@@ -73,11 +73,31 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 	}
 	
 	public Scalar getRowLabel(int index){
-		return rowLabels == null ? null : rowLabels.get(index);
+		return rowLabels.get(index);
 	}
 	
 	public Scalar getColumnLabel(int index){
-		return columnLabels == null ? null : columnLabels.get(index);
+		return columnLabels.get(index);
+	}
+	
+	public Vector getRowLabels() { 
+		return rowLabels;
+	}
+	
+	public void setRowLabels(Vector vector){
+		if(vector.rows() != rows)
+			throw new IllegalArgumentException("the row label size doesn't equal to the row number of the matrix.");
+		rowLabels = vector;
+	}
+	
+	public Vector getColumnLabels(){
+		return columnLabels;
+	}
+	
+	public void setColumnLabels(Vector vector){
+		if(vector.columns() != columns)
+			throw new IllegalArgumentException("the column label size doesn't equal to the column number of the matrix.");
+		columnLabels = vector;
 	}
 	
 	public String getString(){
@@ -190,6 +210,13 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 	
 	public void write(ExtendedDataOutput out) throws IOException{
 		int flag = (DATA_FORM.DF_MATRIX.ordinal() << 8) + getDataType().ordinal();
+		out.writeShort(flag);
+		byte labelFlag = (byte)((hasRowLabel() ? 1 : 0) + (hasColumnLabel() ? 2 : 0));
+		out.writeByte(labelFlag);
+		if(hasRowLabel())
+			rowLabels.write(out);
+		if(hasColumnLabel())
+			columnLabels.write(out);
 		out.writeShort(flag);
 		out.writeInt(rows());
 		out.writeInt(columns());

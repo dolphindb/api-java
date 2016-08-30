@@ -163,6 +163,45 @@ public class DBConnection {
 		return factory.createEntity(df, dt, in);
 	}
 	
+	public void upload(List<String> variables, List<Entity> arguments) throws IOException{
+		if(socket == null || !socket.isConnected()){
+			throw new IOException("Database connection is not established yet.");
+		}
+		int num = variables.size();
+		if(num != arguments.size())
+			throw new IllegalArgumentException("The size of variables doesn't match the size of objects");
+		if(variables.isEmpty())
+			return;
+		
+	    String body = "variable\n";
+	    for(int i=0; i<num; ++i){
+	    	if(!isVariableCandidate(variables.get(i)))
+	    		throw new IllegalArgumentException("'" + variables.get(i) +"' is not a good variable name.");
+	    	body +=variables.get(i);
+	    	if(i<num - 1)
+	    		body += ",";
+	    }
+		body += ("\n"+ arguments.size() +"\n");
+		body += remoteLittleEndian ? "1" : "0";
+		out.writeBytes("API "+sessionID+" ");
+		out.writeBytes(String.valueOf(body.length()));
+		out.writeByte('\n');
+		out.writeBytes(body);
+		for(int i=0; i<arguments.size(); ++i)
+			arguments.get(i).write(out);
+		out.flush();
+		
+		ExtendedDataInput in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
+			new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
+		
+		String[] headers = in.readLine().split(" ");
+		if(headers.length != 3)
+			throw new IOException("Received invalid header.");
+		String msg = in.readLine();
+		if(!msg.equals("OK"))
+			throw new IOException(msg);
+	}
+	
 	public void close(){
 		try{
 			if(socket != null){
@@ -173,5 +212,17 @@ public class DBConnection {
 		catch(Exception ex){
 			ex.printStackTrace();
 		}
+	}
+	
+	private boolean isVariableCandidate(String word){
+		char cur=word.charAt(0);
+		if((cur<'a' || cur>'z') && (cur<'A' || cur>'Z'))
+			return false;
+		for(int i=1;i<word.length();i++){
+			cur=word.charAt(i);
+			if((cur<'a' || cur>'z') && (cur<'A' || cur>'Z') && (cur<'0' || cur>'9') && cur!='_')
+				return false;
+		}
+		return true;
 	}
 }

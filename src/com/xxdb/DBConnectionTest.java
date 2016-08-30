@@ -126,6 +126,7 @@ public class DBConnectionTest {
 		System.out.println(result.getString());
 	}
 	
+	
 	public void testAnyVector() throws IOException{
 		BasicAnyVector result = (BasicAnyVector)conn.run("{1, 2, {1,3, 5},{0.9, 0.8}}");
 		System.out.println(result.getString());
@@ -141,21 +142,31 @@ public class DBConnectionTest {
 		sb.append("dates=(2012.01.01..2016.07.31)[def(x):weekday(x) between 1:5]\n");
 		sb.append("chartData=each(cumsum,reshape(rand(10000,dates.size()*5)-4500, dates.size():5))\n");
 		sb.append("chartData.rename!(dates, \"Strategy#\"+string(1..5))\n");
-		sb.append("plot(chartData,[\"Cumulative Pnls of Five Strategies\",\"date\",\"pnl\"],,CHART_LINE)");
+		sb.append("plot(chartData,[\"Cumulative Pnls of Five Strategies\",\"date\",\"pnl\"],,LINE)");
 		BasicChart chart = (BasicChart)conn.run(sb.toString());
 		System.out.println(chart.getTitle());
 		System.out.println(chart.getData().getRowLabel(0).getString());
 	}
 	
-	public void testChart2() throws IOException {
-		BasicChart chart = (BasicChart)conn.run("x=0.2*1..100;plot([sin,cos](x),,x)");
-		System.out.println(chart.getData().getString());
+	public void testMatrixUpload() throws IOException{
+		Entity a = conn.run("cross(+, 1..5, 1..5)");
+		Entity b = conn.run("1..25$5:5");
+		List<String> variables = new ArrayList<String>();
+		List<Entity> entities = new ArrayList<Entity>();
+		variables.add("a");
+		variables.add("b");
+		entities.add(a);
+		entities.add(b);
+		conn.upload(variables, entities);
+		Entity matrix = conn.run("a+b");
+		System.out.println(matrix.getString());
 	}
+	
 	
 	public static void main(String[] args){
 		try{
 			DBConnectionTest test = new DBConnectionTest();
-			/*test.testVoid();
+			test.testVoid();
 			test.testFunctionDef();
 			test.testIntegerVector();
 			test.testStringVector();
@@ -169,8 +180,9 @@ public class DBConnectionTest {
 			test.testTable();
 			test.testFunction();
 			test.testAnyVector();
-			test.testSet();*/
-			test.testChart2();
+			test.testSet();
+			test.testChart();
+			test.testMatrixUpload();
 		}
 		catch(Exception ex){
 			ex.printStackTrace();
