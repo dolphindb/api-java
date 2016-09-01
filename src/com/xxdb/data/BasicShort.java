@@ -23,7 +23,7 @@ public class BasicShort extends AbstractScalar{
 	
 	@Override
 	public boolean isNull() {
-		return  value == Integer.MIN_VALUE;
+		return  value == Short.MIN_VALUE;
 	}
 	
 	@Override

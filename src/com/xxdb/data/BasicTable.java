@@ -45,6 +45,25 @@ public class BasicTable extends AbstractEntity implements Table{
 		}
 	}
 	
+    public BasicTable(final List<String> colNames, final List<Vector> cols) {
+        this.setColName(colNames);
+        this.setColumns(cols);
+    }
+    
+    public void setColName (final List<String> colNames) {
+        names_.clear();
+        for (String name : colNames)
+            names_.add(name);
+    }
+    
+    public void setColumns (final List<Vector> cols) {
+    	columns_.clear();
+        // this is a shallow copy!
+        for (Vector vector : cols)
+        	columns_.add(vector);
+        
+    }
+    
 	@Override
 	public DATA_CATEGORY getDataCategory() {
 		return DATA_CATEGORY.MIXED;
@@ -161,6 +180,7 @@ public class BasicTable extends AbstractEntity implements Table{
 		out.writeShort(flag);
 		out.writeInt(rows());
 		out.writeInt(columns());
+		out.writeString(""); //table name
 		for(String colName : names_)
 			out.writeString(colName);
 		for(Vector vector : columns_)
