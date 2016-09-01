@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.LocalTime;
+import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
@@ -9,6 +10,14 @@ public class BasicMinuteVector extends BasicIntVector{
 	
 	public BasicMinuteVector(int size){
 		super(DATA_FORM.DF_VECTOR, size);
+	}
+	
+	public BasicMinuteVector(List<Integer> list){
+		super(list);
+	}
+	
+	public BasicMinuteVector(int[] array){
+		super(array);
 	}
 	
 	protected BasicMinuteVector(DATA_FORM df, int size){

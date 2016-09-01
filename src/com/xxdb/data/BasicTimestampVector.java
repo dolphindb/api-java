@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
@@ -9,6 +10,14 @@ public class BasicTimestampVector extends BasicLongVector{
 
 	public BasicTimestampVector(int size){
 		super(size);
+	}
+	
+	public BasicTimestampVector(List<Long> list){
+		super(list);
+	}
+	
+	public BasicTimestampVector(long[] array){
+		super(array);
 	}
 	
 	protected BasicTimestampVector(DATA_FORM df, int size){

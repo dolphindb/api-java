@@ -4,17 +4,24 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import com.xxdb.data.BasicAnyVector;
 import com.xxdb.data.BasicChart;
 import com.xxdb.data.BasicDateTimeVector;
 import com.xxdb.data.BasicDateVector;
 import com.xxdb.data.BasicDictionary;
+import com.xxdb.data.BasicDoubleMatrix;
 import com.xxdb.data.BasicDoubleVector;
 import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicIntMatrix;
 import com.xxdb.data.BasicIntVector;
 import com.xxdb.data.BasicSet;
+import com.xxdb.data.BasicShortVector;
+import com.xxdb.data.BasicStringMatrix;
 import com.xxdb.data.BasicStringVector;
 import com.xxdb.data.BasicTable;
 import com.xxdb.data.Entity;
@@ -131,10 +138,8 @@ public class DBConnectionTest {
 	public void testFunction() throws IOException{
 		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
 		List<Entity> args = new ArrayList<Entity>(1);
-		BasicDoubleVector vec = new BasicDoubleVector(3);
-		vec.setDouble(0, 1.5);
-		vec.setDouble(1, 2.5);
-		vec.setDouble(2, 7);
+		double[] array = {1.5, 2.5, 7};
+		BasicDoubleVector vec = new BasicDoubleVector(array);
 		args.add(vec);
 		Scalar result = (Scalar)conn.run("sum", args);
 		System.out.println(result.getString());
@@ -192,19 +197,49 @@ public class DBConnectionTest {
         System.out.println(result.getString());
     }
     
-    public void testFunctionIntMatrix(final int nrow, final int ncol) throws IOException {
+    public void testFunctionIntMatrix(final int nrow, final int ncol) throws Exception {
     	System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-        BasicIntMatrix matrix = new BasicIntMatrix(nrow,ncol);
-        int value = 0;
-        for (int i=0; i<nrow; ++i) {
-            for (int j=0; j<ncol; ++j) {
-                matrix.setInt(i, j, value++);
-            }
+        List<int[]> data = new ArrayList<int[]>();
+        for (int i=0; i<ncol; ++i) {
+        	int[] array = IntStream.range(i*nrow,i*nrow+nrow).toArray();
+        	data.add(array);
         }
+        BasicIntMatrix matrix = new BasicIntMatrix(nrow, ncol, data);
         System.out.println(matrix.getString());
         List<Entity> args = new ArrayList<Entity>(1);
         args.add(matrix);
         BasicIntVector vector = (BasicIntVector)conn.run("flatten", args);
+        System.out.println(vector.getString());
+    }
+    
+    public void testFunctionDoubleMatrix(final int nrow, final int ncol) throws Exception {
+    	System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
+        List<double[]> data = new ArrayList<double[]>();
+        for (int i=0; i<ncol; ++i) {
+        	double[] array = DoubleStream.iterate(i*nrow, n->n+1).limit(nrow).toArray();
+        	data.add(array);
+        }
+        BasicDoubleMatrix matrix = new BasicDoubleMatrix(nrow, ncol, data);
+        System.out.println(matrix.getString());
+        List<Entity> args = new ArrayList<Entity>(1);
+        args.add(matrix);
+        BasicDoubleVector vector = (BasicDoubleVector) conn.run("flatten", args);
+        System.out.println(vector.getString());
+    }
+    
+    public void testFunctionStrMatrix() throws Exception {
+    	System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
+        List<String[]> data = new ArrayList<String[]>();
+        String[] array = new String[]{"test1", "test2", "test3"};
+       	data.add(array);
+        array = new String[]{"test4", "test5", "test6"};
+     	data.add(array);
+       
+        BasicStringMatrix matrix = new BasicStringMatrix(3, 2, data);
+        System.out.println(matrix.getString());
+        List<Entity> args = new ArrayList<Entity>(1);
+        args.add(matrix);
+        BasicStringVector vector = (BasicStringVector)conn.run("flatten", args);
         System.out.println(vector.getString());
     }
     
@@ -217,28 +252,16 @@ public class DBConnectionTest {
 		
 		List<Vector> cols = new ArrayList<Vector>();
 		
-		BasicIntVector vec = new BasicIntVector(5);
-		vec.setInt(0, 1);
-		vec.setInt(1, 2);
-		vec.setInt(2, 3);
-		vec.setInt(3, 4);
-		vec.setInt(4, 3);
+		int[] intArray = new int[]{1,2,3,4,3};
+		BasicIntVector vec = new BasicIntVector(intArray);
 		cols.add(vec);
 		
-		BasicDoubleVector vecDouble = new BasicDoubleVector(5);
-		vecDouble.setDouble(0, 7.8);
-		vecDouble.setDouble(1, 4.6);
-		vecDouble.setDouble(2, 5.1);
-		vecDouble.setDouble(3, 9.6);
-		vecDouble.setDouble(4, 0.1);
+		double[] doubleArray = new double[]{7.8, 4.6, 5.1, 9.6, 0.1};
+		BasicDoubleVector vecDouble = new BasicDoubleVector(doubleArray);
 		cols.add(vecDouble);
 		
-		vec = new BasicIntVector(5);
-		vec.setInt(0, 5);
-		vec.setInt(1, 4);
-		vec.setInt(2, 3);
-		vec.setInt(3, 2);
-		vec.setInt(4, 1);
+		intArray = new int[]{5,4,3,2,1};
+		vec = new BasicIntVector(intArray);
 		cols.add(vec);
 		
 		BasicTable t1 = new BasicTable(colNames, cols);
@@ -249,19 +272,16 @@ public class DBConnectionTest {
 		colNames.add("x");
 		
 		cols = new ArrayList<Vector>();
-		vec = new BasicIntVector(2);
-		vec.setInt(0, 3);
-		vec.setInt(1, 1);
+		intArray = new int[]{3,1};
+		vec = new BasicIntVector(intArray);
 		cols.add(vec);
 		
-		vec = new BasicIntVector(2);
-		vec.setInt(0, 500);
-		vec.setInt(1, 800);
-		cols.add(vec);
+		short[] shortArray = new short[]{500, 800};
+		BasicShortVector vecShort = new BasicShortVector(shortArray);
+		cols.add(vecShort);
 		
-		vecDouble = new BasicDoubleVector(2);
-		vecDouble.setDouble(0, 66.0);
-		vecDouble.setDouble(1, 88.0);
+		doubleArray = new double[]{66.0, 88.0};
+		vecDouble = new BasicDoubleVector(doubleArray);
 		cols.add(vecDouble);
 		
 		BasicTable t2 = new BasicTable(colNames, cols);
@@ -298,7 +318,9 @@ public class DBConnectionTest {
 			test.testChart();
 			test.testMatrixUpload();
 			test.testUserDefineFunction();
-			test.testFunctionIntMatrix(3,3);
+			test.testFunctionIntMatrix(4, 2);
+			test.testFunctionDoubleMatrix(4, 2);
+			test.testFunctionStrMatrix();
 			test.testTableUpload();
 
 		}

@@ -2,11 +2,17 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.LocalTime;
+import java.util.List;
+
 import com.xxdb.io.ExtendedDataInput;
 
 public class BasicMinuteMatrix extends BasicIntMatrix{
 	public BasicMinuteMatrix(int rows, int columns){
 		super(rows, columns);
+	}
+	
+	public BasicMinuteMatrix(int rows, int columns, List<int[]> listOfArrays) throws Exception {
+		super(rows,columns, listOfArrays);
 	}
 	
 	public BasicMinuteMatrix(ExtendedDataInput in) throws IOException {

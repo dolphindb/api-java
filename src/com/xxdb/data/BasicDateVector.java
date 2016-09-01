@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
@@ -9,6 +10,14 @@ public class BasicDateVector extends BasicIntVector{
 
 	public BasicDateVector(int size) {
 		super(size);
+	}
+	
+	public BasicDateVector(List<Integer> list){
+		super(list);
+	}
+	
+	public BasicDateVector(int[] array){
+		super(array);
 	}
 	
 	protected BasicDateVector(DATA_FORM df, int size){

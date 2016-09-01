@@ -1,7 +1,9 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.util.List;
 
+import com.xxdb.data.Entity.DATA_FORM;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -10,6 +12,20 @@ public class BasicFloatVector extends AbstractVector{
 	
 	public BasicFloatVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
+	}
+	
+	public BasicFloatVector(List<Float> list){
+		super(DATA_FORM.DF_VECTOR);
+		if (list != null) {
+			values = new float[list.size()];
+			for (int i=0; i<list.size(); ++i)
+				values[i] = list.get(i);
+		}
+	}
+	
+	public BasicFloatVector(float[] array){
+		super(DATA_FORM.DF_VECTOR);
+		values = array.clone();
 	}
 	
 	protected BasicFloatVector(DATA_FORM df, int size){

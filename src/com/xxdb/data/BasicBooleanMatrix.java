@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
@@ -11,6 +12,19 @@ private byte[] values;
 	public BasicBooleanMatrix(int rows, int columns){
 		super(rows, columns);
 		values = new byte[rows * columns];
+	}
+	
+	public BasicBooleanMatrix(int rows, int columns, List<byte[]> listOfArrays) throws Exception {
+		super(rows,columns);
+		values = new byte[rows*columns];
+		if (listOfArrays == null || listOfArrays.size() != columns)
+			throw new Exception("input list of arrays does not have " + columns + " columns");
+		for (int i=0; i<columns; ++i) {
+			byte[] array = listOfArrays.get(i);
+			if (array == null || array.length != rows)
+				throw new Exception("The length of array "+ (i+1) + " doesn't have " + rows + " elements");
+			System.arraycopy(array, 0, values, i*rows, rows);
+		}
 	}
 	
 	public BasicBooleanMatrix(ExtendedDataInput in) throws IOException {

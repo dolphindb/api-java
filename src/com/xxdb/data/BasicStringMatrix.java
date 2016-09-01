@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
@@ -12,6 +13,20 @@ public class BasicStringMatrix extends AbstractMatrix{
 	public BasicStringMatrix(int rows, int columns){
 		super(rows, columns);
 		values = new String[rows * columns];
+		isSymbol = true;
+	}
+	
+	public BasicStringMatrix(int rows, int columns, List<String[]> list) throws Exception {
+		super(rows,columns);
+		values = new String[rows*columns];
+		if (list == null || list.size() != columns)
+			throw new Exception("input list of arrays does not have " + columns + " columns");
+		for (int i=0; i<columns; ++i) {
+			String[] array = list.get(i);
+			if (array == null || array.length != rows)
+				throw new Exception("The length of array "+ (i+1) + " doesn't have " + rows + " elements");
+			System.arraycopy(array, 0, values, i*rows, rows);
+		}
 		isSymbol = true;
 	}
 	

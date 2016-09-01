@@ -2,12 +2,17 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
 public class BasicDateTimeMatrix extends BasicIntMatrix{
 	public BasicDateTimeMatrix(int rows, int columns){
 		super(rows, columns);
+	}
+	
+	public BasicDateTimeMatrix(int rows, int columns, List<int[]> listOfArrays) throws Exception {
+		super(rows,columns, listOfArrays);
 	}
 	
 	public BasicDateTimeMatrix(ExtendedDataInput in) throws IOException {

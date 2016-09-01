@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
@@ -10,6 +11,20 @@ public class BasicLongVector extends AbstractVector{
 	
 	public BasicLongVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
+	}
+	
+	public BasicLongVector(List<Long> list){
+		super(DATA_FORM.DF_VECTOR);
+		if (list != null) {
+			values = new long[list.size()];
+			for (int i=0; i<list.size(); ++i)
+				values[i] = list.get(i);
+		}
+	}
+	
+	public BasicLongVector(long[] array){
+		super(DATA_FORM.DF_VECTOR);
+		values = array.clone();
 	}
 	
 	protected BasicLongVector(DATA_FORM df, int size){

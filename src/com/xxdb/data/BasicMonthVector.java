@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.YearMonth;
+import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
@@ -9,6 +10,14 @@ public class BasicMonthVector extends BasicIntVector{
 
 	public BasicMonthVector(int size){
 		super(DATA_FORM.DF_VECTOR, size);
+	}
+	
+	public BasicMonthVector(List<Integer> list){
+		super(list);
+	}
+	
+	public BasicMonthVector(int[] array){
+		super(array);
 	}
 	
 	protected BasicMonthVector(DATA_FORM df, int size){
