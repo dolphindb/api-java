@@ -6,6 +6,8 @@ public interface Matrix extends Entity{
 	Scalar getRowLabel(int row);
 	Scalar getColumnLabel(int column);
 	Scalar get(int row, int column);
+	Vector getRowLabels();
+	Vector getColumnLabels();
 	boolean hasRowLabel();
 	boolean hasColumnLabel();
 	Class<?> getElementClass();
