@@ -82,6 +82,11 @@ public class BasicLongVector extends AbstractVector{
 	public int rows() {
 		return values.length;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicLong.class;
+	}
 
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		for(long value : values)

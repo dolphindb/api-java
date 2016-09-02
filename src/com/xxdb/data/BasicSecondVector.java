@@ -52,4 +52,9 @@ public class BasicSecondVector extends BasicIntVector{
 	public void setSecond(int index, LocalTime time){
 		setInt(index, Utils.countSeconds(time));
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicSecond.class;
+	}
 }

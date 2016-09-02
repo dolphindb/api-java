@@ -88,6 +88,10 @@ public class BasicAnyVector extends AbstractVector{
 		sb.append(")");
 		return sb.toString();
 	}
+	
+	public Class<?> getElementClass(){
+		return Entity.class;
+	}
 
 	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {

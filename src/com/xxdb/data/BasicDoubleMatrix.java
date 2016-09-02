@@ -63,6 +63,11 @@ public class BasicDoubleMatrix extends AbstractMatrix{
 	public DATA_TYPE getDataType() {
 		return DATA_TYPE.DT_DOUBLE;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicDouble.class;
+	}
 
 	@Override
 	protected void readMatrixFromInputStream(int rows, int columns,	ExtendedDataInput in)  throws IOException{

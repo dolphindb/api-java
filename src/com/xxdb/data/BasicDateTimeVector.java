@@ -52,5 +52,10 @@ public class BasicDateTimeVector extends BasicIntVector{
 	public void setDateTime(int index, LocalDateTime dt){
 		setInt(index,Utils.countSeconds(dt));
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicDateTime.class;
+	}
 
 }

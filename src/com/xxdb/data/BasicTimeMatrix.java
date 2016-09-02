@@ -41,4 +41,9 @@ public class BasicTimeMatrix extends BasicIntMatrix{
 	public DATA_TYPE getDataType() {
 		return DATA_TYPE.DT_TIME;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicTime.class;
+	}
 }

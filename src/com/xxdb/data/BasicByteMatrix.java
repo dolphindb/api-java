@@ -63,6 +63,11 @@ public class BasicByteMatrix extends AbstractMatrix{
 	public DATA_TYPE getDataType() {
 		return DATA_TYPE.DT_BYTE;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicByte.class;
+	}
 
 	@Override
 	protected void readMatrixFromInputStream(int rows, int columns,	ExtendedDataInput in)  throws IOException{

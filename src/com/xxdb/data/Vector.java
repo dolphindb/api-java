@@ -7,4 +7,5 @@ public interface Vector extends Entity{
 	void setNull(int index);
 	Scalar get(int index);
 	void set(int index, Scalar value) throws Exception;
+	Class<?> getElementClass();
 }

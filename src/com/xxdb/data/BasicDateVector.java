@@ -52,4 +52,9 @@ public class BasicDateVector extends BasicIntVector{
 	public void setDate(int index, LocalDate date){
 		setInt(index,Utils.countDays(date));
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicDate.class;
+	}
 }

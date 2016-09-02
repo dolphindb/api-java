@@ -33,6 +33,11 @@ public class BasicDateTimeMatrix extends BasicIntMatrix{
 	}
 
 	@Override
+	public Class<?> getElementClass(){
+		return BasicDateTime.class;
+	}
+	
+	@Override
 	public DATA_CATEGORY getDataCategory() {
 		return DATA_CATEGORY.TEMPORAL;
 	}

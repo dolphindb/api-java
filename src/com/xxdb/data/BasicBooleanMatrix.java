@@ -63,6 +63,11 @@ private byte[] values;
 	public DATA_TYPE getDataType() {
 		return DATA_TYPE.DT_BOOL;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicBoolean.class;
+	}
 
 	@Override
 	protected void readMatrixFromInputStream(int rows, int columns,	ExtendedDataInput in)  throws IOException{

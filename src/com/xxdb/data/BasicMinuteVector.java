@@ -52,5 +52,10 @@ public class BasicMinuteVector extends BasicIntVector{
 	public void setMinute(int index, LocalTime time){
 		setInt(index, Utils.countMinutes(time));
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicMinute.class;
+	}
 
 }

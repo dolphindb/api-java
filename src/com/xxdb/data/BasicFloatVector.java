@@ -83,6 +83,11 @@ public class BasicFloatVector extends AbstractVector{
 		return values.length;
 	}
 	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicFloat.class;
+	}
+	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		for(float value : values)
 			out.writeFloat(value);

@@ -41,4 +41,9 @@ public class BasicSecondMatrix extends BasicIntMatrix{
 	public DATA_TYPE getDataType() {
 		return DATA_TYPE.DT_SECOND;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicSecond.class;
+	}
 }

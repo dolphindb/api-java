@@ -81,6 +81,11 @@ public class BasicStringVector extends AbstractVector{
 	public DATA_TYPE getDataType() {
 		return isSymbol ? DATA_TYPE.DT_SYMBOL : DATA_TYPE.DT_STRING;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicString.class;
+	}
 
 	@Override
 	public int rows() {

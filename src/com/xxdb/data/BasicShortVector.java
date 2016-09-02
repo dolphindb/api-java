@@ -82,6 +82,11 @@ public class BasicShortVector extends AbstractVector{
 	public int rows() {
 		return values.length;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicShort.class;
+	}
 
 	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {

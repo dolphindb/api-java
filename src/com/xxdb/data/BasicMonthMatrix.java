@@ -42,5 +42,10 @@ public class BasicMonthMatrix extends BasicIntMatrix{
 	public DATA_TYPE getDataType() {
 		return DATA_TYPE.DT_MONTH;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return YearMonth.class;
+	}
 
 }

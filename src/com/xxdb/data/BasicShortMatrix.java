@@ -63,6 +63,11 @@ public class BasicShortMatrix extends AbstractMatrix{
 	public DATA_TYPE getDataType() {
 		return DATA_TYPE.DT_SHORT;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicShort.class;
+	}
 
 	@Override
 	protected void readMatrixFromInputStream(int rows, int columns,	ExtendedDataInput in)  throws IOException{

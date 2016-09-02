@@ -77,6 +77,11 @@ public class BasicBooleanVector extends AbstractVector{
 	public DATA_TYPE getDataType() {
 		return Entity.DATA_TYPE.DT_BOOL;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicBoolean.class;
+	}
 
 	@Override
 	public int rows() {

@@ -67,6 +67,11 @@ public class BasicStringMatrix extends AbstractMatrix{
 	public DATA_TYPE getDataType() {
 		return isSymbol ? DATA_TYPE.DT_SYMBOL : DATA_TYPE.DT_STRING;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicString.class;
+	}
 
 	@Override
 	protected void readMatrixFromInputStream(int rows, int columns,	ExtendedDataInput in)  throws IOException{

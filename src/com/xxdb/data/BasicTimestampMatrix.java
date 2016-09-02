@@ -42,5 +42,10 @@ public class BasicTimestampMatrix extends BasicLongMatrix{
 	public DATA_TYPE getDataType() {
 		return DATA_TYPE.DT_TIMESTAMP;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicTimestamp.class;
+	}
 
 }

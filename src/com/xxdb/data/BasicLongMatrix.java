@@ -65,6 +65,11 @@ public class BasicLongMatrix extends AbstractMatrix{
 	}
 
 	@Override
+	public Class<?> getElementClass(){
+		return BasicLong.class;
+	}
+	
+	@Override
 	protected void readMatrixFromInputStream(int rows, int columns,	ExtendedDataInput in)  throws IOException{
 		int size = rows * columns;
 		values =new long[size];

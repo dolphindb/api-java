@@ -77,6 +77,11 @@ public class BasicByteVector extends AbstractVector{
 	public DATA_TYPE getDataType() {
 		return Entity.DATA_TYPE.DT_BYTE;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicByte.class;
+	}
 
 	@Override
 	public int rows() {

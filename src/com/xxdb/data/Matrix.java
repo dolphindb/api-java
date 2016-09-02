@@ -8,4 +8,5 @@ public interface Matrix extends Entity{
 	Scalar get(int row, int column);
 	boolean hasRowLabel();
 	boolean hasColumnLabel();
+	Class<?> getElementClass();
 }

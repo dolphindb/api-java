@@ -32,6 +32,11 @@ public class BasicDateMatrix extends BasicIntMatrix{
 	public Scalar get(int row, int column) {
 		return new BasicDate(getInt(row, column));
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicDate.class;
+	}
 
 	@Override
 	public DATA_CATEGORY getDataCategory() {

@@ -77,6 +77,11 @@ public class BasicDoubleVector extends AbstractVector{
 	public DATA_TYPE getDataType() {
 		return Entity.DATA_TYPE.DT_DOUBLE;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicDouble.class;
+	}
 
 	@Override
 	public int rows() {

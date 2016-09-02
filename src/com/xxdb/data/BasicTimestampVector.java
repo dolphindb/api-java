@@ -52,4 +52,9 @@ public class BasicTimestampVector extends BasicLongVector{
 	public void setTimestamp(int index, LocalDateTime dt){
 		setLong(index, Utils.countMilliseconds(dt));
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicTimestamp.class;
+	}
 }

@@ -49,5 +49,10 @@ public class BasicMonthVector extends BasicIntVector{
 	public void setMonth(int index, YearMonth month){
 		setInt(index, Utils.countMonths(month));
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return YearMonth.class;
+	}
 
 }

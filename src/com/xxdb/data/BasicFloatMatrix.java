@@ -63,6 +63,11 @@ public class BasicFloatMatrix extends AbstractMatrix{
 	public DATA_TYPE getDataType() {
 		return DATA_TYPE.DT_FLOAT;
 	}
+	
+	@Override
+	public Class<?> getElementClass(){
+		return BasicFloat.class;
+	}
 
 	@Override
 	protected void readMatrixFromInputStream(int rows, int columns,	ExtendedDataInput in)  throws IOException{
