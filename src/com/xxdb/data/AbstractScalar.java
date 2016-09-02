@@ -27,4 +27,9 @@ public abstract class AbstractScalar extends AbstractEntity implements Scalar{
 		out.writeShort(flag);
 		writeScalarToOutputStream(out);
 	}
+	
+	@Override
+	public String toString(){
+		return getString();
+	}
 }
