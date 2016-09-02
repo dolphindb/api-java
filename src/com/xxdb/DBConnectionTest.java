@@ -3,7 +3,9 @@ package com.xxdb;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -173,13 +175,10 @@ public class DBConnectionTest {
 		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
 		Entity a = conn.run("cross(+, 1..5, 1..5)");
 		Entity b = conn.run("1..25$5:5");
-		List<String> variables = new ArrayList<String>();
-		List<Entity> entities = new ArrayList<Entity>();
-		variables.add("a");
-		variables.add("b");
-		entities.add(a);
-		entities.add(b);
-		conn.upload(variables, entities);
+		Map<String, Entity> map = new HashMap<String, Entity>();
+		map.put("a", a);
+		map.put("b", b);
+		conn.upload(map);
 		Entity matrix = conn.run("a+b");
 		System.out.println(matrix.getString());
 	}
@@ -286,13 +285,11 @@ public class DBConnectionTest {
 		
 		BasicTable t2 = new BasicTable(colNames, cols);
 		
-		List<String> variables = new ArrayList<String>();
-		List<Entity> entities = new ArrayList<Entity>();
-		variables.add("t1");
-		variables.add("t2");
-		entities.add(t1);
-		entities.add(t2);
-		conn.upload(variables, entities);
+		Map<String, Entity> map = new HashMap<String, Entity>();
+		map.put("t1", t1);
+		map.put("t2", t2);
+		conn.upload(map);
+		conn.upload(map);
 		Entity table = conn.run("lj(t1, t2, `id)");
 		System.out.println(table.getString());
 	}   

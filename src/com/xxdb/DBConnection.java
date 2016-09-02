@@ -4,7 +4,9 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.xxdb.data.BasicEntityFactory;
 import com.xxdb.data.Entity;
@@ -163,32 +165,32 @@ public class DBConnection {
 		return factory.createEntity(df, dt, in);
 	}
 	
-	public void upload(List<String> variables, List<Entity> arguments) throws IOException{
+	public void upload(final Map<String, Entity> variableObjectMap) throws IOException{
 		if(socket == null || !socket.isConnected()){
 			throw new IOException("Database connection is not established yet.");
 		}
-		int num = variables.size();
-		if(num != arguments.size())
-			throw new IllegalArgumentException("The size of variables doesn't match the size of objects");
-		if(variables.isEmpty())
+		if(variableObjectMap == null || variableObjectMap.isEmpty())
 			return;
+
+		List<Entity> objects = new ArrayList<Entity>();
 		
 	    String body = "variable\n";
-	    for(int i=0; i<num; ++i){
-	    	if(!isVariableCandidate(variables.get(i)))
-	    		throw new IllegalArgumentException("'" + variables.get(i) +"' is not a good variable name.");
-	    	body +=variables.get(i);
-	    	if(i<num - 1)
-	    		body += ",";
+	    for (String key: variableObjectMap.keySet()) {
+	    	if(!isVariableCandidate(key))
+	    		throw new IllegalArgumentException("'" + key +"' is not a good variable name.");
+	    	body += key + ",";
+	    	objects.add(variableObjectMap.get(key));
 	    }
-		body += ("\n"+ arguments.size() +"\n");
+	    body = body.substring(0, body.length()-1);
+
+		body += ("\n"+ objects.size() +"\n");
 		body += remoteLittleEndian ? "1" : "0";
 		out.writeBytes("API "+sessionID+" ");
 		out.writeBytes(String.valueOf(body.length()));
 		out.writeByte('\n');
 		out.writeBytes(body);
-		for(int i=0; i<arguments.size(); ++i)
-			arguments.get(i).write(out);
+		for(int i=0; i<objects.size(); ++i)
+			objects.get(i).write(out);
 		out.flush();
 		
 		ExtendedDataInput in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
