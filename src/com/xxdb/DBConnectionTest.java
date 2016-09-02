@@ -202,6 +202,10 @@ public class DBConnectionTest {
         	data.add(array);
         }
         BasicIntMatrix matrix = new BasicIntMatrix(nrow, ncol, data);
+        BasicIntVector lables = new BasicIntVector(IntStream.range(1, nrow+1).toArray());
+        matrix.setRowLabels(lables);
+        lables = new BasicIntVector(IntStream.range(1, ncol+1).toArray());
+        matrix.setColumnLabels(lables);
         System.out.println(matrix.getString());
         List<Entity> args = new ArrayList<Entity>(1);
         args.add(matrix);

@@ -95,7 +95,7 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 	}
 	
 	public void setColumnLabels(Vector vector){
-		if(vector.columns() != columns)
+		if(vector.rows() != columns)
 			throw new IllegalArgumentException("the column label size doesn't equal to the column number of the matrix.");
 		columnLabels = vector;
 	}
