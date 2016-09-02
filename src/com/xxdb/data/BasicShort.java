@@ -6,7 +6,7 @@ import java.time.temporal.Temporal;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
-public class BasicShort extends AbstractScalar{
+public class BasicShort extends AbstractScalar implements Comparable<BasicShort>{
 	private short value;
 
 	public BasicShort(short value){
@@ -78,4 +78,8 @@ public class BasicShort extends AbstractScalar{
 		out.writeShort(value);
 	}
 
+	@Override
+	public int compareTo(BasicShort o) {
+		return Short.compare(value, o.value);
+	}
 }

@@ -3,7 +3,6 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.util.List;
 
-import com.xxdb.data.Entity.DATA_FORM;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 

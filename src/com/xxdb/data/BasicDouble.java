@@ -6,7 +6,7 @@ import java.time.temporal.Temporal;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
-public class BasicDouble extends AbstractScalar{
+public class BasicDouble extends AbstractScalar implements Comparable<BasicDouble>{
 	private double value;
 
 	public BasicDouble(double value){
@@ -76,5 +76,10 @@ public class BasicDouble extends AbstractScalar{
 	
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeDouble(value);
+	}
+
+	@Override
+	public int compareTo(BasicDouble o) {
+		return Double.compare(value, o.value);
 	}
 }

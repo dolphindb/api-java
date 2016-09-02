@@ -7,7 +7,7 @@ import java.time.temporal.Temporal;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
-public class BasicByte extends AbstractScalar {
+public class BasicByte extends AbstractScalar implements Comparable<BasicByte>{
 	private byte value;
 
 	public BasicByte(byte value){
@@ -77,5 +77,10 @@ public class BasicByte extends AbstractScalar {
 	
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeByte(value);
+	}
+
+	@Override
+	public int compareTo(BasicByte o) {
+		return Byte.compare(value, o.value);
 	}
 }
