@@ -89,9 +89,10 @@ public class DBConnection {
 		ExtendedDataInput in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
 			new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
 		
-		String[] headers = in.readLine().split(" ");
+		String header = in.readLine();
+		String[] headers = header.split(" ");
 		if(headers.length != 3)
-			throw new IOException("Received invalid header.");
+			throw new IOException("Received invalid header: " + header);
 		
 		int numObject = Integer.parseInt(headers[1]);
 		
