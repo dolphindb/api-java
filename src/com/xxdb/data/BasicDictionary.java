@@ -126,6 +126,10 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 		return dict.values();
 	}
 	
+	public Set<Map.Entry<Scalar, Entity>> entrySet(){
+		return dict.entrySet();
+	}
+	
 	public String getString(){
 		StringBuilder sbKeys = new StringBuilder("{");
 		StringBuilder sbValues = new StringBuilder("{");
