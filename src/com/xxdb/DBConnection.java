@@ -30,12 +30,17 @@ public class DBConnection {
 	private boolean remoteLittleEndian;
 	private ExtendedDataOutput out;
 	private EntityFactory factory;
+	private String hostName;
+	private int port;
 	
 	public DBConnection(){
 		factory = new BasicEntityFactory();
+		sessionID = "";
 	}
 	
 	public boolean connect(String hostName, int port) throws IOException{
+		this.hostName = hostName;
+		this.port = port;
 		socket = new Socket(hostName, port);
 		out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		@SuppressWarnings("resource")
@@ -74,8 +79,14 @@ public class DBConnection {
 	}
 	
 	public Entity run(String script) throws IOException{
+		boolean reconnect = false;
 		if(socket == null || !socket.isConnected()){
-			throw new IOException("Database connection is not established yet.");
+			if(sessionID.isEmpty())
+				throw new IOException("Database connection is not established yet.");
+			else{
+				reconnect = true;
+				socket = new Socket(hostName, port);
+			}
 		}
 		
 	    String body = "script\n"+script;
@@ -94,6 +105,8 @@ public class DBConnection {
 		if(headers.length != 3)
 			throw new IOException("Received invalid header: " + header);
 		
+		if(reconnect)
+			sessionID = headers[0];
 		int numObject = Integer.parseInt(headers[1]);
 		
 		String msg = in.readLine();
@@ -119,8 +132,14 @@ public class DBConnection {
 	}
 	
 	public Entity run(String function, List<Entity> arguments) throws IOException{
+		boolean reconnect = false;
 		if(socket == null || !socket.isConnected()){
-			throw new IOException("Database connection is not established yet.");
+			if(sessionID.isEmpty())
+				throw new IOException("Database connection is not established yet.");
+			else{
+				reconnect = true;
+				socket = new Socket(hostName, port);
+			}
 		}
 		
 	    String body = "function\n"+function;
@@ -142,6 +161,8 @@ public class DBConnection {
 		if(headers.length != 3)
 			throw new IOException("Received invalid header.");
 		
+		if(reconnect)
+			sessionID = headers[0];
 		int numObject = Integer.parseInt(headers[1]);
 		
 		String msg = in.readLine();
@@ -167,9 +188,16 @@ public class DBConnection {
 	}
 	
 	public void upload(final Map<String, Entity> variableObjectMap) throws IOException{
+		boolean reconnect = false;
 		if(socket == null || !socket.isConnected()){
-			throw new IOException("Database connection is not established yet.");
+			if(sessionID.isEmpty())
+				throw new IOException("Database connection is not established yet.");
+			else{
+				reconnect = true;
+				socket = new Socket(hostName, port);
+			}
 		}
+		
 		if(variableObjectMap == null || variableObjectMap.isEmpty())
 			return;
 
@@ -200,6 +228,8 @@ public class DBConnection {
 		String[] headers = in.readLine().split(" ");
 		if(headers.length != 3)
 			throw new IOException("Received invalid header.");
+		if(reconnect)
+			sessionID = headers[0];
 		String msg = in.readLine();
 		if(!msg.equals("OK"))
 			throw new IOException(msg);
