@@ -29,7 +29,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 			throw new IOException("The form of dictionary keys must be vector");
 		if(type <0 || type >= types.length)
 			throw new IOException("Invalid key type: " + type);
-		
+		keyType = types[type];
 		Vector keys = (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, types[type], in);
 		
 		//read value vector
