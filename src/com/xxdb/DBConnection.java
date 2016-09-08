@@ -86,15 +86,23 @@ public class DBConnection {
 			else{
 				reconnect = true;
 				socket = new Socket(hostName, port);
+				out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 			}
 		}
 		
-	    String body = "script\n"+script;
-		out.writeBytes("API "+sessionID+" ");
-		out.writeBytes(String.valueOf(body.length()));
-		out.writeByte('\n');
-		out.writeBytes(body);
-		out.flush();
+		String body = "script\n"+script;
+		
+		try{
+			out.writeBytes("API "+sessionID+" ");
+			out.writeBytes(String.valueOf(body.length()));
+			out.writeByte('\n');
+			out.writeBytes(body);
+			out.flush();
+		}
+		catch(Exception ex){
+			socket = null;
+			throw ex;
+		}
 		
 		@SuppressWarnings("resource")
 		ExtendedDataInput in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
@@ -139,19 +147,27 @@ public class DBConnection {
 			else{
 				reconnect = true;
 				socket = new Socket(hostName, port);
+				out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 			}
 		}
 		
 	    String body = "function\n"+function;
 		body += ("\n"+ arguments.size() +"\n");
 		body += remoteLittleEndian ? "1" : "0";
-		out.writeBytes("API "+sessionID+" ");
-		out.writeBytes(String.valueOf(body.length()));
-		out.writeByte('\n');
-		out.writeBytes(body);
-		for(int i=0; i<arguments.size(); ++i)
-			arguments.get(i).write(out);
-		out.flush();
+			
+		try{
+			out.writeBytes("API "+sessionID+" ");
+			out.writeBytes(String.valueOf(body.length()));
+			out.writeByte('\n');
+			out.writeBytes(body);
+			for(int i=0; i<arguments.size(); ++i)
+				arguments.get(i).write(out);
+			out.flush();
+		}
+		catch(Exception ex){
+			socket = null;
+			throw ex;
+		}
 		
 		@SuppressWarnings("resource")
 		ExtendedDataInput in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
@@ -195,6 +211,7 @@ public class DBConnection {
 			else{
 				reconnect = true;
 				socket = new Socket(hostName, port);
+				out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 			}
 		}
 		
@@ -211,16 +228,22 @@ public class DBConnection {
 	    	objects.add(variableObjectMap.get(key));
 	    }
 	    body = body.substring(0, body.length()-1);
-
 		body += ("\n"+ objects.size() +"\n");
 		body += remoteLittleEndian ? "1" : "0";
-		out.writeBytes("API "+sessionID+" ");
-		out.writeBytes(String.valueOf(body.length()));
-		out.writeByte('\n');
-		out.writeBytes(body);
-		for(int i=0; i<objects.size(); ++i)
-			objects.get(i).write(out);
-		out.flush();
+		
+		try{
+			out.writeBytes("API "+sessionID+" ");
+			out.writeBytes(String.valueOf(body.length()));
+			out.writeByte('\n');
+			out.writeBytes(body);
+			for(int i=0; i<objects.size(); ++i)
+				objects.get(i).write(out);
+			out.flush();
+		}
+		catch(Exception ex){
+			socket = null;
+			throw ex;
+		}
 		
 		ExtendedDataInput in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
 			new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
