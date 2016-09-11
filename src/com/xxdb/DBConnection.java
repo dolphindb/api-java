@@ -101,7 +101,6 @@ public class DBConnection {
 			out.writeBytes(body);
 			out.flush();
 			reconnect = true;
-			sessionID = null;
 		}
 		catch(Exception ex){
 			socket = null;
@@ -172,7 +171,6 @@ public class DBConnection {
 				arguments.get(i).write(out);
 			out.flush();
 			reconnect = true;
-			sessionID = null;
 		}
 		catch(Exception ex){
 			socket = null;
@@ -254,7 +252,6 @@ public class DBConnection {
 				objects.get(i).write(out);
 			out.flush();
 			reconnect = true;
-			sessionID = null;
 		}
 		catch(Exception ex){
 			socket = null;
