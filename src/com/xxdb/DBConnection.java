@@ -80,16 +80,9 @@ public class DBConnection {
 	
 	public Entity run(String script) throws IOException{
 		boolean reconnect = false;
-		if(socket == null || !socket.isConnected()){
-			if(sessionID.isEmpty())
+		if(socket == null || !socket.isConnected() || socket.isClosed() || sessionID.isEmpty())
 				throw new IOException("Database connection is not established yet.");
-			else{
-				reconnect = true;
-				socket = new Socket(hostName, port);
-				out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-			}
-		}
-		
+
 		String body = "script\n"+script;
 		
 		try{
@@ -98,6 +91,17 @@ public class DBConnection {
 			out.writeByte('\n');
 			out.writeBytes(body);
 			out.flush();
+		}
+		catch(IOException ex) {
+			socket = new Socket(hostName, port);
+			out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+			out.writeBytes("API "+sessionID+" ");
+			out.writeBytes(String.valueOf(body.length()));
+			out.writeByte('\n');
+			out.writeBytes(body);
+			out.flush();
+			reconnect = true;
+			sessionID = null;
 		}
 		catch(Exception ex){
 			socket = null;
@@ -141,15 +145,8 @@ public class DBConnection {
 	
 	public Entity run(String function, List<Entity> arguments) throws IOException{
 		boolean reconnect = false;
-		if(socket == null || !socket.isConnected()){
-			if(sessionID.isEmpty())
-				throw new IOException("Database connection is not established yet.");
-			else{
-				reconnect = true;
-				socket = new Socket(hostName, port);
-				out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-			}
-		}
+		if(socket == null || !socket.isConnected() || socket.isClosed() || sessionID.isEmpty())
+			throw new IOException("Database connection is not established yet.");
 		
 	    String body = "function\n"+function;
 		body += ("\n"+ arguments.size() +"\n");
@@ -163,6 +160,19 @@ public class DBConnection {
 			for(int i=0; i<arguments.size(); ++i)
 				arguments.get(i).write(out);
 			out.flush();
+		}
+		catch(IOException ex) {
+			socket = new Socket(hostName, port);
+			out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+			out.writeBytes("API "+sessionID+" ");
+			out.writeBytes(String.valueOf(body.length()));
+			out.writeByte('\n');
+			out.writeBytes(body);
+			for(int i=0; i<arguments.size(); ++i)
+				arguments.get(i).write(out);
+			out.flush();
+			reconnect = true;
+			sessionID = null;
 		}
 		catch(Exception ex){
 			socket = null;
@@ -205,15 +215,8 @@ public class DBConnection {
 	
 	public void upload(final Map<String, Entity> variableObjectMap) throws IOException{
 		boolean reconnect = false;
-		if(socket == null || !socket.isConnected()){
-			if(sessionID.isEmpty())
-				throw new IOException("Database connection is not established yet.");
-			else{
-				reconnect = true;
-				socket = new Socket(hostName, port);
-				out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-			}
-		}
+		if(socket == null || !socket.isConnected() || socket.isClosed() || sessionID.isEmpty())
+			throw new IOException("Database connection is not established yet.");
 		
 		if(variableObjectMap == null || variableObjectMap.isEmpty())
 			return;
@@ -239,6 +242,19 @@ public class DBConnection {
 			for(int i=0; i<objects.size(); ++i)
 				objects.get(i).write(out);
 			out.flush();
+		}
+		catch(IOException ex) {
+			socket = new Socket(hostName, port);
+			out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+			out.writeBytes("API "+sessionID+" ");
+			out.writeBytes(String.valueOf(body.length()));
+			out.writeByte('\n');
+			out.writeBytes(body);
+			for(int i=0; i<objects.size(); ++i)
+				objects.get(i).write(out);
+			out.flush();
+			reconnect = true;
+			sessionID = null;
 		}
 		catch(Exception ex){
 			socket = null;
