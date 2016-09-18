@@ -149,6 +149,9 @@ public class DBConnectionTest {
 	public void testAnyVector() throws IOException{
 		BasicAnyVector result = (BasicAnyVector)conn.run("{1, 2, {1,3, 5},{0.9, 0.8}}");
 		System.out.println(result.getString());
+		
+		result = (BasicAnyVector)conn.run("eachRight(def(x,y):x+y,1,(1,2,3))");
+		System.out.println(result.getString());
 	}
 	
 	public void testSet() throws IOException{
