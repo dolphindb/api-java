@@ -41,6 +41,15 @@ public class DBConnection {
 		sessionID = "";
 	}
 	
+	public boolean isBusy(){
+		if(!mutex.tryLock())
+			return true;
+		else{
+			mutex.unlock();
+			return false;
+		}
+	}
+	
 	public boolean connect(String hostName, int port) throws IOException{
 		mutex.lock();
 		try{
@@ -86,6 +95,70 @@ public class DBConnection {
 				remoteLittleEndian = true;
 			
 			return true;
+		}
+		finally{
+			mutex.unlock();
+		}
+	}
+	
+	public void disconnect() throws IOException{
+		if(sessionID.isEmpty())
+			return;
+		mutex.lock();
+		try{
+			boolean reconnect = false;
+			if(socket == null || !socket.isConnected() || socket.isClosed()){
+				reconnect = true;
+				socket = new Socket(hostName, port);
+			}
+	
+			String body = "disconnect\n";
+			
+			try{
+				out.writeBytes("API "+sessionID+" ");
+				out.writeBytes(String.valueOf(body.length()));
+				out.writeByte('\n');
+				out.writeBytes(body);
+				out.flush();
+			}
+			catch(IOException ex) {
+				if(reconnect){
+					socket = null;
+					throw ex;
+				}
+				
+				try {
+					socket = new Socket(hostName, port);
+					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+					out.writeBytes("API "+sessionID+" ");
+					out.writeBytes(String.valueOf(body.length()));
+					out.writeByte('\n');
+					out.writeBytes(body);
+					out.flush();
+					reconnect = true;
+				}
+				catch(Exception e){
+					socket = null;
+					throw e;
+				}
+			}
+			
+			ExtendedDataInput in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
+				new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
+			
+			String header = in.readLine();
+			String[] headers = header.split(" ");
+			if(headers.length != 3){
+				socket = null;
+				throw new IOException("Received invalid header: " + header);
+			}
+			
+			String msg = in.readLine();
+			if(!msg.equals("OK"))
+				throw new IOException(msg);
+			sessionID = "";
+			socket.close();
+			socket = null;
 		}
 		finally{
 			mutex.unlock();
