@@ -21,6 +21,7 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 import com.xxdb.io.LittleEndianDataInputStream;
 import com.xxdb.io.LittleEndianDataOutputStream;
+import com.xxdb.io.ProgressListener;
 
 public class DBConnection {
 	private static final int MAX_FORM_VALUE = DATA_FORM.values().length -1;
@@ -177,6 +178,10 @@ public class DBConnection {
 	}
 	
 	public Entity run(String script) throws IOException{
+		return run(script, (ProgressListener)null);
+	}
+	
+	public Entity run(String script, ProgressListener listener) throws IOException{
 		mutex.lock();
 		try{
 			boolean reconnect = false;
@@ -192,7 +197,7 @@ public class DBConnection {
 			String body = "script\n"+script;
 			
 			try{
-				out.writeBytes("API "+sessionID+" ");
+				out.writeBytes((listener != null ? "API2 " : "API ")+sessionID+" ");
 				out.writeBytes(String.valueOf(body.length()));
 				out.writeByte('\n');
 				out.writeBytes(body);
@@ -207,7 +212,7 @@ public class DBConnection {
 				try {
 					socket = new Socket(hostName, port);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-					out.writeBytes("API "+sessionID+" ");
+					out.writeBytes((listener != null ? "API2 " : "API ")+sessionID+" ");
 					out.writeBytes(String.valueOf(body.length()));
 					out.writeByte('\n');
 					out.writeBytes(body);
@@ -224,6 +229,14 @@ public class DBConnection {
 				new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
 			
 			String header = in.readLine();
+			while(header.equals("MSG")){
+				//read intermediate message to indicate the progress
+				String msg = in.readString();
+				if(listener != null)
+					listener.progress(msg);
+				header = in.readLine();
+			}
+			
 			String[] headers = header.split(" ");
 			if(headers.length != 3){
 				socket = null;
