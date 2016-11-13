@@ -191,6 +191,7 @@ public class DBConnection {
 				else{
 					reconnect = true;
 					socket = new Socket(hostName, port);
+					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 				}
 			}
 	
@@ -299,6 +300,7 @@ public class DBConnection {
 				else{
 					reconnect = true;
 					socket = new Socket(hostName, port);
+					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 				}
 			}
 			
@@ -408,6 +410,7 @@ public class DBConnection {
 				else{
 					reconnect = true;
 					socket = new Socket(hostName, port);
+					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 				}
 			}
 			
