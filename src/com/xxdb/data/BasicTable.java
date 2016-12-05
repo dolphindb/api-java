@@ -117,6 +117,7 @@ public class BasicTable extends AbstractEntity implements Table{
 	    int curCol=0;
 	    int maxColWidth;
 		StringBuilder[] list = new StringBuilder[rows+1];
+		StringBuilder separator = new StringBuilder();
 		String[] listTmp = new String[rows+1];
 	    int i,curSize;
 
@@ -135,12 +136,17 @@ public class BasicTable extends AbstractEntity implements Table{
 	    		maxColWidth=strColMaxWidth;
 	    	if((int)listTmp[0].length()>maxColWidth)
 	    		maxColWidth=Math.min(strColMaxWidth,(int)listTmp[0].length());
-	    	if(curCol<columns()-1)
-	    		maxColWidth++;
 
 	    	if(length+maxColWidth>Utils.DISPLAY_WIDTH && curCol+1<columns())
 	    		break;
 
+	    	for(int k=0; k<maxColWidth; ++k)
+	    		separator.append('-');
+	    	if(curCol<columns()-1){
+	    		maxColWidth++;
+	    		separator.append(' ');
+	    	}
+	    	
 	    	for(i=0;i<=rows;i++){
 	    		curSize=listTmp[i].length();
 	    		if(curSize<=maxColWidth){
@@ -154,6 +160,7 @@ public class BasicTable extends AbstractEntity implements Table{
 	    			if(maxColWidth>3)
 	    				list[i].append(listTmp[i].substring(0,maxColWidth-3));
 	    			list[i].append("...");
+	    			separator.append("---");
 	    		}
 	    	}
 	    	length+=maxColWidth;
@@ -165,8 +172,11 @@ public class BasicTable extends AbstractEntity implements Table{
 	    		list[i].append("...");
 	    }
 
-	    StringBuilder resultStr = new StringBuilder();
-	    for(i=0;i<=rows;i++){
+	    StringBuilder resultStr = new StringBuilder(list[0]);
+	    resultStr.append("\n");
+	    resultStr.append(separator);
+	    resultStr.append("\n");
+	    for(i=1;i<=rows;i++){
 	    	resultStr.append(list[i]);
 	    	resultStr.append("\n");
 	    }

@@ -1,12 +1,14 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.time.temporal.Temporal;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>{
+	private static final DecimalFormat df = new DecimalFormat("0.######");
 	private float value;
 
 	public BasicFloat(float value){
@@ -58,7 +60,7 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 		if(isNull())
 			return "";
 		else
-			return String.valueOf(value);
+			return df.format(value);
 	}
 	
 	@Override

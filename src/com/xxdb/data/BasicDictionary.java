@@ -131,31 +131,57 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 	}
 	
 	public String getString(){
-		StringBuilder sbKeys = new StringBuilder("{");
-		StringBuilder sbValues = new StringBuilder("{");
-		Set<Map.Entry<Scalar, Entity>> entries = dict.entrySet();
-		Iterator<Map.Entry<Scalar, Entity>> it = entries.iterator();
-		if(it.hasNext()){
-			Map.Entry<Scalar, Entity> entry = it.next();
-			sbKeys.append(entry.getKey().getString());
-			sbValues.append(entry.getValue().getString());
+		if(valueType == DATA_TYPE.DT_ANY){
+			StringBuilder content = new StringBuilder();
+			int count=0;
+			Set<Map.Entry<Scalar, Entity>> entries = dict.entrySet();
+			Iterator<Map.Entry<Scalar, Entity>> it = entries.iterator();
+			while(it.hasNext() && count<20){
+				Map.Entry<Scalar, Entity> entry = it.next();
+				content.append(entry.getKey().getString());
+				content.append("->");
+				DATA_FORM form = entry.getValue().getDataForm();
+				if(form == DATA_FORM.DF_MATRIX || form == DATA_FORM.DF_TABLE)
+					content.append("\n");
+				else if(form == DATA_FORM.DF_DICTIONARY)
+					content.append("{\n");
+				content.append(entry.getValue().getString());
+				if(form == DATA_FORM.DF_DICTIONARY)
+					content.append("}");
+				content.append("\n");
+				++count;
+			}
+			if(it.hasNext())
+				content.append("...\n");
+			return content.toString();
 		}
-		int count=1;
-		while(it.hasNext() && count<5){
-			Map.Entry<Scalar, Entity> entry = it.next();
-			sbKeys.append(',');
-			sbKeys.append(entry.getKey().getString());
-			sbValues.append(',');
-			sbValues.append(entry.getValue().getString());
-			++count;
+		else{
+			StringBuilder sbKeys = new StringBuilder("{");
+			StringBuilder sbValues = new StringBuilder("{");
+			Set<Map.Entry<Scalar, Entity>> entries = dict.entrySet();
+			Iterator<Map.Entry<Scalar, Entity>> it = entries.iterator();
+			if(it.hasNext()){
+				Map.Entry<Scalar, Entity> entry = it.next();
+				sbKeys.append(entry.getKey().getString());
+				sbValues.append(entry.getValue().getString());
+			}
+			int count=1;
+			while(it.hasNext() && count<20){
+				Map.Entry<Scalar, Entity> entry = it.next();
+				sbKeys.append(',');
+				sbKeys.append(entry.getKey().getString());
+				sbValues.append(',');
+				sbValues.append(entry.getValue().getString());
+				++count;
+			}
+			if(it.hasNext()){
+				sbKeys.append("...");
+				sbValues.append("...");
+			}
+			sbKeys.append("}");
+			sbValues.append("}");
+			return sbKeys.toString() + "->" + sbValues.toString();
 		}
-		if(it.hasNext()){
-			sbKeys.append("...");
-			sbValues.append("...");
-		}
-		sbKeys.append("}");
-		sbValues.append("}");
-		return sbKeys.toString() + "->" + sbValues.toString();
 	}
 	
 	public void write(ExtendedDataOutput out) throws IOException{
