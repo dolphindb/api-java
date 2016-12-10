@@ -27,8 +27,9 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[DATA_TYPE.DT_TIMESTAMP.ordinal()] = new TimestampFactory();
 		factories[DATA_TYPE.DT_STRING.ordinal()] = new StringFactory();
 		factories[DATA_TYPE.DT_FUNCTIONDEF.ordinal()] = new FunctionDefFactory();
-		factories[DATA_TYPE.DT_HANDLE.ordinal()] = new LongFactory();
+		factories[DATA_TYPE.DT_HANDLE.ordinal()] = new SystemHandleFactory();
 		factories[DATA_TYPE.DT_SYMBOL.ordinal()] = new SymbolFactory();
+		factories[DATA_TYPE.DT_CODE.ordinal()] = new MetaCodeFactory();
 	}
 	
 	@Override
@@ -288,7 +289,15 @@ public class BasicEntityFactory implements EntityFactory{
 	}
 	
 	private class FunctionDefFactory extends StringFactory{
-		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicString(in, DATA_TYPE.DT_FUNCTIONDEF);}
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, DATA_TYPE.DT_FUNCTIONDEF);}
+	}
+	
+	private class MetaCodeFactory extends StringFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, DATA_TYPE.DT_CODE);}
+	}
+	
+	private class SystemHandleFactory extends StringFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, DATA_TYPE.DT_HANDLE);}
 	}
 	
 	

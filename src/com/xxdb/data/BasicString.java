@@ -17,14 +17,12 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 		value = in.readString();
 	}
 	
-	public BasicString(ExtendedDataInput in, DATA_TYPE type) throws IOException{
-		if(type==DATA_TYPE.DT_FUNCTIONDEF)
-			in.readByte();
-		value = in.readString();
-	}
-	
 	public String getString(){
 		return value;
+	}
+	
+	protected void setString(String value){
+		this.value = value;
 	}
 	
 	@Override

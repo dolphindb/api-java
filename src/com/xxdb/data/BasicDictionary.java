@@ -185,7 +185,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 	}
 	
 	public void write(ExtendedDataOutput out) throws IOException{
-		if(valueType==DATA_TYPE.DT_DICTIONARY || valueType==DATA_TYPE.DT_STREAM)
+		if(valueType==DATA_TYPE.DT_DICTIONARY)
 			throw new IOException("Can't streamlize the dictionary with value type " + valueType.name());
 		
 		BasicEntityFactory factory = new BasicEntityFactory();
