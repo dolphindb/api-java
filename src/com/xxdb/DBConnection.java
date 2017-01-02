@@ -503,4 +503,12 @@ public class DBConnection {
 		}
 		return true;
 	}
+	
+	public String getHostName(){
+		return hostName;
+	}
+	
+	public int getPort(){
+		return port;
+	}
 }
