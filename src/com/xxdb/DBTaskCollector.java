@@ -116,5 +116,6 @@ public class DBTaskCollector{
 		}
 		DBTaskCollector dc = new DBTaskCollector();
 		dc.assembleTasks(Paths.get(args[0]), Paths.get(args[1]));
+		System.out.println("Done!");
 	}
 }

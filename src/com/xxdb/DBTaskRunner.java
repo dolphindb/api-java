@@ -27,7 +27,7 @@ public class DBTaskRunner implements Runnable {
 		if(t == null){
 			t = new Thread(this);
 		}
-		System.out.println(connStr + " starting " + taskId);
+		//System.out.println(connStr + " starting " + taskId);
 		t.start();
 	}
 	
