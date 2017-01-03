@@ -45,16 +45,12 @@ public class DBTaskCollector{
 			System.out.println("No valid DB Connections!");
 			return;
 		}
-		
-		for(String taskString: tasks){
-			String[] lines = taskString.split("\n");
-			if(lines[0].startsWith("//")){
-				String taskId = lines[0].substring(2, lines[0].length());
-				int randomNum = ThreadLocalRandom.current().nextInt(0, connectionList.size());
-				DBTaskRunner runner = new DBTaskRunner(taskId, taskString, connectionList.get(randomNum));
-				runner.sleep(500);
-				runner.start();
-			}
+		int randomNum = ThreadLocalRandom.current().nextInt(0, connectionList.size());
+		for(int i=0; i<5; i++){
+			Collections.shuffle(tasks);
+			String threadName = "Thread" + (i+1);
+			DBTaskRunner runner = new DBTaskRunner(threadName, tasks, connectionList.get(randomNum),100);
+			runner.start();
 		}
 	}
 	
