@@ -52,7 +52,7 @@ public class DBTaskCollector{
 				String taskId = lines[0].substring(2, lines[0].length());
 				int randomNum = ThreadLocalRandom.current().nextInt(0, connectionList.size());
 				DBTaskRunner runner = new DBTaskRunner(taskId, taskString, connectionList.get(randomNum));
-				runner.sleep(2000);
+				runner.sleep(500);
 				runner.start();
 			}
 		}
@@ -90,7 +90,7 @@ public class DBTaskCollector{
 				else{
 					script += line +"\n";
 				}
-				if(emptyCt>=2 &&prevLine.equals("")&&!line.equals("")){
+				if(emptyCt>=2 &&prevLine.equals("")&&line.startsWith("//")){
 					tasks.add(script);
 					script = line + "\n";
 					emptyCt = 0;

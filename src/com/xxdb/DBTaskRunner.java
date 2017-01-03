@@ -18,7 +18,10 @@ public class DBTaskRunner implements Runnable {
 			System.out.println(connStr + " running " + taskId);
 			conn.run(taskString);
 		} catch (IOException e) {
-			e.printStackTrace();
+			if(!taskId.toLowerCase().contains("_ex")){
+				e.printStackTrace();
+				System.out.println(taskString);
+			}
 		}
 	}
 	
