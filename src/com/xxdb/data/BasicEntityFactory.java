@@ -25,11 +25,12 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[DATA_TYPE.DT_MONTH.ordinal()] = new MonthFactory();
 		factories[DATA_TYPE.DT_DATETIME.ordinal()] = new DateTimeFactory();
 		factories[DATA_TYPE.DT_TIMESTAMP.ordinal()] = new TimestampFactory();
+		factories[DATA_TYPE.DT_SYMBOL.ordinal()] = new SymbolFactory();
 		factories[DATA_TYPE.DT_STRING.ordinal()] = new StringFactory();
 		factories[DATA_TYPE.DT_FUNCTIONDEF.ordinal()] = new FunctionDefFactory();
 		factories[DATA_TYPE.DT_HANDLE.ordinal()] = new SystemHandleFactory();
-		factories[DATA_TYPE.DT_SYMBOL.ordinal()] = new SymbolFactory();
 		factories[DATA_TYPE.DT_CODE.ordinal()] = new MetaCodeFactory();
+		factories[DATA_TYPE.DT_DATASOURCE.ordinal()] = new DataSourceFactory();
 	}
 	
 	@Override
@@ -294,6 +295,10 @@ public class BasicEntityFactory implements EntityFactory{
 	
 	private class MetaCodeFactory extends StringFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, DATA_TYPE.DT_CODE);}
+	}
+	
+	private class DataSourceFactory extends StringFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, DATA_TYPE.DT_DATASOURCE);}
 	}
 	
 	private class SystemHandleFactory extends StringFactory{
