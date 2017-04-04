@@ -8,7 +8,8 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>{
-	private static final DecimalFormat df = new DecimalFormat("0.######");
+	private static final DecimalFormat df1 = new DecimalFormat("0.######");
+	private static final DecimalFormat df2 = new DecimalFormat("0.######E0");
 	private float value;
 
 	public BasicFloat(float value){
@@ -59,8 +60,15 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 	public String getString() {
 		if(isNull())
 			return "";
-		else
-			return df.format(value);
+		else if(Float.isNaN(value) || Float.isInfinite(value))
+			return String.valueOf(value);
+		else{
+			float absVal = Math.abs(value);
+			if((absVal>0 && absVal<=0.000001) || absVal>=1000000.0)
+				return df2.format(value);
+			else
+				return df1.format(value);
+		}
 	}
 	
 	@Override
