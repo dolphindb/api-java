@@ -31,6 +31,7 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[DATA_TYPE.DT_HANDLE.ordinal()] = new SystemHandleFactory();
 		factories[DATA_TYPE.DT_CODE.ordinal()] = new MetaCodeFactory();
 		factories[DATA_TYPE.DT_DATASOURCE.ordinal()] = new DataSourceFactory();
+		factories[DATA_TYPE.DT_RESOURCE.ordinal()] = new DataSourceFactory();
 	}
 	
 	@Override
@@ -305,7 +306,9 @@ public class BasicEntityFactory implements EntityFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, DATA_TYPE.DT_HANDLE);}
 	}
 	
-	
+	private class ResourceFactory extends StringFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, DATA_TYPE.DT_RESOURCE);}
+	}
 	
 
 }
