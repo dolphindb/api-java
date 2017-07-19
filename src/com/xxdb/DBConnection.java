@@ -181,6 +181,45 @@ public class DBConnection {
 		return run(script, (ProgressListener)null);
 	}
 	
+	public boolean tryReconnect() throws IOException {
+		System.out.println("Try reconnect");
+		socket = new Socket(hostName, port);
+		out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+		@SuppressWarnings("resource")
+		ExtendedDataInput in = new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
+	    String body = "connect\n";
+		out.writeBytes("API 0 ");
+		out.writeBytes(String.valueOf(body.length()));
+		out.writeByte('\n');
+		out.writeBytes(body);
+		out.flush();
+		
+
+		String line = in.readLine();
+		int endPos = line.indexOf(' ');
+		if(endPos <= 0){
+			close();
+			return false;
+		}
+		sessionID = line.substring(0, endPos);
+	
+		int startPos = endPos +1;
+		endPos = line.indexOf(' ', startPos);
+		if(endPos != line.length()-2){
+			close();
+			return false;
+		}
+		
+		if(line.charAt(endPos +1) == '0'){
+			remoteLittleEndian = false;
+			out = new BigEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+		}
+		else
+			remoteLittleEndian = true;
+		
+		return true;
+	}
+	
 	public Entity run(String script, ProgressListener listener) throws IOException{
 		mutex.lock();
 		try{
@@ -189,20 +228,24 @@ public class DBConnection {
 				if(sessionID.isEmpty())
 					throw new IOException("Database connection is not established yet.");
 				else{
-					reconnect = true;
 					socket = new Socket(hostName, port);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 				}
 			}
 	
 			String body = "script\n"+script;
-			
+			ExtendedDataInput in = null;
+			String header = null;
 			try{
 				out.writeBytes((listener != null ? "API2 " : "API ")+sessionID+" ");
 				out.writeBytes(String.valueOf(body.length()));
 				out.writeByte('\n');
 				out.writeBytes(body);
 				out.flush();
+				
+				in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
+					new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
+				header = in.readLine();
 			}
 			catch(IOException ex) {
 				if(reconnect){
@@ -211,13 +254,16 @@ public class DBConnection {
 				}
 				
 				try {
-					socket = new Socket(hostName, port);
-					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+					tryReconnect();
 					out.writeBytes((listener != null ? "API2 " : "API ")+sessionID+" ");
 					out.writeBytes(String.valueOf(body.length()));
 					out.writeByte('\n');
 					out.writeBytes(body);
 					out.flush();
+					
+					in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
+						new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
+					header = in.readLine();
 					reconnect = true;
 				}
 				catch(Exception e){
@@ -226,10 +272,6 @@ public class DBConnection {
 				}
 			}
 			
-			ExtendedDataInput in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
-				new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
-			
-			String header = in.readLine();
 			while(header.equals("MSG")){
 				//read intermediate message to indicate the progress
 				String msg = in.readString();
@@ -298,7 +340,6 @@ public class DBConnection {
 				if(sessionID.isEmpty())
 					throw new IOException("Database connection is not established yet.");
 				else{
-					reconnect = true;
 					socket = new Socket(hostName, port);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 				}
@@ -307,7 +348,9 @@ public class DBConnection {
 		    String body = "function\n"+function;
 			body += ("\n"+ arguments.size() +"\n");
 			body += remoteLittleEndian ? "1" : "0";
-				
+			
+			ExtendedDataInput in = null;
+			String[] headers = null;
 			try{
 				out.writeBytes("API "+sessionID+" ");
 				out.writeBytes(String.valueOf(body.length()));
@@ -316,6 +359,10 @@ public class DBConnection {
 				for(int i=0; i<arguments.size(); ++i)
 					arguments.get(i).write(out);
 				out.flush();
+				
+				in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
+					new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
+				headers = in.readLine().split(" ");
 			}
 			catch(IOException ex) {
 				if(reconnect){
@@ -323,8 +370,8 @@ public class DBConnection {
 					throw ex;
 				}
 				
-				try {
-					socket = new Socket(hostName, port);
+				try {					
+					tryReconnect();
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 					out.writeBytes("API "+sessionID+" ");
 					out.writeBytes(String.valueOf(body.length()));
@@ -333,6 +380,10 @@ public class DBConnection {
 					for(int i=0; i<arguments.size(); ++i)
 						arguments.get(i).write(out);
 					out.flush();
+					
+					in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
+						new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
+					headers = in.readLine().split(" ");
 					reconnect = true;
 				}
 				catch(Exception e){
@@ -340,11 +391,7 @@ public class DBConnection {
 					throw e;
 				}
 			}
-			
-			ExtendedDataInput in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
-				new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
-			
-			String[] headers = in.readLine().split(" ");
+
 			if(headers.length != 3){
 				socket = null;
 				throw new IOException("Received invalid header.");
