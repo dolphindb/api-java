@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.xxdb.DBConnection;
 import com.xxdb.consumer.datatransferobject.IMessage;
@@ -14,17 +16,22 @@ import com.xxdb.data.Entity;
 
 public class Consumer {
 	
-	private ConsumerListenerManager _LsnMgr = null;
+	private ConsumerListenerManager _lsnMgr = null;
 	private String _host = "";
 	private int _port = 0;
 	// Global list , multithreading processing 
-	//private static List<IMessage> _list = new ArrayList<IMessage>();
 	private static BlockingQueue<IMessage> _list = new ArrayBlockingQueue<>(4096);
 	
+	private int _workerNumber = 0;
+	
 	public Consumer(String host,int port) {
-		this._LsnMgr = new ConsumerListenerManager();
+		this._lsnMgr = new ConsumerListenerManager();
 		this._host = host;
 		this._port = port;
+	}
+	
+	public void setConsumeThreadNumber (int number){
+		this._workerNumber = number;
 	}
 	
 	public static BlockingQueue<IMessage> getMessageQueue(){
@@ -33,7 +40,7 @@ public class Consumer {
 	
 	
 	public ConsumerListenerManager getConsumerListenerManager() {
-		return this._LsnMgr;
+		return this._lsnMgr;
 	}
 	
 	public void subscribe(String tableName) {
@@ -70,14 +77,23 @@ public class Consumer {
 			e.printStackTrace();
 		}	
 		
-		//start Worker thread to invoke consume handler 
-		MessageQueueWorker consumeQueueWorker = new MessageQueueWorker(this._LsnMgr);
-		Thread myThread2 = new Thread(consumeQueueWorker);
-		myThread2.start();
+		
+		//start Worker thread to invoke consume handler
+		if(this._workerNumber<=1){
+			MessageQueueWorker consumeQueueWorker = new MessageQueueWorker(this._lsnMgr);
+			Thread myThread2 = new Thread(consumeQueueWorker);
+			myThread2.start();
+		} else {
+			ExecutorService pool = Executors.newCachedThreadPool();
+			for (int i=0;i<this._workerNumber;i++) {
+				pool.execute(new MessageQueueWorker(this._lsnMgr));
+			}
+		}
+		
 	}
 	
 	public void addListener(MessageIncomingHandler listener){
-		this._LsnMgr.addMessageIncomingListener(listener);
+		this._lsnMgr.addMessageIncomingListener(listener);
 	}
 }
 
