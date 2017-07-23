@@ -75,21 +75,18 @@ public class Daemon {
 	protected ConsumerListenerManager getConsumerListenerManager() {
 		return this._lsnMgr;
 	}
-	
-	private CreateSubscribeListening _subscribeClient = null;
-	
+		
 	private String handleSubscribe(String host,int port,String tableName,MessageIncomingHandler handler) {
 
 		Entity re;
 		DBConnection dbConn = new DBConnection();
 		String topic = "";
 		
-		//start thread for socket accept when got a topic
-		if(_subscribeClient==null){	
-			_subscribeClient = new CreateSubscribeListening(this.ssocket);
+		//start thread for socket accept when got a topic	
+		CreateSubscribeListening _subscribeClient = new CreateSubscribeListening(this.ssocket);
 			Thread listeningThread = new Thread(_subscribeClient);
 			listeningThread.start();
-		}
+		
 		
 		try {
 			dbConn.connect(host, port);
@@ -181,9 +178,6 @@ public class Daemon {
 			this._serverSocket = serverSocket;
 		}
 		
-
-		
-		SimpleDateFormat df1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");//设置日期格式
 		
 		public void run(){
 			Socket socket = null;
@@ -197,17 +191,8 @@ public class Daemon {
 			ExtendedDataInput in = new LittleEndianDataInputStream(bis);
 			System.out.println("get in stream");
 
-			int ct=0;
-			Date ds = new Date();
 			while(true){
-				
-//				Date de = new Date();
-//				if(de.getTime()-ds.getTime() >=100){
-//					System.out.println("published number/100ms : " + ct);
-//					ct = 0;
-//					ds = new Date();
-//				}
-//				System.out.println("begin read");
+			
 				
 				Boolean b = in.readBoolean(); //true/false : big/Little
 				long msgid = in.readLong();
@@ -228,7 +213,6 @@ public class Daemon {
 					
 				}
 				
-				//System.out.println("form" + form + " type :" + type);	
 				DATA_FORM df = DATA_FORM.values()[form];
 				DATA_TYPE dt = DATA_TYPE.values()[type];
 				Entity body  = null;
@@ -237,8 +221,6 @@ public class Daemon {
 					body =  factory.createEntity(df, dt, in);
 				}
 				catch(Exception exception){
-//					System.out.println("form" + form + " type :" + type);	
-//					System.out.println("short=" + flag);
 					continue;
 				}
 				
@@ -250,14 +232,12 @@ public class Daemon {
 					int rowSize = dTable.getEntity(0).rows();
 					
 
-//					BasicTimestamp tend = null;
 					if(rowSize>=1){
 						if(rowSize==1){
 							BasicMessage rec = new BasicMessage(msgid,topic,dTable);
 							try {
-//								if(tend==null) tend = rec.getValue(0);
 								queue.put(rec);
-								ct ++;
+							
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}	
@@ -271,22 +251,14 @@ public class Daemon {
 									row.setEntity(j, entity);
 								}
 								BasicMessage rec = new BasicMessage(msgid,topic,row);
-//								if(tend==null) tend = rec.getValue(0);
 								try {
 									queue.put(rec);
 								} catch (InterruptedException e) {
-									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}
 							}
-							ct += rowSize;
 						}
 					}
-					
-//					Timestamp dpub = Timestamp.valueOf(tend.getTimestamp());
-//					TimingLogger.AddLog(dpub.getTime(), dreceived.getTime(),rowSize);
-//					System.out.println("parsing finished");
-//					System.out.println(df1.format(new Date()));
 				} else {
 					System.out.println("body is not vector");
 					System.out.println(body);
