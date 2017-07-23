@@ -177,11 +177,8 @@ public class Daemon {
 		
 		ServerSocket _serverSocket = null;
 		
-//		private String _topic = "";
-//		
 		public CreateSubscribeListening(ServerSocket serverSocket){
 			this._serverSocket = serverSocket;
-//			this._topic = topic;
 		}
 		
 
