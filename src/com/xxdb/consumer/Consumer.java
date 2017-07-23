@@ -19,7 +19,7 @@ public class Consumer {
 	private ConsumerListenerManager _lsnMgr = null;
 	private String _host = "";
 	private int _port = 0;
-	// Global list , multithreading processing 
+
 	private static BlockingQueue<IMessage> _list = new ArrayBlockingQueue<>(4096);
 	
 	private int _workerNumber = 0;
@@ -38,14 +38,12 @@ public class Consumer {
 		return _list;
 	}
 	
-	
 	public ConsumerListenerManager getConsumerListenerManager() {
 		return this._lsnMgr;
 	}
 	
-	public void subscribe(String tableName) {
+	public void subscribe(String tableName,MessageIncomingHandler handler) {
 
-		//start subscribe thread for listening incoming message
 		CreateSubscribeListening subscribeClient = new CreateSubscribeListening();
 		Thread myThread1 = new Thread(subscribeClient);
 		myThread1.start();
@@ -59,13 +57,16 @@ public class Consumer {
 			dbConn.connect(this._host, this._port);
 
 			List<Entity> params = new ArrayList<Entity>();
-			//1.取得生产者的topic
+
 			params.add(new BasicString(tableName));
 			re = dbConn.run("getSubscriptionTopic", params);
-			System.out.println("getSubscriptionTopic:" + re.getString());
+			String topic = re.getString();
+			System.out.println("getSubscriptionTopic:" + topic);
+
+			this._lsnMgr.addMessageIncomingListener(topic, handler);
 			
 			params.clear();
-			//2、通过publishTable把订阅者地址端口，订阅表名传过去
+
 			params.add(new BasicString("localhost"));
 			params.add(new BasicInt(60011));
 			params.add(new BasicString(tableName));
@@ -73,12 +74,11 @@ public class Consumer {
 			System.out.println("publishTable:" + re.getString());
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}	
 		
 		
-		//start Worker thread to invoke consume handler
 		if(this._workerNumber<=1){
 			MessageQueueWorker consumeQueueWorker = new MessageQueueWorker(this._lsnMgr);
 			Thread myThread2 = new Thread(consumeQueueWorker);
@@ -92,8 +92,5 @@ public class Consumer {
 		
 	}
 	
-	public void addListener(MessageIncomingHandler listener){
-		this._lsnMgr.addMessageIncomingListener(listener);
-	}
 }
 
