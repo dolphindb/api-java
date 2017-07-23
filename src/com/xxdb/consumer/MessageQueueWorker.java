@@ -19,29 +19,37 @@ public class MessageQueueWorker  implements Runnable{
 	
 	private ConsumerListenerManager _lsnMgr = null;
 	
-	public MessageQueueWorker(ConsumerListenerManager lgnMgr){
+	private String _topic = "";
+	
+	public MessageQueueWorker(String topic,ConsumerListenerManager lgnMgr){
 		this._lsnMgr = lgnMgr;
+		this._topic = topic;
 	}
+	
+	
+	
+
 	// consume message in queue
 	@Override
 	public void run() {
 		System.out.println("worker is fighting : find Message ");
-//		System.out.println(Consumer.getMessageQueue().size());
+
 		SimpleDateFormat df1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS");
 		int ct = 0;
 		Date ds = new Date();
 		Date dLastBusy = null;
 		boolean isprinted = false;
+		
+		BlockingQueue<IMessage> queue = Daemon.getMessageQueue(this._topic);
 		while(true){
 			
-			if(Consumer.getMessageQueue().size()>0)
+			if(queue.isEmpty() == false)
 			{
 //				System.out.println("find messages in queue");
 				IMessage msg = null;
 				try {
-					msg = Consumer.getMessageQueue().take();
+					msg = queue.take();
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				this._lsnMgr.fireEvent(msg);
