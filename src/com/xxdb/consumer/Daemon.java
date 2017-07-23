@@ -36,8 +36,6 @@ import com.xxdb.io.LittleEndianDataInputStream;
 public class Daemon {
 	
 	private ConsumerListenerManager _lsnMgr = null;
-	private String _host = "";
-	private int _port = 0;
 
 	private int _workerNumber = 0;
 	
@@ -49,17 +47,23 @@ public class Daemon {
 		this._listeningPort = port;
 	}
 	
-	public Daemon(String host,int port) {
+	public Daemon(int port) {
 		this._lsnMgr = new ConsumerListenerManager();
-		this._host = host;
-		this._port = port;
+		try {
+			ssocket = new ServerSocket(port);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public Daemon() {
+		this._lsnMgr = new ConsumerListenerManager();
 		try {
 			ssocket = new ServerSocket(this._listeningPort);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
 	public void setConsumeThreadNumber (int number){
 		this._workerNumber = number;
 	}
@@ -72,13 +76,23 @@ public class Daemon {
 		return this._lsnMgr;
 	}
 	
-	private String handleSubscribe(String tableName,MessageIncomingHandler handler) {
+	private CreateSubscribeListening _subscribeClient = null;
+	
+	private String handleSubscribe(String host,int port,String tableName,MessageIncomingHandler handler) {
 
 		Entity re;
 		DBConnection dbConn = new DBConnection();
 		String topic = "";
+		
+		//start thread for socket accept when got a topic
+		if(_subscribeClient==null){	
+			_subscribeClient = new CreateSubscribeListening(this.ssocket);
+			Thread listeningThread = new Thread(_subscribeClient);
+			listeningThread.start();
+		}
+		
 		try {
-			dbConn.connect(this._host, this._port);
+			dbConn.connect(host, port);
 
 			List<Entity> params = new ArrayList<Entity>();
 
@@ -86,11 +100,7 @@ public class Daemon {
 			re = dbConn.run("getSubscriptionTopic", params);
 			topic = re.getString();
 			System.out.println("getSubscriptionTopic:" + topic);
-
-			//start thread for socket accept when got a topic
-			CreateSubscribeListening subscribeClient = new CreateSubscribeListening(topic,this.ssocket);
-			Thread listeningThread = new Thread(subscribeClient);
-			listeningThread.start();
+		
 			if(handler!=null)
 				this._lsnMgr.addMessageIncomingListener(topic, handler);
 			QueueManager.addQueue(topic);
@@ -124,12 +134,12 @@ public class Daemon {
 		
 	}
 	
-	public void subscribe(String tableName,MessageIncomingHandler handler){
-		handleSubscribe(tableName, handler);
+	public void subscribe(String host,int port,String tableName,MessageIncomingHandler handler){
+		handleSubscribe(host,port,tableName, handler);
 	}
 	
-	public String subscribe(String tableName){
-		return handleSubscribe(tableName,null);
+	public String subscribe(String host,int port,String tableName){
+		return handleSubscribe(host,port,tableName,null);
 	}
 	
 	public ArrayList<IMessage> poll(String topic, long timeout){
@@ -137,8 +147,8 @@ public class Daemon {
 		ArrayList<IMessage> reArray = new ArrayList<IMessage>();
 		BlockingQueue<IMessage> queue = QueueManager.getQueue(topic);
 		Date ds = new Date();
-		 long start = ds.getTime();
-         long remaining = timeout;
+		long start = ds.getTime();
+        long remaining = timeout;
          
 		do{
 			if(queue.isEmpty() == false){
@@ -169,7 +179,7 @@ public class Daemon {
 		
 //		private String _topic = "";
 //		
-		public CreateSubscribeListening(String topic,ServerSocket serverSocket){
+		public CreateSubscribeListening(ServerSocket serverSocket){
 			this._serverSocket = serverSocket;
 //			this._topic = topic;
 		}

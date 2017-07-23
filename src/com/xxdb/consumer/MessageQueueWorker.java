@@ -63,7 +63,6 @@ public class MessageQueueWorker  implements Runnable{
 			else {
 				if(isprinted == false)
 				{
-					//计算统计均值
 					if(dLastBusy!=null){
 						Date de = new Date();
 						if(de.getTime() - dLastBusy.getTime() >=10000){
