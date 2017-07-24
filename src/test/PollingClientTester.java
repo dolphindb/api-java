@@ -16,6 +16,23 @@ public class PollingClientTester {
     public static void main(String args[]) {
         PollingClient client = new PollingClient();
 
+        /*
+        n=20000000
+        t=table(n:0,`time`sym`qty`price`exch,[TIMESTAMP,SYMBOL,INT,DOUBLE,SYMBOL])
+        share t as trades
+        setStream(trades,true)
+        t=NULL
+        rows = 1
+        timev = take(now(), rows)
+        symv = take(`MKFT, rows)
+        qtyv = take(112, rows)
+        pricev = take(53.75, rows)
+        exchv = take(`N, rows)
+        for(x in 0:2000000){
+        insert into trades values(timev, symv, qtyv, pricev, exchv)
+        }
+        insert into trades values(timev, symv, take(-1, 1), pricev, exchv)
+         */
         try {
             TopicPoller poller = client.subscribe("localhost", 8848, "trades", -1);
             int count = 0;
