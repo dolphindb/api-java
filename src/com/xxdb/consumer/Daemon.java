@@ -1,293 +1,31 @@
 package com.xxdb.consumer;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import com.xxdb.DBConnection;
-import com.xxdb.consumer.datatransferobject.BasicMessage;
-import com.xxdb.consumer.datatransferobject.IMessage;
-import com.xxdb.data.AbstractVector;
-import com.xxdb.data.BasicAnyVector;
-import com.xxdb.data.BasicEntityFactory;
-import com.xxdb.data.BasicInt;
-import com.xxdb.data.BasicString;
-import com.xxdb.data.Entity;
-import com.xxdb.data.EntityFactory;
-import com.xxdb.data.Entity.DATA_FORM;
-import com.xxdb.data.Entity.DATA_TYPE;
-import com.xxdb.io.ExtendedDataInput;
-import com.xxdb.io.LittleEndianDataInputStream;
-
-public class Daemon {
+public class Daemon  implements Runnable{
 	
-	private ConsumerListenerManager _lsnMgr = null;
-
-	private int _workerNumber = 0;
-	
-	ServerSocket ssocket = null;
-	
-	private int _listeningPort = 60011;
-	
-	public void setSubscriptPort(int port){
-		this._listeningPort = port;
-	}
+	private int _listeningPort = 0;
 	
 	public Daemon(int port) {
-		this._lsnMgr = new ConsumerListenerManager();
-		try {
-			ssocket = new ServerSocket(port);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		this._listeningPort = port;
 	}
 
-	public Daemon() {
-		this._lsnMgr = new ConsumerListenerManager();
-		try {
-			ssocket = new ServerSocket(this._listeningPort);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	public void setConsumeThreadNumber (int number){
-		this._workerNumber = number;
-	}
-	
-	protected static BlockingQueue<IMessage> getMessageQueue(String topic){
-		return QueueManager.getQueue(topic);
-	}
-	
-	protected ConsumerListenerManager getConsumerListenerManager() {
-		return this._lsnMgr;
-	}
-		
-	private String handleSubscribe(String host,int port,String tableName,MessageIncomingHandler handler) {
-
-		Entity re;
-		DBConnection dbConn = new DBConnection();
-		String topic = "";
-		
-		//start thread for socket accept when got a topic	
-		CreateSubscribeListening _subscribeClient = new CreateSubscribeListening(this.ssocket);
-		Thread listeningThread = new Thread(_subscribeClient);
-		listeningThread.start();
-		
+	@Override
+	public void run() {
 		
 		try {
-			dbConn.connect(host, port);
-
-			List<Entity> params = new ArrayList<Entity>();
-
-			params.add(new BasicString(tableName));
-			re = dbConn.run("getSubscriptionTopic", params);
-			topic = re.getString();
-			System.out.println("getSubscriptionTopic:" + topic);
-		
-			if(handler!=null)
-				this._lsnMgr.addMessageIncomingListener(topic, handler);
-			QueueManager.addQueue(topic);
-			params.clear();
-
-			params.add(new BasicString("localhost"));
-			params.add(new BasicInt(this._listeningPort));
-			params.add(new BasicString(tableName));
-			re = dbConn.run("publishTable", params);
-			System.out.println("publishTable:" + re.getString());
-
+			ServerSocket ssocket = new ServerSocket(this._listeningPort);
+			while(true)
+			{
+				Socket socket = ssocket.accept();
+				MessageQueueParser listener = new MessageQueueParser(socket);
+				Thread listeningThread = new Thread(listener);
+				listeningThread.start();
+			}
 		} catch (IOException e) {
-
 			e.printStackTrace();
-		}	
-		
-		if(handler!=null){
-			if(this._workerNumber<=1){
-				MessageQueueWorker consumeQueueWorker = new MessageQueueWorker(topic,this._lsnMgr);
-				Thread myThread2 = new Thread(consumeQueueWorker);
-				myThread2.start();
-			} else {
-				ExecutorService pool = Executors.newCachedThreadPool();
-				for (int i=0;i<this._workerNumber;i++) {
-					pool.execute(new MessageQueueWorker(topic,this._lsnMgr));
-				}
-			}
-		}
-		
-		return topic;
-		
-	}
-	
-	public void subscribe(String host,int port,String tableName,MessageIncomingHandler handler){
-		handleSubscribe(host,port,tableName, handler);
-	}
-	
-	public String subscribe(String host,int port,String tableName){
-		return handleSubscribe(host,port,tableName,null);
-	}
-	
-	public ArrayList<IMessage> poll(String topic, long timeout){
-
-		ArrayList<IMessage> reArray = new ArrayList<IMessage>();
-		BlockingQueue<IMessage> queue = QueueManager.getQueue(topic);
-		Date ds = new Date();
-		long start = ds.getTime();
-        long remaining = timeout;
-         
-		do{
-			if(queue.isEmpty() == false){
-				try {
-					reArray.add(queue.take());
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			
-			long elapsed = (new Date()).getTime() - start;
-            remaining = timeout - elapsed;
-		} while (remaining > 0);
-		return reArray;
-	}
-	
-	public class CreateSubscribeListening implements Runnable{
-		
-		private final int MAX_FORM_VALUE = DATA_FORM.values().length -1;
-		private final int MAX_TYPE_VALUE = DATA_TYPE.values().length -1;
-
-		//1¡£ start socketServer and listening
-		//2. receive message
-		//3. add message to queue
-		BufferedInputStream bis = null;
-		
-		ServerSocket _serverSocket = null;
-		
-		public CreateSubscribeListening(ServerSocket serverSocket){
-			this._serverSocket = serverSocket;
-		}
-		
-		
-		public void run(){
-			Socket socket = null;
-			
-			try {
-		
-			socket  = this._serverSocket.accept();
-			if(bis == null) bis= new BufferedInputStream(socket.getInputStream());
-			
-			ExtendedDataInput in = new LittleEndianDataInputStream(bis);
-
-			while(true){
-				Boolean b = in.readBoolean(); //true/false : big/Little
-				long msgid = in.readLong();
-				String topic = in.readString();
-				short flag = in.readShort();
-
-				BlockingQueue<IMessage> queue = Daemon.getMessageQueue(topic);
-				
-				EntityFactory factory = new BasicEntityFactory();
-				int form = flag>>8;
-				int type = flag & 0xff;
-				
-				if(form < 0 || form > MAX_FORM_VALUE)
-					throw new IOException("Invalid form value: " + form);
-				if(type <0 || type > MAX_TYPE_VALUE){
-					throw new IOException("Invalid type value: " + type);
-					
-				}
-				
-				DATA_FORM df = DATA_FORM.values()[form];
-				DATA_TYPE dt = DATA_TYPE.values()[type];
-				Entity body  = null;
-				try
-				{
-					body =  factory.createEntity(df, dt, in);
-				}
-				catch(Exception exception){
-					continue;
-				}
-				
-				
-				if(body.isVector()){
-					BasicAnyVector dTable = (BasicAnyVector)body;
-					
-					int colSize = dTable.rows();
-					int rowSize = dTable.getEntity(0).rows();
-					
-
-					if(rowSize>=1){
-						if(rowSize==1){
-							BasicMessage rec = new BasicMessage(msgid,topic,dTable);
-							try {
-								queue.put(rec);
-							
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}	
-						} else {
-							for(int i=0;i<rowSize;i++){
-								BasicAnyVector row = new BasicAnyVector(colSize);
-								
-								for(int j=0;j<colSize;j++){
-									AbstractVector vector = (AbstractVector)dTable.getEntity(j);
-									Entity entity = vector.get(i);
-									row.setEntity(j, entity);
-								}
-								BasicMessage rec = new BasicMessage(msgid,topic,row);
-								try {
-									queue.put(rec);
-								} catch (InterruptedException e) {
-									e.printStackTrace();
-								}
-							}
-						}
-					}
-				} else {
-					System.out.println("body is not vector");
-					System.out.println(body);
-				}
-			}
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			try {
-				socket.close();
-				ssocket.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		}
-		
-	}
-	
-	public static class QueueManager {
-		
-		private static HashMap<String, BlockingQueue<IMessage>> _queueMap = new HashMap();
-		
-		public static void addQueue(String topic) {
-			if(!_queueMap.containsKey(topic)){
-				BlockingQueue<IMessage> q = new ArrayBlockingQueue<>(4096);
-				_queueMap.put(topic, q);
-			}
-		}
-		
-		public static BlockingQueue<IMessage> getQueue(String topic) {
-			BlockingQueue<IMessage> q = null;
-			if(_queueMap.containsKey(topic)){
-				 q = _queueMap.get(topic);
-			}
-			return q;
 		}
 		
 	}

@@ -29,7 +29,7 @@ public class MessageQueueWorker  implements Runnable{
 	// consume message in queue
 	@Override
 	public void run() {
-		BlockingQueue<IMessage> queue = Daemon.getMessageQueue(this._topic);
+		BlockingQueue<IMessage> queue = QueueManager.getQueue(this._topic);
 		while(true){
 			
 			if(queue.isEmpty() == false)
