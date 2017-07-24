@@ -2,28 +2,28 @@ package com.xxdb.client;
 import java.util.HashMap;
 import com.xxdb.client.datatransferobject.IMessage;
 
-public class ConsumerListenerManager {
+public class HandlerManager {
 
 
-	private HashMap<String, MessageIncomingHandler> listeners ;
+	private HashMap<String, IncomingMessageHandler> handlers;
 
-    public void addMessageIncomingListener(String topic,MessageIncomingHandler listener) {
-        if (listeners == null) {
-            listeners = new HashMap<String,MessageIncomingHandler>();
+    public void addIncomingMessageHandler(String topic, IncomingMessageHandler listener) {
+        if (handlers == null) {
+            handlers = new HashMap<String,IncomingMessageHandler>();
         }
-        listeners.put(topic,listener);
+        handlers.put(topic,listener);
     }
 
 
-    public MessageIncomingHandler removeMessageIncomingListener(String topic) {
-        if (listeners == null)
+    public IncomingMessageHandler removeIncomingMessageHandler(String topic) {
+        if (handlers == null)
             return null;
-        return listeners.remove(topic);
+        return handlers.remove(topic);
     }
 
 
     public void fireEvent(IMessage msg) {
-        if (listeners == null)
+        if (handlers == null)
             return;
 
         notifyListeners(msg);
@@ -32,9 +32,9 @@ public class ConsumerListenerManager {
 
     private void notifyListeners(IMessage msg) {
 
-    	MessageIncomingHandler listener = listeners.get(msg.getTopic());
+    	IncomingMessageHandler listener = handlers.get(msg.getTopic());
     	if(listener!=null) 	{
-    		listener.DoEvent(msg);
+    		listener.doEvent(msg);
     	}
     	
     }

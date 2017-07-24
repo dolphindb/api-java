@@ -20,6 +20,7 @@ public class BasicAnyVector extends AbstractVector{
 		int cols = in.readInt();
 		int size = rows * cols;
 		values = new Entity[size];
+		assert(rows <= 1024);
 		BasicEntityFactory factory = new BasicEntityFactory();
 		for(int i=0; i<size; ++i){
 			short flag = in.readShort();
@@ -28,6 +29,7 @@ public class BasicAnyVector extends AbstractVector{
 			Entity obj = factory.createEntity(DATA_FORM.values()[form], DATA_TYPE.values()[type], in);
 			values[i] = obj;
 		}
+
 	}
 	
 	public Entity getEntity(int index){

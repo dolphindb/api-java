@@ -3,6 +3,6 @@ import java.util.EventListener;
 
 import com.xxdb.client.datatransferobject.IMessage;
 
-public interface MessageIncomingHandler extends EventListener {
-	public void DoEvent(IMessage msg);
+public interface IncomingMessageHandler extends EventListener {
+	public void doEvent(IMessage msg);
 }

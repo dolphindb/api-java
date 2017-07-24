@@ -1,35 +1,30 @@
-package com.xxdb.consumer;
+package com.xxdb.client;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.xxdb.consumer.datatransferobject.IMessage;
+import com.xxdb.client.datatransferobject.IMessage;
 
 public class MessageQueueWorker  implements Runnable{
 
 	private ReentrantLock lock = new ReentrantLock(); 
 	
-	private ConsumerListenerManager _lsnMgr = null;
+	private HandlerManager _lsnMgr = null;
 	
 	private String _topic = "";
-	
-	public MessageQueueWorker(String topic,ConsumerListenerManager lgnMgr){
+
+	private QueueManager _queueManager;
+	public MessageQueueWorker(String topic,HandlerManager lgnMgr, QueueManager queueManager){
 		this._lsnMgr = lgnMgr;
 		this._topic = topic;
+		this._queueManager = queueManager;
 	}
 	
 	// consume message in queue
 	@Override
 	public void run() {
-		BlockingQueue<IMessage> queue = QueueManager.getQueue(this._topic);
+		BlockingQueue<IMessage> queue = _queueManager.getQueue(this._topic);
 		while(true){
 			
 			if(queue.isEmpty() == false)

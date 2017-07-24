@@ -1,12 +1,13 @@
-package com.xxdb.consumer;
+package com.xxdb.client;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 
-import com.xxdb.consumer.datatransferobject.BasicMessage;
-import com.xxdb.consumer.datatransferobject.IMessage;
+import com.xxdb.client.datatransferobject.BasicMessage;
+import com.xxdb.client.datatransferobject.IMessage;
 import com.xxdb.data.AbstractVector;
 import com.xxdb.data.BasicAnyVector;
 import com.xxdb.data.BasicEntityFactory;
@@ -22,15 +23,16 @@ public class MessageQueueParser implements Runnable{
 		private final int MAX_FORM_VALUE = DATA_FORM.values().length -1;
 		private final int MAX_TYPE_VALUE = DATA_TYPE.values().length -1;
 
-		//1¡£ start socketServer and listening
+		//1ï¿½ï¿½ start socketServer and listening
 		//2. receive message
 		//3. add message to queue
 		BufferedInputStream bis = null;
 		
 		Socket _socket = null;
-		
-		public MessageQueueParser(Socket socket){
+		QueueManager _queueManager;
+		public MessageQueueParser(Socket socket, QueueManager queueManager){
 			this._socket = socket;
+			this._queueManager = queueManager;
 		}
 		
 		
@@ -42,15 +44,16 @@ public class MessageQueueParser implements Runnable{
 			if(bis == null) bis= new BufferedInputStream(socket.getInputStream());
 			
 			ExtendedDataInput in = new LittleEndianDataInputStream(bis);
-
+			int count = 0;
 			while(true){
-				System.out.println("begin read ");
+
+				//System.out.println("begin read ");
 				Boolean b = in.readBoolean(); //true/false : big/Little
 				long msgid = in.readLong();
 				String topic = in.readString();
 				short flag = in.readShort();
 
-				BlockingQueue<IMessage> queue = QueueManager.getQueue(topic);
+				BlockingQueue<IMessage> queue = _queueManager.getQueue(topic);
 				
 				EntityFactory factory = new BasicEntityFactory();
 				int form = flag>>8;
@@ -86,12 +89,17 @@ public class MessageQueueParser implements Runnable{
 					if(rowSize>=1){
 						if(rowSize==1){
 							BasicMessage rec = new BasicMessage(msgid,topic,dTable);
+
 							try {
-								queue.put(rec);
-							
+								if (queue.offer(rec) == false) {
+									synchronized (_queueManager) {
+										_queueManager.notify();
+									}
+									queue.put(rec);
+								}
 							} catch (InterruptedException e) {
 								e.printStackTrace();
-							}	
+							}
 						} else {
 							for(int i=0;i<rowSize;i++){
 								BasicAnyVector row = new BasicAnyVector(colSize);
@@ -103,7 +111,12 @@ public class MessageQueueParser implements Runnable{
 								}
 								BasicMessage rec = new BasicMessage(msgid,topic,row);
 								try {
-									queue.put(rec);
+									if (queue.offer(rec) == false) {
+										synchronized (_queueManager) {
+											_queueManager.notify();
+										}
+										queue.put(rec);
+									}
 								} catch (InterruptedException e) {
 									e.printStackTrace();
 								}
@@ -113,6 +126,10 @@ public class MessageQueueParser implements Runnable{
 				} else {
 					System.out.println("body is not vector");
 					System.out.println(body);
+				}
+				++count;
+				if (count % 10000 == 0) {
+					System.out.println("count:" + count);
 				}
 			}
 

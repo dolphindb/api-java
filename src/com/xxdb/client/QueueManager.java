@@ -1,27 +1,27 @@
-package com.xxdb.consumer;
+package com.xxdb.client;
 
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import com.xxdb.consumer.datatransferobject.IMessage;
+import com.xxdb.client.datatransferobject.IMessage;
+import jdk.nashorn.internal.ir.Block;
 
 public class QueueManager {
 		
-		private static HashMap<String, BlockingQueue<IMessage>> _queueMap = new HashMap();
+		private HashMap<String, BlockingQueue<IMessage>> _queueMap = new HashMap();
 		
-		public static void addQueue(String topic) {
+		public synchronized BlockingQueue<IMessage> addQueue(String topic) {
 			if(!_queueMap.containsKey(topic)){
 				BlockingQueue<IMessage> q = new ArrayBlockingQueue<>(4096);
 				_queueMap.put(topic, q);
+				return q;
 			}
+			throw new RuntimeException("Topic " + topic + " already subscribed");
 		}
 		
-		public static BlockingQueue<IMessage> getQueue(String topic) {
-			BlockingQueue<IMessage> q = null;
-			if(_queueMap.containsKey(topic)){
-				 q = _queueMap.get(topic);
-			}
+		public synchronized BlockingQueue<IMessage> getQueue(String topic) {
+			BlockingQueue<IMessage> q = _queueMap.get(topic);;
 			return q;
 		}
 		

@@ -1,4 +1,4 @@
-package com.xxdb.consumer.datatransferobject;
+package com.xxdb.client.datatransferobject;
 
 import com.xxdb.data.Entity;
 
