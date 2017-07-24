@@ -1,6 +1,6 @@
-package com.xxdb.consumer;
+package com.xxdb.client;
 import java.util.HashMap;
-import com.xxdb.consumer.datatransferobject.IMessage;
+import com.xxdb.client.datatransferobject.IMessage;
 
 public class ConsumerListenerManager {
 

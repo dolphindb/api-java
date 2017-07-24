@@ -1,38 +1,40 @@
-package com.xxdb.consumer;
+package com.xxdb.client;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.xxdb.DBConnection;
-import com.xxdb.consumer.datatransferobject.IMessage;
+import com.xxdb.client.datatransferobject.IMessage;
 import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicString;
 import com.xxdb.data.Entity;
 
-public class Consumer {
-	private ConsumerListenerManager _lsnMgr = null;
+public abstract class Client {
+	private HandlerManager _lsnMgr = null;
 
 	private int _workerNumber = 0;
 	
 	private int _listeningPort = 8849;
-	
-	public Consumer(int subscribePort){
-		this._lsnMgr = new ConsumerListenerManager();
+
+	private QueueManager _queueManager = new QueueManager();
+	public Client(int subscribePort){
+		this._lsnMgr = new HandlerManager();
 		this._listeningPort = subscribePort;
-		Daemon daemon = new Daemon(subscribePort);
+		Daemon daemon = new Daemon(subscribePort, _queueManager);
 		Thread pThread = new Thread(daemon);
 		pThread.start();
 	}
-		
+
 	public ArrayList<IMessage> poll(String topic, long timeout){
 
 		ArrayList<IMessage> reArray = new ArrayList<IMessage>();
-		BlockingQueue<IMessage> queue = QueueManager.getQueue(topic);
+		BlockingQueue<IMessage> queue = _queueManager.getQueue(topic);
 		Date ds = new Date();
 		long start = ds.getTime();
         long remaining = timeout;
@@ -56,12 +58,12 @@ public class Consumer {
 	public void setConsumeThreadNumber (int number){
 		this._workerNumber = number;
 	}
-	
-	protected ConsumerListenerManager getConsumerListenerManager() {
+
+	protected HandlerManager getConsumerListenerManager() {
 		return this._lsnMgr;
 	}
-		
-	private String handleSubscribe(String host,int port,String tableName,MessageIncomingHandler handler) {
+
+	private String handleSubscribe(String host,int port,String tableName,IncomingMessageHandler handler) {
 
 		Entity re;
 		DBConnection dbConn = new DBConnection();
@@ -79,8 +81,8 @@ public class Consumer {
 			System.out.println("getSubscriptionTopic:" + topic);
 		
 			if(handler!=null)
-				this._lsnMgr.addMessageIncomingListener(topic, handler);
-			QueueManager.addQueue(topic);
+				this._lsnMgr.addIncomingMessageHandler(topic, handler);
+			_queueManager.addQueue(topic);
 			params.clear();
 
 			params.add(new BasicString("localhost"));
@@ -95,20 +97,20 @@ public class Consumer {
 		
 		if(handler!=null){
 			if(this._workerNumber<=1){
-				MessageQueueWorker consumeQueueWorker = new MessageQueueWorker(topic,this._lsnMgr);
+				MessageQueueWorker consumeQueueWorker = new MessageQueueWorker(topic,this._lsnMgr,_queueManager );
 				Thread myThread2 = new Thread(consumeQueueWorker);
 				myThread2.start();
 			} else {
 				ExecutorService pool = Executors.newCachedThreadPool();
 				for (int i=0;i<this._workerNumber;i++) {
-					pool.execute(new MessageQueueWorker(topic,this._lsnMgr));
+					pool.execute(new MessageQueueWorker(topic,this._lsnMgr, _queueManager));
 				}
 			}
 		}
 		return topic;
 	}
 	
-	public void subscribe(String host,int port,String tableName,MessageIncomingHandler handler){
+	public void subscribe(String host,int port,String tableName,IncomingMessageHandler handler){
 		handleSubscribe(host,port,tableName, handler);
 	}
 	
