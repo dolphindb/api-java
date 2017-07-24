@@ -4,19 +4,14 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.Time;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.IllegalFormatCodePointException;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.omg.CORBA.PolicyListHelper;
 
 import com.xxdb.DBConnection;
 import com.xxdb.consumer.datatransferobject.BasicMessage;
@@ -84,8 +79,8 @@ public class Daemon {
 		
 		//start thread for socket accept when got a topic	
 		CreateSubscribeListening _subscribeClient = new CreateSubscribeListening(this.ssocket);
-			Thread listeningThread = new Thread(_subscribeClient);
-			listeningThread.start();
+		Thread listeningThread = new Thread(_subscribeClient);
+		listeningThread.start();
 		
 		
 		try {
@@ -184,16 +179,12 @@ public class Daemon {
 			
 			try {
 		
-			System.out.println("acceptint socket...");
 			socket  = this._serverSocket.accept();
-			System.out.println("socket accepted!");
 			if(bis == null) bis= new BufferedInputStream(socket.getInputStream());
+			
 			ExtendedDataInput in = new LittleEndianDataInputStream(bis);
-			System.out.println("get in stream");
 
 			while(true){
-			
-				
 				Boolean b = in.readBoolean(); //true/false : big/Little
 				long msgid = in.readLong();
 				String topic = in.readString();
@@ -202,7 +193,6 @@ public class Daemon {
 				BlockingQueue<IMessage> queue = Daemon.getMessageQueue(topic);
 				
 				EntityFactory factory = new BasicEntityFactory();
-
 				int form = flag>>8;
 				int type = flag & 0xff;
 				
