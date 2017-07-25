@@ -87,7 +87,7 @@ public class MessageQueueParser implements Runnable{
 				
 				end = System.currentTimeMillis();
 	            System.out.println(" parsing body took " + (end - start) + "ms");
-	            /*
+	            
 				if(body.isVector()){
 					BasicAnyVector dTable = (BasicAnyVector)body;
 					
@@ -139,7 +139,7 @@ public class MessageQueueParser implements Runnable{
 					System.out.println("body is not vector");
 					System.out.println(body);
 				}
-				*/
+				
 			}
 
 		} catch (IOException e) {
