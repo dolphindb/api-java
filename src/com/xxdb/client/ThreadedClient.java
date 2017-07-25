@@ -5,17 +5,16 @@ import com.xxdb.client.datatransferobject.IMessage;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 
-/**
- * Created by root on 7/24/17.
- */
+
 public class ThreadedClient extends  AbstractClient {
-    // A ThreadedClient using the default subscribe port 8849.
-    public ThreadedClient() {
+
+	public ThreadedClient() {
         this(DEFAULT_PORT);
     }
     public ThreadedClient(int subscribePort){
         super(subscribePort);
     }
+    
     class HandlerLopper extends Thread{
         BlockingQueue<IMessage> queue;
         IncomingMessageHandler handler;

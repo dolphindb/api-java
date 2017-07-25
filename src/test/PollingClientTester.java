@@ -34,7 +34,7 @@ public class PollingClientTester {
         insert into trades values(timev, symv, take(-1, 1), pricev, exchv,x)
          */
         try {
-            TopicPoller poller1 = client.subscribe("192.168.1.25", 8801, "trades1", -1);
+            TopicPoller poller1 = client.subscribe("192.168.1.25", 8801, "trades1", 0);
             //TopicPoller poller2 = client.subscribe("192.168.1.25", 8801, "trades2", -1);
             int count = 0;
             boolean started = false;
@@ -42,10 +42,13 @@ public class PollingClientTester {
             while (true) {
                 ArrayList<IMessage> msgs = poller1.poll(1000);
                 if (msgs.size() > 0 && started == false) {
+                	
                     started = true;
                     start = System.currentTimeMillis();
                 }
+                
                 count += msgs.size();
+                System.out.println("get message " + count);
                 if (msgs.size() > 0) {
                     if (((BasicInt)msgs.get(msgs.size() - 1).getEntity(2)).getInt() == -1) {
                         break;

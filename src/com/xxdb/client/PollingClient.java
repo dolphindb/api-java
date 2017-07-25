@@ -6,9 +6,6 @@ import com.xxdb.client.datatransferobject.IMessage;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 
-/**
- * Created by root on 7/24/17.
- */
 public class PollingClient extends AbstractClient{
     public PollingClient() {
         this(DEFAULT_PORT);

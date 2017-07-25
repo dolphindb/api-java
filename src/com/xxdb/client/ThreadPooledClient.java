@@ -8,12 +8,10 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * Created by root on 7/24/17.
- */
+
 public class ThreadPooledClient extends  AbstractClient {
-    // A ThreadedClient using the default subscribe port 8849 and thread count.
-    private static int CORES = Runtime.getRuntime().availableProcessors();
+
+	private static int CORES = Runtime.getRuntime().availableProcessors();
     private ExecutorService threadPool;
     private ArrayList<BlockingQueue<IMessage>> topicQueues = new ArrayList<>();
     private ArrayList<IncomingMessageHandler> handlers = new ArrayList<>();
@@ -38,8 +36,8 @@ public class ThreadPooledClient extends  AbstractClient {
                     }
                     if (scheduled == false) {
                         try {
-                            synchronized (_queueManager) {
-                                _queueManager.wait();
+                            synchronized (queueManager) {
+                                queueManager.wait();
                             }
                         } catch (InterruptedException e) {
                             e.printStackTrace();

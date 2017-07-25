@@ -6,9 +6,7 @@ import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by root on 7/24/17.
- */
+
 public class TopicPoller {
     BlockingQueue<IMessage> queue;
     public TopicPoller(BlockingQueue<IMessage> queue) {

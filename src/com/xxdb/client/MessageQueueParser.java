@@ -20,137 +20,109 @@ import com.xxdb.io.LittleEndianDataInputStream;
 
 public class MessageQueueParser implements Runnable{
 		
-		private final int MAX_FORM_VALUE = DATA_FORM.values().length -1;
-		private final int MAX_TYPE_VALUE = DATA_TYPE.values().length -1;
+	private final int MAX_FORM_VALUE = DATA_FORM.values().length -1;
+	private final int MAX_TYPE_VALUE = DATA_TYPE.values().length -1;
 
-		//1�� start socketServer and listening
-		//2. receive message
-		//3. add message to queue
-		BufferedInputStream bis = null;
+	BufferedInputStream bis = null;
+	Socket socket = null;
+	QueueManager queueManager;
+	public MessageQueueParser(Socket socket, QueueManager queueManager){
+		this.socket = socket;
+		this.queueManager = queueManager;
+	}
+	
+	public void run(){
+		Socket socket = this.socket;
 		
-		Socket _socket = null;
-		QueueManager _queueManager;
-		public MessageQueueParser(Socket socket, QueueManager queueManager){
-			this._socket = socket;
-			this._queueManager = queueManager;
-		}
-		
-		
-		public void run(){
-			Socket socket = this._socket;
+		try {
+		if(bis == null) bis= new BufferedInputStream(socket.getInputStream());
+	
+		ExtendedDataInput in = new LittleEndianDataInputStream(bis);
+		while(true){
 			
-			try {
-
-			if(bis == null) bis= new BufferedInputStream(socket.getInputStream());
+			Boolean b = in.readBoolean(); //true/false : big/Little
+			long msgid = in.readLong();
+			String topic = in.readString();
+			short flag = in.readShort();
+				
+			BlockingQueue<IMessage> queue = queueManager.getQueue(topic);
+				
+			EntityFactory factory = new BasicEntityFactory();
+			int form = flag>>8;
+			int type = flag & 0xff;
 			
-			ExtendedDataInput in = new LittleEndianDataInputStream(bis);
-			int count = 0;
-			while(true){
-				++count;
-				if (count % 10 == 0) {
-					System.out.println("count:" + count);
-				}
-				long start = System.currentTimeMillis();
-				//System.out.println("begin read ");
-				Boolean b = in.readBoolean(); //true/false : big/Little
-				long end = System.currentTimeMillis();
-				System.out.println(" parsing header took " + (end - start) + "ms");
-				long msgid = in.readLong();
-				String topic = in.readString();
-				short flag = in.readShort();
+			if(form < 0 || form > MAX_FORM_VALUE)
+				throw new IOException("Invalid form value: " + form);
+			if(type <0 || type > MAX_TYPE_VALUE){
+				throw new IOException("Invalid type value: " + type);
 				
+			}
+			DATA_FORM df = DATA_FORM.values()[form];
+			DATA_TYPE dt = DATA_TYPE.values()[type];
+			Entity body  = null;
+			try
+			{
+				body =  factory.createEntity(df, dt, in);
+			}
+			catch(Exception exception){
+				throw exception;
+			}
+	           
+			if(body.isVector()){
+				BasicAnyVector dTable = (BasicAnyVector)body;
 				
-				BlockingQueue<IMessage> queue = _queueManager.getQueue(topic);
+				int colSize = dTable.rows();
+				int rowSize = dTable.getEntity(0).rows();
 				
-				EntityFactory factory = new BasicEntityFactory();
-				int form = flag>>8;
-				int type = flag & 0xff;
-				
-				if(form < 0 || form > MAX_FORM_VALUE)
-					throw new IOException("Invalid form value: " + form);
-				if(type <0 || type > MAX_TYPE_VALUE){
-					throw new IOException("Invalid type value: " + type);
-					
-				}
-				start = System.currentTimeMillis();
-				DATA_FORM df = DATA_FORM.values()[form];
-				DATA_TYPE dt = DATA_TYPE.values()[type];
-				Entity body  = null;
-				try
-				{
-					body =  factory.createEntity(df, dt, in);
-				}
-				catch(Exception exception){
-					throw exception;
-					//continue;
-				}
-				
-				end = System.currentTimeMillis();
-	            System.out.println(" parsing body took " + (end - start) + "ms");
-	            
-				if(body.isVector()){
-					BasicAnyVector dTable = (BasicAnyVector)body;
-					
-					int colSize = dTable.rows();
-					int rowSize = dTable.getEntity(0).rows();
-					
-
-					if(rowSize>=1){
-						if(rowSize==1){
-							BasicMessage rec = new BasicMessage(msgid,topic,dTable);
-							
+				if(rowSize>=1){
+					if(rowSize==1){
+						BasicMessage rec = new BasicMessage(msgid,topic,dTable);
+						try {
+							if (queue.offer(rec) == false) {
+								synchronized (queueManager) {
+									queueManager.notify();
+								}
+								queue.put(rec);
+							}
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					} else {
+						for(int i=0;i<rowSize;i++){
+							BasicAnyVector row = new BasicAnyVector(colSize);
+						
+							for(int j=0;j<colSize;j++){
+								AbstractVector vector = (AbstractVector)dTable.getEntity(j);
+								Entity entity = vector.get(i);
+								row.setEntity(j, entity);
+							}
+							BasicMessage rec = new BasicMessage(msgid,topic,row);
 							try {
 								if (queue.offer(rec) == false) {
-									synchronized (_queueManager) {
-										_queueManager.notify();
+									synchronized (queueManager) {
+										queueManager.notify();
 									}
 									queue.put(rec);
 								}
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
-						} else {
-							
-							for(int i=0;i<rowSize;i++){
-								BasicAnyVector row = new BasicAnyVector(colSize);
-								
-								for(int j=0;j<colSize;j++){
-									AbstractVector vector = (AbstractVector)dTable.getEntity(j);
-									Entity entity = vector.get(i);
-									row.setEntity(j, entity);
-								}
-								BasicMessage rec = new BasicMessage(msgid,topic,row);
-								try {
-									if (queue.offer(rec) == false) {
-										synchronized (_queueManager) {
-											_queueManager.notify();
-										}
-										queue.put(rec);
-									}
-								} catch (InterruptedException e) {
-									e.printStackTrace();
-								}
-							}
-							
 						}
 					}
-				
-				} else {
-					System.out.println("body is not vector");
-					System.out.println(body);
 				}
-				
+			} else {
+				System.out.println("body is not a vector");
 			}
-
+		}
+	} catch (IOException e) {
+		e.printStackTrace();
+	} finally {
+		try {
+			socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-			try {
-				socket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
-		}
-		
 	}
+}
+		
+}
