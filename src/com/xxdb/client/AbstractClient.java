@@ -1,7 +1,12 @@
 package com.xxdb.client;
 
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import com.xxdb.DBConnection;
@@ -47,7 +52,7 @@ public abstract class AbstractClient {
 		BlockingQueue<IMessage> queue = queueManager.addQueue(topic);
 		params.clear();
 
-		params.add(new BasicString("localhost"));
+		params.add(new BasicString(GetLocalIP()));
 		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
 		if (offset != -1)
@@ -55,5 +60,29 @@ public abstract class AbstractClient {
 		re = dbConn.run("publishTable", params);
 
 		return queue;
+	}
+	
+	private String GetLocalIP(){
+		Enumeration allNetInterfaces = null;
+		String localIp = "127.0.0.1";
+		try {
+			allNetInterfaces = NetworkInterface.getNetworkInterfaces();
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+		InetAddress ip = null;
+		while (allNetInterfaces.hasMoreElements())		{
+			NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
+
+			Enumeration addresses = netInterface.getInetAddresses();
+			while (addresses.hasMoreElements()){
+				ip = (InetAddress) addresses.nextElement();
+				if (ip != null && ip instanceof Inet4Address){
+					localIp = ip.getHostAddress();
+				} 
+			}
+		}
+		//System.out.println(localIp);
+		return localIp;
 	}
 }

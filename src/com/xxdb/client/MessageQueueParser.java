@@ -111,7 +111,7 @@ public class MessageQueueParser implements Runnable{
 					}
 				}
 			} else {
-				System.out.println("body is not a vector");
+				throw new RuntimeException("body is not a vector");
 			}
 		}
 	} catch (IOException e) {
