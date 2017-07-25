@@ -6,27 +6,35 @@ import java.net.Socket;
 
 public class Daemon  implements Runnable{
 	
-	private int _listeningPort = 0;
-	private QueueManager _queueManager;
+	private int listeningPort = 0;
+	private QueueManager queueManager;
 	public Daemon(int port, QueueManager queueManager) {
-		this._listeningPort = port;
-		this._queueManager = queueManager;
+		this.listeningPort = port;
+		this.queueManager = queueManager;
 	}
 
 	@Override
 	public void run() {
-		
+		ServerSocket ssocket = null;
 		try {
-			ServerSocket ssocket = new ServerSocket(this._listeningPort);
+			ssocket = new ServerSocket(this.listeningPort);
 			while(true)
 			{
 				Socket socket = ssocket.accept();
-				MessageQueueParser listener = new MessageQueueParser(socket, _queueManager);
+				MessageQueueParser listener = new MessageQueueParser(socket, queueManager);
 				Thread listeningThread = new Thread(listener);
 				listeningThread.start();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+		finally{
+			if(ssocket!=null)
+				try {
+					ssocket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 		}
 		
 	}
