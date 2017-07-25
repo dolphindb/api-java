@@ -14,11 +14,11 @@ import java.util.ArrayList;
  */
 public class PollingClientTester {
     public static void main(String args[]) {
-        PollingClient client = new PollingClient();
+        PollingClient client = new PollingClient(8990);
 
         /*
         n=20000000
-        t=table(n:0,`time`sym`qty`price`exch,[TIMESTAMP,SYMBOL,INT,DOUBLE,SYMBOL])
+        t=table(n:0,`time`sym`qty`price`exch`index,[TIMESTAMP,SYMBOL,INT,DOUBLE,SYMBOL,LONG])
         share t as trades
         setStream(trades,true)
         t=NULL
@@ -29,17 +29,18 @@ public class PollingClientTester {
         pricev = take(53.75, rows)
         exchv = take(`N, rows)
         for(x in 0:2000000){
-        insert into trades values(timev, symv, qtyv, pricev, exchv)
+        insert into trades values(timev, symv, qtyv, pricev, exchv,x)
         }
-        insert into trades values(timev, symv, take(-1, 1), pricev, exchv)
+        insert into trades values(timev, symv, take(-1, 1), pricev, exchv,x)
          */
         try {
-            TopicPoller poller = client.subscribe("localhost", 8848, "trades", -1);
+            TopicPoller poller1 = client.subscribe("192.168.1.25", 8801, "trades1", -1);
+            //TopicPoller poller2 = client.subscribe("192.168.1.25", 8801, "trades2", -1);
             int count = 0;
             boolean started = false;
             long start = System.currentTimeMillis();
             while (true) {
-                ArrayList<IMessage> msgs = poller.poll(1000);
+                ArrayList<IMessage> msgs = poller1.poll(1000);
                 if (msgs.size() > 0 && started == false) {
                     started = true;
                     start = System.currentTimeMillis();
@@ -53,6 +54,7 @@ public class PollingClientTester {
             }
             long end = System.currentTimeMillis();
             System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
+            
         } catch (IOException e) {
             e.printStackTrace();
         }

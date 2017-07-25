@@ -46,13 +46,20 @@ public class MessageQueueParser implements Runnable{
 			ExtendedDataInput in = new LittleEndianDataInputStream(bis);
 			int count = 0;
 			while(true){
-
+				++count;
+				if (count % 10 == 0) {
+					System.out.println("count:" + count);
+				}
+				long start = System.currentTimeMillis();
 				//System.out.println("begin read ");
 				Boolean b = in.readBoolean(); //true/false : big/Little
+				long end = System.currentTimeMillis();
+				System.out.println(" parsing header took " + (end - start) + "ms");
 				long msgid = in.readLong();
 				String topic = in.readString();
 				short flag = in.readShort();
-
+				
+				
 				BlockingQueue<IMessage> queue = _queueManager.getQueue(topic);
 				
 				EntityFactory factory = new BasicEntityFactory();
@@ -65,7 +72,7 @@ public class MessageQueueParser implements Runnable{
 					throw new IOException("Invalid type value: " + type);
 					
 				}
-				
+				start = System.currentTimeMillis();
 				DATA_FORM df = DATA_FORM.values()[form];
 				DATA_TYPE dt = DATA_TYPE.values()[type];
 				Entity body  = null;
@@ -78,7 +85,9 @@ public class MessageQueueParser implements Runnable{
 					//continue;
 				}
 				
-				
+				end = System.currentTimeMillis();
+	            System.out.println(" parsing body took " + (end - start) + "ms");
+	            /*
 				if(body.isVector()){
 					BasicAnyVector dTable = (BasicAnyVector)body;
 					
@@ -89,7 +98,7 @@ public class MessageQueueParser implements Runnable{
 					if(rowSize>=1){
 						if(rowSize==1){
 							BasicMessage rec = new BasicMessage(msgid,topic,dTable);
-
+							
 							try {
 								if (queue.offer(rec) == false) {
 									synchronized (_queueManager) {
@@ -101,6 +110,7 @@ public class MessageQueueParser implements Runnable{
 								e.printStackTrace();
 							}
 						} else {
+							
 							for(int i=0;i<rowSize;i++){
 								BasicAnyVector row = new BasicAnyVector(colSize);
 								
@@ -121,16 +131,15 @@ public class MessageQueueParser implements Runnable{
 									e.printStackTrace();
 								}
 							}
+							
 						}
 					}
+				
 				} else {
 					System.out.println("body is not vector");
 					System.out.println(body);
 				}
-				++count;
-				if (count % 10000 == 0) {
-					System.out.println("count:" + count);
-				}
+				*/
 			}
 
 		} catch (IOException e) {

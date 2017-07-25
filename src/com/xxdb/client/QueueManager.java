@@ -5,7 +5,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import com.xxdb.client.datatransferobject.IMessage;
-import jdk.nashorn.internal.ir.Block;
 
 public class QueueManager {
 		
