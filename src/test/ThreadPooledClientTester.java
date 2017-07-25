@@ -6,7 +6,7 @@ import com.xxdb.client.ThreadPooledClient;
 
 public class ThreadPooledClientTester {
 	public static void main(String args[]) {
-		ThreadPooledClient client = new ThreadPooledClient(8990,7);
+		ThreadPooledClient client = new ThreadPooledClient(8993,7);
 		try {
 			client.subscribe("192.168.1.12", 8082, "trades", new TwoSigmaMessageHandler());
 		} catch (IOException e) {
