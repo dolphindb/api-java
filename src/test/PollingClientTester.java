@@ -34,7 +34,7 @@ public class PollingClientTester {
         insert into trades values(timev, symv, take(-1, 1), pricev, exchv,x)
          */
         try {
-            TopicPoller poller1 = client.subscribe("192.168.1.12", 8082, "trades", -1);
+            TopicPoller poller1 = client.subscribe("192.168.1.13", 8849, "trades", 0);
             //TopicPoller poller2 = client.subscribe("192.168.1.25", 8801, "trades2", -1);
             int count = 0;
             boolean started = false;

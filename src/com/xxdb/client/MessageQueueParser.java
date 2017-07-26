@@ -78,13 +78,18 @@ public class MessageQueueParser implements Runnable{
 					if(rowSize==1){
 						BasicMessage rec = new BasicMessage(msgid,topic,dTable);
 						try {
-							if (queue.offer(rec) == false) {
+							if (queue.offer(rec) && queue.size() == 1) {
 								synchronized (queueManager) {
 									queueManager.notify();
 								}
-								queue.put(rec);
+							} else {
+								while (queue.offer(rec) == false)
+									synchronized (queueManager) {
+										queueManager.notify();
+									}
 							}
-						} catch (InterruptedException e) {
+							
+						} catch (Exception e) {
 							e.printStackTrace();
 						}
 					} else {
@@ -98,13 +103,20 @@ public class MessageQueueParser implements Runnable{
 							}
 							BasicMessage rec = new BasicMessage(msgid,topic,row);
 							try {
-								if (queue.offer(rec) == false) {
-									synchronized (queueManager) {
-										queueManager.notify();
+								if (queue.offer(rec)) {
+									if (queue.size() == 1) {
+										synchronized (queueManager) {
+											queueManager.notify();
+										}
 									}
-									queue.put(rec);
+								} else {
+									while (queue.offer(rec) == false) {
+										synchronized (queueManager) {
+											queueManager.notify();
+										}
+									}
 								}
-							} catch (InterruptedException e) {
+							} catch (Exception e) {
 								e.printStackTrace();
 							}
 						}

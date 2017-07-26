@@ -58,8 +58,26 @@ public abstract class AbstractClient {
 		if (offset != -1)
 		params.add(new BasicLong(offset));
 		re = dbConn.run("publishTable", params);
-
+		dbConn.close();
 		return queue;
+	}
+	
+	
+	protected void stopSubscribe(String host,int port ,String tableName) throws IOException {
+		
+		Entity re;
+		
+		DBConnection dbConn = new DBConnection();
+		
+		dbConn.connect(host, port);
+		
+		List<Entity> params = new ArrayList<Entity>();
+		params.add(new BasicString(tableName));
+		re = dbConn.run("stopSubscribeTable", params);
+		dbConn.close();
+		
+		return;
+		
 	}
 	
 	private String GetLocalIP(){
