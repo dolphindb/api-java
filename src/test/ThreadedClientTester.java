@@ -2,8 +2,7 @@ package test;
 
 import java.io.IOException;
 
-import com.xxdb.client.PollingClient;
-import com.xxdb.client.ThreadedClient;
+import com.xxdb.streaming.client.ThreadedClient;
 
 public class ThreadedClientTester {
 	public static void main(String args[]) {
@@ -32,7 +31,7 @@ public class ThreadedClientTester {
         ThreadedClient client = new ThreadedClient(8991);
         
         try {
-			client.subscribe("192.168.1.13", 8849, "trades", new TwoSigmaMessageHandler());
+			client.subscribe("192.168.1.25", 8848, "trades", new TwoSigmaMessageHandler(), 0);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

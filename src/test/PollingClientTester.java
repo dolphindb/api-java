@@ -1,10 +1,9 @@
 package test;
 
-import com.xxdb.client.PollingClient;
-import com.xxdb.client.TopicPoller;
-import com.xxdb.client.datatransferobject.IMessage;
-import com.xxdb.data.BasicInt;
-import com.xxdb.data.BasicIntVector;
+import com.xxdb.streaming.client.PollingClient;
+import com.xxdb.streaming.client.TopicPoller;
+import com.xxdb.streaming.client.datatransferobject.IMessage;
+import com.xxdb.streaming.data.BasicInt;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,13 +33,14 @@ public class PollingClientTester {
         insert into trades values(timev, symv, take(-1, 1), pricev, exchv,x)
          */
         try {
-            TopicPoller poller1 = client.subscribe("192.168.1.13", 8849, "trades", 0);
-            //TopicPoller poller2 = client.subscribe("192.168.1.25", 8801, "trades2", -1);
+            TopicPoller poller1 = client.subscribe("192.168.1.25", 8848, "trades", 0);
             int count = 0;
             boolean started = false;
             long start = System.currentTimeMillis();
             while (true) {
                 ArrayList<IMessage> msgs = poller1.poll(1000);
+                if (msgs == null)
+                    continue;
                 if (msgs.size() > 0 && started == false) {
                 	
                     started = true;
@@ -54,10 +54,10 @@ public class PollingClientTester {
                         break;
                     }
                 }
-                long end = System.currentTimeMillis();    
-                if((end - start) % 60000 > 0)
-                	System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
             }
+            long end = System.currentTimeMillis();
+            System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
+
         } catch (IOException e) {
             e.printStackTrace();
         }
