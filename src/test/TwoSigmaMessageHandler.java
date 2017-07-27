@@ -27,14 +27,17 @@ public class TwoSigmaMessageHandler implements MessageHandler {
 //			old = cur;
 //			System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
 //		}
-		long end = System.currentTimeMillis();
-		System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count.get() / ((end - start) / 1000.0) + " messages/s");		 
-		BasicInt qty = msg.getValue(2);
-		if(qty.getInt() == -1){
+		if (count.get() % 100000 == 0) {
+			long end = System.currentTimeMillis();
+			System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count.get() / ((end - start) / 1000.0) + " messages/s");		 
+
+		}
+//		BasicInt qty = msg.getValue(2);
+//		if(qty.getInt() == -1){
 //			long end = System.currentTimeMillis();
 //			System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count.get() / ((end - start) / 1000.0) + " messages/s");
 //			System.exit(0);
-		}
+//		}
 	}
 
 }

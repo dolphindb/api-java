@@ -10,10 +10,10 @@ import java.util.concurrent.BlockingQueue;
 public class ThreadedClient extends  AbstractClient {
 
 	public ThreadedClient() {
-        this(DEFAULT_PORT);
+        this(DEFAULT_HOST,DEFAULT_PORT);
     }
-    public ThreadedClient(int subscribePort){
-        super(subscribePort);
+    public ThreadedClient(String localIP,int subscribePort){
+        super(localIP,subscribePort);
     }
     
     class HandlerLopper extends Thread{

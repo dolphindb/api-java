@@ -9,11 +9,11 @@ import java.util.concurrent.BlockingQueue;
 
 public class PollingClient extends AbstractClient{
     public PollingClient() {
-        this(DEFAULT_PORT);
+        this(DEFAULT_HOST,DEFAULT_PORT);
     }
 
-    public PollingClient(int subscribePort) {
-        super(subscribePort);
+    public PollingClient(String localIP,int subscribePort) {
+        super(localIP,subscribePort);
     }
 
     public TopicPoller subscribe(String host,int port,String tableName, long offset) throws IOException{

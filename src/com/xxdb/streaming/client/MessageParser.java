@@ -78,9 +78,13 @@ class MessageParser implements Runnable{
 							BasicAnyVector row = new BasicAnyVector(colSize);
 						
 							for(int j=0;j<colSize;j++){
-								AbstractVector vector = (AbstractVector)dTable.getEntity(j);
-								Entity entity = vector.get(i);
-								row.setEntity(j, entity);
+//								try{
+									AbstractVector vector = (AbstractVector)dTable.getEntity(j);
+									Entity entity = vector.get(i);
+									row.setEntity(j, entity);
+//								} catch (ClassCastException e) {
+//									e.printStackTrace();
+//								}
 							}
 							BasicMessage rec = new BasicMessage(msgid,topic,row);
 							messages.add(rec);
@@ -92,7 +96,7 @@ class MessageParser implements Runnable{
 				throw new RuntimeException("body is not a vector");
 			}
 		}
-	} catch (IOException e) {
+	} catch (Exception e) {
 		e.printStackTrace();
 	} finally {
 		try {

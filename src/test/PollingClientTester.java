@@ -13,7 +13,7 @@ import java.util.ArrayList;
  */
 public class PollingClientTester {
     public static void main(String args[]) {
-        PollingClient client = new PollingClient(8992);
+        PollingClient client = new PollingClient("192.168.1.13",8992);
 
         /*
         n=20000000

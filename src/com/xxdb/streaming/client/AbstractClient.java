@@ -12,23 +12,25 @@ import com.xxdb.DBConnection;
 import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicLong;
 import com.xxdb.data.BasicString;
+import com.xxdb.data.BasicStringVector;
 import com.xxdb.data.Entity;
 import com.xxdb.streaming.client.datatransferobject.IMessage;
 
 abstract class AbstractClient implements MessageDispatcher{
 	
 	protected static final int DEFAULT_PORT = 8849;
-
+	protected static final String DEFAULT_HOST = "localhost";
 	protected int listeningPort;
-
+	protected String localIP;
 	protected QueueManager queueManager = new QueueManager();
 	protected HashMap<String, List<IMessage>> messageCache = new HashMap<>();
 	protected HashMap<String, String> tableName2Topic = new HashMap<>();
 	public AbstractClient(){
-		this(DEFAULT_PORT);
+		this(DEFAULT_HOST,DEFAULT_PORT);
 	}
-	public AbstractClient(int subscribePort){
+	public AbstractClient(String localIP,int subscribePort){
 		this.listeningPort = subscribePort;
+		this.localIP = localIP;
 		Daemon daemon = new Daemon(subscribePort, this);
 		Thread pThread = new Thread(daemon);
 		pThread.start();
@@ -87,12 +89,13 @@ abstract class AbstractClient implements MessageDispatcher{
 		BlockingQueue<List<IMessage>> queue = queueManager.addQueue(topic);
 		params.clear();
 		tableName2Topic.put(tableName, topic);
-		params.add(new BasicString(GetLocalIP()));
+		params.add(new BasicString(this.localIP));
 		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
 		if (offset != -1)
 		params.add(new BasicLong(offset));
-		dbConn.run("publishTable", params);
+		re = dbConn.run("publishTable", params);
+		
 		dbConn.close();
 		return queue;
 	}
@@ -115,7 +118,25 @@ abstract class AbstractClient implements MessageDispatcher{
 		
 	}
 	
-	private String GetLocalIP(){
+	
+	public class SubTable{
+		BasicStringVector f = null;
+		String t = "";
+		
+		public SubTable(String topic,BasicStringVector fields){
+			this.f = fields;
+			this.t = topic;
+		}
+		
+		public BasicStringVector getFields(){
+			return this.f;
+		}
+		
+		public String getTopic(){
+			return this.t;
+		}
+	}
+	public String GetLocalIP(){
 		Enumeration allNetInterfaces = null;
 		String localIp = "127.0.0.1";
 		try {
