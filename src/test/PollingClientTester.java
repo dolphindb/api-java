@@ -33,7 +33,7 @@ public class PollingClientTester {
         insert into trades values(timev, symv, take(-1, 1), pricev, exchv,x)
          */
         try {
-            TopicPoller poller1 = client.subscribe("192.168.1.25", 8848, "trades", 0);
+            TopicPoller poller1 = client.subscribe("192.168.1.42", 8801, "trades1", 0);
             int count = 0;
             boolean started = false;
             long start = System.currentTimeMillis();
@@ -54,9 +54,10 @@ public class PollingClientTester {
                         break;
                     }
                 }
+                long end = System.currentTimeMillis();
+                System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
             }
-            long end = System.currentTimeMillis();
-            System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
+            
 
         } catch (IOException e) {
             e.printStackTrace();

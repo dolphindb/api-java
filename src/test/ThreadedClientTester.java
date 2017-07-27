@@ -28,10 +28,10 @@ public class ThreadedClientTester {
         insert into trades values(timev, count, take(-1, rows), pricev, exchv);
 		 */
 		
-        ThreadedClient client = new ThreadedClient(8991);
+        ThreadedClient client = new ThreadedClient(8997);
         
         try {
-			client.subscribe("192.168.1.25", 8848, "trades", new TwoSigmaMessageHandler(), 0);
+			client.subscribe("192.168.1.42", 8801, "trades1", new TwoSigmaMessageHandler(), 0);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
