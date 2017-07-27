@@ -6,15 +6,15 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.xxdb.data.AbstractVector;
+import com.xxdb.data.BasicAnyVector;
+import com.xxdb.data.BasicEntityFactory;
+import com.xxdb.data.Entity;
+import com.xxdb.data.EntityFactory;
+import com.xxdb.io.ExtendedDataInput;
+import com.xxdb.io.LittleEndianDataInputStream;
 import com.xxdb.streaming.client.datatransferobject.BasicMessage;
 import com.xxdb.streaming.client.datatransferobject.IMessage;
-import com.xxdb.streaming.data.AbstractVector;
-import com.xxdb.streaming.data.BasicAnyVector;
-import com.xxdb.streaming.data.BasicEntityFactory;
-import com.xxdb.streaming.data.Entity;
-import com.xxdb.streaming.data.EntityFactory;
-import com.xxdb.streaming.io.ExtendedDataInput;
-import com.xxdb.streaming.io.LittleEndianDataInputStream;
 
 class MessageParser implements Runnable{
 		

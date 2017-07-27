@@ -1,7 +1,7 @@
 package com.xxdb.streaming.client.datatransferobject;
 
-import com.xxdb.streaming.data.BasicAnyVector;
-import com.xxdb.streaming.data.Entity;
+import com.xxdb.data.BasicAnyVector;
+import com.xxdb.data.Entity;
 
 public class BasicMessage implements IMessage {
 	

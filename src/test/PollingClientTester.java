@@ -1,9 +1,9 @@
 package test;
 
+import com.xxdb.data.BasicInt;
 import com.xxdb.streaming.client.PollingClient;
 import com.xxdb.streaming.client.TopicPoller;
 import com.xxdb.streaming.client.datatransferobject.IMessage;
-import com.xxdb.streaming.data.BasicInt;
 
 import java.io.IOException;
 import java.util.ArrayList;

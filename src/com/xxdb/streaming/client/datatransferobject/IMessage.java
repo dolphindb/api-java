@@ -1,6 +1,6 @@
 package com.xxdb.streaming.client.datatransferobject;
 
-import com.xxdb.streaming.data.Entity;
+import com.xxdb.data.Entity;
 
 public interface IMessage {
 

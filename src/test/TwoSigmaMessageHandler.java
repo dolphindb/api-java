@@ -1,8 +1,8 @@
 package test;
 
+import com.xxdb.data.BasicInt;
 import com.xxdb.streaming.client.MessageHandler;
 import com.xxdb.streaming.client.datatransferobject.IMessage;
-import com.xxdb.streaming.data.BasicInt;
 
 import java.util.concurrent.atomic.AtomicLong;
 

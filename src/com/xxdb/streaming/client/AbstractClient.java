@@ -7,12 +7,13 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
-import com.xxdb.streaming.DBConnection;
+
+import com.xxdb.DBConnection;
+import com.xxdb.data.BasicInt;
+import com.xxdb.data.BasicLong;
+import com.xxdb.data.BasicString;
+import com.xxdb.data.Entity;
 import com.xxdb.streaming.client.datatransferobject.IMessage;
-import com.xxdb.streaming.data.BasicInt;
-import com.xxdb.streaming.data.BasicLong;
-import com.xxdb.streaming.data.BasicString;
-import com.xxdb.streaming.data.Entity;
 
 abstract class AbstractClient implements MessageDispatcher{
 	
