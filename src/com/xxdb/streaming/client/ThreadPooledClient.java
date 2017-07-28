@@ -91,7 +91,7 @@ public class ThreadPooledClient extends AbstractClient {
     public void subscribe(String host, int port, String tableName, MessageHandler handler, long offset) throws IOException {
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port,tableName, offset);
         synchronized (queueHandlers) {
-            queueHandlers.put(tableName2Topic.get(tableName), new QueueHandlerBinder(queue, handler));
+            queueHandlers.put(tableName2Topic.get(host + ":" + port + ":" + tableName), new QueueHandlerBinder(queue, handler));
         }
     }
     // subscribe to host:port on tableName with offset set to position past the last element

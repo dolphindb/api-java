@@ -25,7 +25,7 @@ public class PollingClient extends AbstractClient{
         return subscribe(host, port, tableName, -1);
     }
 
-    void unsubscribe(String host,int port ,String tableName) throws IOException {
+    public void unsubscribe(String host,int port ,String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName);
     }
 }

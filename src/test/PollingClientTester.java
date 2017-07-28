@@ -13,7 +13,7 @@ import java.util.ArrayList;
  */
 public class PollingClientTester {
     public static void main(String args[]) {
-        PollingClient client = new PollingClient("192.168.1.13",8992);
+        PollingClient client = new PollingClient("192.168.1.25",8992);
 
         /*
         n=20000000
@@ -33,16 +33,15 @@ public class PollingClientTester {
         insert into trades values(timev, symv, take(-1, 1), pricev, exchv,x)
          */
         try {
-            TopicPoller poller1 = client.subscribe("192.168.1.42", 8801, "trades1", 0);
+            TopicPoller poller1 = client.subscribe("192.168.1.14", 8082, "trades1", 0);
             int count = 0;
             boolean started = false;
             long start = System.currentTimeMillis();
-            while (true) {
+            while (count < 20000000) {
                 ArrayList<IMessage> msgs = poller1.poll(1000);
                 if (msgs == null)
                     continue;
                 if (msgs.size() > 0 && started == false) {
-                	
                     started = true;
                     start = System.currentTimeMillis();
                 }
@@ -54,11 +53,12 @@ public class PollingClientTester {
                         break;
                     }
                 }
-                long end = System.currentTimeMillis();
-                System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
+                if (count % 100000 == 0) {
+                    long end = System.currentTimeMillis();
+                    System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
+                }
             }
-            
-
+            client.unsubscribe("192.168.1.14", 8082, "trades1");
         } catch (IOException e) {
             e.printStackTrace();
         }

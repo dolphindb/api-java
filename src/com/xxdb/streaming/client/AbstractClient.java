@@ -39,6 +39,8 @@ abstract class AbstractClient implements MessageDispatcher{
 	private void addMessageToCache(IMessage msg) {
 		String topic = msg.getTopic();
 		List<IMessage> cache = messageCache.get(topic);
+		//if (!msg.getTopic().equals("rh8904_trades1"))
+		//	assert(msg.getTopic() == "rh8904_trades1");
 		if (cache == null) {
 			cache = new ArrayList<>();
 			messageCache.put(msg.getTopic(), cache);
@@ -46,15 +48,17 @@ abstract class AbstractClient implements MessageDispatcher{
 		cache.add(msg);
 	}
 	private void flushToQueue() {
-		Set<String> keySet = messageCache.keySet();
-		for(String topic : keySet) {
-			try {
-				queueManager.getQueue(topic).put(messageCache.get(topic));
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			Set<String> keySet = messageCache.keySet();
+			for(String topic : keySet) {
+				try {
+					queueManager.getQueue(topic).put(messageCache.get(topic));
+				} catch (Exception e) {
+					e.printStackTrace();
+
+				}
 			}
-		}
-		messageCache.clear();
+			messageCache.clear();
+
 	}
 
 	public void dispatch(IMessage msg) {
@@ -88,7 +92,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		topic = re.getString();
 		BlockingQueue<List<IMessage>> queue = queueManager.addQueue(topic);
 		params.clear();
-		tableName2Topic.put(tableName, topic);
+		tableName2Topic.put(host + ":" + port + ":" + tableName, topic);
 		params.add(new BasicString(this.localIP));
 		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
@@ -110,8 +114,10 @@ abstract class AbstractClient implements MessageDispatcher{
 		dbConn.connect(host, port);
 		
 		List<Entity> params = new ArrayList<Entity>();
+		params.add(new BasicString(this.localIP));
+		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
-		re = dbConn.run("stopSubscribeTable", params);
+		re = dbConn.run("stopPublishTable", params);
 		dbConn.close();
 		
 		return;

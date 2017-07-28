@@ -27,12 +27,16 @@ public class BasicAnyVector extends AbstractVector{
 			short flag = in.readShort();
 			int form = flag>>8;
 			int type = flag & 0xff;
+			//if (form != 1)
+				//assert (form == 1);
+			//if (type != 4)
+				//assert(type == 4);
 			Entity obj = factory.createEntity(DATA_FORM.values()[form], DATA_TYPE.values()[type], in);
 			values[i] = obj;
 		}
 
 	}
-	
+
 	public Entity getEntity(int index){
 		return values[index];
 	}

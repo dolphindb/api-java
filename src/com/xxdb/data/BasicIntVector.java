@@ -35,6 +35,8 @@ public class BasicIntVector extends AbstractVector{
 	protected BasicIntVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
 		super(df);
 		int rows = in.readInt();
+		//if (rows != 1024)
+			//assert(rows == 1024);
 		int cols = in.readInt(); 
 		int size = rows * cols;
 		values = new int[size];

@@ -7,10 +7,10 @@ import com.xxdb.streaming.client.datatransferobject.IMessage;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class TwoSigmaMessageHandler implements MessageHandler {
-	private static AtomicLong count = new AtomicLong();
-	private static long start = 0;
+	private AtomicLong count = new AtomicLong();
+	private long start = 0;
 	//private static long end = 0;
-	private static boolean started = false;
+	private boolean started = false;
 	private static int old = 0;
 	@Override
 	public void doEvent(IMessage msg) {
@@ -31,6 +31,9 @@ public class TwoSigmaMessageHandler implements MessageHandler {
 			long end = System.currentTimeMillis();
 			System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count.get() / ((end - start) / 1000.0) + " messages/s");		 
 
+		}
+		if (count.get() == 20000000) {
+			System.out.println("Done");
 		}
 //		BasicInt qty = msg.getValue(2);
 //		if(qty.getInt() == -1){
