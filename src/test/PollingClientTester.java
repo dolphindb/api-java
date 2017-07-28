@@ -45,7 +45,7 @@ public class PollingClientTester {
                     started = true;
                     start = System.currentTimeMillis();
                 }
-                
+
                 count += msgs.size();
                 //System.out.println("get message " + count);
                 if (msgs.size() > 0) {

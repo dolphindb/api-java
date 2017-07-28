@@ -33,7 +33,7 @@ public class ThreadedClientTester {
         insert into trades values(timev, count, take(-1, rows), pricev, exchv);
 		client.GetLocalIP();
 		 */
-        
+
         try {
 			//client.subscribe("192.168.1.45", 8904, "trades2", new TwoSigmaMessageHandler(), 0);
 			//client.subscribe("192.168.1.45", 8904, "trades1", new TwoSigmaMessageHandler(), 0);
