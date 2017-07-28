@@ -28,7 +28,7 @@ public class ThreadedClientTester {
         insert into trades values(timev, count, take(-1, rows), pricev, exchv);
 		client.GetLocalIP();
 		 */
-		ThreadedClient client = new ThreadedClient("192.168.1.13",8997);
+		ThreadedClient client = new ThreadedClient("192.168.1.13",8999);
         
         try {
 			client.subscribe("192.168.1.42", 8904, "trades1", new TwoSigmaMessageHandler(), 0);
