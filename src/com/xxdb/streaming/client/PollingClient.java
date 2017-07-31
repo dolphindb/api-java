@@ -4,16 +4,17 @@ package com.xxdb.streaming.client;
 import com.xxdb.streaming.client.datatransferobject.IMessage;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 public class PollingClient extends AbstractClient{
-    public PollingClient() {
-        this(DEFAULT_HOST,DEFAULT_PORT);
+    public PollingClient() throws SocketException {
+        this(DEFAULT_PORT);
     }
 
-    public PollingClient(String localIP,int subscribePort) {
-        super(localIP,subscribePort);
+    public PollingClient(int subscribePort) throws SocketException {
+        super(subscribePort);
     }
 
     public TopicPoller subscribe(String host,int port,String tableName, long offset) throws IOException{

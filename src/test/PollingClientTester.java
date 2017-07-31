@@ -6,14 +6,15 @@ import com.xxdb.streaming.client.TopicPoller;
 import com.xxdb.streaming.client.datatransferobject.IMessage;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 /**
  * Created by root on 7/24/17.
  */
 public class PollingClientTester {
-    public static void main(String args[]) {
-        PollingClient client = new PollingClient("192.168.1.25",8992);
+    public static void main(String args[]) throws SocketException {
+        PollingClient client = new PollingClient(8992);
 
         /*
         n=20000000
@@ -33,7 +34,7 @@ public class PollingClientTester {
         insert into trades values(timev, symv, take(-1, 1), pricev, exchv,x)
          */
         try {
-            TopicPoller poller1 = client.subscribe("192.168.1.14", 8082, "trades1", 0);
+            TopicPoller poller1 = client.subscribe("192.168.1.45", 8904, "trades1", 0);
             int count = 0;
             boolean started = false;
             long start = System.currentTimeMillis();
@@ -58,7 +59,7 @@ public class PollingClientTester {
                     System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
                 }
             }
-            client.unsubscribe("192.168.1.14", 8082, "trades1");
+            //client.unsubscribe("192.168.1.45", 8904, "trades1");
         } catch (IOException e) {
             e.printStackTrace();
         }

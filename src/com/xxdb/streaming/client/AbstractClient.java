@@ -25,12 +25,13 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected QueueManager queueManager = new QueueManager();
 	protected HashMap<String, List<IMessage>> messageCache = new HashMap<>();
 	protected HashMap<String, String> tableName2Topic = new HashMap<>();
-	public AbstractClient(){
-		this(DEFAULT_HOST,DEFAULT_PORT);
+	protected HashMap<String, Boolean> hostEndian = new HashMap<>();
+	public AbstractClient() throws SocketException{
+		this(DEFAULT_PORT);
 	}
-	public AbstractClient(String localIP,int subscribePort){
+	public AbstractClient(int subscribePort) throws SocketException{
 		this.listeningPort = subscribePort;
-		this.localIP = localIP;
+		this.localIP = this.GetLocalIP();
 		Daemon daemon = new Daemon(subscribePort, this);
 		Thread pThread = new Thread(daemon);
 		pThread.start();
@@ -75,6 +76,16 @@ abstract class AbstractClient implements MessageDispatcher{
 		}
 		flushToQueue();
 	}
+	
+	public boolean isRemoteLittleEndian(String host){
+		if(hostEndian.containsKey(host)){
+			return hostEndian.get(host);
+		}
+		else
+			return false; //default bigEndian
+	}
+	
+	
 	// establish a connection between dolphindb server
 	// return a queue exclusively for the table.
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName, long offset) throws IOException,RuntimeException {
@@ -84,7 +95,11 @@ abstract class AbstractClient implements MessageDispatcher{
 		String topic = "";
 
 		dbConn.connect(host, port);
-
+		
+		if(!hostEndian.containsKey(host)){
+			hostEndian.put(host, dbConn.getRemoteLittleEndian());
+		}
+		
 		List<Entity> params = new ArrayList<Entity>();
 
 		params.add(new BasicString(tableName));
@@ -142,27 +157,22 @@ abstract class AbstractClient implements MessageDispatcher{
 			return this.t;
 		}
 	}
-	public String GetLocalIP(){
-		Enumeration allNetInterfaces = null;
-		String localIp = "127.0.0.1";
-		try {
-			allNetInterfaces = NetworkInterface.getNetworkInterfaces();
-		} catch (SocketException e) {
-			e.printStackTrace();
-		}
-		InetAddress ip = null;
-		while (allNetInterfaces.hasMoreElements())		{
-			NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
-
-			Enumeration addresses = netInterface.getInetAddresses();
-			while (addresses.hasMoreElements()){
-				ip = (InetAddress) addresses.nextElement();
-				if (ip != null && ip instanceof Inet4Address){
-					localIp = ip.getHostAddress();
-				} 
-			}
-		}
-		//System.out.println(localIp);
-		return localIp;
+	public String GetLocalIP() throws SocketException{
+	        try {
+	            for (Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces(); interfaces.hasMoreElements();) {
+	                NetworkInterface networkInterface = interfaces.nextElement();
+	                if (networkInterface.isLoopback() || networkInterface.isVirtual() || !networkInterface.isUp()) {
+	                    continue;
+	                }
+	                Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+	                if (addresses.hasMoreElements()) {
+	                    InetAddress ip = addresses.nextElement();
+	                    return ip.getHostAddress();
+	                }
+	            }
+	        } catch (SocketException e) {
+	            throw e;
+	        }
+	        return null;
 	}
 }

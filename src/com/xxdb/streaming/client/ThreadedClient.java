@@ -3,17 +3,18 @@ package com.xxdb.streaming.client;
 import com.xxdb.streaming.client.datatransferobject.IMessage;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 
 public class ThreadedClient extends  AbstractClient {
 
-	public ThreadedClient() {
-        this(DEFAULT_HOST,DEFAULT_PORT);
+	public ThreadedClient() throws SocketException {
+        this(DEFAULT_PORT);
     }
-    public ThreadedClient(String localIP,int subscribePort){
-        super(localIP,subscribePort);
+    public ThreadedClient(int subscribePort) throws SocketException{
+        super(subscribePort);
     }
     
     class HandlerLopper extends Thread{

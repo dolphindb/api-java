@@ -3,6 +3,7 @@ package com.xxdb.streaming.client;
 import com.xxdb.streaming.client.datatransferobject.IMessage;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -24,11 +25,11 @@ public class ThreadPooledClient extends AbstractClient {
         private MessageHandler handler;
     }
     private HashMap<String, QueueHandlerBinder> queueHandlers = new HashMap<>();
-    public ThreadPooledClient() {
-        this(DEFAULT_HOST,DEFAULT_PORT, CORES);
+    public ThreadPooledClient() throws SocketException {
+        this(DEFAULT_PORT, CORES);
     }
-    public ThreadPooledClient(String localIP,int subscribePort, int threadCount){
-        super(localIP,subscribePort);
+    public ThreadPooledClient(int subscribePort, int threadCount) throws SocketException{
+        super(subscribePort);
         threadPool = Executors.newFixedThreadPool(threadCount);
         new Thread() {
             private LinkedList<IMessage> backlog = new LinkedList<>();

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.xxdb.data.*;
+import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.LittleEndianDataInputStream;
 import com.xxdb.streaming.client.datatransferobject.BasicMessage;
@@ -36,11 +37,15 @@ class MessageParser implements Runnable{
 	}
 	public void run(){
 		Socket socket = this.socket;
-		
 		try {
 		if(bis == null) bis= new BufferedInputStream(socket.getInputStream());
 		long offset = 0;
-		ExtendedDataInput in = new LittleEndianDataInputStream(bis);
+		
+		String host = socket.getInetAddress().getHostAddress();
+		boolean isRemoteLittleEndian = this.dispatcher.isRemoteLittleEndian(host);
+
+		ExtendedDataInput in = isRemoteLittleEndian ? new LittleEndianDataInputStream(bis) : new BigEndianDataInputStream(bis);
+		
 		while(true){
 			Boolean b = in.readBoolean(); //true/false : big/Little
 			assert(b == true);
@@ -101,6 +106,7 @@ class MessageParser implements Runnable{
 							BasicMessage rec = new BasicMessage(msgid,topic,row);
 							//assert ((BasicInt)rec.getEntity(0)).getInt() == 9;
 							messages.add(rec);
+							msgid ++;
 						}
 						dispatcher.batchDispatch(messages);
 					}

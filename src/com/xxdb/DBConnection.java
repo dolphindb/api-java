@@ -100,6 +100,10 @@ public class DBConnection {
 		}
 	}
 	
+	public boolean getRemoteLittleEndian (){
+		return this.remoteLittleEndian;
+	}
+	
 	public void disconnect() throws IOException{
 		if(sessionID.isEmpty())
 			return;
