@@ -20,7 +20,7 @@ package com.xxdb.streaming.sample;
 import com.xxdb.data.BasicInt;
 import com.xxdb.streaming.client.PollingClient;
 import com.xxdb.streaming.client.TopicPoller;
-import com.xxdb.streaming.client.datatransferobject.IMessage;
+import com.xxdb.streaming.client.IMessage;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -29,11 +29,14 @@ import java.util.ArrayList;
 public class PollingClientTester {
     public static void main(String args[]) throws SocketException {
         PollingClient client = new PollingClient(8992);
-
+        String ip = client.GetLocalIP();
+        
+        System.out.println(ip);
 
         
         try {
-            TopicPoller poller1 = client.subscribe("192.168.1.45", 8904, "trades1", 0);
+        	
+            TopicPoller poller1 = client.subscribe("192.168.1.47", 8905, "trades1", 0);
             int count = 0;
             boolean started = false;
             long start = System.currentTimeMillis();
@@ -63,5 +66,6 @@ public class PollingClientTester {
             e.printStackTrace();
         }
         System.exit(0);
+
     }
 }

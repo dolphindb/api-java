@@ -1,11 +1,14 @@
 package com.xxdb.streaming.client;
 
 import java.io.IOException;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+
+import javax.management.ImmutableDescriptor;
 
 import com.xxdb.DBConnection;
 import com.xxdb.data.BasicInt;
@@ -39,8 +42,6 @@ abstract class AbstractClient implements MessageDispatcher{
 	private void addMessageToCache(IMessage msg) {
 		String topic = msg.getTopic();
 		List<IMessage> cache = messageCache.get(topic);
-		//if (!msg.getTopic().equals("rh8904_trades1"))
-		//	assert(msg.getTopic() == "rh8904_trades1");
 		if (cache == null) {
 			cache = new ArrayList<>();
 			messageCache.put(msg.getTopic(), cache);
@@ -85,8 +86,6 @@ abstract class AbstractClient implements MessageDispatcher{
 	}
 	
 	
-	// establish a connection between dolphindb server
-	// return a queue exclusively for the table.
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName, long offset) throws IOException,RuntimeException {
 
 		Entity re;
@@ -164,9 +163,15 @@ abstract class AbstractClient implements MessageDispatcher{
 	                    continue;
 	                }
 	                Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
-	                if (addresses.hasMoreElements()) {
-	                    InetAddress ip = addresses.nextElement();
-	                    return ip.getHostAddress();
+
+	                while (addresses.hasMoreElements()) {
+	                	try{
+	                		Inet4Address ip = (Inet4Address) addresses.nextElement();	
+	                		if(ip!=null)
+		                    	return ip.getHostAddress();
+	                	}catch(ClassCastException e){
+	                		
+	                	}
 	                }
 	            }
 	        } catch (SocketException e) {
