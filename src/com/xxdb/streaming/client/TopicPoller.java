@@ -1,6 +1,6 @@
 package com.xxdb.streaming.client;
 
-import com.xxdb.streaming.client.datatransferobject.IMessage;
+import com.xxdb.streaming.client.IMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +33,7 @@ public class TopicPoller {
         }
     }
     private final static ArrayList<IMessage> emptyList = new ArrayList<>();
-    // Poll as many messages as there are in the topic.
-    // If there are no messages for the topic at start,
-    // wait at most @timeout milliseconds.
+
     public ArrayList<IMessage> poll(long timeout){
         if (cache == null) {
             fillCache(timeout);

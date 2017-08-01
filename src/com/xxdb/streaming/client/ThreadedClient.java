@@ -1,6 +1,6 @@
 package com.xxdb.streaming.client;
 
-import com.xxdb.streaming.client.datatransferobject.IMessage;
+import com.xxdb.streaming.client.IMessage;
 
 import java.io.IOException;
 import java.net.SocketException;

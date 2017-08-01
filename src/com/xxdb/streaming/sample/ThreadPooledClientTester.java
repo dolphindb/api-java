@@ -1,4 +1,4 @@
-package test;
+package com.xxdb.streaming.sample;
 
 import java.io.IOException;
 import java.net.SocketException;

@@ -1,12 +1,9 @@
 package com.xxdb.streaming.client;
 
-import com.xxdb.streaming.client.datatransferobject.IMessage;
+import com.xxdb.streaming.client.IMessage;
 
 import java.util.List;
 
-/**
- * Created by root on 7/26/17.
- */
 interface MessageDispatcher {
 	boolean isRemoteLittleEndian(String host);
 	

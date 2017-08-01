@@ -10,8 +10,8 @@ import com.xxdb.data.*;
 import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.LittleEndianDataInputStream;
-import com.xxdb.streaming.client.datatransferobject.BasicMessage;
-import com.xxdb.streaming.client.datatransferobject.IMessage;
+import com.xxdb.streaming.client.BasicMessage;
+import com.xxdb.streaming.client.IMessage;
 
 class MessageParser implements Runnable{
 		
@@ -53,8 +53,7 @@ class MessageParser implements Runnable{
 			if (msgid != offset)
 				assert(offset == msgid);
 			String topic = in.readString();
-			//if (!topic.equals("rh8904_trades1"))
-			//	assert(topic.equals("rh8904_trades1"));
+
 			short flag = in.readShort();
 
 			EntityFactory factory = new BasicEntityFactory();
@@ -87,7 +86,6 @@ class MessageParser implements Runnable{
 				if(rowSize>=1){
 					if(rowSize==1){
 						BasicMessage rec = new BasicMessage(msgid,topic,dTable);
-						//assert ((BasicInt)rec.getEntity(0)).getInt() == 9;
 						dispatcher.dispatch(rec);
 					} else {
 						List<IMessage> messages = new ArrayList<>(rowSize);
@@ -95,16 +93,11 @@ class MessageParser implements Runnable{
 							BasicAnyVector row = new BasicAnyVector(colSize);
 						
 							for(int j=0;j<colSize;j++){
-//								try{
 									AbstractVector vector = (AbstractVector)dTable.getEntity(j);
 									Entity entity = vector.get(i);
 									row.setEntity(j, entity);
-//								} catch (ClassCastException e) {
-//									e.printStackTrace();
-//								}
 							}
 							BasicMessage rec = new BasicMessage(msgid,topic,row);
-							//assert ((BasicInt)rec.getEntity(0)).getInt() == 9;
 							messages.add(rec);
 							msgid ++;
 						}

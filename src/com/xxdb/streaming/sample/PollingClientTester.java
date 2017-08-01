@@ -1,4 +1,21 @@
-package test;
+/* ==============server publish data sample========== 
+   n=20000000
+   t=table(n:0,`time`sym`qty`price`exch`index,[TIMESTAMP,SYMBOL,INT,DOUBLE,SYMBOL,LONG])
+   share t as trades
+   setStream(trades,true)
+   t=NULL
+   rows = 1
+   timev = take(now(), rows)
+   symv = take(`MKFT, rows)
+   qtyv = take(112, rows)
+   pricev = take(53.75, rows)
+   exchv = take(`N, rows)
+   for(x in 0:2000000){
+   insert into trades values(timev, symv, qtyv, pricev, exchv,x)
+   }
+   insert into trades values(timev, symv, take(-1, 1), pricev, exchv,x)
+ */
+package com.xxdb.streaming.sample;
 
 import com.xxdb.data.BasicInt;
 import com.xxdb.streaming.client.PollingClient;
@@ -9,30 +26,12 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
 
-/**
- * Created by root on 7/24/17.
- */
 public class PollingClientTester {
     public static void main(String args[]) throws SocketException {
         PollingClient client = new PollingClient(8992);
 
-        /*
-        n=20000000
-        t=table(n:0,`time`sym`qty`price`exch`index,[TIMESTAMP,SYMBOL,INT,DOUBLE,SYMBOL,LONG])
-        share t as trades
-        setStream(trades,true)
-        t=NULL
-        rows = 1
-        timev = take(now(), rows)
-        symv = take(`MKFT, rows)
-        qtyv = take(112, rows)
-        pricev = take(53.75, rows)
-        exchv = take(`N, rows)
-        for(x in 0:2000000){
-        insert into trades values(timev, symv, qtyv, pricev, exchv,x)
-        }
-        insert into trades values(timev, symv, take(-1, 1), pricev, exchv,x)
-         */
+
+        
         try {
             TopicPoller poller1 = client.subscribe("192.168.1.45", 8904, "trades1", 0);
             int count = 0;

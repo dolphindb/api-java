@@ -1,4 +1,4 @@
-package com.xxdb.streaming.client.datatransferobject;
+package com.xxdb.streaming.client;
 
 import com.xxdb.data.Entity;
 

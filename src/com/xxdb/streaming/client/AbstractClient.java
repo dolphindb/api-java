@@ -1,7 +1,6 @@
 package com.xxdb.streaming.client;
 
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -14,7 +13,7 @@ import com.xxdb.data.BasicLong;
 import com.xxdb.data.BasicString;
 import com.xxdb.data.BasicStringVector;
 import com.xxdb.data.Entity;
-import com.xxdb.streaming.client.datatransferobject.IMessage;
+import com.xxdb.streaming.client.IMessage;
 
 abstract class AbstractClient implements MessageDispatcher{
 	
