@@ -1,8 +1,6 @@
 package com.xxdb.data;
 
 import java.io.IOException;
-import java.lang.*;
-
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 

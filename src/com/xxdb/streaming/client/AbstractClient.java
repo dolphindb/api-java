@@ -8,13 +8,10 @@ import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 
-import javax.management.ImmutableDescriptor;
-
 import com.xxdb.DBConnection;
 import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicLong;
 import com.xxdb.data.BasicString;
-import com.xxdb.data.BasicStringVector;
 import com.xxdb.data.Entity;
 import com.xxdb.streaming.client.IMessage;
 
@@ -28,6 +25,7 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected HashMap<String, List<IMessage>> messageCache = new HashMap<>();
 	protected HashMap<String, String> tableName2Topic = new HashMap<>();
 	protected HashMap<String, Boolean> hostEndian = new HashMap<>();
+	
 	public AbstractClient() throws SocketException{
 		this(DEFAULT_PORT);
 	}
@@ -49,17 +47,16 @@ abstract class AbstractClient implements MessageDispatcher{
 		cache.add(msg);
 	}
 	private void flushToQueue() {
-			Set<String> keySet = messageCache.keySet();
-			for(String topic : keySet) {
-				try {
-					queueManager.getQueue(topic).put(messageCache.get(topic));
-				} catch (Exception e) {
-					e.printStackTrace();
 
-				}
+		Set<String> keySet = messageCache.keySet();
+		for(String topic : keySet) {
+			try {
+				queueManager.getQueue(topic).put(messageCache.get(topic));
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-			messageCache.clear();
-
+		}
+		messageCache.clear();
 	}
 
 	public void dispatch(IMessage msg) {
@@ -89,9 +86,9 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName, long offset) throws IOException,RuntimeException {
 
 		Entity re;
-		DBConnection dbConn = new DBConnection();
 		String topic = "";
-
+		
+		DBConnection dbConn = new DBConnection();
 		dbConn.connect(host, port);
 		
 		if(!hostEndian.containsKey(host)){
@@ -99,13 +96,15 @@ abstract class AbstractClient implements MessageDispatcher{
 		}
 		
 		List<Entity> params = new ArrayList<Entity>();
-
 		params.add(new BasicString(tableName));
+		
 		re = dbConn.run("getSubscriptionTopic", params);
 		topic = re.getString();
 		BlockingQueue<List<IMessage>> queue = queueManager.addQueue(topic);
 		params.clear();
+		
 		tableName2Topic.put(host + ":" + port + ":" + tableName, topic);
+		
 		params.add(new BasicString(this.localIP));
 		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
@@ -120,42 +119,19 @@ abstract class AbstractClient implements MessageDispatcher{
 	
 	protected void unsubscribeInternal(String host,int port ,String tableName) throws IOException {
 		
-		Entity re;
-		
 		DBConnection dbConn = new DBConnection();
-		
 		dbConn.connect(host, port);
-		
 		List<Entity> params = new ArrayList<Entity>();
 		params.add(new BasicString(this.localIP));
 		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
-		re = dbConn.run("stopPublishTable", params);
+		dbConn.run("stopPublishTable", params);
 		dbConn.close();
-		
 		return;
 		
 	}
 	
-	
-	public class SubTable{
-		BasicStringVector f = null;
-		String t = "";
-		
-		public SubTable(String topic,BasicStringVector fields){
-			this.f = fields;
-			this.t = topic;
-		}
-		
-		public BasicStringVector getFields(){
-			return this.f;
-		}
-		
-		public String getTopic(){
-			return this.t;
-		}
-	}
-	public String GetLocalIP() throws SocketException{
+	private String GetLocalIP() throws SocketException{
 	        try {
 	            for (Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces(); interfaces.hasMoreElements();) {
 	                NetworkInterface networkInterface = interfaces.nextElement();

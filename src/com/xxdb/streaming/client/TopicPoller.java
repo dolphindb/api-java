@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 public class TopicPoller {
     BlockingQueue<List<IMessage>> queue;
     ArrayList<IMessage> cache = null;
+    
     public TopicPoller(BlockingQueue<List<IMessage>> queue) {
         this.queue = queue;
     }
@@ -32,7 +33,7 @@ public class TopicPoller {
             cache.addAll(list);
         }
     }
-    private final static ArrayList<IMessage> emptyList = new ArrayList<>();
+
 
     public ArrayList<IMessage> poll(long timeout){
         if (cache == null) {

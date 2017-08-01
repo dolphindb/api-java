@@ -29,9 +29,6 @@ import java.util.ArrayList;
 public class PollingClientTester {
     public static void main(String args[]) throws SocketException {
         PollingClient client = new PollingClient(8992);
-        String ip = client.GetLocalIP();
-        
-        System.out.println(ip);
 
         
         try {
