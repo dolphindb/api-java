@@ -11,7 +11,7 @@ public class ThreadPooledClientTester {
 		ThreadPooledClient client;
 		try {
 			client = new ThreadPooledClient(8993,7);
-			client.subscribe("192.168.1.42", 8801, "trades1", new TwoSigmaMessageHandler(), 0);
+			client.subscribe("192.168.1.42", 8801, "trades1", new SampleMessageHandler(), 0);
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -1,9 +1,8 @@
 package com.xxdb.streaming.sample;
 
 import com.xxdb.data.BasicInt;
+import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.MessageHandler;
-import com.xxdb.streaming.client.datatransferobject.IMessage;
-
 import java.util.concurrent.atomic.AtomicLong;
 
 public class SampleMessageHandler implements MessageHandler {
