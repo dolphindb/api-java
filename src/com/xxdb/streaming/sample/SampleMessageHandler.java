@@ -1,6 +1,5 @@
 package com.xxdb.streaming.sample;
 
-import com.xxdb.data.BasicInt;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.MessageHandler;
 import java.util.concurrent.atomic.AtomicLong;
@@ -10,7 +9,6 @@ public class SampleMessageHandler implements MessageHandler {
 	private long start = 0;
 
 	private boolean started = false;
-	private static int old = 0;
 	@Override
 	public void doEvent(IMessage msg) {
 		if(started==false){

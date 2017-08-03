@@ -5,41 +5,37 @@ import com.xxdb.data.Entity;
 
 public class BasicMessage implements IMessage {
 	
-	long _offset = 0;
+	long offset = 0;
 	
-	String _topic = "";
+	String topic = "";
 	
-	BasicAnyVector _msg = null;
+	BasicAnyVector msg = null;
 	
 	public BasicMessage(long offset,String topic, BasicAnyVector msg){
-		this._offset = offset;
-		this._topic = topic;
-		this._msg = msg;
+		this.offset = offset;
+		this.topic = topic;
+		this.msg = msg;
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T getValue(int colIndex) {
-		// TODO Auto-generated method stub
-		return (T)this._msg.getEntity(colIndex);
+		return (T)this.msg.getEntity(colIndex);
 	}
 
 	@Override
 	public String getTopic() {
-		// TODO Auto-generated method stub
-		return this._topic;
+		return this.topic;
 	}
 
 	@Override
 	public long getOffset() {
-		// TODO Auto-generated method stub
-		return this._offset;
+		return this.offset;
 	}
 
 	@Override
 	public Entity getEntity(int colIndex) {
-		// TODO Auto-generated method stub
-		return this._msg.getEntity(colIndex);
+		return this.msg.getEntity(colIndex);
 	}
 
 }

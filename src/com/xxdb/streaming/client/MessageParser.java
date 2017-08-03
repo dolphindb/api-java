@@ -55,7 +55,6 @@ class MessageParser implements Runnable{
 			String topic = in.readString();
 
 			short flag = in.readShort();
-
 			EntityFactory factory = new BasicEntityFactory();
 			int form = flag>>8;
 
@@ -103,9 +102,6 @@ class MessageParser implements Runnable{
 						}
 						dispatcher.batchDispatch(messages);
 					}
-				}
-				if (rowSize != 1024) {
-					System.out.println("row Size " + rowSize);
 				}
 				offset += rowSize;
 			} else {
