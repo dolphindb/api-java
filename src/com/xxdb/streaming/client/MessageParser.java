@@ -41,17 +41,23 @@ class MessageParser implements Runnable{
 		if(bis == null) bis= new BufferedInputStream(socket.getInputStream());
 		long offset = 0;
 		
-		String host = socket.getInetAddress().getHostAddress();
-		boolean isRemoteLittleEndian = this.dispatcher.isRemoteLittleEndian(host);
+		//String host = socket.getInetAddress().getHostAddress();
+		//boolean isRemoteLittleEndian = this.dispatcher.isRemoteLittleEndian(host);
 
-		ExtendedDataInput in = isRemoteLittleEndian ? new LittleEndianDataInputStream(bis) : new BigEndianDataInputStream(bis);
-		
+		ExtendedDataInput in = null; //isRemoteLittleEndian ? new LittleEndianDataInputStream(bis) : new BigEndianDataInputStream(bis);
+
 		while(true){
-			Boolean b = in.readBoolean(); //true/false : big/Little
-			assert(b == true);
+
+			if (in == null) {
+				Boolean b = bis.read() != 0; //true/false : little/big
+				if (b == true)
+					in = new LittleEndianDataInputStream(bis);
+				else
+					in = new BigEndianDataInputStream(bis);
+			} else {
+				Boolean b = in.readBoolean();
+			}
 			long msgid = in.readLong();
-			if (msgid != offset)
-				assert(offset == msgid);
 			String topic = in.readString();
 
 			short flag = in.readShort();

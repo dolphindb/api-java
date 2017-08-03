@@ -20,9 +20,10 @@ public class TableRouterFacotry {
                 return new LiteralValuePartitionedTableRouter(values, locations);
             }
         } else if (type == Entity.PARTITION_TYPE.LIST){
-            if (values.getDataCategory() == Entity.DATA_CATEGORY.INTEGRAL) {
+            BasicAnyVector schema = (BasicAnyVector)values;
+            if (schema.getEntity(0).getDataCategory() == Entity.DATA_CATEGORY.INTEGRAL) {
                 return new IntegralListPartitionedTableRouter(values, locations);
-            } else if (values.getDataCategory() == Entity.DATA_CATEGORY.LITERAL) {
+            } else if (schema.getEntity(0).getDataCategory() == Entity.DATA_CATEGORY.LITERAL) {
                 return new LiteralListPartitionedTableRouter(values, locations);
             }
         }

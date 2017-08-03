@@ -32,11 +32,11 @@ public class PollingClientTester {
         
         try {
         	
-            TopicPoller poller1 = client.subscribe("192.168.1.47", 8905, "trades1", 0);
+            TopicPoller poller1 = client.subscribe("192.168.1.25", 8847, "TradesByList", 0);
             int count = 0;
             boolean started = false;
             long start = System.currentTimeMillis();
-            while (count < 20000000) {
+            while (count < 18000000) {
                 ArrayList<IMessage> msgs = poller1.poll(1000);
                 if (msgs == null)
                     continue;

@@ -60,7 +60,7 @@ class LiteralValuePartitionedTableRouter implements TableRouter {
             String stringVal = partitionColumn.getString();
             List<String> locations = map.get(stringVal);
             if (locations == null)
-                throw new RuntimeException(partitionColumn.getNumber().longValue() + " does not match any partitioning values!");
+                throw new RuntimeException(partitionColumn.getString() + " does not match any partitioning values!");
             return locations.get(0);
         } catch (Exception e) {
             throw new RuntimeException(e);

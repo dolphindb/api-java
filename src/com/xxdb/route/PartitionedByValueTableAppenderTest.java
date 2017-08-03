@@ -12,10 +12,11 @@ import java.util.Random;
 /**
  * Created by root on 8/2/17.
  */
-public class PartitionedTableAppenderTest {
+public class PartitionedByValueTableAppenderTest {
     static Random random = new Random();
     private static List<Entity> generateRandomRow() {
-        BasicString symbol = new BasicString(String.valueOf((char)(random.nextInt(26) + 'A')));
+        final String[] symbols = new String[]{"A", "AA"};
+        BasicString symbol = new BasicString(symbols[random.nextInt(2)]);
         BasicDate date = new BasicDate(LocalDate.now());
         BasicSecond time = new BasicSecond(LocalTime.now());
         BasicDouble price = new BasicDouble(random.nextDouble() * 10);
@@ -27,9 +28,9 @@ public class PartitionedTableAppenderTest {
         return Arrays.asList(symbol, date, time, price, size, g127, corr, cond, ex);
     }
 
-    public static void main(String[] args) {
+        public static void main(String[] args) {
         try {
-            PartitionedTableAppender appender = new PartitionedTableAppender("Trades", "192.168.1.25", 8847);
+            PartitionedTableAppender appender = new PartitionedTableAppender("TradesByValue", "192.168.1.25", 8847);
             System.out.println(appender.append(generateRandomRow()));
         } catch (IOException e) {
             e.printStackTrace();
