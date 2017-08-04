@@ -7,7 +7,7 @@ import com.xxdb.data.Vector;
 import java.io.IOException;
 import java.util.*;
 import java.util.Set;
-import java.util.concurrent.Callable;
+import java.util.concurrent.*;
 
 /**
  * PartitionedTableAppender is a used to append rows to a partitioned table
@@ -29,11 +29,16 @@ import java.util.concurrent.Callable;
  * rows.add(vint);
  * rows.add(vstring);
  * affected = tableAppender.append(rows);
+ *
+ *
+ * // cleanup
+ * tableAppender.shutdownThreadPool();
  * }
  * </pre>
  */
 public class PartitionedTableAppender {
     // alias to connection mapping
+    private static final int CORES = Runtime.getRuntime().availableProcessors();
     private Map<String, DBConnection> connectionMap = new HashMap<>();
     private BasicDictionary tableInfo;
     private TableRouter router;
@@ -42,6 +47,9 @@ public class PartitionedTableAppender {
     private int cols;
     private Entity.DATA_CATEGORY columnCategories[];
     private Entity.DATA_TYPE columnTypes[];
+    private int threadCount;
+    private ExecutorService threadPool;
+
     /**
      *
      * @param tableName name of the shared table
@@ -49,8 +57,16 @@ public class PartitionedTableAppender {
      * @param port port
      */
     public PartitionedTableAppender(String tableName, String host, int port) throws IOException {
+        this(tableName, host, port, 0);
+    }
+
+    public PartitionedTableAppender(String tableName, String host, int port, int threadCount) throws IOException {
         this.tableName = new BasicString(tableName);
         DBConnection conn = new DBConnection();
+        BasicAnyVector locations;
+        AbstractVector partitionSchema;
+        BasicTable colDefs;
+        BasicIntVector typeInts;
         try {
             conn.connect(host, port);
             tableInfo = (BasicDictionary) conn.run("schema(" + tableName+ ")");
@@ -58,14 +74,13 @@ public class PartitionedTableAppender {
             if (partitionColumnIdx == -1) {
                 throw new RuntimeException("Table '" + tableName + "' is not partitioned");
             }
-            BasicAnyVector locations = (BasicAnyVector) tableInfo.get(new BasicString("partitionSites"));
+            locations = (BasicAnyVector) tableInfo.get(new BasicString("partitionSites"));
             int partitionType = ((BasicInt) tableInfo.get(new BasicString("partitionType"))).getInt();
-            AbstractVector partitionSchema = (AbstractVector) tableInfo.get(new BasicString("partitionSchema"));
+            partitionSchema = (AbstractVector) tableInfo.get(new BasicString("partitionSchema"));
             router = TableRouterFacotry.createRouter(Entity.PARTITION_TYPE.values()[partitionType], partitionSchema, locations);
-            System.out.println(tableName + " partitioned by " + Entity.PARTITION_TYPE.values()[partitionType].name());
-            BasicTable colDefs = ((BasicTable) tableInfo.get(new BasicString("colDefs")));
+            colDefs = ((BasicTable) tableInfo.get(new BasicString("colDefs")));
             this.cols = colDefs.getColumn(0).rows();
-            BasicIntVector typeInts = (BasicIntVector) colDefs.getColumn("typeInt");
+            typeInts = (BasicIntVector) colDefs.getColumn("typeInt");
             this.columnCategories = new Entity.DATA_CATEGORY[this.cols];
             this.columnTypes = new Entity.DATA_TYPE[this.cols];
             for (int i = 0; i < cols; ++i) {
@@ -77,6 +92,15 @@ public class PartitionedTableAppender {
         } finally {
             conn.close();
         }
+
+        this.threadCount = threadCount;
+        if (this.threadCount <= 0) {
+            this.threadCount = Math.min(CORES, locations.rows());
+        }
+        if (this.threadCount > 0) {
+            this.threadCount--; // count calling thread in
+        }
+        threadPool = Executors.newFixedThreadPool(this.threadCount);
     }
 
     private String getDestination(Scalar partitioningColumn) {
@@ -118,13 +142,12 @@ public class PartitionedTableAppender {
                     try {
                         vector.set(j, column.get(j));
                     } catch (Exception e) {
-                        throw  new RuntimeException(e);
+                        throw new RuntimeException(e);
                     }
                 }
                 args.add(vector);
             }
             try {
-                //System.out.println("append " + args.get(1).rows() + " rows to " + conn.getHostName() + ":" + conn.getPort());
                 return ((BasicInt)conn.run("tableInsert", args)).getInt();
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -171,11 +194,24 @@ public class PartitionedTableAppender {
         }
 
         int affected = 0;
-        // TODO: run task in parallel
+        BatchAppendTask savedTask = null;
         Set<DBConnection> keySet = conn2TaskMap.keySet();
+        List<Future<Integer>> futures = new ArrayList<>();
         for (DBConnection conn : keySet) {
             BatchAppendTask task = conn2TaskMap.get(conn);
-            affected += task.call();
+            if (savedTask == null) {
+                savedTask = task;
+            } else {
+                futures.add(threadPool.submit(task));
+            }
+        }
+        affected += savedTask.call();
+        for (int i = 0; i < futures.size(); ++i) {
+            try {
+                affected += futures.get(i).get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
         }
         return affected;
     }
@@ -227,5 +263,9 @@ public class PartitionedTableAppender {
         } else { // CHECK_RESULT_MULTI_ROWS
             return appendBatch(row);
         }
+    }
+
+    public void shutdownThreadPool() {
+        this.threadPool.shutdown();
     }
 }

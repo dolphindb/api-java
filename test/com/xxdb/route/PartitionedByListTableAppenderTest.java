@@ -83,18 +83,14 @@ public class PartitionedByListTableAppenderTest {
         return Arrays.asList(vsymbol, vdate, vtime, vprice, vsize, vg127, vcorr, vcond, vex);
     }
     public static int INSERTIONS = 8000000;
-    public static int BATCH_SIZE = 1000;
+    public static int BATCH_SIZE = 100;
 
     public static void main(String[] args) {
+        PartitionedTableAppender appender = null;
         try {
-            PartitionedTableAppender appender = new PartitionedTableAppender("TradesByList", "192.168.1.25", 8847);
-
-            appender.append(generateRandomRow());
-            appender.append(generateRandomRow());
+            appender = new PartitionedTableAppender("TradesByList", "192.168.1.25", 8847);
+            int affected = 0;
             long start = System.currentTimeMillis();
-            appender.append(generateRandomRow());
-            int affected = 2;
-
             for(int i = 0; i < INSERTIONS; i += BATCH_SIZE) {
                 affected += appender.append(generateRandomRows(BATCH_SIZE));
             }
@@ -103,6 +99,9 @@ public class PartitionedByListTableAppenderTest {
             System.out.println("inserting " + affected + " rows took " + (end - start) + "ms, throughput: " + affected / ((end - start) / 1000.0) + " rows/s");
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (appender != null)
+                appender.shutdownThreadPool();
         }
     }
 }

@@ -2,6 +2,7 @@ package com.xxdb.streaming.sample;
 
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.MessageHandler;
+
 import java.util.concurrent.atomic.AtomicLong;
 
 public class SampleMessageHandler implements MessageHandler {
