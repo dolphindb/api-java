@@ -10,13 +10,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * PartitionedTableAppender is a used to append rows to a partitioned table
- * across a cluster of DolphinDB instances.
+ * TableAppender is a used to append rows to a normal table.
  *
  * <pre>
  * {@code
  *
- * PartitionedTableAppender tableAppender = new PartitionedTableAppender("Trades", "192.168.1.25", 8848);
+ * TableAppender tableAppender = new PartitionedTableAppender("Trades", "192.168.1.25", 8848);
  * List<Entity> row = new ArrayList<>();
  * row.add(BasicInt(1));
  * row.add(BasicString('A'));

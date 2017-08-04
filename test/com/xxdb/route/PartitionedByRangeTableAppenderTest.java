@@ -53,9 +53,9 @@ public class PartitionedByRangeTableAppenderTest {
         for(int i = 0; i < n; ++i) {
             vdate.setDate(i, LocalDate.now());
         }
-        BasicTimeVector vtime = new BasicTimeVector(n);
+        BasicSecondVector vtime = new BasicSecondVector(n);
         for(int i = 0; i < n; ++i) {
-            vtime.setTime(i, LocalTime.now());
+            vtime.setSecond(i, LocalTime.now());
         }
         BasicDoubleVector vprice = new BasicDoubleVector(n);
         for(int i = 0; i < n; ++i) {
@@ -84,17 +84,37 @@ public class PartitionedByRangeTableAppenderTest {
         return Arrays.asList(vsymbol, vdate, vtime, vprice, vsize, vg127, vcorr, vcond, vex);
     }
     public static int INSERTIONS = 20000000;
-    public static int BATCH_SIZE = 1000;
+    public static int BATCH_SIZE = 100;
 
     public static void main(String[] args) {
+        String host = "192.168.1.25";
+        String tableName = "Trades";
+        int port = 8847;
+        if (args.length >= 1) {
+            tableName = args[0];
+        }
+        if (args.length >= 2) {
+            host = args[1];
+        }
+        if (args.length >= 3) {
+            port = Integer.valueOf(args[2]);
+        }
+        PartitionedTableAppender appender = null;
         try {
-            PartitionedTableAppender appender = new PartitionedTableAppender("Trades", "192.168.1.25", 8847);
-            appender.append(generateRandomRow());
+            appender = new PartitionedTableAppender(tableName, host, port);
+            int affected = 0;
+            long start = System.currentTimeMillis();
             for(int i = 0; i < INSERTIONS; i += BATCH_SIZE) {
-                appender.append(generateRandomRows(BATCH_SIZE));
+                affected += appender.append(generateRandomRows(BATCH_SIZE));
             }
+
+            long end = System.currentTimeMillis();
+            System.out.println("inserting " + affected + " rows took " + (end - start) + "ms, throughput: " + affected / ((end - start) / 1000.0) + " rows/s");
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (appender != null)
+                appender.shutdownThreadPool();
         }
     }
 }

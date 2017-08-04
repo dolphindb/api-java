@@ -82,13 +82,13 @@ public class PartitionedByListTableAppenderTest {
         }
         return Arrays.asList(vsymbol, vdate, vtime, vprice, vsize, vg127, vcorr, vcond, vex);
     }
-    public static int INSERTIONS = 8000000;
+    public static int INSERTIONS = 40000000;
     public static int BATCH_SIZE = 100;
 
     public static void main(String[] args) {
         PartitionedTableAppender appender = null;
         try {
-            appender = new PartitionedTableAppender("TradesByList", "192.168.1.25", 8847);
+            appender = new PartitionedTableAppender("TradesByList", "192.168.1.25", 8847, 2);
             int affected = 0;
             long start = System.currentTimeMillis();
             for(int i = 0; i < INSERTIONS; i += BATCH_SIZE) {
