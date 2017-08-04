@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class DBTaskCollector{
 	public DBTaskCollector() {
@@ -45,12 +44,39 @@ public class DBTaskCollector{
 			System.out.println("No valid DB Connections!");
 			return;
 		}
-		int randomNum = ThreadLocalRandom.current().nextInt(0, connectionList.size());
-		for(int i=0; i<5; i++){
+		
+		ArrayList<Integer> lista = new ArrayList <Integer>();
+		lista.add(100);
+		lista.add(300);
+		lista.add(500);
+		lista.add(1000);
+		lista.add(2000);
+		lista.add(3000);
+		
+		ArrayList<Integer> listb = new ArrayList <Integer>();
+		listb.add(1000000);
+		listb.add(1000000);
+		listb.add(1000000);
+		listb.add(3000000);
+		listb.add(5000000);
+		int ctt = 0;
+		while(true){
+			ctt++;
+			System.out.println("RUNNING XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX " + ctt);
+			//int randomNum = ThreadLocalRandom.current().nextInt(0, connectionList.size());
 			Collections.shuffle(tasks);
-			String threadName = "Thread" + (i+1);
-			DBTaskRunner runner = new DBTaskRunner(threadName, tasks, connectionList.get(randomNum),100);
+			String threadName = "Thread" + (ctt);
+			Collections.shuffle(lista);
+			DBTaskRunner runner = new DBTaskRunner(threadName, tasks, connectionList,lista.get(0));
 			runner.start();
+			Collections.shuffle(listb);
+			try {
+				System.out.print("TAKING A BREAK for " + listb.get(0) + " ms");
+				Thread.sleep(listb.get(0));
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
