@@ -60,6 +60,7 @@ public class DBConnection {
 			this.hostName = hostName;
 			this.port = port;
 			socket = new Socket(hostName, port);
+			socket.setTcpNoDelay(true);
 			out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 			@SuppressWarnings("resource")
 			ExtendedDataInput in = new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));

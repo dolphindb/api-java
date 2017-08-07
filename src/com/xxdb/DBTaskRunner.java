@@ -1,12 +1,17 @@
 package com.xxdb;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.xxdb.data.Entity;
 
 public class DBTaskRunner implements Runnable {
 	private DBConnection conn;
+	private ArrayList<DBConnection> connections;
 	private String connStr, threadName;
 	private ArrayList<String> taskList;
 	private Thread t;
@@ -19,6 +24,13 @@ public class DBTaskRunner implements Runnable {
 		this.threadName = threadName;
 	}
 	
+	public DBTaskRunner(String threadName, ArrayList<String> tasks, ArrayList<DBConnection> connections, long breath) {
+		this.connections = connections;
+		this.taskList = tasks;
+		this.breath = breath;
+		this.threadName = threadName;
+	}
+	
 	public void run(){
 		String taskId = "";
 		String taskString = null;
@@ -26,9 +38,17 @@ public class DBTaskRunner implements Runnable {
 			for(String ts: taskList){
 				taskString = ts;
 				String[] lines = taskString.split("\n");
+				if(connections != null){
+					int randomNum = ThreadLocalRandom.current().nextInt(0, connections.size());
+					DBConnection tmp = connections.get(randomNum);
+					conn = tmp;
+					connStr = conn.getHostName() + ":" + conn.getPort();
+				}
 				if(lines[0].startsWith("//")){
 					taskId = lines[0].substring(2, lines[0].length());
-					System.out.println(threadName + ", " + connStr + " running " + taskId);
+					DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+					Date date = new Date();
+					System.out.println(threadName + ", " + connStr + " running " + taskId + " " + dateFormat.format(date));
 				}
 				Thread.sleep(breath);
 				Entity et = conn.run(taskString);

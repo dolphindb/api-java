@@ -18,9 +18,9 @@
 package com.xxdb.streaming.sample;
 
 import com.xxdb.data.BasicInt;
+import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.PollingClient;
 import com.xxdb.streaming.client.TopicPoller;
-import com.xxdb.streaming.client.IMessage;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -29,18 +29,29 @@ import java.util.ArrayList;
 public class PollingClientTester {
     public static void main(String args[]) throws SocketException {
         PollingClient client = new PollingClient(8992);
-
         
         try {
+<<<<<<< HEAD:src/com/xxdb/streaming/sample/PollingClientTester.java
         	
             TopicPoller poller1 = client.subscribe("192.168.1.14", 8082, "trades1", 0);
             int count = 0;
             boolean started = false;
             long start = System.currentTimeMillis();
             while (count < 200) {
+=======
+            TopicPoller poller1 = client.subscribe("192.168.1.25", 8847, "Trades");
+            int count = 0;
+            boolean started = false;
+            long start = System.currentTimeMillis();
+            long last = System.currentTimeMillis();
+            while (true) {
+>>>>>>> origin/master:test/com/xxdb/streaming/sample/PollingClientTester.java
                 ArrayList<IMessage> msgs = poller1.poll(1000);
-                if (msgs == null)
+                if (msgs == null) {
+                    count = 0;
+                    start = System.currentTimeMillis();
                     continue;
+                }
                 if (msgs.size() > 0 && started == false) {
                     started = true;
                     start = System.currentTimeMillis();
@@ -53,11 +64,15 @@ public class PollingClientTester {
                         break;
                     }
                 }
-                if (count % 100000 == 0) {
+                long now = System.currentTimeMillis();
+                if (now - last >= 1000) {
                     long end = System.currentTimeMillis();
                     System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
+                    last = now;
                 }
             }
+            long end = System.currentTimeMillis();
+            System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
             //client.unsubscribe("192.168.1.45", 8904, "trades1");
         } catch (IOException e) {
             e.printStackTrace();

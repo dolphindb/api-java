@@ -1,9 +1,9 @@
 package com.xxdb.streaming.sample;
 
+import com.xxdb.streaming.client.ThreadedClient;
+
 import java.io.IOException;
 import java.net.SocketException;
-
-import com.xxdb.streaming.client.ThreadedClient;
 
 public class ThreadedClientTester {
 
