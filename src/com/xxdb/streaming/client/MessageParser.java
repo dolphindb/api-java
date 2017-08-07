@@ -47,7 +47,7 @@ class MessageParser implements Runnable{
 		ExtendedDataInput in = isRemoteLittleEndian ? new LittleEndianDataInputStream(bis) : new BigEndianDataInputStream(bis);
 		
 		while(true){
-			Boolean b = in.readBoolean(); //true/false : big/Little
+			Boolean b = in.readBoolean(); 
 			assert(b == true);
 			long msgid = in.readLong();
 			if (msgid != offset)
