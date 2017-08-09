@@ -1,16 +1,22 @@
 package com.xxdb;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import com.xxdb.data.BasicAnyVector;
 import com.xxdb.data.BasicChart;
+import com.xxdb.data.BasicDate;
 import com.xxdb.data.BasicDateTimeVector;
 import com.xxdb.data.BasicDateVector;
 import com.xxdb.data.BasicDictionary;
@@ -24,6 +30,8 @@ import com.xxdb.data.BasicShortVector;
 import com.xxdb.data.BasicStringMatrix;
 import com.xxdb.data.BasicStringVector;
 import com.xxdb.data.BasicTable;
+import com.xxdb.data.BasicTime;
+import com.xxdb.data.BasicTimeVector;
 import com.xxdb.data.Entity;
 import com.xxdb.data.Scalar;
 import com.xxdb.data.Vector;
@@ -33,7 +41,7 @@ public class DBConnectionTest {
 	
 	public DBConnectionTest() throws IOException{
 		conn = new DBConnection();
-		if(!conn.connect("localhost",80)){
+		if(!conn.connect("localhost",8080)){
 			throw new IOException("Failed to connect to 2xdb server");
 		}
 	}
@@ -297,12 +305,90 @@ public class DBConnectionTest {
 		conn.upload(map);
 		Entity table = conn.run("lj(t1, t2, `id)");
 		System.out.println(table.getString());
-	}   
+	}
+	
+	/**
+	 * This method bulk loads a table to DolphinDB partitioned historical database through Java API. 
+	 * The whole process consists of three steps:
+	 * (1) Prepare a DolphinDB table in Java.
+	 * (2) Upload the table to DolphinDB Server
+	 * (3) Call savePartition function on server to a historical database
+	 */
+	public void testBulkLoad() throws IOException{
+		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
+		
+		//prepare a table with five columns
+		List<String> colNames = new ArrayList<String>();
+		colNames.add("sym");
+		colNames.add("date");
+		colNames.add("time");
+		colNames.add("price");
+		colNames.add("qty");
+		
+		List<Vector> cols = new ArrayList<Vector>();
+		int n = 2000000;
+		
+		String[] syms = new String[]{"AAPL","AMZN","AB"};
+		String[] vsym = new String[n];
+		int[] indices = generateRandomIntegers(syms.length, n);
+		for(int i=0; i<n; ++i)
+			vsym[i] = syms[indices[i]];
+		cols.add(new BasicStringVector(vsym));
+		
+		BasicDate date = new BasicDate(LocalDate.of(2017,8, 7));
+		int[] dates = new int[]{0,1,2};
+		BasicDateVector vdate = new BasicDateVector(n);
+		indices = generateRandomIntegers(dates.length, n);
+		for(int i=0; i<n; ++i)
+			vdate.setInt(i, date.getInt() + dates[indices[i]]);
+		cols.add(vdate);
+		
+		BasicTime time = new BasicTime(LocalTime.of(9,30, 0));
+		BasicTimeVector vtime = new BasicTimeVector(n);
+		indices = generateRandomIntegers(21600000, n);
+		for(int i=0; i<n; ++i)
+			vtime.setInt(i, time.getInt() + indices[i]);
+		cols.add(vtime);
+
+		
+		double[] prices = new double[]{7.8, 7.6, 7.1, 7.5, 7.4};
+		double[] vprice = new double[n];
+		indices = generateRandomIntegers(prices.length, n);
+		for(int i=0; i<n; ++i)
+			vprice[i] = prices[indices[i]];
+		cols.add(new BasicDoubleVector(vprice));
+		
+		int[] qtys = new int[]{5,4,3,2,1};
+		int[] vqty = new int[n];
+		indices = generateRandomIntegers(qtys.length, n);
+		for(int i=0; i<n; ++i)
+			vqty[i] = qtys[indices[i]];
+		cols.add(new BasicIntVector(vqty));;
+		
+		BasicTable t1 = new BasicTable(colNames, cols);
+	
+		//upload the table to DolphinDB server
+		Map<String, Entity> map = new HashMap<String, Entity>();
+		map.put("t1", t1);
+		LocalDateTime start = LocalDateTime.now();
+		conn.upload(map);
+		LocalDateTime end = LocalDateTime.now();
+		Duration elapsed = Duration.between(start, end);
+		System.out.println("Table upload time: " + elapsed.getSeconds() + " s " + (elapsed.getNano()/1000000));
+	}
+	
+	private int[] generateRandomIntegers(int uplimit, int count){
+		Random randomGenerator = new Random();
+		int[] indices = new int[count];
+		for(int i=0; i<count; ++i)
+			indices[i] = randomGenerator.nextInt(uplimit);
+		return indices;
+	}
 	
 	public static void main(String[] args){
 		try{
 			DBConnectionTest test = new DBConnectionTest();
-			test.testVoid();
+			/*test.testVoid();
 			test.testFunctionDef();
 			test.testIntegerVector();
 			test.testStringVector();
@@ -323,7 +409,8 @@ public class DBConnectionTest {
 			test.testFunctionIntMatrix(4, 2);
 			test.testFunctionDoubleMatrix(4, 2);
 			test.testFunctionStrMatrix();
-			test.testTableUpload();
+			test.testTableUpload();*/
+			test.testBulkLoad();
 
 		}
 		catch(Exception ex){
