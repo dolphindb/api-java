@@ -38,19 +38,27 @@ class MessageParser implements Runnable{
 		Socket socket = this.socket;
 		try {
 		if(bis == null) bis= new BufferedInputStream(socket.getInputStream());
-		long offset = 0;
-		
-		String host = socket.getInetAddress().getHostAddress();
-		boolean isRemoteLittleEndian = this.dispatcher.isRemoteLittleEndian(host);
+		long offset = -1;
 
-		ExtendedDataInput in = isRemoteLittleEndian ? new LittleEndianDataInputStream(bis) : new BigEndianDataInputStream(bis);
-		
+		ExtendedDataInput in = null; //isRemoteLittleEndian ? new LittleEndianDataInputStream(bis) : new BigEndianDataInputStream(bis);
+
 		while(true){
-			Boolean b = in.readBoolean(); 
-			assert(b == true);
+
+			if (in == null) {
+				Boolean b = bis.read() != 0; //true/false : little/big
+				if (b == true)
+					in = new LittleEndianDataInputStream(bis);
+				else
+					in = new BigEndianDataInputStream(bis);
+			} else {
+				in.readBoolean();
+			}
 			long msgid = in.readLong();
-			if (msgid != offset)
+			if (offset == -1) {
+				offset = msgid;
+			} else {
 				assert(offset == msgid);
+			}
 			String topic = in.readString();
 
 			short flag = in.readShort();
