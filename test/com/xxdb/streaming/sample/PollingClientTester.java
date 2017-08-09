@@ -20,7 +20,6 @@ package com.xxdb.streaming.sample;
 import com.xxdb.data.BasicByte;
 import com.xxdb.data.BasicDouble;
 import com.xxdb.data.BasicInt;
-import com.xxdb.route.PartitionedByListTableAppenderTest;
 import com.xxdb.route.PartitionedByRangeTableAppenderTest;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.PollingClient;
@@ -29,9 +28,6 @@ import com.xxdb.streaming.client.TopicPoller;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 public class PollingClientTester {
     public static void main(String args[]) throws SocketException {
