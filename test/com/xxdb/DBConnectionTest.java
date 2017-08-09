@@ -41,7 +41,7 @@ public class DBConnectionTest {
 	
 	public DBConnectionTest() throws IOException{
 		conn = new DBConnection();
-		if(!conn.connect("localhost",8848)){
+		if(!conn.connect("localhost",8080)){
 			throw new IOException("Failed to connect to 2xdb server");
 		}
 	}
@@ -326,7 +326,7 @@ public class DBConnectionTest {
 		colNames.add("qty");
 		
 		List<Vector> cols = new ArrayList<Vector>();
-		int n = 20000000;
+		int n = 5000000;
 		
 		String[] syms = new String[]{"AAPL","AMZN","AB"};
 		String[] vsym = new String[n];
@@ -375,6 +375,20 @@ public class DBConnectionTest {
 		LocalDateTime end = LocalDateTime.now();
 		Duration elapsed = Duration.between(start, end);
 		System.out.println("Table upload time: " + elapsed.getSeconds() + " s " + (elapsed.getNano()/1000000));
+		
+		/**
+		 * run the script on server to save data to historical database
+		 * (1) create or open the database which has value-based partition on date.
+		 * (2) convert the column sym from STRING type to SYMBOL type. The SYMBOL type has much better query performance than STRING type.
+		 * (3) call savePartition function to dump data to historical database on disk.
+		*/
+		String script = "tickdb = database('c:/DolphinDB/db_testing/TickDB_A', VALUE, 2000.01.01..2024.12.31) \n" + 
+				"t1[`sym] = symbol(t1.sym) \n" +
+				"tickdb.savePartition(t1, `Trades, `date,true, true)";
+		start = LocalDateTime.now();
+		conn.run(script);
+		elapsed = Duration.between(start, LocalDateTime.now());
+		System.out.println("Table save time: " + elapsed.getSeconds() + " s " + (elapsed.getNano()/1000000));
 	}
 	
 	private int[] generateRandomIntegers(int uplimit, int count){
