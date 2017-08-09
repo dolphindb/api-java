@@ -368,12 +368,11 @@ public class DBConnectionTest {
 		BasicTable t1 = new BasicTable(colNames, cols);
 	
 		//upload the table to DolphinDB server
-		Map<String, Entity> map = new HashMap<String, Entity>();
-		map.put("t1", t1);
+		Map<String, Entity> vars = new HashMap<String, Entity>();
+		vars.put("t1", t1);
 		LocalDateTime start = LocalDateTime.now();
-		conn.upload(map);
-		LocalDateTime end = LocalDateTime.now();
-		Duration elapsed = Duration.between(start, end);
+		conn.upload(vars);
+		Duration elapsed = Duration.between(start, LocalDateTime.now());
 		System.out.println("Table upload time: " + elapsed.getSeconds() + " s " + (elapsed.getNano()/1000000));
 		
 		/**
@@ -385,6 +384,7 @@ public class DBConnectionTest {
 		String script = "tickdb = database('c:/DolphinDB/db_testing/TickDB_A', VALUE, 2000.01.01..2024.12.31) \n" + 
 				"t1[`sym] = symbol(t1.sym) \n" +
 				"tickdb.savePartition(t1, `Trades, `date,true, true)";
+		
 		start = LocalDateTime.now();
 		conn.run(script);
 		elapsed = Duration.between(start, LocalDateTime.now());
