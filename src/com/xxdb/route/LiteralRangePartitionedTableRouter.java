@@ -71,9 +71,6 @@ class LiteralRangePartitionedTableRouter extends AbstractRangePartitionedTableRo
             throw  new RuntimeException("invalid column category " + partitionColumn.getDataCategory().name() + ", expect Literal category.");
         try {
             String stringVal = partitionColumn.getString();
-            if (stringVal.compareTo("ACMR") > 0) {
-                System.out.println();
-            }
             int pos = lowerBound(this.ranges, stringVal);
             if (0 <= pos && pos < ranges.length) {
                 if (ranges[pos].equals(stringVal))

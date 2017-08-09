@@ -89,7 +89,6 @@ public class BasicLongVector extends AbstractVector{
 	}
 
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		for(long value : values)
-			out.writeLong(value);
+		out.writeLongArray(values);
 	}
 }

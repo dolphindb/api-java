@@ -17,7 +17,11 @@
  */
 package com.xxdb.streaming.sample;
 
+import com.xxdb.data.BasicByte;
+import com.xxdb.data.BasicDouble;
 import com.xxdb.data.BasicInt;
+import com.xxdb.route.PartitionedByListTableAppenderTest;
+import com.xxdb.route.PartitionedByRangeTableAppenderTest;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.PollingClient;
 import com.xxdb.streaming.client.TopicPoller;
@@ -25,6 +29,9 @@ import com.xxdb.streaming.client.TopicPoller;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class PollingClientTester {
     public static void main(String args[]) throws SocketException {
@@ -49,6 +56,21 @@ public class PollingClientTester {
                 }
 
                 count += msgs.size();
+                for (int i = 0; i < msgs.size(); ++i) {
+                    String symbol = msgs.get(i).getEntity(0).getString();
+                    if (!PartitionedByRangeTableAppenderTest.symbolSet.contains(symbol))
+                        assert PartitionedByRangeTableAppenderTest.symbolSet.contains(symbol);
+                    Double price = ((BasicDouble)msgs.get(i).getEntity(3)).getDouble();
+                    if (!PartitionedByRangeTableAppenderTest.doubleSet.contains(price))
+                        assert PartitionedByRangeTableAppenderTest.doubleSet.contains(price);
+                    Integer size =  ((BasicInt)msgs.get(i).getEntity(4)).getInt();
+                    if (!PartitionedByRangeTableAppenderTest.intSet.contains(size))
+                        assert PartitionedByRangeTableAppenderTest.intSet.contains(size);
+                    byte ex = ((BasicByte)msgs.get(i).getEntity(8)).getByte();
+                    if (ex != 'B')
+                        assert(ex == 'B');
+                }
+
                 //System.out.println("get message " + count);
                 if (msgs.size() > 0) {
                     if (((BasicInt)msgs.get(msgs.size() - 1).getEntity(2)).getInt() == -1) {

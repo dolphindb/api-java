@@ -89,7 +89,6 @@ public class BasicFloatVector extends AbstractVector{
 	}
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		for(float value : values)
-			out.writeFloat(value);
+		out.writeFloatArray(values);
 	}
 }

@@ -89,8 +89,7 @@ public class BasicDoubleVector extends AbstractVector{
 	}
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		for(double value : values)
-			out.writeDouble(value);
+		out.writeDoubleArray(values);
 	}
 
 }

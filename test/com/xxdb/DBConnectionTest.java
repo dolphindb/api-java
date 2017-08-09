@@ -41,7 +41,7 @@ public class DBConnectionTest {
 	
 	public DBConnectionTest() throws IOException{
 		conn = new DBConnection();
-		if(!conn.connect("localhost",8080)){
+		if(!conn.connect("localhost",8848)){
 			throw new IOException("Failed to connect to 2xdb server");
 		}
 	}
@@ -326,7 +326,7 @@ public class DBConnectionTest {
 		colNames.add("qty");
 		
 		List<Vector> cols = new ArrayList<Vector>();
-		int n = 2000000;
+		int n = 20000000;
 		
 		String[] syms = new String[]{"AAPL","AMZN","AB"};
 		String[] vsym = new String[n];
@@ -411,7 +411,6 @@ public class DBConnectionTest {
 			test.testFunctionStrMatrix();
 			test.testTableUpload();*/
 			test.testBulkLoad();
-
 		}
 		catch(Exception ex){
 			ex.printStackTrace();

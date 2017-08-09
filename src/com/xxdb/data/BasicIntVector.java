@@ -91,7 +91,6 @@ public class BasicIntVector extends AbstractVector{
 	}
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		for(int value : values)
-			out.writeInt(value);
+		out.writeIntArray(values);
 	}
 }

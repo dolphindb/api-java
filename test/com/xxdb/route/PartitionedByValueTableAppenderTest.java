@@ -28,7 +28,7 @@ public class PartitionedByValueTableAppenderTest {
         return Arrays.asList(symbol, date, time, price, size, g127, corr, cond, ex);
     }
 
-        public static void main(String[] args) {
+    public static void main(String[] args) {
         try {
             PartitionedTableAppender appender = new PartitionedTableAppender("TradesByValue", "192.168.1.25", 8847);
             System.out.println(appender.append(generateRandomRow()));

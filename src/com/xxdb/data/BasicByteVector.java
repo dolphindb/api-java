@@ -89,7 +89,6 @@ public class BasicByteVector extends AbstractVector{
 	}
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		for(byte value : values)
-			out.writeByte(value);
+		out.write(values);
 	}
 }

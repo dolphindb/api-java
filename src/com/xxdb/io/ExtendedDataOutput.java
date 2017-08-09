@@ -6,4 +6,16 @@ import java.io.IOException;
 public interface ExtendedDataOutput extends DataOutput {
 	void writeString(String str) throws IOException;
 	void flush() throws IOException;
+	void writeShortArray(short[] A) throws IOException;
+	void writeShortArray(short[] A, int startIdx, int len) throws IOException;
+	void writeIntArray(int[] A) throws IOException;
+	void writeIntArray(int[] A, int startIdx, int len) throws IOException;
+	void writeLongArray(long[] A) throws IOException;
+	void writeLongArray(long[] A, int startIdx, int len) throws IOException;
+	void writeDoubleArray(double[] A) throws IOException;
+	void writeDoubleArray(double[] A, int startIdx, int len) throws IOException;
+	void writeFloatArray(float[] A) throws IOException;
+	void writeFloatArray(float[] A, int startIdx, int len) throws IOException;
+	void writeStringArray(String[] A) throws IOException;
+	void writeStringArray(String[] A, int startIdx, int len) throws IOException;
 }

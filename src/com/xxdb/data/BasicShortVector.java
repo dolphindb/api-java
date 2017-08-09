@@ -90,7 +90,6 @@ public class BasicShortVector extends AbstractVector{
 
 	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
-		for(short value : values)
-			out.writeShort(value);
+		out.writeShortArray(values);
 	}
 }
