@@ -16,7 +16,6 @@ import com.xxdb.data.Entity;
 import com.xxdb.streaming.client.IMessage;
 
 abstract class AbstractClient implements MessageDispatcher{
-	
 	protected static final int DEFAULT_PORT = 8849;
 	protected static final String DEFAULT_HOST = "localhost";
 	protected int listeningPort;

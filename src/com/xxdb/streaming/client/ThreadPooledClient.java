@@ -12,9 +12,9 @@ import java.util.concurrent.locks.LockSupport;
 
 
 public class ThreadPooledClient extends AbstractClient {
-
 	private static int CORES = Runtime.getRuntime().availableProcessors();
     private ExecutorService threadPool;
+    
     private class QueueHandlerBinder {
         public QueueHandlerBinder(BlockingQueue<List<IMessage>> queue, MessageHandler handler) {
             this.queue = queue;

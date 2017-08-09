@@ -4,12 +4,9 @@ import com.xxdb.data.BasicAnyVector;
 import com.xxdb.data.Entity;
 
 public class BasicMessage implements IMessage {
-	
-	long offset = 0;
-	
-	String topic = "";
-	
-	BasicAnyVector msg = null;
+	private long offset = 0;
+	private String topic = "";
+	private BasicAnyVector msg = null;
 	
 	public BasicMessage(long offset,String topic, BasicAnyVector msg){
 		this.offset = offset;

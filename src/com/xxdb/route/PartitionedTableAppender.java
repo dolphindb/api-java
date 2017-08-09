@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.concurrent.*;
 
 /**
- * PartitionedTableAppender is a used to append rows to a partitioned table
+ * PartitionedTableAppender is used to append rows to a partitioned table
  * across a cluster of DolphinDB instances.
  *
  * <pre>
@@ -37,7 +37,6 @@ import java.util.concurrent.*;
  * </pre>
  */
 public class PartitionedTableAppender {
-    // alias to connection mapping
     private static final int CORES = Runtime.getRuntime().availableProcessors();
     private Map<String, DBConnection> connectionMap = new HashMap<>();
     private BasicDictionary tableInfo;
@@ -98,7 +97,7 @@ public class PartitionedTableAppender {
             this.threadCount = Math.min(CORES, locations.rows());
         }
         if (this.threadCount > 0) {
-            this.threadCount--; // count calling thread in
+            this.threadCount--;
         }
         threadPool = Executors.newFixedThreadPool(this.threadCount);
     }

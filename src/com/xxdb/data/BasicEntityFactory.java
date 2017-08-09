@@ -1,8 +1,6 @@
 package com.xxdb.data;
 
 import java.io.IOException;
-import java.lang.*;
-
 import com.xxdb.io.ExtendedDataInput;
 
 public class BasicEntityFactory implements EntityFactory{
@@ -30,7 +28,7 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[Entity.DATA_TYPE.DT_HANDLE.ordinal()] = new SystemHandleFactory();
 		factories[Entity.DATA_TYPE.DT_CODE.ordinal()] = new MetaCodeFactory();
 		factories[Entity.DATA_TYPE.DT_DATASOURCE.ordinal()] = new DataSourceFactory();
-		factories[Entity.DATA_TYPE.DT_RESOURCE.ordinal()] = new DataSourceFactory();
+		factories[Entity.DATA_TYPE.DT_RESOURCE.ordinal()] = new ResourceFactory();
 	}
 	
 	@Override

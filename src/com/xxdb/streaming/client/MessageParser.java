@@ -14,7 +14,6 @@ import com.xxdb.streaming.client.BasicMessage;
 import com.xxdb.streaming.client.IMessage;
 
 class MessageParser implements Runnable{
-		
 	private final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length -1;
 	private final int MAX_TYPE_VALUE = Entity.DATA_TYPE.values().length -1;
 

@@ -5,7 +5,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 class Daemon  implements Runnable{
-	
 	private int listeningPort = 0;
 	private MessageDispatcher dispatcher;
 	public Daemon(int port, MessageDispatcher dispatcher) {

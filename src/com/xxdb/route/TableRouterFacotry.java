@@ -3,7 +3,6 @@ package com.xxdb.route;
 import com.xxdb.data.AbstractVector;
 import com.xxdb.data.BasicAnyVector;
 import com.xxdb.data.Entity;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class TableRouterFacotry {
     public static TableRouter createRouter(Entity.PARTITION_TYPE type, AbstractVector values, BasicAnyVector locations) {
@@ -29,5 +28,4 @@ public class TableRouterFacotry {
         }
         throw new RuntimeException("Unsupported partition type " + type.toString());
     }
-
 }

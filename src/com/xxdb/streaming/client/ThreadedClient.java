@@ -13,6 +13,7 @@ public class ThreadedClient extends  AbstractClient {
 	public ThreadedClient() throws SocketException {
         this(DEFAULT_PORT);
     }
+	
     public ThreadedClient(int subscribePort) throws SocketException{
         super(subscribePort);
     }

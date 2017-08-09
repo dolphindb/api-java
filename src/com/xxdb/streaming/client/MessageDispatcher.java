@@ -6,7 +6,6 @@ import java.util.List;
 
 interface MessageDispatcher {
 	boolean isRemoteLittleEndian(String host);
-	
     void dispatch(IMessage message);
     void batchDispatch(List<IMessage> message);
 }

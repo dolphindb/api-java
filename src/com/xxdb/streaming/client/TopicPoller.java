@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-
 public class TopicPoller {
     BlockingQueue<List<IMessage>> queue;
     ArrayList<IMessage> cache = null;

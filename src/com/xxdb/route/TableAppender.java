@@ -5,9 +5,7 @@ import com.xxdb.data.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * TableAppender is a used to append rows to a normal table.
@@ -24,7 +22,6 @@ import java.util.Map;
  * </pre>
  */
 public class TableAppender {
-    // alias to connection mapping
     private DBConnection conn;
     private BasicDictionary tableInfo;
     private BasicString tableName;

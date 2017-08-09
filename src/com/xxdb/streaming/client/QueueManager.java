@@ -8,6 +8,7 @@ import com.xxdb.streaming.client.IMessage;
 
 class QueueManager {
 	private HashMap<String, BlockingQueue<List<IMessage>>> queueMap = new HashMap<String, BlockingQueue<List<IMessage>>>();
+	
 	public synchronized BlockingQueue<List<IMessage>> addQueue(String topic) {
 		if(!queueMap.containsKey(topic)){
 			BlockingQueue<List<IMessage>> q = new ArrayBlockingQueue<>(4096);

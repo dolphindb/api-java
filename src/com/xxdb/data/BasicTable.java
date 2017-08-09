@@ -24,7 +24,6 @@ public class BasicTable extends AbstractEntity implements Table{
 			String name = in.readString();
 			name2index_.put(name, name2index_.size());
 			names_.add(name);
-			
 		}
 		
 		BasicEntityFactory factory = new BasicEntityFactory();
