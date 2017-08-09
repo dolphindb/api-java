@@ -31,21 +31,12 @@ public class PollingClientTester {
         PollingClient client = new PollingClient(8992);
         
         try {
-<<<<<<< HEAD:src/com/xxdb/streaming/sample/PollingClientTester.java
-        	
-            TopicPoller poller1 = client.subscribe("192.168.1.14", 8082, "trades1", 0);
-            int count = 0;
-            boolean started = false;
-            long start = System.currentTimeMillis();
-            while (count < 200) {
-=======
             TopicPoller poller1 = client.subscribe("192.168.1.25", 8847, "Trades");
             int count = 0;
             boolean started = false;
             long start = System.currentTimeMillis();
             long last = System.currentTimeMillis();
             while (true) {
->>>>>>> origin/master:test/com/xxdb/streaming/sample/PollingClientTester.java
                 ArrayList<IMessage> msgs = poller1.poll(1000);
                 if (msgs == null) {
                     count = 0;

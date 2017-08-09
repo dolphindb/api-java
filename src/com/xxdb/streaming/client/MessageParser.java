@@ -105,7 +105,7 @@ class MessageParser implements Runnable{
 				}
 				offset += rowSize;
 			} else {
-				throw new RuntimeException("body is not a vector");
+				throw new RuntimeException("message body has an invalid format.vector is expected");
 			}
 		}
 	} catch (Exception e) {

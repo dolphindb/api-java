@@ -109,9 +109,7 @@ public class PartitionedTableAppender {
     private DBConnection getConnection(Entity partitioningColumn) throws IOException{
         if (!(partitioningColumn instanceof  Scalar))
             throw new RuntimeException("partitioning column value must be a scalar");
-        //System.out.println(partitioningColumn.toString());
         String dest = getDestination((Scalar) partitioningColumn);
-        //System.out.println(partitioningColumn.toString() + " => " + dest);
         DBConnection conn = connectionMap.get(dest);
         if (conn == null) {
             conn = new DBConnection();
