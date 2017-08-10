@@ -4,6 +4,12 @@ import java.io.IOException;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+/**
+ * 
+ * Corresponds to DolphinDB ANY VECTOR
+ *
+ */
+
 public class BasicAnyVector extends AbstractVector{
 	private Entity[] values;
 	

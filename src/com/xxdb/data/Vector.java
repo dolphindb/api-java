@@ -1,4 +1,9 @@
 package com.xxdb.data;
+/**
+ * 
+ * Interface for DolphinDB data form: ARRAY, BIGARRAY
+ *
+ */
 
 public interface Vector extends Entity{
 	final int DISPLAY_ROWS = 10;

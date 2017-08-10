@@ -6,6 +6,12 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Corresponds to DolphinDB MINUTE MATRIX
+ *
+ */
+
 public class BasicMinuteMatrix extends BasicIntMatrix{
 	public BasicMinuteMatrix(int rows, int columns){
 		super(rows, columns);

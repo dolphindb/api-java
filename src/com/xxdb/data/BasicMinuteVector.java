@@ -6,6 +6,12 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Corresponds to DolphinDB MINUTE VECTOR
+ *
+ */
+
 public class BasicMinuteVector extends BasicIntVector{
 	
 	public BasicMinuteVector(int size){

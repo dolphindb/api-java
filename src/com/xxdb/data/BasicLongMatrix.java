@@ -6,6 +6,12 @@ import java.util.List;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+/**
+ * 
+ * Corresponds to DolphinDB LONG MATRIX
+ *
+ */
+
 public class BasicLongMatrix extends AbstractMatrix{
 	private long[] values;
 	

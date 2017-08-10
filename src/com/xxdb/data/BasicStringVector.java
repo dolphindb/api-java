@@ -8,6 +8,12 @@ import java.util.List;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+/**
+ * 
+ * Corresponds to DolphinDB STRING VECTOR
+ *
+ */
+
 public class BasicStringVector extends AbstractVector{
 	static final String[] symbols = new String[]{"A","AA","AABWS","AAC","AACC","AAI","AAME","AANB","AAON","AAP","AAPL",
 			"AAPR","AAR","AATI","AAU","AAUKD","AAV","AAWW","AAY","AAZST","AB","ABA","ABAX","ABB","ABBC","ABBI",

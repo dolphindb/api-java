@@ -9,6 +9,12 @@ import java.util.Map;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+/**
+ * 
+ * Corresponds to DolphinDB TABLE object
+ *
+ */
+
 public class BasicTable extends AbstractEntity implements Table{
 	private List<Vector> columns_ = new ArrayList<Vector>();
 	private List<String> names_ = new ArrayList<String>();

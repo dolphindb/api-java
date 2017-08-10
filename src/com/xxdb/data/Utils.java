@@ -5,6 +5,12 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 
+/**
+ * 
+ * Provides temporal functions
+ *
+ */
+
 public class Utils {
 	public static final int DISPLAY_ROWS = 20;
 	public static final int DISPLAY_COLS = 100;

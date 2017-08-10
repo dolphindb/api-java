@@ -10,6 +10,12 @@ import java.util.Set;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+/**
+ * 
+ * Corresponds to DolphinDB DICTIONARY object
+ *
+ */
+
 public class BasicDictionary extends AbstractEntity implements Dictionary{
 	private Map<Scalar, Entity> dict;
 	private DATA_TYPE keyType;

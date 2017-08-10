@@ -6,6 +6,13 @@ import java.time.temporal.Temporal;
 
 import com.xxdb.io.ExtendedDataInput;
 
+
+/**
+ * 
+ * Corresponds to DolphinDB SECOND object
+ *
+ */
+
 public class BasicSecond extends BasicInt{
 
 	public BasicSecond(LocalTime value){

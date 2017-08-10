@@ -6,6 +6,12 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Corresponds to DolphinDB TIMESTAMP VECTOR
+ *
+ */
+
 public class BasicTimestampVector extends BasicLongVector{
 
 	public BasicTimestampVector(int size){

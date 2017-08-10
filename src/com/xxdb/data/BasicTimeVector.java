@@ -3,8 +3,13 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.List;
-
 import com.xxdb.io.ExtendedDataInput;
+
+/**
+ * 
+ * Corresponds to DolphinDB TIME VECTOR
+ *
+ */
 
 public class BasicTimeVector extends BasicIntVector{
 	

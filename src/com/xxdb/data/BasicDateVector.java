@@ -6,6 +6,12 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Corresponds to DolphinDB DATE VECTOR
+ *
+ */
+
 public class BasicDateVector extends BasicIntVector{
 
 	public BasicDateVector(int size) {

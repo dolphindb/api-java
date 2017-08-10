@@ -6,6 +6,12 @@ import java.time.temporal.Temporal;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+/**
+ * 
+ * Corresponds to DolphinDB SHORT object
+ *
+ */
+
 public class BasicShort extends AbstractScalar implements Comparable<BasicShort>{
 	private short value;
 

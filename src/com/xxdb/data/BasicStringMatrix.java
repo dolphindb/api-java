@@ -2,9 +2,14 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.util.List;
-
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+
+/**
+ * 
+ * Corresponds to DolphinDB STRING MATRIX
+ *
+ */
 
 public class BasicStringMatrix extends AbstractMatrix{
 	private String[] values;

@@ -6,6 +6,13 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
+
+/**
+ * 
+ * Corresponds to DolphinDB MONTH VECTOR
+ *
+ */
+
 public class BasicMonthVector extends BasicIntVector{
 
 	public BasicMonthVector(int size){

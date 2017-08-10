@@ -6,6 +6,13 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
+
+/**
+ * 
+ * Corresponds to DolphinDB SECOND MATRIX
+ *
+ */
+
 public class BasicSecondMatrix extends BasicIntMatrix{
 	public BasicSecondMatrix(int rows, int columns){
 		super(rows, columns);

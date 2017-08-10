@@ -6,6 +6,12 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Corresponds to DolphinDB MONTH MATRIX
+ *
+ */
+
 public class BasicMonthMatrix extends BasicIntMatrix{
 	public BasicMonthMatrix(int rows, int columns){
 		super(rows, columns);

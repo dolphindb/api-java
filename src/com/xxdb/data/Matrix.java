@@ -1,5 +1,11 @@
 package com.xxdb.data;
 
+/**
+ * 
+ * Interface for DolphinDB data form: MATRIX
+ *
+ */
+
 public interface Matrix extends Entity{
 	boolean isNull(int row, int column);
 	void setNull(int row, int column);

@@ -7,6 +7,12 @@ import java.time.temporal.Temporal;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Corresponds to DolphinDB MONTH object
+ *
+ */
+
 public class BasicMonth extends BasicInt{
 
 	public BasicMonth(int year, Month month){

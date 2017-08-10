@@ -6,6 +6,12 @@ import java.time.temporal.Temporal;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Corresponds to DolphinDB timestamp scalar
+ *
+ */
+
 public class BasicTimestamp extends BasicLong{
 
 	public BasicTimestamp(LocalDateTime value){

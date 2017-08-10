@@ -6,6 +6,12 @@ import java.time.temporal.Temporal;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Corresponds to DolphinDB DATETIME object
+ *
+ */
+
 public class BasicDateTime extends BasicInt{
 
 	public BasicDateTime(LocalDateTime value){

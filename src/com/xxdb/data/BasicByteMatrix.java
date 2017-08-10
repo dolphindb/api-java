@@ -6,6 +6,12 @@ import java.util.List;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+/**
+ * 
+ * Corresponds to DolphinDB BYTE MATRIX
+ *
+ */
+
 public class BasicByteMatrix extends AbstractMatrix{
 	private byte[] values;
 	

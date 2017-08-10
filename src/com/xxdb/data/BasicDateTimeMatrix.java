@@ -6,6 +6,12 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Corresponds to DolphinDB DATETIME MATRIX
+ *
+ */
+
 public class BasicDateTimeMatrix extends BasicIntMatrix{
 	public BasicDateTimeMatrix(int rows, int columns){
 		super(rows, columns);

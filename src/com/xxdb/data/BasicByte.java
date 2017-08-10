@@ -7,6 +7,12 @@ import java.time.temporal.Temporal;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+/**
+ * 
+ * Corresponds to DolphinDB BYTE object
+ *
+ */
+
 public class BasicByte extends AbstractScalar implements Comparable<BasicByte>{
 	private byte value;
 

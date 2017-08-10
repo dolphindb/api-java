@@ -21,6 +21,19 @@ import com.xxdb.io.LittleEndianDataInputStream;
 import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.ProgressListener;
 
+/**
+ * Sets up a connection to DolphinDB server through TCP/IP protocol
+ * Executes DolphinDB scripts
+ * 
+ * Example:
+ * 
+ * import com.xxdb;
+ * DBConnection conn = new DBConnection();
+ * boolean success = conn.connect("localhost", 8080);
+ * conn.run("sum(1..100)");
+ *
+ */
+
 public class DBConnection {
 	private static final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length -1;
 	private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.values().length -1;

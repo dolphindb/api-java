@@ -6,6 +6,12 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Corresponds to DolphinDB matrix with time elements.
+ *
+ */
+
 public class BasicTimeMatrix extends BasicIntMatrix{
 	public BasicTimeMatrix(int rows, int columns){
 		super(rows, columns);

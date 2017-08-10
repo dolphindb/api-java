@@ -6,6 +6,12 @@ import java.util.List;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+/**
+ * 
+ * Corresponds to DolphinDB FLOAT VECTOR
+ *
+ */
+
 public class BasicFloatVector extends AbstractVector{
 	private float[] values;
 	

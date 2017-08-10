@@ -6,6 +6,12 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Corresponds to DolphinDB SECOND VECTOR
+ *
+ */
+
 public class BasicSecondVector extends BasicIntVector{
 	
 	public BasicSecondVector(int size){

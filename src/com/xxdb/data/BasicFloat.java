@@ -7,6 +7,12 @@ import java.time.temporal.Temporal;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+/**
+ * 
+ * Corresponds to DolphinDB FLOAT object
+ *
+ */
+
 public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>{
 	private static final DecimalFormat df1 = new DecimalFormat("0.######");
 	private static final DecimalFormat df2 = new DecimalFormat("0.######E0");

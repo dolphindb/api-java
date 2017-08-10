@@ -5,6 +5,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
+/**
+ * 
+ * Corresponds to DolphinDB TIMESTAMP MATRIX
+ *
+ */
 
 public class BasicTimestampMatrix extends BasicLongMatrix{
 	public BasicTimestampMatrix(int rows, int columns){

@@ -6,6 +6,12 @@ import java.time.temporal.Temporal;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+/**
+ * 
+ * Corresponds to DolphinDB BOOL object
+ *
+ */
+
 public class BasicBoolean extends AbstractScalar implements Comparable<BasicBoolean>{
 	private byte value;
 

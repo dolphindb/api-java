@@ -1,5 +1,11 @@
 package com.xxdb.data;
 
+/**
+ * 
+ * Interface for all chart types
+ *
+ */
+
 public interface Chart extends Dictionary{
 	enum CHART_TYPE {CT_AREA, CT_BAR, CT_COLUMN, CT_HISTOGRAM, CT_LINE, CT_PIE, CT_SCATTER, CT_TREND};
 	

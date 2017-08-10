@@ -4,6 +4,12 @@ import java.io.IOException;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Handles creating chart and retrieving chart properties
+ *
+ */
+
 public class BasicChart extends BasicDictionary implements Chart{
 	private static BasicString KEY_CHARTTYPE = new BasicString("chartType");
 	private static BasicString KEY_DATA = new BasicString("data");
