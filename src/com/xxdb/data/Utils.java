@@ -126,7 +126,7 @@ public class Utils {
 	}
 	
 	public static long countMilliseconds(LocalDateTime dt){
-		int seconds = countSeconds(dt);
+		long seconds = countSeconds(dt);
 		return seconds * 1000 + dt.getNano() / 1000000;
 	}
 	
