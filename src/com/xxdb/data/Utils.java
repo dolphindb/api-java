@@ -126,17 +126,26 @@ public class Utils {
 	}
 	
 	public static long countMilliseconds(LocalDateTime dt){
-		return countMilliseconds(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour(), dt.getMinute(), dt.getSecond(), dt.getNano()/1000000);
+		int seconds = countSeconds(dt);
+		return seconds * 1000 + dt.getNano() / 1000000;
 	}
 	
 	public static long countMilliseconds(int year, int month, int day, int hour, int minute, int second, int millisecond){
 		return countSeconds(year, month, day, hour, minute, second) * 1000L + millisecond;
 	}
 	public static long countNanoseconds(LocalDateTime dt) {
-		return countMilliseconds(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour(), dt.getMinute(), dt.getSecond(), 0) * 1000000 + dt.getNano();
+		long seconds = countSeconds(dt);
+		return seconds * 1000000000l + dt.getNano();
 	}
+
+	/**
+	 * 1 <==> 1999.12.31 00:00:00.001
+	 * 0 <==> 1999.12.31 00:00:00.000
+	 * -1 <==> 1999.12.30 23:59:59.999
+	 * ...
+	 */
 	public static LocalDateTime parseTimestamp(long milliseconds){
-		int days= (int)(milliseconds / 86400000L);
+		int days= (int)Math.floor(((double)milliseconds / 86400000.0));
 		LocalDate date = Utils.parseDate(days);
 		
 		milliseconds = milliseconds % 86400000L;
@@ -158,10 +167,15 @@ public class Utils {
 	public static final long NANOS_PER_MINUTE = NANOS_PER_SECOND * SECONDS_PER_MINUTE;
 	public static final long NANOS_PER_HOUR = NANOS_PER_MINUTE * MINUTES_PER_HOUR;
 	public static final long NANOS_PER_DAY = NANOS_PER_HOUR * HOURS_PER_DAY;
-
+	public static final long MILLS_PER_DAY = NANOS_PER_DAY / 1000000;
+	/**
+	 * 1 <==> 1999.12.31 00:00:00.000000001
+	 * 0 <==> 1999.12.31 00:00:00.000000000
+	 * -1 <==> 1999.12.30 23:59:59.999999999
+	 * ...
+	 */
 	public static LocalDateTime parseNanoTimestamp(long nanoseconds){
-		int days= (int)(nanoseconds / NANOS_PER_DAY);
-
+		int days=  (int)Math.floor(((double)nanoseconds / NANOS_PER_DAY));
 		LocalDate date = Utils.parseDate(days);
 		nanoseconds = nanoseconds % NANOS_PER_DAY;
 		if (nanoseconds < 0)
