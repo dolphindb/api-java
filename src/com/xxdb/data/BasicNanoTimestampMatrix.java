@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * 
- * Corresponds to DolphinDB TIMESTAMP MATRIX
+ * Corresponds to DolphinDB nanotimestamp matrix
  *
  */
 

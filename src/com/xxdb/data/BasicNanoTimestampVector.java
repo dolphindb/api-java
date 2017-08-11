@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * 
- * Corresponds to DolphinDB TIMESTAMP VECTOR
+ * Corresponds to DolphinDB nanotimestamp vector
  *
  */
 

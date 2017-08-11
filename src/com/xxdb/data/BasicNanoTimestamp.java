@@ -8,7 +8,7 @@ import java.time.temporal.Temporal;
 
 /**
  * 
- * Corresponds to DolphinDB timestamp scalar
+ * Corresponds to DolphinDB nanotimestamp scalar
  *
  */
 

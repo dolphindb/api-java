@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * 
- * Corresponds to DolphinDB matrix with time elements.
+ * Corresponds to DolphinDB matrix with nanotime elements.
  *
  */
 
