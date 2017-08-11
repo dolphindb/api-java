@@ -1,0 +1,66 @@
+package com.xxdb.data;
+
+import com.xxdb.io.ExtendedDataInput;
+
+import java.io.IOException;
+import java.time.LocalTime;
+import java.time.temporal.Temporal;
+
+/**
+ * 
+ * Corresponds to DolphinDB time object.
+ *
+ */
+
+public class BasicNanoTime extends BasicLong{
+
+	public BasicNanoTime(LocalTime value){
+		super(Utils.countNanoseconds(value));
+	}
+
+	public BasicNanoTime(ExtendedDataInput in) throws IOException {
+		super(in);
+	}
+
+	protected BasicNanoTime(long value){
+		super(value);
+	}
+
+	@Override
+	public DATA_CATEGORY getDataCategory() {
+		return DATA_CATEGORY.TEMPORAL;
+	}
+
+	@Override
+	public DATA_TYPE getDataType() {
+		return DATA_TYPE.DT_NANOTIME;
+	}
+	
+	public LocalTime getTime(){
+		if(isNull())
+			return null;
+		else
+			return Utils.parseNanoTime(getLong());
+	}
+
+	@Override
+	public Temporal getTemporal() throws Exception {
+		return getTime();
+	}
+	
+	@Override
+	public String getString() {
+		if(isNull())
+			return "";
+		else
+			return getTime().toString();
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(! (o instanceof BasicNanoTime) || o == null)
+			return false;
+		else
+			return getLong() == ((BasicNanoTime)o).getLong();
+	}
+}

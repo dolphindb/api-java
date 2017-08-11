@@ -18,10 +18,12 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[Entity.DATA_TYPE.DT_MINUTE.ordinal()] = new MinuteFactory();
 		factories[Entity.DATA_TYPE.DT_SECOND.ordinal()] = new SecondFactory();
 		factories[Entity.DATA_TYPE.DT_TIME.ordinal()] = new TimeFactory();
+		factories[Entity.DATA_TYPE.DT_NANOTIME.ordinal()] = new NanoTimeFactory();
 		factories[Entity.DATA_TYPE.DT_DATE.ordinal()] = new DateFactory();
 		factories[Entity.DATA_TYPE.DT_MONTH.ordinal()] = new MonthFactory();
 		factories[Entity.DATA_TYPE.DT_DATETIME.ordinal()] = new DateTimeFactory();
 		factories[Entity.DATA_TYPE.DT_TIMESTAMP.ordinal()] = new TimestampFactory();
+		factories[Entity.DATA_TYPE.DT_NANOTIMESTAMP.ordinal()] = new NanoTimestampFactory();
 		factories[Entity.DATA_TYPE.DT_SYMBOL.ordinal()] = new SymbolFactory();
 		factories[Entity.DATA_TYPE.DT_STRING.ordinal()] = new StringFactory();
 		factories[Entity.DATA_TYPE.DT_FUNCTIONDEF.ordinal()] = new FunctionDefFactory();
@@ -220,7 +222,17 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPairWithDefaultValue(){ return new BasicTimeVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicTimeMatrix(rows, columns);}
 	}
-	
+	private class NanoTimeFactory implements TypeFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicNanoTime(in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicNanoTimeVector(Entity.DATA_FORM.DF_VECTOR, in);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicNanoTimeVector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicNanoTimeMatrix(in);}
+		public Scalar createScalarWithDefaultValue() { return new BasicNanoTime(0);}
+		public Vector createVectorWithDefaultValue(int size){ return new BasicNanoTimeVector(size);}
+		public Vector createPairWithDefaultValue(){ return new BasicNanoTimeVector(Entity.DATA_FORM.DF_PAIR, 2);}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicNanoTimeMatrix(rows, columns);}
+	}
+
 	private class DateFactory implements TypeFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicDate(in);}
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicDateVector(Entity.DATA_FORM.DF_VECTOR, in);}
@@ -264,7 +276,17 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPairWithDefaultValue(){ return new BasicTimestampVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicTimestampMatrix(rows, columns);}
 	}
-	
+	private class NanoTimestampFactory implements TypeFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicNanoTimestamp(in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicNanoTimestampVector(Entity.DATA_FORM.DF_VECTOR, in);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicNanoTimestampVector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicNanoTimestampMatrix(in);}
+		public Scalar createScalarWithDefaultValue() { return new BasicNanoTimestamp(0);}
+		public Vector createVectorWithDefaultValue(int size){ return new BasicNanoTimestampVector(size);}
+		public Vector createPairWithDefaultValue(){ return new BasicNanoTimestampVector(Entity.DATA_FORM.DF_PAIR, 2);}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicNanoTimestampMatrix(rows, columns);}
+	}
+
 	private class StringFactory implements TypeFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicString(in);}
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, in);}

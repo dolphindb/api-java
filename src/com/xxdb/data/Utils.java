@@ -132,7 +132,9 @@ public class Utils {
 	public static long countMilliseconds(int year, int month, int day, int hour, int minute, int second, int millisecond){
 		return countSeconds(year, month, day, hour, minute, second) * 1000L + millisecond;
 	}
-	
+	public static long countNanoseconds(LocalDateTime dt) {
+		return countMilliseconds(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour(), dt.getMinute(), dt.getSecond(), 0) * 1000000 + dt.getNano();
+	}
 	public static LocalDateTime parseTimestamp(long milliseconds){
 		int days= (int)(milliseconds / 86400000L);
 		LocalDate date = Utils.parseDate(days);
@@ -148,7 +150,22 @@ public class Utils {
 		int second = seconds % 60;
 		return LocalDateTime.of(date.getYear(), date.getMonth(), date.getDayOfMonth(), hour, minute, second, millisecond * 1000000);
 	}
-	
+
+	public static final int HOURS_PER_DAY = 24;
+	public static final int MINUTES_PER_HOUR = 60;
+	public static final int SECONDS_PER_MINUTE = 60;
+	public static final long NANOS_PER_SECOND = 1000_000_000L;
+	public static final long NANOS_PER_MINUTE = NANOS_PER_SECOND * SECONDS_PER_MINUTE;
+	public static final long NANOS_PER_HOUR = NANOS_PER_MINUTE * MINUTES_PER_HOUR;
+	public static final long NANOS_PER_DAY = NANOS_PER_HOUR * HOURS_PER_DAY;
+
+	public static LocalDateTime parseNanoTimestamp(long nanoseconds){
+		int days= (int)(nanoseconds / NANOS_PER_DAY);
+
+		LocalDate date = Utils.parseDate(days);
+		LocalTime time = Utils.parseNanoTime(nanoseconds % NANOS_PER_DAY);
+		return LocalDateTime.of(date, time);
+	}
 	public static int countMilliseconds(LocalTime time){
 		return countMilliseconds(time.getHour(), time.getMinute(), time.getSecond(), time.getNano() / 1000000);
 	}
@@ -156,11 +173,19 @@ public class Utils {
 	public static int countMilliseconds(int hour, int minute, int second, int millisecond){
 		return ((hour * 60 + minute) * 60 + second) * 1000+millisecond;
 	}
-	
+
+	public static long countNanoseconds(LocalTime time) {
+		return (long)countMilliseconds(time.getHour(), time.getMinute(), time.getSecond(), 0) * 1000000 + time.getNano();
+	}
+
 	public static LocalTime parseTime(int milliseconds){
 		return LocalTime.of(milliseconds/3600000, milliseconds/60000 % 60, milliseconds/1000 %60, milliseconds % 1000 *1000000);
 	}
-	
+
+	public static LocalTime parseNanoTime(long nanoOfDay){
+		return LocalTime.ofNanoOfDay(nanoOfDay);
+	}
+
 	public static int countSeconds(LocalTime time){
 		return countSeconds(time.getHour(), time.getMinute(), time.getSecond());
 	}

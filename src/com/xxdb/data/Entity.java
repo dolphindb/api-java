@@ -32,7 +32,7 @@ public interface Entity {
 
 	static Entity.DATA_CATEGORY typeToCategory(Entity.DATA_TYPE type) {
 		if(type == Entity.DATA_TYPE.DT_TIME || type == Entity.DATA_TYPE.DT_SECOND || type== Entity.DATA_TYPE.DT_MINUTE || type == Entity.DATA_TYPE.DT_DATE
-				|| type == Entity.DATA_TYPE.DT_DATETIME || type == Entity.DATA_TYPE.DT_MONTH || type == Entity.DATA_TYPE.DT_TIMESTAMP)
+				|| type == Entity.DATA_TYPE.DT_DATETIME || type == Entity.DATA_TYPE.DT_MONTH || type == Entity.DATA_TYPE.DT_TIMESTAMP || type == DATA_TYPE.DT_NANOTIME || type == DATA_TYPE.DT_NANOTIMESTAMP)
 			return Entity.DATA_CATEGORY.TEMPORAL;
 		else if(type == Entity.DATA_TYPE.DT_INT || type == Entity.DATA_TYPE.DT_LONG || type == Entity.DATA_TYPE.DT_SHORT || type == Entity.DATA_TYPE.DT_BYTE)
 			return Entity.DATA_CATEGORY.INTEGRAL;
