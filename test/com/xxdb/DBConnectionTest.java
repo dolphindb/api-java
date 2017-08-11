@@ -41,15 +41,12 @@ public class DBConnectionTest {
 	
 	public DBConnectionTest() throws IOException{
 		conn = new DBConnection();
-		if(!conn.connect("localhost",8080)){
+		if(!conn.connect("localhost",8848)){
 			throw new IOException("Failed to connect to 2xdb server");
 		}
 	}
 	
 	public void testVoid() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		Entity obj = conn.run("NULL");
-		System.out.println(obj.getDataType());
 	}
 	
 	public void testStringVector() throws IOException{
