@@ -163,6 +163,9 @@ public class Utils {
 		int days= (int)(nanoseconds / NANOS_PER_DAY);
 
 		LocalDate date = Utils.parseDate(days);
+		nanoseconds = nanoseconds % NANOS_PER_DAY;
+		if (nanoseconds < 0)
+			nanoseconds += NANOS_PER_DAY;
 		LocalTime time = Utils.parseNanoTime(nanoseconds % NANOS_PER_DAY);
 		return LocalDateTime.of(date, time);
 	}

@@ -50,6 +50,25 @@ public class TimeTest{
                 throw new RuntimeException("expect 5, got" + dt.getNano());
         }
 
+
+        {
+            LocalDateTime dt1 = Utils.parseTimestamp(-1);
+            LocalDateTime dt = Utils.parseNanoTimestamp(-1);
+            if (dt.getYear() != 1999)
+                throw new RuntimeException("expect 1999, got" + dt.getYear());
+            if (dt.getMonthValue() != 12)
+                throw new RuntimeException("expect 12, got" + dt.getMonthValue());
+            if (dt.getDayOfMonth() != 30)
+                throw new RuntimeException("expect 30, got" + dt.getDayOfMonth());
+            if (dt.getHour() != 23)
+                throw new RuntimeException("expect 23, got" + dt.getHour());
+            if (dt.getMinute() != 59)
+                throw new RuntimeException("expect 59, got" + dt.getMinute());
+            if (dt.getSecond() != 59)
+                throw new RuntimeException("expect 59, got" + dt.getSecond());
+            if (dt.getNano() != Utils.NANOS_PER_DAY - 1)
+                throw new RuntimeException("expect " + (Utils.NANOS_PER_DAY - 1) + ", got" + dt.getNano());
+        }
         {
             LocalTime dt = Utils.parseNanoTime(5);
             if (dt.getHour() != 0)
