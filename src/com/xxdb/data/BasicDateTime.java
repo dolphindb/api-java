@@ -14,7 +14,7 @@ import com.xxdb.io.ExtendedDataInput;
  */
 
 public class BasicDateTime extends BasicInt{
-	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
+	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss");
 
 	public BasicDateTime(LocalDateTime value){
 		super(Utils.countSeconds(value));

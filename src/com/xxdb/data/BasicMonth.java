@@ -15,7 +15,7 @@ import com.xxdb.io.ExtendedDataInput;
  */
 
 public class BasicMonth extends BasicInt{
-	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM");
+	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM'm'");
 
 	public BasicMonth(int year, Month month){
 		super(year * 12 + month.getValue());
@@ -59,7 +59,7 @@ public class BasicMonth extends BasicInt{
 		if(isNull())
 			return "";
 		else
-			return getMonth().format(format) + "m";
+			return getMonth().format(format);
 	}
 	
 	@Override

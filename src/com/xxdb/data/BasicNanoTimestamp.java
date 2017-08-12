@@ -14,7 +14,7 @@ import java.time.temporal.Temporal;
  */
 
 public class BasicNanoTimestamp extends BasicLong{
-	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss.SSSSSSSSS");
+	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSSSSSSSS");
 
 	public BasicNanoTimestamp(LocalDateTime value){
 		super(Utils.countNanoseconds(value));
