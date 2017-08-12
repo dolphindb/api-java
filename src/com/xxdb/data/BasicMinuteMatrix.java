@@ -8,7 +8,7 @@ import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
- * Corresponds to DolphinDB MINUTE MATRIX
+ * Corresponds to DolphinDB minute matrix
  *
  */
 

@@ -1,7 +1,7 @@
 package com.xxdb.data;
 
 /*
- * Interface for DolphinDB data form: DICTIONARY.
+ * Interface for dictionary object
  */
 
 public interface Dictionary extends Entity{

@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -13,7 +14,8 @@ import com.xxdb.io.ExtendedDataInput;
  */
 
 public class BasicTimestamp extends BasicLong{
-
+	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss.SSS");
+	
 	public BasicTimestamp(LocalDateTime value){
 		super(Utils.countMilliseconds(value));
 	}
@@ -53,7 +55,7 @@ public class BasicTimestamp extends BasicLong{
 		if(isNull())
 			return "";
 		else
-			return getTimestamp().toString();
+			return getTimestamp().format(format);
 	}
 	
 	@Override

@@ -2,7 +2,7 @@ package com.xxdb.data;
 
 /**
  * 
- * Interface for DolphinDB data form: MATRIX
+ * Interface for matrix object
  *
  */
 

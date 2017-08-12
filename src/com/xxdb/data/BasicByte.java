@@ -9,7 +9,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB BYTE object
+ * Corresponds to DolphinDB char scalar
  *
  */
 

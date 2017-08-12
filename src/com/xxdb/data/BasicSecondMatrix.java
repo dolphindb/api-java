@@ -9,7 +9,7 @@ import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
- * Corresponds to DolphinDB SECOND MATRIX
+ * Corresponds to DolphinDB second matrix
  *
  */
 

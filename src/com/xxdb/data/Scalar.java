@@ -3,7 +3,7 @@ package com.xxdb.data;
 import java.time.temporal.Temporal;
 /**
  * 
- * Interface for DolphinDB data form: SCALAR
+ * Interface for scalar object
  *
  */
 

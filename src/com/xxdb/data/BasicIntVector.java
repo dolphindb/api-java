@@ -8,7 +8,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB INT VECTOR
+ * Corresponds to DolphinDB int vector
  *
  */
 

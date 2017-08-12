@@ -7,7 +7,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB STRING MATRIX
+ * Corresponds to DolphinDB string matrix
  *
  */
 

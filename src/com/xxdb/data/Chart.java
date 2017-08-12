@@ -2,7 +2,7 @@ package com.xxdb.data;
 
 /**
  * 
- * Interface for all chart types
+ * Interface for chart object
  *
  */
 

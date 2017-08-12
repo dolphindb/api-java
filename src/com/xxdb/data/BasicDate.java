@@ -2,11 +2,19 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 
 import com.xxdb.io.ExtendedDataInput;
 
+/**
+ * 
+ * Corresponds to DolphinDB date scalar
+ *
+ */
+
 public class BasicDate extends BasicInt{
+	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
 	public BasicDate(LocalDate value){
 		super(Utils.countDays(value));
@@ -47,7 +55,7 @@ public class BasicDate extends BasicInt{
 		if(isNull())
 			return "";
 		else
-			return getDate().toString();
+			return getDate().format(format);
 	}
 	
 	@Override

@@ -11,7 +11,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB TABLE object
+ * Corresponds to DolphinDB table object
  *
  */
 

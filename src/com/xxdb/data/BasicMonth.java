@@ -3,17 +3,19 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.time.Month;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 
 import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
- * Corresponds to DolphinDB MONTH object
+ * Corresponds to DolphinDB month scalar
  *
  */
 
 public class BasicMonth extends BasicInt{
+	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM");
 
 	public BasicMonth(int year, Month month){
 		super(year * 12 + month.getValue());
@@ -57,7 +59,7 @@ public class BasicMonth extends BasicInt{
 		if(isNull())
 			return "";
 		else
-			return getMonth().toString();
+			return getMonth().format(format) + "m";
 	}
 	
 	@Override

@@ -8,7 +8,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB BOOL VECTOR
+ * Corresponds to DolphinDB bool vector
  *
  */
 

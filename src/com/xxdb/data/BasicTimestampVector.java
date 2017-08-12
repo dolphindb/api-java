@@ -8,7 +8,7 @@ import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
- * Corresponds to DolphinDB TIMESTAMP VECTOR
+ * Corresponds to DolphinDB timestamp vector
  *
  */
 

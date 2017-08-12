@@ -9,7 +9,7 @@ import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
- * Corresponds to DolphinDB MONTH VECTOR
+ * Corresponds to DolphinDB month vector
  *
  */
 

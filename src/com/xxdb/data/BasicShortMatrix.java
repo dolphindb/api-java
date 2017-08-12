@@ -8,7 +8,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB SHORT MATRIX
+ * Corresponds to DolphinDB short matrix
  *
  */
 

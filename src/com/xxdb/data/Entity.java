@@ -4,9 +4,6 @@ import java.io.IOException;
 
 import com.xxdb.io.ExtendedDataOutput;
 
-/*
- * Interface for all DolphinDB data types 
- */
 
 public interface Entity {
 	enum DATA_TYPE {DT_VOID,DT_BOOL,DT_BYTE,DT_SHORT,DT_INT,DT_LONG,DT_DATE,DT_MONTH,DT_TIME,DT_MINUTE,DT_SECOND,DT_DATETIME,DT_TIMESTAMP,DT_NANOTIME,DT_NANOTIMESTAMP,

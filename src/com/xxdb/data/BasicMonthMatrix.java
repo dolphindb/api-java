@@ -8,7 +8,7 @@ import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
- * Corresponds to DolphinDB MONTH MATRIX
+ * Corresponds to DolphinDB month matrix
  *
  */
 

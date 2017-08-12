@@ -7,7 +7,7 @@ import java.util.List;
 import com.xxdb.io.ExtendedDataInput;
 /**
  * 
- * Corresponds to DolphinDB TIMESTAMP MATRIX
+ * Corresponds to DolphinDB timestamp matrix
  *
  */
 

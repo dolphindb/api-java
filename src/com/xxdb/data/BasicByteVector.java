@@ -8,7 +8,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB BYTE VECTOR
+ * Corresponds to DolphinDB char vector
  *
  */
 

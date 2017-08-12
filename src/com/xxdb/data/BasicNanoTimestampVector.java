@@ -48,14 +48,14 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 		return new BasicNanoTimestamp(getLong(index));
 	}
 	
-	public LocalDateTime getTimestamp(int index){
+	public LocalDateTime getNanoTimestamp(int index){
 		if(isNull(index))
 			return null;
 		else
 			return Utils.parseNanoTimestamp(getLong(index));
 	}
 	
-	public void setTimestamp(int index, LocalDateTime dt){
+	public void setNanoTimestamp(int index, LocalDateTime dt){
 		setLong(index, Utils.countNanoseconds(dt));
 	}
 	

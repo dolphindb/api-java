@@ -1,7 +1,7 @@
 package com.xxdb.data;
 
 /*
- * Interface for DolphinDB data form: SET
+ * Interface for set object
  */
 
 public interface Set extends Entity{

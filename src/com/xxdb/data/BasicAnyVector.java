@@ -6,7 +6,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB ANY VECTOR
+ * Corresponds to DolphinDB tuple(any vector)
  *
  */
 

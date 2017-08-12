@@ -4,6 +4,7 @@ import com.xxdb.io.ExtendedDataInput;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 
 /**
@@ -13,6 +14,7 @@ import java.time.temporal.Temporal;
  */
 
 public class BasicNanoTimestamp extends BasicLong{
+	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss.SSSSSSSSS");
 
 	public BasicNanoTimestamp(LocalDateTime value){
 		super(Utils.countNanoseconds(value));
@@ -36,7 +38,7 @@ public class BasicNanoTimestamp extends BasicLong{
 		return DATA_TYPE.DT_NANOTIMESTAMP;
 	}
 	
-	public LocalDateTime getTimestamp(){
+	public LocalDateTime getNanoTimestamp(){
 		if(isNull())
 			return null;
 		else
@@ -45,7 +47,7 @@ public class BasicNanoTimestamp extends BasicLong{
 	
 	@Override
 	public Temporal getTemporal() throws Exception {
-		return getTimestamp();
+		return getNanoTimestamp();
 	}
 	
 	@Override
@@ -53,7 +55,7 @@ public class BasicNanoTimestamp extends BasicLong{
 		if(isNull())
 			return "";
 		else
-			return getTimestamp().toString();
+			return getNanoTimestamp().format(format);
 	}
 	
 	@Override

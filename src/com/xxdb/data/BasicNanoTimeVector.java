@@ -48,14 +48,14 @@ public class BasicNanoTimeVector extends BasicLongVector{
 		return new BasicNanoTime(getLong(index));
 	}
 	
-	public LocalTime getTime(int index){
+	public LocalTime getNanoTime(int index){
 		if(isNull(index))
 			return null;
 		else
 			return Utils.parseNanoTime(getLong(index));
 	}
 	
-	public void setTime(int index, LocalTime time){
+	public void setNanoTime(int index, LocalTime time){
 		setLong(index, Utils.countNanoseconds(time));
 	}
 	

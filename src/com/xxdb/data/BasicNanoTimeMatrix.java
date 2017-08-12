@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * 
- * Corresponds to DolphinDB matrix with nanotime elements.
+ * Corresponds to DolphinDB nanotime matrix.
  *
  */
 
@@ -25,11 +25,11 @@ public class BasicNanoTimeMatrix extends BasicLongMatrix{
 		super(in);
 	}
 
-	public void setTime(int row, int column, LocalTime value){
+	public void setNanoTime(int row, int column, LocalTime value){
 		setLong(row, column, Utils.countNanoseconds(value));
 	}
 	
-	public LocalTime getTime(int row, int column){
+	public LocalTime getNanoTime(int row, int column){
 		return Utils.parseNanoTime(getLong(row, column));
 	}
 

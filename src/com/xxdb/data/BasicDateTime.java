@@ -2,17 +2,19 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 
 import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
- * Corresponds to DolphinDB DATETIME object
+ * Corresponds to DolphinDB datetime scalar
  *
  */
 
 public class BasicDateTime extends BasicInt{
+	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
 
 	public BasicDateTime(LocalDateTime value){
 		super(Utils.countSeconds(value));
@@ -53,7 +55,7 @@ public class BasicDateTime extends BasicInt{
 		if(isNull())
 			return "";
 		else
-			return getDateTime().toString();
+			return getDateTime().format(format);
 	}
 	
 	@Override

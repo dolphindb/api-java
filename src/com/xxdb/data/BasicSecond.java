@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -9,11 +10,12 @@ import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
- * Corresponds to DolphinDB SECOND object
+ * Corresponds to DolphinDB second scalar
  *
  */
 
 public class BasicSecond extends BasicInt{
+	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm:ss");
 
 	public BasicSecond(LocalTime value){
 		super(Utils.countSeconds(value));
@@ -54,7 +56,7 @@ public class BasicSecond extends BasicInt{
 		if(isNull())
 			return "";
 		else
-			return getSecond().toString();
+			return getSecond().format(format);
 	}
 	
 	@Override

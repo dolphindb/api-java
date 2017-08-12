@@ -6,7 +6,7 @@ import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
- * Handles creating chart and retrieving chart properties
+ * Corresponds to DolphinDB chart object
  *
  */
 

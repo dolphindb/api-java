@@ -2,7 +2,7 @@ package com.xxdb.data;
 
 /**
  * 
- * Interface for DolphinDB data form: TABLE
+ * Interface for table object
  *
  */
 

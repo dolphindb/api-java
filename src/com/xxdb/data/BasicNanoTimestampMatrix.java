@@ -25,11 +25,11 @@ public class BasicNanoTimestampMatrix extends BasicLongMatrix{
 		super(in);
 	}
 
-	public void setTimestamp(int row, int column, LocalDateTime value){
+	public void setNanoTimestamp(int row, int column, LocalDateTime value){
 		setLong(row, column, Utils.countNanoseconds(value));
 	}
 	
-	public LocalDateTime getTimestamp(int row, int column){
+	public LocalDateTime getNanoTimestamp(int row, int column){
 		return Utils.parseNanoTimestamp(getLong(row, column));
 	}
 	

@@ -5,12 +5,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 
-/**
- * 
- * Provides temporal functions
- *
- */
-
 public class Utils {
 	public static final int DISPLAY_ROWS = 20;
 	public static final int DISPLAY_COLS = 100;
@@ -39,7 +33,6 @@ public class Utils {
 	
 	public static int countDays(int year, int month, int day){
 	    //1999.12.31 return 0
-
 		if(month<1 || month>12 || day<0)
 			return 0;
 

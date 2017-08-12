@@ -8,7 +8,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB STRING object
+ * Corresponds to DolphinDB string scalar
  *
  */
 

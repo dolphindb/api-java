@@ -4,15 +4,16 @@ import com.xxdb.io.ExtendedDataInput;
 
 import java.io.IOException;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 
 /**
- * 
- * Corresponds to DolphinDB nanotime object.
+ * Corresponds to DolphinDB nanotime scalar.
  *
  */
 
 public class BasicNanoTime extends BasicLong{
+	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSSSSS");
 
 	public BasicNanoTime(LocalTime value){
 		super(Utils.countNanoseconds(value));
@@ -36,7 +37,7 @@ public class BasicNanoTime extends BasicLong{
 		return DATA_TYPE.DT_NANOTIME;
 	}
 	
-	public LocalTime getTime(){
+	public LocalTime getNanoTime(){
 		if(isNull())
 			return null;
 		else
@@ -45,7 +46,7 @@ public class BasicNanoTime extends BasicLong{
 
 	@Override
 	public Temporal getTemporal() throws Exception {
-		return getTime();
+		return getNanoTime();
 	}
 	
 	@Override
@@ -53,7 +54,7 @@ public class BasicNanoTime extends BasicLong{
 		if(isNull())
 			return "";
 		else
-			return getTime().toString();
+			return getNanoTime().format(format);
 	}
 	
 	@Override

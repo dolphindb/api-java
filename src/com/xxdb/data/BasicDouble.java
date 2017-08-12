@@ -9,7 +9,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB DOUBLE object
+ * Corresponds to DolphinDB double scalar
  *
  */
 

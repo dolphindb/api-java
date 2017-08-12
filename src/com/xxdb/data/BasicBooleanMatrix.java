@@ -8,7 +8,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB BOOL MATRIX
+ * Corresponds to DolphinDB bool matrix
  *
  */
 

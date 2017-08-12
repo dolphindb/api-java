@@ -12,7 +12,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB DICTIONARY object
+ * Corresponds to DolphinDB dictionary object
  *
  */
 

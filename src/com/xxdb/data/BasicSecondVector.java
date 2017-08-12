@@ -8,7 +8,7 @@ import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
- * Corresponds to DolphinDB SECOND VECTOR
+ * Corresponds to DolphinDB second vector
  *
  */
 

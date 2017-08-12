@@ -9,7 +9,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphinDB FLOAT object
+ * Corresponds to DolphinDB float scalar
  *
  */
 

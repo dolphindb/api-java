@@ -8,7 +8,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
- * Corresponds to DolphindB LONG object
+ * Corresponds to DolphindB long scalar
  *
  */
 
