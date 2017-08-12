@@ -64,6 +64,8 @@ public class BasicByte extends AbstractScalar implements Comparable<BasicByte>{
 	public String getString() {
 		if(isNull())
 			return "";
+		else if(value > 31 && value < 127)
+			return "'" + String.valueOf((char)value) + "'";
 		else
 			return String.valueOf(value);
 	}
