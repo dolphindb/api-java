@@ -39,7 +39,7 @@ public class TableAppender {
             this.conn.connect(host, port);
             tableInfo = (BasicDictionary) conn.run("schema(" + tableName+ ")");
             int partitionColumnIdx = ((BasicInt) tableInfo.get(new BasicString("partitionColumnIndex"))).getInt();
-            if (partitionColumnIdx == -1) {
+            if (partitionColumnIdx != -1) {
                 throw new RuntimeException("Table '" + tableName + "' is partitioned");
             }
             BasicTable colDefs = ((BasicTable) tableInfo.get(new BasicString("colDefs")));

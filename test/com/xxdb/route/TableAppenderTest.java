@@ -22,14 +22,14 @@ public class TableAppenderTest {
         BasicInt size = new BasicInt(random.nextInt(100));
         BasicInt corr = new BasicInt(random.nextInt(16));
         BasicInt g127 = new BasicInt(random.nextInt(128));
-        BasicString cond = new BasicString("A");
+        BasicString cond = new BasicString("中国");
         BasicByte ex = new BasicByte((byte)'B');
         return Arrays.asList(symbol, date, time, price, size, g127, corr, cond, ex);
     }
 
     public static void main(String[] args) {
         try {
-            TableAppender appender = new TableAppender("Trades", "192.168.1.25", 8847);
+            TableAppender appender = new TableAppender("t3", "192.168.1.25", 8848);
             System.out.println(appender.append(generateRandomRow()));
         } catch (IOException e) {
             e.printStackTrace();
