@@ -13,6 +13,7 @@ import com.xxdb.data.BasicEntityFactory;
 import com.xxdb.data.Entity;
 import com.xxdb.data.EntityFactory;
 import com.xxdb.data.Void;
+import com.xxdb.io.AbstractExtendedDataOutputStream;
 import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.BigEndianDataOutputStream;
 import com.xxdb.io.ExtendedDataInput;
@@ -253,7 +254,7 @@ public class DBConnection {
 			String header = null;
 			try{
 				out.writeBytes((listener != null ? "API2 " : "API ")+sessionID+" ");
-				out.writeBytes(String.valueOf(body.length()));
+				out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
 				out.writeByte('\n');
 				out.writeBytes(body);
 				out.flush();
@@ -271,7 +272,7 @@ public class DBConnection {
 				try {
 					tryReconnect();
 					out.writeBytes((listener != null ? "API2 " : "API ")+sessionID+" ");
-					out.writeBytes(String.valueOf(body.length()));
+					out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
 					out.writeByte('\n');
 					out.writeBytes(body);
 					out.flush();

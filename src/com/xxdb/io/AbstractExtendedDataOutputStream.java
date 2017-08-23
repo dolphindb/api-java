@@ -50,8 +50,29 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 	@Override
 	public void writeBytes(String s) throws IOException {
 		int len = s.length();
-		for (int i = 0; i < len; ++i)
-			writeByte(s.charAt(i));
+		int i = 0;
+		int pos = 0;
+		
+		if (buf == null)
+			buf = new byte[BUF_SIZE];
+		do {
+			while (i < len && pos < buf.length - 4){
+				char c = s.charAt(i++);
+				if (c >= '\u0001' && c <= '\u007f')
+					buf[pos++] = (byte) c;
+				else if (c == '\u0000' || (c >= '\u0080' && c <= '\u07ff')){
+					buf[pos++] = (byte) (0xc0 | (0x1f & (c >> 6)));
+					buf[pos++] = (byte) (0x80 | (0x3f & c));
+				}
+				else{
+					buf[pos++] = (byte) (0xe0 | (0x0f & (c >> 12)));
+					buf[pos++] = (byte) (0x80 | (0x3f & (c >> 6)));
+					buf[pos++] = (byte) (0x80 | (0x3f & c));
+				}
+			}
+			write(buf, 0, pos);
+			pos = 0;
+		}while (i < len);
 	}
 
 	@Override
@@ -125,7 +146,7 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 		}while (i < len);
 	}
 
-	private int getUTFlength(String value, int start, int sum) throws IOException {
+	public static int getUTFlength(String value, int start, int sum) throws IOException {
 		int len = value.length();
 		for (int i = start; i < len && sum <= 65535; ++i){
 			char c = value.charAt(i);
