@@ -22,7 +22,7 @@ import com.xxdb.data.BasicDateVector;
 
 
 public class DBTaskSoak{
-	private int MAXSYMBOLCOUNT = 2000;
+	private int MAXSYMBOLCOUNT = 10000;
 	private int concurrent=64;
 	private long totalSymbolCount=new BigInteger("153391860010").longValueExact();
 	private int totalDateCount = 34454;

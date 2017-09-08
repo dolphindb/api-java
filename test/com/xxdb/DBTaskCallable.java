@@ -54,9 +54,9 @@ public class DBTaskCallable implements Callable<String> {
 				BasicDateVector dateVec = (BasicDateVector) conn.run( "(" + date + "-4)..(" +date + "+5)");
 				String dateString = dateVec.get(0).toString() + ":" + dateVec.get(9).toString();
 				if(symbolList.size()>1)
-					sql = "select  sum(bidSize), avg(bidPrice) as avgBidPrice,  avg(underlyerLastBidPrice) as avgUnderlyerPrice from TAQ where symbol in [\"" + String.join("\",\"", symbolList) + "\"], date between " + dateString + " group by symbol, date" ;
+					sql = "select  sum(bidSize), avg(bidPrice) as avgBidPrice,  avg(underlyerLastBidPrice) as avgUnderlyerPrice from TAQ where symbol in [\"" + String.join("\",\"", symbolList) + "\"], date>="+dateVec.get(0).toString() + " and date<=" + dateVec.get(9).toString() +" group by symbol, date" ;
 				else
-					sql = "select  sum(bidSize), avg(bidPrice) as avgBidPrice,  avg(underlyerLastBidPrice) as avgUnderlyerPrice from TAQ where symbol =\"" + symbolList.get(0) + "\", date between " + dateString + " group by date" ;
+					sql = "select  sum(bidSize), avg(bidPrice) as avgBidPrice,  avg(underlyerLastBidPrice) as avgUnderlyerPrice from TAQ where symbol =\"" + symbolList.get(0) + "\", date>= " +dateVec.get(0).toString() + " and date<=" + dateVec.get(9).toString() +" group by date" ;
 				System.out.println(dateFormat.format(date1) + "   " + connStr + "   " + sql);
 				table = (BasicTable)conn.run(sql);
 				
