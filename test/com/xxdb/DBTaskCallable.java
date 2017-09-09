@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 
 import com.xxdb.data.BasicDateVector;
 import com.xxdb.data.BasicTable;
-import com.xxdb.data.Scalar;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -52,7 +51,6 @@ public class DBTaskCallable implements Callable<String> {
 			}
 			else if(queryType.equalsIgnoreCase("groupbyDate")){
 				BasicDateVector dateVec = (BasicDateVector) conn.run( "(" + date + "-4)..(" +date + "+5)");
-				String dateString = dateVec.get(0).toString() + ":" + dateVec.get(9).toString();
 				if(symbolList.size()>1)
 					sql = "select  sum(bidSize), avg(bidPrice) as avgBidPrice,  avg(underlyerLastBidPrice) as avgUnderlyerPrice from TAQ where symbol in [\"" + String.join("\",\"", symbolList) + "\"], date>="+dateVec.get(0).toString() + " and date<=" + dateVec.get(9).toString() +" group by symbol, date" ;
 				else

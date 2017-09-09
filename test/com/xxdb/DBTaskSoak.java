@@ -18,8 +18,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
-import com.xxdb.data.BasicDateVector;
-
 
 public class DBTaskSoak{
 	private int MAXSYMBOLCOUNT = 10000;
@@ -112,32 +110,12 @@ public class DBTaskSoak{
 	    	try {
 				System.out.println(future.get());
 			} catch (InterruptedException | ExecutionException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 	    }
 	    for(DBConnection c1 : connectionList){
 	    	c1.close();
 	    }
-	}
-	
-
-	private ArrayList<DBConnection> parseConnectionList(Path filePath){
-		ArrayList<DBConnection> connectionList = new ArrayList<DBConnection>();
-		try {
-			List<String> lines = Files.readAllLines(filePath);
-			for(String line: lines){
-				line = line.trim();
-				if(!line.equals("")){
-					DBConnection conn = new DBConnection();
-					conn.connect(line.split(":")[0], Integer.parseInt(line.split(":")[1]));
-					connectionList.add(conn);
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return connectionList;
 	}
 	
 	private ArrayList<DBConnection> parseConnectionList(Path filePath, int numOfSession){
@@ -172,44 +150,9 @@ public class DBTaskSoak{
 		return connectionList;
 	}
 	
-	private ArrayList<String> parseScript(Path filePath){
-		ArrayList<String> tasks = new ArrayList<String>(100);
-		try {
-			List<String> lines = Files.readAllLines(filePath);
-			int emptyCt = 0;
-			String script = "";
-			String prevLine = "";
-			for(String line: lines){
-				line = line.trim();
-				if(line.equals("")){
-					emptyCt += 1;
-				}
-				else{
-					script += line +"\n";
-				}
-				if(emptyCt>=2 &&prevLine.equals("")&&line.startsWith("//")){
-					tasks.add(script);
-					script = line + "\n";
-					emptyCt = 0;
-				}
-				prevLine = line;
-			}
-			if(!script.trim().equals("")){
-				tasks.add(script);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		Collections.shuffle(tasks);
-		return tasks;
-	}
-	
-	
 	private NavigableMap<Long, String> parseFreqMap(Path filePath){
 		final NavigableMap<Long, String> map = new TreeMap<Long, String>();
-		//System.out.println(map.floorEntry(3).getValue());
-		//System.out.println(map.floorEntry((long) 10).getValue());
-		//System.out.println(map.floorEntry(18).getValue());
+
 		try {
 			List<String> lines = Files.readAllLines(filePath);
 			map.put((long)0, lines.get(0).split(",")[0]);
@@ -228,22 +171,6 @@ public class DBTaskSoak{
 	
 	
 	public static void main(String[] args) {
-//		DBConnection conn = new DBConnection();
-//		try {
-//			conn.connect("192.168.1.151", 8080);
-//			String date = "2016.07.18";
-//			BasicDateVector dateVec = (BasicDateVector) conn.run( "(" + date + "-4)..(" +date + "+5)");
-//			System.out.println(dateVec.rows());
-//			for(int i=0;i<dateVec.rows(); i++){
-//				System.out.println(dateVec.get(i).toString());
-//			}
-//			
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-		
-	
 		if(args.length <3){
 			System.out.println("Usage: java DBTaskCollector serverFile symbolFile dateFile");
 		}
