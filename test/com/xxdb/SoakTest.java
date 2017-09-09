@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.NavigableMap;
-import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -21,19 +20,19 @@ public class SoakTest {
 	
 	public void test(Path serverFile, Path symbolFile, Path dateFile, int sessions, int breath){
 		ArrayList<DBConnection> connectionList = parseConnectionList(serverFile, sessions);
-		List<String> symbolList = new ArrayList<>(parseFreqMap(symbolFile).values());
+		NavigableMap<Long, String> symbolMap = parseFreqMap(symbolFile);
 		NavigableMap<Long, String> dateMap = parseFreqMap(dateFile);
 		
 		if(connectionList.size() == 0){
 			System.out.println("No servers collected, please put a list of servers in a text file with format: x.x.x.x:xxxx");
 			return;
 		}
-		if(symbolList.size() == 0){
+		if(symbolMap.size() == 0){
 			System.out.println("No symbols collected, please put a list of symbols in a text file with format: symbol, count");
 			return;
 		}
 		
-		JobGenerator jobGenerator = new JobGenerator(symbolList, dateMap);
+		JobGenerator jobGenerator = new JobGenerator(symbolMap, dateMap);
 		for(int i=0; i<sessions; ++i){
 			new Thread(new Executor(jobGenerator, connectionList.get(i), breath)).start();
 		}
@@ -113,17 +112,17 @@ public class SoakTest {
     }
     
     private class JobGenerator {
-    	private List<String> symbolList;
+    	private NavigableMap<Long, String> symbolMap;
 		private NavigableMap<Long, String> dateMap;
 		private ArrayList <String> queryTypeList;
 		private ArrayList<Integer> szList;
-		private int totalSymbolCount;
+		private long totalSymbolCount;
 		private long totalDateCount;
 		
-    	public JobGenerator(List<String> symbolList, NavigableMap<Long, String> dateMap){
-    		this.symbolList = symbolList;
+    	public JobGenerator(NavigableMap<Long, String> symbolMap, NavigableMap<Long, String> dateMap){
+    		this.symbolMap = symbolMap;
     		this.dateMap = dateMap;
-    		totalSymbolCount = symbolList.size();
+    		totalSymbolCount = symbolMap.lastKey();
     		totalDateCount = dateMap.lastKey();
     		
     		queryTypeList = new ArrayList<String>();
@@ -152,16 +151,16 @@ public class SoakTest {
     	}
     	
     	public synchronized JobDesc next(){
-    		int symbolIdx = ThreadLocalRandom.current().nextInt(0, totalSymbolCount);
-	    	String symbol = symbolList.get(symbolIdx);
+    		long symbolIdx = ThreadLocalRandom.current().nextLong(0, totalSymbolCount);
+	    	String symbol = symbolMap.floorEntry(symbolIdx).getValue();
 	    	long dateIdx = ThreadLocalRandom.current().nextLong(0, totalDateCount);
 	    	String queryType = queryTypeList.get(ThreadLocalRandom.current().nextInt(0, queryTypeList.size()));
 	    	ArrayList<String> mysymbols = new ArrayList<String>();
 	    	if(queryType.equalsIgnoreCase("groupbyDate")){
 	    		int idx = ThreadLocalRandom.current().nextInt(0, szList.size());
 	    		while(mysymbols.size()<szList.get(idx)){
-	    			symbolIdx = ThreadLocalRandom.current().nextInt(0, totalSymbolCount);
-	    			String tmpSymbol = symbolList.get(symbolIdx);
+	    			symbolIdx = ThreadLocalRandom.current().nextLong(0, totalSymbolCount);
+	    			String tmpSymbol = symbolMap.floorEntry(symbolIdx).getValue();
 	    			if(mysymbols.contains(tmpSymbol))
 	    				continue;
 	    			mysymbols.add(tmpSymbol);
@@ -225,13 +224,14 @@ public class SoakTest {
 						print(connStr + "   " + sql);
 					}
 					else if(queryType.equalsIgnoreCase("groupbyDate")){
-						BasicDateVector dateVec = (BasicDateVector) conn.run( "(" + date + "-3)..(" +date + "+3)");
+						BasicDateVector dateVec = (BasicDateVector) conn.run( "(" + date + "-4)..(" +date + "+5)");
 						if(symbolList.size()>1)
-							sql = "select  sum(bidSize), avg(bidPrice) as avgBidPrice,  avg(underlyerLastBidPrice) as avgUnderlyerPrice from TAQ where symbol in [\"" + String.join("\",\"", symbolList) + "\"], date>="+dateVec.get(0).toString() + " and date<=" + dateVec.get(6).toString() +" group by symbol, date" ;
+							sql = "select  sum(bidSize), avg(bidPrice) as avgBidPrice,  avg(underlyerLastBidPrice) as avgUnderlyerPrice from TAQ where symbol in [\"" + String.join("\",\"", symbolList) + "\"], date>="+dateVec.get(0).toString() + " and date<=" + dateVec.get(9).toString() +" group by symbol, date" ;
 						else
-							sql = "select  sum(bidSize), avg(bidPrice) as avgBidPrice,  avg(underlyerLastBidPrice) as avgUnderlyerPrice from TAQ where symbol =\"" + symbolList.get(0) + "\", date>= " +dateVec.get(0).toString() + " and date<=" + dateVec.get(6).toString() +" group by date" ;
+							sql = "select  sum(bidSize), avg(bidPrice) as avgBidPrice,  avg(underlyerLastBidPrice) as avgUnderlyerPrice from TAQ where symbol =\"" + symbolList.get(0) + "\", date>= " +dateVec.get(0).toString() + " and date<=" + dateVec.get(9).toString() +" group by date" ;
 						print(connStr + "   " + sql);
 						table = (BasicTable)conn.run(sql);
+						
 					}
 					else{
 						String symbol = symbolList.get(0);
