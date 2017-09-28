@@ -480,6 +480,7 @@ public class DBConnection {
 	}
 	
 	public void close(){
+		mutex.lock();
 		try{
 			if(socket != null){
 				socket.close();
@@ -488,6 +489,9 @@ public class DBConnection {
 		}
 		catch(Exception ex){
 			ex.printStackTrace();
+		}
+		finally {
+			mutex.unlock();
 		}
 	}
 	
