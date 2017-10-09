@@ -34,30 +34,28 @@ public class Utils {
 	public static int countDays(int year, int month, int day){
 	    //1999.12.31 return 0
 		if(month<1 || month>12 || day<0)
-			return 0;
+			return Integer.MIN_VALUE;
 
-	    int days=0;
-	    days=(year-2000)/4*1461;
+		int days=10956 + (year-2000)/4*1461;
 	    year=(year-2000)%4;
 	    days+=365*year;
 	    if(year==0){
 	    	//leap year
 	    	days += cumLeapMonthDays[month-1];
-	    	days += Math.min(day, leapMonthDays[month-1]);
+	    	return day <= leapMonthDays[month - 1] ? days + day : Integer.MIN_VALUE;
 	    }
 	    else{
 	    	if(year>=0) days++;
 	    	days += cumMonthDays[month-1];
-	    	days += Math.min(day, monthDays[month-1]);
+	    	return day <= monthDays[month - 1] ? days + day : Integer.MIN_VALUE;
 	    }
-
-		return days;
 	}
 
 	public static LocalDate parseDate(int days){
 		int year, month, day;
 		boolean leap=false;
 
+		days -= 10956;
 		year=2000+(days/1461)*4;
 		days=days%1461;
 		if(days<0){
@@ -132,9 +130,9 @@ public class Utils {
 	}
 
 	/**
-	 * 1 <==> 1999.12.31 00:00:00.001
-	 * 0 <==> 1999.12.31 00:00:00.000
-	 * -1 <==> 1999.12.30 23:59:59.999
+	 * 1 <==> 1970.01.01 00:00:00.001
+	 * 0 <==> 1970.01.01 00:00:00.000
+	 * -1 <==> 1970.01.01 23:59:59.999
 	 * ...
 	 */
 	public static LocalDateTime parseTimestamp(long milliseconds){
