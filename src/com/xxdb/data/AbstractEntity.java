@@ -10,6 +10,7 @@ public abstract class AbstractEntity {
 	public boolean isMatrix(){ return getDataForm() == Entity.DATA_FORM.DF_MATRIX;}
 	public boolean isDictionary(){ return getDataForm() == Entity.DATA_FORM.DF_DICTIONARY;}
 	public boolean isChart(){ return getDataForm() == Entity.DATA_FORM.DF_CHART;}
+	public boolean isChunk(){ return getDataForm() == Entity.DATA_FORM.DF_CHUNK;}
 	
 	protected Entity.DATA_CATEGORY getDataCategory(Entity.DATA_TYPE valueType) {
 		if(valueType == Entity.DATA_TYPE.DT_BOOL)

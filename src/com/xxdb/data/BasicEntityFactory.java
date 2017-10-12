@@ -43,6 +43,8 @@ public class BasicEntityFactory implements EntityFactory{
 			return new BasicDictionary(type, in);
 		else if(form == Entity.DATA_FORM.DF_SET)
 			return new BasicSet(type, in);
+		else if(form == Entity.DATA_FORM.DF_CHUNK)
+			return new BasicChunkMeta(in);
 		else if(type == Entity.DATA_TYPE.DT_ANY && form == Entity.DATA_FORM.DF_VECTOR)
 			return new BasicAnyVector(in);
 		else if(type == Entity.DATA_TYPE.DT_VOID && form == Entity.DATA_FORM.DF_SCALAR){
