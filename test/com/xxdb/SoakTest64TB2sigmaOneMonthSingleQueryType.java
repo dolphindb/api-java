@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class SoakTest64TB2sigma {
+public class SoakTest64TB2sigmaOneMonthSingleQueryType {
 	
 	public void test(Path serverFile, Path symbolFile, Path dateFile, int sessions, int breath){
 		List<String> symbolList = new ArrayList<String>();
@@ -151,8 +151,8 @@ public class SoakTest64TB2sigma {
     	    queryTypeList.add("download");
     	    queryTypeList.add("download");
     	    queryTypeList.add("download");
-    	    queryTypeList.add("groupbyMinute");
-    	    queryTypeList.add("groupbyDate");
+    	    //queryTypeList.add("groupbyMinute");
+    	    //queryTypeList.add("groupbyDate");
     	    
     	    szList = new ArrayList<Integer>();
 	  		szList.add(1);
@@ -189,23 +189,7 @@ public class SoakTest64TB2sigma {
 		public String generateNextDate() {
 			int x = ThreadLocalRandom.current().nextInt(0, 100);
 			int size = dateList.size();
-			int daysback = 0;
-			if (x < 50) {
-				// within a week
-				daysback = 7;
-			} else if (x < 70) {
-				// within a month
-				daysback = 30;
-			} else if (x < 85) {
-				// within a year
-				daysback = 365;
-			} else if (x < 95){
-				// within 3 years
-				daysback = 365 * 3;
-			} else {
-				// within 5 years
-				daysback = 365 * 5;
-			}
+			int daysback = 30;
 			int start = size - daysback;
 			if (start < 0)
 				start = 0;
@@ -342,7 +326,7 @@ public class SoakTest64TB2sigma {
 		}
 
 		System.out.println("sessions " + sessions);
-		SoakTest64TB2sigma dc = new SoakTest64TB2sigma();
+		SoakTest64TB2sigmaOneMonthSingleQueryType dc = new SoakTest64TB2sigmaOneMonthSingleQueryType();
 		dc.test(Paths.get("soak_server.txt"), Paths.get("QuotesSymbolDistProb.csv"), Paths.get("dates.txt"), sessions, 0);
 	}
 }

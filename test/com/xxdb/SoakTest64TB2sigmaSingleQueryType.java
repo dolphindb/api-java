@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class SoakTest64TB2sigma {
+public class SoakTest64TB2sigmaSingleQueryType {
 	
 	public void test(Path serverFile, Path symbolFile, Path dateFile, int sessions, int breath){
 		List<String> symbolList = new ArrayList<String>();
@@ -151,8 +151,8 @@ public class SoakTest64TB2sigma {
     	    queryTypeList.add("download");
     	    queryTypeList.add("download");
     	    queryTypeList.add("download");
-    	    queryTypeList.add("groupbyMinute");
-    	    queryTypeList.add("groupbyDate");
+    	    //queryTypeList.add("groupbyMinute");
+    	    //queryTypeList.add("groupbyDate");
     	    
     	    szList = new ArrayList<Integer>();
 	  		szList.add(1);
@@ -342,7 +342,7 @@ public class SoakTest64TB2sigma {
 		}
 
 		System.out.println("sessions " + sessions);
-		SoakTest64TB2sigma dc = new SoakTest64TB2sigma();
+		SoakTest64TB2sigmaSingleQueryType dc = new SoakTest64TB2sigmaSingleQueryType();
 		dc.test(Paths.get("soak_server.txt"), Paths.get("QuotesSymbolDistProb.csv"), Paths.get("dates.txt"), sessions, 0);
 	}
 }
