@@ -104,8 +104,12 @@ public class Utils {
 	}
 	
 	public static LocalDateTime parseDateTime(int seconds){
+		LocalDate date;
 		int days= seconds / 86400;
-		LocalDate date = Utils.parseDate(days);
+		if (seconds >= 0)
+			date = Utils.parseDate(days);
+		else
+			date = Utils.parseDate(days - 1);
 		seconds = seconds % 86400;
 		if(seconds < 0)
 			seconds += 86400;
