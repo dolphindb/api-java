@@ -108,6 +108,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		params.add(new BasicString(this.localIP));
 		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
+		params.add(new BasicString(""));
 		if (offset != -1)
 		params.add(new BasicLong(offset));
 		re = dbConn.run("publishTable", params);
@@ -128,7 +129,6 @@ abstract class AbstractClient implements MessageDispatcher{
 		dbConn.run("stopPublishTable", params);
 		dbConn.close();
 		return;
-		
 	}
 	
 	private String GetLocalIP() throws SocketException{
