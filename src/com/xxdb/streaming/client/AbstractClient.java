@@ -12,6 +12,7 @@ import com.xxdb.DBConnection;
 import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicLong;
 import com.xxdb.data.BasicString;
+import com.xxdb.data.BasicAnyVector;
 import com.xxdb.data.Entity;
 import com.xxdb.streaming.client.IMessage;
 
@@ -98,7 +99,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		params.add(new BasicString(tableName));
 		
 		re = dbConn.run("getSubscriptionTopic", params);
-		topic = re.getString();
+		topic = ((BasicAnyVector)re).getEntity(0).getString();
 		BlockingQueue<List<IMessage>> queue = queueManager.addQueue(topic);
 		params.clear();
 		
@@ -107,6 +108,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		params.add(new BasicString(this.localIP));
 		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
+		params.add(new BasicString(""));
 		if (offset != -1)
 		params.add(new BasicLong(offset));
 		re = dbConn.run("publishTable", params);
@@ -127,7 +129,6 @@ abstract class AbstractClient implements MessageDispatcher{
 		dbConn.run("stopPublishTable", params);
 		dbConn.close();
 		return;
-		
 	}
 	
 	private String GetLocalIP() throws SocketException{
