@@ -19,6 +19,7 @@ import com.xxdb.streaming.client.IMessage;
 abstract class AbstractClient implements MessageDispatcher{
 	protected static final int DEFAULT_PORT = 8849;
 	protected static final String DEFAULT_HOST = "localhost";
+	protected static final String DEFAULT_ACTION_NAME = "javaStreamingApi";
 	protected int listeningPort;
 	protected String localIP;
 	protected QueueManager queueManager = new QueueManager();
@@ -83,7 +84,7 @@ abstract class AbstractClient implements MessageDispatcher{
 	}
 	
 	
-	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName, long offset) throws IOException,RuntimeException {
+	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName,String actionName, long offset) throws IOException,RuntimeException {
 
 		Entity re;
 		String topic = "";
@@ -108,7 +109,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		params.add(new BasicString(this.localIP));
 		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
-		params.add(new BasicString(""));
+		params.add(new BasicString(actionName));
 		if (offset != -1)
 		params.add(new BasicLong(offset));
 		re = dbConn.run("publishTable", params);
@@ -117,8 +118,12 @@ abstract class AbstractClient implements MessageDispatcher{
 		return queue;
 	}
 	
+	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName, long offset) throws IOException,RuntimeException {
+		return subscribeInternal(host,port,tableName,DEFAULT_ACTION_NAME,offset);
 	
-	protected void unsubscribeInternal(String host,int port ,String tableName) throws IOException {
+	}
+	
+	protected void unsubscribeInternal(String host,int port ,String tableName,String actionName) throws IOException {
 		
 		DBConnection dbConn = new DBConnection();
 		dbConn.connect(host, port);
@@ -126,25 +131,48 @@ abstract class AbstractClient implements MessageDispatcher{
 		params.add(new BasicString(this.localIP));
 		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
+		params.add(new BasicString(actionName));
 		dbConn.run("stopPublishTable", params);
 		dbConn.close();
 		return;
 	}
-	
+	protected void unsubscribeInternal(String host,int port ,String tableName) throws IOException {
+		unsubscribeInternal(host, port, tableName, DEFAULT_ACTION_NAME);
+	}
 	private String GetLocalIP() throws SocketException{
 	        try {
 	            for (Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces(); interfaces.hasMoreElements();) {
 	                NetworkInterface networkInterface = interfaces.nextElement();
+	                //=================
+//	                byte[] mac = networkInterface.getHardwareAddress();
+//	                if(mac!= null){
+//		                StringBuffer sb = new StringBuffer();
+//		                for (int i = 0; i < mac.length; i++) {
+//		                if (i != 0) {
+//		                sb.append("-");
+//		                }
+//		           	    String s = Integer.toHexString(mac[i] & 0xFF);
+//		                sb.append(s.length() == 1 ? 0 + s : s);
+//		                }
+//		                System.out.println(sb.toString().toUpperCase());
+//	                	
+//	                }
+//	                //====================
 	                if (networkInterface.isLoopback() || networkInterface.isVirtual() || !networkInterface.isUp()) {
 	                    continue;
 	                }
 	                Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
-
+	                
 	                while (addresses.hasMoreElements()) {
 	                	try{
 	                		Inet4Address ip = (Inet4Address) addresses.nextElement();	
-	                		if(ip!=null)
+	                		if(ip!=null){
+//	                			System.out.println(":::::" + ip.getHostAddress());
+//	                			System.out.println(":isSiteLocalAddress::::" + ip.isSiteLocalAddress());
+//	                			System.out.println(":isAnyLocalAddress::::" + ip.isAnyLocalAddress());
+//	                			System.out.println(":isLinkLocalAddress::::" + ip.isLinkLocalAddress());
 		                    	return ip.getHostAddress();
+	                		}
 	                	}catch(ClassCastException e){
 	                		
 	                	}
