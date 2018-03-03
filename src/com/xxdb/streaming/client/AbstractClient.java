@@ -98,7 +98,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		
 		List<Entity> params = new ArrayList<Entity>();
 		params.add(new BasicString(tableName));
-		
+		params.add(new BasicString(actionName));
 		re = dbConn.run("getSubscriptionTopic", params);
 		topic = ((BasicAnyVector)re).getEntity(0).getString();
 		BlockingQueue<List<IMessage>> queue = queueManager.addQueue(topic);
