@@ -88,7 +88,6 @@ class MessageParser implements Runnable{
 				
 				int colSize = dTable.rows();
 				int rowSize = dTable.getEntity(0).rows();
-				
 				if(rowSize>=1){
 					if(rowSize==1){
 						BasicMessage rec = new BasicMessage(msgid,topic,dTable);
