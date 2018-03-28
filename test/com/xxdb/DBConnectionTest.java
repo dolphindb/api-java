@@ -41,7 +41,7 @@ public class DBConnectionTest {
 	
 	public DBConnectionTest() throws IOException{
 		conn = new DBConnection();
-		if(!conn.connect("localhost",8848)){
+		if(!conn.connect("192.168.1.61",8702)){
 			throw new IOException("Failed to connect to 2xdb server");
 		}
 	}
@@ -251,6 +251,15 @@ public class DBConnectionTest {
         BasicStringVector vector = (BasicStringVector)conn.run("flatten", args);
         System.out.println(vector.getString());
     }
+    public void Test_upload_table() throws IOException{
+    	BasicTable tb = (BasicTable)conn.run("table(1..100 as id,take(`aaa,100) as name)");
+    	Map<String, Entity> upObj = new HashMap<String, Entity>();
+        upObj.put("table_uploaded", (Entity)tb);
+        conn.upload(upObj);
+        Entity table = conn.run("table_uploaded");
+		System.out.println(table.getString());
+    
+    }
     
 	public void testTableUpload() throws IOException{
 		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -420,8 +429,9 @@ public class DBConnectionTest {
 			test.testFunctionIntMatrix(4, 2);
 			test.testFunctionDoubleMatrix(4, 2);
 			test.testFunctionStrMatrix();
-			test.testTableUpload();*/
-			test.testBulkLoad();
+			test.testTableUpload();
+			//test.testBulkLoad();*/
+			test.Test_upload_table();
 		}
 		catch(Exception ex){
 			ex.printStackTrace();

@@ -484,6 +484,7 @@ public class DBConnection {
 		try{
 			if(socket != null){
 				socket.close();
+				sessionID = "";
 				socket = null;
 			}
 		}
