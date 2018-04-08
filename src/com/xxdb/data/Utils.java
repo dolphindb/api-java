@@ -32,63 +32,49 @@ public class Utils {
 	}
 	
 	public static int countDays(int year, int month, int day){
-	    //1999.12.31 return 0
 		if(month<1 || month>12 || day<0)
 			return Integer.MIN_VALUE;
-
-		int days=10956 + (year-2000)/4*1461;
-	    year=(year-2000)%4;
-	    days+=365*year;
-	    if(year==0){
-	    	//leap year
-	    	days += cumLeapMonthDays[month-1];
-	    	return day <= leapMonthDays[month - 1] ? days + day : Integer.MIN_VALUE;
-	    }
-	    else{
-	    	if(year>=0) days++;
-	    	days += cumMonthDays[month-1];
-	    	return day <= monthDays[month - 1] ? days + day : Integer.MIN_VALUE;
-	    }
+	    int divide400Years = year / 400;
+	    int offset400Years = year % 400;
+	    int days = divide400Years * 146097 + offset400Years * 365 - 719529;
+	    if(offset400Years > 0) days += (offset400Years - 1) / 4 + 1 - (offset400Years - 1) / 100;
+	    if((year%4==0 && year%100!=0) || year%400==0){
+			days+=cumLeapMonthDays[month-1];
+			return day <= leapMonthDays[month - 1] ? days + day : Integer.MIN_VALUE;
+		}
+		else{
+			days+=cumMonthDays[month-1];
+			return day <= monthDays[month - 1] ? days + day : Integer.MIN_VALUE;
+		}
 	}
 
 	public static LocalDate parseDate(int days){
 		int year, month, day;
-		boolean leap=false;
-
-		days -= 10956;
-		year=2000+(days/1461)*4;
-		days=days%1461;
-		if(days<0){
-			year-=4;
-			days+=1461;
-		}
-		if(days>366){
-			year+=1;
-			days=days-366;
-			year+=days/365;
-			days=days%365;
-		}
-		else{
-			leap=true;
-		}
-		if(days==0){
-			year=year-1;
-			month=12;
-			day=31;
+		days += 719529;
+	    int circleIn400Years = days / 146097;
+	    int offsetIn400Years = days % 146097;
+	    int resultYear = circleIn400Years * 400;
+	    int similarYears = offsetIn400Years / 365;
+	    int tmpDays = similarYears * 365;
+	    if(similarYears > 0) tmpDays += (similarYears - 1) / 4 + 1 - (similarYears - 1) / 100;
+	    if(tmpDays >= offsetIn400Years) --similarYears;
+	    year = similarYears + resultYear;
+	    days -= circleIn400Years * 146097 + tmpDays;
+	    boolean leap = ( (year%4==0 && year%100!=0) || year%400==0 );
+	    if(days <= 0) {
+	        days += leap ? 366 : 365;
+	    }
+	    if(leap){
+			month=days/32+1;
+			if(days>cumLeapMonthDays[month])
+				month++;
+			day=days-cumLeapMonthDays[month-1];
 		}
 		else{
-			if(leap){
-				month=days/32+1;
-				if(days>cumLeapMonthDays[month])
-					month++;
-				day=days-cumLeapMonthDays[month-1];
-			}
-			else{
-				month=days/32+1;
-				if(days>cumMonthDays[month])
-					month++;
-				day=days-cumMonthDays[month-1];
-			}
+			month=days/32+1;
+			if(days>cumMonthDays[month])
+				month++;
+			day=days-cumMonthDays[month-1];
 		}
 		
 		return LocalDate.of(year,month,day);
