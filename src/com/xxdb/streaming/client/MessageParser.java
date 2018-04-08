@@ -53,20 +53,22 @@ class MessageParser implements Runnable{
 			} else {
 				in.readBoolean();
 			}
+			long sendTimestamp = in.readLong();
 			long msgid = in.readLong();
+			
 			if (offset == -1) {
 				offset = msgid;
 			} else {
 				assert(offset == msgid);
 			}
 			String topic = in.readString();
-
 			short flag = in.readShort();
 			EntityFactory factory = new BasicEntityFactory();
 			int form = flag>>8;
 
 			int type = flag & 0xff;
-			
+			System.out.println(form);
+			System.out.println(type);
 			if(form < 0 || form > MAX_FORM_VALUE)
 				throw new IOException("Invalid form value: " + form);
 			if(type <0 || type > MAX_TYPE_VALUE){

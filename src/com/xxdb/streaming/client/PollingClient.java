@@ -9,14 +9,11 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 public class PollingClient extends AbstractClient{
-    public PollingClient() throws SocketException {
-        this(DEFAULT_PORT);
-    }
 
     public PollingClient(int subscribePort) throws SocketException {
         super(subscribePort);
     }
-
+    
     public TopicPoller subscribe(String host,int port,String tableName,String actionName, long offset) throws IOException{
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName,actionName, offset);
         return new TopicPoller(queue);
