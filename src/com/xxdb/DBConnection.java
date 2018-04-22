@@ -3,6 +3,7 @@ package com.xxdb;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -514,5 +515,9 @@ public class DBConnection {
 	
 	public int getPort(){
 		return port;
+	}
+	
+	public InetAddress getLocalAddress(){
+		return socket.getLocalAddress();	
 	}
 }
