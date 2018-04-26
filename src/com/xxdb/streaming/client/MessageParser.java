@@ -67,8 +67,7 @@ class MessageParser implements Runnable{
 			int form = flag>>8;
 
 			int type = flag & 0xff;
-			System.out.println(form);
-			System.out.println(type);
+
 			if(form < 0 || form > MAX_FORM_VALUE)
 				throw new IOException("Invalid form value: " + form);
 			if(type <0 || type > MAX_TYPE_VALUE){
