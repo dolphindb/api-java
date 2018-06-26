@@ -39,21 +39,21 @@ class MessageParser implements Runnable{
 		try {
 		if(bis == null) bis= new BufferedInputStream(socket.getInputStream());
 		long offset = -1;
-
-		ExtendedDataInput in = null; //isRemoteLittleEndian ? new LittleEndianDataInputStream(bis) : new BigEndianDataInputStream(bis);
+		ExtendedDataInput in = null;
 
 		while(true){
-
 			if (in == null) {
-				Boolean b = bis.read() != 0; //true/false : little/big
-				if (b == true)
+				Boolean isLittle = bis.read() != 0;
+				if (isLittle == true)
 					in = new LittleEndianDataInputStream(bis);
 				else
 					in = new BigEndianDataInputStream(bis);
-			} else {
+			} 
+			else {
 				in.readBoolean();
 			}
-			long sendTimestamp = in.readLong();
+			
+			in.readLong();
 			long msgid = in.readLong();
 			
 			if (offset == -1) {
