@@ -520,4 +520,12 @@ public class DBConnection {
 	public InetAddress getLocalAddress(){
 		return socket.getLocalAddress();	
 	}
+
+	public boolean isConnected(){
+		if(this.socket!=null){
+			return this.socket.isConnected();
+		}else{
+			return false;
+		}
+	}
 }
