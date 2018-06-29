@@ -5,12 +5,16 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.xxdb.data.BasicBoolean;
 import com.xxdb.data.BasicEntityFactory;
+import com.xxdb.data.BasicString;
 import com.xxdb.data.Entity;
 import com.xxdb.data.EntityFactory;
 import com.xxdb.data.Void;
@@ -48,6 +52,9 @@ public class DBConnection {
 	private EntityFactory factory;
 	private String hostName;
 	private int port;
+	private String userId;
+	private String password;
+	private boolean encrypted;
 	
 	public DBConnection(){
 		factory = new BasicEntityFactory();
@@ -65,6 +72,10 @@ public class DBConnection {
 	}
 	
 	public boolean connect(String hostName, int port) throws IOException{
+		return connect(hostName, port, "", "");
+	}
+	
+	public boolean connect(String hostName, int port, String userId, String password) throws IOException{
 		mutex.lock();
 		try{
 			if(!sessionID.isEmpty()){
@@ -74,68 +85,18 @@ public class DBConnection {
 			
 			this.hostName = hostName;
 			this.port = port;
-			socket = new Socket(hostName, port);
-			socket.setTcpNoDelay(true);
-			out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-			@SuppressWarnings("resource")
-			ExtendedDataInput in = new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
-		    String body = "connect\n";
-			out.writeBytes("API 0 ");
-			out.writeBytes(String.valueOf(body.length()));
-			out.writeByte('\n');
-			out.writeBytes(body);
-			out.flush();
+			this.userId = userId;
+			this.password = password;
+			this.encrypted = true;
 			
-	
-			String line = in.readLine();
-			int endPos = line.indexOf(' ');
-			if(endPos <= 0){
-				close();
-				return false;
-			}
-			sessionID = line.substring(0, endPos);
-		
-			int startPos = endPos +1;
-			endPos = line.indexOf(' ', startPos);
-			if(endPos != line.length()-2){
-				close();
-				return false;
-			}
-			
-			if(line.charAt(endPos +1) == '0'){
-				remoteLittleEndian = false;
-				out = new BigEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-			}
-			else
-				remoteLittleEndian = true;
-			
-			return true;
+			return connect();
 		}
 		finally{
 			mutex.unlock();
 		}
 	}
 	
-	public boolean getRemoteLittleEndian (){
-		return this.remoteLittleEndian;
-	}
-	
-	public Entity tryRun(String script) throws IOException{
-		if(!mutex.tryLock())
-			return null;
-		try{
-			return run(script);
-		}
-		finally{
-			mutex.unlock();
-		}
-	}
-	
-	public Entity run(String script) throws IOException{
-		return run(script, (ProgressListener)null);
-	}
-	
-	public boolean tryReconnect() throws IOException {
+	private boolean connect() throws IOException {
 		socket = new Socket(hostName, port);
 		out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		@SuppressWarnings("resource")
@@ -170,7 +131,63 @@ public class DBConnection {
 		else
 			remoteLittleEndian = true;
 		
+		if(!userId.isEmpty() && !password.isEmpty())
+			login();
+		
 		return true;
+	}
+	
+	public void login(String userId, String password, boolean enableEncryption) throws IOException{
+		mutex.lock();
+		try{
+			this.userId = userId;
+			this.password = password;
+			this.encrypted = enableEncryption;
+			
+			login();
+		}
+		finally{
+			mutex.unlock();
+		}
+	}
+	
+	private void login() throws IOException{
+		List<Entity> args = new ArrayList<>();
+		if(encrypted){
+	        BasicString keyCode = (BasicString) run("getDynamicPublicKey()");
+			PublicKey key = RSAUtils.getPublicKey(keyCode.getString());
+			byte[] usr =  RSAUtils.encryptByPublicKey(userId.getBytes(), key);
+		    byte[] pass = RSAUtils.encryptByPublicKey(password.getBytes(), key);
+	
+	        
+	        args.add(new BasicString(Base64.getMimeEncoder().encodeToString(usr)));
+	        args.add(new BasicString(Base64.getMimeEncoder().encodeToString(pass)));
+	        args.add(new BasicBoolean(true));
+		}
+		else{
+			 args.add(new BasicString(userId));
+		     args.add(new BasicString(password));
+		}
+        run("login", args);
+	}
+	
+	public boolean getRemoteLittleEndian (){
+		return this.remoteLittleEndian;
+	}
+	
+	public Entity tryRun(String script) throws IOException{
+		if(!mutex.tryLock())
+			return null;
+		try{
+			return run(script);
+		}
+		finally{
+			mutex.unlock();
+		}
+	}
+	
+	public Entity run(String script) throws IOException{
+		return run(script, (ProgressListener)null);
 	}
 	
 	public Entity run(String script, ProgressListener listener) throws IOException{
@@ -207,7 +224,7 @@ public class DBConnection {
 				}
 				
 				try {
-					tryReconnect();
+					connect();
 					out.writeBytes((listener != null ? "API2 " : "API ")+sessionID+" ");
 					out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
 					out.writeByte('\n');
@@ -324,7 +341,7 @@ public class DBConnection {
 				}
 				
 				try {					
-					tryReconnect();
+					connect();
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 					out.writeBytes("API "+sessionID+" ");
 					out.writeBytes(String.valueOf(body.length()));

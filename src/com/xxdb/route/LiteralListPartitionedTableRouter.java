@@ -10,7 +10,8 @@ class LiteralListPartitionedTableRouter implements TableRouter {
         initialize(values, locations);
     }
 
-    private void initialize(AbstractVector values, BasicAnyVector locations) {
+    @SuppressWarnings("unchecked")
+	private void initialize(AbstractVector values, BasicAnyVector locations) {
         if (values.getDataType() != Entity.DATA_TYPE.DT_ANY || values.getDataForm() != Entity.DATA_FORM.DF_VECTOR) {
             throw new RuntimeException("expect a vector of partitioning lists");
         }
