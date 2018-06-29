@@ -522,10 +522,6 @@ public class DBConnection {
 	}
 
 	public boolean isConnected(){
-		if(this.socket!=null){
-			return this.socket.isConnected();
-		}else{
-			return false;
-		}
+		return socket != null && socket.isConnected();
 	}
 }
