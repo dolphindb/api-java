@@ -25,7 +25,7 @@ class LiteralRangePartitionedTableRouter extends AbstractRangePartitionedTableRo
         initialize(strings, locations);
     }
 
-    private static <T extends Comparable> boolean isSorted(List<T> theList) {
+    private static <T extends Comparable<T>> boolean isSorted(List<T> theList) {
         T previous = null;
         for (T t: theList) {
             if (previous != null && t.compareTo(previous) < 0) return false;
