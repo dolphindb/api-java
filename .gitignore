@@ -13,3 +13,9 @@ hs_err_pid*
 /bin/
 .project
 .classpath
+.idea/artifacts/dolphindb.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
+dolphindb_javaapi.iml
