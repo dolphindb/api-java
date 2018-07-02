@@ -13,3 +13,8 @@ hs_err_pid*
 /bin/
 .project
 .classpath
+
+# IDEA #
+.idea/
+.idea/*.xml
+.idea/artifacts/*.xml
