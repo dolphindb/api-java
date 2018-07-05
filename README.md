@@ -17,8 +17,8 @@ Java API adopts interface-oriented programming. Java API uses the class interfac
 
 | Extended interfaces        | Naming rules           | Examples  |
 | ------------- |:-------------:| -----:|
-| scalar      | Basic+<DataType> | BasicInt, BasicDouble, BasicDate, etc. |
-| vector and matrix | Basic+<DataForm> | BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc. |
+| scalar      |Basic+<DataType> | BasicInt, BasicDouble, BasicDate, etc.|
+| vector and matrix |Basic+<DataForm> | BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.|
 | set, dictionary and table |Basic+<DataForm>  |BasicSet, BasicDictionary, BasicTable. |
 | chart | |BasicChart
        
