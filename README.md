@@ -23,7 +23,7 @@ Java API adopts interface-oriented programming. Java API uses the class interfac
 | chart | |BasicChart
        
       
-"Basic" indicates the basic implementation of a data form interface, <DataType> indicates a DolphinDB data type, and <DataForm> indicates a DolphinDB data form.
+**Basic** indicates the basic implementation of a data form interface, **DataType** indicates a DolphinDB data type, and **DataForm** indicates a DolphinDB data form.
 
 
 #### 4. Setup DolphinDB connection
