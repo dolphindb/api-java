@@ -26,52 +26,41 @@ Java API adopts interface-oriented programming. Java API uses the class interfac
 "Basic" indicates the basic implementation of a data form interface, <DataType> indicates a DolphinDB data type, and <DataForm> indicates a DolphinDB data form.
 
 
-
-
-
-Setup DolphinDB connection
-
+#### 4. Setup DolphinDB connection
 
 
 Java API connects to DolphinDB server through TCP/IP protocol. To establish a connection, specify the host and port of the DolphinDB server as illustrated by the example below.
 
-
-
+```
 import com.xxdb;
 
-       
-
+  
 DBConnection conn = new DBConnection();
 
 boolean success = conn.connect("localhost", 80);
+```
 
 
-
-
-
-Run Scripts
-
+#### 5. Run Scripts
 
 
 You can use the following statement to run DolphinDB script. The maximum length of a script is 65,535 bytes.
 
 
-
+```
 conn.run("<SCRIPT>");
-
-
+```
 
 If the script contains a statement, it will return a data object. If the script contains multiple statements, it will return the last object that they generate. If the script contains errors or if network issues occur, it will throw an IOException.
 
 
-
-Vector
-
+#### 5.1 Vector
 
 
-In the example below, the DolphinDB script "rand(`IBM`MSFT`GOOG`BIDU, 10)" returns the Java object BasicStringVector. The method vector.rows() indicates the size of the vector. To access an element in a vector, use the method vector.getString(index).
 
+In the example below, the DolphinDB script **"rand(`IBM`MSFT`GOOG`BIDU, 10)"** returns the Java object BasicStringVector. The method vector.rows() indicates the size of the vector. To access an element in a vector, use the method vector.getString(index).
 
+```
 public void testStringVector() throws IOException{
 
 BasicStringVector vector = (BasicStringVector)conn.run("rand(`IBM`MSFT`GOOG`BIDU, 10)");
@@ -85,13 +74,13 @@ BasicStringVector vector = (BasicStringVector)conn.run("rand(`IBM`MSFT`GOOG`BIDU
                System.out.println(vector.getString(i));
 
 }
-
+```
 
 
 Similarly, you can work with a double vector or a tuple.
 
 
-
+```
 public void testDoubleVector() throws IOException{
 
        BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0, 10)");
@@ -107,9 +96,6 @@ public void testDoubleVector() throws IOException{
 }
 
 
-
-
-
 public void testAnyVector() throws IOException{
 
        BasicAnyVector result = (BasicAnyVector)conn.run("[1, 2, [1,3,5],[0.9, [0.8]]]");
@@ -117,15 +103,13 @@ public void testAnyVector() throws IOException{
        System.out.println(result.getString());
 
 }
+```
 
 
+#### 5.2 Set
 
 
-
-Set
-
-
-
+```
 public void testSet() throws IOException{
 
                BasicSet result = (BasicSet)conn.run("set(1+3*1..100)");
@@ -133,17 +117,17 @@ public void testSet() throws IOException{
                System.out.println(result.getString());
 
 }
-
+```
        
 
-Matrix
+#### 5.3 Matrix
 
 
 
 To access an element from an integer matrix, use getInt(row, col). To get the number of rows or columns, use functions rows() and columns() respectively.
 
 
-
+```
 public void testIntMatrix() throws IOException {
 
        BasicIntMatrix matrix = (BasicIntMatrix)conn.run("1..6$3:2");
@@ -151,16 +135,14 @@ public void testIntMatrix() throws IOException {
        System.out.println(matrix.getString());
 
 }
+```
 
-
-
-Dictionary
-
+#### 5.4 Dictionary
 
 
 To get all keys and values from a dictionary, use functions keys() and values() respectively. To look up a value in a dictionary, use the method get(key).
 
-
+```
 public void testDictionary() throws IOException{
 
        BasicDictionary dict = (BasicDictionary)conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
@@ -170,16 +152,16 @@ public void testDictionary() throws IOException{
       System.out.println(dict.get(new BasicInt(1)).getString());
 
 }
+```
 
 
-
-Table
+#### 5.5 Table
 
 
 
 To get a table column, use method table.getColumn(index); to get column names, use method table.getColumnName(index); to get table column/row size, use table.columns()/table.rows().
 
-
+```
 public void testTable() throws IOException{
 
 StringBuilder sb =new StringBuilder();
@@ -197,17 +179,17 @@ StringBuilder sb =new StringBuilder();
        System.out.println(table.getString());
 
 }
+```
 
 
-
-Null Object
+#### 5.6 Null Object
 
 
 
 To get a "NULL" object, you can execute the following script and then call method obj.getDataType()
 
 
-
+```
 public void testVoid() throws IOException{
 
        Entity obj = conn.run("NULL");
@@ -215,19 +197,19 @@ public void testVoid() throws IOException{
        System.out.println(obj.getDataType());
 
 }
+```
 
 
 
 
-
-Run DolphinDB Functions
+#### 6. Run DolphinDB Functions
 
 
 
 We can call either a DolphinDB built-in function or a user defined function. The example below passes a double vector to the server and calls the sum function.
 
 
-
+```
 public void testFunction() throws IOException{
 
        List<Entity> args = new ArrayList<Entity>(1);
@@ -247,19 +229,19 @@ public void testFunction() throws IOException{
        System.out.println(result.getString());
 
 }
+```
 
 
 
 
-
-Upload Objects to DolphinDB Server
+#### 7. Upload Objects to DolphinDB Server
 
 
 
 We can upload a binary data object to a DolphinDB server and assign it to a variable for future use. The variable name can use 3 types of characters: letter, digit, and underscore. The first character must be a letter.
 
 
-
+```
 public void testFunction() throws IOException{
 
        List<Entity> args = new ArrayList<Entity>(1);
@@ -285,3 +267,5 @@ List<Entity> vars = new ArrayList<String>(1);
        System.out.println(result.getString());
 
 }
+```
+
