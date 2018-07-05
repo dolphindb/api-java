@@ -38,6 +38,12 @@ import com.xxdb;
 DBConnection conn = new DBConnection();
 
 boolean success = conn.connect("localhost", 8848);
+
+
+//Or with login info
+
+boolean success = conn.connect("localhost", 8848, "admin", "123456");
+
 ```
 
 
