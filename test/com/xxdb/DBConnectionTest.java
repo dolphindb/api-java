@@ -41,7 +41,7 @@ public class DBConnectionTest {
 	
 	public DBConnectionTest() throws IOException{
 		conn = new DBConnection();
-		if(!conn.connect("192.168.1.61",8702)){
+		if(!conn.connect("localhost",8900)){
 			throw new IOException("Failed to connect to 2xdb server");
 		}
 	}
@@ -56,6 +56,12 @@ public class DBConnectionTest {
 		System.out.println("size: "+size);
 		for(int i=0; i<size; ++i)
 			System.out.println(vector.getString(i));
+	}
+
+	public void testLoginWithLogin() throws IOException{
+		conn = new DBConnection();
+		conn.connect("localhost",8900,"admin","123456");
+
 	}
 	
 	public void testFunctionDef() throws IOException{
@@ -430,8 +436,9 @@ public class DBConnectionTest {
 			test.testFunctionDoubleMatrix(4, 2);
 			test.testFunctionStrMatrix();
 			test.testTableUpload();
-			//test.testBulkLoad();*/
-			test.Test_upload_table();
+			//test.testBulkLoad();
+			test.Test_upload_table();*/
+			test.testLoginWithLogin();
 		}
 		catch(Exception ex){
 			ex.printStackTrace();
