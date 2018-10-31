@@ -30,17 +30,6 @@ public class RSAUtils {
         return binkey;
     }
 
-    public static byte[] decodeOpenSSLPrivateKey(String instr) {
-        String pempubheader = "-----BEGIN PRIVATE KEY-----";
-        String pempubfooter = "-----END PRIVATE KEY-----";
-        String pemstr = instr.trim();
-        byte[] binkey;
-        pemstr = pemstr.replace(pempubheader, "" ).replace(pempubfooter, "" ).replaceAll("\\s","");
-        String pubstr = pemstr.trim();
-        binkey = Base64.getDecoder().decode(pubstr);
-        return binkey;
-    }
-
     public static byte[] encryptByPublicKey(byte[] data,PublicKey pk) throws IOException{
     	try{
 	        Cipher cipher=Cipher.getInstance("RSA/ECB/PKCS1Padding");
