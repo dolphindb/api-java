@@ -171,7 +171,7 @@ public class DBConnectionTest {
 		sb.append("dates=(2012.01.01..2016.07.31)[def(x):weekday(x) between 1:5]\n");
 		sb.append("chartData=each(cumsum,reshape(rand(10000,dates.size()*5)-4500, dates.size():5))\n");
 		sb.append("chartData.rename!(dates, \"Strategy#\"+string(1..5))\n");
-		sb.append("plot(chartData,[\"Cumulative Pnls of Five Strategies\",\"date\",\"pnl\"],,LINE)");
+		sb.append("plot(chartData,,[\"Cumulative Pnls of Five Strategies\",\"date\",\"pnl\"],LINE)");
 		BasicChart chart = (BasicChart)conn.run(sb.toString());
 		System.out.println(chart.getTitle());
 		System.out.println(chart.getData().getRowLabel(0).getString());
