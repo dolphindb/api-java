@@ -41,7 +41,7 @@ public class DBConnectionTest {
 	
 	public DBConnectionTest() throws IOException{
 		conn = new DBConnection();
-		if(!conn.connect("192.168.1.61",8702)){
+		if(!conn.connect("localhost",8848)){
 			throw new IOException("Failed to connect to 2xdb server");
 		}
 	}
@@ -389,7 +389,8 @@ public class DBConnectionTest {
 		*/
 		String script = "tickdb = database('c:/DolphinDB/db_testing/TickDB_A', VALUE, 2000.01.01..2024.12.31) \n" + 
 				"t1[`sym] = symbol(t1.sym) \n" +
-				"tickdb.savePartition(t1, `Trades, `date,true, true)";
+				"tb = tickdb.createPartitionedTable(t1,`Trades,`date) \n" +
+				"tb.append!(t1)";
 		
 		start = LocalDateTime.now();
 		conn.run(script);
@@ -404,7 +405,11 @@ public class DBConnectionTest {
 			indices[i] = randomGenerator.nextInt(uplimit);
 		return indices;
 	}
-	
+
+	public  static  void testDfs(){
+		String dfsPath = "dfs://testDB";
+		//BasicTable tableData = new BasicTable();
+	}
 	public static void main(String[] args){
 		try{
 			DBConnectionTest test = new DBConnectionTest();
@@ -430,8 +435,8 @@ public class DBConnectionTest {
 			test.testFunctionDoubleMatrix(4, 2);
 			test.testFunctionStrMatrix();
 			test.testTableUpload();
-			//test.testBulkLoad();*/
-			test.Test_upload_table();
+			test.Test_upload_table();*/
+			test.testBulkLoad();
 		}
 		catch(Exception ex){
 			ex.printStackTrace();
