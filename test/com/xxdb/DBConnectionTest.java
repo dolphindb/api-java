@@ -41,7 +41,7 @@ public class DBConnectionTest {
 	
 	public DBConnectionTest() throws IOException{
 		conn = new DBConnection();
-		if(!conn.connect("localhost",8900)){
+		if(!conn.connect("localhost",8848)){
 			throw new IOException("Failed to connect to 2xdb server");
 		}
 	}
@@ -56,12 +56,6 @@ public class DBConnectionTest {
 		System.out.println("size: "+size);
 		for(int i=0; i<size; ++i)
 			System.out.println(vector.getString(i));
-	}
-
-	public void testLoginWithLogin() throws IOException{
-		conn = new DBConnection();
-		conn.connect("localhost",8900,"admin","123456");
-
 	}
 	
 	public void testFunctionDef() throws IOException{
@@ -177,7 +171,7 @@ public class DBConnectionTest {
 		sb.append("dates=(2012.01.01..2016.07.31)[def(x):weekday(x) between 1:5]\n");
 		sb.append("chartData=each(cumsum,reshape(rand(10000,dates.size()*5)-4500, dates.size():5))\n");
 		sb.append("chartData.rename!(dates, \"Strategy#\"+string(1..5))\n");
-		sb.append("plot(chartData,[\"Cumulative Pnls of Five Strategies\",\"date\",\"pnl\"],,LINE)");
+		sb.append("plot(chartData,,[\"Cumulative Pnls of Five Strategies\",\"date\",\"pnl\"],LINE)");
 		BasicChart chart = (BasicChart)conn.run(sb.toString());
 		System.out.println(chart.getTitle());
 		System.out.println(chart.getData().getRowLabel(0).getString());
@@ -395,7 +389,8 @@ public class DBConnectionTest {
 		*/
 		String script = "tickdb = database('c:/DolphinDB/db_testing/TickDB_A', VALUE, 2000.01.01..2024.12.31) \n" + 
 				"t1[`sym] = symbol(t1.sym) \n" +
-				"tickdb.savePartition(t1, `Trades, `date,true, true)";
+				"tb = tickdb.createPartitionedTable(t1,`Trades,`date) \n" +
+				"tb.append!(t1)";
 		
 		start = LocalDateTime.now();
 		conn.run(script);
