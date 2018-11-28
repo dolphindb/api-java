@@ -1,10 +1,7 @@
 package com.xxdb;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,27 +11,7 @@ import java.util.Random;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
-import com.xxdb.data.BasicAnyVector;
-import com.xxdb.data.BasicChart;
-import com.xxdb.data.BasicDate;
-import com.xxdb.data.BasicDateTimeVector;
-import com.xxdb.data.BasicDateVector;
-import com.xxdb.data.BasicDictionary;
-import com.xxdb.data.BasicDoubleMatrix;
-import com.xxdb.data.BasicDoubleVector;
-import com.xxdb.data.BasicInt;
-import com.xxdb.data.BasicIntMatrix;
-import com.xxdb.data.BasicIntVector;
-import com.xxdb.data.BasicSet;
-import com.xxdb.data.BasicShortVector;
-import com.xxdb.data.BasicStringMatrix;
-import com.xxdb.data.BasicStringVector;
-import com.xxdb.data.BasicTable;
-import com.xxdb.data.BasicTime;
-import com.xxdb.data.BasicTimeVector;
-import com.xxdb.data.Entity;
-import com.xxdb.data.Scalar;
-import com.xxdb.data.Vector;
+import com.xxdb.data.*;
 
 public class DBConnectionTest {
 	private DBConnection conn;
@@ -405,7 +382,208 @@ public class DBConnectionTest {
 			indices[i] = randomGenerator.nextInt(uplimit);
 		return indices;
 	}
-	
+
+	private	BasicTable createBasicTable(){
+		List<String> colNames = new ArrayList<String>();
+		colNames.add("cbool");
+		colNames.add("cchar");
+		colNames.add("cshort");
+		colNames.add("cint");
+		colNames.add("clong");
+		colNames.add("cdate");
+		colNames.add("cmonth");
+		colNames.add("ctime");
+		colNames.add("cminute");
+		colNames.add("csecond");
+		colNames.add("cdatetime");
+		colNames.add("ctimestamp");
+		colNames.add("cnanotime");
+		colNames.add("cnanotimestamp");
+		colNames.add("cfloat");
+		colNames.add("cdouble");
+		colNames.add("csymbol");
+		colNames.add("cstring");
+		List<Vector> cols = new ArrayList<Vector>();
+		//boolean
+		byte[] vbool = new byte[]{1,0};
+		BasicBooleanVector bbv = new BasicBooleanVector(vbool);
+		cols.add(bbv);
+		//char
+		byte[] vchar = new byte[]{(byte)'c',(byte)'a'};
+		BasicByteVector bcv = new BasicByteVector(vchar);
+		cols.add(bcv);
+		//cshort
+		short[] vshort = new short[]{32767,29};
+		BasicShortVector bshv = new BasicShortVector(vshort);
+		cols.add(bshv);
+		//cint
+		int[] vint = new int[]{2147483647,483647};
+		BasicIntVector bintv = new BasicIntVector(vint);
+		cols.add(bintv);
+		//clong
+		long[] vlong = new long[]{2147483647,483647};
+		BasicLongVector blongv = new BasicLongVector(vlong);
+		cols.add(blongv);
+		//cdate
+		int[] vdate = new int[]{Utils.countDays(LocalDate.of(2018,2,14)),Utils.countDays(LocalDate.of(2018,8,15))};
+		BasicDateVector bdatev = new BasicDateVector(vdate);
+		cols.add(bdatev);
+		//cmonth
+		int[] vmonth = new int[]{Utils.countMonths(YearMonth.of(2018,2)),Utils.countMonths(YearMonth.of(2018,8))};
+		BasicMonthVector bmonthv = new BasicMonthVector(vmonth);
+		cols.add(bmonthv);
+		//ctime
+		int[] vtime = new int[]{Utils.countMilliseconds(16,46,05,123),Utils.countMilliseconds(18,32,05,321)};
+		BasicTimeVector btimev = new BasicTimeVector(vtime);
+		cols.add(btimev);
+		//cminute
+		int[] vminute = new int[]{Utils.countMinutes(LocalTime.of(16,30)),Utils.countMinutes(LocalTime.of(9,30))};
+		BasicMinuteVector bminutev = new BasicMinuteVector(vminute);
+		cols.add(bminutev);
+		//csecond
+		int[] vsecond = new int[]{Utils.countSeconds(LocalTime.of(9,30,30)),Utils.countSeconds(LocalTime.of(16,30,50))};
+		BasicSecondVector bsecondv = new BasicSecondVector(vsecond);
+		cols.add(bsecondv);
+		//cdatetime
+		int[] vdatetime = new int[]{Utils.countSeconds(LocalDateTime.of(2018,9,8,9,30,01)),Utils.countSeconds(LocalDateTime.of(2018,11,8,16,30,01))};
+		BasicDateTimeVector bdatetimev = new BasicDateTimeVector(vdatetime);
+		cols.add(bdatetimev);
+		//ctimestamp
+		long[] vtimestamp = new long[]{Utils.countMilliseconds(2018,11,12,9,30,01,123),Utils.countMilliseconds(2018,11,12,16,30,01,123)};
+		//long[] vtimestamp = new long[]{Utils.countMilliseconds(LocalDateTime),Utils.countMilliseconds(LocalDateTime)};
+		BasicTimestampVector btimestampv = new BasicTimestampVector(vtimestamp);
+		cols.add(btimestampv);
+		//cnanotime
+		long[] vnanotime = new long[]{Utils.countNanoseconds(LocalTime.of(9,30,05,123456789)),Utils.countNanoseconds(LocalTime.of(16,30,05,987654321))};
+		BasicNanoTimeVector bnanotimev = new BasicNanoTimeVector(vnanotime);
+		cols.add(bnanotimev);
+		//cnanotimestamp
+		long[] vnanotimestamp = new long[]{Utils.countNanoseconds(LocalDateTime.of(2018,11,12,9,30,05,123456789)),Utils.countNanoseconds(LocalDateTime.of(2018,11,13,16,30,05,987654321))};
+		BasicNanoTimestampVector bnanotimestampv = new BasicNanoTimestampVector(vnanotimestamp);
+		cols.add(bnanotimestampv);
+		//cfloat
+		float[] vfloat = new float[]{2147.483647f,483.647f};
+		BasicFloatVector bfloatv = new BasicFloatVector(vfloat);
+		cols.add(bfloatv);
+		//cdouble
+		double[] vdouble = new double[]{214.7483647,48.3647};
+		BasicDoubleVector bdoublev = new BasicDoubleVector(vdouble);
+		cols.add(bdoublev);
+		//csymbol
+		String[] vsymbol = new String[]{"GOOG","MS"};
+		BasicStringVector bsymbolv = new BasicStringVector(vsymbol);
+		cols.add(bsymbolv);
+		//cstring
+		String[] vstring = new String[]{"","test string"};
+		BasicStringVector bstringv = new BasicStringVector(vstring);
+		cols.add(bstringv);
+		BasicTable t1 = new BasicTable(colNames, cols);
+		return t1;
+	}
+	public void test_save_memoryTable() throws IOException{
+		BasicTable table1 = createBasicTable();
+		conn.run("t = table(10000:0,`cbool`cchar`cshort`cint`clong`cdate`cmonth`ctime`cminute`csecond`cdatetime`ctimestamp`cnanotime`cnanotimestamp`cfloat`cdouble`csymbol`cstring,[BOOL,CHAR,SHORT,INT,LONG,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING])\n");
+		conn.run("share t as memoryTable");
+		conn.run("def saveData(data){ memoryTable.append!(data)}");
+		List<Entity> args = new ArrayList<Entity>(1);
+		args.add(table1);
+		conn.run("saveData", args);
+	}
+
+	public void test_save_dfsTable() throws IOException{
+		BasicTable table1 = createBasicTable();
+		conn.login("admin","123456",false);
+		conn.run("t = table(10000:0,`cbool`cchar`cshort`cint`clong`cdate`cmonth`ctime`cminute`csecond`cdatetime`ctimestamp`cnanotime`cnanotimestamp`cfloat`cdouble`csymbol`cstring,[BOOL,CHAR,SHORT,INT,LONG,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING])\n");
+		conn.run("if(existsDatabase('dfs://testDatabase')){dropDatabase('dfs://testDatabase')}");
+		conn.run("db = database('dfs://testDatabase',RANGE,2018.01.01..2018.12.31)");
+		conn.run("db.createPartitionedTable(t,'tb1','cdate')");
+		conn.run("def saveData(data){ loadTable('dfs://testDatabase','tb1').append!(data)}");
+		List<Entity> args = new ArrayList<Entity>(1);
+		args.add(table1);
+		conn.run("saveData", args);
+	}
+
+	public void test_save_localTable() throws IOException{
+		BasicTable table1 = createBasicTable();
+		String dbpath = "/home/user1/testDatabase";
+		conn.run("t = table(10000:0,`cbool`cchar`cshort`cint`clong`cdate`cmonth`ctime`cminute`csecond`cdatetime`ctimestamp`cnanotime`cnanotimestamp`cfloat`cdouble`csymbol`cstring,[BOOL,CHAR,SHORT,INT,LONG,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING])\n");
+		conn.run(String.format("if(existsDatabase('{0}')){dropDatabase('{0}')}",dbpath));
+		conn.run(String.format("db = database('{0}',VALUE,'MS' 'GOOG' 'FB')",dbpath));
+		conn.run("db.createPartitionedTable(t,'tb1','csymbol')");
+		conn.run(String.format("def saveData(data){ loadTable('{0}','tb1').append!(data)}",dbpath));
+		List<Entity> args = new ArrayList<Entity>(1);
+		args.add(table1);
+		conn.run("saveData", args);
+	}
+
+	public void test_loop_basicTable() throws Exception{
+		BasicTable table1 = createBasicTable();
+			for(int ri=0;ri<table1.rows();ri++){
+				BasicBoolean boolv = (BasicBoolean)table1.getColumn("cbool").get(ri);
+				System.out.println(boolv.getBoolean());
+
+				BasicByte charv = (BasicByte)table1.getColumn("cchar").get(ri);
+				System.out.println((char)charv.getByte());
+
+				BasicShort shortv = (BasicShort) table1.getColumn("cshort").get(ri);
+				System.out.println(shortv.getNumber().shortValue());
+
+				BasicInt intv = (BasicInt) table1.getColumn("cint").get(ri);
+				System.out.println(intv.getNumber().intValue());
+
+				BasicLong longv = (BasicLong) table1.getColumn("clong").get(ri);
+				System.out.println(longv.getNumber().longValue());
+
+				BasicDate datev = (BasicDate) table1.getColumn("cdate").get(ri);
+				LocalDate date = datev.getDate();
+				System.out.println(date);
+
+				BasicMonth monthv = (BasicMonth) table1.getColumn("cmonth").get(ri);
+				YearMonth ym = monthv.getMonth();
+				System.out.println(ym);
+
+				BasicTime timev = (BasicTime) table1.getColumn("ctime").get(ri);
+				LocalTime time = timev.getTime();
+				System.out.println(time);
+
+				BasicMinute minutev = (BasicMinute) table1.getColumn("cminute").get(ri);
+				LocalTime minute = minutev.getMinute();
+				System.out.println(minute);
+
+				BasicSecond secondv = (BasicSecond) table1.getColumn("csecond").get(ri);
+				LocalTime second = secondv.getSecond();
+				System.out.println(second);
+
+				BasicDateTime datetimev = (BasicDateTime) table1.getColumn("cdatetime").get(ri);
+				LocalDateTime datetime = datetimev.getDateTime();
+				System.out.println(datetime);
+
+				BasicTimestamp timestampv = (BasicTimestamp) table1.getColumn("ctimestamp").get(ri);
+				LocalDateTime timestamp = timestampv.getTimestamp();
+				System.out.println(timestamp);
+
+				BasicNanoTime nanotimev = (BasicNanoTime) table1.getColumn("cnanotime").get(ri);
+				LocalTime nanotime = nanotimev.getNanoTime();
+				System.out.println(nanotime);
+
+				BasicNanoTimestamp nanotimestampv = (BasicNanoTimestamp) table1.getColumn("cnanotimestamp").get(ri);
+				LocalDateTime nanotimestamp = nanotimestampv.getNanoTimestamp();
+				System.out.println(nanotimestamp);
+
+				BasicFloat floatv = (BasicFloat) table1.getColumn("cfloat").get(ri);
+				System.out.println(floatv.getFloat());
+
+				BasicDouble doublev = (BasicDouble) table1.getColumn("cdouble").get(ri);
+				System.out.println(doublev.getDouble());
+
+				BasicString symbolv = (BasicString) table1.getColumn("csymbol").get(ri);
+				System.out.println(symbolv.getString());
+
+				BasicString stringv = (BasicString) table1.getColumn("cstring").get(ri);
+				System.out.println(stringv.getString());
+			}
+	}
+
 	public static void main(String[] args){
 		try{
 			DBConnectionTest test = new DBConnectionTest();
@@ -432,9 +610,14 @@ public class DBConnectionTest {
 			test.testFunctionStrMatrix();
 			test.testTableUpload();
 			//test.testBulkLoad();
-			test.Test_upload_table();*/
+			test.Test_upload_table();
 			test.testLoginWithLogin();
+			test.test_save_memoryTable();
+			test.test_save_dfsTable();*/
+			test.test_save_localTable();
+			test.test_loop_basicTable();
 		}
+
 		catch(Exception ex){
 			ex.printStackTrace();
 			System.out.println(ex.getMessage());
