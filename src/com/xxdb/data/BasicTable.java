@@ -57,6 +57,7 @@ public class BasicTable extends AbstractEntity implements Table{
     
     public void setColName (final List<String> colNames) {
         names_.clear();
+		name2index_.clear();
         for (String name : colNames){
 			names_.add(name);
 			name2index_.put(name, name2index_.size());

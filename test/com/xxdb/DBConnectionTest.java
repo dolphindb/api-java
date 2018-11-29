@@ -2,16 +2,12 @@ package com.xxdb;
 
 import java.io.IOException;
 import java.time.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import com.xxdb.data.*;
+import com.xxdb.data.Vector;
 
 public class DBConnectionTest {
 	private DBConnection conn;
@@ -126,7 +122,18 @@ public class DBConnectionTest {
 		Scalar result = (Scalar)conn.run("sum", args);
 		System.out.println(result.getString());
 	}
-	
+
+	public void testFunction1() throws IOException{
+		Map<String, Entity> vars = new HashMap<String, Entity>();
+		BasicDoubleVector vec = new BasicDoubleVector(3);
+		vec.setDouble(0, 1.5);
+		vec.setDouble(1, 2.5);
+		vec.setDouble(2, 7);
+		vars.put("a",vec);
+		conn.upload(vars);
+		Entity result = conn.run("accumulate(+,a)");
+		System.out.println(result.getString());
+	}
 	
 	public void testAnyVector() throws IOException{
 		BasicAnyVector result = (BasicAnyVector)conn.run("{1, 2, {1,3, 5},{0.9, 0.8}}");
@@ -403,7 +410,9 @@ public class DBConnectionTest {
 		colNames.add("cdouble");
 		colNames.add("csymbol");
 		colNames.add("cstring");
-		List<Vector> cols = new ArrayList<Vector>();
+		List<Vector> cols = new ArrayList<Vector>(){};
+
+
 		//boolean
 		byte[] vbool = new byte[]{1,0};
 		BasicBooleanVector bbv = new BasicBooleanVector(vbool);
@@ -450,7 +459,6 @@ public class DBConnectionTest {
 		cols.add(bdatetimev);
 		//ctimestamp
 		long[] vtimestamp = new long[]{Utils.countMilliseconds(2018,11,12,9,30,01,123),Utils.countMilliseconds(2018,11,12,16,30,01,123)};
-		//long[] vtimestamp = new long[]{Utils.countMilliseconds(LocalDateTime),Utils.countMilliseconds(LocalDateTime)};
 		BasicTimestampVector btimestampv = new BasicTimestampVector(vtimestamp);
 		cols.add(btimestampv);
 		//cnanotime
@@ -503,8 +511,10 @@ public class DBConnectionTest {
 		conn.run("saveData", args);
 	}
 
-	public void test_save_localTable() throws IOException{
-		BasicTable table1 = createBasicTable();
+	public void test_save_localTable(List<Byte> boolArray,List<Integer> intArray,double[] dblArray, List<Integer> dateArray,List<String> strArray) throws IOException{
+		List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
+		List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
+		BasicTable table1 = new BasicTable(colNames,cols);
 		String dbpath = "/home/user1/testDatabase";
 		conn.run("t = table(10000:0,`cbool`cchar`cshort`cint`clong`cdate`cmonth`ctime`cminute`csecond`cdatetime`ctimestamp`cnanotime`cnanotimestamp`cfloat`cdouble`csymbol`cstring,[BOOL,CHAR,SHORT,INT,LONG,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING])\n");
 		conn.run(String.format("if(existsDatabase('{0}')){dropDatabase('{0}')}",dbpath));
@@ -516,74 +526,54 @@ public class DBConnectionTest {
 		conn.run("saveData", args);
 	}
 
-	public void test_loop_basicTable() throws Exception{
-		BasicTable table1 = createBasicTable();
-			for(int ri=0;ri<table1.rows();ri++){
-				BasicBoolean boolv = (BasicBoolean)table1.getColumn("cbool").get(ri);
-				System.out.println(boolv.getBoolean());
-
-				BasicByte charv = (BasicByte)table1.getColumn("cchar").get(ri);
-				System.out.println((char)charv.getByte());
-
-				BasicShort shortv = (BasicShort) table1.getColumn("cshort").get(ri);
-				System.out.println(shortv.getNumber().shortValue());
-
-				BasicInt intv = (BasicInt) table1.getColumn("cint").get(ri);
-				System.out.println(intv.getNumber().intValue());
-
-				BasicLong longv = (BasicLong) table1.getColumn("clong").get(ri);
-				System.out.println(longv.getNumber().longValue());
-
-				BasicDate datev = (BasicDate) table1.getColumn("cdate").get(ri);
-				LocalDate date = datev.getDate();
-				System.out.println(date);
-
-				BasicMonth monthv = (BasicMonth) table1.getColumn("cmonth").get(ri);
-				YearMonth ym = monthv.getMonth();
-				System.out.println(ym);
-
-				BasicTime timev = (BasicTime) table1.getColumn("ctime").get(ri);
-				LocalTime time = timev.getTime();
-				System.out.println(time);
-
-				BasicMinute minutev = (BasicMinute) table1.getColumn("cminute").get(ri);
-				LocalTime minute = minutev.getMinute();
-				System.out.println(minute);
-
-				BasicSecond secondv = (BasicSecond) table1.getColumn("csecond").get(ri);
-				LocalTime second = secondv.getSecond();
-				System.out.println(second);
-
-				BasicDateTime datetimev = (BasicDateTime) table1.getColumn("cdatetime").get(ri);
-				LocalDateTime datetime = datetimev.getDateTime();
-				System.out.println(datetime);
-
-				BasicTimestamp timestampv = (BasicTimestamp) table1.getColumn("ctimestamp").get(ri);
-				LocalDateTime timestamp = timestampv.getTimestamp();
-				System.out.println(timestamp);
-
-				BasicNanoTime nanotimev = (BasicNanoTime) table1.getColumn("cnanotime").get(ri);
-				LocalTime nanotime = nanotimev.getNanoTime();
-				System.out.println(nanotime);
-
-				BasicNanoTimestamp nanotimestampv = (BasicNanoTimestamp) table1.getColumn("cnanotimestamp").get(ri);
-				LocalDateTime nanotimestamp = nanotimestampv.getNanoTimestamp();
-				System.out.println(nanotimestamp);
-
-				BasicFloat floatv = (BasicFloat) table1.getColumn("cfloat").get(ri);
-				System.out.println(floatv.getFloat());
-
-				BasicDouble doublev = (BasicDouble) table1.getColumn("cdouble").get(ri);
-				System.out.println(doublev.getDouble());
-
-				BasicString symbolv = (BasicString) table1.getColumn("csymbol").get(ri);
-				System.out.println(symbolv.getString());
-
-				BasicString stringv = (BasicString) table1.getColumn("cstring").get(ri);
-				System.out.println(stringv.getString());
-			}
+	public void test_loop_basicTable(BasicTable table1) throws Exception{
+		BasicStringVector stringv = (BasicStringVector) table1.getColumn("cstring");
+		BasicIntVector intv = (BasicIntVector) table1.getColumn("cint");
+		BasicTimestampVector timestampv = (BasicTimestampVector) table1.getColumn("ctimestamp");
+		BasicDoubleVector doublev = (BasicDoubleVector) table1.getColumn("cdouble");
+		for(int ri=0;ri<table1.rows();ri++){
+			System.out.println(stringv.getString(ri));
+			System.out.println(intv.getInt(ri));
+			LocalDateTime timestamp = timestampv.getTimestamp(ri);
+			System.out.println(timestamp);
+			System.out.println(doublev.getDouble(ri));
+		}
 	}
 
+
+	public void test_temperal(){
+		//BasicDate bd = new BasicDate(Utils.countDays(LocalDate.of(2018,11,12)));
+		BasicDate bd = new BasicDate(LocalDate.of(2018,11,12));
+		BasicMonth bm = new BasicMonth(YearMonth.of(2018,11));
+		BasicTime bt = new BasicTime(LocalTime.of(20,8,1,123000000));
+		BasicMinute bmn = new BasicMinute(LocalTime.of(20,8));
+		BasicSecond bs = new BasicSecond(LocalTime.of(20,8,1));
+		BasicDateTime bdt = new BasicDateTime(LocalDateTime.of(2018,11,12,8,1,1));
+		BasicTimestamp bts = new BasicTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123000000));
+		BasicNanoTime bnt = new BasicNanoTime(LocalTime.of(20,8,1,123456789));
+		BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123456789));
+
+		BasicTimestamp btt = new BasicTimestamp(Utils.parseTimestamp(1543494854000l));
+		LocalDateTime dt = btt.getTimestamp();
+
+	}
+	public void test_save_TableInsert(String dbPath,String tbName,List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
+		List<Entity> args = Arrays.asList(new BasicStringVector(strArray),new BasicIntVector(intArray),new BasicTimestampVector(tsArray),new BasicDoubleVector(dblArray));
+		//conn.run("t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE]);share t as mtable1;\n");
+		conn.run(String.format("def saveData(strv,iv,tsv,dbv){loadTable('%s','%s').tableInsert(strv,iv,tsv,dbv)}",dbPath,tbName));
+		conn.run("saveData", args);
+	}
+
+	public void test_save_insert(String str,int i, long ts,double dbl) throws IOException{
+		conn.run("t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE]);share t as mtable2;\n");
+		conn.run(String.format("insert into t values('%s',%s,%s,%s)",str,i,ts,dbl));
+	}
+
+	public void test_save_table(BasicTable table1) throws IOException {
+		List<Entity> args = Arrays.asList(table1);
+		conn.run("def saveData(data){shareTable.append!(strv,iv,tsv,dbv)}");
+		conn.run("saveData", args);
+	}
 	public static void main(String[] args){
 		try{
 			DBConnectionTest test = new DBConnectionTest();
@@ -613,9 +603,18 @@ public class DBConnectionTest {
 			test.Test_upload_table();
 			test.testLoginWithLogin();
 			test.test_save_memoryTable();
-			test.test_save_dfsTable();*/
-			test.test_save_localTable();
-			test.test_loop_basicTable();
+			test.test_save_dfsTable();
+			List<Integer> iv = Arrays.asList(1,2,3);
+			List<Double> dbv = Arrays.asList(1.1,2.2,3.3);
+			long n = Utils.countMilliseconds(LocalDateTime.now());
+			List<Long> dtv = Arrays.asList(n,n+1,n+2);
+			List<String> sv = Arrays.asList("aaa","bbb","ccc");
+			String dbPath = "C:/data/testDatabase";
+			String tbName = "tb1";
+			test.test_save_TableInsert(dbPath,tbName,sv,iv,dtv,dbv);*/
+			//test.test_save_localTable();
+			//test.test_loop_basicTable();
+			test.testFunction1();
 		}
 
 		catch(Exception ex){
