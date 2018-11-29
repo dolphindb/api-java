@@ -232,7 +232,7 @@ public void testFunction() throws IOException{
 
 ### 9. 如何将Java数据表对象保存到DolphinDB的数据库中
 
-使用Java API的一个重要场景是，用户从其他数据库系统或是第三方WebAPI中取到数据，将数据进行清洗后存入DolphinDB数据库中，本节将通过Java API将Java程序取到的数据上传并保存到DolphinDB的不同类型的数据表中。
+使用Java API的一个重要场景是，用户从其他数据库系统或是第三方WebAPI中取到数据，将数据进行清洗后存入DolphinDB数据库中，本节将通过Java API将Java程序取到的数据上传并保存到DolphinDB的数据表中。
 
 DolphinDB的数据表按存储方式分为三种
 
@@ -240,6 +240,7 @@ DolphinDB的数据表按存储方式分为三种
 - 本地磁盘表：数据保存在本地磁盘上，即使节点关闭，通过脚本就可以方便的从磁盘加载到内存。
 - 分布式表：数据在物理上分布在不同的节点，通过DolphinDB的分布式计算引擎，逻辑上仍然可以像本地表一样做统一查询。
 
+因为本地磁盘表和分布式表的数据追加方式基本相同，所以下面分两部分介绍内存表数据追加以及本地磁盘和分布式表的数据追加。
 #### 9.1. 将数据保存到DolphinDB内存表
 
 DolphinDB提供三种方式将数据新增到内存表：
@@ -247,7 +248,7 @@ DolphinDB提供三种方式将数据新增到内存表：
 - 通过TableInsert函数保存多个数组对象；
 - 通过append!(data) 方式保存表对象。
 
-这三种方式的区别是接收的参数类型不同。
+这三种方式的区别是接收的参数类型不同，具体业务场景中，可能从数据源取到的是单点数据，也可能是多个数组或者表的方式组成的数据集。
 
 下面分别介绍三种方式保存数据的实例，在例子中使用到的数据表有4个列，分别是`string,int,timestamp,double`类型，列名分别为`cstring,cint,ctimestamp,cdouble`，构建脚本如下：
 ```
@@ -263,7 +264,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 }
 ```
 
-##### 9.1.2. 使用数组方式保存
+##### 9.1.2. 使用多个数组方式保存
 
 若Java程序获取的数据易于组织成List方式，使用tableInsert函数是一个比较适合的保存方式，这个函数可以接受多个数组作为参数，将数组追加到数据表中。
 
