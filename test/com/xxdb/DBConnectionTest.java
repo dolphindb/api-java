@@ -574,6 +574,11 @@ public class DBConnectionTest {
 		conn.run("def saveData(data){shareTable.append!(strv,iv,tsv,dbv)}");
 		conn.run("saveData", args);
 	}
+
+	public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
+		conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
+	}
+
 	public static void main(String[] args){
 		try{
 			DBConnectionTest test = new DBConnectionTest();

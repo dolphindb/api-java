@@ -12,7 +12,7 @@ vector，matrix|Basic+<DataType>+<DataForm>|BasicIntVector, BasicDoubleMatrix, B
 set， dictionary和table|Basic+<DataForm>|BasicSet, BasicDictionary, BasicTable.
 chart|BacisChart|
 
-“Basic”表示基本的数据类型接口，<DataType>表示DolphinDB数据类型名称，<DataForm>是一个DolphinDB数据形式名称。
+“Basic”表示基本的数据类型接口，`<DataType>`表示DolphinDB数据类型名称，`<DataForm>`是一个DolphinDB数据形式名称。
 
 ### 3. Java API提供的主要函数
 DolphinDB Java API 提供的最核心的对象是DBConnection，它主要的功能就是让Java应用可以通过它调用DolphinDB的脚本和函数，在Java应用和DolphinDB服务器之间互通数据。
