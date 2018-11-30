@@ -322,7 +322,7 @@ BasicTable table1 = new BasicTable(colNames,cols);
 ### 10. 如何循环遍历BasicTable
 由于BasicTable是列式存储，所以需要通过先取出列，再循环取行的方式。
 
-例子中参数BasicTable的有4个列，分别是`string,int,timestamp,double`类型，列名分别为`cstring,cint,ctimestamp,cdouble`。
+例子中参数BasicTable的有4个列，分别是`STRING,INT,TIMESTAMP,DOUBLE`类型，列名分别为`cstring,cint,ctimestamp,cdouble`。
 
 ```
 public void test_loop_basicTable(BasicTable table1) throws Exception{
