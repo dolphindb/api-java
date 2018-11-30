@@ -555,28 +555,6 @@ public class DBConnectionTest {
 
 		BasicTimestamp btt = new BasicTimestamp(Utils.parseTimestamp(1543494854000l));
 		LocalDateTime dt = btt.getTimestamp();
-
-	}
-	public void test_save_TableInsert(String dbPath,String tbName,List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
-		List<Entity> args = Arrays.asList(new BasicStringVector(strArray),new BasicIntVector(intArray),new BasicTimestampVector(tsArray),new BasicDoubleVector(dblArray));
-		//conn.run("t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE]);share t as mtable1;\n");
-		conn.run(String.format("def saveData(strv,iv,tsv,dbv){loadTable('%s','%s').tableInsert(strv,iv,tsv,dbv)}",dbPath,tbName));
-		conn.run("saveData", args);
-	}
-
-	public void test_save_insert(String str,int i, long ts,double dbl) throws IOException{
-		conn.run("t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE]);share t as mtable2;\n");
-		conn.run(String.format("insert into t values('%s',%s,%s,%s)",str,i,ts,dbl));
-	}
-
-	public void test_save_table(BasicTable table1) throws IOException {
-		List<Entity> args = Arrays.asList(table1);
-		conn.run("def saveData(data){shareTable.append!(strv,iv,tsv,dbv)}");
-		conn.run("saveData", args);
-	}
-
-	public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
-		conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
 	}
 
 	public static void main(String[] args){
