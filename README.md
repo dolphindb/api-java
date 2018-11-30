@@ -75,12 +75,9 @@ rand(`IBM`MSFT`GOOG`BIDU,10)
 
 ```
 public void testStringVector() throws IOException{
-
     BasicStringVector vector = (BasicStringVector)conn.run("rand(`IBM`MSFT`GOOG`BIDU, 10)");
-
     int size = vector.rows();
     System.out.println("size: "+size);
-
     for(int i=0; i<size; ++i)
         System.out.println(vector.getString(i));
 }
@@ -89,24 +86,19 @@ public void testStringVector() throws IOException{
 类似的，也可以处理双精度浮点类型的向量或者元组。
 ```
 public void testDoubleVector() throws IOException{
-       BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0, 10)");
-
-       int size = vector.rows();
-       System.out.println("size: "+size);
-
-       for(int i=0; i<size; ++i)
-           System.out.println(vector.getDouble(i));
+    BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0, 10)");
+    int size = vector.rows();
+    System.out.println("size: "+size);
+    for(int i=0; i<size; ++i)
+       System.out.println(vector.getDouble(i));
 }
 ```
 
 
 ```
 public void testAnyVector() throws IOException{
-
-       BasicAnyVector result = (BasicAnyVector)conn.run("[1, 2, [1,3,5],[0.9, [0.8]]]");
-
-       System.out.println(result.getString());
-
+    BasicAnyVector result = (BasicAnyVector)conn.run("[1, 2, [1,3,5],[0.9, [0.8]]]");
+    System.out.println(result.getString());
 }
 ```
 
@@ -114,11 +106,8 @@ public void testAnyVector() throws IOException{
 
 ```
 public void testSet() throws IOException{
-
-               BasicSet result = (BasicSet)conn.run("set(1+3*1..100)");
-
-               System.out.println(result.getString());
-
+    BasicSet result = (BasicSet)conn.run("set(1+3*1..100)");
+    System.out.println(result.getString());
 }
 ```
 
@@ -128,11 +117,8 @@ public void testSet() throws IOException{
 
 ```
 public void testIntMatrix() throws IOException {
-
-       BasicIntMatrix matrix = (BasicIntMatrix)conn.run("1..6$3:2");
-
-       System.out.println(matrix.getString());
-
+    BasicIntMatrix matrix = (BasicIntMatrix)conn.run("1..6$3:2");
+    System.out.println(matrix.getString());
 }
 ```
 
@@ -142,13 +128,9 @@ public void testIntMatrix() throws IOException {
 
 ```
 public void testDictionary() throws IOException{
-
     BasicDictionary dict = (BasicDictionary)conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
-
     //to print the corresponding value for key 1.
-
     System.out.println(dict.get(new BasicInt(1)).getString());
-
 }
 ```
 
@@ -159,18 +141,13 @@ public void testDictionary() throws IOException{
 
 ```
 public void testTable() throws IOException{
-
     StringBuilder sb =new StringBuilder();
-
     sb.append("n=2000\n");
     sb.append("syms=`IBM`C`MS`MSFT`JPM`ORCL\n");
     sb.append("mytrades=table(09:30:00+rand(18000,n) as timestamp,rand(syms, n) as sym, 10*(1+rand(100,n)) as qty,5.0+rand(100.0,n) as price)\n");
     sb.append("select qty,price from mytrades where sym=`IBM");
-
     BasicTable table = (BasicTable)conn.run(sb.toString());
-
     System.out.println(table.getString());
-
 }
 ```
 - NULL对象
