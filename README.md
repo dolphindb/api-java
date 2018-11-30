@@ -173,17 +173,14 @@ import java.util.List;
 import java.util.ArrayList;
 //Run DolphinDB function with Java objects
 public void testFunction() throws IOException{
-
     List<Entity> args = new ArrayList<Entity>(1);
     BasicDoubleVector vec = new BasicDoubleVector(3);
     vec.setDouble(0, 1.5);
     vec.setDouble(1, 2.5);
     vec.setDouble(2, 7);
     args.add(vec);
-
     Scalar result = (Scalar)conn.run("sum", args);
     System.out.println(result.getString());
-
 }
 ```
 
@@ -249,9 +246,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 public void test_save_TableInsert(dbPath,tbName,List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
 		//用数组构造参数
 		List<Entity> args = Arrays.asList(new BasicStringVector(strArray),new BasicIntVector(intArray),new BasicTimestampVector(tsArray),new BasicDoubleVector(dblArray));
-		//tableInsert的参数与目标表的列在顺序上要对应。
-		conn.run(String."def saveData(strv,iv,tsv,dbv){sharedTable.tableInsert(strv,iv,tsv,dbv)}");
-		conn.run("saveData", args);
+		conn.run("tableInsert{sharedTable}", args);
 }
 ```
 ##### 9.1.3. 使用表方式保存
@@ -260,18 +255,46 @@ public void test_save_TableInsert(dbPath,tbName,List<String> strArray,List<Integ
 ```
 public void test_save_table(BasicTable table1) throws IOException {
 	List<Entity> args = Arrays.asList(table1);
-	conn.run("def saveData(data){shareTable.append!(data)}");
-	conn.run("saveData", args);
+	conn.run("append!{shareTable}", args);
 }
 ```
 #### 9.2. 将数据保存到本地磁盘表和分布式表
-对于本地磁盘表和分布式表，DolphinDB统一使用append!方式追加数据。
+分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性; 分布式表支持多副本机制，即提供了数据容错能力，有能作为数据访问的负载均衡。
 
-本例中涉及的数据表可以通过通过如下脚本构建，请注意只有启用 `enableDFS=1`的集群环境才能使用分布式表，若单机测试环境可以使用本地磁盘表。
+本例中涉及到的数据表可以通过如下脚本构建 ：
+
+*请注意只有启用 `enableDFS=1` 的集群环境才能使用分布式表。*
 
 ```
-//使用分布式表
 dbPath = 'dfs://testDatabase'
+tbName = 'tb1'
+
+if(existsDatabase(dbPath)){dropDatabase(dbPath)}
+db = database(dbPath,RANGE,2018.01.01..2018.12.31)
+db.createPartitionedTable(t,tbName,'ctimestamp')
+```
+DolphinDB提供loadTable方法可以加载分布式表，通过append!方式追加数据，具体的脚本示例如下：
+
+```
+public void test_save_table(String dbPath, BasicTable table1) throws IOException{
+	List<Entity> args = new ArrayList<Entity>(1);
+	args.add(table1);
+	conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
+}
+```
+
+当用户在Java程序中取到的值是数组或列表时，也可以很方便的构造出BasicTable用于追加数据，比如现在有 `boolArray, intArray, dblArray, dateArray, strArray` 5个列表对象(List<T>),可以通过以下语句构造BasicTable对象：
+
+```
+List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
+List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
+BasicTable table1 = new BasicTable(colNames,cols);
+```
+
+#### 9.3. 将数据保存到本地磁盘表
+通常本地磁盘表用于学习环境或者单机静态数据集测试，它不支持事务，不保证运行中的数据一致性，所以不建议在生产环境中使用。
+
+```
 //使用本地磁盘表
 //dbPath = "C:/data/testDatabase"
 tbName = 'tb1'
@@ -280,24 +303,16 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB提供loadTable方法可以加载本地磁盘表和分布式表，对于两种类型的数据表而言，追加数据都是通过append!方式进行，所以下面的脚本示例可以涵盖这两种表的数据追加场景。
+DolphinDB提供loadTable方法可以加载本地磁盘表和分布式表，对于本地磁盘表而言，追加数据都是通过append!方式进行。
 ```
-public void test_save_table(String dbPath, String tbName, BasicTable table1) throws IOException{
-    conn.run(String.format("def saveData(data){ loadTable('%s','%s').append!(data)}",dbpath,tbName));
-	List<Entity> args = new ArrayList<Entity>(1);
-	args.add(table1);
-	conn.run("saveData", args);
+public void test_save_table(String dbPath, BasicTable table1) throws IOException{
+    List<Entity> args = new ArrayList<Entity>(1);
+    args.add(table1);
+    conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
-当用户在Java程序中取到的值是数组或列表时，也可以很方便的构造出BasicTable用于追加数据，比如现在有`boolArray, intArray, dblArray, dateArray, strArray`5个列表对象(List<T>),可以通过一下语句构造BasicTable对象。
-```
-List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
-List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
-BasicTable table1 = new BasicTable(colNames,cols);
-```
-
-### 10. 如何循环遍历BasicTable
-由于BasicTable是列式存储，所以需要通过先取出列，再循环取行的方式。
+### 10. 循环遍历BasicTable
+由于BasicTable是列式存储，所以需要通过先取出列，再循环取出行的方式。
 
 例子中参数BasicTable的有4个列，分别是`STRING,INT,TIMESTAMP,DOUBLE`类型，列名分别为`cstring,cint,ctimestamp,cdouble`。
 
@@ -317,7 +332,7 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 }
 ```
 
-### 11. DolphinDB和Java API之间的数据类型转换
+### 11. DolphinDB和Java之间的数据类型转换
 Java API提供了与DolphinDB内部数据类型对应的对象，通常是以Basic+<DataType>这种方式命名，比如BasicInt，BasicDate等等。
 一些Java的基础类型，可以通过构造函数直接创建对应的DOlphinDB数据结构，比如`new BasicInt(4)`，`new BasicDouble(1.23)`，但是也有一些类型需要做一些转换，下面列出需要做简单转换的类型：
 - `CHAR`类型：DolphinDB中的`CHAR`类型以Byte形式保存，所以在Java API中用`BasicByte`类型来构造`CHAR`，例如`new BasicByte((byte)'c')`
