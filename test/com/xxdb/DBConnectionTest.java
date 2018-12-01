@@ -14,7 +14,7 @@ public class DBConnectionTest {
 	
 	public DBConnectionTest() throws IOException{
 		conn = new DBConnection();
-		if(!conn.connect("localhost",8848)){
+		if(!conn.connect("192.168.1.111",18801)){
 			throw new IOException("Failed to connect to 2xdb server");
 		}
 	}
@@ -557,6 +557,12 @@ public class DBConnectionTest {
 		LocalDateTime dt = btt.getTimestamp();
 	}
 
+	public void test_partialFunction() throws IOException{
+		conn.run("share table(1..50 as id) as sharedTable");
+		int[] intArray = new int[]{30,40,50};
+		List<Entity> args = Arrays.asList(new BasicIntVector(intArray));
+		conn.run("tableInsert{sharedTable}",args);
+	}
 	public static void main(String[] args){
 		try{
 			DBConnectionTest test = new DBConnectionTest();
@@ -597,7 +603,8 @@ public class DBConnectionTest {
 			test.test_save_TableInsert(dbPath,tbName,sv,iv,dtv,dbv);*/
 			//test.test_save_localTable();
 			//test.test_loop_basicTable();
-			test.testFunction1();
+			//test.testFunction1();
+			test.test_partialFunction();
 		}
 
 		catch(Exception ex){

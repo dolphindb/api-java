@@ -113,7 +113,7 @@ public void testSet() throws IOException{
 
 - 矩阵
 
-要从整数矩阵中检索一个元素，我们可以使用getInt(row,)。 要获取行数和列数，我们可以使用函数rows()和columns()。
+要从整数矩阵中检索一个元素，我们可以使用getInt(row,col)。 要获取行数和列数，我们可以使用函数rows()和columns()。
 
 ```
 public void testIntMatrix() throws IOException {
@@ -243,7 +243,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 若Java程序获取的数据可以组织成List方式，使用tableInsert函数比较适合，这个函数可以接受多个数组作为参数，将数组追加到数据表中。
 
 ```
-public void test_save_TableInsert(dbPath,tbName,List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
+public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
 		//用数组构造参数
 		List<Entity> args = Arrays.asList(new BasicStringVector(strArray),new BasicIntVector(intArray),new BasicTimestampVector(tsArray),new BasicDoubleVector(dblArray));
 		conn.run("tableInsert{sharedTable}", args);
@@ -266,7 +266,7 @@ public void test_save_table(BasicTable table1) throws IOException {
 	conn.run("append!{shareTable}", args);
 }
 ```
-#### 9.2. 将数据保存到本地磁盘表和分布式表
+#### 9.2. 将数据保存到分布式表
 分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性; 分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
 
 本例中涉及到的数据表可以通过如下脚本构建 ：
