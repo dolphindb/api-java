@@ -240,7 +240,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 
 ##### 9.1.2. 使用多个数组方式保存
 
-若Java程序获取的数据易于组织成List方式，使用tableInsert函数是一个比较适合的保存方式，这个函数可以接受多个数组作为参数，将数组追加到数据表中。
+若Java程序获取的数据可以组织成List方式，使用tableInsert函数比较适合，这个函数可以接受多个数组作为参数，将数组追加到数据表中。
 
 ```
 public void test_save_TableInsert(dbPath,tbName,List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
