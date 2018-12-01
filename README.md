@@ -197,7 +197,7 @@ public void testFunction() throws IOException{
 	vec.setDouble(0, 1.5);
 	vec.setDouble(1, 2.5);
 	vec.setDouble(2, 7);
-    vars.put("a",vec);
+	vars.put("a",vec);
 	conn.upload(vars);
 	Entity result = conn.run("accumulate(+,a)");
 	System.out.println(result.getString());
@@ -231,7 +231,7 @@ share t as sharedTable
 ```
 由于内存表是会话隔离的，所以JAVA会话中创建的内存表只有本会话可见，如果需要在GUI或者其他终端查看数据，需要通过share关键字在会话间共享内存表
 ##### 9.1.1. 保存单点数据
-若java程序是每次获取单条数据记录保存到DolphinDB，那么可以通过类似SQL语句的insert into 的方式保存数据
+若Java程序是每次获取单条数据记录保存到DolphinDB，那么可以通过类似SQL语句的insert into 的方式保存数据
 ```
 public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
 	conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
