@@ -341,7 +341,7 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 ```
 
 ### 11. DolphinDB和Java之间的数据类型转换
-Java API提供了与DolphinDB内部数据类型对应的对象，通常是以Basic+<DataType>这种方式命名，比如BasicInt，BasicDate等等。
+Java API提供了与DolphinDB内部数据类型对应的对象，通常是以Basic+ `<DataType>` 这种方式命名，比如BasicInt，BasicDate等等。
 一些Java的基础类型，可以通过构造函数直接创建对应的DOlphinDB数据结构，比如`new BasicInt(4)`，`new BasicDouble(1.23)`，但是也有一些类型需要做一些转换，下面列出需要做简单转换的类型：
 - `CHAR`类型：DolphinDB中的`CHAR`类型以Byte形式保存，所以在Java API中用`BasicByte`类型来构造`CHAR`，例如`new BasicByte((byte)'c')`
 - `SYMBOL`类型：DolphinDB中的`SYMBOL`类型是对字符串的优化，可以提高DolphinDB对字符串数据存储和查询的效率，但是Java中并不需要这种类型，所以Java API不提供`BasicSymbol`这种对象，直接用`BasicString`来处理即可。
@@ -362,7 +362,7 @@ BasicSecond bs = new BasicSecond(LocalTime.of(20,8,1));
 //DateTime: 2018.11.12T08:01:01
 BasicDateTime bdt = new BasicDateTime(LocalDateTime.of(2018,11,12,8,1,1));
 //Timestamp: 2018.11.12T08:01:01.123
-BasicTimestamp bts = new asicTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123000000));
+BasicTimestamp bts = new BasicTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123000000));
 //NanoTime: 20:08:01.123456789
 BasicNanoTime bnt = new BasicNanoTime(LocalTime.of(20,8,1,123456789));
 //NanoTimestamp: 2018.11.12T20:08:01.123456789
