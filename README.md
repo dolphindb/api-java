@@ -229,7 +229,7 @@ DolphinDB提供三种方式将数据新增到内存表：
 t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE])
 share t as sharedTable
 ```
-由于内存表是会话隔离的，所以Java会话中创建的内存表只有本会话可见，如果需要在GUI或者其他终端查看数据，需要通过share关键字在会话间共享内存表。
+由于内存表是会话隔离的，所以GUI中创建的内存表只有当前GUI会话可见，如果需要在Java程序或者其他终端访问，需要通过share关键字在会话间共享内存表。
 ##### 9.1.1. 保存单点数据
 若Java程序是每次获取单条数据记录保存到DolphinDB，那么可以通过类似SQL语句的insert into 的方式保存数据。
 ```
@@ -371,7 +371,7 @@ BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1
 如果在第三方系统中时间以时间戳的方式存储，DolphinDB时间对象也可以用时间戳来实例化。
 Java API中的Utils类提供了各种时间类型与标准时间戳的转换算法，比如将毫秒级的时间戳转换为DolphinDB的`BasicTimestamp`对象:
 ```
-LocalDateTime dt = Utils.parseTimestamp(1543494854000l)
+LocalDateTime dt = Utils.parseTimestamp(1543494854000l);
 BasicTimestamp ts = new BasicTimestamp(dt);
 ```
 也可以将DolphinDB对象转换为整形或长整形的时间戳，比如：
