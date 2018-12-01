@@ -229,7 +229,7 @@ DolphinDB提供三种方式将数据新增到内存表：
 t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE])
 share t as sharedTable
 ```
-由于内存表是会话隔离的，所以JAVA会话中创建的内存表只有本会话可见，如果需要在GUI或者其他终端查看数据，需要通过share关键字在会话间共享内存表。
+由于内存表是会话隔离的，所以Java会话中创建的内存表只有本会话可见，如果需要在GUI或者其他终端查看数据，需要通过share关键字在会话间共享内存表。
 ##### 9.1.1. 保存单点数据
 若Java程序是每次获取单条数据记录保存到DolphinDB，那么可以通过类似SQL语句的insert into 的方式保存数据。
 ```
