@@ -63,7 +63,7 @@ conn.run("script");
 import com.xxdb.data.*;
 ```
 
-注意，下面的代码紧接建立DolphinDB连接的例子。
+注意，下面的代码需要在建立连接后才能运行。
 
 - 向量
 
