@@ -16,7 +16,7 @@ chart|BasicChart|
 
 ### 3. Java API提供的主要函数
 DolphinDB Java API 提供的最核心的对象是DBConnection，它主要的功能就是让Java应用可以通过它调用DolphinDB的脚本和函数，在Java应用和DolphinDB服务器之间互通数据。
-DBConnection类提供如下主要方法
+DBConnection类提供如下主要方法：
 
 | 方法名        | 详情          |
 |:------------- |:-------------|
