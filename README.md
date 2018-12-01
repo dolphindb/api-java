@@ -208,7 +208,7 @@ public void testFunction() throws IOException{
 
 使用Java API的一个重要场景是，用户从其他数据库系统或是第三方WebAPI中取到数据，将数据进行清洗后存入DolphinDB数据库中，本节将介绍通过Java API将取到的数据上传并保存到DolphinDB的数据表中。
 
-DolphinDB数据表按存储方式分为三种
+DolphinDB数据表按存储方式分为三种:
 
 - 内存表: 数据仅保存在本节点内存，存取速度最快，但是节点关闭数据就不存在了。
 - 本地磁盘表：数据保存在本地磁盘上，即使节点关闭，通过脚本就可以方便的从磁盘加载到内存。
@@ -229,9 +229,9 @@ DolphinDB提供三种方式将数据新增到内存表：
 t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE])
 share t as sharedTable
 ```
-由于内存表是会话隔离的，所以JAVA会话中创建的内存表只有本会话可见，如果需要在GUI或者其他终端查看数据，需要通过share关键字在会话间共享内存表
+由于内存表是会话隔离的，所以JAVA会话中创建的内存表只有本会话可见，如果需要在GUI或者其他终端查看数据，需要通过share关键字在会话间共享内存表。
 ##### 9.1.1. 保存单点数据
-若Java程序是每次获取单条数据记录保存到DolphinDB，那么可以通过类似SQL语句的insert into 的方式保存数据
+若Java程序是每次获取单条数据记录保存到DolphinDB，那么可以通过类似SQL语句的insert into 的方式保存数据。
 ```
 public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
 	conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
