@@ -30,7 +30,7 @@ DBConnection类提供如下主要方法：
 
 ### 4. 建立DolphinDB连接
 
-Java API通过TCP/IP协议连接到Dolphin DB服务器。 在下列例子中，我们连接正在运行的端口号为8848的本地DolphinDB服务器：
+Java API通过TCP/IP协议连接到DolphinDB服务器。 在下列例子中，我们连接正在运行的端口号为8848的本地DolphinDB服务器：
 
 ```
 import com.xxdb;
