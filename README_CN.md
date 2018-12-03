@@ -204,11 +204,8 @@ public void testTable() throws IOException{
 要描述一个NULL对象，我们可以调用函数obj.getDataType()。
 ```
 public void testVoid() throws IOException{
-
-       Entity obj = conn.run("NULL");
-
-       System.out.println(obj.getDataType());
-
+    Entity obj = conn.run("NULL");
+    System.out.println(obj.getDataType());
 }
 ```
 
@@ -223,15 +220,14 @@ DolphinDB数据表按存储方式分为三种:
 
 - 内存表: 数据仅保存在本节点内存，存取速度最快，但是节点关闭数据就不存在了。
 - 本地磁盘表：数据保存在本地磁盘上，即使节点关闭，通过脚本就可以方便的从磁盘加载到内存。
-- 分布式表：数据在物理上分布在不同的节点，通过DolphinDB的分布式计算引擎，逻辑上仍然可以像本地表一样做统一查询。
-
-下面分三部分介绍内存表数据追加以及本地磁盘和分布式表的数据追加。
+- 分布式表：数据分布在不同的节点，通过DolphinDB的分布式计算引擎，逻辑上仍然可以像本地表一样做统一查询。
 
 #### 7.1 保存数据到DolphinDB内存表
 
-DolphinDB提供多种方式来保存数据，分别对应以下几个场景：
-- 保存单点数据：通过 insert into 方式保存单点数据；
-- 保存批量数据：通过 tableInsert 函数保存多个数组对象；通过 append! 函数保存表对象。
+DolphinDB提供多种方式来保存数据：
+- 通过 insert into 保存单条数据；
+- 通过 tableInsert 函数批量保存多条数据；
+- 通过 append! 函数保存表对象。
 
 
 这几种方式的区别是接收的参数类型不同，具体业务场景中，可能从数据源取到的是单点数据，也可能是多个数组或者表的方式组成的数据集。
