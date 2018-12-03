@@ -58,7 +58,7 @@ conn.run("script");
 ### 4.调用DolphinDB函数
 当一段逻辑需要被服务端脚本反复调用时，可以用DolphinDB脚本将逻辑封装成自定义函数，类似于存储过程，然后在Java程序中通过函数方式调用。
 
-下面的示例将一个double向量传递给服务器，并调用sum函数，这个函数可以是任意的用户自定义函数，并且支持Partial Application方式调用，具体Partail Application方式调用示例可以参考7.1.2节。
+下面的示例将一个double向量传递给服务器，并调用sum函数，这个函数可以是任意的用户自定义函数，并且支持`部分应用`的方式调用，具体`部分应用`方式调用示例可以参考7.1.2节。
 ```
 import java.util.List;
 import java.util.ArrayList;
