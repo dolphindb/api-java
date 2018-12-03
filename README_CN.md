@@ -61,14 +61,12 @@ conn.run("script");
 * 参数已经在DolphinDB Server端存在
 有两个变量 x,y 已经通过java程序提前在服务器端生成
 ```
-conn.run("x = [1,3,5]")
-conn.run("y = [2,4,6]")
+conn.run("x = [1,3,5];y = [2,4,6]")
 ```
 那么在Java端要对这两个向量做加法运算，只需要直接使用`run(script)`的方式即可
 ```
-//Run DolphinDB function with Java objects
+//Run DolphinDB function with DolphinDB objects
 public void testFunction() throws IOException{
-
     Vector result = (Vector)conn.run("add(x,y)");
     System.out.println(result.getString());
 }
