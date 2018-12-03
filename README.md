@@ -332,8 +332,9 @@ In this example, using the `partial application' feature in DolphinDB, the serve
 
 For specific documentation, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
-##### 7.1.3 使用append！函数批量保存数据
-若Java程序是从DolphinDB的服务端获取表数据做处理后保存到分布式表，那么使用append!函数会更加方便，append!函数接受一个表对象作为参数，将数据追加到数据表中。
+##### 7.1.3 Use append! Function to save data in batches
+
+The append! function accepts a table object as a parameter and appends the data to the data table.
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
@@ -341,12 +342,14 @@ public void test_save_table(BasicTable table1) throws IOException {
     conn.run("append!{shareTable}", args);
 }
 ```
-#### 7.2 保存数据到分布式表
-分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性; 分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
+#### 7.2 Save data to a distributed table
+Distributed table is the data storage method recommended by DolphinDB in production environment. It supports snapshot level transaction isolation and ensures data consistency. Distributed table supports multiple copy mechanism, which provides data fault tolerance and data access. Load balancing.
 
-本例中涉及到的数据表可以通过如下脚本构建 ：
 
-*请注意只有启用 `enableDFS=1` 的集群环境才能使用分布式表。*
+The data tables involved in this example can be built with the following script:
+
+
+*Please note that distributed tables can only be used in cluster environments with `enableDFS=1` enabled. *
 
 ```
 dbPath = 'dfs://testDatabase'
@@ -356,7 +359,7 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB提供loadTable方法可以加载分布式表，通过append!方式追加数据，具体的脚本示例如下：
+DolphinDB provides the loadTable method to load distributed tables and append data via append!. The specific script examples are as follows:
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
@@ -366,19 +369,20 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 
-当用户在Java程序中取到的值是数组或列表时，也可以很方便的构造出BasicTable用于追加数据，比如现在有 `boolArray, intArray, dblArray, dateArray, strArray` 5个列表对象(List<T>),可以通过以下语句构造BasicTable对象：
 
+When the value retrieved by the user in the Java program is an array or a list, it is also convenient to construct a BasicTable for appending data. For example, there are now `boolArray, intArray, dblArray, dateArray, strArray` 5 list objects (List< T>), you can construct a BasicTable object with the following statement:
 ```
 List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
 List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
 BasicTable table1 = new BasicTable(colNames,cols);
 ```
 
-#### 7.3 保存数据到本地磁盘表
-本地磁盘表通用用于静态数据集的计算分析，既可以用于数据的输入，也可以作为计算的输出。它不支持事务，也不持支并发读写。
+#### 7.3 Save data to local disk table
+
+Local disk tables are commonly used for computational analysis of static data sets, either for data input or as a calculated output. It does not support transactions, and does not support concurrent reading and writing.
 
 ```
-//使用DolphinDB脚本创建一个数据表
+// Create a data table using the DolphinDB script
 dbPath = "C:/data/testDatabase"
 tbName = 'tb1'
 
@@ -386,7 +390,9 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB提供loadTable方法同样可以加载本地磁盘表，通过append!追加数据。
+
+DolphinDB provides the loadTable method to load local disk tables as well, and function append! to append data.
+
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
@@ -394,10 +400,13 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
     conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
-#### 7.4 读取和使用表数据
-在Java API中，表数据保存为BasicTable对象，由于BasicTable是列式存储，所以要读取和使用所有desultory需要通过先取出列，再循环取出行的方式。
+#### 7.4 Load table
 
-例子中参数BasicTable的有4个列，分别是`STRING,INT,TIMESTAMP,DOUBLE`类型，列名分别为`cstring,cint,ctimestamp,cdouble`。
+
+In the Java API, the table data is saved as a BasicTable object. Since the BasicTable is a columnar store, all the desultory needs to be read and used by retrieving the rows and retrieving the rows.
+
+In the example, the parameter BasicTable has 4 columns, which are `STRING, INT, TIMESTAMP, DOUBLE`, and the column names are `cstring, cint, ctimestamp, cdouble`.
+
 
 ```
 public void test_loop_basicTable(BasicTable table1) throws Exception{
