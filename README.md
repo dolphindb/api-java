@@ -69,13 +69,13 @@ Method runs also supports DolphinDB built-in functions and user defined function
 
 The following example shows how the Java program calls DolhinDB's add function. The add function has two parameters. The calling method will be different based on the location of the parameters. The following examples show the sample code in three cases:
 
-* 所有参数都在DolphinDB Server端
+* All parameters are on the DolphinDB Server side
 
-变量 x, y 已经通过java程序提前在服务器端生成。
+The variables x, y have been generated on the server side in advance by the java program.
 ```
 conn.run("x = [1,3,5];y = [2,4,6]")
 ```
-那么在Java端要对这两个向量做加法运算，只需要直接使用`run(script)`的方式即可
+Then in the Java side to add these two vectors, you only need to use the `run(script)` method directly.
 ```
 public void testFunction() throws IOException{
     Vector result = (Vector)conn.run("add(x,y)");
@@ -83,13 +83,14 @@ public void testFunction() throws IOException{
 }
 ```
 
-* 部分参数在DolphinDB Server端存在
 
-变量 x 已经通过java程序提前在服务器端生成，参数 y 要在Java客户端生成
+* Some parameters exist on the DolphinDB Server side
+
+The variable x has been generated on the server side in advance by the java program, and the parameter y is to be generated on the Java client.
 ```
 conn.run("x = [1,3,5]")
 ```
-这时就需要使用`部分应用`方式，把参数 x 固化在add函数内，具体请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+At this time, you need to use the "partial application" method to embed parameter x in the add function. For details, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
 ```
 public void testFunction() throws IOException{
@@ -103,7 +104,8 @@ public void testFunction() throws IOException{
     System.out.println(result.getString());
 }
 ```
-* 两个参数都在java客户端
+
+* Both parameters are in the java client
 ```
 import java.util.List;
 import java.util.ArrayList;
@@ -125,10 +127,12 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 5. 上传数据对象
-当Java中的一些数据需要被服务端频繁的用到，那么每次调用的时候都上传一次肯定不是一个好的做法，这个时候可以使用upload方法，将数据上传到服务器并分配给一个变量，在Server端就可以重复使用这个变量。
+### 5. Upload a data object
 
-我们可以将二进制数据对象上传到DolphinDB服务器，并将其分配给一个变量以备将来使用。 变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
+When some data in Java needs to be used frequently by the server, it is certainly not a good practice to upload it once per call. At this time, you can use the upload method to upload the data to the server and assign it to a variable. This variable can be reused on the server side.
+
+
+We can upload the binary data object to the DolphinDB server and assign it to a variable for future use. Variable names can use three types of characters: letters, numbers, or underscores. The first character must be a letter.
 
 ```
 public void testFunction() throws IOException{
@@ -144,25 +148,28 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 6. 读取数据示例
+### 6. Read data example
 
-下面介绍通过DBConnection对象，读取DolphinDB不同类型的数据。
+The following describes the different types of data objects read bthrough the DBConnection method.
 
-首先导入DolphinDB数据类型包：
+First import the DolphinDB data type package:
 
 ```
 import com.xxdb.data.*;
 ```
 
-注意，下面的代码需要在建立连接后才能运行。
 
-- 向量
+Note that the code below needs to be established after the connection is established.
 
-在下面的示例中，DolphinDB语句
+- Vector
+
+The example below shows the DolphinDB statement generating a random fast symbol vector with size as 10.
+
 ```
 rand(`IBM`MSFT`GOOG`BIDU,10)
 ```
-返回Java对象BasicStringVector。vector.rows()方法能够获取向量的大小。我们可以使用vector.getString(i)方法按照索引访问向量元素。
+
+Returns the Java object BasicStringVector. The vector.rows() method gets the size of the vector. We can access vector elements by index using the vector.getString(i) method.
 
 ```
 public void testStringVector() throws IOException{
@@ -174,7 +181,7 @@ public void testStringVector() throws IOException{
 }
 ```
 
-类似的，也可以处理双精度浮点类型的向量或者元组。
+Similarly, you can also handle vectors or tuples of int,double,float, or any other types.
 ```
 public void testDoubleVector() throws IOException{
     BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0, 10)");
@@ -193,7 +200,7 @@ public void testAnyVector() throws IOException{
 }
 ```
 
-- 集合
+- Set
 
 ```
 public void testSet() throws IOException{
@@ -202,9 +209,9 @@ public void testSet() throws IOException{
 }
 ```
 
-- 矩阵
+- Matrix
 
-要从整数矩阵中检索一个元素，我们可以使用getInt(row,col)。 要获取行数和列数，我们可以使用函数rows()和columns()。
+To retrieve an element from an integer matrix, we can use getInt(row, col). To get the number of rows and columns, we can use the functions rows() and columns().
 
 ```
 public void testIntMatrix() throws IOException {
@@ -213,9 +220,9 @@ public void testIntMatrix() throws IOException {
 }
 ```
 
-- 字典
+- Dictionary
 
-用函数keys()和values()可以从字典取得所有的键和值。要从一个键里取得它的值，可以调用get(key)。
+All keys and values ​​can be retrieved from the dictionary using the functions keys() and values(). To get its value from a key, you can call get(key).
 
 ```
 public void testDictionary() throws IOException{
@@ -226,9 +233,10 @@ public void testDictionary() throws IOException{
 ```
 
 
-- 表
+- Table
 
-要获取表的列，我们可以调用table.getColumn(index)；同样，我们可以调用table.getColumnName(index)获取列名。 对于列和行的数量，我们可以分别调用table.columns()和table.rows()。
+
+To get the column of the table, we can call table.getColumn(index); again, we can call table.getColumnName(index) to get the column name. For the number of columns and rows, we can call table.columns() and table.rows() respectively.
 
 ```
 public void testTable() throws IOException{
@@ -243,7 +251,9 @@ public void testTable() throws IOException{
 ```
 - NULL对象
 
-要描述一个NULL对象，我们可以调用函数obj.getDataType()。
+
+To describe a NULL object, we can call the function obj.getDataType().
+
 ```
 public void testVoid() throws IOException{
     Entity obj = conn.run("NULL");
@@ -254,7 +264,7 @@ public void testVoid() throws IOException{
 
 
 
-### 7. 读写DolphinDB数据表
+### 7. Read and write DolphinDB data table
 
 使用Java API的一个重要场景是，用户从其他数据库系统或是第三方WebAPI中取到数据，将数据进行清洗后存入DolphinDB数据库中，本节将介绍通过Java API将取到的数据上传并保存到DolphinDB的数据表中。
 
