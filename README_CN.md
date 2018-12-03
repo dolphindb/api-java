@@ -43,7 +43,7 @@ boolean success = conn.connect("localhost", 8848);
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
 
-### 3.运行脚本
+### 3. 运行脚本
 
 在Java中运行DolphinDB脚本的语法如下：
 ```
@@ -55,7 +55,7 @@ conn.run("script");
 
 
 
-### 4.调用DolphinDB函数
+### 4. 运行函数
 当一段逻辑需要被服务端脚本反复调用时，可以用DolphinDB脚本将逻辑封装成自定义函数，类似于存储过程，然后在Java程序中通过函数方式调用。
 
 下面的示例将一个double向量传递给服务器，并调用sum函数，这个函数可以是任意的用户自定义函数，并且支持`部分应用`的方式调用，具体`部分应用`方式调用示例可以参考7.1.2节。
@@ -81,7 +81,7 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 5.将对象上传到DolphinDB服务器
+### 5. 上传数据对象
 当Java中的一些数据需要被服务端频繁的用到，那么每次调用的时候都上传一次肯定不是一个好的做法，这个时候可以使用upload方法，将数据上传到服务器并分配给一个变量，在Server端就可以重复使用这个变量。
 
 我们可以将二进制数据对象上传到DolphinDB服务器，并将其分配给一个变量以备将来使用。 变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
@@ -102,7 +102,7 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 6.DolphinDB读取数据示例
+### 6. 读取数据示例
 
 下面介绍通过DBConnection对象，读取DolphinDB不同类型的数据。
 
@@ -215,7 +215,7 @@ public void testVoid() throws IOException{
 
 
 
-### 7. 保存数据到DolphinDB的数据表
+### 7. 读写DolphinDB数据表
 
 使用Java API的一个重要场景是，用户从其他数据库系统或是第三方WebAPI中取到数据，将数据进行清洗后存入DolphinDB数据库中，本节将介绍通过Java API将取到的数据上传并保存到DolphinDB的数据表中。
 
@@ -394,7 +394,7 @@ long timestamp = Utils.countMilliseconds(dt);
 ```
 如果时间戳以其他精度保存，Utils类还中提供如下方法，可以适应各种不同的精度：
 - Utils.countMonths：计算给定时间到1970.01之间的月份差，返回int
-- Utils.countDays：计算给定时间到1970.01。01之间的天数差，返回int
+- Utils.countDays：计算给定时间到1970.01.01之间的天数差，返回int
 - Utils.countMinutes：计算给定时间到1970.01.01T00:00之间的分钟差，返回int
 - Utils.countSeconds：计算给定时间到1970.01.01T00:00:00之间的秒数差，返回int
 - Utils.countMilliseconds：计算给定时间到1970.01.01T00:00:00之间的毫秒数差，返回long
