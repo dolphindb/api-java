@@ -24,7 +24,7 @@ DBConnection类提供如下主要方法：
 |login(username,password,enableEncryption)|登陆服务器|
 |run(script)|将脚本在DolphinDB服务器运行|
 |run(functionName,args)|调用DolphinDB服务器上的函数|
-|upload(variableObjectMap)|将本地数据对象上传到DOlphinDB服务器|
+|upload(variableObjectMap)|将本地数据对象上传到DolphinDB服务器|
 |isBusy()|判断当前会话是否正忙|
 |close()|关闭当前会话|
 
@@ -304,7 +304,7 @@ BasicTable table1 = new BasicTable(colNames,cols);
 
 ```
 //使用本地磁盘表
-//dbPath = "C:/data/testDatabase"
+dbPath = "C:/data/testDatabase"
 tbName = 'tb1'
 
 if(existsDatabase(dbPath)){dropDatabase(dbPath)}
