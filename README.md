@@ -64,7 +64,7 @@ If the script contains only one statement, such as an expression, DolphinDB retu
 
 ### 4. Run a function
 
-Method runs also supports DolphinDB built-in functions and user defined functions to run on remote DolphinDB server.
+Method `run` also supports DolphinDB built-in functions and user defined functions to run on remote DolphinDB server.
 
 
 The following example shows how the Java program calls DolhinDB's add function. The add function has two parameters. The calling method will be different based on the location of the parameters. The following examples show the sample code in three cases:
