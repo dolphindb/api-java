@@ -54,27 +54,36 @@ conn.run("script");
 如果脚本只包含一条语句，如表达式，DolphinDB会返回一个数据对象；否则返回NULL对象。如果脚本包含多条语句，将返回最后一个对象。如果脚本含有错误或者出现网络问题，它会抛出IOException。
 
 
+
 ### 4.调用DolphinDB函数
+当一段逻辑需要被服务端脚本反复调用时，可以通过将逻辑封装成DolphinDB的自定义函数，类似于存储过程，然后在Java程序中通过函数方式调用。
 
-调用的函数可以是内置函数或用户自定义函数。 下面的示例将一个double向量传递给服务器，并调用sum函数。
-
+下面的示例将一个double向量传递给服务器，并调用sum函数，这。
 ```
 import java.util.List;
 import java.util.ArrayList;
 //Run DolphinDB function with Java objects
 public void testFunction() throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
-    BasicDoubleVector vec = new BasicDoubleVector(3);
-    vec.setDouble(0, 1.5);
-    vec.setDouble(1, 2.5);
-    vec.setDouble(2, 7);
-    args.add(vec);
-    Scalar result = (Scalar)conn.run("sum", args);
+    BasicDoubleVector x = new BasicDoubleVector(3);
+    x.setDouble(0, 1.5);
+    x.setDouble(1, 2.5);
+    x.setDouble(2, 7);
+    BasicDoubleVector y = new BasicDoubleVector(3);
+    y.setDouble(0, 2.5);
+    y.setDouble(1, 3.5);
+    y.setDouble(2, 5);
+    args.Add(x);
+    args.Add(y);
+    Vector result = (Vector)conn.run("add", args);
     System.out.println(result.getString());
+
 }
 ```
 
+
 ### 5.将对象上传到DolphinDB服务器
+当Java中的一些数据需要被服务端频繁的用到，那么每次调用的时候都上传一次肯定不是一个好的做法，这个时候可以使用upload方法，将数据上传到服务器并分配给一个变量。
 
 我们可以将二进制数据对象上传到DolphinDB服务器，并将其分配给一个变量以备将来使用。 变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
 
@@ -94,7 +103,7 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 6.DolphinDB读取数据结构实例
+### 6.DolphinDB读取数据示例
 
 下面介绍通过DBConnection对象，读取DolphinDB不同类型的数据。
 
@@ -221,12 +230,12 @@ DolphinDB数据表按存储方式分为三种:
 
 #### 7.1. 将数据保存到DolphinDB内存表
 
-DolphinDB提供多种方式来保存数据，分别对应一下几个场景：
+DolphinDB提供多种方式来保存数据，分别对应以下几个场景：
 - 保存单点数据：通过 insert into 方式保存单点数据；
-- 保存批量数据： 通过tableInsert 函数保存多个数组对象；
-- 保存批量数据： 通过 append! 函数保存表对象。
+- 保存批量数据： 通过tableInsert 函数保存多个数组对象；通过 append! 函数保存表对象。
 
-这三种方式的区别是接收的参数类型不同，具体业务场景中，可能从数据源取到的是单点数据，也可能是多个数组或者表的方式组成的数据集。
+
+这几种方式的区别是接收的参数类型不同，具体业务场景中，可能从数据源取到的是单点数据，也可能是多个数组或者表的方式组成的数据集。
 
 下面分别介绍三种方式保存数据的实例，在例子中使用到的数据表有4个列，分别是`string,int,timestamp,double`类型，列名分别为`cstring,cint,ctimestamp,cdouble`，构建脚本如下：
 ```
