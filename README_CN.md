@@ -9,7 +9,7 @@ Java API遵循面向接口编程的原则。Java API使用接口类Entity来表�
 scalar|`Basic<DataType>`|BasicInt, BasicDouble, BasicDate, etc.
 vector，matrix|`Basic<DataType><DataForm>`|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
 set， dictionary和table|`Basic<DataForm>`|BasicSet, BasicDictionary, BasicTable.
-chart|BasicChart|
+chart||BasicChart
 
 “Basic”表示基本的数据类型接口，`<DataType>`表示DolphinDB数据类型名称，`<DataForm>`是一个DolphinDB数据形式名称。
 
@@ -38,11 +38,10 @@ DBConnection conn = new DBConnection();
 boolean success = conn.connect("localhost", 8848);
 ```
 使用用户名和密码建立连接：
-
 ```
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
-
+当不带用户名密码连接成功后，脚本在Guest权限下运行，后续运行中若需要提升权限，可以通过调用 `conn.login('admin','123456'，false)` 登录获取权限。
 ### 3.运行脚本
 
 在Java中运行DolphinDB脚本的语法如下：
@@ -53,12 +52,50 @@ conn.run("script");
 
 如果脚本只包含一条语句，如表达式，DolphinDB会返回一个数据对象；否则返回NULL对象。如果脚本包含多条语句，将返回最后一个对象。如果脚本含有错误或者出现网络问题，它会抛出IOException。
 
-
-
 ### 4.调用DolphinDB函数
-当一段逻辑需要被服务端脚本反复调用时，可以用DolphinDB脚本将逻辑封装成自定义函数，类似于存储过程，然后在Java程序中通过函数方式调用。
 
-下面的示例将一个double向量传递给服务器，并调用sum函数，这个函数可以是任意的用户自定义函数，并且支持`部分应用`的方式调用，具体`部分应用`方式调用示例可以参考7.1.2节。
+当一段逻辑需要被服务端脚本反复调用时，可以用DolphinDB脚本将逻辑封装成自定义函数，类似于存储过程，然后在Java程序中通过函数方式调用。这个函数可以是任意的用户自定义函数，并且支持`部分应用`的方式调用，具体`部分应用`方式调用示例可以参考7.1.2节。
+
+下面的示例展示Java程序调用DolhinDB的add函数的方式，add函数有两个参数，参数的存储位置不同，也会导致调用方式的不同，下面会分三种情况来展示示例代码：
+
+* 参数已经在DolphinDB Server端存在
+有两个变量 x,y 已经通过java程序提前在服务器端生成
+```
+conn.run("x = [1,3,5]")
+conn.run("y = [2,4,6]")
+```
+那么在Java端要对这两个向量做加法运算，只需要直接使用`run(script)`的方式即可
+```
+//Run DolphinDB function with Java objects
+public void testFunction() throws IOException{
+
+    Vector result = (Vector)conn.run("add(x,y)");
+    System.out.println(result.getString());
+}
+```
+
+* 参数有部分在DolphinDB Server端存在
+有一个变量 x 已经通过java程序提前在服务器端生成，而另一个参数 y 要在调用函数时动态获取
+```
+conn.run("x = [1,3,5]")
+```
+这时就需要使用`部分应用`方式，把参数 x 固化在add函数内，具体请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+
+```
+//Run DolphinDB function with Java objects
+public void testFunction() throws IOException{
+    List<Entity> args = new ArrayList<Entity>(1);
+    BasicDoubleVector y = new BasicDoubleVector(3);
+    y.setDouble(0, 2.5);
+    y.setDouble(1, 3.5);
+    y.setDouble(2, 5);
+    args.Add(y);
+    Vector result = (Vector)conn.run("add{x}"，args);
+    System.out.println(result.getString());
+}
+```
+* 两个参数都在java端获取
+
 ```
 import java.util.List;
 import java.util.ArrayList;
@@ -90,15 +127,15 @@ public void testFunction() throws IOException{
 //Run DolphinDB function with Java objects
 
 public void testFunction() throws IOException{
-	Map<String, Entity> vars = new HashMap<String, Entity>();
-	BasicDoubleVector vec = new BasicDoubleVector(3);
-	vec.setDouble(0, 1.5);
-	vec.setDouble(1, 2.5);
-	vec.setDouble(2, 7);
-	vars.put("a",vec);
-	conn.upload(vars);
-	Entity result = conn.run("accumulate(+,a)");
-	System.out.println(result.getString());
+    Map<String, Entity> vars = new HashMap<String, Entity>();
+    BasicDoubleVector vec = new BasicDoubleVector(3);
+    vec.setDouble(0, 1.5);
+    vec.setDouble(1, 2.5);
+    vec.setDouble(2, 7);
+    vars.put("a",vec);
+    conn.upload(vars);
+    Entity result = conn.run("accumulate(+,a)");
+    System.out.println(result.getString());
 }
 ```
 
@@ -204,11 +241,8 @@ public void testTable() throws IOException{
 要描述一个NULL对象，我们可以调用函数obj.getDataType()。
 ```
 public void testVoid() throws IOException{
-
-       Entity obj = conn.run("NULL");
-
-       System.out.println(obj.getDataType());
-
+    Entity obj = conn.run("NULL");
+    System.out.println(obj.getDataType());
 }
 ```
 
@@ -247,7 +281,7 @@ share t as sharedTable
 若Java程序是每次获取单条数据记录保存到DolphinDB，那么可以通过类似SQL语句的insert into 的方式保存数据。
 ```
 public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
-	conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
+    conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
 }
 ```
 
@@ -257,9 +291,9 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 
 ```
 public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
-		//用数组构造参数
-		List<Entity> args = Arrays.asList(new BasicStringVector(strArray),new BasicIntVector(intArray),new BasicTimestampVector(tsArray),new BasicDoubleVector(dblArray));
-		conn.run("tableInsert{sharedTable}", args);
+    //用数组构造参数
+    List<Entity> args = Arrays.asList(new BasicStringVector(strArray),new BasicIntVector(intArray),new BasicTimestampVector(tsArray),new BasicDoubleVector(dblArray));
+    conn.run("tableInsert{sharedTable}", args);
 }
 ```
 实际运用的场景中，通常是Java程序往服务端已经存在的表中写入数据，在服务端可以用 `tableInsert(sharedTable,vec1,vec2,vec3...)` 这样的脚本，但是在Java里用 `conn.run("tableInsert",args)` 方式调用时，tableInsert的第一个参数是服务端表的对象引用，它无法在Java程序端获取到，所以常规的做法是在预先在服务端定义一个函数，把sharedTable固化的函数体内，比如
@@ -275,8 +309,8 @@ def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
-	List<Entity> args = Arrays.asList(table1);
-	conn.run("append!{shareTable}", args);
+    List<Entity> args = Arrays.asList(table1);
+    conn.run("append!{shareTable}", args);
 }
 ```
 #### 7.2. 将数据保存到分布式表
@@ -298,9 +332,9 @@ DolphinDB提供loadTable方法可以加载分布式表，通过append!方式追�
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
-	List<Entity> args = new ArrayList<Entity>(1);
-	args.add(table1);
-	conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
+    List<Entity> args = new ArrayList<Entity>(1);
+    args.add(table1);
+    conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
 
@@ -339,17 +373,17 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 
 ```
 public void test_loop_basicTable(BasicTable table1) throws Exception{
-	BasicStringVector stringv = (BasicStringVector) table1.getColumn("cstring");
-	BasicIntVector intv = (BasicIntVector) table1.getColumn("cint");
-	BasicTimestampVector timestampv = (BasicTimestampVector) table1.getColumn("ctimestamp");
-	BasicDoubleVector doublev = (BasicDoubleVector) table1.getColumn("cdouble");
-	for(int ri=0; ri<table1.rows(); ri++){
-		System.out.println(stringv.getString(ri));
-		System.out.println(intv.getInt(ri));
-		LocalDateTime timestamp = timestampv.getTimestamp(ri);
-		System.out.println(timestamp);
-		System.out.println(doublev.getDouble(ri));
-	}
+    BasicStringVector stringv = (BasicStringVector) table1.getColumn("cstring");
+    BasicIntVector intv = (BasicIntVector) table1.getColumn("cint");
+    BasicTimestampVector timestampv = (BasicTimestampVector) table1.getColumn("ctimestamp");
+    BasicDoubleVector doublev = (BasicDoubleVector) table1.getColumn("cdouble");
+    for(int ri=0; ri<table1.rows(); ri++){
+        System.out.println(stringv.getString(ri));
+        System.out.println(intv.getInt(ri));
+        LocalDateTime timestamp = timestampv.getTimestamp(ri);
+        System.out.println(timestamp);
+        System.out.println(doublev.getDouble(ri));
+    }
 }
 ```
 
