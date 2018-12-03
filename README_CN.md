@@ -58,7 +58,7 @@ conn.run("script");
 
 下面的示例展示Java程序调用DolhinDB的add函数的方式，add函数有两个参数，参数的存储位置不同，也会导致调用方式的不同，下面会分三种情况来展示示例代码：
 
-* 参数已经在DolphinDB Server端存在
+* 所有参数都在DolphinDB Server端
 
 两个变量 x, y 已经通过java程序提前在服务器端生成。
 ```
