@@ -351,7 +351,7 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB提供loadTable方法可以加载本地磁盘表和分布式表，对于本地磁盘表而言，追加数据都是通过append!方式进行。
+DolphinDB提供loadTable方法同样可以加载本地磁盘表，通过append!追加数据。
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
@@ -360,7 +360,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 #### 7.4 读取和使用表数据
-在Java API中，表数据保存为basicTable对象，由于BasicTable是列式存储，所以要读取和使用所有desultory需要通过先取出列，再循环取出行的方式。
+在Java API中，表数据保存为BasicTable对象，由于BasicTable是列式存储，所以要读取和使用所有desultory需要通过先取出列，再循环取出行的方式。
 
 例子中参数BasicTable的有4个列，分别是`STRING,INT,TIMESTAMP,DOUBLE`类型，列名分别为`cstring,cint,ctimestamp,cdouble`。
 
