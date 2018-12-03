@@ -60,7 +60,7 @@ conn.run("script");
 
 * 所有参数都在DolphinDB Server端
 
-两个变量 x, y 已经通过java程序提前在服务器端生成。
+变量 x, y 已经通过java程序提前在服务器端生成。
 ```
 conn.run("x = [1,3,5];y = [2,4,6]")
 ```
