@@ -53,7 +53,48 @@ conn.run("script");
 
 如果脚本只包含一条语句，如表达式，DolphinDB会返回一个数据对象；否则返回NULL对象。如果脚本包含多条语句，将返回最后一个对象。如果脚本含有错误或者出现网络问题，它会抛出IOException。
 
-### 4.读取DolphinDB数据结构的数据
+
+### 4.调用DolphinDB函数
+
+调用的函数可以是内置函数或用户自定义函数。 下面的示例将一个double向量传递给服务器，并调用sum函数。
+
+```
+import java.util.List;
+import java.util.ArrayList;
+//Run DolphinDB function with Java objects
+public void testFunction() throws IOException{
+    List<Entity> args = new ArrayList<Entity>(1);
+    BasicDoubleVector vec = new BasicDoubleVector(3);
+    vec.setDouble(0, 1.5);
+    vec.setDouble(1, 2.5);
+    vec.setDouble(2, 7);
+    args.add(vec);
+    Scalar result = (Scalar)conn.run("sum", args);
+    System.out.println(result.getString());
+}
+```
+
+### 5.将对象上传到DolphinDB服务器
+
+我们可以将二进制数据对象上传到DolphinDB服务器，并将其分配给一个变量以备将来使用。 变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
+
+```
+//Run DolphinDB function with Java objects
+
+public void testFunction() throws IOException{
+	Map<String, Entity> vars = new HashMap<String, Entity>();
+	BasicDoubleVector vec = new BasicDoubleVector(3);
+	vec.setDouble(0, 1.5);
+	vec.setDouble(1, 2.5);
+	vec.setDouble(2, 7);
+	vars.put("a",vec);
+	conn.upload(vars);
+	Entity result = conn.run("accumulate(+,a)");
+	System.out.println(result.getString());
+}
+```
+
+### 6.DolphinDB读取数据结构实例
 
 下面介绍通过DBConnection对象，读取DolphinDB不同类型的数据。
 
@@ -164,45 +205,7 @@ public void testVoid() throws IOException{
 ```
 
 
-### 5.调用DolphinDB函数
 
-调用的函数可以是内置函数或用户自定义函数。 下面的示例将一个double向量传递给服务器，并调用sum函数。
-
-```
-import java.util.List;
-import java.util.ArrayList;
-//Run DolphinDB function with Java objects
-public void testFunction() throws IOException{
-    List<Entity> args = new ArrayList<Entity>(1);
-    BasicDoubleVector vec = new BasicDoubleVector(3);
-    vec.setDouble(0, 1.5);
-    vec.setDouble(1, 2.5);
-    vec.setDouble(2, 7);
-    args.add(vec);
-    Scalar result = (Scalar)conn.run("sum", args);
-    System.out.println(result.getString());
-}
-```
-
-### 6.将对象上传到DolphinDB服务器
-
-我们可以将二进制数据对象上传到DolphinDB服务器，并将其分配给一个变量以备将来使用。 变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
-
-```
-//Run DolphinDB function with Java objects
-
-public void testFunction() throws IOException{
-	Map<String, Entity> vars = new HashMap<String, Entity>();
-	BasicDoubleVector vec = new BasicDoubleVector(3);
-	vec.setDouble(0, 1.5);
-	vec.setDouble(1, 2.5);
-	vec.setDouble(2, 7);
-	vars.put("a",vec);
-	conn.upload(vars);
-	Entity result = conn.run("accumulate(+,a)");
-	System.out.println(result.getString());
-}
-```
 
 ### 7. 保存数据到DolphinDB的数据库表
 
