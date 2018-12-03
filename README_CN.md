@@ -1,8 +1,7 @@
-### 1. Java API 概念
-Java API本质上实现了Java程序和DolphinDB服务器之间的消息传递和数据转换协议。
-Java API运行在Java 1.8以上环境
+### 1. Java API 概述
+Java API本质上实现了Java程序和DolphinDB服务器之间的消息传递和数据转换协议，
+它需要运行在Java 1.8以上环境
 
-### 2. Java对象和DolphinDB对象之间的映射
 Java API遵循面向接口编程的原则。Java API使用接口类Entity来表示DolphinDB返回的所有数据类型。在Entity接口类的基础上，根据DolphinDB的数据类型，Java API提供了7种拓展接口，分别是scalar，vector，matrix，set，dictionary，table和chart。这些接口类都包含在com.xxdb.data包中。
 
 拓展的接口类|命名规则|例子
@@ -14,7 +13,8 @@ chart|BasicChart|
 
 “Basic”表示基本的数据类型接口，`<DataType>`表示DolphinDB数据类型名称，`<DataForm>`是一个DolphinDB数据形式名称。
 
-### 3. Java API提供的主要函数
+详细接口和类描述请参考[Java API手册](https://www.dolphindb.com/javaapi/)
+
 DolphinDB Java API 提供的最核心的对象是DBConnection，它主要的功能就是让Java应用可以通过它调用DolphinDB的脚本和函数，在Java应用和DolphinDB服务器之间互通数据。
 DBConnection类提供如下主要方法：
 
@@ -28,7 +28,7 @@ DBConnection类提供如下主要方法：
 |isBusy()|判断当前会话是否正忙|
 |close()|关闭当前会话|
 
-### 4. 建立DolphinDB连接
+### 2. 建立DolphinDB连接
 
 Java API通过TCP/IP协议连接到DolphinDB服务器。 在下列例子中，我们连接正在运行的端口号为8848的本地DolphinDB服务器：
 
@@ -43,7 +43,7 @@ boolean success = conn.connect("localhost", 8848);
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
 
-### 5.运行脚本
+### 3.运行脚本
 
 在Java中运行DolphinDB脚本的语法如下：
 ```
@@ -53,9 +53,9 @@ conn.run("script");
 
 如果脚本只包含一条语句，如表达式，DolphinDB会返回一个数据对象；否则返回NULL对象。如果脚本包含多条语句，将返回最后一个对象。如果脚本含有错误或者出现网络问题，它会抛出IOException。
 
-### 6.操作DolphinDB数据结构的数据
+### 4.读取DolphinDB数据结构的数据
 
-下面介绍建立DolphinDB连接后，在Java环境中，对不同DolphinDB数据类型进行操作，运行结果显示在Console窗口。
+下面介绍通过DBConnection对象，读取DolphinDB不同类型的数据。
 
 首先导入DolphinDB数据类型包：
 
@@ -164,7 +164,7 @@ public void testVoid() throws IOException{
 ```
 
 
-### 7.调用DolphinDB函数
+### 5.调用DolphinDB函数
 
 调用的函数可以是内置函数或用户自定义函数。 下面的示例将一个double向量传递给服务器，并调用sum函数。
 
@@ -184,7 +184,7 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 8.将对象上传到DolphinDB服务器
+### 6.将对象上传到DolphinDB服务器
 
 我们可以将二进制数据对象上传到DolphinDB服务器，并将其分配给一个变量以备将来使用。 变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
 
@@ -204,7 +204,7 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 9. 如何将Java数据表对象保存到DolphinDB的数据库中
+### 7. 保存数据到DolphinDB的数据库表
 
 使用Java API的一个重要场景是，用户从其他数据库系统或是第三方WebAPI中取到数据，将数据进行清洗后存入DolphinDB数据库中，本节将介绍通过Java API将取到的数据上传并保存到DolphinDB的数据表中。
 
@@ -214,13 +214,14 @@ DolphinDB数据表按存储方式分为三种:
 - 本地磁盘表：数据保存在本地磁盘上，即使节点关闭，通过脚本就可以方便的从磁盘加载到内存。
 - 分布式表：数据在物理上分布在不同的节点，通过DolphinDB的分布式计算引擎，逻辑上仍然可以像本地表一样做统一查询。
 
-因为本地磁盘表和分布式表的数据追加方式基本相同，所以下面分两部分介绍内存表数据追加以及本地磁盘和分布式表的数据追加。
-#### 9.1. 将数据保存到DolphinDB内存表
+下面分三部分介绍内存表数据追加以及本地磁盘和分布式表的数据追加。
 
-DolphinDB提供三种方式将数据新增到内存表：
-- 通过 insert into 方式保存单点数据；
-- 通过 tableInsert 函数保存多个数组对象；
-- 通过 append! 函数保存表对象。
+#### 7.1. 将数据保存到DolphinDB内存表
+
+DolphinDB提供多种方式来保存数据，分别对应一下两种场景：
+- 保存单点数据：通过 insert into 方式保存单点数据；
+- 保存批量数据： 通过tableInsert 函数保存多个数组对象；
+- 保存批量数据： 通过 append! 函数保存表对象。
 
 这三种方式的区别是接收的参数类型不同，具体业务场景中，可能从数据源取到的是单点数据，也可能是多个数组或者表的方式组成的数据集。
 
@@ -230,7 +231,8 @@ t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE]
 share t as sharedTable
 ```
 由于内存表是会话隔离的，所以GUI中创建的内存表只有当前GUI会话可见，如果需要在Java程序或者其他终端访问，需要通过share关键字在会话间共享内存表。
-##### 9.1.1. 保存单点数据
+
+##### 7.1.1. 保存单点数据
 若Java程序是每次获取单条数据记录保存到DolphinDB，那么可以通过类似SQL语句的insert into 的方式保存数据。
 ```
 public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
@@ -238,7 +240,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 }
 ```
 
-##### 9.1.2. 使用多个数组方式保存
+##### 7.1.2. 使用多个数组方式保存
 
 若Java程序获取的数据可以组织成List方式，使用tableInsert函数比较适合，这个函数可以接受多个数组作为参数，将数组追加到数据表中。
 
@@ -257,7 +259,7 @@ def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
 在本例中，使用了DolphinDB 中的`部分应用`这一特性，将服务端表名以`tableInsert{sharedTable}`这样的方式固化到tableInsert中，作为一个独立函数来使用。这样就不需要再使用自定义函数的方式实现。
 具体的文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
-##### 9.1.3. 使用表方式保存
+##### 7.1.3. 使用表方式保存
 若Java程序是从DolphinDB的服务端获取表数据做处理后保存到分布式表，那么使用append!函数会更加方便，append!函数接受一个表对象作为参数，将数据追加到数据表中。
 
 ```
@@ -266,7 +268,7 @@ public void test_save_table(BasicTable table1) throws IOException {
 	conn.run("append!{shareTable}", args);
 }
 ```
-#### 9.2. 将数据保存到分布式表
+#### 7.2. 将数据保存到分布式表
 分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性; 分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
 
 本例中涉及到的数据表可以通过如下脚本构建 ：
@@ -299,7 +301,7 @@ List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicInt
 BasicTable table1 = new BasicTable(colNames,cols);
 ```
 
-#### 9.3. 将数据保存到本地磁盘表
+#### 7.3. 将数据保存到本地磁盘表
 通常本地磁盘表用于学习环境或者单机静态数据集测试，它不支持事务，不保证运行中的数据一致性，所以不建议在生产环境中使用。
 
 ```
@@ -319,7 +321,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
     conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
-### 10. 循环遍历BasicTable
+#### 7.4. 读取和使用表数据
 由于BasicTable是列式存储，所以需要通过先取出列，再循环取出行的方式。
 
 例子中参数BasicTable的有4个列，分别是`STRING,INT,TIMESTAMP,DOUBLE`类型，列名分别为`cstring,cint,ctimestamp,cdouble`。
@@ -340,7 +342,7 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 }
 ```
 
-### 11. DolphinDB和Java之间的数据类型转换
+### 8. DolphinDB和Java之间的数据类型转换
 Java API提供了与DolphinDB内部数据类型对应的对象，通常是以Basic+ `<DataType>` 这种方式命名，比如BasicInt，BasicDate等等。
 一些Java的基础类型，可以通过构造函数直接创建对应的DOlphinDB数据结构，比如`new BasicInt(4)`，`new BasicDouble(1.23)`，但是也有一些类型需要做一些转换，下面列出需要做简单转换的类型：
 - `CHAR`类型：DolphinDB中的`CHAR`类型以Byte形式保存，所以在Java API中用`BasicByte`类型来构造`CHAR`，例如`new BasicByte((byte)'c')`
