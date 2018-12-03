@@ -221,7 +221,7 @@ DolphinDB数据表按存储方式分为三种:
 
 #### 7.1. 将数据保存到DolphinDB内存表
 
-DolphinDB提供多种方式来保存数据，分别对应一下两种场景：
+DolphinDB提供多种方式来保存数据，分别对应一下几个场景：
 - 保存单点数据：通过 insert into 方式保存单点数据；
 - 保存批量数据： 通过tableInsert 函数保存多个数组对象；
 - 保存批量数据： 通过 append! 函数保存表对象。
@@ -243,7 +243,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 }
 ```
 
-##### 7.1.2. 使用多个数组方式保存
+##### 7.1.2. 使用多个数组方式批量保存
 
 若Java程序获取的数据可以组织成List方式，使用tableInsert函数比较适合，这个函数可以接受多个数组作为参数，将数组追加到数据表中。
 
@@ -262,7 +262,7 @@ def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
 在本例中，使用了DolphinDB 中的`部分应用`这一特性，将服务端表名以`tableInsert{sharedTable}`这样的方式固化到tableInsert中，作为一个独立函数来使用。这样就不需要再使用自定义函数的方式实现。
 具体的文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
-##### 7.1.3. 使用表方式保存
+##### 7.1.3. 使用表方式批量保存
 若Java程序是从DolphinDB的服务端获取表数据做处理后保存到分布式表，那么使用append!函数会更加方便，append!函数接受一个表对象作为参数，将数据追加到数据表中。
 
 ```
@@ -305,7 +305,7 @@ BasicTable table1 = new BasicTable(colNames,cols);
 ```
 
 #### 7.3. 将数据保存到本地磁盘表
-通常本地磁盘表用于学习环境或者单机静态数据集测试，它不支持事务，不保证运行中的数据一致性，所以不建议在生产环境中使用。
+通常本地磁盘表用于学习环境或者单机静态数据集测试，它不支持事务，不保证运行中的数据一致性，所以不建议在团队生产环境中使用。
 
 ```
 //使用本地磁盘表
