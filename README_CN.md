@@ -65,7 +65,6 @@ conn.run("x = [1,3,5];y = [2,4,6]")
 ```
 那么在Java端要对这两个向量做加法运算，只需要直接使用`run(script)`的方式即可
 ```
-//Run DolphinDB function with DolphinDB objects
 public void testFunction() throws IOException{
     Vector result = (Vector)conn.run("add(x,y)");
     System.out.println(result.getString());
@@ -80,7 +79,6 @@ conn.run("x = [1,3,5]")
 这时就需要使用`部分应用`方式，把参数 x 固化在add函数内，具体请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
 ```
-//Run DolphinDB function with Java objects
 public void testFunction() throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     BasicDoubleVector y = new BasicDoubleVector(3);
@@ -97,7 +95,7 @@ public void testFunction() throws IOException{
 ```
 import java.util.List;
 import java.util.ArrayList;
-//Run DolphinDB function with Java objects
+
 public void testFunction() throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     BasicDoubleVector x = new BasicDoubleVector(3);
@@ -112,7 +110,6 @@ public void testFunction() throws IOException{
     args.Add(y);
     Vector result = (Vector)conn.run("add", args);
     System.out.println(result.getString());
-
 }
 ```
 
@@ -122,8 +119,6 @@ public void testFunction() throws IOException{
 我们可以将二进制数据对象上传到DolphinDB服务器，并将其分配给一个变量以备将来使用。 变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
 
 ```
-//Run DolphinDB function with Java objects
-
 public void testFunction() throws IOException{
     Map<String, Entity> vars = new HashMap<String, Entity>();
     BasicDoubleVector vec = new BasicDoubleVector(3);
