@@ -430,8 +430,19 @@ Java API提供了与DolphinDB内部数据类型对应的对象，通常是以Bas
 - `CHAR`类型：DolphinDB中的`CHAR`类型以Byte形式保存，所以在Java API中用`BasicByte`类型来构造`CHAR`，例如`new BasicByte((byte)'c')`
 - `SYMBOL`类型：DolphinDB中的`SYMBOL`类型是对字符串的优化，可以提高DolphinDB对字符串数据存储和查询的效率，但是Java中并不需要这种类型，所以Java API不提供`BasicSymbol`这种对象，直接用`BasicString`来处理即可。
 - 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供`date, month, time, minute, second, datetime, timestamp, nanotime, nanotimestamp`九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html)。由于Java也提供了`LocalDate,LocalTime,LocalDateTime,YearMonth`等数据类型，所以Java API在Utils类里提供了所有Java时间类型和int或long之间的转换函数。
+- 
 
-以下脚本展示Java API中DolphinDB时间类型与Java原生时间类型之间的对应关系：
+### 8. Data type conversion between DolphinDB and Java
+The Java API provides objects that correspond to the internal data types of DolphinDB, usually named after Basic+ `<DataType>`, such as BasicInt, BasicDate, and so on.
+Some basic Java types, you can directly create the corresponding DOlphinDB data structure through the constructor, such as `new BasicInt(4)`, `new BasicDouble(1.23)`, but there are some types that need to be converted. The following list needs to be simple. Type of conversion:
+- `CHAR` type: The `CHAR` type in DolphinDB is stored as a Byte, so use the `BasicByte` type to construct `CHAR` in the Java API, for example `new BasicByte((byte)'c')`
+- `SYMBOL` type: The `SYMBOL` type in DolphinDB is an optimization of strings, which can improve the efficiency of DolphinDB for string data storage and query, but this type is not needed in Java, so Java API does not provide `BasicSymbol `This kind of object can be processed directly with `BasicString`.
+- Temporal type: The Temporal data type is internal stored as int or long type. DolphinDB provides 9 temporal data types: date, month, time, minute, second, datetime, timestamp, nanotime, nanotimestamp`, the highest precision can be Nanoseconds. For a detailed description, refer to [DolphinDB Timing Type and Conversion] (https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html). Since Java also provides data types such as `LocalDate, LocalTime, LocalDateTime, YearMonth`, the Java API provides all Java temporal types and conversion functions between int or long in the Utils class.
+
+
+
+The following script shows the correspondence between the DolphinDB time type in the Java API and the Java native time type:
+
 ```
 //Date:2018.11.12
 BasicDate bd = new BasicDate(LocalDate.of(2018,11,12));
@@ -452,21 +463,27 @@ BasicNanoTime bnt = new BasicNanoTime(LocalTime.of(20,8,1,123456789));
 //NanoTimestamp: 2018.11.12T20:08:01.123456789
 BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123456789))
 ```
-如果在第三方系统中时间以时间戳的方式存储，DolphinDB时间对象也可以用时间戳来实例化。
-Java API中的Utils类提供了各种时间类型与标准时间戳的转换算法，比如将毫秒级的时间戳转换为DolphinDB的`BasicTimestamp`对象:
+
+If the time is stored in a timestamp in a third-party system, the DolphinDB time object can also be instantiated with a timestamp.
+The Utils class in the Java API provides conversion algorithms for various time types and standard timestamps, such as converting millisecond timestamps to DolphinDB's `BasicTimestamp` objects:
+
+
 ```
 LocalDateTime dt = Utils.parseTimestamp(1543494854000l);
 BasicTimestamp ts = new BasicTimestamp(dt);
 ```
-也可以将DolphinDB对象转换为整形或长整形的时间戳，比如：
+
+You can also convert a DolphinDB object to a timestamp of an integer or long integer, such as:
 ```
 LocalDateTime dt = ts.getTimestamp();
 long timestamp = Utils.countMilliseconds(dt);
 ```
-如果时间戳以其他精度保存，Utils类还中提供如下方法，可以适应各种不同的精度：
-- Utils.countMonths：计算给定时间到1970.01之间的月份差，返回int
-- Utils.countDays：计算给定时间到1970.01.01之间的天数差，返回int
-- Utils.countMinutes：计算给定时间到1970.01.01T00:00之间的分钟差，返回int
-- Utils.countSeconds：计算给定时间到1970.01.01T00:00:00之间的秒数差，返回int
-- Utils.countMilliseconds：计算给定时间到1970.01.01T00:00:00之间的毫秒数差，返回long
-- Utils.countNanoseconds：计算给定时间到1970.01.01T00:00:00.000之间的纳秒数差，返回long
+If the timestamp is saved with other precision, the Utils class also provides the following methods to accommodate a variety of different precisions:
+- Utils.countMonths: Calculate the monthly difference between a given time and 1970.01, returning an int
+- Utils.countDays: Calculate the difference in the number of days between the given time and 1970.01.01, return int
+- Utils.countMinutes: Calculate the minute difference between the given time and 1970.01.01T00:00, return int
+- Utils.countSeconds: Calculate the difference in seconds between a given time and 1970.01.01T00:00:00, returning int
+- Utils.countMilliseconds: Calculate the difference in milliseconds between a given time and 1970.01.01T00:00:00, return long
+- Utils.countNanoseconds: Calculate the difference in nanoseconds between a given time and 1970.01.01T00:00:00.000, return long
+
+
