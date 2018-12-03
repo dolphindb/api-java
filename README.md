@@ -249,7 +249,7 @@ public void testTable() throws IOException{
     System.out.println(table.getString());
 }
 ```
-- NULL对象
+- NULL object
 
 
 To describe a NULL object, we can call the function obj.getDataType().
@@ -266,20 +266,21 @@ public void testVoid() throws IOException{
 
 ### 7. Read and write DolphinDB data table
 
-使用Java API的一个重要场景是，用户从其他数据库系统或是第三方WebAPI中取到数据，将数据进行清洗后存入DolphinDB数据库中，本节将介绍通过Java API将取到的数据上传并保存到DolphinDB的数据表中。
+An important scenario for using the Java API is that users fetch data from other database systems or third-party WebAPIs, clean the data and store it in the DolphinDB database. This section describes uploading and saving the data retrieved through the Java API.
 
-DolphinDB数据表按存储方式分为三种:
 
-- 内存表: 数据仅保存在本节点内存，存取速度最快，但是节点关闭数据就不存在了。
-- 本地磁盘表：数据保存在本地磁盘上，即使节点关闭，通过脚本就可以方便的从磁盘加载到内存。
-- 分布式表：数据分布在不同的节点，通过DolphinDB的分布式计算引擎，逻辑上仍然可以像本地表一样做统一查询。
+The DolphinDB data table is divided into three types according to storage methods:
 
-#### 7.1 保存数据到DolphinDB内存表
+- In-memory table: The data is only stored in the memory of this node, and the access speed is the fastest, but the node shutdown data does not exist.
+- Local disk table: The data is saved on the local disk. Even if the node is closed, it can be easily loaded from the disk into the memory through the script.
+- Distributed tables: Data is distributed across different nodes. Through DolphinDB's distributed computing engine, users can query the table like a local table.
 
-DolphinDB提供多种方式来保存数据：
-- 通过 insert into 保存单条数据；
-- 通过 tableInsert 函数批量保存多条数据；
-- 通过 append! 函数保存表对象。
+#### 7.1 Save data to DolphinDB in-memory table
+
+DolphinDB offers several ways to save data:
+- save a single piece of data by insert into ;
+- Save multiple pieces of data in bulk via the tableInsert function;
+- Save the table object with the append! function.
 
 
 这几种方式的区别是接收的参数类型不同，具体业务场景中，可能从数据源取到的是单点数据，也可能是多个数组或者表的方式组成的数据集。
