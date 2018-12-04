@@ -1,9 +1,9 @@
 ### 1. Java API Introduction
-The Java API essentially implements the messaging and data conversion protocol between the Java program and the DolphinDB server.
+DolphinDB Java API implements the messaging and data conversion protocol between Java and DolphinDB server.
 
-It needs to run in a Java 1.8 or higher environment
+It needs to run in Java 1.8 or higher environment.
 
-The Java API follows the principles of interface-oriented programming. The Java API uses the interface class Entity to represent all the data types returned by DolphinDB. Based on the Entity interface class, according to the data type of DolphinDB, the Java API provides seven extension interfaces, namely scalar, vector, matrix, set, dictionary, table and chart. These interface classes are included in the com.xxdb.data package.
+The Java API follows the principles of interface-oriented programming. The Java API uses the interface class Entity to represent all data types returned by DolphinDB. Based on the Entity interface class, according to the data type of DolphinDB, the Java API provides 7 extension interfaces: scalar, vector, matrix, set, dictionary, table and chart. These interface classes are included in the com.xxdb.data package.
 
 Extended interface classes | Naming rules | Examples
 ---|---|---
@@ -12,7 +12,7 @@ vector, matrix|`Basic<DataType><DataForm>`|BasicIntVector, BasicDoubleMatrix, Ba
 set, dictionary, and table|`Basic<DataForm>`|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
-"Basic" represents the basic data type interface, `<DataType>` represents the DolphinDB data type name, and `<DataForm>` is a DolphinDB data form name.
+"Basic" represents the basic data type interface, `<DataType>` represents the DolphinDB data type, and `<DataForm>` is a DolphinDB data form.
 
 For detailed interface and class description, please refer to [Java API Manual](https://www.dolphindb.com/javaapi/)
 
@@ -129,7 +129,7 @@ public void testFunction() throws IOException{
 
 ### 5. Upload a data object
 
-When some data in Java needs to be used frequently by the server, it is certainly not a good practice to upload it once per call. At this time, you can use the upload method to upload the data to the server and assign it to a variable. This variable can be reused on the server side.
+When some data in Java needs to be used frequently by the server, it is not recommended to upload it once per call. At this time, you can use the upload method to upload the data to the server and assign it to a variable. This variable can be reused on the server side.
 
 
 We can upload the binary data object to the DolphinDB server and assign it to a variable for future use. Variable names can use three types of characters: letters, numbers, or underscores. The first character must be a letter.
