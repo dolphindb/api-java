@@ -1,77 +1,175 @@
-### 1. Java API 概念
-Java API本质上实现了Java程序和DolphinDB服务器之间的消息传递和数据转换协议。
-Java API运行在Java 1.8以上环境
+### 1. Java API Introduction
+The Java API essentially implements the messaging and data conversion protocol between the Java program and the DolphinDB server.
 
-### 2. Java对象和DolphinDB对象之间的映射
-Java API遵循面向接口编程的原则。Java API使用接口类Entity来表示DolphinDB返回的所有数据类型。在Entity接口类的基础上，根据DolphinDB的数据类型，Java API提供了7种拓展接口，分别是scalar，vector，matrix，set，dictionary，table和chart。这些接口类都包含在com.xxdb.data包中。
+It needs to run in a Java 1.8 or higher environment
 
-拓展的接口类|命名规则|例子
+The Java API follows the principles of interface-oriented programming. The Java API uses the interface class Entity to represent all the data types returned by DolphinDB. Based on the Entity interface class, according to the data type of DolphinDB, the Java API provides seven extension interfaces, namely scalar, vector, matrix, set, dictionary, table and chart. These interface classes are included in the com.xxdb.data package.
+
+Extended interface classes | Naming rules | Examples
 ---|---|---
 scalar|`Basic<DataType>`|BasicInt, BasicDouble, BasicDate, etc.
-vector，matrix|`Basic<DataType><DataForm>`|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
-set， dictionary和table|`Basic<DataForm>`|BasicSet, BasicDictionary, BasicTable.
-chart|BasicChart|
+vector, matrix|`Basic<DataType><DataForm>`|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
+set, dictionary, and table|`Basic<DataForm>`|BasicSet, BasicDictionary, BasicTable.
+chart||BasicChart
 
-“Basic”表示基本的数据类型接口，`<DataType>`表示DolphinDB数据类型名称，`<DataForm>`是一个DolphinDB数据形式名称。
+"Basic" represents the basic data type interface, `<DataType>` represents the DolphinDB data type name, and `<DataForm>` is a DolphinDB data form name.
 
-### 3. Java API提供的主要函数
-DolphinDB Java API 提供的最核心的对象是DBConnection，它主要的功能就是让Java应用可以通过它调用DolphinDB的脚本和函数，在Java应用和DolphinDB服务器之间互通数据。
-DBConnection类提供如下主要方法：
+For detailed interface and class description, please refer to [Java API Manual](https://www.dolphindb.com/javaapi/)
 
-| 方法名        | 详情          |
+One of core functions provided by the DolphinDB Java API is DBConnection. Its main function is to allow Java applications to execute scripts and functions on the DolphinDB server and pass data between them in both directions.
+
+The DBConnection class provides the following main methods:
+
+
+
+| Method Name | Details |
 |:------------- |:-------------|
-|connect(host, port, [username, password])|将会话连接到DolphinDB服务器|
-|login(username,password,enableEncryption)|登陆服务器|
-|run(script)|将脚本在DolphinDB服务器运行|
-|run(functionName,args)|调用DolphinDB服务器上的函数|
-|upload(variableObjectMap)|将本地数据对象上传到DolphinDB服务器|
-|isBusy()|判断当前会话是否正忙|
-|close()|关闭当前会话|
+|connect(host, port, [username, password])|Connect the session to the DolphinDB server|
+|login(username,password,enableEncryption)|Login server|
+|run(script)|Run the script on the DolphinDB server|
+|run(functionName,args)|Call the function on the DolphinDB server|
+|upload(variableObjectMap)|Upload local data objects to DolphinDB server|
+|isBusy()|Judge if the current session is busy |
+|close()|Close the current session|
 
-### 4. 建立DolphinDB连接
 
-Java API通过TCP/IP协议连接到DolphinDB服务器。 在下列例子中，我们连接正在运行的端口号为8848的本地DolphinDB服务器：
+### 2. Establish a DolphinDB connection
+
+The Java API connects to the DolphinDB server via the TCP/IP protocol. In the following example, we connect the running local DolphinDB server with port number 8848:
 
 ```
 import com.xxdb;
 DBConnection conn = new DBConnection();
 boolean success = conn.connect("localhost", 8848);
 ```
-使用用户名和密码建立连接：
-
+Establish a connection with a username and password:
 ```
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
+When the connection is successful without the username and password, the script runs under the guest permission. If you need to upgrade the permissions in subsequent runs, you can log in to get the permission by calling `conn.login('admin', '123456', true)`.
 
-### 5.运行脚本
+### 3.Run a script
 
-在Java中运行DolphinDB脚本的语法如下：
+The syntax for running the DolphinDB script in Java is as follows:
+
 ```
 conn.run("script");
 ```
-其中，脚本的最大长度为65,535字节。
 
-如果脚本只包含一条语句，如表达式，DolphinDB会返回一个数据对象；否则返回NULL对象。如果脚本包含多条语句，将返回最后一个对象。如果脚本含有错误或者出现网络问题，它会抛出IOException。
+The maximum length of the script is 65,535 bytes.
 
-### 6.操作DolphinDB数据结构的数据
 
-下面介绍建立DolphinDB连接后，在Java环境中，对不同DolphinDB数据类型进行操作，运行结果显示在Console窗口。
+If the script contains only one statement, such as an expression, DolphinDB returns a data object; otherwise it returns a NULL object. If the script contains more than one statement, the last object will be returned. If the script contains an error or there is a network problem, it throws an IOException.
 
-首先导入DolphinDB数据类型包：
+
+### 4. Run a function
+
+Method `run` also supports DolphinDB built-in functions and user defined functions to run on remote DolphinDB server.
+
+
+The following example shows how the Java program calls DolhinDB's `add` function. The `add` function has two parameters. The calling method will be different based on the location of the parameters. The following examples show the sample code in three cases:
+
+* All parameters are on the DolphinDB Server side
+
+The variables x, y have been generated on the server side in advance by the java program.
+```
+conn.run("x = [1,3,5];y = [2,4,6]")
+```
+Then in the Java side to add these two vectors, you only need to use the `run(script)` method directly.
+```
+public void testFunction() throws IOException{
+    Vector result = (Vector)conn.run("add(x,y)");
+    System.out.println(result.getString());
+}
+```
+
+
+* Some parameters exist on the DolphinDB Server side
+
+The variable x has been generated on the server side in advance by the java program, and the parameter y is to be generated on the Java client.
+```
+conn.run("x = [1,3,5]")
+```
+At this time, you need to use the "partial application" method to embed parameter x in the add function. For details, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+
+```
+public void testFunction() throws IOException{
+    List<Entity> args = new ArrayList<Entity>(1);
+    BasicDoubleVector y = new BasicDoubleVector(3);
+    y.setDouble(0, 2.5);
+    y.setDouble(1, 3.5);
+    y.setDouble(2, 5);
+    args.Add(y);
+    Vector result = (Vector)conn.run("add{x}", args);
+    System.out.println(result.getString());
+}
+```
+
+* Both parameters are in the java client
+```
+import java.util.List;
+import java.util.ArrayList;
+
+public void testFunction() throws IOException{
+    List<Entity> args = new ArrayList<Entity>(1);
+    BasicDoubleVector x = new BasicDoubleVector(3);
+    x.setDouble(0, 1.5);
+    x.setDouble(1, 2.5);
+    x.setDouble(2, 7);
+    BasicDoubleVector y = new BasicDoubleVector(3);
+    y.setDouble(0, 2.5);
+    y.setDouble(1, 3.5);
+    y.setDouble(2, 5);
+    args.Add(x);
+    args.Add(y);
+    Vector result = (Vector)conn.run("add", args);
+    System.out.println(result.getString());
+}
+```
+
+### 5. Upload a data object
+
+When some data in Java needs to be used frequently by the server, it is certainly not a good practice to upload it once per call. At this time, you can use the upload method to upload the data to the server and assign it to a variable. This variable can be reused on the server side.
+
+
+We can upload the binary data object to the DolphinDB server and assign it to a variable for future use. Variable names can use three types of characters: letters, numbers, or underscores. The first character must be a letter.
+
+```
+public void testFunction() throws IOException{
+    Map<String, Entity> vars = new HashMap<String, Entity>();
+    BasicDoubleVector vec = new BasicDoubleVector(3);
+    vec.setDouble(0, 1.5);
+    vec.setDouble(1, 2.5);
+    vec.setDouble(2, 7);
+    vars.put("a",vec);
+    conn.upload(vars);
+    Entity result = conn.run("accumulate(+,a)");
+    System.out.println(result.getString());
+}
+```
+
+### 6. Read data example
+
+The following describes the different types of data objects read bthrough the DBConnection method.
+
+First import the DolphinDB data type package:
 
 ```
 import com.xxdb.data.*;
 ```
 
-注意，下面的代码需要在建立连接后才能运行。
 
-- 向量
+Note that the code below needs to be established after the connection is established.
 
-在下面的示例中，DolphinDB语句
+- Vector
+
+The example below shows the DolphinDB statement generating a random fast symbol vector with size as 10.
+
 ```
 rand(`IBM`MSFT`GOOG`BIDU,10)
 ```
-返回Java对象BasicStringVector。vector.rows()方法能够获取向量的大小。我们可以使用vector.getString(i)方法按照索引访问向量元素。
+
+Returns the Java object BasicStringVector. The vector.rows() method gets the size of the vector. We can access vector elements by index using the vector.getString(i) method.
 
 ```
 public void testStringVector() throws IOException{
@@ -83,7 +181,7 @@ public void testStringVector() throws IOException{
 }
 ```
 
-类似的，也可以处理双精度浮点类型的向量或者元组。
+Similarly, you can also handle vectors or tuples of int,double,float, or any other types.
 ```
 public void testDoubleVector() throws IOException{
     BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0, 10)");
@@ -102,7 +200,7 @@ public void testAnyVector() throws IOException{
 }
 ```
 
-- 集合
+- Set
 
 ```
 public void testSet() throws IOException{
@@ -111,9 +209,9 @@ public void testSet() throws IOException{
 }
 ```
 
-- 矩阵
+- Matrix
 
-要从整数矩阵中检索一个元素，我们可以使用getInt(row,col)。 要获取行数和列数，我们可以使用函数rows()和columns()。
+To retrieve an element from an integer matrix, we can use getInt(row, col). To get the number of rows and columns, we can use the functions rows() and columns().
 
 ```
 public void testIntMatrix() throws IOException {
@@ -122,9 +220,9 @@ public void testIntMatrix() throws IOException {
 }
 ```
 
-- 字典
+- Dictionary
 
-用函数keys()和values()可以从字典取得所有的键和值。要从一个键里取得它的值，可以调用get(key)。
+All keys and values ​​can be retrieved from the dictionary using the functions keys() and values(). To get its value from a key, you can call get(key).
 
 ```
 public void testDictionary() throws IOException{
@@ -135,9 +233,10 @@ public void testDictionary() throws IOException{
 ```
 
 
-- 表
+- Table
 
-要获取表的列，我们可以调用table.getColumn(index)；同样，我们可以调用table.getColumnName(index)获取列名。 对于列和行的数量，我们可以分别调用table.columns()和table.rows()。
+
+To get the column of the table, we can call table.getColumn(index); again, we can call table.getColumnName(index) to get the column name. For the number of columns and rows, we can call table.columns() and table.rows() respectively.
 
 ```
 public void testTable() throws IOException{
@@ -150,128 +249,107 @@ public void testTable() throws IOException{
     System.out.println(table.getString());
 }
 ```
-- NULL对象
+- NULL object
 
-要描述一个NULL对象，我们可以调用函数obj.getDataType()。
+
+To describe a NULL object, we can call the function obj.getDataType().
+
 ```
 public void testVoid() throws IOException{
-
-       Entity obj = conn.run("NULL");
-
-       System.out.println(obj.getDataType());
-
+    Entity obj = conn.run("NULL");
+    System.out.println(obj.getDataType());
 }
 ```
 
 
-### 7.调用DolphinDB函数
 
-调用的函数可以是内置函数或用户自定义函数。 下面的示例将一个double向量传递给服务器，并调用sum函数。
 
-```
-import java.util.List;
-import java.util.ArrayList;
-//Run DolphinDB function with Java objects
-public void testFunction() throws IOException{
-    List<Entity> args = new ArrayList<Entity>(1);
-    BasicDoubleVector vec = new BasicDoubleVector(3);
-    vec.setDouble(0, 1.5);
-    vec.setDouble(1, 2.5);
-    vec.setDouble(2, 7);
-    args.add(vec);
-    Scalar result = (Scalar)conn.run("sum", args);
-    System.out.println(result.getString());
-}
-```
+### 7. Read and write DolphinDB data table
 
-### 8.将对象上传到DolphinDB服务器
+An important scenario for using the Java API is that users fetch data from other database systems or third-party WebAPIs, clean the data and store it in the DolphinDB database. This section describes uploading and saving the data retrieved through the Java API.
 
-我们可以将二进制数据对象上传到DolphinDB服务器，并将其分配给一个变量以备将来使用。 变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
 
-```
-//Run DolphinDB function with Java objects
+The DolphinDB data table is divided into three types according to storage methods:
 
-public void testFunction() throws IOException{
-	Map<String, Entity> vars = new HashMap<String, Entity>();
-	BasicDoubleVector vec = new BasicDoubleVector(3);
-	vec.setDouble(0, 1.5);
-	vec.setDouble(1, 2.5);
-	vec.setDouble(2, 7);
-	vars.put("a",vec);
-	conn.upload(vars);
-	Entity result = conn.run("accumulate(+,a)");
-	System.out.println(result.getString());
-}
-```
+- In-memory table: The data is only stored in the memory of this node, and the access speed is the fastest, but the node shutdown data does not exist.
+- Local disk table: The data is saved on the local disk. Even if the node is closed, it can be easily loaded from the disk into the memory through the script.
+- Distributed tables: Data is distributed across different nodes. Through DolphinDB's distributed computing engine, users can query the table like a local table.
 
-### 9. 如何将Java数据表对象保存到DolphinDB的数据库中
+#### 7.1 Save data to DolphinDB in-memory table
 
-使用Java API的一个重要场景是，用户从其他数据库系统或是第三方WebAPI中取到数据，将数据进行清洗后存入DolphinDB数据库中，本节将介绍通过Java API将取到的数据上传并保存到DolphinDB的数据表中。
+DolphinDB offers several ways to save data:
+- save a single piece of data by insert into ;
+- Save multiple pieces of data in bulk via the tableInsert function;
+- Save the table object with the append! function.
 
-DolphinDB数据表按存储方式分为三种:
 
-- 内存表: 数据仅保存在本节点内存，存取速度最快，但是节点关闭数据就不存在了。
-- 本地磁盘表：数据保存在本地磁盘上，即使节点关闭，通过脚本就可以方便的从磁盘加载到内存。
-- 分布式表：数据在物理上分布在不同的节点，通过DolphinDB的分布式计算引擎，逻辑上仍然可以像本地表一样做统一查询。
+The difference between these methods is that the types of parameters received are different. In a specific business scenario, a single data point may be obtained from the data source, or may be a data set composed of multiple arrays or tables.
 
-因为本地磁盘表和分布式表的数据追加方式基本相同，所以下面分两部分介绍内存表数据追加以及本地磁盘和分布式表的数据追加。
-#### 9.1. 将数据保存到DolphinDB内存表
-
-DolphinDB提供三种方式将数据新增到内存表：
-- 通过 insert into 方式保存单点数据；
-- 通过 tableInsert 函数保存多个数组对象；
-- 通过 append! 函数保存表对象。
-
-这三种方式的区别是接收的参数类型不同，具体业务场景中，可能从数据源取到的是单点数据，也可能是多个数组或者表的方式组成的数据集。
-
-下面分别介绍三种方式保存数据的实例，在例子中使用到的数据表有4个列，分别是`string,int,timestamp,double`类型，列名分别为`cstring,cint,ctimestamp,cdouble`，构建脚本如下：
+The following describes three examples of saving data. The data table used in the example has four columns, namely `string, int, timestamp, double`, and the column names are `cstring,cint,ctimestamp,cdouble`. The script is as follows:
 ```
 t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE])
 share t as sharedTable
 ```
-由于内存表是会话隔离的，所以GUI中创建的内存表只有当前GUI会话可见，如果需要在Java程序或者其他终端访问，需要通过share关键字在会话间共享内存表。
-##### 9.1.1. 保存单点数据
-若Java程序是每次获取单条数据记录保存到DolphinDB，那么可以通过类似SQL语句的insert into 的方式保存数据。
+
+Since an in-memory table is session-isolated, only the current GUI session can see the table. If you need to access it in a different Java program or other terminal, you need to share the in-memory table between sessions through the `share` keyword.
+
+##### 7.1.1 Saving single point data using SQL
+If the Java program is to save a single data record to DolphinDB each time, you can save the data through the SQL statement (insert into).
+
 ```
 public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
-	conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
+    conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
 }
 ```
 
-##### 9.1.2. 使用多个数组方式保存
 
-若Java程序获取的数据可以组织成List方式，使用tableInsert函数比较适合，这个函数可以接受多个数组作为参数，将数组追加到数据表中。
+##### 7.1.2 Using the tableInsert function to save data in batches
+
+
+
+If the data obtained by the Java program can be organized into a List mode, it is more suitable to use the tableInsert function. This function can accept multiple arrays as parameters and append the array to the data table.
 
 ```
 public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
-		//用数组构造参数
-		List<Entity> args = Arrays.asList(new BasicStringVector(strArray),new BasicIntVector(intArray),new BasicTimestampVector(tsArray),new BasicDoubleVector(dblArray));
-		conn.run("tableInsert{sharedTable}", args);
+    //Construct parameters with arrays
+    List<Entity> args = Arrays.asList(new BasicStringVector(strArray),new BasicIntVector(intArray),new BasicTimestampVector(tsArray),new BasicDoubleVector(dblArray));
+    conn.run("tableInsert{sharedTable}", args);
 }
 ```
-实际运用的场景中，通常是Java程序往服务端已经存在的表中写入数据，在服务端可以用 `tableInsert(sharedTable,vec1,vec2,vec3...)` 这样的脚本，但是在Java里用 `conn.run("tableInsert",args)` 方式调用时，tableInsert的第一个参数是服务端表的对象引用，它无法在Java程序端获取到，所以常规的做法是在预先在服务端定义一个函数，把sharedTable固化的函数体内，比如
+
+
+In the actual application scenario, usually the Java program writes data to a table already existing on the server side. On the server side, a script such as `tableInsert(sharedTable, vec1, vec2, vec3...)` can be used. But in Java, when called with `conn.run("tableInsert", args)`, the first parameter of tableInsert is the object reference of the server table. It cannot be obtained in the Java program, so the conventional practice is to define a function in server to embed the sharedTable, such as
+
 ```
 def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
 ```
-然后再通过`conn.run("saveData",args)`运行函数，虽然这样也能实现目标，但是对Java程序来说要多一次服务端的调用，多消耗了网络资源。
-在本例中，使用了DolphinDB 中的`部分应用`这一特性，将服务端表名以`tableInsert{sharedTable}`这样的方式固化到tableInsert中，作为一个独立函数来使用。这样就不需要再使用自定义函数的方式实现。
-具体的文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
-##### 9.1.3. 使用表方式保存
-若Java程序是从DolphinDB的服务端获取表数据做处理后保存到分布式表，那么使用append!函数会更加方便，append!函数接受一个表对象作为参数，将数据追加到数据表中。
+Then, run the function through `conn.run("saveData", args)`. Although this achieves the goal,  for the Java program, one more server cal consumes more network resources.
+
+
+In this example, using the `partial application' feature in DolphinDB, the server table name is embeded into tableInsert in the manner of `tableInsert{sharedTable}` and used as a stand-alone function. This way you don't need to use a custom function.
+
+
+For specific documentation, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+
+##### 7.1.3 Use append! Function to save data in batches
+
+The append! function accepts a table object as a parameter and appends the data to the data table.
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
-	List<Entity> args = Arrays.asList(table1);
-	conn.run("append!{shareTable}", args);
+    List<Entity> args = Arrays.asList(table1);
+    conn.run("append!{shareTable}", args);
 }
 ```
-#### 9.2. 将数据保存到分布式表
-分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性; 分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
+#### 7.2 Save data to a distributed table
+Distributed table is the data storage method recommended by DolphinDB in production environment. It supports snapshot level transaction isolation and ensures data consistency. Distributed table supports multiple copy mechanism, which provides data fault tolerance and data access. Load balancing.
 
-本例中涉及到的数据表可以通过如下脚本构建 ：
 
-*请注意只有启用 `enableDFS=1` 的集群环境才能使用分布式表。*
+The data tables involved in this example can be built with the following script:
+
+
+*Please note that distributed tables can only be used in cluster environments with `enableDFS=1` enabled. *
 
 ```
 dbPath = 'dfs://testDatabase'
@@ -281,37 +359,8 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB提供loadTable方法可以加载分布式表，通过append!方式追加数据，具体的脚本示例如下：
+DolphinDB provides the loadTable method to load distributed tables and append data via append!. The specific script examples are as follows:
 
-```
-public void test_save_table(String dbPath, BasicTable table1) throws IOException{
-	List<Entity> args = new ArrayList<Entity>(1);
-	args.add(table1);
-	conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
-}
-```
-
-当用户在Java程序中取到的值是数组或列表时，也可以很方便的构造出BasicTable用于追加数据，比如现在有 `boolArray, intArray, dblArray, dateArray, strArray` 5个列表对象(List<T>),可以通过以下语句构造BasicTable对象：
-
-```
-List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
-List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
-BasicTable table1 = new BasicTable(colNames,cols);
-```
-
-#### 9.3. 将数据保存到本地磁盘表
-通常本地磁盘表用于学习环境或者单机静态数据集测试，它不支持事务，不保证运行中的数据一致性，所以不建议在生产环境中使用。
-
-```
-//使用本地磁盘表
-dbPath = "C:/data/testDatabase"
-tbName = 'tb1'
-
-if(existsDatabase(dbPath)){dropDatabase(dbPath)}
-db = database(dbPath,RANGE,2018.01.01..2018.12.31)
-db.createPartitionedTable(t,tbName,'ctimestamp')
-```
-DolphinDB提供loadTable方法可以加载本地磁盘表和分布式表，对于本地磁盘表而言，追加数据都是通过append!方式进行。
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
@@ -319,35 +368,74 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
     conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
-### 10. 循环遍历BasicTable
-由于BasicTable是列式存储，所以需要通过先取出列，再循环取出行的方式。
 
-例子中参数BasicTable的有4个列，分别是`STRING,INT,TIMESTAMP,DOUBLE`类型，列名分别为`cstring,cint,ctimestamp,cdouble`。
+
+When the value retrieved by the user in the Java program is an array or a list, it is also convenient to construct a BasicTable for appending data. For example, there are now `boolArray, intArray, dblArray, dateArray, strArray` 5 list objects (List< T>), you can construct a BasicTable object with the following statement:
+```
+List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
+List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
+BasicTable table1 = new BasicTable(colNames,cols);
+```
+
+#### 7.3 Save data to local disk table
+
+Local disk tables are commonly used for computational analysis of static data sets, either for data input or as a calculated output. It does not support transactions, and does not support concurrent reading and writing.
+
+```
+// Create a data table using the DolphinDB script
+dbPath = "C:/data/testDatabase"
+tbName = 'tb1'
+
+if(existsDatabase(dbPath)){dropDatabase(dbPath)}
+db = database(dbPath,RANGE,2018.01.01..2018.12.31)
+db.createPartitionedTable(t,tbName,'ctimestamp')
+```
+
+DolphinDB provides the loadTable method to load local disk tables as well, and function append! to append data.
+
+```
+public void test_save_table(String dbPath, BasicTable table1) throws IOException{
+    List<Entity> args = new ArrayList<Entity>(1);
+    args.add(table1);
+    conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
+}
+```
+#### 7.4 Load table
+
+
+In the Java API, the table data is saved as a BasicTable object. Since the BasicTable is a columnar store, all the desultory needs to be read and used by retrieving the rows and retrieving the rows.
+
+In the example, the parameter BasicTable has 4 columns, which are `STRING, INT, TIMESTAMP, DOUBLE`, and the column names are `cstring, cint, ctimestamp, cdouble`.
+
 
 ```
 public void test_loop_basicTable(BasicTable table1) throws Exception{
-	BasicStringVector stringv = (BasicStringVector) table1.getColumn("cstring");
-	BasicIntVector intv = (BasicIntVector) table1.getColumn("cint");
-	BasicTimestampVector timestampv = (BasicTimestampVector) table1.getColumn("ctimestamp");
-	BasicDoubleVector doublev = (BasicDoubleVector) table1.getColumn("cdouble");
-	for(int ri=0; ri<table1.rows(); ri++){
-		System.out.println(stringv.getString(ri));
-		System.out.println(intv.getInt(ri));
-		LocalDateTime timestamp = timestampv.getTimestamp(ri);
-		System.out.println(timestamp);
-		System.out.println(doublev.getDouble(ri));
-	}
+    BasicStringVector stringv = (BasicStringVector) table1.getColumn("cstring");
+    BasicIntVector intv = (BasicIntVector) table1.getColumn("cint");
+    BasicTimestampVector timestampv = (BasicTimestampVector) table1.getColumn("ctimestamp");
+    BasicDoubleVector doublev = (BasicDoubleVector) table1.getColumn("cdouble");
+    for(int ri=0; ri<table1.rows(); ri++){
+        System.out.println(stringv.getString(ri));
+        System.out.println(intv.getInt(ri));
+        LocalDateTime timestamp = timestampv.getTimestamp(ri);
+        System.out.println(timestamp);
+        System.out.println(doublev.getDouble(ri));
+    }
 }
 ```
 
-### 11. DolphinDB和Java之间的数据类型转换
-Java API提供了与DolphinDB内部数据类型对应的对象，通常是以Basic+ `<DataType>` 这种方式命名，比如BasicInt，BasicDate等等。
-一些Java的基础类型，可以通过构造函数直接创建对应的DOlphinDB数据结构，比如`new BasicInt(4)`，`new BasicDouble(1.23)`，但是也有一些类型需要做一些转换，下面列出需要做简单转换的类型：
-- `CHAR`类型：DolphinDB中的`CHAR`类型以Byte形式保存，所以在Java API中用`BasicByte`类型来构造`CHAR`，例如`new BasicByte((byte)'c')`
-- `SYMBOL`类型：DolphinDB中的`SYMBOL`类型是对字符串的优化，可以提高DolphinDB对字符串数据存储和查询的效率，但是Java中并不需要这种类型，所以Java API不提供`BasicSymbol`这种对象，直接用`BasicString`来处理即可。
-- 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供`date, month, time, minute, second, datetime, timestamp, nanotime, nanotimestamp`九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html)。由于Java也提供了`LocalDate,LocalTime,LocalDateTime,YearMonth`等数据类型，所以Java API在Utils类里提供了所有Java时间类型和int或long之间的转换函数。
 
-以下脚本展示Java API中DolphinDB时间类型与Java原生时间类型之间的对应关系：
+### 8. Data type conversion between DolphinDB and Java
+The Java API provides objects that correspond to the internal data types of DolphinDB, usually named after Basic+ `<DataType>`, such as BasicInt, BasicDate, and so on.
+Some basic Java types, you can directly create the corresponding DOlphinDB data structure through the constructor, such as `new BasicInt(4)`, `new BasicDouble(1.23)`, but there are some types that need to be converted. The following list needs to be simple. Type of conversion:
+- `CHAR` type: The `CHAR` type in DolphinDB is stored as a Byte, so use the `BasicByte` type to construct `CHAR` in the Java API, for example `new BasicByte((byte)'c')`
+- `SYMBOL` type: The `SYMBOL` type in DolphinDB is an optimization of strings, which can improve the efficiency of DolphinDB for string data storage and query, but this type is not needed in Java, so Java API does not provide `BasicSymbol `This kind of object can be processed directly with `BasicString`.
+- Temporal type: The Temporal data type is internal stored as int or long type. DolphinDB provides 9 temporal data types: date, month, time, minute, second, datetime, timestamp, nanotime, nanotimestamp`, the highest precision can be Nanoseconds. For a detailed description, refer to [DolphinDB Timing Type and Conversion] (https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html). Since Java also provides data types such as `LocalDate, LocalTime, LocalDateTime, YearMonth`, the Java API provides all Java temporal types and conversion functions between int or long in the Utils class.
+
+
+
+The following script shows the correspondence between the DolphinDB time type in the Java API and the Java native time type:
+
 ```
 //Date:2018.11.12
 BasicDate bd = new BasicDate(LocalDate.of(2018,11,12));
@@ -368,21 +456,27 @@ BasicNanoTime bnt = new BasicNanoTime(LocalTime.of(20,8,1,123456789));
 //NanoTimestamp: 2018.11.12T20:08:01.123456789
 BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123456789))
 ```
-如果在第三方系统中时间以时间戳的方式存储，DolphinDB时间对象也可以用时间戳来实例化。
-Java API中的Utils类提供了各种时间类型与标准时间戳的转换算法，比如将毫秒级的时间戳转换为DolphinDB的`BasicTimestamp`对象:
+
+If the time is stored in a timestamp in a third-party system, the DolphinDB time object can also be instantiated with a timestamp.
+The Utils class in the Java API provides conversion algorithms for various time types and standard timestamps, such as converting millisecond timestamps to DolphinDB's `BasicTimestamp` objects:
+
+
 ```
 LocalDateTime dt = Utils.parseTimestamp(1543494854000l);
 BasicTimestamp ts = new BasicTimestamp(dt);
 ```
-也可以将DolphinDB对象转换为整形或长整形的时间戳，比如：
+
+You can also convert a DolphinDB object to a timestamp of an integer or long integer, such as:
 ```
 LocalDateTime dt = ts.getTimestamp();
 long timestamp = Utils.countMilliseconds(dt);
 ```
-如果时间戳以其他精度保存，Utils类还中提供如下方法，可以适应各种不同的精度：
-- Utils.countMonths：计算给定时间到1970.01之间的月份差，返回int
-- Utils.countDays：计算给定时间到1970.01。01之间的天数差，返回int
-- Utils.countMinutes：计算给定时间到1970.01.01T00:00之间的分钟差，返回int
-- Utils.countSeconds：计算给定时间到1970.01.01T00:00:00之间的秒数差，返回int
-- Utils.countMilliseconds：计算给定时间到1970.01.01T00:00:00之间的毫秒数差，返回long
-- Utils.countNanoseconds：计算给定时间到1970.01.01T00:00:00.000之间的纳秒数差，返回long
+If the timestamp is saved with other precision, the Utils class also provides the following methods to accommodate a variety of different precisions:
+- Utils.countMonths: Calculate the monthly difference between a given time and 1970.01, returning an int
+- Utils.countDays: Calculate the difference in the number of days between the given time and 1970.01.01, return int
+- Utils.countMinutes: Calculate the minute difference between the given time and 1970.01.01T00:00, return int
+- Utils.countSeconds: Calculate the difference in seconds between a given time and 1970.01.01T00:00:00, returning int
+- Utils.countMilliseconds: Calculate the difference in milliseconds between a given time and 1970.01.01T00:00:00, return long
+- Utils.countNanoseconds: Calculate the difference in nanoseconds between a given time and 1970.01.01T00:00:00.000, return long
+
+
