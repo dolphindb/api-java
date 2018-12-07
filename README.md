@@ -3,8 +3,7 @@ DolphinDB Java API implements the messaging and data conversion protocol between
 
 It needs to run in Java 1.8 or higher environment.
 
-The Java API follows the principles of interface-oriented programming. The Java API uses the interface class Entity to represent all data types returned by DolphinDB. Based on the Entity interface class, according to the data type of DolphinDB, the Java API provides 7 extension interfaces: scalar, vector, matrix, set, dictionary, table and chart. These interface classes are included in the com.xxdb.data package.
-
+Java API adopts interface-oriented programming. Java API uses the class interface "Entity" to represent all data types returned from DolphinDB. Java API provides 7 types of extended interfaces: scalar, vector, matrix, set, dictionary, table and chart based on the "Entity" interface and DolphinDB data forms. They are included in the package of com.xxdb.data.
 Extended interface classes | Naming rules | Examples
 ---|---|---
 scalar|`Basic<DataType>`|BasicInt, BasicDouble, BasicDate, etc.
@@ -12,7 +11,7 @@ vector, matrix|`Basic<DataType><DataForm>`|BasicIntVector, BasicDoubleMatrix, Ba
 set, dictionary, and table|`Basic<DataForm>`|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
-"Basic" represents the basic data type interface, `<DataType>` represents the DolphinDB data type, and `<DataForm>` is a DolphinDB data form.
+"Basic" indicates the basic implementation of a data form interface, <DataType> indicates a DolphinDB data type, and <DataForm> indicates a DolphinDB data form.
 
 For detailed interface and class description, please refer to [Java API Manual](https://www.dolphindb.com/javaapi/)
 
