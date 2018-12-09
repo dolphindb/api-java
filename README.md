@@ -1,9 +1,8 @@
 ### 1. Java API Introduction
-DolphinDB Java API implements the messaging and data conversion protocol between Java and DolphinDB server.
 
-It needs to run in Java 1.8 or higher environment.
+DolphinDB Java API implements the messaging and data conversion protocol between Java and DolphinDB server. It needs Java 1.8 or higher environment.
 
-Java API adopts interface-oriented programming. Java API uses the class interface "Entity" to represent all data types returned from DolphinDB. Java API provides 7 types of extended interfaces: scalar, vector, matrix, set, dictionary, table and chart based on the "Entity" interface and DolphinDB data forms. They are included in the package of com.xxdb.data.
+Java API adopts interface-oriented programming. It uses the class interface "Entity" to represent all data types returned from DolphinDB. Java API provides 7 types of extended interfaces: scalar, vector, matrix, set, dictionary, table and chart based on the "Entity" interface and DolphinDB data forms. They are included in the package of com.xxdb.data.
 
 Extended interface classes | Naming rules | Examples
 ---|---|---
@@ -12,30 +11,23 @@ vector, matrix|`Basic<DataType><DataForm>`|BasicIntVector, BasicDoubleMatrix, Ba
 set, dictionary, and table|`Basic<DataForm>`|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
-"Basic" indicates the basic implementation of a data form interface, <DataType> indicates a DolphinDB data type, and <DataForm> indicates a DolphinDB data form.
+"Basic" indicates the basic implementation of a data form interface, <DataType> indicates a DolphinDB data type, and <DataForm> indicates a DolphinDB data form. For detailed interface and class description, please refer to [Java API Manual](https://www.dolphindb.com/javaapi/).
 
-For detailed interface and class description, please refer to [Java API Manual](https://www.dolphindb.com/javaapi/)
-
-One of core functions provided by the DolphinDB Java API is DBConnection. Its main function is to allow Java applications to execute scripts and functions on the DolphinDB server and pass data between them in both directions.
-
-The DBConnection class provides the following main methods:
-
-
+The most important object provided by the DolphinDB Java API is DBConnection. It allows Java applications to execute script and functions on DolphinDB servers and transfer data between Java applications and DolphinDB servers in both directions. The DBConnection class provides the following main methods:
 
 | Method Name | Details |
 |:------------- |:-------------|
-|connect(host, port, [username, password])|Connect the session to the DolphinDB server|
-|login(username,password,enableEncryption)|Login server|
-|run(script)|Run the script on the DolphinDB server|
-|run(functionName,args)|Call the function on the DolphinDB server|
-|upload(variableObjectMap)|Upload local data objects to DolphinDB server|
-|isBusy()|Judge if the current session is busy |
+|connect(host, port, [username, password])|Connect the session to DolphinDB server|
+|login(username,password,enableEncryption)|Login to DolphinDB server|
+|run(script)|Run script on DolphinDB server|
+|run(functionName,args)|Call a function on DolphinDB server|
+|upload(variableObjectMap)|Upload local data to DolphinDB server|
+|isBusy()|Judge if the current session is busy|
 |close()|Close the current session|
-
 
 ### 2. Establish a DolphinDB connection
 
-The Java API connects to the DolphinDB server via the TCP/IP protocol. In the following example, we connect the running local DolphinDB server with port number 8848:
+The Java API connects to the DolphinDB server via TCP/IP protocol. In the following example, we connect to a local DolphinDB server with port number 8848:
 
 ```
 import com.xxdb;
@@ -46,36 +38,30 @@ Establish a connection with a username and password:
 ```
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
-When the connection is successful without the username and password, the script runs under the guest permission. If you need to upgrade the permissions in subsequent runs, you can log in to get the permission by calling `conn.login('admin', '123456', true)`.
+If the connection is established without using a username and password, we only have guest privileges. To be granted more privileges, we can log in by calling `conn.login('admin', '123456', true)`.
 
-### 3.Run a script
+### 3.Run script
 
-The syntax for running the DolphinDB script in Java is as follows:
+Use the following statement to run DolphinDB script in Java:
 
 ```
 conn.run("script");
 ```
-
 The maximum length of the script is 65,535 bytes.
 
+### 4. Execute functions
 
-If the script contains only one statement, such as an expression, DolphinDB returns a data object; otherwise it returns a NULL object. If the script contains more than one statement, the last object will be returned. If the script contains an error or there is a network problem, it throws an IOException.
+We can use method `run` to execute DolphinDB built-in functions or user defined functions on a remote DolphinDB server.
 
+The following examples show 3 ways to call DolphinDB's built-in function `add` function in Java, depending on the location of the parameters `x` and `y` of the `add` function.
 
-### 4. Run a function
+* Both parameters are on DolphinDB server
 
-Method `run` also supports DolphinDB built-in functions and user defined functions to run on remote DolphinDB server.
-
-
-The following example shows how the Java program calls DolhinDB's `add` function. The `add` function has two parameters. The calling method will be different based on the location of the parameters. The following examples show the sample code in three cases:
-
-* All parameters are on the DolphinDB Server side
-
-The variables x, y have been generated on the server side in advance by the java program.
+If both variables `x` and `y` have been generated on DolphinDB server by Java applications,
 ```
 conn.run("x = [1,3,5];y = [2,4,6]")
 ```
-Then in the Java side to add these two vectors, you only need to use the `run(script)` method directly.
+then we can use `run(script)` directly.
 ```
 public void testFunction() throws IOException{
     Vector result = (Vector)conn.run("add(x,y)");
@@ -83,14 +69,13 @@ public void testFunction() throws IOException{
 }
 ```
 
+* Only 1 parameter exists on the DolphinDB server
 
-* Some parameters exist on the DolphinDB Server side
-
-The variable x has been generated on the server side in advance by the java program, and the parameter y is to be generated on the Java client.
+The variable `x` has been generated on DolphinDB server by the Java program, and the parameter `y` is to be generated by the Java client.
 ```
 conn.run("x = [1,3,5]")
 ```
-At this time, you need to use the "partial application" method to embed parameter x in the add function. For details, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+In this case, we need to use the "partial application" method to embed parameter `x` in function `add`. For details, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
 ```
 public void testFunction() throws IOException{
@@ -105,7 +90,7 @@ public void testFunction() throws IOException{
 }
 ```
 
-* Both parameters are in the java client
+* Both parameters are to be generated by the java client
 ```
 import java.util.List;
 import java.util.ArrayList;
@@ -127,10 +112,9 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 5. Upload a data object
+### 5. Upload data objects
 
 When some data in Java needs to be used frequently by the server, it is not recommended to upload it once per call. At this time, you can use the upload method to upload the data to the server and assign it to a variable. This variable can be reused on the server side.
-
 
 We can upload the binary data object to the DolphinDB server and assign it to a variable for future use. Variable names can use three types of characters: letters, numbers, or underscores. The first character must be a letter.
 
