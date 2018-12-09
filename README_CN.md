@@ -55,9 +55,9 @@ conn.run("script");
 
 下面的示例展示Java程序调用DolphinDB的`add`函数。`add`函数有两个参数`x`和`y`。参数的存储位置不同，也会导致调用方式的不同。存在以下三种情况：
 
-* 所有参数都在DolphinDB Server端
+* 所有参数都在DolphinDB server端
 
-若变量 x, y 已经通过Java程序在服务器端生成，
+若变量`x`和`y`已经通过Java程序在服务器端生成，
 ```
 conn.run("x = [1,3,5];y = [2,4,6]")
 ```
@@ -69,7 +69,7 @@ public void testFunction() throws IOException{
 }
 ```
 
-* 部分参数在DolphinDB Server端存在
+* 仅有一个参数在DolphinDB server端存在
 
 若变量`x`已经通过Java程序在服务器端生成，
 ```
@@ -89,7 +89,7 @@ public void testFunction() throws IOException{
     System.out.println(result.getString());
 }
 ```
-* 两个参数都在Java客户端
+* 两个参数都待由Java客户端赋值
 ```
 import java.util.List;
 import java.util.ArrayList;
@@ -113,7 +113,7 @@ public void testFunction() throws IOException{
 
 ### 5. 上传数据对象
 
-当Java中的一些数据需要被服务端频繁的用到，不建议每次调用的时候都上传一次。这时可使用`upload`方法，将数据上传到DolphinDB服务器并分配给一个变量，后续就可以重复使用这个变量。变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
+当Java中的一些数据需要被服务端频繁的用到，可使用`upload`方法，将数据上传到DolphinDB服务器并分配给一个变量，后续就可以重复使用这个变量。变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
 
 ```
 public void testFunction() throws IOException{
@@ -251,7 +251,6 @@ DolphinDB提供多种方式来保存数据：
 - 通过 tableInsert 函数批量保存多条数据；
 - 通过 append! 函数保存表对象。
 
-
 这几种方式的区别是接收的参数类型不同，具体业务场景中，可能从数据源取到的是单点数据，也可能是多个数组或者表的方式组成的数据集。
 
 下面分别介绍三种方式保存数据的实例，在例子中使用到的数据表有4个列，分别是`string,int,timestamp,double`类型，列名分别为`cstring,cint,ctimestamp,cdouble`，构建脚本如下：
@@ -262,7 +261,8 @@ share t as sharedTable
 由于内存表是会话隔离的，所以GUI中创建的内存表只有当前GUI会话可见，如果需要在Java程序或者其他终端访问，需要通过share关键字在会话间共享内存表。
 
 ##### 7.1.1 使用SQL保存单点数据
-若Java程序是每次获取单条数据记录保存到DolphinDB，那么可以通过SQL语句（insert into）保存数据。
+
+若Java程序是每次获取单条数据记录保存到DolphinDB，那么可以通过SQL语句INSERT INTO保存数据。
 ```
 public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
     conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
@@ -289,6 +289,7 @@ def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
 具体的文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
 ##### 7.1.3 使用append！函数批量保存数据
+
 若Java程序是从DolphinDB的服务端获取表数据做处理后保存到分布式表，那么使用append!函数会更加方便，append!函数接受一个表对象作为参数，将数据追加到数据表中。
 
 ```
@@ -298,6 +299,7 @@ public void test_save_table(BasicTable table1) throws IOException {
 }
 ```
 #### 7.2 保存数据到分布式表
+
 分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性; 分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
 
 本例中涉及到的数据表可以通过如下脚本构建 ：
