@@ -56,7 +56,7 @@ conn.run("script");
 ### 4. 运行函数
 当一段逻辑需要被服务端脚本反复调用时，可以用DolphinDB脚本将逻辑封装成自定义函数，类似于存储过程，然后在Java程序中通过函数方式调用。
 
-下面的示例展示Java程序调用DolhinDB的add函数的方式，add函数有两个参数，参数的存储位置不同，也会导致调用方式的不同，下面会分三种情况来展示示例代码：
+下面的示例展示Java程序调用DolhinDB的`add`函数，`add`函数有两个参数`x,y`，参数的存储位置不同，也会导致调用方式的不同，存在以下三种情况：
 
 * 所有参数都在DolphinDB Server端
 
@@ -115,9 +115,8 @@ public void testFunction() throws IOException{
 ```
 
 ### 5. 上传数据对象
-当Java中的一些数据需要被服务端频繁的用到，那么每次调用的时候都上传一次肯定不是一个好的做法，这个时候可以使用upload方法，将数据上传到服务器并分配给一个变量，在Server端就可以重复使用这个变量。
-
-我们可以将二进制数据对象上传到DolphinDB服务器，并将其分配给一个变量以备将来使用。 变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
+当Java中的一些数据需要被服务端频繁的用到，那么每次调用的时候都上传一次肯定不是一个好的做法，这个时候可以使用upload方法，将数据上传到服务器并分配给一个变量，后续就可以重复使用这个变量。
+变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
 
 ```
 public void testFunction() throws IOException{
@@ -217,7 +216,7 @@ public void testDictionary() throws IOException{
 
 - 表
 
-要获取表的列，我们可以调用table.getColumn(index)；同样，我们可以调用table.getColumnName(index)获取列名。 对于列和行的数量，我们可以分别调用table.columns()和table.rows()。
+要获取表的列，可以用table.getColumn(index)，使用table.columns()和table.rows()来分别获取列和行数。
 
 ```
 public void testTable() throws IOException{
@@ -351,7 +350,7 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB提供loadTable方法可以加载本地磁盘表和分布式表，对于本地磁盘表而言，追加数据都是通过append!方式进行。
+DolphinDB提供loadTable方法同样可以加载本地磁盘表，通过append!追加数据。
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
@@ -360,7 +359,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 #### 7.4 读取和使用表数据
-在Java API中，表数据保存为basicTable对象，由于BasicTable是列式存储，所以要读取和使用所有desultory需要通过先取出列，再循环取出行的方式。
+在Java API中，表数据保存为BasicTable对象，由于BasicTable是列式存储，所以要读取和使用所有desultory需要通过先取出列，再循环取出行的方式。
 
 例子中参数BasicTable的有4个列，分别是`STRING,INT,TIMESTAMP,DOUBLE`类型，列名分别为`cstring,cint,ctimestamp,cdouble`。
 
