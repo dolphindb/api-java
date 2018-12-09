@@ -404,15 +404,14 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 }
 ```
 
-
 ### 8. Data type conversion between DolphinDB and Java
-The Java API provides objects that correspond to the internal data types of DolphinDB, usually named after Basic+ `<DataType>`, such as BasicInt, BasicDate, and so on.
-Some basic Java types, you can directly create the corresponding DOlphinDB data structure through the constructor, such as `new BasicInt(4)`, `new BasicDouble(1.23)`, but there are some types that need to be converted. The following list needs to be simple. Type of conversion:
+
+Java API provides objects that correspond to the internal data types of DolphinDB. They are usually named as Basic+ `<DataType>`, such as BasicInt, BasicDate, and so on.
+
+For certain basic Java types, we can directly create the corresponding DolphinDB data structures through the constructor, such as `new BasicInt(4)`, `new BasicDouble(1.23)`. The following types, however, need to be converted.
 - `CHAR` type: The `CHAR` type in DolphinDB is stored as a Byte, so use the `BasicByte` type to construct `CHAR` in the Java API, for example `new BasicByte((byte)'c')`
 - `SYMBOL` type: The `SYMBOL` type in DolphinDB is an optimization of strings, which can improve the efficiency of DolphinDB for string data storage and query, but this type is not needed in Java, so Java API does not provide `BasicSymbol `This kind of object can be processed directly with `BasicString`.
 - Temporal type: The Temporal data type is internal stored as int or long type. DolphinDB provides 9 temporal data types: date, month, time, minute, second, datetime, timestamp, nanotime, nanotimestamp`, the highest precision can be Nanoseconds. For a detailed description, refer to [DolphinDB Timing Type and Conversion] (https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html). Since Java also provides data types such as `LocalDate, LocalTime, LocalDateTime, YearMonth`, the Java API provides all Java temporal types and conversion functions between int or long in the Utils class.
-
-
 
 The following script shows the correspondence between the DolphinDB time type in the Java API and the Java native time type:
 
@@ -439,7 +438,6 @@ BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1
 
 If the time is stored in a timestamp in a third-party system, the DolphinDB time object can also be instantiated with a timestamp.
 The Utils class in the Java API provides conversion algorithms for various time types and standard timestamps, such as converting millisecond timestamps to DolphinDB's `BasicTimestamp` objects:
-
 
 ```
 LocalDateTime dt = Utils.parseTimestamp(1543494854000l);
