@@ -132,9 +132,9 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 6. Read data example
+### 6. Read data
 
-The following describes the different types of data objects read bthrough the DBConnection method.
+This section introduces how to read different types of data objects with the DBConnection object.
 
 First import the DolphinDB data type package:
 
@@ -142,18 +142,15 @@ First import the DolphinDB data type package:
 import com.xxdb.data.*;
 ```
 
-
-Note that the code below needs to be established after the connection is established.
-
 - Vector
 
-The example below shows the DolphinDB statement generating a random fast symbol vector with size as 10.
+The following DolphinDB statement returns a Java object BasicStringVector. 
 
 ```
 rand(`IBM`MSFT`GOOG`BIDU,10)
 ```
 
-Returns the Java object BasicStringVector. The vector.rows() method gets the size of the vector. We can access vector elements by index using the vector.getString(i) method.
+The `rows()` method returns the size of the vector. We can access vector elements by index with the `getString()` method.
 
 ```
 public void testStringVector() throws IOException{
@@ -165,7 +162,7 @@ public void testStringVector() throws IOException{
 }
 ```
 
-Similarly, you can also handle vectors or tuples of int,double,float, or any other types.
+Similarly, we can work with vectors or tuples of int, double, float or any other types.
 ```
 public void testDoubleVector() throws IOException{
     BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0, 10)");
@@ -175,7 +172,6 @@ public void testDoubleVector() throws IOException{
        System.out.println(vector.getDouble(i));
 }
 ```
-
 
 ```
 public void testAnyVector() throws IOException{
@@ -195,7 +191,7 @@ public void testSet() throws IOException{
 
 - Matrix
 
-To retrieve an element from an integer matrix, we can use getInt(row, col). To get the number of rows and columns, we can use the functions rows() and columns().
+To retrieve an element from an integer matrix, we can use getInt(row, col). To get the number of rows and columns, we can use functions `rows()` and `columns()`.
 
 ```
 public void testIntMatrix() throws IOException {
