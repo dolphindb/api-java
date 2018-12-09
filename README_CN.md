@@ -139,15 +139,13 @@ public void testFunction() throws IOException{
 import com.xxdb.data.*;
 ```
 
-注意，下面的代码需要在建立连接后才能运行。
-
 - 向量
 
-在下面的示例中，DolphinDB语句
+以下DolphinDB语句返回Java对象BasicStringVector。
 ```
 rand(`IBM`MSFT`GOOG`BIDU,10)
 ```
-返回Java对象BasicStringVector。vector.rows()方法能够获取向量的大小。我们可以使用vector.getString(i)方法按照索引访问向量元素。
+`rows()`方法可以获取向量的元素数量。我们可以使用`getString()`方法按照索引访问向量元素。
 
 ```
 public void testStringVector() throws IOException{
@@ -159,7 +157,7 @@ public void testStringVector() throws IOException{
 }
 ```
 
-类似的，也可以处理双精度浮点类型的向量或者元组。
+类似的，也可以处理其它数据类型的向量或者元组。
 ```
 public void testDoubleVector() throws IOException{
     BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0, 10)");
