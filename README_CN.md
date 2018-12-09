@@ -1,6 +1,5 @@
 ### 1. Java API 概述
-Java API本质上实现了Java程序和DolphinDB服务器之间的消息传递和数据转换协议，
-它需要运行在Java 1.8以上环境
+Java API需要运行在Java 1.8或以上环境。
 
 Java API遵循面向接口编程的原则。Java API使用接口类Entity来表示DolphinDB返回的所有数据类型。在Entity接口类的基础上，根据DolphinDB的数据类型，Java API提供了7种拓展接口，分别是scalar，vector，matrix，set，dictionary，table和chart。这些接口类都包含在com.xxdb.data包中。
 
@@ -11,12 +10,9 @@ vector，matrix|`Basic<DataType><DataForm>`|BasicIntVector, BasicDoubleMatrix, B
 set， dictionary和table|`Basic<DataForm>`|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
-“Basic”表示基本的数据类型接口，`<DataType>`表示DolphinDB数据类型名称，`<DataForm>`是一个DolphinDB数据形式名称。
+“Basic”表示基本的数据类型接口，`<DataType>`表示DolphinDB数据类型名称，`<DataForm>`是一个DolphinDB数据形式名称。接口和类的详细描述请参考[Java API手册](https://www.dolphindb.com/javaapi/)。
 
-详细接口和类描述请参考[Java API手册](https://www.dolphindb.com/javaapi/)
-
-DolphinDB Java API 提供的最核心的对象是DBConnection，它主要的功能就是让Java应用可以通过它在DolphinDB服务器上执行脚本和函数，并在两者之间双向传递数据。
-DBConnection类提供如下主要方法：
+DolphinDB Java API提供的最核心的对象是DBConnection。Java应用可以通过它在DolphinDB服务器上执行脚本和函数，并在两者之间双向传递数据。DBConnection类提供如下主要方法：
 
 | 方法名        | 详情          |
 |:------------- |:-------------|
@@ -30,41 +26,42 @@ DBConnection类提供如下主要方法：
 
 ### 2. 建立DolphinDB连接
 
-Java API通过TCP/IP协议连接到DolphinDB服务器。 在下列例子中，我们连接正在运行的端口号为8848的本地DolphinDB服务器：
+Java API通过TCP/IP协议连接到DolphinDB服务器。在以下例子中，我们连接正在运行的端口号为8848的本地DolphinDB服务器：
 
 ```
 import com.xxdb;
 DBConnection conn = new DBConnection();
 boolean success = conn.connect("localhost", 8848);
 ```
+
 使用用户名和密码建立连接：
 ```
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
-当不带用户名密码连接成功后，脚本在Guest权限下运行，后续运行中若需要提升权限，可以通过调用 `conn.login('admin','123456',true)` 登录获取权限。
+
+若未使用用户名及密码连接成功，脚本在Guest权限下运行。后续运行中若需要提升权限，可以通过调用 `conn.login('admin','123456',true)` 登录获取权限。
+
 ### 3.运行脚本
 
-在Java中运行DolphinDB脚本的语法如下：
+在Java中运行DolphinDB脚本：
 ```
 conn.run("script");
 ```
-其中，脚本的最大长度为65,535字节。
-
-如果脚本只包含一条语句，如表达式，DolphinDB会返回一个数据对象；否则返回NULL对象。如果脚本包含多条语句，将返回最后一个对象。如果脚本含有错误或者出现网络问题，它会抛出IOException。
-
+脚本的最大长度为65,535字节。
 
 ### 4. 运行函数
+
 当一段逻辑需要被服务端脚本反复调用时，可以用DolphinDB脚本将逻辑封装成自定义函数，类似于存储过程，然后在Java程序中通过函数方式调用。
 
-下面的示例展示Java程序调用DolhinDB的`add`函数，`add`函数有两个参数`x,y`，参数的存储位置不同，也会导致调用方式的不同，存在以下三种情况：
+下面的示例展示Java程序调用DolphinDB的`add`函数。`add`函数有两个参数`x`和`y`。参数的存储位置不同，也会导致调用方式的不同。存在以下三种情况：
 
 * 所有参数都在DolphinDB Server端
 
-变量 x, y 已经通过java程序提前在服务器端生成。
+若变量 x, y 已经通过Java程序在服务器端生成，
 ```
 conn.run("x = [1,3,5];y = [2,4,6]")
 ```
-那么在Java端要对这两个向量做加法运算，只需要直接使用`run(script)`的方式即可
+那么在Java端要对这两个向量做加法运算，只需要直接使用`run(script)`的方式即可。
 ```
 public void testFunction() throws IOException{
     Vector result = (Vector)conn.run("add(x,y)");
@@ -74,11 +71,11 @@ public void testFunction() throws IOException{
 
 * 部分参数在DolphinDB Server端存在
 
-变量 x 已经通过java程序提前在服务器端生成，参数 y 要在Java客户端生成
+若变量`x`已经通过Java程序在服务器端生成，
 ```
 conn.run("x = [1,3,5]")
 ```
-这时就需要使用`部分应用`方式，把参数 x 固化在add函数内，具体请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+而参数`y`要在Java客户端生成，这时就需要使用“部分应用”方式，把参数`x`固化在`add`函数内。具体请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
 ```
 public void testFunction() throws IOException{
@@ -92,7 +89,7 @@ public void testFunction() throws IOException{
     System.out.println(result.getString());
 }
 ```
-* 两个参数都在java客户端
+* 两个参数都在Java客户端
 ```
 import java.util.List;
 import java.util.ArrayList;
@@ -115,8 +112,8 @@ public void testFunction() throws IOException{
 ```
 
 ### 5. 上传数据对象
-当Java中的一些数据需要被服务端频繁的用到，那么每次调用的时候都上传一次肯定不是一个好的做法，这个时候可以使用upload方法，将数据上传到服务器并分配给一个变量，后续就可以重复使用这个变量。
-变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
+
+当Java中的一些数据需要被服务端频繁的用到，不建议每次调用的时候都上传一次。这时可使用`upload`方法，将数据上传到DolphinDB服务器并分配给一个变量，后续就可以重复使用这个变量。变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
 
 ```
 public void testFunction() throws IOException{
@@ -173,7 +170,6 @@ public void testDoubleVector() throws IOException{
 }
 ```
 
-
 ```
 public void testAnyVector() throws IOException{
     BasicAnyVector result = (BasicAnyVector)conn.run("[1, 2, [1,3,5],[0.9, [0.8]]]");
@@ -213,7 +209,6 @@ public void testDictionary() throws IOException{
 }
 ```
 
-
 - 表
 
 要获取表的列，可以用table.getColumn(index)，使用table.columns()和table.rows()来分别获取列和行数。
@@ -238,9 +233,6 @@ public void testVoid() throws IOException{
     System.out.println(obj.getDataType());
 }
 ```
-
-
-
 
 ### 7. 读写DolphinDB数据表
 
@@ -359,6 +351,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 #### 7.4 读取和使用表数据
+
 在Java API中，表数据保存为BasicTable对象，由于BasicTable是列式存储，所以要读取和使用所有desultory需要通过先取出列，再循环取出行的方式。
 
 例子中参数BasicTable的有4个列，分别是`STRING,INT,TIMESTAMP,DOUBLE`类型，列名分别为`cstring,cint,ctimestamp,cdouble`。
@@ -380,6 +373,7 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 ```
 
 ### 8. DolphinDB和Java之间的数据类型转换
+
 Java API提供了与DolphinDB内部数据类型对应的对象，通常是以Basic+ `<DataType>` 这种方式命名，比如BasicInt，BasicDate等等。
 一些Java的基础类型，可以通过构造函数直接创建对应的DOlphinDB数据结构，比如`new BasicInt(4)`，`new BasicDouble(1.23)`，但是也有一些类型需要做一些转换，下面列出需要做简单转换的类型：
 - `CHAR`类型：DolphinDB中的`CHAR`类型以Byte形式保存，所以在Java API中用`BasicByte`类型来构造`CHAR`，例如`new BasicByte((byte)'c')`
