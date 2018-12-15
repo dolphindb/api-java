@@ -225,7 +225,7 @@ public void testTable() throws IOException{
 ```
 - NULL对象
 
-要描述一个NULL对象，我们可以使用`obj.getDataType()`。
+要判断一个对象是否为NULL，我们可以使用`obj.getDataType()`。
 ```
 public void testVoid() throws IOException{
     Entity obj = conn.run("NULL");
@@ -239,8 +239,8 @@ public void testVoid() throws IOException{
 
 DolphinDB数据表按存储方式分为三种:
 
-- 内存表: 数据仅保存在本节点内存，存取速度最快，但是节点关闭后数据就不存在了。
-- 本地磁盘表：数据保存在本地磁盘上，即使节点关闭，通过脚本就可以方便的从磁盘加载到内存。
+- 内存表: 数据仅保存在内存中，存取速度最快，但是节点关闭后数据就不存在了。
+- 本地磁盘表：数据保存在本地磁盘上。可以从磁盘加载到内存。
 - 分布式表：数据分布在不同的节点，通过DolphinDB的分布式计算引擎，仍然可以像本地表一样做统一查询。
 
 #### 7.1 保存数据到DolphinDB内存表
@@ -248,29 +248,27 @@ DolphinDB数据表按存储方式分为三种:
 DolphinDB提供多种方式来保存数据：
 - 通过`insert into`保存单条数据
 - 通过`tableInsert`函数批量保存多条数据
-- 通过`append!`函数保存表对象
+- 通过`append!`函数保存数据表
 
-这几种方式的区别是接收的参数类型不同，具体业务场景中，可能从数据源取到的是单点数据，也可能是多个数组或者表的方式组成的数据集。
-
-下面分别介绍三种方式保存数据的实例，在例子中使用到的数据表有4个列，分别是`string,int,timestamp,double`类型，列名分别为`cstring,cint,ctimestamp,cdouble`，构建脚本如下：
+下面分别介绍三种方式保存数据的实例，在例子中使用到的数据表有4个列，分别是string, int, timestamp, double类型，列名分别为cstring, cint, ctimestamp, cdouble。
 ```
 t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE])
 share t as sharedTable
 ```
-由于内存表是会话隔离的，所以GUI中创建的内存表只有当前GUI会话可见，如果需要在Java程序或者其他终端访问，需要通过share关键字在会话间共享内存表。
+由于内存表是会话隔离的，所以该内存表只有当前会话可见。如果需要在其它会话中访问，需要通过`share`在会话间共享内存表。
 
-##### 7.1.1 使用SQL保存单点数据
+##### 7.1.1 使用`INSERT INTO`保存单条数据
 
-若Java程序是每次获取单条数据记录保存到DolphinDB，那么可以通过SQL语句`INSERT INTO`保存数据。
+若每次将单条数据记录保存到DolphinDB，可以使用SQL语句`INSERT INTO`。
 ```
 public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
     conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
 }
 ```
 
-##### 7.1.2 使用`tableInsert`函数批量保存数据
+##### 7.1.2 使用`tableInsert`函数批量保存多条数据
 
-若Java程序获取的数据可以组织成List方式，使用tableInsert函数比较适合，这个函数可以接受多个数组作为参数，将数组追加到数据表中。
+若Java程序获取的数据可以组织成List方式，使用`tableInsert`函数比较适合批量保存多条数据。这个函数可以接受多个数组作为参数，将数组追加到数据表中。
 
 ```
 public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
@@ -279,17 +277,18 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, 
     conn.run("tableInsert{sharedTable}", args);
 }
 ```
-实际运用的场景中，通常是Java程序往服务端已经存在的表中写入数据，在服务端可以用 `tableInsert(sharedTable,vec1,vec2,vec3...)` 这样的脚本，但是在Java里用 `conn.run("tableInsert",args)` 方式调用时，tableInsert的第一个参数是服务端表的对象引用，它无法在Java程序端获取到，所以常规的做法是在预先在服务端定义一个函数，把sharedTable固化的函数体内，比如
+实际使用场景中，通常是Java程序往服务端已经存在的表中写入数据，在服务端可以用 `tableInsert(sharedTable,vec1,vec2,vec3...)` 这样的脚本，但是在Java里用 `conn.run("tableInsert",args)` 方式调用时，`tableInsert`的第一个参数是服务端表的对象引用，它无法在Java程序端获取到，所以常规的做法是在预先在服务端定义一个函数，把`sharedTable`固化在该函数内，比如
 ```
 def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
 ```
-然后再通过`conn.run("saveData",args)`运行函数，虽然这样也能实现目标，但是对Java程序来说要多一次服务端的调用，多消耗了网络资源。
-在本例中，使用了DolphinDB 中的`部分应用`这一特性，将服务端表名以`tableInsert{sharedTable}`这样的方式固化到tableInsert中，作为一个独立函数来使用。这样就不需要再使用自定义函数的方式实现。
+然后再通过`conn.run("saveData",args)`运行函数。虽然这样也能实现目标，但是Java程序要多调用一次服务端，多消耗了网络资源。
+
+在本例中，使用了DolphinDB 中的`部分应用`这一特性，将服务端表名以`tableInsert{sharedTable}`这样的方式固化到`tableInsert`中，作为一个独立函数来使用。这样就不需要再使用自定义函数的方式实现。
 具体的文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
 ##### 7.1.3 使用`append！`函数批量保存数据
 
-若Java程序是从DolphinDB的服务端获取表数据做处理后保存到分布式表，那么使用`append!`函数会更加方便。`append!`函数接受一个表对象作为参数，将数据追加到数据表中。
+若Java程序是从DolphinDB的服务端获取数据表，处理后保存到分布式表，那么可使用`append!`函数。`append!`函数接受一个表对象作为参数，将数据追加到数据表中。
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
@@ -313,7 +312,7 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB提供loadTable方法可以加载分布式表，通过append!方式追加数据，具体的脚本示例如下：
+DolphinDB提供`loadTable`方法可以加载分布式表，通过`append!`方式追加数据，具体的脚本示例如下：
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
@@ -323,7 +322,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 
-当用户在Java程序中取到的值是数组或列表时，也可以很方便的构造出BasicTable用于追加数据，比如现在有 `boolArray, intArray, dblArray, dateArray, strArray` 5个列表对象(List<T>),可以通过以下语句构造BasicTable对象：
+当用户在Java程序中取到的值是数组或列表时，也可以很方便的构造出BasicTable用于追加数据，比如现在有 boolArray, intArray, dblArray, dateArray, strArray 5个列表对象(List<T>),可以通过以下语句构造BasicTable对象：
 
 ```
 List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
@@ -332,6 +331,7 @@ BasicTable table1 = new BasicTable(colNames,cols);
 ```
 
 #### 7.3 保存数据到本地磁盘表
+
 本地磁盘表通用用于静态数据集的计算分析，既可以用于数据的输入，也可以作为计算的输出。它不支持事务，也不持支并发读写。
 
 ```
@@ -343,7 +343,7 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB提供loadTable方法同样可以加载本地磁盘表，通过append!追加数据。
+DolphinDB提供`loadTable`方法同样可以加载本地磁盘表，通过`append!`追加数据。
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
@@ -355,7 +355,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 
 在Java API中，表数据保存为BasicTable对象，由于BasicTable是列式存储，所以要读取和使用所有desultory需要通过先取出列，再循环取出行的方式。
 
-例子中参数BasicTable的有4个列，分别是`STRING,INT,TIMESTAMP,DOUBLE`类型，列名分别为`cstring,cint,ctimestamp,cdouble`。
+例子中参数BasicTable的有4个列，分别是STRING, INT, TIMESTAMP, DOUBLE类型，列名分别为cstring, cint, ctimestamp, cdouble。
 
 ```
 public void test_loop_basicTable(BasicTable table1) throws Exception{
