@@ -274,7 +274,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 
 ##### 7.1.2 Save data in batches with `tableInsert`
 
-If the data obtained by the Java program can be organized into a List mode, use function `tableInsert` to save them in batches. `tableInsert` can accept multiple arrays as a parameter and append them to a table.
+To save multiple records in batches, we can use `Arrays.asLIst` method to encapsulate multiple vectors in a List, then use function `tableInsert` to append to a table.
 
 ```
 public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
