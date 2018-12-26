@@ -288,7 +288,7 @@ def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
 
 ##### 7.1.3 使用`append！`函数批量保存数据
 
-若Java程序是从DolphinDB的服务端获取数据表，处理后保存到分布式表，那么可使用`append!`函数。`append!`函数接受一个表对象作为参数，将数据追加到数据表中。
+若Java程序是从DolphinDB的服务端获取数据表，经过java程序处理后保存到内存表，那么可使用`append!`函数。`append!`函数接受一个表对象作为参数，将数据追加到数据表中。
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
