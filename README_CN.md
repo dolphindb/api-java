@@ -5,7 +5,7 @@ Java API遵循面向接口编程的原则。Java API使用接口类Entity来表�
 
 拓展的接口类|命名规则|例子
 ---|---|---
-scalar|Basic<DataType>|BasicInt, BasicDouble, BasicDate, etc.
+scalar|Basic\<DataType\>|BasicInt, BasicDouble, BasicDate, etc.
 vector，matrix|Basic<DataType><DataForm>|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
 set， dictionary和table|Basic<DataForm>|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
