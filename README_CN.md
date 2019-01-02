@@ -268,7 +268,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 
 ##### 7.1.2 使用`tableInsert`函数批量保存多条数据
 
-若Java程序获取的数据可以组织成List方式，使用`tableInsert`函数比较适合批量保存多条数据。这个函数可以接受多个数组作为参数，将数组追加到数据表中。
+若Java程序获取的数据可以组织成List方式，`tableInsert`函数比较适合用来批量保存多条数据。这个函数可以接受多个数组作为参数，将数组追加到数据表中。
 
 ```
 public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,List<Long> tsArray,List<Double> dblArray) throws IOException{
@@ -277,11 +277,11 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,L
     conn.run("tableInsert{sharedTable}", args);
 }
 ```
-实际使用场景中，通常是Java程序往服务端已经存在的表中写入数据，在服务端可以用tableInsert(sharedTable,vec1,vec2,vec3...)这样的脚本，但是在Java里用conn.run("tableInsert",args)方式调用时，`tableInsert`的第一个参数是服务端表的对象引用，它无法在Java程序端获取到。一种做法是预先在服务端定义一个函数，把`sharedTable`固化在该函数内，比如
+实际使用场景中，通常是Java程序向服务端已经存在的表中写入数据，在服务端可以用tableInsert(sharedTable,vec1,vec2,vec3...)这样的脚本，但是在Java里用conn.run("tableInsert",args)方式调用时，`tableInsert`的第一个参数是服务端表的对象引用，它无法在Java程序端获取到。一种做法是预先在服务端定义一个函数，把`sharedTable`固化在该函数内，比如
 ```
 def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
 ```
-然后再通过`conn.run("saveData",args)`运行函数。虽然这样也能实现目标，但是Java程序要多调用一次服务端，多消耗了网络资源。
+然后再运行conn.run("saveData",args)。虽然这样也能实现目标，但是Java程序要多调用一次服务端，多消耗了网络资源。
 
 在本例中，使用了DolphinDB 中的“部分应用”这一特性，将服务端表名以tableInsert{sharedTable}的方式固化到`tableInsert`中，作为一个独立函数来使用。这样就不需要再使用自定义函数的方式实现。具体文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
@@ -352,9 +352,9 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 ```
 #### 7.4 读取和使用表数据
 
-在Java API中，表数据保存为BasicTable对象，由于BasicTable是列式存储，所以要读取和使用所有desultory需要通过先取出列，再循环取出行的方式。
+在Java API中，表数据保存为BasicTable对象，由于BasicTable是列式存储，所以要读取和使用所有数据需要通过先取出列，再循环取出行的方式。
 
-例子中参数BasicTable的有4个列，分别是STRING, INT, TIMESTAMP, DOUBLE类型，列名分别为cstring, cint, ctimestamp, cdouble。
+例子中参数BasicTable的有4个列，列名分别为cstring, cint, ctimestamp, cdouble，数据类型分别是STRING, INT, TIMESTAMP, DOUBLE。
 
 ```
 public void test_loop_basicTable(BasicTable table1) throws Exception{
