@@ -2,16 +2,16 @@
 
 DolphinDB Java API needs Java 1.8 or higher environment.
 
-Java API adopts interface-oriented programming. It uses the class interface "Entity" to represent all data types returned from DolphinDB. Java API provides 7 types of extended interfaces: scalar, vector, matrix, set, dictionary, table and chart based on the "Entity" interface and DolphinDB data forms. They are included in the package of com.xxdb.data.
+Java API adopts interface-oriented programming. It uses the interface "Entity" to represent all data types returned from DolphinDB. Java API provides 7 types of extended interfaces: scalar, vector, matrix, set, dictionary, table and chart based on the "Entity" interface and DolphinDB data forms. They are included in the package of com.xxdb.data.
 
 Extended interface classes | Naming rules | Examples
 ---|---|---
-scalar|`Basic<DataType>`|BasicInt, BasicDouble, BasicDate, etc.
-vector, matrix|`Basic<DataType><DataForm>`|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
-set, dictionary, and table|`Basic<DataForm>`|BasicSet, BasicDictionary, BasicTable.
+scalar|Basic\<DataType\>|BasicInt, BasicDouble, BasicDate, etc.
+vector, matrix|Basic\<DataType\>\<DataForm\>|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
+set, dictionary, table|Basic\<DataForm\>|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
-"Basic" indicates the basic implementation of a data form interface, <DataType> indicates a DolphinDB data type, and <DataForm> indicates a DolphinDB data form. For detailed interface and class description, please refer to [Java API Manual](https://www.dolphindb.com/javaapi/).
+"Basic" indicates the basic implementation of a data form interface, \<DataType\> indicates a DolphinDB data type, and \<DataForm\> indicates a DolphinDB data form. For detailed interface and class description, please refer to [Java API Manual](https://www.dolphindb.com/javaapi/).
 
 The most important object provided by the DolphinDB Java API is DBConnection. It allows Java applications to execute script and functions on DolphinDB servers and transfer data between Java applications and DolphinDB servers in both directions. The DBConnection class provides the following main methods:
 
@@ -38,12 +38,11 @@ Establish a connection with a username and password:
 ```
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
-If the connection is established without using a username and password, we only have guest privileges. To be granted more privileges, we can log in by calling `conn.login('admin', '123456', true)`.
+If the connection is established without using a username and password, we only have guest privileges. To be granted more privileges, we can log in by calling conn.login('admin', '123456', true).
 
 ### 3.Run script
 
 Use the following statement to run DolphinDB script in Java:
-
 ```
 conn.run("script");
 ```
@@ -51,7 +50,7 @@ The maximum length of the script is 65,535 bytes.
 
 ### 4. Execute functions
 
-We can use method `run` to execute DolphinDB built-in functions or user defined functions on a remote DolphinDB server.
+We can use method `run` to execute DolphinDB built-in functions or user-defined functions on a remote DolphinDB server.
 
 The following examples show 3 ways to call DolphinDB's built-in function `add` in Java, depending on the locations of the parameters "x" and "y".
 
@@ -61,7 +60,7 @@ If both variables "x" and "y" have been generated on DolphinDB server by Java ap
 ```
 conn.run("x = [1,3,5];y = [2,4,6]")
 ```
-then we can use `run(script)` directly.
+then we can execute run("script") directly.
 ```
 public void testFunction() throws IOException{
     Vector result = (Vector)conn.run("add(x,y)");
@@ -132,7 +131,7 @@ public void testFunction() throws IOException{
 
 ### 6. Read data
 
-This section introduces how to read different types of data in DolphinDB with the DBConnection object.
+This section introduces how to read different data forms in DolphinDB with the DBConnection object.
 
 First, import the DolphinDB data type package:
 
