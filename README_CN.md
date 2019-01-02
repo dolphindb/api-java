@@ -277,14 +277,13 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,L
     conn.run("tableInsert{sharedTable}", args);
 }
 ```
-实际使用场景中，通常是Java程序往服务端已经存在的表中写入数据，在服务端可以用 `tableInsert(sharedTable,vec1,vec2,vec3...)` 这样的脚本，但是在Java里用 `conn.run("tableInsert",args)` 方式调用时，`tableInsert`的第一个参数是服务端表的对象引用，它无法在Java程序端获取到。一种做法是预先在服务端定义一个函数，把`sharedTable`固化在该函数内，比如
+实际使用场景中，通常是Java程序往服务端已经存在的表中写入数据，在服务端可以用tableInsert(sharedTable,vec1,vec2,vec3...)这样的脚本，但是在Java里用conn.run("tableInsert",args)方式调用时，`tableInsert`的第一个参数是服务端表的对象引用，它无法在Java程序端获取到。一种做法是预先在服务端定义一个函数，把`sharedTable`固化在该函数内，比如
 ```
 def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
 ```
 然后再通过`conn.run("saveData",args)`运行函数。虽然这样也能实现目标，但是Java程序要多调用一次服务端，多消耗了网络资源。
 
-在本例中，使用了DolphinDB 中的`部分应用`这一特性，将服务端表名以`tableInsert{sharedTable}`这样的方式固化到`tableInsert`中，作为一个独立函数来使用。这样就不需要再使用自定义函数的方式实现。
-具体的文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+在本例中，使用了DolphinDB 中的“部分应用”这一特性，将服务端表名以tableInsert{sharedTable}的方式固化到`tableInsert`中，作为一个独立函数来使用。这样就不需要再使用自定义函数的方式实现。具体文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
 ##### 7.1.3 使用`append！`函数批量保存数据
 
@@ -302,7 +301,7 @@ public void test_save_table(BasicTable table1) throws IOException {
 
 本例中涉及到的数据表可以通过如下脚本构建：
 
-*请注意只有启用 `enableDFS=1` 的集群环境才能使用分布式表。*
+*请注意只有启用enableDFS=1的集群环境才能使用分布式表。*
 
 ```
 dbPath = 'dfs://testDatabase'
@@ -334,8 +333,8 @@ BasicTable table1 = new BasicTable(colNames,cols);
 
 本地磁盘表通用用于静态数据集的计算分析，既可以用于数据的输入，也可以作为计算的输出。它不支持事务，也不持支并发读写。
 
+使用DolphinDB脚本创建一个数据表：
 ```
-//使用DolphinDB脚本创建一个数据表
 dbPath = "C:/data/testDatabase"
 tbName = 'tb1'
 
@@ -386,22 +385,30 @@ Java API提供了与DolphinDB内部数据类型对应的对象，通常是以Bas
 ```
 //Date:2018.11.12
 BasicDate bd = new BasicDate(LocalDate.of(2018,11,12));
+
 //Month:2018.11M
 BasicMonth bm = new BasicMonth(YearMonth.of(2018,11));
+
 //Time:20:08:01.123
 BasicTime bt = new BasicTime(LocalTime.of(20,8,1,123000000));
+
 //Minute:20:08m
 BasicMinute bmn = new BasicMinute(LocalTime.of(20,8));
+
 //Second:20:08:01
 BasicSecond bs = new BasicSecond(LocalTime.of(20,8,1));
+
 //DateTime: 2018.11.12T08:01:01
 BasicDateTime bdt = new BasicDateTime(LocalDateTime.of(2018,11,12,8,1,1));
+
 //Timestamp: 2018.11.12T08:01:01.123
 BasicTimestamp bts = new BasicTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123000000));
+
 //NanoTime: 20:08:01.123456789
 BasicNanoTime bnt = new BasicNanoTime(LocalTime.of(20,8,1,123456789));
+
 //NanoTimestamp: 2018.11.12T20:08:01.123456789
-BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123456789))
+BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123456789));
 ```
 如果在第三方系统中时间以时间戳的方式存储，DolphinDB时间对象也可以用时间戳来实例化。Java API中的Utils类提供了各种时间类型与标准时间戳的转换算法，比如将毫秒级的时间戳转换为DolphinDB的`BasicTimestamp`对象:
 ```
