@@ -39,7 +39,7 @@ boolean success = conn.connect("localhost", 8848);
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
 
-若未使用用户名及密码连接成功，脚本在Guest权限下运行。后续运行中若需要提升权限，可以通过调用 `conn.login('admin','123456',true)` 登录获取权限。
+若未使用用户名及密码连接成功，则脚本在Guest权限下运行。后续运行中若需要提升权限，可以通过conn.login('admin','123456',true)登录获取权限。
 
 ### 3.运行脚本
 
@@ -53,7 +53,7 @@ conn.run("script");
 
 可使用`run`命令在远程DolphinDB服务器上执行DolphinDB内置或用户自定义函数。
 
-下面的示例展示Java程序调用DolphinDB内置的`add`函数。`add`函数有两个参数x和y。参数的存储位置不同，也会导致调用方式的不同。存在以下三种情况：
+下面的示例展示Java程序调用DolphinDB内置的`add`函数。`add`函数有两个参数x和y。参数的存储位置不同，也会导致调用方式的不同。可能有以下三种情况：
 
 * 所有参数都在DolphinDB server端
 
@@ -61,7 +61,7 @@ conn.run("script");
 ```
 conn.run("x = [1,3,5];y = [2,4,6]")
 ```
-那么在Java端要对这两个向量做加法运算，只需要直接使用`run(script)`的方式即可。
+那么在Java端要对这两个向量做加法运算，只需直接使用run("script")即可。
 ```
 public void testFunction() throws IOException{
     Vector result = (Vector)conn.run("add(x,y)");
@@ -113,7 +113,7 @@ public void testFunction() throws IOException{
 
 ### 5. 上传数据对象
 
-可使用`upload`方法，将本地的数据上传到DolphinDB服务器并分配给一个变量。变量名称可以使用三种类型的字符：字母，数字或下划线。 第一个字符必须是字母。
+可使用`upload`方法，将本地的数据上传到DolphinDB服务器并分配给一个变量。变量名称可以使用三种类型的字符：字母，数字或下划线，第一个字符必须是字母。
 
 ```
 public void testFunction() throws IOException{
@@ -277,7 +277,7 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,L
     conn.run("tableInsert{sharedTable}", args);
 }
 ```
-实际使用场景中，通常是Java程序往服务端已经存在的表中写入数据，在服务端可以用 `tableInsert(sharedTable,vec1,vec2,vec3...)` 这样的脚本，但是在Java里用 `conn.run("tableInsert",args)` 方式调用时，`tableInsert`的第一个参数是服务端表的对象引用，它无法在Java程序端获取到，所以常规的做法是在预先在服务端定义一个函数，把`sharedTable`固化在该函数内，比如
+实际使用场景中，通常是Java程序往服务端已经存在的表中写入数据，在服务端可以用 `tableInsert(sharedTable,vec1,vec2,vec3...)` 这样的脚本，但是在Java里用 `conn.run("tableInsert",args)` 方式调用时，`tableInsert`的第一个参数是服务端表的对象引用，它无法在Java程序端获取到。一种做法是预先在服务端定义一个函数，把`sharedTable`固化在该函数内，比如
 ```
 def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
 ```
@@ -288,7 +288,7 @@ def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
 
 ##### 7.1.3 使用`append！`函数批量保存数据
 
-若Java程序是从DolphinDB的服务端获取数据表，经过java程序处理后保存到内存表，那么可使用`append!`函数。`append!`函数接受一个表对象作为参数，将数据追加到数据表中。
+若Java程序是从DolphinDB的服务端获取数据表，经过Java程序处理后保存到内存表，那么可使用`append!`函数。`append!`函数接受一个表对象作为参数，将数据追加到数据表中。
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
