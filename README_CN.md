@@ -374,7 +374,7 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 
 ### 8. DolphinDB和Java之间的数据类型转换
 
-Java API提供了与DolphinDB内部数据类型对应的对象，通常是以Basic+<DataType>这种方式命名，比如BasicInt，BasicDate等等。
+Java API提供了与DolphinDB内部数据类型对应的对象，通常是以Basic+\<DataType\>这种方式命名，比如BasicInt，BasicDate等等。
 
 对于一些Java的基础类型，可以通过构造函数直接创建对应的DolphinDB数据类型，比如new BasicInt(4)，new BasicDouble(1.23)，但是也有一些类型需要做一些简单转换。下面列出需要做转换的类型：
 - `CHAR`类型：DolphinDB中的`CHAR`类型以Byte形式保存，所以在Java API中用`BasicByte`类型来构造`CHAR`，例如`new BasicByte((byte)'c')`
