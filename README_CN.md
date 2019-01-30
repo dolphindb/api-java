@@ -277,13 +277,7 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,L
     conn.run("tableInsert{sharedTable}", args);
 }
 ```
-实际使用场景中，通常是Java程序向服务端已经存在的表中写入数据，在服务端可以用tableInsert(sharedTable,vec1,vec2,vec3...)这样的脚本，但是在Java里用conn.run("tableInsert",args)方式调用时，`tableInsert`的第一个参数是服务端表的对象引用，它无法在Java程序端获取到。一种做法是预先在服务端定义一个函数，把`sharedTable`固化在该函数内，比如
-```
-def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
-```
-然后再运行conn.run("saveData",args)。虽然这样也能实现目标，但是Java程序要多调用一次服务端，多消耗了网络资源。
-
-在本例中，使用了DolphinDB 中的“部分应用”这一特性，将服务端表名以tableInsert{sharedTable}的方式固化到`tableInsert`中，作为一个独立函数来使用。这样就不需要再使用自定义函数的方式实现。具体文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+在本例中，使用了DolphinDB 中的“部分应用”这一特性，将服务端表名以tableInsert{sharedTable}的方式固化到`tableInsert`中，作为一个独立函数来使用。具体文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
 ##### 7.1.3 使用`append！`函数批量保存数据
 
@@ -297,9 +291,7 @@ public void test_save_table(BasicTable table1) throws IOException {
 ```
 #### 7.2 保存数据到分布式表
 
-分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性; 分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
-
-本例中涉及到的数据表可以通过如下脚本构建：
+分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性。分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
 
 *请注意只有启用enableDFS=1的集群环境才能使用分布式表。*
 
@@ -321,7 +313,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 
-当用户在Java程序中取到的值是数组或列表时，也可以很方便的构造出BasicTable用于追加数据，比如现在有 boolArray, intArray, dblArray, dateArray, strArray 5个列表对象(List<T>),可以通过以下语句构造BasicTable对象：
+当用户在Java程序中取到的值是数组或列表时，也可以很方便的构造出BasicTable用于追加数据，例如若有 boolArray, intArray, dblArray, dateArray, strArray 5个列表对象(List<T>),可以通过以下语句构造BasicTable对象：
 
 ```
 List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
@@ -350,9 +342,9 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
     conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
-#### 7.4 读取和使用表数据
+#### 7.4 读取和使用数据表
 
-在Java API中，表数据保存为BasicTable对象，由于BasicTable是列式存储，所以要读取和使用所有数据需要通过先取出列，再循环取出行的方式。
+在Java API中，数据表保存为BasicTable对象，由于BasicTable是列式存储，所以要读取和使用所有数据需要通过先取出列，再循环取出行的方式。
 
 例子中参数BasicTable的有4个列，列名分别为cstring, cint, ctimestamp, cdouble，数据类型分别是STRING, INT, TIMESTAMP, DOUBLE。
 
