@@ -238,13 +238,13 @@ public void testVoid() throws IOException{
 
 ### 7. Read/write DolphinDB tables
 
-Users may get data from other database systems or third-party APIs and store the data in DolphinDB database. This section introduces how to upload and save these data with Java API.
+Users may import data from other database systems or third-party APIs to a DolphinDB database. This section introduces how to upload and save data with Java API.
 
 There are 3 types of DolphinDB tables:
 
 - In-memory table: it has the fastest access speed, but if the node shuts down we will lose the data.
 - Local disk table: data are saved on the local disk. Data can be loaded from the disk into memory.
-- Distributed tables: data are distributed across multiple nodes. Users can query the table like a local disk table.
+- Distributed table: data are distributed across multiple nodes. Users can query the table like a local disk table.
 
 #### 7.1 Save data to a DolphinDB in-memory table
 
@@ -253,17 +253,14 @@ DolphinDB offers several ways to save data:
 - Save multiple rows of data in bulk with function `tableInsert`
 - Save a table object with function `append!`
 
-The table used in the following examples has 4 columns. The data types of them are string, int, timestamp and double. The column names are cstring, cint, ctimestamp and cdouble, respectively.
+The table in the following examples has 4 columns. Their data types are string, int, timestamp and double. The column names are cstring, cint, ctimestamp and cdouble, respectively.
 ```
 t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE])
 share t as sharedTable
 ```
-
-Since an in-memory table is isolated among sessions, only in the current session can we access the table. To access it in a different session, we need to share the in-memory table among sessions with `share`.
+By default, an in-memory table is not shared among sessions. To access it in a different session, we need to share it among sessions with `share`.
 
 ##### 7.1.1 Save a single record with `INSERT INTO`
-
-To save a single record each time, use `INSERT INTO`.
 
 ```
 public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
@@ -273,7 +270,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 
 ##### 7.1.2 Save data in batches with `tableInsert`
 
-To save multiple records in batches, we can use `Arrays.asLIst` method to encapsulate multiple vectors in a List, then use function `tableInsert` to append to a table.
+To save multiple records in batches, we can use `Arrays.asLIst` method to encapsulate multiple vectors in a List, then use function `tableInsert` to append it to a table.
 
 ```
 public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
@@ -283,21 +280,9 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, 
 }
 ```
 
-Quite often we need to write data to a table on the server side. On the server side, a script such as `tableInsert(sharedTable, vec1, vec2, vec3...)` can be used. But in Java, when called with `conn.run("tableInsert", args)`, the first parameter of tableInsert is the object reference of the server table. It cannot be obtained in the Java program, so the conventional practice is to define a function in server to embed the sharedTable, such as
-
-```
-def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
-```
-
-Then, run the function through `conn.run("saveData", args)`. Although this achieves the goal,  for the Java program, one more server cal consumes more network resources.
-
-In this example, using the `partial application' feature in DolphinDB, the server table name is embeded into tableInsert in the manner of `tableInsert{sharedTable}` and used as a stand-alone function. This way you don't need to use a custom function.
-
-For specific documentation, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+The example above uses partial application in DolphinDB. The table on the server is embeded in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
 ##### 7.1.3 Save data in batches with `append!`
-
-The append! function accepts a table object as a parameter and appends the data to the data table.
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
@@ -307,9 +292,7 @@ public void test_save_table(BasicTable table1) throws IOException {
 ```
 #### 7.2 Save data to a distributed table
 
-Distributed table is the data storage method recommended by DolphinDB in production environment. It supports snapshot level transaction isolation and ensures data consistency. Distributed table supports multiple copy mechanism, which provides data fault tolerance and data access. Load balancing.
-
-The data tables involved in this example can be built with the following script:
+Distributed table is recommended by DolphinDB in production environment. It supports snapshot isolation and ensures data consistency. Distributed table supports multiple copy mechanism, which offers fault tolerance and load balancing.
 
 *Please note that distributed tables can only be used in cluster environments with `enableDFS=1` enabled. *
 
@@ -321,7 +304,7 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB provides the loadTable method to load distributed tables and append data via append!. The specific script examples are as follows:
+DolphinDB provides `loadTable` method to load distributed tables and `append!` method to append data. 
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
@@ -331,7 +314,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 
-When the value retrieved by the user in the Java program is an array or a list, it is also convenient to construct a BasicTable for appending data. For example, there are now `boolArray, intArray, dblArray, dateArray, strArray` 5 list objects (List< T>), you can construct a BasicTable object with the following statement:
+When we retrieve an array or a list in the Java program, it is also convenient to construct a BasicTable for appending data. For example, if we have `boolArray, intArray, dblArray, dateArray, strArray` 5 list objects (List<T>), we can construct a BasicTable object:
 ```
 List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
 List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
@@ -340,10 +323,9 @@ BasicTable table1 = new BasicTable(colNames,cols);
 
 #### 7.3 Save data to local disk table
 
-Local disk tables are commonly used for computational analysis of static data sets, either for data input or as a calculated output. It does not support transactions, and does not support concurrent reading and writing.
+Local disk tables can be used for data analysis on historical data sets. They do not support transactions, nor do they support concurrent reading and writing.
 
 ```
-// Create a data table using the DolphinDB script
 dbPath = "C:/data/testDatabase"
 tbName = 'tb1'
 
@@ -352,7 +334,7 @@ db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
 
-DolphinDB provides the loadTable method to load local disk tables as well, and function append! to append data.
+DolphinDB provides `loadTable` method to load local disk tables, and function `append!` to append data.
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
@@ -363,7 +345,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 ```
 #### 7.4 Load table
 
-In the Java API, the table data is saved as a BasicTable object. Since the BasicTable is a columnar store, all the desultory needs to be read and used by retrieving the rows and retrieving the rows.
+In Java API, a table is saved as a BasicTable object. Since BasicTable is a columnar store, all the desultory needs to be read and used by retrieving the rows and retrieving the rows.
 
 In the example, the parameter BasicTable has 4 columns, which are `STRING, INT, TIMESTAMP, DOUBLE`, and the column names are `cstring, cint, ctimestamp, cdouble`.
 
