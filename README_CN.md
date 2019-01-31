@@ -364,13 +364,11 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 }
 ```
 
-### 8. DolphinDB和Java之间的数据类型转换
+### 8. Java原生类型向DolphinDB数据类型转换
 
-Java API提供了与DolphinDB内部数据类型对应的对象，通常是以Basic+\<DataType\>这种方式命名，比如BasicInt，BasicDate等等。
+API提供了一组以Basic+\<DataType\>方式命名的类，分别对应DolphinDB的数据类型，比如BasicInt类，BasicDate类等等。
 
-对于一些Java的基础类型，可以通过构造函数直接创建对应的DolphinDB数据类型，比如new BasicInt(4)，new BasicDouble(1.23)。
-
-但是也有一些类型需要做一些简单转换。下面列出需要做转换的类型：
+大部分Java原生类型可以通过构造函数直接创建对应的DolphinDB数据类型，比如`new BasicInt(4)`，`new BasicDouble(1.23)`。但是也有一些特殊的DolphinDB数据类型，并不能按前面所描述的方法简单转换，下面针对这些类型做出说明：
 - `CHAR`类型：DolphinDB中的`CHAR`类型以Byte形式保存，所以在Java API中用`BasicByte`类型来构造`CHAR`，例如`new BasicByte((byte)'c')`
 - `SYMBOL`类型：DolphinDB中的`SYMBOL`类型是对字符串的优化，可以提高DolphinDB对字符串数据存储和查询的效率，但是Java中并不需要这种类型，所以Java API不提供`BasicSymbol`这种对象，直接用`BasicString`来处理即可。
 - 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供date、month、time、minute、second、datetime、timestamp、nanotime、nanotimestamp九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html)。由于Java也提供了LocalDate、LocalTime、LocalDateTime、YearMonth等数据类型，所以Java API在Utils类里提供了所有Java时间类型和int或long之间的转换函数。
