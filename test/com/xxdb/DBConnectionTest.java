@@ -14,7 +14,7 @@ public class DBConnectionTest {
 	
 	public DBConnectionTest() throws IOException{
 		conn = new DBConnection();
-		if(!conn.connect("192.168.1.111",18801)){
+		if(!conn.connect("192.168.1.135",8981)){
 			throw new IOException("Failed to connect to 2xdb server");
 		}
 	}
@@ -134,7 +134,17 @@ public class DBConnectionTest {
 		Entity result = conn.run("accumulate(+,a)");
 		System.out.println(result.getString());
 	}
-	
+
+	public void testFunction2() throws IOException{
+		conn.run("login('admin','123456')");
+		conn.run("def Foo5(a,b){ f=file('testsharp.csv','w');f.writeLine(string(a)); }");
+		List<Entity> args = new ArrayList<Entity>();
+		args.add(new BasicDouble(1.3));
+		args.add(new BasicDouble(1.4));
+		Entity result = conn.run("Foo5",args);
+		System.out.println("over Foo5");
+	}
+
 	public void testAnyVector() throws IOException{
 		BasicAnyVector result = (BasicAnyVector)conn.run("{1, 2, {1,3, 5},{0.9, 0.8}}");
 		System.out.println(result.getString());
@@ -563,6 +573,31 @@ public class DBConnectionTest {
 		List<Entity> args = Arrays.asList(new BasicIntVector(intArray));
 		conn.run("tableInsert{sharedTable}",args);
 	}
+
+	public void testFunction3() throws IOException{
+		DBConnection conn = new DBConnection();
+		conn.connect("192.168.1.135", 8981, "admin", "123456");
+
+		List<Entity> args = new ArrayList<Entity>();
+		args.add(new BasicDouble(0.15));
+		args.add(new BasicDouble(0.28));
+		args.add(new BasicDouble(2));
+		args.add(new BasicDouble(1.8));
+		args.add(new BasicDouble(-0.025));
+		args.add(new BasicDouble(0.055));
+		args.add(new BasicDouble(0));
+		args.add(new BasicDouble(0));
+		args.add(new BasicDouble(100));
+		args.add(new BasicDouble(1.1));
+		args.add(new BasicDouble(2));
+		args.add(new BasicDouble(2.243));
+		args.add(new BasicDouble(2.32895));
+		args.add(new BasicDouble(2.5));
+
+		BasicDouble rt1 = (BasicDouble)conn.run("WingModel", args);
+		System.out.println(rt1.getDouble());
+	}
+
 	public static void main(String[] args){
 		try{
 			DBConnectionTest test = new DBConnectionTest();
@@ -604,7 +639,10 @@ public class DBConnectionTest {
 			//test.test_save_localTable();
 			//test.test_loop_basicTable();
 			//test.testFunction1();
-			test.test_partialFunction();
+			//test.test_partialFunction();
+			//test.testFunction2();
+			test.testFunction3();
+
 		}
 
 		catch(Exception ex){
