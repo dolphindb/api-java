@@ -366,12 +366,15 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 
 ### 8. Java原生类型向DolphinDB数据类型转换
 
-API提供了一组以Basic+\<DataType\>方式命名的类，分别对应DolphinDB的数据类型，比如BasicInt类，BasicDate类等等。
+Java API提供了一组以Basic+\<DataType\>方式命名的类，分别对应DolphinDB的数据类型，比如BasicInt类，BasicDate类等等。
 
-大部分Java原生类型可以通过构造函数直接创建对应的DolphinDB数据类型，比如`new BasicInt(4)`，`new BasicDouble(1.23)`。但是也有一些特殊的DolphinDB数据类型，并不能按前面所描述的方法简单转换，下面针对这些类型做出说明：
-- `CHAR`类型：DolphinDB中的`CHAR`类型以Byte形式保存，所以在Java API中用`BasicByte`类型来构造`CHAR`，例如`new BasicByte((byte)'c')`
-- `SYMBOL`类型：DolphinDB中的`SYMBOL`类型是对字符串的优化，可以提高DolphinDB对字符串数据存储和查询的效率，但是Java中并不需要这种类型，所以Java API不提供`BasicSymbol`这种对象，直接用`BasicString`来处理即可。
-- 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供date、month、time、minute、second、datetime、timestamp、nanotime、nanotimestamp九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html)。由于Java也提供了LocalDate、LocalTime、LocalDateTime、YearMonth等数据类型，所以Java API在Utils类里提供了所有Java时间类型和int或long之间的转换函数。
+大部分Java原生类型可以通过构造函数直接创建对应的DolphinDB数据类型，比如new BasicInt(4)，new BasicDouble(1.23)。但是也有一些特殊的DolphinDB数据类型，并不能按前面所描述的方法简单转换，下面针对这些类型做出说明：
+
+大部分DolphinDB数据类型可以由Java原生类型构建，例如new BasicInt(4)对应integer，new BasicDouble(1.23)对应double，等等。但是也有一些DolphinDB数据类型，并不能由上述方法构建：
+
+- CHAR类型：DolphinDB中的CHAR类型以Byte形式保存，所以在Java API中用BasicByte类型来构造CHAR，例如new BasicByte((byte)'c')。
+- SYMBOL类型：DolphinDB中的SYMBOL类型是对字符串的优化，可以提高DolphinDB对字符串数据存储和查询的效率，但是Java中并不需要这种类型，所以Java API不提供BasicSymbol这种对象，直接用BasicString来处理即可。
+- 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供date、month、time、minute、second、datetime、timestamp、nanotime、nanotimestamp九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html)。由于Java也提供了LocalDate、LocalTime、LocalDateTime、YearMonth等数据类型，所以Java API在Utils类里提供了所有Java时间类型与int或long之间的转换函数。
 
 以下脚本展示Java API中DolphinDB时间类型与Java原生时间类型之间的对应关系：
 ```
@@ -402,7 +405,7 @@ BasicNanoTime bnt = new BasicNanoTime(LocalTime.of(20,8,1,123456789));
 //NanoTimestamp: 2018.11.12T20:08:01.123456789
 BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123456789));
 ```
-如果在第三方系统中时间以时间戳的方式存储，DolphinDB时间对象也可以用时间戳来实例化。Java API中的Utils类提供了各种时间类型与标准时间戳的转换算法，比如将毫秒级的时间戳转换为DolphinDB的`BasicTimestamp`对象:
+如果在第三方系统中时间以时间戳的方式存储，DolphinDB时间对象也可以用时间戳来实例化。Java API中的Utils类提供了各种时间类型与标准时间戳的转换算法，比如将毫秒级的时间戳转换为DolphinDB的BasicTimestamp对象:
 ```
 LocalDateTime dt = Utils.parseTimestamp(1543494854000l);
 BasicTimestamp ts = new BasicTimestamp(dt);
