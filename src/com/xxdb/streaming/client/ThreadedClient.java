@@ -39,14 +39,24 @@ public class ThreadedClient extends  AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, MessageHandler handler, long offset) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName, offset);
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName,actionName, offset);
         new HandlerLopper(queue, handler).start();
     }
-    public void subscribe(String host,int port,String tableName, MessageHandler handler) throws IOException {
-        subscribe(host, port, tableName, handler, -1);
+
+    public void subscribe(String host,int port,String tableName, String actionName,MessageHandler handler) throws IOException {
+        subscribe(host, port, tableName,actionName, handler, -1);
     }
-    void unsubscribe(String host,int port ,String tableName) throws IOException {
-        unsubscribeInternal(host, port, tableName);
+
+    public void subscribe(String host,int port,String tableName, MessageHandler handler) throws IOException {
+        subscribe(host, port, tableName,"", handler, -1);
+    }
+
+    public void unsubscribe(String host,int port ,String tableName, String actionName) throws IOException {
+        unsubscribeInternal(host, port, tableName, actionName);
+    }
+
+    public void unsubscribe(String host,int port ,String tableName) throws IOException {
+        unsubscribeInternal(host, port, tableName,"");
     }
 }
