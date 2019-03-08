@@ -38,7 +38,7 @@ public class ThreadedClientTester {
 
         try {
 			//client.subscribe("192.168.1.45", 8904, "trades2", new TwoSigmaMessageHandler(), 0);
-			client.subscribe("192.168.1.42", 8904, "trades1", new SampleMessageHandler(), 0);
+			client.subscribe("192.168.1.42", 8904, "trades1", "", new SampleMessageHandler());
 			//client.subscribe("192.168.1.14", 8082, "trades1", new TwoSigmaMessageHandler(), 0);
 		} catch (IOException e) {
 			e.printStackTrace();
