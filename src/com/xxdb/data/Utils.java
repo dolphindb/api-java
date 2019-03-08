@@ -119,7 +119,7 @@ public class Utils {
 		return seconds * 1000000000l + dt.getNano();
 	}
 
-	/**
+	/*
 	 * 1 <==> 1970.01.01 00:00:00.001
 	 * 0 <==> 1970.01.01 00:00:00.000
 	 * -1 <==> 1969.12.31 23:59:59.999
@@ -149,7 +149,7 @@ public class Utils {
 	public static final long NANOS_PER_HOUR = NANOS_PER_MINUTE * MINUTES_PER_HOUR;
 	public static final long NANOS_PER_DAY = NANOS_PER_HOUR * HOURS_PER_DAY;
 	public static final long MILLS_PER_DAY = NANOS_PER_DAY / 1000000;
-	/**
+	/*
 	 * 1 <==> 1970.01.01 00:00:00.000000001
 	 * 0 <==> 1970.01.01 00:00:00.000000000
 	 * -1 <==> 1969.12.31 23:59:59.999999999

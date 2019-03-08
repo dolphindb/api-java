@@ -108,7 +108,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		params.add(new BasicString(tableName));
 		params.add(new BasicString(actionName));
 		if (offset != -1)
-		params.add(new BasicLong(offset));
+			params.add(new BasicLong(offset));
 		re = dbConn.run("publishTable", params);
 		
 		dbConn.close();
