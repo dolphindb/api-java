@@ -89,17 +89,26 @@ public class ThreadPooledClient extends AbstractClient {
             this.handler.doEvent(message);
         }
     }
-    public void subscribe(String host, int port, String tableName, MessageHandler handler, long offset) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port,tableName, offset);
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port,tableName,actionName, offset);
         synchronized (queueHandlers) {
             queueHandlers.put(tableName2Topic.get(host + ":" + port + ":" + tableName), new QueueHandlerBinder(queue, handler));
         }
     }
     // subscribe to host:port on tableName with offset set to position past the last element
-    public void subscribe(String host,int port,String tableName, MessageHandler handler) throws IOException {
-        subscribe(host, port, tableName, handler, -1);
+    public void subscribe(String host,int port,String tableName, String actionName, MessageHandler handler) throws IOException {
+        subscribe(host, port, tableName, actionName, handler, -1);
     }
-    void unsubscribe(String host,int port ,String tableName) throws IOException {
+
+    public void subscribe(String host,int port,String tableName, MessageHandler handler) throws IOException {
+        subscribe(host, port, tableName, "", handler, -1);
+    }
+
+    public void unsubscribe(String host,int port ,String tableName,String actionName) throws IOException {
+        unsubscribeInternal(host, port, tableName,actionName);
+    }
+
+    public void unsubscribe(String host,int port ,String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName);
     }
 }
