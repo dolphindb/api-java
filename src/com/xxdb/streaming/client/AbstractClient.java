@@ -1,7 +1,9 @@
 package com.xxdb.streaming.client;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 
@@ -24,14 +26,21 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected HashMap<String, String> tableName2Topic = new HashMap<>();
 	protected HashMap<String, Boolean> hostEndian = new HashMap<>();
 	protected Thread pThread ; 
-	public AbstractClient() throws SocketException{
+	public AbstractClient() throws SocketException {
 		this(DEFAULT_PORT);
 	}
-	public AbstractClient(int subscribePort) throws SocketException{
+	public AbstractClient(int subscribePort) throws SocketException {
 		this.listeningPort = subscribePort;
 		Daemon daemon = new Daemon(subscribePort, this);
 		pThread = new Thread(daemon);
 		pThread.start();
+		try {
+			localIP = InetAddress.getLocalHost().getHostAddress();
+		}
+		catch (UnknownHostException ex) {
+			System.out.println("Cannot get local address");
+			ex.printStackTrace();
+		}
 	}
 
 	private void addMessageToCache(IMessage msg) {
@@ -87,7 +96,6 @@ abstract class AbstractClient implements MessageDispatcher{
 		
 		DBConnection dbConn = new DBConnection();
 		dbConn.connect(host, port);
-		this.localIP = dbConn.getLocalAddress().getHostAddress();
 		
 		if(!hostEndian.containsKey(host)){
 			hostEndian.put(host, dbConn.getRemoteLittleEndian());
