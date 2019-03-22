@@ -403,7 +403,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 #### 7.4 Load table
 
 
-In the Java API, the table data is saved as a BasicTable object. Since the BasicTable is a columnar store, all the desultory needs to be read and used by retrieving the rows and retrieving the rows.
+In the Java API, the table data is saved as a BasicTable object. Since the BasicTable is a columnar store, all the desultory needs to be read and used by retrieving the columns and retrieving the rows.
 
 In the example, the parameter BasicTable has 4 columns, which are `STRING, INT, TIMESTAMP, DOUBLE`, and the column names are `cstring, cint, ctimestamp, cdouble`.
 
