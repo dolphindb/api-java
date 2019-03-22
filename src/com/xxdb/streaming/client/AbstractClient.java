@@ -1,9 +1,7 @@
 package com.xxdb.streaming.client;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 
@@ -19,7 +17,6 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected static final int DEFAULT_PORT = 8849;
 	protected static final String DEFAULT_HOST = "localhost";
 	protected static final String DEFAULT_ACTION_NAME = "javaStreamingApi";
-	protected String localIP;
 	protected int listeningPort;
 	protected QueueManager queueManager = new QueueManager();
 	protected HashMap<String, List<IMessage>> messageCache = new HashMap<>();
@@ -34,13 +31,6 @@ abstract class AbstractClient implements MessageDispatcher{
 		Daemon daemon = new Daemon(subscribePort, this);
 		pThread = new Thread(daemon);
 		pThread.start();
-		try {
-			localIP = InetAddress.getLocalHost().getHostAddress();
-		}
-		catch (UnknownHostException ex) {
-			System.out.println("Cannot get local address");
-			ex.printStackTrace();
-		}
 	}
 
 	private void addMessageToCache(IMessage msg) {
@@ -96,6 +86,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		
 		DBConnection dbConn = new DBConnection();
 		dbConn.connect(host, port);
+		String localIP = dbConn.getLocalAddress().getHostAddress();
 		
 		if(!hostEndian.containsKey(host)){
 			hostEndian.put(host, dbConn.getRemoteLittleEndian());
@@ -111,7 +102,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		
 		tableName2Topic.put(host + ":" + port + ":" + tableName, topic);
 		
-		params.add(new BasicString(this.localIP));
+		params.add(new BasicString(localIP));
 		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
 		params.add(new BasicString(actionName));
@@ -130,8 +121,9 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected void unsubscribeInternal(String host,int port ,String tableName,String actionName) throws IOException {
 		DBConnection dbConn = new DBConnection();
 		dbConn.connect(host, port);
+		String localIP = dbConn.getLocalAddress().getHostAddress();
 		List<Entity> params = new ArrayList<Entity>();
-		params.add(new BasicString(this.localIP));
+		params.add(new BasicString(localIP));
 		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
 		params.add(new BasicString(actionName));
