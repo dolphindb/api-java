@@ -37,4 +37,9 @@ public class BigEndianDataInputStream extends AbstractExtendedDataInputStream{
 		byte b2 = readAndCheckByte();
 		return fromBytes(b1, b2, (byte)0, (byte)0);
 	}
+
+	@Override
+	public boolean isLittleEndian() {
+		return false;
+	}
 }

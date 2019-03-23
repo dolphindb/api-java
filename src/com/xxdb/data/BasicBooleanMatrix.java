@@ -79,8 +79,12 @@ private byte[] values;
 	protected void readMatrixFromInputStream(int rows, int columns,	ExtendedDataInput in)  throws IOException{
 		int size = rows * columns;
 		values =new byte[size];
-		for(int i=0; i<size; ++i)
-			values[i] = in.readByte();
+		int off = 0;
+		while (off < size) {
+			int len = Math.min(BUF_SIZE, size - off);
+			in.readFully(values, off, len);
+			off += len;
+		}
 	}
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
