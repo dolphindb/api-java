@@ -84,7 +84,10 @@ class MessageParser implements Runnable{
 			catch(Exception exception) {
 				throw exception;
 			}
-			if(body.isVector()){
+			if (body.isTable()) {
+				assert(body.rows() == 0);
+			}
+			else if (body.isVector()){
 				BasicAnyVector dTable = (BasicAnyVector)body;
 				
 				int colSize = dTable.rows();
@@ -112,7 +115,7 @@ class MessageParser implements Runnable{
 				}
 				offset += rowSize;
 			} else {
-				throw new RuntimeException("message body has an invalid format.vector is expected");
+				throw new RuntimeException("message body has an invalid format. Vector or table is expected");
 			}
 		}
 	} catch (Exception e) {
