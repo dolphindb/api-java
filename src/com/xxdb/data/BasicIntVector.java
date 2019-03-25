@@ -1,6 +1,8 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -41,13 +43,20 @@ public class BasicIntVector extends AbstractVector{
 	protected BasicIntVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
 		super(df);
 		int rows = in.readInt();
-		//if (rows != 1024)
-			//assert(rows == 1024);
 		int cols = in.readInt(); 
 		int size = rows * cols;
 		values = new int[size];
-		for(int i=0; i<size; ++i)
-			values[i] = in.readInt();
+		int totalBytes = size * 4, off = 0;
+		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		while (off < totalBytes) {
+			int len = Math.min(BUF_SIZE, totalBytes - off);
+			in.readFully(buf, 0, len);
+			int start = off / 4, end = len / 4;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+			for (int i = 0; i < end; i++)
+				values[i + start] = byteBuffer.getInt(i * 4);
+			off += len;
+		}
 	}
 	
 	public Scalar get(int index){

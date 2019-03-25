@@ -42,13 +42,18 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 	}
 
 	@Override
-	public void readFully(byte[] arg0) throws IOException {
-		super.read(arg0);
+	public void readFully(byte[] b) throws IOException {
+		readFully(b, 0, b.length);
 	}
 
 	@Override
-	public void readFully(byte[] arg0, int arg1, int arg2) throws IOException {
-		super.read(arg0, arg1, arg2);
+	public void readFully(byte[] b, int off, int len) throws IOException {
+		int read;
+		do {
+			read = super.read(b, off, len);
+			len -= read;
+			off += read;
+		} while (len > 0);
 	}
 	
 	@Override

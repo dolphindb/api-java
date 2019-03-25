@@ -44,8 +44,12 @@ public class BasicBooleanVector extends AbstractVector{
 		int cols = in.readInt(); 
 		int size = rows * cols;
 		values = new byte[size];
-		for(int i=0; i<size; ++i)
-			values[i] = in.readByte();
+		int off = 0;
+		while (off < size) {
+			int len = Math.min(BUF_SIZE, size - off);
+			in.readFully(values, off, len);
+			off += len;
+		}
 	}
 	
 	public Scalar get(int index){

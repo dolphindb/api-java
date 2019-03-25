@@ -1,6 +1,8 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -79,8 +81,17 @@ public class BasicShortMatrix extends AbstractMatrix{
 	protected void readMatrixFromInputStream(int rows, int columns,	ExtendedDataInput in)  throws IOException{
 		int size = rows * columns;
 		values =new short[size];
-		for(int i=0; i<size; ++i)
-			values[i] = in.readShort();
+		int totalBytes = size * 2, off = 0;
+		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		while (off < totalBytes) {
+			int len = Math.min(BUF_SIZE, totalBytes - off);
+			in.readFully(buf, 0, len);
+			int start = off / 2, end = len / 2;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+			for (int i = 0; i < end; i++)
+				values[i + start] = byteBuffer.getShort(i * 2);
+			off += len;
+		}
 	}
 
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{

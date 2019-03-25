@@ -1,41 +1,33 @@
 ### 1. Java API Introduction
-DolphinDB Java API implements the messaging and data conversion protocol between Java and DolphinDB server.
 
-It needs to run in Java 1.8 or higher environment.
+DolphinDB Java API needs Java 1.8 or higher environment.
 
-Java API adopts interface-oriented programming. Java API uses the class interface "Entity" to represent all data types returned from DolphinDB. Java API provides 7 types of extended interfaces: scalar, vector, matrix, set, dictionary, table and chart based on the "Entity" interface and DolphinDB data forms. They are included in the package of com.xxdb.data.
+Java API adopts interface-oriented programming. It uses the interface "Entity" to represent all data types returned from DolphinDB. Java API provides 7 types of extended interfaces: scalar, vector, matrix, set, dictionary, table and chart based on the "Entity" interface and DolphinDB data forms. They are included in the package of com.xxdb.data.
 
 Extended interface classes | Naming rules | Examples
 ---|---|---
-scalar|`Basic<DataType>`|BasicInt, BasicDouble, BasicDate, etc.
-vector, matrix|`Basic<DataType><DataForm>`|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
-set, dictionary, and table|`Basic<DataForm>`|BasicSet, BasicDictionary, BasicTable.
+scalar|Basic\<DataType\>|BasicInt, BasicDouble, BasicDate, etc.
+vector, matrix|Basic\<DataType\>\<DataForm\>|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
+set, dictionary, table|Basic\<DataForm\>|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
-"Basic" indicates the basic implementation of a data form interface, <DataType> indicates a DolphinDB data type, and <DataForm> indicates a DolphinDB data form.
+"Basic" indicates the basic implementation of a data form interface, \<DataType\> indicates a DolphinDB data type, and \<DataForm\> indicates a DolphinDB data form. For detailed interface and class description, please refer to [Java API Manual](https://www.dolphindb.com/javaapi/).
 
-For detailed interface and class description, please refer to [Java API Manual](https://www.dolphindb.com/javaapi/)
-
-One of core functions provided by the DolphinDB Java API is DBConnection. Its main function is to allow Java applications to execute scripts and functions on the DolphinDB server and pass data between them in both directions.
-
-The DBConnection class provides the following main methods:
-
-
+The most important object provided by DolphinDB Java API is DBConnection. It allows Java applications to execute script and functions on DolphinDB servers and transfer data between Java applications and DolphinDB servers in both directions. The DBConnection class provides the following main methods:
 
 | Method Name | Details |
 |:------------- |:-------------|
-|connect(host, port, [username, password])|Connect the session to the DolphinDB server|
-|login(username,password,enableEncryption)|Login server|
-|run(script)|Run the script on the DolphinDB server|
-|run(functionName,args)|Call the function on the DolphinDB server|
-|upload(variableObjectMap)|Upload local data objects to DolphinDB server|
-|isBusy()|Judge if the current session is busy |
+|connect(host, port, [username, password])|Connect the session to DolphinDB server|
+|login(username,password,enableEncryption)|Login to DolphinDB server|
+|run(script)|Run script on DolphinDB server|
+|run(functionName,args)|Call a function on DolphinDB server|
+|upload(variableObjectMap)|Upload local data to DolphinDB server|
+|isBusy()|Judge if the current session is busy|
 |close()|Close the current session|
-
 
 ### 2. Establish a DolphinDB connection
 
-The Java API connects to the DolphinDB server via the TCP/IP protocol. In the following example, we connect the running local DolphinDB server with port number 8848:
+The Java API connects to the DolphinDB server via TCP/IP protocol. In the following example, we connect to a local DolphinDB server with port number 8848:
 
 ```
 import com.xxdb;
@@ -46,36 +38,29 @@ Establish a connection with a username and password:
 ```
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
-When the connection is successful without the username and password, the script runs under the guest permission. If you need to upgrade the permissions in subsequent runs, you can log in to get the permission by calling `conn.login('admin', '123456', true)`.
+If the connection is established without using a username and password, we only have guest privileges. To be granted more privileges, we can log in by calling conn.login('admin', '123456', true).
 
-### 3.Run a script
+### 3.Run script
 
-The syntax for running the DolphinDB script in Java is as follows:
-
+Use the following statement to run DolphinDB script in Java:
 ```
 conn.run("script");
 ```
-
 The maximum length of the script is 65,535 bytes.
 
+### 4. Execute functions
 
-If the script contains only one statement, such as an expression, DolphinDB returns a data object; otherwise it returns a NULL object. If the script contains more than one statement, the last object will be returned. If the script contains an error or there is a network problem, it throws an IOException.
+We can use method `run` to execute DolphinDB built-in functions or user-defined functions on a remote DolphinDB server.
 
+The following examples show 3 ways to call DolphinDB's built-in function `add` in Java, depending on the locations of the parameters "x" and "y".
 
-### 4. Run a function
+* Both parameters are on DolphinDB server
 
-Method `run` also supports DolphinDB built-in functions and user defined functions to run on remote DolphinDB server.
-
-
-The following example shows how the Java program calls DolhinDB's `add` function. The `add` function has two parameters. The calling method will be different based on the location of the parameters. The following examples show the sample code in three cases:
-
-* All parameters are on the DolphinDB Server side
-
-The variables x, y have been generated on the server side in advance by the java program.
+If both variables "x" and "y" have been generated on DolphinDB server by Java applications,
 ```
 conn.run("x = [1,3,5];y = [2,4,6]")
 ```
-Then in the Java side to add these two vectors, you only need to use the `run(script)` method directly.
+then we can execute run("script") directly.
 ```
 public void testFunction() throws IOException{
     Vector result = (Vector)conn.run("add(x,y)");
@@ -83,14 +68,13 @@ public void testFunction() throws IOException{
 }
 ```
 
+* Only 1 parameter exists on DolphinDB server
 
-* Some parameters exist on the DolphinDB Server side
-
-The variable x has been generated on the server side in advance by the java program, and the parameter y is to be generated on the Java client.
+Parameter "x" has been generated on DolphinDB server by the Java program, and parameter "y" is to be generated by the Java program.
 ```
 conn.run("x = [1,3,5]")
 ```
-At this time, you need to use the "partial application" method to embed parameter x in the add function. For details, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+In this case, we need to use the "partial application" method to embed parameter "x" in function `add`. For details, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
 ```
 public void testFunction() throws IOException{
@@ -105,7 +89,7 @@ public void testFunction() throws IOException{
 }
 ```
 
-* Both parameters are in the java client
+* Both parameters are to be generated by Java program
 ```
 import java.util.List;
 import java.util.ArrayList;
@@ -127,12 +111,9 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 5. Upload a data object
+### 5. Upload data objects
 
-When some data in Java needs to be used frequently by the server, it is not recommended to upload it once per call. At this time, you can use the upload method to upload the data to the server and assign it to a variable. This variable can be reused on the server side.
-
-
-We can upload the binary data object to the DolphinDB server and assign it to a variable for future use. Variable names can use three types of characters: letters, numbers, or underscores. The first character must be a letter.
+We can upload a binary data object to DolphinDB server and assign it to a variable for future use. Variable names can use 3 types of characters: letters, numbers, or underscores. The first character must be a letter.
 
 ```
 public void testFunction() throws IOException{
@@ -148,28 +129,25 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 6. Read data example
+### 6. Read data
 
-The following describes the different types of data objects read bthrough the DBConnection method.
+This section introduces how to read different data forms in DolphinDB with the DBConnection object.
 
-First import the DolphinDB data type package:
+First, import the DolphinDB data type package:
 
 ```
 import com.xxdb.data.*;
 ```
 
-
-Note that the code below needs to be established after the connection is established.
-
 - Vector
 
-The example below shows the DolphinDB statement generating a random fast symbol vector with size as 10.
+The following DolphinDB statement returns a Java object BasicStringVector. 
 
 ```
 rand(`IBM`MSFT`GOOG`BIDU,10)
 ```
 
-Returns the Java object BasicStringVector. The vector.rows() method gets the size of the vector. We can access vector elements by index using the vector.getString(i) method.
+The `rows` method returns the size of the vector. We can access vector elements by index with the `getString` method.
 
 ```
 public void testStringVector() throws IOException{
@@ -181,7 +159,7 @@ public void testStringVector() throws IOException{
 }
 ```
 
-Similarly, you can also handle vectors or tuples of int,double,float, or any other types.
+Similarly, we can work with vectors or tuples of int, double, float or any other types.
 ```
 public void testDoubleVector() throws IOException{
     BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0, 10)");
@@ -191,7 +169,6 @@ public void testDoubleVector() throws IOException{
        System.out.println(vector.getDouble(i));
 }
 ```
-
 
 ```
 public void testAnyVector() throws IOException{
@@ -211,7 +188,7 @@ public void testSet() throws IOException{
 
 - Matrix
 
-To retrieve an element from an integer matrix, we can use getInt(row, col). To get the number of rows and columns, we can use the functions rows() and columns().
+To retrieve an element from an integer matrix, we can use `getInt`. To get the number of rows and columns, we can use functions `rows` and `columns`.
 
 ```
 public void testIntMatrix() throws IOException {
@@ -222,7 +199,7 @@ public void testIntMatrix() throws IOException {
 
 - Dictionary
 
-All keys and values ​​can be retrieved from the dictionary using the functions keys() and values(). To get its value from a key, you can call get(key).
+The keys and values of a dictionary can be retrieved with functions `keys` and `values`, respectively. To get the value for a key, use `get`.
 
 ```
 public void testDictionary() throws IOException{
@@ -232,11 +209,9 @@ public void testDictionary() throws IOException{
 }
 ```
 
-
 - Table
 
-
-To get the column of the table, we can call table.getColumn(index); again, we can call table.getColumnName(index) to get the column name. For the number of columns and rows, we can call table.columns() and table.rows() respectively.
+To get a column of a table, use `table.getColumn(index)`; to get a column name, use `table.getColumnName(index)`. To get the number of columns and rows of a table, use `table.columns()` and `table.rows()`, respectively.
 
 ```
 public void testTable() throws IOException{
@@ -261,40 +236,31 @@ public void testVoid() throws IOException{
 }
 ```
 
+### 7. Read/write DolphinDB tables
 
+Users may import data from other database systems or third-party APIs to a DolphinDB database. This section introduces how to upload and save data with Java API.
 
+There are 3 types of DolphinDB tables:
 
-### 7. Read and write DolphinDB data table
+- In-memory table: it has the fastest access speed, but if the node shuts down we will lose the data.
+- Local disk table: data are saved on the local disk. Data can be loaded from the disk into memory.
+- Distributed table: data are distributed across multiple nodes. Users can query the table like a local disk table.
 
-An important scenario for using the Java API is that users fetch data from other database systems or third-party WebAPIs, clean the data and store it in the DolphinDB database. This section describes uploading and saving the data retrieved through the Java API.
-
-
-The DolphinDB data table is divided into three types according to storage methods:
-
-- In-memory table: The data is only stored in the memory of this node, and the access speed is the fastest, but the node shutdown data does not exist.
-- Local disk table: The data is saved on the local disk. Even if the node is closed, it can be easily loaded from the disk into the memory through the script.
-- Distributed tables: Data is distributed across different nodes. Through DolphinDB's distributed computing engine, users can query the table like a local table.
-
-#### 7.1 Save data to DolphinDB in-memory table
+#### 7.1 Save data to a DolphinDB in-memory table
 
 DolphinDB offers several ways to save data:
-- save a single piece of data by insert into ;
-- Save multiple pieces of data in bulk via the tableInsert function;
-- Save the table object with the append! function.
+- Save a single row of data with `insert into`
+- Save multiple rows of data in bulk with function `tableInsert`
+- Save a table object with function `append!`
 
-
-The difference between these methods is that the types of parameters received are different. In a specific business scenario, a single data point may be obtained from the data source, or may be a data set composed of multiple arrays or tables.
-
-The following describes three examples of saving data. The data table used in the example has four columns, namely `string, int, timestamp, double`, and the column names are `cstring,cint,ctimestamp,cdouble`. The script is as follows:
+The table in the following examples has 4 columns. Their data types are string, int, timestamp and double. The column names are cstring, cint, ctimestamp and cdouble, respectively.
 ```
 t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE])
 share t as sharedTable
 ```
+By default, an in-memory table is not shared among sessions. To access it in a different session, we need to share it among sessions with `share`.
 
-Since an in-memory table is session-isolated, only the current GUI session can see the table. If you need to access it in a different Java program or other terminal, you need to share the in-memory table between sessions through the `share` keyword.
-
-##### 7.1.1 Saving single point data using SQL
-If the Java program is to save a single data record to DolphinDB each time, you can save the data through the SQL statement (insert into).
+##### 7.1.1 Save a single record with `INSERT INTO`
 
 ```
 public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
@@ -302,12 +268,9 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 }
 ```
 
+##### 7.1.2 Save data in batches with `tableInsert`
 
-##### 7.1.2 Using the tableInsert function to save data in batches
-
-
-
-If the data obtained by the Java program can be organized into a List mode, it is more suitable to use the tableInsert function. This function can accept multiple arrays as parameters and append the array to the data table.
+To save multiple records in batches, we can use `Arrays.asLIst` method to encapsulate multiple vectors in a List, then use function `tableInsert` to append it to a table.
 
 ```
 public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
@@ -317,24 +280,9 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, 
 }
 ```
 
+The example above uses partial application in DolphinDB. The table on the server is embeded in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
-In the actual application scenario, usually the Java program writes data to a table already existing on the server side. On the server side, a script such as `tableInsert(sharedTable, vec1, vec2, vec3...)` can be used. But in Java, when called with `conn.run("tableInsert", args)`, the first parameter of tableInsert is the object reference of the server table. It cannot be obtained in the Java program, so the conventional practice is to define a function in server to embed the sharedTable, such as
-
-```
-def saveData(v1,v2,v3,v4){tableInsert(sharedTable,v1,v2,v3,v4)}
-```
-
-Then, run the function through `conn.run("saveData", args)`. Although this achieves the goal,  for the Java program, one more server cal consumes more network resources.
-
-
-In this example, using the `partial application' feature in DolphinDB, the server table name is embeded into tableInsert in the manner of `tableInsert{sharedTable}` and used as a stand-alone function. This way you don't need to use a custom function.
-
-
-For specific documentation, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
-
-##### 7.1.3 Use append! Function to save data in batches
-
-The append! function accepts a table object as a parameter and appends the data to the data table.
+##### 7.1.3 Save data in batches with `append!`
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
@@ -343,13 +291,10 @@ public void test_save_table(BasicTable table1) throws IOException {
 }
 ```
 #### 7.2 Save data to a distributed table
-Distributed table is the data storage method recommended by DolphinDB in production environment. It supports snapshot level transaction isolation and ensures data consistency. Distributed table supports multiple copy mechanism, which provides data fault tolerance and data access. Load balancing.
 
+Distributed table is recommended by DolphinDB in production environment. It supports snapshot isolation and ensures data consistency. Distributed table supports multiple copy mechanism, which offers fault tolerance and load balancing.
 
-The data tables involved in this example can be built with the following script:
-
-
-*Please note that distributed tables can only be used in cluster environments with `enableDFS=1` enabled. *
+Please note that distributed tables can only be used in cluster environments with `enableDFS=1` enabled.
 
 ```
 dbPath = 'dfs://testDatabase'
@@ -359,7 +304,7 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB provides the loadTable method to load distributed tables and append data via append!. The specific script examples are as follows:
+DolphinDB provides `loadTable` method to load distributed tables and `append!` method to append data. 
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
@@ -369,8 +314,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 
-
-When the value retrieved by the user in the Java program is an array or a list, it is also convenient to construct a BasicTable for appending data. For example, there are now `boolArray, intArray, dblArray, dateArray, strArray` 5 list objects (List< T>), you can construct a BasicTable object with the following statement:
+When we retrieve an array or a list in the Java program, it is also convenient to construct a BasicTable for appending data. For example, if we have `boolArray, intArray, dblArray, dateArray, strArray` 5 list objects (List<T>), we can construct a BasicTable object:
 ```
 List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
 List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
@@ -379,10 +323,9 @@ BasicTable table1 = new BasicTable(colNames,cols);
 
 #### 7.3 Save data to local disk table
 
-Local disk tables are commonly used for computational analysis of static data sets, either for data input or as a calculated output. It does not support transactions, and does not support concurrent reading and writing.
+Local disk tables can be used for data analysis on historical data sets. They do not support transactions, nor do they support concurrent reading and writing.
 
 ```
-// Create a data table using the DolphinDB script
 dbPath = "C:/data/testDatabase"
 tbName = 'tb1'
 
@@ -391,7 +334,7 @@ db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
 
-DolphinDB provides the loadTable method to load local disk tables as well, and function append! to append data.
+DolphinDB provides `loadTable` method to load local disk tables, and function `append!` to append data.
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
@@ -402,11 +345,12 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 ```
 #### 7.4 Load table
 
+在Java API中，数据表保存为BasicTable对象。由于BasicTable是列式存储，所以若要在Java API中读取行数据需要先取出需要的列，再取出行。
 
-In the Java API, the table data is saved as a BasicTable object. Since the BasicTable is a columnar store, all the desultory needs to be read and used by retrieving the columns and retrieving the rows.
 
-In the example, the parameter BasicTable has 4 columns, which are `STRING, INT, TIMESTAMP, DOUBLE`, and the column names are `cstring, cint, ctimestamp, cdouble`.
+In Java API, a table is saved as a BasicTable object. Since BasicTable is column based, to retrieve rows we need to get the necessary columns first and then get the rows.
 
+In the example below, the BasicTable has 4 columns: STRING, INT, TIMESTAMP and DOUBLE. The column names are cstring, cint, ctimestamp and cdouble.
 
 ```
 public void test_loop_basicTable(BasicTable table1) throws Exception{
@@ -424,17 +368,16 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 }
 ```
 
-
 ### 8. Data type conversion between DolphinDB and Java
-The Java API provides objects that correspond to the internal data types of DolphinDB, usually named after Basic+ `<DataType>`, such as BasicInt, BasicDate, and so on.
-Some basic Java types, you can directly create the corresponding DOlphinDB data structure through the constructor, such as `new BasicInt(4)`, `new BasicDouble(1.23)`, but there are some types that need to be converted. The following list needs to be simple. Type of conversion:
+
+Java API provides objects that correspond to DolphinDB data types. They are usually named as Basic+ `<DataType>`, such as BasicInt, BasicDate, and so on.
+
+For certain basic Java types, we can directly create the corresponding DolphinDB data types such as `new BasicInt(4)`, `new BasicDouble(1.23)`. The following Java types, however, need to be converted.
 - `CHAR` type: The `CHAR` type in DolphinDB is stored as a Byte, so use the `BasicByte` type to construct `CHAR` in the Java API, for example `new BasicByte((byte)'c')`
 - `SYMBOL` type: The `SYMBOL` type in DolphinDB is an optimization of strings, which can improve the efficiency of DolphinDB for string data storage and query, but this type is not needed in Java, so Java API does not provide `BasicSymbol `This kind of object can be processed directly with `BasicString`.
-- Temporal type: The Temporal data type is internal stored as int or long type. DolphinDB provides 9 temporal data types: date, month, time, minute, second, datetime, timestamp, nanotime, nanotimestamp`, the highest precision can be Nanoseconds. For a detailed description, refer to [DolphinDB Timing Type and Conversion] (https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html). Since Java also provides data types such as `LocalDate, LocalTime, LocalDateTime, YearMonth`, the Java API provides all Java temporal types and conversion functions between int or long in the Utils class.
+- Temporal types: Temporal data types are stored as int or long type in DolphinDB. DolphinDB provides 9 temporal data types: date, month, time, minute, second, datetime, timestamp, nanotime, nanotimestamp, the highest precision can be Nanoseconds. For a detailed description, refer to [DolphinDB Timing Type and Conversion] (https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html). Since Java also provides data types such as LocalDate, LocalTime, LocalDateTime and YearMonth, Java API provides all Java temporal types and conversion functions between int or long in the Utils class.
 
-
-
-The following script shows the correspondence between the DolphinDB time type in the Java API and the Java native time type:
+The following script shows the correspondence between DolphinDB temporal types in Java API and Java native time types:
 
 ```
 //Date:2018.11.12
@@ -457,9 +400,8 @@ BasicNanoTime bnt = new BasicNanoTime(LocalTime.of(20,8,1,123456789));
 BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123456789))
 ```
 
-If the time is stored in a timestamp in a third-party system, the DolphinDB time object can also be instantiated with a timestamp.
-The Utils class in the Java API provides conversion algorithms for various time types and standard timestamps, such as converting millisecond timestamps to DolphinDB's `BasicTimestamp` objects:
-
+If a temporal variable is stored as timestamp in a third-party system, DolphinDB time object can also be instantiated with a timestamp.
+The Utils class in the Java API provides conversion algorithms for various temporal types and standard timestamps, such as converting millisecond timestamps to DolphinDB's `BasicTimestamp` objects:
 
 ```
 LocalDateTime dt = Utils.parseTimestamp(1543494854000l);
