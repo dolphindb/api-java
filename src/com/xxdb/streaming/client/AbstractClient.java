@@ -52,7 +52,6 @@ abstract class AbstractClient implements MessageDispatcher{
 		synchronized (topicToSite) {
 			if (topicToSite.containsKey(topic))
 				topicToSite.get(topic).msgId = msgId;
-			System.out.println("set: " + msgId);
 		}
 	}
 
