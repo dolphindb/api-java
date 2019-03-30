@@ -20,6 +20,8 @@ class MessageParser implements Runnable{
 	BufferedInputStream bis = null;
 	Socket socket = null;
 	MessageDispatcher dispatcher;
+	String topic;
+
 	public MessageParser(Socket socket, MessageDispatcher dispatcher){
 		this.socket = socket;
 		this.dispatcher = dispatcher;
@@ -55,13 +57,12 @@ class MessageParser implements Runnable{
 			
 			in.readLong();
 			long msgid = in.readLong();
-			
 			if (offset == -1) {
 				offset = msgid;
 			} else {
 				assert(offset == msgid);
 			}
-			String topic = in.readString();
+			topic = in.readString();
 			short flag = in.readShort();
 			EntityFactory factory = new BasicEntityFactory();
 			int form = flag>>8;
@@ -88,6 +89,7 @@ class MessageParser implements Runnable{
 				assert(body.rows() == 0);
 			}
 			else if (body.isVector()){
+				dispatcher.setMsgId(topic, msgid);
 				BasicAnyVector dTable = (BasicAnyVector)body;
 				
 				int colSize = dTable.rows();
@@ -108,7 +110,7 @@ class MessageParser implements Runnable{
 							}
 							BasicMessage rec = new BasicMessage(msgid,topic,row);
 							messages.add(rec);
-							msgid ++;
+							msgid++;
 						}
 						dispatcher.batchDispatch(messages);
 					}
@@ -119,7 +121,11 @@ class MessageParser implements Runnable{
 			}
 		}
 	} catch (Exception e) {
-		e.printStackTrace();
+		if (dispatcher.isClosed())
+			System.out.println("Successfully unsubscribed table.");
+		else {
+			dispatcher.tryReconnect(topic);
+		}
 	} finally {
 		try {
 			socket.close();
@@ -128,5 +134,4 @@ class MessageParser implements Runnable{
 		}
 	}
 }
-		
 }

@@ -20,12 +20,83 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected int listeningPort;
 	protected QueueManager queueManager = new QueueManager();
 	protected HashMap<String, List<IMessage>> messageCache = new HashMap<>();
-	protected HashMap<String, String> tableName2Topic = new HashMap<>();
+	protected HashMap<String, String> tableNameToTopic = new HashMap<>();
 	protected HashMap<String, Boolean> hostEndian = new HashMap<>();
-	protected Thread pThread ; 
+	protected Thread pThread;
+	private boolean closed = false;
+	protected HashMap<String, Site> topicToSite = new HashMap<>();
+	
+	protected class Site {
+		String host;
+		int port;
+		String tableName;
+		String actionName;
+		MessageHandler handler;
+		long msgId;
+		boolean reconnect;
+
+		Site(String host, int port, String tableName, String actionName, MessageHandler handler, long msgId, boolean reconnect) {
+			this.host = host;
+			this.port = port;
+			this.tableName = tableName;
+			this.actionName = actionName;
+			this.handler = handler;
+			this.msgId = msgId;
+			this.reconnect = reconnect;
+		}
+	}
+	
+	abstract protected void doReconnect(Site site);
+	
+	public void setMsgId(String topic, long msgId) {
+		synchronized (topicToSite) {
+			if (topicToSite.containsKey(topic))
+				topicToSite.get(topic).msgId = msgId;
+			System.out.println("set: " + msgId);
+		}
+	}
+
+	public void tryReconnect(String topic) {
+		System.out.println("Trigger reconnect");
+		queueManager.removeQueue(topic);
+    	Site site = null;
+    	synchronized (topicToSite) {
+			site = topicToSite.get(topic);
+		}
+    	if (!site.reconnect)
+    		return;
+		activeCloseConnection(site);
+		doReconnect(site);
+	}
+	
+	public void activeCloseConnection(Site site) {
+		while (true) {
+			try {
+				DBConnection conn = new DBConnection();
+				conn.connect(site.host, site.port);
+				String localIP = conn.getLocalAddress().getHostAddress();
+				List<Entity> params = new ArrayList<>();
+				params.add(new BasicString(localIP));
+				params.add(new BasicInt(listeningPort));
+				conn.run("activeClosePublishConnection", params);
+				conn.close();
+				return;
+			} catch (Exception ex) {
+				System.out.println("Unable to actively close the publish connection from site " + site.host + ":" + site.port);
+			}
+			
+			try {
+				Thread.sleep(1000);
+			} catch (Exception e) {
+
+			}
+		}
+	}
+
 	public AbstractClient() throws SocketException {
 		this(DEFAULT_PORT);
 	}
+	
 	public AbstractClient(int subscribePort) throws SocketException {
 		this.listeningPort = subscribePort;
 		Daemon daemon = new Daemon(subscribePort, this);
@@ -44,7 +115,6 @@ abstract class AbstractClient implements MessageDispatcher{
 	}
 	
 	private void flushToQueue() {
-
 		Set<String> keySet = messageCache.keySet();
 		for(String topic : keySet) {
 			try {
@@ -77,10 +147,16 @@ abstract class AbstractClient implements MessageDispatcher{
 			return hostEndian.get(host);
 		}
 		else
-			return false; 
+			return false;
 	}
 	
-	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName,String actionName, long offset) throws IOException,RuntimeException {
+	public boolean isClosed() {
+		return closed;
+	}
+	
+	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
+			String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect)
+			throws IOException,RuntimeException {
 		Entity re;
 		String topic = "";
 		
@@ -97,25 +173,37 @@ abstract class AbstractClient implements MessageDispatcher{
 		params.add(new BasicString(actionName));
 		re = dbConn.run("getSubscriptionTopic", params);
 		topic = ((BasicAnyVector)re).getEntity(0).getString();
-		BlockingQueue<List<IMessage>> queue = queueManager.addQueue(topic);
 		params.clear();
 		
-		tableName2Topic.put(host + ":" + port + ":" + tableName, topic);
-		
+		tableNameToTopic.put(host + ":" + port + ":" + tableName, topic);
+		synchronized (topicToSite) {
+			topicToSite.put(topic, new Site(host, port, tableName, actionName, handler, offset - 1, reconnect));
+		}
+
 		params.add(new BasicString(localIP));
 		params.add(new BasicInt(this.listeningPort));
 		params.add(new BasicString(tableName));
 		params.add(new BasicString(actionName));
-		if (offset != -1)
-			params.add(new BasicLong(offset));
+		params.add(new BasicLong(offset));
 		re = dbConn.run("publishTable", params);
-		
 		dbConn.close();
+
+		BlockingQueue<List<IMessage>> queue = queueManager.addQueue(topic);
 		return queue;
 	}
 	
+	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
+			String tableName, String actionName, long offset, boolean reconnect)
+			throws IOException,RuntimeException {
+		return subscribeInternal(host, port, tableName, actionName, null, offset, reconnect);
+	}
+
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName, long offset) throws IOException,RuntimeException {
-		return subscribeInternal(host,port,tableName,DEFAULT_ACTION_NAME,offset);
+		return subscribeInternal(host,port,tableName,DEFAULT_ACTION_NAME,offset,false);
+	}
+	
+	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName, String actionName, long offset) throws IOException,RuntimeException {
+		return subscribeInternal(host,port,tableName,actionName,offset,false);
 	}
 	
 	protected void unsubscribeInternal(String host,int port ,String tableName,String actionName) throws IOException {
@@ -129,6 +217,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		params.add(new BasicString(actionName));
 		dbConn.run("stopPublishTable", params);
 		dbConn.close();
+		closed = true;
 		return;
 	}
 

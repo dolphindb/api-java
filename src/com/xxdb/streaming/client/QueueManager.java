@@ -22,4 +22,8 @@ class QueueManager {
 		BlockingQueue<List<IMessage>> q = queueMap.get(topic);;
 		return q;
 	}
+	
+	public synchronized void removeQueue(String topic) {
+		queueMap.remove(topic);
+	}
 }
