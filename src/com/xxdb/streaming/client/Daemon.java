@@ -24,11 +24,12 @@ class Daemon  implements Runnable{
 			while(true)
 			{
 				Socket socket = ssocket.accept();
-				socket.setOOBInline(true);
+				socket.setKeepAlive(true);
 				MessageParser listener = new MessageParser(socket, dispatcher);
 				Thread listeningThread = new Thread(listener);
 				listeningThread.start();
-				new Thread(new ConnectionDetector(socket)).start();
+				if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
+					new Thread(new ConnectionDetector(socket)).start();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
