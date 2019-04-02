@@ -6,7 +6,7 @@ import java.util.List;
 
 interface MessageDispatcher {
 	boolean isRemoteLittleEndian(String host);
-    boolean isClosed();
+    boolean isClosed(String topic);
     void dispatch(IMessage message);
     void batchDispatch(List<IMessage> message);
     void tryReconnect(String topic);

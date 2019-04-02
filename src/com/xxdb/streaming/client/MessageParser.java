@@ -121,11 +121,10 @@ class MessageParser implements Runnable{
 			}
 		}
 	} catch (Exception e) {
-		if (dispatcher.isClosed())
-			System.out.println("Successfully unsubscribed table.");
-		else {
+		if (dispatcher.isClosed(topic))
+			return;
+		else
 			dispatcher.tryReconnect(topic);
-		}
 	} finally {
 		try {
 			socket.close();

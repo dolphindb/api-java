@@ -216,10 +216,16 @@ public class PartitionedTableAppender {
     // assume input is sanity checked.
     private int appendSingle(List<Entity> row) throws IOException {
         DBConnection conn = getConnection(row.get(partitionColumnIdx));
-        List<Entity> args = new ArrayList<>();
-        args.add(tableName);
-        args.addAll(row);
-        return ((BasicInt)conn.run("tableInsert", args)).getInt();
+        try {
+	        List<Entity> args = new ArrayList<>();
+	        args.add(tableName);
+	        args.addAll(row);
+	        return ((BasicInt)conn.run("tableInsert", args)).getInt();
+        } catch (IOException ex) {
+			throw ex;
+		} finally {
+			conn.close();
+		}
     }
     private void checkColumnType(int col, Entity.DATA_CATEGORY category, Entity.DATA_TYPE type) {
         Entity.DATA_CATEGORY expectCategory = this.columnCategories[col];

@@ -23,7 +23,6 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected HashMap<String, String> tableNameToTopic = new HashMap<>();
 	protected HashMap<String, Boolean> hostEndian = new HashMap<>();
 	protected Thread pThread;
-	private boolean closed = false;
 	protected HashMap<String, Site> topicToSite = new HashMap<>();
 	
 	protected class Site {
@@ -34,6 +33,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		MessageHandler handler;
 		long msgId;
 		boolean reconnect;
+		boolean closed = false;
 
 		Site(String host, int port, String tableName, String actionName, MessageHandler handler, long msgId, boolean reconnect) {
 			this.host = host;
@@ -50,8 +50,9 @@ abstract class AbstractClient implements MessageDispatcher{
 	
 	public void setMsgId(String topic, long msgId) {
 		synchronized (topicToSite) {
-			if (topicToSite.containsKey(topic))
-				topicToSite.get(topic).msgId = msgId;
+			Site site = topicToSite.get(topic);
+			if (site != null)
+				site.msgId = msgId;
 		}
 	}
 
@@ -73,12 +74,17 @@ abstract class AbstractClient implements MessageDispatcher{
 			try {
 				DBConnection conn = new DBConnection();
 				conn.connect(site.host, site.port);
-				String localIP = conn.getLocalAddress().getHostAddress();
-				List<Entity> params = new ArrayList<>();
-				params.add(new BasicString(localIP));
-				params.add(new BasicInt(listeningPort));
-				conn.run("activeClosePublishConnection", params);
-				conn.close();
+				try {
+					String localIP = conn.getLocalAddress().getHostAddress();
+					List<Entity> params = new ArrayList<>();
+					params.add(new BasicString(localIP));
+					params.add(new BasicInt(listeningPort));
+					conn.run("activeClosePublishConnection", params);
+				} catch (IOException ioex) {
+					throw ioex;
+				} finally {
+					conn.close();
+				}
 				return;
 			} catch (Exception ex) {
 				System.out.println("Unable to actively close the publish connection from site " + site.host + ":" + site.port);
@@ -149,8 +155,14 @@ abstract class AbstractClient implements MessageDispatcher{
 			return false;
 	}
 	
-	public boolean isClosed() {
-		return closed;
+	public boolean isClosed(String topic) {
+		synchronized (topicToSite) {
+			Site site = topicToSite.get(topic);
+			if (site != null)
+				return site.closed;
+			else
+				return true;
+		}
 	}
 	
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
@@ -161,32 +173,38 @@ abstract class AbstractClient implements MessageDispatcher{
 		
 		DBConnection dbConn = new DBConnection();
 		dbConn.connect(host, port);
-		String localIP = dbConn.getLocalAddress().getHostAddress();
-		
-		if(!hostEndian.containsKey(host)){
-			hostEndian.put(host, dbConn.getRemoteLittleEndian());
-		}
-		
-		List<Entity> params = new ArrayList<Entity>();
-		params.add(new BasicString(tableName));
-		params.add(new BasicString(actionName));
-		re = dbConn.run("getSubscriptionTopic", params);
-		topic = ((BasicAnyVector)re).getEntity(0).getString();
-		params.clear();
-		
-		tableNameToTopic.put(host + ":" + port + ":" + tableName, topic);
-		synchronized (topicToSite) {
-			topicToSite.put(topic, new Site(host, port, tableName, actionName, handler, offset - 1, reconnect));
-		}
+		try {
+			String localIP = dbConn.getLocalAddress().getHostAddress();
+			
+			if(!hostEndian.containsKey(host)){
+				hostEndian.put(host, dbConn.getRemoteLittleEndian());
+			}
+			
+			List<Entity> params = new ArrayList<Entity>();
+			params.add(new BasicString(tableName));
+			params.add(new BasicString(actionName));
+			re = dbConn.run("getSubscriptionTopic", params);
+			topic = ((BasicAnyVector)re).getEntity(0).getString();
+			params.clear();
+			
+			synchronized (tableNameToTopic) {
+				tableNameToTopic.put(host + ":" + port + ":" + tableName, topic);
+			}
+			synchronized (topicToSite) {
+				topicToSite.put(topic, new Site(host, port, tableName, actionName, handler, offset - 1, reconnect));
+			}
 
-		params.add(new BasicString(localIP));
-		params.add(new BasicInt(this.listeningPort));
-		params.add(new BasicString(tableName));
-		params.add(new BasicString(actionName));
-		params.add(new BasicLong(offset));
-		re = dbConn.run("publishTable", params);
-		dbConn.close();
-
+			params.add(new BasicString(localIP));
+			params.add(new BasicInt(this.listeningPort));
+			params.add(new BasicString(tableName));
+			params.add(new BasicString(actionName));
+			params.add(new BasicLong(offset));
+			re = dbConn.run("publishTable", params);
+		} catch (Exception ex) {
+			throw ex;
+		} finally {
+			dbConn.close();
+		}
 		BlockingQueue<List<IMessage>> queue = queueManager.addQueue(topic);
 		return queue;
 	}
@@ -208,15 +226,30 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected void unsubscribeInternal(String host,int port ,String tableName,String actionName) throws IOException {
 		DBConnection dbConn = new DBConnection();
 		dbConn.connect(host, port);
-		String localIP = dbConn.getLocalAddress().getHostAddress();
-		List<Entity> params = new ArrayList<Entity>();
-		params.add(new BasicString(localIP));
-		params.add(new BasicInt(this.listeningPort));
-		params.add(new BasicString(tableName));
-		params.add(new BasicString(actionName));
-		dbConn.run("stopPublishTable", params);
-		dbConn.close();
-		closed = true;
+		try {
+			String localIP = dbConn.getLocalAddress().getHostAddress();
+			List<Entity> params = new ArrayList<Entity>();
+			params.add(new BasicString(localIP));
+			params.add(new BasicInt(this.listeningPort));
+			params.add(new BasicString(tableName));
+			params.add(new BasicString(actionName));
+			dbConn.run("stopPublishTable", params);
+			String topic = null;
+			String fullTableName = host + ":" + port + ":" + tableName;
+			synchronized (tableNameToTopic) {
+				topic = tableNameToTopic.get(fullTableName);
+			}
+			synchronized (topicToSite) {
+				Site site = topicToSite.get(topic);
+				if (site != null)
+					site.closed = true;
+			}
+			System.out.println("Successfully unsubscribed table " + fullTableName);
+		} catch (Exception ex) {
+			throw ex;
+		} finally {
+			dbConn.close();
+		}
 		return;
 	}
 
