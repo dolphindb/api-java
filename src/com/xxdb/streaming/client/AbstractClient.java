@@ -11,6 +11,7 @@ import com.xxdb.data.BasicLong;
 import com.xxdb.data.BasicString;
 import com.xxdb.data.BasicAnyVector;
 import com.xxdb.data.Entity;
+import com.xxdb.data.Vector;
 import com.xxdb.streaming.client.IMessage;
 
 abstract class AbstractClient implements MessageDispatcher{
@@ -33,9 +34,11 @@ abstract class AbstractClient implements MessageDispatcher{
 		MessageHandler handler;
 		long msgId;
 		boolean reconnect;
+		Vector filter = null;
 		boolean closed = false;
 
-		Site(String host, int port, String tableName, String actionName, MessageHandler handler, long msgId, boolean reconnect) {
+		Site(String host, int port, String tableName, String actionName,
+				MessageHandler handler, long msgId, boolean reconnect, Vector filter) {
 			this.host = host;
 			this.port = port;
 			this.tableName = tableName;
@@ -43,6 +46,7 @@ abstract class AbstractClient implements MessageDispatcher{
 			this.handler = handler;
 			this.msgId = msgId;
 			this.reconnect = reconnect;
+			this.filter = filter;
 		}
 	}
 	
@@ -166,7 +170,8 @@ abstract class AbstractClient implements MessageDispatcher{
 	}
 	
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
-			String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect)
+			String tableName, String actionName, MessageHandler handler,
+			long offset, boolean reconnect, Vector filter)
 			throws IOException,RuntimeException {
 		Entity re;
 		String topic = "";
@@ -191,7 +196,7 @@ abstract class AbstractClient implements MessageDispatcher{
 				tableNameToTopic.put(host + ":" + port + ":" + tableName, topic);
 			}
 			synchronized (topicToSite) {
-				topicToSite.put(topic, new Site(host, port, tableName, actionName, handler, offset - 1, reconnect));
+				topicToSite.put(topic, new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter));
 			}
 
 			params.add(new BasicString(localIP));
@@ -199,6 +204,8 @@ abstract class AbstractClient implements MessageDispatcher{
 			params.add(new BasicString(tableName));
 			params.add(new BasicString(actionName));
 			params.add(new BasicLong(offset));
+			if (filter != null)
+				params.add(filter);
 			re = dbConn.run("publishTable", params);
 		} catch (Exception ex) {
 			throw ex;
@@ -212,7 +219,7 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
 			String tableName, String actionName, long offset, boolean reconnect)
 			throws IOException,RuntimeException {
-		return subscribeInternal(host, port, tableName, actionName, null, offset, reconnect);
+		return subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, null);
 	}
 
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName, long offset) throws IOException,RuntimeException {

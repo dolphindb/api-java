@@ -1,6 +1,7 @@
 package com.xxdb.streaming.client;
 
 
+import com.xxdb.data.Vector;
 import com.xxdb.streaming.client.IMessage;
 
 import java.io.IOException;
@@ -20,7 +21,7 @@ public class PollingClient extends AbstractClient{
     	while (true) {
     		try {
 				Thread.sleep(5000);
-    			BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, site.msgId + 1, true);
+    			BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter);
 				System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
     			topicPoller.setQueue(queue);
     			return;
@@ -31,11 +32,19 @@ public class PollingClient extends AbstractClient{
     	}
     }
     
-    public TopicPoller subscribe(String host,int port,String tableName,String actionName,long offset,boolean reconnect) throws IOException{
-    	BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName,actionName,offset,reconnect);
+    public TopicPoller subscribe(String host,int port,String tableName,String actionName,long offset,boolean reconnect,Vector filter) throws IOException{
+    	BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName,actionName,null,offset,reconnect,filter);
     	topicPoller = new TopicPoller(queue);
     	return topicPoller;
 	}
+    
+    public TopicPoller subscribe(String host,int port,String tableName,String actionName,long offset,boolean reconnect) throws IOException{
+    	return subscribe(host,port,tableName,actionName,offset,reconnect,null);
+	}
+    
+    public TopicPoller subscribe(String host,int port,String tableName,String actionName,long offset,Vector filter) throws IOException{
+        return subscribe(host,port,tableName,actionName,offset,false,filter);
+    }
 
     public TopicPoller subscribe(String host,int port,String tableName,String actionName,long offset) throws IOException{
         return subscribe(host,port,tableName,actionName,offset,false);

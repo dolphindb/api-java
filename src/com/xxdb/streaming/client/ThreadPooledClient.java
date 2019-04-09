@@ -1,6 +1,7 @@
 package com.xxdb.streaming.client;
 
 import com.xxdb.streaming.client.IMessage;
+import com.xxdb.data.Vector;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -107,11 +108,19 @@ public class ThreadPooledClient extends AbstractClient {
 		}
     }
 
-    public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port,tableName,actionName,offset,reconnect);
+    public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect,Vector filter) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port,tableName,actionName,handler,offset,reconnect,filter);
         synchronized (queueHandlers) {
             queueHandlers.put(tableNameToTopic.get(host + ":" + port + ":" + tableName), new QueueHandlerBinder(queue, handler));
         }
+    }
+    
+    public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect) throws IOException {
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, null);
+    }
+    
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, Vector filter) throws IOException {
+        subscribe(host, port, tableName, actionName, handler, offset, false, filter);
     }
     
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset) throws IOException {
