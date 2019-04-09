@@ -280,7 +280,7 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, 
 }
 ```
 
-若Java程序获取的数据处理后组织成BasicTable对象，tableInsert函数也可以接受一个表对象作为参数。
+The function `tableInsert` accepts a table object as input as well.
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
@@ -305,7 +305,7 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB provides `loadTable` method to load distributed tables and `append!` method to append data. 
+DolphinDB provides `loadTable` method to load distributed tables and `tableInsert` method to append data. 
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
@@ -335,7 +335,7 @@ db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
 
-DolphinDB provides `loadTable` method to load local disk tables, and function `append!` to append data.
+DolphinDB provides `loadTable` method to load local disk tables, and function `tableInsert` to append data.
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
