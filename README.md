@@ -251,7 +251,7 @@ There are 3 types of DolphinDB tables:
 DolphinDB offers several ways to save data:
 - Save a single row of data with `insert into`
 - Save multiple rows of data in bulk with function `tableInsert`
-- Save a table object with function `append!`
+- Save a table object with function `tableInsert`
 
 The table in the following examples has 4 columns. Their data types are string, int, timestamp and double. The column names are cstring, cint, ctimestamp and cdouble, respectively.
 ```
