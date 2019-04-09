@@ -345,9 +345,6 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 ```
 #### 7.4 Load table
 
-在Java API中，数据表保存为BasicTable对象。由于BasicTable是列式存储，所以若要在Java API中读取行数据需要先取出需要的列，再取出行。
-
-
 In Java API, a table is saved as a BasicTable object. Since BasicTable is column based, to retrieve rows we need to get the necessary columns first and then get the rows.
 
 In the example below, the BasicTable has 4 columns: STRING, INT, TIMESTAMP and DOUBLE. The column names are cstring, cint, ctimestamp and cdouble.
