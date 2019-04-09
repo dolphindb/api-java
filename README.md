@@ -311,7 +311,7 @@ DolphinDB provides `loadTable` method to load distributed tables and `append!` m
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     args.add(table1);
-    conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
+    conn.run(String.format("tableInsert{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
 
@@ -341,7 +341,7 @@ DolphinDB provides `loadTable` method to load local disk tables, and function `a
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     args.add(table1);
-    conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
+    conn.run(String.format("tableInsert{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
 #### 7.4 Load table
