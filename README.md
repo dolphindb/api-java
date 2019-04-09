@@ -280,16 +280,17 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, 
 }
 ```
 
-The example above uses partial application in DolphinDB. The table on the server is embeded in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
-
-##### 7.1.3 Save data in batches with `append!`
+若Java程序获取的数据处理后组织成BasicTable对象，tableInsert函数也可以接受一个表对象作为参数。
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
     List<Entity> args = Arrays.asList(table1);
-    conn.run("append!{shareTable}", args);
+    conn.run("tableInsert{shareTable}", args);
 }
 ```
+
+The example above uses partial application in DolphinDB. The table on the server is embeded in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+
 #### 7.2 Save data to a distributed table
 
 Distributed table is recommended by DolphinDB in production environment. It supports snapshot isolation and ensures data consistency. Distributed table supports multiple copy mechanism, which offers fault tolerance and load balancing.
