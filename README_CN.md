@@ -266,7 +266,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 }
 ```
 
-##### 7.1.2 使用`tableInsert`函数批量保存多条数据
+##### 7.1.2 使用`tableInsert`函数批量保存数组对象
 
 若Java程序获取的数据可以组织成List方式，`tableInsert`函数比较适合用来批量保存多条数据。这个函数可以接受多个数组作为参数，将数组追加到数据表中。
 
@@ -279,14 +279,14 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,L
 ```
 在本例中，使用了DolphinDB 中的“部分应用”这一特性，将服务端表名以tableInsert{sharedTable}的方式固化到`tableInsert`中，作为一个独立函数来使用。具体文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
-##### 7.1.3 使用`append！`函数批量保存数据
+##### 7.1.3 使用`tableInsert`函数保存BasicTable对象
 
-若Java程序是从DolphinDB的服务端获取数据表，经过Java程序处理后保存到内存表，那么可使用`append!`函数。`append!`函数接受一个表对象作为参数，将数据追加到数据表中。
+若Java程序获取的数据处理后组织成BasicTable对象，tableInsert函数也可以接受一个表对象作为参数，批量添加数据。
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
     List<Entity> args = Arrays.asList(table1);
-    conn.run("append!{shareTable}", args);
+    conn.run("tableInsert{shareTable}", args);
 }
 ```
 #### 7.2 保存数据到分布式表

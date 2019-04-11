@@ -1,6 +1,7 @@
 package com.xxdb.streaming.client;
 
 import com.xxdb.streaming.client.IMessage;
+import com.xxdb.data.Vector;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -28,6 +29,7 @@ public class ThreadPooledClient extends AbstractClient {
     public ThreadPooledClient() throws SocketException {
         this(DEFAULT_PORT, CORES);
     }
+
     public ThreadPooledClient(int subscribePort, int threadCount) throws SocketException{
         super(subscribePort);
         threadPool = Executors.newFixedThreadPool(threadCount);
@@ -78,6 +80,7 @@ public class ThreadPooledClient extends AbstractClient {
             }
         }.start();
     }
+
     class HandlerRunner implements Runnable{
         MessageHandler handler;
         IMessage message;
@@ -89,19 +92,63 @@ public class ThreadPooledClient extends AbstractClient {
             this.handler.doEvent(message);
         }
     }
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port,tableName,actionName, offset);
+    
+    protected void doReconnect(Site site) {
+		threadPool.shutdownNow();
+    	while (true) {
+			try {
+				Thread.sleep(5000);
+				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true);
+				System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
+				return;
+			} catch (Exception ex) {
+				System.out.println("Unable to subscribe table. Will try again after 5 seconds.");
+				ex.printStackTrace();
+			}
+		}
+    }
+
+    public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect,Vector filter) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port,tableName,actionName,handler,offset,reconnect,filter);
         synchronized (queueHandlers) {
-            queueHandlers.put(tableName2Topic.get(host + ":" + port + ":" + tableName), new QueueHandlerBinder(queue, handler));
+            queueHandlers.put(tableNameToTopic.get(host + ":" + port + ":" + tableName), new QueueHandlerBinder(queue, handler));
         }
     }
-    // subscribe to host:port on tableName with offset set to position past the last element
+    
+    public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect) throws IOException {
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, null);
+    }
+    
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, Vector filter) throws IOException {
+        subscribe(host, port, tableName, actionName, handler, offset, false, filter);
+    }
+    
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset) throws IOException {
+        subscribe(host, port, tableName, actionName, handler, offset, false);
+    }
+    
     public void subscribe(String host,int port,String tableName, String actionName, MessageHandler handler) throws IOException {
         subscribe(host, port, tableName, actionName, handler, -1);
     }
+    
+    public void subscribe(String host,int port,String tableName, String actionName, MessageHandler handler, boolean reconnect) throws IOException {
+        subscribe(host, port, tableName, actionName, handler, -1, reconnect);
+    }
 
-    public void subscribe(String host,int port,String tableName, MessageHandler handler) throws IOException {
-        subscribe(host, port, tableName, "", handler, -1);
+    public void subscribe(String host,int port,String tableName,MessageHandler handler) throws IOException {
+        subscribe(host, port, tableName, DEFAULT_ACTION_NAME, handler, -1);
+    }
+    
+    public void subscribe(String host,int port,String tableName,MessageHandler handler,boolean reconnect) throws IOException {
+        subscribe(host, port, tableName, DEFAULT_ACTION_NAME, handler, -1, reconnect);
+    }
+    
+    public void subscribe(String host,int port,String tableName,MessageHandler handler,long offset) throws IOException {
+        subscribe(host, port, tableName, DEFAULT_ACTION_NAME, handler, offset);
+    }
+    
+    public void subscribe(String host,int port,String tableName,MessageHandler handler,long offset,boolean reconnect) throws IOException {
+        subscribe(host, port, tableName, DEFAULT_ACTION_NAME, handler, offset, reconnect);
     }
 
     public void unsubscribe(String host,int port ,String tableName,String actionName) throws IOException {

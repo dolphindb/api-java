@@ -14,6 +14,11 @@ public class TopicPoller {
     public TopicPoller(BlockingQueue<List<IMessage>> queue) {
         this.queue = queue;
     }
+    
+    public void setQueue(BlockingQueue<List<IMessage>> queue) {
+    	this.queue = queue;
+    }
+   
     private void fillCache(long timeout) {
         assert(cache == null);
         List<IMessage> list = queue.poll();
@@ -32,7 +37,6 @@ public class TopicPoller {
             cache.addAll(list);
         }
     }
-
 
     public ArrayList<IMessage> poll(long timeout){
         if (cache == null) {

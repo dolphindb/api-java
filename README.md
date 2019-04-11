@@ -251,7 +251,7 @@ There are 3 types of DolphinDB tables:
 DolphinDB offers several ways to save data:
 - Save a single row of data with `insert into`
 - Save multiple rows of data in bulk with function `tableInsert`
-- Save a table object with function `append!`
+- Save a table object with function `tableInsert`
 
 The table in the following examples has 4 columns. Their data types are string, int, timestamp and double. The column names are cstring, cint, ctimestamp and cdouble, respectively.
 ```
@@ -280,16 +280,17 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, 
 }
 ```
 
-The example above uses partial application in DolphinDB. The table on the server is embeded in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
-
-##### 7.1.3 Save data in batches with `append!`
+The function `tableInsert` accepts a table object as input as well.
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
     List<Entity> args = Arrays.asList(table1);
-    conn.run("append!{shareTable}", args);
+    conn.run("tableInsert{shareTable}", args);
 }
 ```
+
+The example above uses partial application in DolphinDB. The table on the server is embeded in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+
 #### 7.2 Save data to a distributed table
 
 Distributed table is recommended by DolphinDB in production environment. It supports snapshot isolation and ensures data consistency. Distributed table supports multiple copy mechanism, which offers fault tolerance and load balancing.
@@ -304,13 +305,13 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB provides `loadTable` method to load distributed tables and `append!` method to append data. 
+DolphinDB provides `loadTable` method to load distributed tables and `tableInsert` method to append data. 
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     args.add(table1);
-    conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
+    conn.run(String.format("tableInsert{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
 
@@ -334,19 +335,16 @@ db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
 
-DolphinDB provides `loadTable` method to load local disk tables, and function `append!` to append data.
+DolphinDB provides `loadTable` method to load local disk tables, and function `tableInsert` to append data.
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     args.add(table1);
-    conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
+    conn.run(String.format("tableInsert{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
 #### 7.4 Load table
-
-在Java API中，数据表保存为BasicTable对象。由于BasicTable是列式存储，所以若要在Java API中读取行数据需要先取出需要的列，再取出行。
-
 
 In Java API, a table is saved as a BasicTable object. Since BasicTable is column based, to retrieve rows we need to get the necessary columns first and then get the rows.
 
