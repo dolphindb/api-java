@@ -11,10 +11,12 @@ import com.xxdb.data.Vector;
 
 public class DBConnectionTest {
 	private DBConnection conn;
-	
-	public DBConnectionTest() throws IOException{
+	public DBConnectionTest(){
+
+	}
+	public DBConnectionTest(String host, int port) throws IOException{
 		conn = new DBConnection();
-		if(!conn.connect("192.168.1.135",8981)){
+		if(!conn.connect(host,port)){
 			throw new IOException("Failed to connect to 2xdb server");
 		}
 	}
@@ -599,9 +601,17 @@ public class DBConnectionTest {
 	}
 
 	public static void main(String[] args){
+
 		try{
-			DBConnectionTest test = new DBConnectionTest();
-			/*test.testVoid();
+			String host = "127.0.0.1";
+			int port = 8848
+			if(args.length>=2){
+				host = args[0];
+				port = Integer.parseInt(args[1])
+			}
+
+			DBConnectionTest test = new DBConnectionTest(host,port);
+			test.testVoid();
 			test.testFunctionDef();
 			test.testIntegerVector();
 			test.testStringVector();
@@ -622,7 +632,7 @@ public class DBConnectionTest {
 			test.testFunctionIntMatrix(4, 2);
 			test.testFunctionDoubleMatrix(4, 2);
 			test.testFunctionStrMatrix();
-			test.testTableUpload();
+			/*test.testTableUpload();
 			//test.testBulkLoad();
 			test.Test_upload_table();
 			test.testLoginWithLogin();
@@ -641,7 +651,7 @@ public class DBConnectionTest {
 			//test.testFunction1();
 			//test.test_partialFunction();
 			//test.testFunction2();
-			test.testFunction3();
+			//test.testFunction3();
 
 		}
 
