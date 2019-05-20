@@ -10,22 +10,26 @@
    <mkdir dir="${classes_src}"/>
    <mkdir dir="${classes_test}"/>
 </target>
+
 <target name="compilesrc" depends="init">
    <!-- <javac srcdir="${test}" destdir="${dest}"/> -->
-   <javac srcdir="${src}" destdir="${classes_src}"/>
+   <javac srcdir="${src}" destdir="${classes_src}" includeantruntime="false" />
 </target>
 <target name="buildsrc" depends="compilesrc">
    <jar jarfile="${src_jar}" basedir="${classes_src}"/>
 </target>
 <target name="compiletest" depends="buildsrc">
    <!-- <javac srcdir="${test}" destdir="${dest}"/> -->
-   <javac srcdir="${test}" classpath="${src_jar}" destdir="${classes_test}"/>
+   <javac srcdir="${test}" classpath="${src_jar}" destdir="${classes_test}" includeantruntime="false" />
 </target>
 <target name="buildtest" depends="compiletest">
    <jar jarfile="${test_jar}" basedir="${classes_test}"/>
 </target>
 <target name="run" depends="buildtest">
-   <java classname="com.xxdb.DBConnectionTest" classpath="${test_jar};${src_jar}"/>
+   <java classname="com.xxdb.DBConnectionTest" classpath="${test_jar};${src_jar}">
+      <arg value="127.0.0.1"/>
+      <arg value="8848"/>
+   </java>
 </target>
 <!-- <target name="clean">
    <delete file="${dest}" />
