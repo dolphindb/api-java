@@ -465,7 +465,7 @@ client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
 
 当每次流数据表有新数据发布时，Java API会调用MyHandler方法，并将新数据通过msg参数传入。
 
-###### 断线重连
+#### 断线重连
 
 `reconnect`参数是一个布尔值，表示订阅意外中断后，是否会自动重新订阅。默认值为`false`。如果`reconnect=true`，有以下三种情况：
 
@@ -482,7 +482,7 @@ PollingClient client = new PollingClient(subscribePort);
 TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset, true);
 ```
 
-##### 启用filter
+#### 启用filter
 
 `filter`参数是一个向量。该参数需要发布端配合`setStreamTableFilterColumn`函数一起使用。使用`setStreamTableFilterColumn`指定流数据表的过滤列，流数据表过滤列在`filter`中的数据才会发布到订阅端，不在`filter`中的数据不会发布。
 
