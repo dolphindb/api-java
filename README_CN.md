@@ -494,5 +494,5 @@ filter.setInt(0, 1);
 filter.setInt(1, 2);
 
 PollingClient client = new PollingClient(subscribePort);
-TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset, filter);
+TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, actionName, offset, filter);
 ```
