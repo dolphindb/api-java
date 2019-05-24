@@ -422,3 +422,77 @@ long timestamp = Utils.countMilliseconds(dt);
 - Utils.countSeconds：计算给定时间到1970.01.01T00:00:00之间的秒数差，返回int
 - Utils.countMilliseconds：计算给定时间到1970.01.01T00:00:00之间的毫秒数差，返回long
 - Utils.countNanoseconds：计算给定时间到1970.01.01T00:00:00.000之间的纳秒数差，返回long
+
+### 9. Java流数据API
+
+Java程序可以通过API订阅流数据，当数据进入客户端后，Java API有两种处理数据的方式：
+
+- 客户机上的应用程序定期检查是否添加了新数据。如果添加了新数据，应用程序会获取数据并且在工作中使用它们。
+
+```
+PollingClient client = new PollingClient(subscribePort);
+TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset);
+
+while (true) {
+   ArrayList<IMessage> msgs = poller1.poll(1000);
+   if (msgs.size() > 0) {
+         BasicInt value = msgs.get(0).getEntity(2);  //取数据中第一行第二个字段
+   }
+}
+```
+
+每次流数据表发布新数据时，poller1会拉取到新数据。无新数据发布时，程序会阻塞在poller1.poll方法这里等待。
+
+Java API使用预先设定的MessageHandler获取及处理新数据。首先需要调用者定义数据处理器Handler，Handler需要实现com.xxdb.streaming.client.MessageHandler接口。
+
+- Java API使用预先设定的MessageHandler直接使用新数据。
+
+```
+public class MyHandler implements MessageHandler {
+       public void doEvent(IMessage msg) {
+               BasicInt qty = msg.getValue(2);
+               //..处理数据
+       }
+}
+```
+
+在启动订阅时，把handler实例作为参数传入订阅函数。
+
+```
+ThreadedClient client = new ThreadedClient(subscribePort);
+client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
+```
+
+当每次流数据表有新数据发布时，Java API会调用MyHandler方法，并将新数据通过msg参数传入。
+
+###### 断线重连
+
+`reconnect`参数是一个布尔值，表示订阅意外中断后，是否会自动重新订阅。默认值为`false`。如果`reconnect=true`，有以下三种情况：
+
+- 如果发布端与订阅端处于正常状态，但是网络中断，那么订阅端会在网络正常时，自动从中断位置重新订阅。
+- 如果发布端崩溃，订阅端会在发布端重启后不断尝试重新订阅。
+    - 如果发布端对流数据表启动了持久化，发布端重启后会首先读取硬盘上的数据，直到发布端读取到订阅中断位置的数据，订阅端才能成功重新订阅。
+    - 如果发布端没有对流数据表启用持久化，那么订阅端将自动重新订阅失败。
+- 如果订阅端崩溃，订阅端重启后不会自动重新订阅，需要重新执行`subscribe`函数。
+
+以下例子在订阅时，设置`reconnect`为`true`：
+
+```
+PollingClient client = new PollingClient(subscribePort);
+TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset, true);
+```
+
+##### 启用filter
+
+`filter`参数是一个向量。该参数需要发布端配合`setStreamTableFilterColumn`函数一起使用。使用`setStreamTableFilterColumn`指定流数据表的过滤列，流数据表过滤列在`filter`中的数据才会发布到订阅端，不在`filter`中的数据不会发布。
+
+以下例子将一个包含元素1和2的整数类型向量作为`subscribe`的`filter`参数：
+
+```
+BasicIntVector filter = new BasicIntVector(2);
+filter.setInt(0, 1);
+filter.setInt(1, 2);
+
+PollingClient client = new PollingClient(subscribePort);
+TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset, filter);
+```
