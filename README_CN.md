@@ -5,12 +5,12 @@ Java API遵循面向接口编程的原则。Java API使用接口类Entity来表�
 
 拓展的接口类|命名规则|例子
 ---|---|---
-scalar|Basic\<DataType\>|BasicInt, BasicDouble, BasicDate, etc.
-vector, matrix|Basic\<DataType\>\<DataForm\>|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
-set, dictionary, table|Basic\<DataForm\>|BasicSet, BasicDictionary, BasicTable.
+scalar|`Basic<DataType>`|BasicInt, BasicDouble, BasicDate, etc.
+vector, matrix|`Basic<DataType><DataForm>`|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
+set, dictionary, table|`Basic<DataForm>`|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
-"Basic"表示基本的数据类型接口，\<DataType\>表示DolphinDB数据类型名称，\<DataForm\>是一个DolphinDB数据形式名称。接口和类的详细描述请参考[Java API手册](https://www.dolphindb.com/javaapi/)。
+"Basic"表示基本的数据类型接口，`<DataType>`表示DolphinDB数据类型名称，`<DataForm>`是一个DolphinDB数据形式名称。接口和类的详细描述请参考[Java API手册](https://www.dolphindb.com/javaapi/)。
 
 DolphinDB Java API提供的最核心的对象是DBConnection。Java应用可以通过它在DolphinDB服务器上执行脚本和函数，并在两者之间双向传递数据。DBConnection类提供如下主要方法：
 
@@ -266,7 +266,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 }
 ```
 
-##### 7.1.2 使用`tableInsert`函数批量保存多条数据
+##### 7.1.2 使用`tableInsert`函数批量保存数组对象
 
 若Java程序获取的数据可以组织成List方式，`tableInsert`函数比较适合用来批量保存多条数据。这个函数可以接受多个数组作为参数，将数组追加到数据表中。
 
@@ -279,14 +279,14 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,L
 ```
 在本例中，使用了DolphinDB 中的“部分应用”这一特性，将服务端表名以tableInsert{sharedTable}的方式固化到`tableInsert`中，作为一个独立函数来使用。具体文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
-##### 7.1.3 使用`append！`函数批量保存数据
+##### 7.1.3 使用`tableInsert`函数保存BasicTable对象
 
-若Java程序是从DolphinDB的服务端获取数据表，经过Java程序处理后保存到内存表，那么可使用`append!`函数。`append!`函数接受一个表对象作为参数，将数据追加到数据表中。
+若Java程序获取的数据处理后组织成BasicTable对象，tableInsert函数也可以接受一个表对象作为参数，批量添加数据。
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
     List<Entity> args = Arrays.asList(table1);
-    conn.run("append!{shareTable}", args);
+    conn.run("tableInsert{shareTable}", args);
 }
 ```
 #### 7.2 保存数据到分布式表
@@ -422,3 +422,77 @@ long timestamp = Utils.countMilliseconds(dt);
 - Utils.countSeconds：计算给定时间到1970.01.01T00:00:00之间的秒数差，返回int
 - Utils.countMilliseconds：计算给定时间到1970.01.01T00:00:00之间的毫秒数差，返回long
 - Utils.countNanoseconds：计算给定时间到1970.01.01T00:00:00.000之间的纳秒数差，返回long
+
+### 9. Java流数据API
+
+Java程序可以通过API订阅流数据，当数据进入客户端后，Java API有两种处理数据的方式：
+
+- 客户机上的应用程序定期检查是否添加了新数据。如果添加了新数据，应用程序会获取数据并且在工作中使用它们。
+
+```
+PollingClient client = new PollingClient(subscribePort);
+TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset);
+
+while (true) {
+   ArrayList<IMessage> msgs = poller1.poll(1000);
+   if (msgs.size() > 0) {
+         BasicInt value = msgs.get(0).getEntity(2);  //取数据中第一行第二个字段
+   }
+}
+```
+
+每次流数据表发布新数据时，poller1会拉取到新数据。无新数据发布时，程序会阻塞在poller1.poll方法这里等待。
+
+Java API使用预先设定的MessageHandler获取及处理新数据。首先需要调用者定义数据处理器Handler，Handler需要实现com.xxdb.streaming.client.MessageHandler接口。
+
+- Java API使用预先设定的MessageHandler直接使用新数据。
+
+```
+public class MyHandler implements MessageHandler {
+       public void doEvent(IMessage msg) {
+               BasicInt qty = msg.getValue(2);
+               //..处理数据
+       }
+}
+```
+
+在启动订阅时，把handler实例作为参数传入订阅函数。
+
+```
+ThreadedClient client = new ThreadedClient(subscribePort);
+client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
+```
+
+当每次流数据表有新数据发布时，Java API会调用MyHandler方法，并将新数据通过msg参数传入。
+
+#### 断线重连
+
+`reconnect`参数是一个布尔值，表示订阅意外中断后，是否会自动重新订阅。默认值为`false`。如果`reconnect=true`，有以下三种情况：
+
+- 如果发布端与订阅端处于正常状态，但是网络中断，那么订阅端会在网络正常时，自动从中断位置重新订阅。
+- 如果发布端崩溃，订阅端会在发布端重启后不断尝试重新订阅。
+    - 如果发布端对流数据表启动了持久化，发布端重启后会首先读取硬盘上的数据，直到发布端读取到订阅中断位置的数据，订阅端才能成功重新订阅。
+    - 如果发布端没有对流数据表启用持久化，那么订阅端将自动重新订阅失败。
+- 如果订阅端崩溃，订阅端重启后不会自动重新订阅，需要重新执行`subscribe`函数。
+
+以下例子在订阅时，设置`reconnect`为`true`：
+
+```
+PollingClient client = new PollingClient(subscribePort);
+TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset, true);
+```
+
+#### 启用filter
+
+`filter`参数是一个向量。该参数需要发布端配合`setStreamTableFilterColumn`函数一起使用。使用`setStreamTableFilterColumn`指定流数据表的过滤列，流数据表过滤列在`filter`中的数据才会发布到订阅端，不在`filter`中的数据不会发布。
+
+以下例子将一个包含元素1和2的整数类型向量作为`subscribe`的`filter`参数：
+
+```
+BasicIntVector filter = new BasicIntVector(2);
+filter.setInt(0, 1);
+filter.setInt(1, 2);
+
+PollingClient client = new PollingClient(subscribePort);
+TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, actionName, offset, filter);
+```
