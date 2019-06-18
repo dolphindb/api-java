@@ -67,13 +67,13 @@ abstract class AbstractClient implements MessageDispatcher{
     	synchronized (topicToSite) {
 			site = topicToSite.get(topic);
 		}
-    	if (!site.reconnect)
+    	if (site == null || !site.reconnect)
     		return;
 		activeCloseConnection(site);
 		doReconnect(site);
 	}
 	
-	public void activeCloseConnection(Site site) {
+	private void activeCloseConnection(Site site) {
 		while (true) {
 			try {
 				DBConnection conn = new DBConnection();
@@ -240,6 +240,7 @@ abstract class AbstractClient implements MessageDispatcher{
 			params.add(new BasicInt(this.listeningPort));
 			params.add(new BasicString(tableName));
 			params.add(new BasicString(actionName));
+			
 			dbConn.run("stopPublishTable", params);
 			String topic = null;
 			String fullTableName = host + ":" + port + ":" + tableName;

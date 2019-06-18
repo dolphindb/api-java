@@ -107,6 +107,6 @@ public class ThreadedClient extends  AbstractClient {
     }
 
     public void unsubscribe(String host,int port ,String tableName) throws IOException {
-        unsubscribeInternal(host, port, tableName,"");
+        unsubscribeInternal(host, port, tableName);
     }
 }

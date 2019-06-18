@@ -22,7 +22,7 @@ public class TableAppenderTest {
         BasicInt size = new BasicInt(random.nextInt(100));
         BasicInt corr = new BasicInt(random.nextInt(16));
         BasicInt g127 = new BasicInt(random.nextInt(128));
-        BasicString cond = new BasicString("中国");
+        BasicString cond = new BasicString("china");
         BasicByte ex = new BasicByte((byte)'B');
         return Arrays.asList(symbol, date, time, price, size, g127, corr, cond, ex);
     }
