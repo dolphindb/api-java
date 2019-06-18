@@ -37,7 +37,7 @@ public class ThreadPooledClient extends AbstractClient {
             private LinkedList<IMessage> backlog = new LinkedList<>();
 
             private boolean fillBacklog() {
-                boolean filled = true;
+                boolean filled = false;
                 synchronized (queueHandlers) {
                     Set<String> keySet = queueHandlers.keySet();
                     for (String topic : keySet) {
@@ -98,7 +98,7 @@ public class ThreadPooledClient extends AbstractClient {
     	while (true) {
 			try {
 				Thread.sleep(5000);
-				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true);
+				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter);
 				System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
 				return;
 			} catch (Exception ex) {
