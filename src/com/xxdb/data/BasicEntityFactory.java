@@ -5,7 +5,7 @@ import com.xxdb.io.ExtendedDataInput;
 
 public class BasicEntityFactory implements EntityFactory{
 	private TypeFactory[] factories;
-	
+
 	public BasicEntityFactory(){
 		factories = new TypeFactory[Entity.DATA_TYPE.values().length];
 		factories[Entity.DATA_TYPE.DT_BOOL.ordinal()] = new BooleanFactory();
@@ -20,6 +20,7 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[Entity.DATA_TYPE.DT_TIME.ordinal()] = new TimeFactory();
 		factories[Entity.DATA_TYPE.DT_NANOTIME.ordinal()] = new NanoTimeFactory();
 		factories[Entity.DATA_TYPE.DT_DATE.ordinal()] = new DateFactory();
+		factories[Entity.DATA_TYPE.DT_DATEHOUR.ordinal()] = new DateHourFactory();
 		factories[Entity.DATA_TYPE.DT_MONTH.ordinal()] = new MonthFactory();
 		factories[Entity.DATA_TYPE.DT_DATETIME.ordinal()] = new DateTimeFactory();
 		factories[Entity.DATA_TYPE.DT_TIMESTAMP.ordinal()] = new TimestampFactory();
@@ -244,6 +245,17 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createVectorWithDefaultValue(int size){ return new BasicDateVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicDateVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicDateMatrix(rows, columns);}
+	}
+	
+	private class DateHourFactory implements TypeFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicDateHour(in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicDateHourVector(Entity.DATA_FORM.DF_VECTOR, in);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicDateHourVector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicDateHourMatrix(in);}
+		public Scalar createScalarWithDefaultValue() { return new BasicDateHour(0);}
+		public Vector createVectorWithDefaultValue(int size) { return new BasicDateHourVector(size);}
+		public Vector createPairWithDefaultValue(){ return new BasicDateHourVector(Entity.DATA_FORM.DF_PAIR, 2);}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicDateHourMatrix(rows, columns);}
 	}
 	
 	private class MonthFactory implements TypeFactory{

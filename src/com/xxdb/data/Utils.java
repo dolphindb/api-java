@@ -106,6 +106,28 @@ public class Utils {
 		return LocalDateTime.of(date.getYear(), date.getMonth(), date.getDayOfMonth(), hour, minute, second);
 	}
 	
+	public static int countHours(LocalDateTime dt) {
+		return countHours(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour());
+	}
+	
+	public static int countHours(int year, int month, int day, int hour) {
+		int days = countDays(year, month, day);
+		return days * 24 + hour;
+	}
+	
+	public static LocalDateTime parseDateHour(int hours){
+		LocalDate date;
+		int days = hours / 24;
+		if (hours >= 0)
+			date = Utils.parseDate(days);
+		else
+			date = Utils.parseDate(days - 1);
+		hours = hours % 24;
+		if (hours < 0)
+			hours += 24;
+		return LocalDateTime.of(date.getYear(), date.getMonth(), date.getDayOfMonth(), hours, 0);
+	}
+	
 	public static long countMilliseconds(LocalDateTime dt){
 		long seconds = countSeconds(dt);
 		return seconds * 1000 + dt.getNano() / 1000000;
