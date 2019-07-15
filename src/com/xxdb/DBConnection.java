@@ -332,8 +332,13 @@ public class DBConnection {
 				throw new IOException("Received invalid header: " + header);
 			}
 			
-			if(reconnect)
+			if(reconnect) {
 				sessionID = headers[0];
+				if (userId.length() > 0 && password.length() > 0)
+					login();
+				if (startup != null && startup.length() > 0)
+					run(startup);
+			}
 			int numObject = Integer.parseInt(headers[1]);
 			
 			String msg = in.readLine();
