@@ -10,11 +10,15 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.xxdb.data.BasicBoolean;
 import com.xxdb.data.BasicEntityFactory;
+import com.xxdb.data.BasicIntVector;
 import com.xxdb.data.BasicString;
+import com.xxdb.data.BasicStringVector;
+import com.xxdb.data.BasicTable;
 import com.xxdb.data.Entity;
 import com.xxdb.data.EntityFactory;
 import com.xxdb.data.Void;
@@ -55,8 +59,24 @@ public class DBConnection {
 	private int port;
 	private String userId;
 	private String password;
+	private String startup = null;
 	private boolean encrypted;
+	private Site sites[] = null;
+	private boolean highAvailability;
 	
+	class Site {
+		private String hostName;
+		private int port;
+
+		public Site(String hostName, int port) {
+			this.hostName = hostName;
+			this.port = port;
+		}
+		
+		public String getHostName() { return hostName; }
+		public int getPort() { return port; }
+	}
+
 	public DBConnection(){
 		factory = new BasicEntityFactory();
 		mutex = new ReentrantLock();
@@ -73,10 +93,30 @@ public class DBConnection {
 	}
 	
 	public boolean connect(String hostName, int port) throws IOException{
-		return connect(hostName, port, "", "");
+		return connect(hostName, port, "", "", null, false);
+	}
+
+	public boolean connect(String hostName, int port, String startup) throws IOException{
+		return connect(hostName, port, "", "", startup, false);
+	}
+	
+	public boolean connect(String hostName, int port, String startup, boolean highAvailability) throws IOException{
+		return connect(hostName, port, "", "", startup, highAvailability);
+	}
+
+	public boolean connect(String hostName, int port, boolean highAvailability) throws IOException{
+		return connect(hostName, port, "", "", null, highAvailability);
 	}
 	
 	public boolean connect(String hostName, int port, String userId, String password) throws IOException{
+		return connect(hostName, port, userId, password, null, false);
+	}
+
+	public boolean connect(String hostName, int port, String userId, String password, String startup) throws IOException{
+		return connect(hostName, port, userId, password, startup, false);
+	}
+	
+	public boolean connect(String hostName, int port, String userId, String password, String startup, boolean highAvailability) throws IOException{
 		mutex.lock();
 		try{
 			if(!sessionID.isEmpty()){
@@ -89,6 +129,8 @@ public class DBConnection {
 			this.userId = userId;
 			this.password = password;
 			this.encrypted = true;
+			this.startup = startup;
+			this.highAvailability = highAvailability;
 			
 			return connect();
 		}
@@ -139,6 +181,23 @@ public class DBConnection {
 		if(!userId.isEmpty() && !password.isEmpty())
 			login();
 		
+		if (startup != null && startup.length() > 0)
+			run(startup);
+		
+		if (highAvailability) {
+			try {
+				BasicTable hostAndPort = (BasicTable) run("select host, port from rpc(getControllerAlias(),getClusterPerf) where mode=0");
+				BasicStringVector hosts = (BasicStringVector) hostAndPort.getColumn(0);
+				BasicIntVector ports = (BasicIntVector) hostAndPort.getColumn(1);
+				int rows = hostAndPort.rows();
+				sites = new Site[rows];
+				for (int i = 0; i < rows; i++)
+					sites[i] = new Site(hosts.getString(i), ports.getInt(i));
+			}
+			catch (Exception e) {
+			}
+		}
+
 		return true;
 	}
 	
@@ -178,6 +237,23 @@ public class DBConnection {
 	
 	public boolean getRemoteLittleEndian (){
 		return this.remoteLittleEndian;
+	}
+	
+	private boolean switchToRandomAvailableSite() throws IOException {
+		if (sites.length <= 1)
+			return false;
+		Site availableSites[] = new Site[sites.length - 1];
+		int idx = 0;
+		for (int i = 0; i < sites.length; i++) {
+			if (sites[i].getHostName() != hostName && sites[i].getPort() != port)
+				availableSites[idx++] = sites[i];
+		}
+		Site nextSite = availableSites[new Random().nextInt(availableSites.length)];
+		hostName = nextSite.getHostName();
+		port = nextSite.getPort();
+		if (startup != null && startup.length() > 0)
+			run(startup);
+		return true;
 	}
 	
 	public Entity tryRun(String script) throws IOException{
@@ -285,6 +361,14 @@ public class DBConnection {
 				socket = null;
 				throw ex;
 			}
+		}
+		catch (Exception ex) {
+			if (socket != null || !highAvailability || sites == null || sites.length == 0)
+				throw ex;
+			if (switchToRandomAvailableSite())
+				return run(script, listener);
+			else
+				throw ex;
 		}
 		finally{
 			mutex.unlock();
@@ -396,6 +480,14 @@ public class DBConnection {
 				socket = null;
 				throw ex;
 			}
+		}
+		catch (Exception ex) {
+			if (socket != null || !highAvailability || sites == null || sites.length == 0)
+				throw ex;
+			if (switchToRandomAvailableSite())
+				return run(function, arguments);
+			else
+				throw ex;
 		}
 		finally{
 			mutex.unlock();
@@ -530,6 +622,10 @@ public class DBConnection {
 	
 	public int getPort(){
 		return port;
+	}
+	
+	public String getSessionID() {
+		return sessionID;
 	}
 	
 	public InetAddress getLocalAddress(){
