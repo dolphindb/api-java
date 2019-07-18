@@ -114,6 +114,10 @@ public class DBConnection {
 		return connect(hostName, port, userId, password, null, false);
 	}
 
+	public boolean connect(String hostName, int port, String userId, String password, boolean highAvailability) throws IOException{
+		return connect(hostName, port, userId, password, null, highAvailability);
+	}
+	
 	public boolean connect(String hostName, int port, String userId, String password, String startup) throws IOException{
 		return connect(hostName, port, userId, password, startup, false);
 	}
@@ -154,7 +158,6 @@ public class DBConnection {
 		out.writeByte('\n');
 		out.writeBytes(body);
 		out.flush();
-		
 
 		String line = input.readLine();
 		int endPos = line.indexOf(' ');
@@ -275,6 +278,10 @@ public class DBConnection {
 	
 	public Entity run(String script) throws IOException{
 		return run(script, (ProgressListener)null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
+	}
+	
+	public Entity run(String script, int priority) throws IOException{
+		return run(script, (ProgressListener)null, priority, DEFAULT_PARALLELISM);
 	}
 	
 	public Entity run(String script, int priority, int parallelism) throws IOException{
@@ -415,6 +422,10 @@ public class DBConnection {
 		return run(function, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
 	}
 	
+	public Entity run(String function, List<Entity> arguments, int priority) throws IOException{
+		return run(function, arguments, priority, DEFAULT_PARALLELISM);
+	}
+	
 	public Entity run(String function, List<Entity> arguments, int priority, int parallelism) throws IOException{
 		mutex.lock();
 		try{
@@ -453,7 +464,7 @@ public class DBConnection {
 					throw ex;
 				}
 				
-				try {					
+				try {
 					connect();
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 					out.writeBytes("API "+sessionID+" ");
