@@ -256,8 +256,10 @@ public class DBConnection {
 		Site nextSite = availableSites[new Random().nextInt(availableSites.length)];
 		hostName = nextSite.getHostName();
 		port = nextSite.getPort();
-		if (startup != null && startup.length() > 0)
-			run(startup);
+		try {
+			connect();
+		}
+		catch (Exception e) {}
 		return true;
 	}
 	
