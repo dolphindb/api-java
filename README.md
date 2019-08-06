@@ -253,6 +253,8 @@ DolphinDB offers several ways to save data:
 - Save multiple rows of data in bulk with function `tableInsert`
 - Save a table object with function `tableInsert`
 
+It is not recommended to save data with function `append!`, because `append!` will return a table schema, increasing the network traffic.
+
 The table in the following examples has 4 columns. Their data types are string, int, timestamp and double. The column names are cstring, cint, ctimestamp and cdouble, respectively.
 ```
 t = table(10000:0,`cstring`cint`ctimestamp`cdouble,[STRING,INT,TIMESTAMP,DOUBLE])
