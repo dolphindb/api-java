@@ -248,7 +248,9 @@ DolphinDB数据表按存储方式分为三种:
 DolphinDB提供多种方式来保存数据：
 - 通过`insert into`保存单条数据
 - 通过`tableInsert`函数批量保存多条数据
-- 通过`append!`函数保存数据表
+- 通过`tableInsert`函数保存数据表
+
+一般不建议通过`append!`函数保存数据，因为`append!`函数会返回一个表结构，增加通信量。
 
 下面分别介绍三种方式保存数据的实例，在例子中使用到的数据表有4个列，分别是string, int, timestamp, double类型，列名分别为cstring, cint, ctimestamp, cdouble。
 ```
@@ -303,13 +305,13 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB提供`loadTable`方法可以加载分布式表，通过`append!`方式追加数据，具体的脚本示例如下：
+DolphinDB提供`loadTable`方法可以加载分布式表，通过`tableInsert`方式追加数据，具体的脚本示例如下：
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     args.add(table1);
-    conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
+    conn.run(String.format("tableInsert{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
 
@@ -334,12 +336,12 @@ if(existsDatabase(dbPath)){dropDatabase(dbPath)}
 db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
-DolphinDB提供`loadTable`方法同样可以加载本地磁盘表，通过`append!`追加数据。
+DolphinDB提供`loadTable`方法同样可以加载本地磁盘表，通过`tableInsert`追加数据。
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     args.add(table1);
-    conn.run(String.format("append!{loadTable('%s','tb1')}",dbPath), args);
+    conn.run(String.format("tableInsert{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
 #### 7.4 读取和使用数据表
