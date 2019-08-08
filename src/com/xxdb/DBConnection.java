@@ -10,15 +10,13 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.xxdb.data.BasicBoolean;
 import com.xxdb.data.BasicEntityFactory;
-import com.xxdb.data.BasicIntVector;
+import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicString;
 import com.xxdb.data.BasicStringVector;
-import com.xxdb.data.BasicTable;
 import com.xxdb.data.Entity;
 import com.xxdb.data.EntityFactory;
 import com.xxdb.data.Void;
@@ -63,21 +61,9 @@ public class DBConnection {
 	private String password;
 	private String startup = null;
 	private boolean encrypted;
-	private Site sites[] = null;
+	private String controllerHost = null;
+	private int controllerPort;
 	private boolean highAvailability;
-	
-	class Site {
-		private String hostName;
-		private int port;
-
-		public Site(String hostName, int port) {
-			this.hostName = hostName;
-			this.port = port;
-		}
-		
-		public String getHostName() { return hostName; }
-		public int getPort() { return port; }
-	}
 
 	public DBConnection(){
 		factory = new BasicEntityFactory();
@@ -191,13 +177,8 @@ public class DBConnection {
 		
 		if (highAvailability) {
 			try {
-				BasicTable hostAndPort = (BasicTable) run("select host, port from rpc(getControllerAlias(),getClusterPerf) where mode=0");
-				BasicStringVector hosts = (BasicStringVector) hostAndPort.getColumn(0);
-				BasicIntVector ports = (BasicIntVector) hostAndPort.getColumn(1);
-				int rows = hostAndPort.rows();
-				sites = new Site[rows];
-				for (int i = 0; i < rows; i++)
-					sites[i] = new Site(hosts.getString(i), ports.getInt(i));
+				controllerHost = ((BasicString) run("rpc(getControllerAlias(), getNodeHost)")).getString();
+				controllerPort = ((BasicInt) run("rpc(getControllerAlias(), getNodePort)")).getInt();
 			}
 			catch (Exception e) {
 			}
@@ -245,21 +226,24 @@ public class DBConnection {
 	}
 	
 	private boolean switchToRandomAvailableSite() throws IOException {
-		if (sites.length <= 1)
+		if (controllerHost == null)
 			return false;
-		Site availableSites[] = new Site[sites.length - 1];
-		int idx = 0;
-		for (int i = 0; i < sites.length; i++) {
-			if (sites[i].getHostName() != hostName && sites[i].getPort() != port)
-				availableSites[idx++] = sites[i];
-		}
-		Site nextSite = availableSites[new Random().nextInt(availableSites.length)];
-		hostName = nextSite.getHostName();
-		port = nextSite.getPort();
+		DBConnection tmp = new DBConnection();
+		tmp.connect(controllerHost, controllerPort);
+		BasicStringVector availableSites = (BasicStringVector) tmp.run("getClusterLiveDataNodes(false)");
+		tmp.close();
+		int size = availableSites.rows();
+		if (size <= 0)
+			return false;
+		String site[] = availableSites.getString(0).split(":");
+		hostName = site[0];
+		port = new Integer(site[1]);
 		try {
 			connect();
 		}
-		catch (Exception e) {}
+		catch (Exception e) {
+			return false;
+		}
 		return true;
 	}
 	
@@ -304,6 +288,8 @@ public class DBConnection {
 				else{
 					socket = new Socket(hostName, port);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+					in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
+						new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
 				}
 			}
 	
@@ -393,10 +379,12 @@ public class DBConnection {
 			}
 		}
 		catch (Exception ex) {
-			if (socket != null || !highAvailability || sites == null || sites.length == 0)
+			if (socket != null || !highAvailability)
 				throw ex;
-			if (switchToRandomAvailableSite())
+			if (switchToRandomAvailableSite()) {
+				mutex.unlock();
 				return run(script, listener, priority, parallelism);
+			}
 			else
 				throw ex;
 		}
@@ -526,10 +514,12 @@ public class DBConnection {
 			}
 		}
 		catch (Exception ex) {
-			if (socket != null || !highAvailability || sites == null || sites.length == 0)
+			if (socket != null || !highAvailability)
 				throw ex;
-			if (switchToRandomAvailableSite())
+			if (switchToRandomAvailableSite()) {
+				mutex.unlock();
 				return run(function, arguments, priority, parallelism);
+			}
 			else
 				throw ex;
 		}
