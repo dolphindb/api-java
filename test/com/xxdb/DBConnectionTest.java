@@ -189,15 +189,15 @@ public class DBConnectionTest {
 		System.out.println("over Foo5");
 	}
 
-	public void testAnyVector() throws IOException{
+	public void testAnyVector() throws IOException, Exception{
 		BasicAnyVector result = (BasicAnyVector)conn.run("{1, 2, {1,3, 5},{0.9, 0.8}}");
 		caseCount++;
 		//System.out.println(result.getString());
-		if(result.get(0)!=1)
+		if(result.get(0).getNumber().intValue()!=1)
 			failedCount++;
 		caseCount++;
 		result = (BasicAnyVector)conn.run("eachRight(def(x,y):x+y,1,(1,2,3))");
-		if(result.get(0)!=2)
+		if(result.get(0).getNumber().intValue()!=2)
 			failedCount++;
 
 //		System.out.println(result.getString());
