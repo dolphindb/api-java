@@ -200,7 +200,6 @@ public class Simulator {
 
 			n=10000000
 			share streamTable(n:0, `symbol`date`time`bid`ofr`bidsiz`ofrsiz`mode`ex`mmid, [SYMBOL,DATE,SECOND,DOUBLE,DOUBLE,INT,INT,INT,SYMBOL,SYMBOL]) as trades1
-			t=NULL
 		 */
 		if (args.length < 3) {
 			System.out.println("Usage: Simulator hostname port path/to/csv");
