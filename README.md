@@ -25,6 +25,8 @@ The most important object provided by DolphinDB Java API is DBConnection. It all
 |isBusy()|Judge if the current session is busy|
 |close()|Close the current session|
 
+For the real-world applications, users can refer to the [example directory](https://github.com/dolphindb/api-java/tree/master/example).
+
 ### 2. Establish a DolphinDB connection
 
 The Java API connects to the DolphinDB server via TCP/IP protocol. In the following example, we connect to a local DolphinDB server with port number 8848:
