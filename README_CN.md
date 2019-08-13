@@ -24,6 +24,8 @@ DolphinDB Java API提供的最核心的对象是DBConnection。Java应用可以�
 |isBusy()|判断当前会话是否正忙|
 |close()|关闭当前会话|
 
+Java API 的实际用例参见[example目录](https://github.com/dolphindb/api-java/tree/master/example)。
+
 ### 2. 建立DolphinDB连接
 
 Java API通过TCP/IP协议连接到DolphinDB服务器。在以下例子中，我们连接正在运行的端口号为8848的本地DolphinDB服务器：
