@@ -14,7 +14,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.xxdb.data.BasicBoolean;
 import com.xxdb.data.BasicEntityFactory;
+import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicString;
+import com.xxdb.data.BasicStringVector;
 import com.xxdb.data.Entity;
 import com.xxdb.data.EntityFactory;
 import com.xxdb.data.Void;
@@ -43,6 +45,8 @@ import com.xxdb.io.ProgressListener;
 public class DBConnection {
 	private static final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length -1;
 	private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.values().length -1;
+	private static final int DEFAULT_PRIORITY = 4;
+	private static final int DEFAULT_PARALLELISM = 2;
 	
 	private ReentrantLock mutex;
 	private String sessionID;
@@ -55,8 +59,12 @@ public class DBConnection {
 	private int port;
 	private String userId;
 	private String password;
+	private String startup = null;
 	private boolean encrypted;
-	
+	private String controllerHost = null;
+	private int controllerPort;
+	private boolean highAvailability;
+
 	public DBConnection(){
 		factory = new BasicEntityFactory();
 		mutex = new ReentrantLock();
@@ -73,10 +81,34 @@ public class DBConnection {
 	}
 	
 	public boolean connect(String hostName, int port) throws IOException{
-		return connect(hostName, port, "", "");
+		return connect(hostName, port, "", "", null, false);
+	}
+
+	public boolean connect(String hostName, int port, String startup) throws IOException{
+		return connect(hostName, port, "", "", startup, false);
+	}
+	
+	public boolean connect(String hostName, int port, String startup, boolean highAvailability) throws IOException{
+		return connect(hostName, port, "", "", startup, highAvailability);
+	}
+
+	public boolean connect(String hostName, int port, boolean highAvailability) throws IOException{
+		return connect(hostName, port, "", "", null, highAvailability);
 	}
 	
 	public boolean connect(String hostName, int port, String userId, String password) throws IOException{
+		return connect(hostName, port, userId, password, null, false);
+	}
+
+	public boolean connect(String hostName, int port, String userId, String password, boolean highAvailability) throws IOException{
+		return connect(hostName, port, userId, password, null, highAvailability);
+	}
+	
+	public boolean connect(String hostName, int port, String userId, String password, String startup) throws IOException{
+		return connect(hostName, port, userId, password, startup, false);
+	}
+	
+	public boolean connect(String hostName, int port, String userId, String password, String startup, boolean highAvailability) throws IOException{
 		mutex.lock();
 		try{
 			if(!sessionID.isEmpty()){
@@ -89,6 +121,8 @@ public class DBConnection {
 			this.userId = userId;
 			this.password = password;
 			this.encrypted = true;
+			this.startup = startup;
+			this.highAvailability = highAvailability;
 			
 			return connect();
 		}
@@ -110,7 +144,6 @@ public class DBConnection {
 		out.writeByte('\n');
 		out.writeBytes(body);
 		out.flush();
-		
 
 		String line = input.readLine();
 		int endPos = line.indexOf(' ');
@@ -139,6 +172,18 @@ public class DBConnection {
 		if(!userId.isEmpty() && !password.isEmpty())
 			login();
 		
+		if (startup != null && startup.length() > 0)
+			run(startup);
+		
+		if (highAvailability) {
+			try {
+				controllerHost = ((BasicString) run("rpc(getControllerAlias(), getNodeHost)")).getString();
+				controllerPort = ((BasicInt) run("rpc(getControllerAlias(), getNodePort)")).getInt();
+			}
+			catch (Exception e) {
+			}
+		}
+
 		return true;
 	}
 	
@@ -159,7 +204,7 @@ public class DBConnection {
 	private void login() throws IOException{
 		List<Entity> args = new ArrayList<>();
 		if(encrypted){
-	        BasicString keyCode = (BasicString) run("getDynamicPublicKey()");
+	        BasicString keyCode = (BasicString) run("getDynamicPublicKey",new ArrayList<Entity>());
 			PublicKey key = RSAUtils.getPublicKey(keyCode.getString());
 			byte[] usr =  RSAUtils.encryptByPublicKey(userId.getBytes(), key);
 		    byte[] pass = RSAUtils.encryptByPublicKey(password.getBytes(), key);
@@ -180,11 +225,37 @@ public class DBConnection {
 		return this.remoteLittleEndian;
 	}
 	
+	private boolean switchToRandomAvailableSite() throws IOException {
+		if (controllerHost == null)
+			return false;
+		DBConnection tmp = new DBConnection();
+		tmp.connect(controllerHost, controllerPort);
+		BasicStringVector availableSites = (BasicStringVector) tmp.run("getClusterLiveDataNodes(false)");
+		tmp.close();
+		int size = availableSites.rows();
+		if (size <= 0)
+			return false;
+		String site[] = availableSites.getString(0).split(":");
+		hostName = site[0];
+		port = new Integer(site[1]);
+		try {
+			connect();
+		}
+		catch (Exception e) {
+			return false;
+		}
+		return true;
+	}
+	
 	public Entity tryRun(String script) throws IOException{
+		return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
+	}
+	
+	public Entity tryRun(String script, int priority, int parallelism) throws IOException{
 		if(!mutex.tryLock())
 			return null;
 		try{
-			return run(script);
+			return run(script, (ProgressListener)null, priority, parallelism);
 		}
 		finally{
 			mutex.unlock();
@@ -192,10 +263,22 @@ public class DBConnection {
 	}
 	
 	public Entity run(String script) throws IOException{
-		return run(script, (ProgressListener)null);
+		return run(script, (ProgressListener)null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
+	}
+	
+	public Entity run(String script, int priority) throws IOException{
+		return run(script, (ProgressListener)null, priority, DEFAULT_PARALLELISM);
+	}
+	
+	public Entity run(String script, int priority, int parallelism) throws IOException{
+		return run(script, (ProgressListener)null, priority, parallelism);
 	}
 	
 	public Entity run(String script, ProgressListener listener) throws IOException{
+		return run(script, listener, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
+	}
+	
+	public Entity run(String script, ProgressListener listener, int priority, int parallelism) throws IOException{
 		mutex.lock();
 		try{
 			boolean reconnect = false;
@@ -205,6 +288,8 @@ public class DBConnection {
 				else{
 					socket = new Socket(hostName, port);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+					in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
+						new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
 				}
 			}
 	
@@ -213,6 +298,7 @@ public class DBConnection {
 			try{
 				out.writeBytes((listener != null ? "API2 " : "API ")+sessionID+" ");
 				out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
+				out.writeBytes(" / 0_1_" + String.valueOf(priority) +"_" + String.valueOf(parallelism));
 				out.writeByte('\n');
 				out.writeBytes(body);
 				out.flush();
@@ -229,6 +315,7 @@ public class DBConnection {
 					connect();
 					out.writeBytes((listener != null ? "API2 " : "API ")+sessionID+" ");
 					out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
+					out.writeBytes(" / 0_1_" + String.valueOf(priority) +"_" + String.valueOf(parallelism));
 					out.writeByte('\n');
 					out.writeBytes(body);
 					out.flush();
@@ -256,8 +343,13 @@ public class DBConnection {
 				throw new IOException("Received invalid header: " + header);
 			}
 			
-			if(reconnect)
+			if(reconnect) {
 				sessionID = headers[0];
+				if (userId.length() > 0 && password.length() > 0)
+					login();
+				if (startup != null && startup.length() > 0)
+					run(startup);
+			}
 			int numObject = Integer.parseInt(headers[1]);
 			
 			String msg = in.readLine();
@@ -286,16 +378,30 @@ public class DBConnection {
 				throw ex;
 			}
 		}
+		catch (Exception ex) {
+			if (socket != null || !highAvailability)
+				throw ex;
+			if (switchToRandomAvailableSite()) {
+				mutex.unlock();
+				return run(script, listener, priority, parallelism);
+			}
+			else
+				throw ex;
+		}
 		finally{
 			mutex.unlock();
 		}
 	}
 	
 	public Entity tryRun(String function, List<Entity> arguments) throws IOException{
+		return tryRun(function, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
+	}
+	
+	public Entity tryRun(String function, List<Entity> arguments, int priority, int parallelism) throws IOException{
 		if(!mutex.tryLock())
 			return null;
 		try{
-			return run(function, arguments);
+			return run(function, arguments, priority, parallelism);
 		}
 		finally{
 			mutex.unlock();
@@ -303,6 +409,14 @@ public class DBConnection {
 	}
 	
 	public Entity run(String function, List<Entity> arguments) throws IOException{
+		return run(function, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
+	}
+	
+	public Entity run(String function, List<Entity> arguments, int priority) throws IOException{
+		return run(function, arguments, priority, DEFAULT_PARALLELISM);
+	}
+	
+	public Entity run(String function, List<Entity> arguments, int priority, int parallelism) throws IOException{
 		mutex.lock();
 		try{
 			boolean reconnect = false;
@@ -325,6 +439,7 @@ public class DBConnection {
 			try{
 				out.writeBytes("API "+sessionID+" ");
 				out.writeBytes(String.valueOf(body.length()));
+				out.writeBytes(" / 0_1_" + String.valueOf(priority) +"_" + String.valueOf(parallelism));
 				out.writeByte('\n');
 				out.writeBytes(body);
 				for(int i=0; i<arguments.size(); ++i)
@@ -339,11 +454,12 @@ public class DBConnection {
 					throw ex;
 				}
 				
-				try {					
+				try {
 					connect();
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 					out.writeBytes("API "+sessionID+" ");
 					out.writeBytes(String.valueOf(body.length()));
+					out.writeBytes(" / 0_1_" + String.valueOf(priority) +"_" + String.valueOf(parallelism));
 					out.writeByte('\n');
 					out.writeBytes(body);
 					for(int i=0; i<arguments.size(); ++i)
@@ -396,6 +512,16 @@ public class DBConnection {
 				socket = null;
 				throw ex;
 			}
+		}
+		catch (Exception ex) {
+			if (socket != null || !highAvailability)
+				throw ex;
+			if (switchToRandomAvailableSite()) {
+				mutex.unlock();
+				return run(function, arguments, priority, parallelism);
+			}
+			else
+				throw ex;
 		}
 		finally{
 			mutex.unlock();
@@ -530,6 +656,10 @@ public class DBConnection {
 	
 	public int getPort(){
 		return port;
+	}
+	
+	public String getSessionID() {
+		return sessionID;
 	}
 	
 	public InetAddress getLocalAddress(){
