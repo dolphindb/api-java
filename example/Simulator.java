@@ -175,8 +175,7 @@ public class Simulator {
 	}
 	
 	private void runInsert() {
-		ArrayList<Entity> arguments = new ArrayList<>(11);
-		arguments.add(new BasicString(TABLE_1_NAME));
+		ArrayList<Entity> arguments = new ArrayList<>(10);
 		arguments.add(new BasicStringVector(vsymbol));
 		arguments.add(new BasicDateVector(vdate));
 		arguments.add(new BasicSecondVector(vtime));
@@ -187,7 +186,7 @@ public class Simulator {
 		arguments.add(new BasicStringVector(vex));
 		arguments.add(new BasicStringVector(vmmid));
 		try {
-			conn.run("tableInsert", arguments);
+			conn.run("tableInsert{" + TABLE_1_NAME + "}", arguments);
 		} catch (Exception e) {
 			System.out.println("Insert error");
 			e.printStackTrace();
