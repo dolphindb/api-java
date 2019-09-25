@@ -34,6 +34,7 @@ public class Simulator {
 	private List<String> vmmid;
 
 	private static final int BATCH_SIZE = 1000;
+	private static final String DB_NAME = "dfs://db";
 	private static final String TABLE_1_NAME = "trades1";
 	
 	public Simulator(String path, DBConnection conn) {
@@ -187,6 +188,22 @@ public class Simulator {
 		arguments.add(new BasicStringVector(vmmid));
 		try {
 			conn.run("tableInsert{" + TABLE_1_NAME + "}", arguments);
+		} catch (Exception e) {
+			System.out.println("Insert error");
+			e.printStackTrace();
+		}
+	}
+	
+	private void runDFSInsert() {
+		List<Vector> columns = Arrays.asList(new BasicStringVector(vsymbol), new BasicDateVector(vdate), new BasicSecondVector(vtime),
+											 new BasicDoubleVector(vbid), new BasicDoubleVector(vofr), new BasicIntVector(vbidsiz),
+											 new BasicIntVector(vmode), new BasicStringVector(vex), new BasicStringVector(vmmid));
+		List<String> columnNames = Arrays.asList("symbol", "date", "time", "bid", "ofr", "bidsiz", "mode", "vex", "mmid");
+		BasicTable table = new BasicTable(columnNames, columns);
+		List<Entity> arguments = Arrays.asList(table);
+		try {
+			String func = String.format("tableInsert{database('%s').loadTable('%s')}", DB_NAME, TABLE_1_NAME);
+			conn.run(func, arguments);
 		} catch (Exception e) {
 			System.out.println("Insert error");
 			e.printStackTrace();
