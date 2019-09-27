@@ -28,7 +28,7 @@ Java API 的实际用例参见[example目录](https://github.com/dolphindb/api-j
 
 ### 2. 建立DolphinDB连接
 
-Java API通过TCP/IP协议连接到DolphinDB服务器。在以下例子中，我们连接正在运行的端口号为8848的本地DolphinDB服务器：
+Java API通过TCP/IP协议连接到DolphinDB服务器。连接正在运行的端口号为8848的本地DolphinDB服务器：
 
 ```
 import com.xxdb;
@@ -36,7 +36,7 @@ DBConnection conn = new DBConnection();
 boolean success = conn.connect("localhost", 8848);
 ```
 
-使用用户名和密码建立连接：
+输入用户名和密码建立连接：
 ```
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
@@ -55,7 +55,7 @@ conn.run("script");
 
 可使用`run`命令在远程DolphinDB服务器上执行DolphinDB内置或用户自定义函数。
 
-下面的示例展示Java程序调用DolphinDB内置的`add`函数。`add`函数有两个参数x和y。参数的存储位置不同，也会导致调用方式的不同。可能有以下三种情况：
+下面的示例展示Java程序调用DolphinDB内置的`add`函数。`add`函数有两个参数x和y。参数的所在位置不同，也会导致调用方式的不同。可能有以下三种情况：
 
 * 所有参数都在DolphinDB server端
 
@@ -71,7 +71,7 @@ public void testFunction() throws IOException{
 }
 ```
 
-* 仅有一个参数在DolphinDB server端存在
+* 仅有一个参数在DolphinDB server端
 
 若变量x已经通过Java程序在服务器端生成，
 ```
@@ -135,7 +135,7 @@ public void testFunction() throws IOException{
 
 下面介绍通过DBConnection对象，读取DolphinDB不同类型的数据。
 
-首先导入DolphinDB数据类型包：
+需要导入DolphinDB数据类型包：
 
 ```
 import com.xxdb.data.*;
@@ -148,7 +148,7 @@ import com.xxdb.data.*;
 ```
 rand(`IBM`MSFT`GOOG`BIDU,10)
 ```
-`rows`方法可以获取向量的元素数量。我们可以使用`getString`方法按照索引访问向量元素。
+可使用`rows`方法获取向量的长度；可使用`getString`方法按照索引访问向量元素。
 
 ```
 public void testStringVector() throws IOException{
@@ -160,7 +160,7 @@ public void testStringVector() throws IOException{
 }
 ```
 
-类似的，也可以处理其它数据类型的向量或者元组。
+类似的，也可以处理INT, DOUBLE, FLOAT以及其它数据类型的向量或者元组。
 ```
 public void testDoubleVector() throws IOException{
     BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0, 10)");
@@ -200,7 +200,7 @@ public void testIntMatrix() throws IOException {
 
 - 字典
 
-用函数`keys`和`values`可以从字典取得所有的键和值。要从一个键里取得它的值，可以调用`get`。
+用函数`keys`和`values`可以从字典取得所有的键和值。要获得一个键对应的值，可以调用`get`。
 
 ```
 public void testDictionary() throws IOException{
@@ -247,7 +247,7 @@ DolphinDB数据表按存储方式分为三种:
 
 #### 7.1 保存数据到DolphinDB内存表
 
-DolphinDB提供多种方式来保存数据：
+DolphinDB提供多种方式来保存数据到内存表：
 - 通过`insert into`保存单条数据
 - 通过`tableInsert`函数批量保存多条数据
 - 通过`tableInsert`函数保存数据表
@@ -261,9 +261,9 @@ share t as sharedTable
 ```
 由于内存表是会话隔离的，所以该内存表只有当前会话可见。如果需要在其它会话中访问，需要通过`share`在会话间共享内存表。
 
-##### 7.1.1 使用`INSERT INTO`保存单条数据
+##### 7.1.1 使用 insert into 保存单条数据
 
-若每次将单条数据记录保存到DolphinDB，可以使用SQL语句`INSERT INTO`。
+若将单条数据记录保存到DolphinDB内存表，可以使用SQL语句insert into。
 ```
 public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
     conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
@@ -272,7 +272,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 
 ##### 7.1.2 使用`tableInsert`函数批量保存数组对象
 
-若Java程序获取的数据可以组织成List方式，`tableInsert`函数比较适合用来批量保存多条数据。这个函数可以接受多个数组作为参数，将数组追加到数据表中。
+`tableInsert`函数比较适合用来批量保存多条数据，它可将多个数组追加到DolphinDB内存表中。若Java程序获取的数据可以组织成List方式，可使用`tableInsert`函数保存。
 
 ```
 public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,List<Long> tsArray,List<Double> dblArray) throws IOException{
@@ -285,7 +285,7 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,L
 
 ##### 7.1.3 使用`tableInsert`函数保存BasicTable对象
 
-若Java程序获取的数据处理后组织成BasicTable对象，tableInsert函数也可以接受一个表对象作为参数，批量添加数据。
+若Java程序获取的数据处理后组织成BasicTable对象，`tableInsert`函数也可以接受一个表对象作为参数，批量添加数据。
 
 ```
 public void test_save_table(BasicTable table1) throws IOException {
