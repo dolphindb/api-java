@@ -1,6 +1,6 @@
 ### 1. Java API Introduction
 
-DolphinDB Java API needs Java 1.8 or higher environment.
+DolphinDB Java API requires Java 1.8 or higher environment.
 
 Java API adopts interface-oriented programming. It uses the interface "Entity" to represent all data types returned from DolphinDB. Java API provides 7 types of extended interfaces: scalar, vector, matrix, set, dictionary, table and chart based on the "Entity" interface and DolphinDB data forms. They are included in the package of com.xxdb.data.
 
