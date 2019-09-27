@@ -18,18 +18,18 @@ The most important object provided by DolphinDB Java API is DBConnection. It all
 | Method Name | Details |
 |:------------- |:-------------|
 |connect(host, port, [username, password])|Connect the session to DolphinDB server|
-|login(username,password,enableEncryption)|Login to DolphinDB server|
+|login(username,password,enableEncryption)|Log in to DolphinDB server|
 |run(script)|Run script on DolphinDB server|
 |run(functionName,args)|Call a function on DolphinDB server|
 |upload(variableObjectMap)|Upload local data to DolphinDB server|
 |isBusy()|Judge if the current session is busy|
 |close()|Close the current session|
 
-For the real-world applications, users can refer to the [example directory](https://github.com/dolphindb/api-java/tree/master/example).
+For a detailed example, users can refer to the [example directory](https://github.com/dolphindb/api-java/tree/master/example).
 
 ### 2. Establish a DolphinDB connection
 
-The Java API connects to the DolphinDB server via TCP/IP protocol. In the following example, we connect to a local DolphinDB server with port number 8848:
+The Java API connects to the DolphinDB server via TCP/IP protocol. To connect to a local DolphinDB server with port number 8848:
 
 ```
 import com.xxdb;
@@ -40,7 +40,7 @@ Establish a connection with a username and password:
 ```
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
-If the connection is established without using a username and password, we only have guest privileges. To be granted more privileges, we can log in by calling conn.login('admin', '123456', true).
+If the connection is established without a username and password, we only have guest privileges. To be granted more privileges, we can log in by calling conn.login('admin', '123456', true).
 
 ### 3.Run script
 
@@ -54,7 +54,7 @@ The maximum length of the script is 65,535 bytes.
 
 We can use method `run` to execute DolphinDB built-in functions or user-defined functions on a remote DolphinDB server.
 
-The following examples show 3 ways to call DolphinDB's built-in function `add` in Java, depending on the locations of the parameters "x" and "y".
+The following examples illustrate 3 ways to call DolphinDB's built-in function `add` in Java, depending on the locations of the parameters "x" and "y" of function `add`.
 
 * Both parameters are on DolphinDB server
 
