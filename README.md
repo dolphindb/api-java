@@ -6,9 +6,9 @@ Java API adopts interface-oriented programming. It uses the interface "Entity" t
 
 Extended interface classes | Naming rules | Examples
 ---|---|---
-scalar|Basic<DataType>|BasicInt, BasicDouble, BasicDate, etc.
-vector, matrix|Basic<DataType><DataForm>|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
-set, dictionary, table|Basic<DataForm>|BasicSet, BasicDictionary, BasicTable.
+scalar|Basic\<DataType\>|BasicInt, BasicDouble, BasicDate, etc.
+vector, matrix|Basic\<DataType\>\<DataForm\>|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
+set, dictionary, table|Basic\<DataForm\>|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
 "Basic" indicates the basic implementation of a data form interface, \<DataType\> indicates a DolphinDB data type, and \<DataForm\> indicates a DolphinDB data form. For detailed interface and class description, please refer to [Java API Manual](https://www.dolphindb.com/javaapi/).
