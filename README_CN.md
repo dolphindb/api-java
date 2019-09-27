@@ -10,7 +10,7 @@ vector, matrix|`Basic<DataType><DataForm>`|BasicIntVector, BasicDoubleMatrix, Ba
 set, dictionary, table|`Basic<DataForm>`|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
-"Basic"表示基本的数据类型接口，`<DataType>`表示DolphinDB数据类型名称，`<DataForm>`是一个DolphinDB数据形式名称。接口和类的详细描述请参考[Java API手册](https://www.dolphindb.com/javaapi/)。
+"Basic"表示基本的数据类型接口，\<DataType\>表示DolphinDB数据类型名称，\<DataForm\>是一个DolphinDB数据形式名称。接口和类的详细描述请参考[Java API手册](https://www.dolphindb.com/javaapi/)。
 
 DolphinDB Java API提供的最核心的对象是DBConnection。Java应用可以通过它在DolphinDB服务器上执行脚本和函数，并在两者之间双向传递数据。DBConnection类提供如下主要方法：
 
