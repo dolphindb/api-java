@@ -385,10 +385,10 @@ Java API provides objects that correspond to DolphinDB data types. They are usua
 The majority of DolphinDB data types can be constructed based on basic Java types. For examples, INT in DolphinDB from 'new BasicInt(4)', DOUBLE in DolphinDB from 'new BasicDouble(1.23)'. The following Java types, however, need to be converted.
 
 - CHAR type: as the CHAR type in DolphinDB is stored as a byte, we can use the BasicByte type to construct CHAR in Java API, for example 'new BasicByte((byte)'c')'.
-- SYMBOL type: the SYMBOL type in DolphinDB is stored as INT to improve the efficiency of storage and query of strings, but this type is not needed in Java, so Java API does not provide BasicSymbol. This kind of object can be processed directly with `BasicString`.
-- Temporal types: Temporal data types are stored as int or long type in DolphinDB. DolphinDB provides 9 temporal data types: date, month, time, minute, second, datetime, timestamp, nanotime, nanotimestamp, the highest precision can be Nanoseconds. For a detailed description, refer to [DolphinDB Timing Type and Conversion] (https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html). Since Java also provides data types such as LocalDate, LocalTime, LocalDateTime and YearMonth, Java API provides all Java temporal types and conversion functions between int or long in the Utils class.
+- SYMBOL type: the SYMBOL type in DolphinDB is stored as INT to improve the efficiency of storage and query of strings. Java doesn't have this data type, so Java API does not provide BasicSymbol. SYMBOL type can be processed directly with BasicString. 
+- Temporal types: temporal data types are stored as INT or LONG in DolphinDB. DolphinDB provides 9 temporal data types: date, month, time, minute, second, datetime, timestamp, nanotime and nanotimestamp. For detailed description, please refer to [DolphinDB Temporal Type and Conversion] (https://www.dolphindb.com/help/TemporalTypeandConversion.html). Since Java also provides data types such as LocalDate, LocalTime, LocalDateTime and YearMonth, Java API provides conversion functions in the Utils class between all Java temporal types and INT or LONG.
 
-The following script shows the correspondence between DolphinDB temporal types in Java API and Java native time types:
+The following script shows the correspondence between DolphinDB temporal types and Java native temporal types:
 
 ```
 //Date:2018.11.12
@@ -411,25 +411,24 @@ BasicNanoTime bnt = new BasicNanoTime(LocalTime.of(20,8,1,123456789));
 BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123456789))
 ```
 
-If a temporal variable is stored as timestamp in a third-party system, DolphinDB time object can also be instantiated with a timestamp.
-The Utils class in the Java API provides conversion algorithms for various temporal types and standard timestamps, such as converting millisecond timestamps to DolphinDB's `BasicTimestamp` objects:
+If a temporal variable is stored as timestamp in a third-party system, DolphinDB temporal object can also be instantiated with a timestamp. The Utils class in the Java API provides conversion algorithms for various temporal types and standard timestamps, such as converting millisecond timestamps to DolphinDB's BasicTimestamp objects:
 
 ```
 LocalDateTime dt = Utils.parseTimestamp(1543494854000l);
 BasicTimestamp ts = new BasicTimestamp(dt);
 ```
 
-You can also convert a DolphinDB object to a timestamp of an integer or long integer, such as:
+You can also convert a DolphinDB object to a timestamp of an integer or long integer. For examples:
 ```
 LocalDateTime dt = ts.getTimestamp();
 long timestamp = Utils.countMilliseconds(dt);
 ```
-If the timestamp is saved with other precision, the Utils class also provides the following methods to accommodate a variety of different precisions:
-- Utils.countMonths: Calculate the monthly difference between a given time and 1970.01, returning an int
-- Utils.countDays: Calculate the difference in the number of days between the given time and 1970.01.01, return int
-- Utils.countMinutes: Calculate the minute difference between the given time and 1970.01.01T00:00, return int
-- Utils.countSeconds: Calculate the difference in seconds between a given time and 1970.01.01T00:00:00, returning int
-- Utils.countMilliseconds: Calculate the difference in milliseconds between a given time and 1970.01.01T00:00:00, return long
-- Utils.countNanoseconds: Calculate the difference in nanoseconds between a given time and 1970.01.01T00:00:00.000, return long
+The Utils class provides the following methods to handle a variety of timestamp precisions:
+- Utils.countMonths: calculate the monthly difference between a given time and 1970.01, returning INT.
+- Utils.countDays: calculate the difference in the number of days between the given time and 1970.01.01, returning INT.
+- Utils.countMinutes: calculate the minute difference between the given time and 1970.01.01T00:00, returning INT.
+- Utils.countSeconds: calculate the difference in seconds between a given time and 1970.01.01T00:00:00, returning INT.
+- Utils.countMilliseconds: calculate the difference in milliseconds between a given time and 1970.01.01T00:00:00, returning LONG.
+- Utils.countNanoseconds: calculate the difference in nanoseconds between a given time and 1970.01.01T00:00:00.000, returning LONG.
 
 
