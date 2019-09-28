@@ -373,8 +373,8 @@ Java API提供了一组以Basic+\<DataType\>方式命名的类，分别对应Dol
 大部分DolphinDB数据类型可以由Java原生类型构建，例如new BasicInt(4)对应integer，new BasicDouble(1.23)对应double，等等。但是也有一些DolphinDB数据类型，并不能由上述方法构建：
 
 - CHAR类型：DolphinDB中的CHAR类型保存为一个byte，所以在Java API中用BasicByte类型来构造CHAR，例如new BasicByte((byte)'c')。
-- SYMBOL类型：DolphinDB中的SYMBOL类型将字符串存储为整形，可以提高对字符串数据存储和查询的效率，但是Java中并不需要这种类型，所以Java API不提供BasicSymbol这种对象，直接用BasicString来处理即可。
-- 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供date、month、time、minute、second、datetime、timestamp、nanotime、nanotimestamp九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html)。由于Java也提供了LocalDate、LocalTime、LocalDateTime、YearMonth等数据类型，所以Java API在Utils类里提供了所有Java时间类型与int或long之间的转换函数。
+- SYMBOL类型：DolphinDB中的SYMBOL类型将字符串存储为整形，可以提高对字符串数据存储和查询的效率，但是Java中并没有这种类型，所以Java API不提供BasicSymbol这种对象，直接用BasicString来处理即可。
+- 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供date, month, time, minute, second, datetime, timestamp, nanotime和nanotimestamp九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html)。由于Java也提供了LocalDate, LocalTime, LocalDateTime, YearMonth等数据类型，所以Java API在Utils类里提供了所有Java时间类型与int或long之间的转换函数。
 
 以下脚本展示Java API中DolphinDB时间类型与Java原生时间类型之间的对应关系：
 ```
@@ -416,12 +416,12 @@ LocalDateTime dt = ts.getTimestamp();
 long timestamp = Utils.countMilliseconds(dt);
 ```
 如果时间戳以其他精度保存，Utils类还中提供如下方法，可以适应各种不同的精度：
-- Utils.countMonths：计算给定时间到1970.01之间的月份差，返回int
-- Utils.countDays：计算给定时间到1970.01.01之间的天数差，返回int
-- Utils.countMinutes：计算给定时间到1970.01.01T00:00之间的分钟差，返回int
-- Utils.countSeconds：计算给定时间到1970.01.01T00:00:00之间的秒数差，返回int
-- Utils.countMilliseconds：计算给定时间到1970.01.01T00:00:00之间的毫秒数差，返回long
-- Utils.countNanoseconds：计算给定时间到1970.01.01T00:00:00.000之间的纳秒数差，返回long
+- Utils.countMonths：计算给定时间到1970.01之间的月份差，返回INT.
+- Utils.countDays：计算给定时间到1970.01.01之间的天数差，返回INT.
+- Utils.countMinutes：计算给定时间到1970.01.01T00:00之间的分钟差，返回INT.
+- Utils.countSeconds：计算给定时间到1970.01.01T00:00:00之间的秒数差，返回INT.
+- Utils.countMilliseconds：计算给定时间到1970.01.01T00:00:00之间的毫秒数差，返回LONG.
+- Utils.countNanoseconds：计算给定时间到1970.01.01T00:00:00.000之间的纳秒数差，返回LONG.
 
 ### 9. Java流数据API
 
