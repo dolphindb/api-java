@@ -467,7 +467,7 @@ client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
 
 #### 断线重连
 
-`reconnect`参数是一个布尔值，表示订阅意外中断后，是否会自动重新订阅。默认值为`false`。如果`reconnect=true`，有以下三种情况：
+reconnect参数是一个布尔值，表示订阅意外中断后，是否会自动重新订阅。默认值为false。如果reconnect=true，有以下三种情况：
 
 - 如果发布端与订阅端处于正常状态，但是网络中断，那么订阅端会在网络正常时，自动从中断位置重新订阅。
 - 如果发布端崩溃，订阅端会在发布端重启后不断尝试重新订阅。
@@ -475,7 +475,7 @@ client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
     - 如果发布端没有对流数据表启用持久化，那么订阅端将自动重新订阅失败。
 - 如果订阅端崩溃，订阅端重启后不会自动重新订阅，需要重新执行`subscribe`函数。
 
-以下例子在订阅时，设置`reconnect`为`true`：
+以下例子在订阅时，设置reconnect为true：
 
 ```
 PollingClient client = new PollingClient(subscribePort);
@@ -484,9 +484,9 @@ TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset, 
 
 #### 启用filter
 
-`filter`参数是一个向量。该参数需要发布端配合`setStreamTableFilterColumn`函数一起使用。使用`setStreamTableFilterColumn`指定流数据表的过滤列，流数据表过滤列在`filter`中的数据才会发布到订阅端，不在`filter`中的数据不会发布。
+filter参数是一个向量。该参数需要发布端配合`setStreamTableFilterColumn`函数一起使用。使用`setStreamTableFilterColumn`指定流数据表的过滤列，流数据表过滤列在filter中的数据才会发布到订阅端，不在filter中的数据不会发布。
 
-以下例子将一个包含元素1和2的整数类型向量作为`subscribe`的`filter`参数：
+以下例子将一个包含元素1和2的整数类型向量作为`subscribe`的filter参数：
 
 ```
 BasicIntVector filter = new BasicIntVector(2);
