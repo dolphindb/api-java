@@ -431,4 +431,78 @@ The Utils class provides the following methods to handle a variety of timestamp 
 - Utils.countMilliseconds: calculate the difference in milliseconds between a given time and 1970.01.01T00:00:00, returning LONG.
 - Utils.countNanoseconds: calculate the difference in nanoseconds between a given time and 1970.01.01T00:00:00.000, returning LONG.
 
+### 9. Java Streaming API
 
+A Java program can subscribe to streaming data via API. Java API can handle streaming data in the following 2 ways after the data has arrived at the client.
+
+- An application on the client periodically checks if new data has arrived. If yes, the application will acquire and consume the data. 
+
+```
+PollingClient client = new PollingClient(subscribePort);
+TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset);
+
+while (true) {
+   ArrayList<IMessage> msgs = poller1.poll(1000);
+   if (msgs.size() > 0) {
+         BasicInt value = msgs.get(0).getEntity(2);  //acquire the first row and the second column in the data
+   }
+}
+```
+
+Each time the streaming table publishes new data, poller1 will pull the new data. When no new data is published, the program 程序会阻塞在poller1.poll方法这里等待。
+
+Java API使用预先设定的MessageHandler获取及处理新数据。首先需要调用者定义数据处理器Handler，Handler需要实现com.xxdb.streaming.client.MessageHandler接口。
+
+- Java API使用预先设定的MessageHandler直接使用新数据。
+
+```
+public class MyHandler implements MessageHandler {
+       public void doEvent(IMessage msg) {
+               BasicInt qty = msg.getValue(2);
+               //..处理数据
+       }
+}
+```
+
+在启动订阅时，把handler实例作为参数传入订阅函数。
+
+```
+ThreadedClient client = new ThreadedClient(subscribePort);
+client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
+```
+
+当每次流数据表有新数据发布时，Java API会调用MyHandler方法，并将新数据通过msg参数传入。
+
+#### Reconnect
+
+Parameter reconnect is a Boolean value indicating whether to automatically resubscribe after the subscription experiences an expected interruption. The default value is false. 
+
+If reconnect=true, whether and how the system resumes the subscription depends on how the unexpected interruption of subscription is caused. 
+
+- If the publisher and the subscriber both stay on but the network connection is interrupted, then after network connection is restored, the subscriber resumes subscription from where the network interruption occurs. 
+- If the publisher crashes, the subscriber will keep attempting to resume subscription after the publisher restarts. 
+    - If persistence was enabled on the publisher, the publisher starts to read the persisted data on disk after restarting. The subscriber can't successfully resubscribe automatically until the publisher has read the data for the time when the publisher crashed.
+    - If persistence was not enabled on the publisher, the subscriber will fail to automatically resubscribe. 
+- If the subscriber crashes, the subscriber won't automatically resume the subscription after it restarts. In this case, we need to execute function `subscribe` again.
+
+Parameter 'reconnect' is set to be true for the following example：
+
+```
+PollingClient client = new PollingClient(subscribePort);
+TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset, true);
+```
+
+#### filter
+
+Parameter 'filter' is a vector. It is used together with function `setStreamTableFilterColumn` at the publisher node. Function `setStreamTableFilterColumn` specifies the filtering column in the streaming table. Only the rows with filtering column values in 'filter' are published. 
+
+In the following example, parameter 'filter' is assigned an INT vector [1,2]: 
+
+```
+BasicIntVector filter = new BasicIntVector(2);
+filter.setInt(0, 1);
+filter.setInt(1, 2);
+
+PollingClient client = new PollingClient(subscribePort);
+TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, actionName, offset, filter);
+```
