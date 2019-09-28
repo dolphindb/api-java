@@ -307,9 +307,7 @@ public void test_save_table(BasicTable table1) throws IOException {
 
 #### 7.2 Save data to a distributed table
 
-Distributed table is recommended by DolphinDB in production environment. It supports snapshot isolation and ensures data consistency. Distributed table supports multiple copy mechanism, which offers fault tolerance and load balancing.
-
-Please note that distributed tables can only be used in cluster environments with `enableDFS=1` enabled.
+Distributed table is recommended by DolphinDB in production environment. It supports snapshot isolation and ensures data consistency. With data replication, Distributed tables offers fault tolerance and load balancing.
 
 ```
 dbPath = 'dfs://testDatabase'
@@ -329,16 +327,16 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 
-When we retrieve an array or a list in the Java program, it is also convenient to construct a BasicTable for appending data. For example, if we have `boolArray, intArray, dblArray, dateArray, strArray` 5 list objects (List<T>), we can construct a BasicTable object:
+When we retrieve an array or a list in the Java program, it is also convenient to construct a BasicTable for appending data. For example, if we have the following 5 list objects boolArray, intArray, dblArray, dateArray and strArray (List\<T\>), we can construct a BasicTable object:
 ```
 List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
 List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
 BasicTable table1 = new BasicTable(colNames,cols);
 ```
 
-#### 7.3 Save data to local disk table
+#### 7.3 Save data to a local disk table
 
-Local disk tables can be used for data analysis on historical data sets. They do not support transactions, nor do they support concurrent reading and writing.
+Local disk tables can be used for data analysis on historical data sets. They do not support transactions, nor do they support concurrent read and write.
 
 ```
 dbPath = "C:/data/testDatabase"
@@ -349,7 +347,7 @@ db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
 
-DolphinDB provides `loadTable` method to load local disk tables, and function `tableInsert` to append data.
+DolphinDB provides `loadTable` method to load local disk tables, and `tableInsert` method to append data.
 
 ```
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
@@ -358,7 +356,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
     conn.run(String.format("tableInsert{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
-#### 7.4 Load table
+#### 7.4 Load tables
 
 In Java API, a table is saved as a BasicTable object. Since BasicTable is column based, to retrieve rows we need to get the necessary columns first and then get the rows.
 
@@ -382,11 +380,12 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 
 ### 8. Data type conversion between DolphinDB and Java
 
-Java API provides objects that correspond to DolphinDB data types. They are usually named as Basic+ `<DataType>`, such as BasicInt, BasicDate, and so on.
+Java API provides objects that correspond to DolphinDB data types. They are usually named as Basic+ \<DataType\>, such as BasicInt, BasicDate, etc.
 
-For certain basic Java types, we can directly create the corresponding DolphinDB data types such as `new BasicInt(4)`, `new BasicDouble(1.23)`. The following Java types, however, need to be converted.
-- `CHAR` type: The `CHAR` type in DolphinDB is stored as a Byte, so use the `BasicByte` type to construct `CHAR` in the Java API, for example `new BasicByte((byte)'c')`
-- `SYMBOL` type: The `SYMBOL` type in DolphinDB is an optimization of strings, which can improve the efficiency of DolphinDB for string data storage and query, but this type is not needed in Java, so Java API does not provide `BasicSymbol `This kind of object can be processed directly with `BasicString`.
+The majority of DolphinDB data types can be constructed based on basic Java types. For examples, INT in DolphinDB from 'new BasicInt(4)', DOUBLE in DolphinDB from 'new BasicDouble(1.23)'. The following Java types, however, need to be converted.
+
+- CHAR type: as the CHAR type in DolphinDB is stored as a byte, we can use the BasicByte type to construct CHAR in Java API, for example 'new BasicByte((byte)'c')'.
+- SYMBOL type: the SYMBOL type in DolphinDB is stored as INT to improve the efficiency of storage and query of strings, but this type is not needed in Java, so Java API does not provide BasicSymbol. This kind of object can be processed directly with `BasicString`.
 - Temporal types: Temporal data types are stored as int or long type in DolphinDB. DolphinDB provides 9 temporal data types: date, month, time, minute, second, datetime, timestamp, nanotime, nanotimestamp, the highest precision can be Nanoseconds. For a detailed description, refer to [DolphinDB Timing Type and Conversion] (https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html). Since Java also provides data types such as LocalDate, LocalTime, LocalDateTime and YearMonth, Java API provides all Java temporal types and conversion functions between int or long in the Utils class.
 
 The following script shows the correspondence between DolphinDB temporal types in Java API and Java native time types:
