@@ -297,8 +297,6 @@ public void test_save_table(BasicTable table1) throws IOException {
 
 分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性。分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
 
-请注意只有启用enableDFS=1的集群环境才能使用分布式表。
-
 ```
 dbPath = 'dfs://testDatabase'
 tbName = 'tb1'
@@ -317,7 +315,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 
-当用户在Java程序中取到的值是数组或列表时，也可以很方便的构造出BasicTable用于追加数据，例如若有 boolArray, intArray, dblArray, dateArray, strArray 5个列表对象(List<T>),可以通过以下语句构造BasicTable对象：
+当用户在Java程序中取到的值是数组或列表时，也可以很方便的构造出BasicTable用于追加数据，例如若有 boolArray, intArray, dblArray, dateArray, strArray 这5个列表对象(List\<T\>),可以通过以下语句构造BasicTable对象：
 
 ```
 List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
@@ -327,7 +325,7 @@ BasicTable table1 = new BasicTable(colNames,cols);
 
 #### 7.3 保存数据到本地磁盘表
 
-本地磁盘表通用用于静态数据集的计算分析，既可以用于数据的输入，也可以作为计算的输出。它不支持事务，也不持支并发读写。
+本地磁盘表通常用于静态数据集的计算分析。它不支持事务，也不持支并发读写。
 
 使用DolphinDB脚本创建一个数据表：
 ```
@@ -350,7 +348,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 
 在Java API中，数据表保存为BasicTable对象。由于BasicTable是列式存储，所以若要在Java API中读取行数据需要先取出需要的列，再取出行。
 
-例子中参数BasicTable的有4个列，列名分别为cstring, cint, ctimestamp, cdouble，数据类型分别是STRING, INT, TIMESTAMP, DOUBLE。
+以下例子中参数BasicTable的有4个列，列名分别为cstring, cint, ctimestamp, cdouble，数据类型分别是STRING, INT, TIMESTAMP, DOUBLE。
 
 ```
 public void test_loop_basicTable(BasicTable table1) throws Exception{
@@ -372,12 +370,10 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 
 Java API提供了一组以Basic+\<DataType\>方式命名的类，分别对应DolphinDB的数据类型，比如BasicInt类，BasicDate类等等。
 
-大部分Java原生类型可以通过构造函数直接创建对应的DolphinDB数据类型，比如new BasicInt(4)，new BasicDouble(1.23)。但是也有一些特殊的DolphinDB数据类型，并不能按前面所描述的方法简单转换，下面针对这些类型做出说明：
-
 大部分DolphinDB数据类型可以由Java原生类型构建，例如new BasicInt(4)对应integer，new BasicDouble(1.23)对应double，等等。但是也有一些DolphinDB数据类型，并不能由上述方法构建：
 
-- CHAR类型：DolphinDB中的CHAR类型以Byte形式保存，所以在Java API中用BasicByte类型来构造CHAR，例如new BasicByte((byte)'c')。
-- SYMBOL类型：DolphinDB中的SYMBOL类型是对字符串的优化，可以提高DolphinDB对字符串数据存储和查询的效率，但是Java中并不需要这种类型，所以Java API不提供BasicSymbol这种对象，直接用BasicString来处理即可。
+- CHAR类型：DolphinDB中的CHAR类型保存为一个byte，所以在Java API中用BasicByte类型来构造CHAR，例如new BasicByte((byte)'c')。
+- SYMBOL类型：DolphinDB中的SYMBOL类型将字符串存储为整形，可以提高对字符串数据存储和查询的效率，但是Java中并不需要这种类型，所以Java API不提供BasicSymbol这种对象，直接用BasicString来处理即可。
 - 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供date、month、time、minute、second、datetime、timestamp、nanotime、nanotimestamp九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html)。由于Java也提供了LocalDate、LocalTime、LocalDateTime、YearMonth等数据类型，所以Java API在Utils类里提供了所有Java时间类型与int或long之间的转换函数。
 
 以下脚本展示Java API中DolphinDB时间类型与Java原生时间类型之间的对应关系：
