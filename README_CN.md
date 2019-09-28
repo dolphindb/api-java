@@ -467,7 +467,9 @@ client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
 
 #### 断线重连
 
-reconnect参数是一个布尔值，表示订阅意外中断后，是否会自动重新订阅。默认值为false。如果reconnect=true，有以下三种情况：
+reconnect参数是一个布尔值，表示订阅意外中断后，是否会自动重新订阅。默认值为false。
+
+订阅意外中断可能由以下三种情况导致。下面我们也一并讲述如果reconnect=true时，订阅中断后系统的反应：
 
 - 如果发布端与订阅端处于正常状态，但是网络中断，那么订阅端会在网络正常时，自动从中断位置重新订阅。
 - 如果发布端崩溃，订阅端会在发布端重启后不断尝试重新订阅。
