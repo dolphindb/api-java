@@ -327,7 +327,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 
-When we retrieve an array or a list in the Java program, it is also convenient to construct a BasicTable for appending data. For example, if we have the following 5 list objects boolArray, intArray, dblArray, dateArray and strArray (List\<T\>), we can construct a BasicTable object:
+We can conveniently construct a BasicTable with arrays or lists in Java to be appended to distributed tables. For example, if we have the following 5 list objects boolArray, intArray, dblArray, dateArray and strArray (List\<T\>), we can construct a BasicTable object:
 ```
 List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
 List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
@@ -433,9 +433,9 @@ The Utils class provides the following methods to handle a variety of timestamp 
 
 ### 9. Java Streaming API
 
-A Java program can subscribe to streaming data via API. Java API can handle streaming data in the following 2 ways after the data has arrived at the client.
+A Java program can subscribe to streaming data via API. Java API can acquire streaming data in the following 2 ways:
 
-- An application on the client periodically checks if new data has arrived. If yes, the application will acquire and consume the data. 
+- The application on the client periodically checks if new data has been added to the streaming table. If yes, the application will acquire and consume the new data. 
 
 ```
 PollingClient client = new PollingClient(subscribePort);
@@ -444,34 +444,34 @@ TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset);
 while (true) {
    ArrayList<IMessage> msgs = poller1.poll(1000);
    if (msgs.size() > 0) {
-         BasicInt value = msgs.get(0).getEntity(2);  //acquire the first row and the second column in the data
+         BasicInt value = msgs.get(0).getEntity(2);  //get the element in the first row and the third column
    }
 }
 ```
 
-Each time the streaming table publishes new data, poller1 will pull the new data. When no new data is published, the program 程序会阻塞在poller1.poll方法这里等待。
+After poller1 detects that new data is added to the streaming table, it will pull the new data. When there is no new data, the Java program is waiting at poller1.poll method. 
 
-Java API使用预先设定的MessageHandler获取及处理新数据。首先需要调用者定义数据处理器Handler，Handler需要实现com.xxdb.streaming.client.MessageHandler接口。
+- Java API uses MessageHandler to get new data
 
-- Java API使用预先设定的MessageHandler直接使用新数据。
+First we need to define the message handler, which needs to implement com.xxdb.streaming.client.MessageHandle interface. 
 
 ```
 public class MyHandler implements MessageHandler {
        public void doEvent(IMessage msg) {
                BasicInt qty = msg.getValue(2);
-               //..处理数据
+               //..data processing...
        }
 }
 ```
 
-在启动订阅时，把handler实例作为参数传入订阅函数。
+The handler instance is passed into function `subscribe` as a parameter. 
 
 ```
 ThreadedClient client = new ThreadedClient(subscribePort);
 client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
 ```
 
-当每次流数据表有新数据发布时，Java API会调用MyHandler方法，并将新数据通过msg参数传入。
+When new data is added to the streaming table, the system notifies Java API to use 'MyHandler' method to acquire the new data. 
 
 #### Reconnect
 
