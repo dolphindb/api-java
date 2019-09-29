@@ -143,7 +143,7 @@ import com.xxdb.data.*;
 
 - 向量
 
-以下DolphinDB语句返回Java对象BasicStringVector。
+首先用字符串向量为例，解释Java使用哪种数据类型来接收DolphinDB返回的向量。以下DolphinDB语句返回Java对象BasicStringVector。
 
 ```
 rand(`IBM`MSFT`GOOG`BIDU,10)
@@ -160,7 +160,7 @@ public void testStringVector() throws IOException{
 }
 ```
 
-类似的，也可以处理INT, DOUBLE, FLOAT以及其它数据类型的向量或者元组。
+用类似的方式，也可以处理INT, DOUBLE, FLOAT以及其它数据类型的向量或者元组。
 ```
 public void testDoubleVector() throws IOException{
     BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0, 10)");
@@ -173,7 +173,7 @@ public void testDoubleVector() throws IOException{
 
 ```
 public void testAnyVector() throws IOException{
-    BasicAnyVector result = (BasicAnyVector)conn.run("[1, 2, [1,3,5],[0.9, [0.8]]]");
+    BasicAnyVector result = (BasicAnyVector)conn.run("[`GS, 2, [1,3,5],[0.9, [0.8]]]");
     System.out.println(result.getString());
 }
 ```
@@ -252,7 +252,7 @@ DolphinDB提供多种方式来保存数据到内存表：
 - 通过`tableInsert`函数批量保存多条数据
 - 通过`tableInsert`函数保存数据表
 
-一般不建议通过`append!`函数保存数据，因为`append!`函数会返回一个表结构，增加通信量。
+一般不建议通过`append!`函数保存数据，因为`append!`函数会返回表的所有记录，增加不必要的通信量。
 
 下面分别介绍三种方式保存数据的实例，在例子中使用到的数据表有4个列，分别是string, int, timestamp, double类型，列名分别为cstring, cint, ctimestamp, cdouble。
 ```
@@ -272,7 +272,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 
 ##### 7.1.2 使用`tableInsert`函数批量保存数组对象
 
-`tableInsert`函数比较适合用来批量保存多条数据，它可将多个数组追加到DolphinDB内存表中。若Java程序获取的数据可以组织成List方式，可使用`tableInsert`函数保存。
+`tableInsert`函数比较适合用来批量保存数据，它可将多个数组追加到DolphinDB内存表中。若Java程序获取的数据可以组织成List方式，可使用`tableInsert`函数保存。
 
 ```
 public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,List<Long> tsArray,List<Double> dblArray) throws IOException{
@@ -315,7 +315,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 
-当用户在Java程序中取到的值是数组或列表时，也可以很方便的构造出BasicTable用于追加数据，例如若有 boolArray, intArray, dblArray, dateArray, strArray 这5个列表对象(List\<T\>),可以通过以下语句构造BasicTable对象：
+Java程序中的数组或列表，也可以很方便的构造出BasicTable用于追加数据。例如若有 boolArray, intArray, dblArray, dateArray, strArray 这5个列表对象(List\<T\>),可以通过以下语句构造BasicTable对象：
 
 ```
 List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
@@ -425,9 +425,9 @@ long timestamp = Utils.countMilliseconds(dt);
 
 ### 9. Java流数据API
 
-Java程序可以通过API订阅流数据，当数据进入客户端后，Java API有两种处理数据的方式：
+Java程序可以通过API订阅流数据。Java API有两种获取数据的方式：
 
-- 客户机上的应用程序定期检查是否添加了新数据。如果添加了新数据，应用程序会获取数据并且在工作中使用它们。
+- 客户机上的应用程序定期去流数据表查询是否有新增数据，若有，应用程序会获取新增数据。
 
 ```
 PollingClient client = new PollingClient(subscribePort);
@@ -436,16 +436,18 @@ TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset);
 while (true) {
    ArrayList<IMessage> msgs = poller1.poll(1000);
    if (msgs.size() > 0) {
-         BasicInt value = msgs.get(0).getEntity(2);  //取数据中第一行第二个字段
+         BasicInt value = msgs.get(0).getEntity(2);  //取数据中第一行第三个字段
    }
 }
 ```
 
-每次流数据表发布新数据时，poller1会拉取到新数据。无新数据发布时，程序会阻塞在poller1.poll方法这里等待。
+poller1探测到流数据表有新增数据后，会拉取到新数据。无新数据发布时，Java程序会阻塞在poller1.poll方法这里等待。
 
-Java API使用预先设定的MessageHandler获取及处理新数据。首先需要调用者定义数据处理器Handler，Handler需要实现com.xxdb.streaming.client.MessageHandler接口。
 
-- Java API使用预先设定的MessageHandler直接使用新数据。
+- Java API使用MessageHandler获取新数据。
+
+首先需要调用者定义数据处理器Handler，Handler需要实现com.xxdb.streaming.client.MessageHandler接口。
+
 
 ```
 public class MyHandler implements MessageHandler {
@@ -463,13 +465,13 @@ ThreadedClient client = new ThreadedClient(subscribePort);
 client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
 ```
 
-当每次流数据表有新数据发布时，Java API会调用MyHandler方法，并将新数据通过msg参数传入。
+当流数据表有新增数据时，系统会通知Java API调用MyHandler方法，将新数据通过msg参数传入。
 
 #### 断线重连
 
 reconnect参数是一个布尔值，表示订阅意外中断后，是否会自动重新订阅。默认值为false。
 
-订阅意外中断可能由以下三种情况导致。下面我们也一并讲述如果reconnect=true时，订阅中断后系统的反应：
+若reconnect设置为true时，订阅意外中断后系统是否以及如何自动重新订阅，取决于订阅中断由哪种原因导致：
 
 - 如果发布端与订阅端处于正常状态，但是网络中断，那么订阅端会在网络正常时，自动从中断位置重新订阅。
 - 如果发布端崩溃，订阅端会在发布端重启后不断尝试重新订阅。
