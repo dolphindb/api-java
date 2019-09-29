@@ -22,7 +22,7 @@ The most important object provided by DolphinDB Java API is DBConnection. It all
 |run(script)|Run script on DolphinDB server|
 |run(functionName,args)|Call a function on DolphinDB server|
 |upload(variableObjectMap)|Upload local data to DolphinDB server|
-|isBusy()|Judge if the current session is busy|
+|isBusy()|Determine if the current session is busy|
 |close()|Close the current session|
 
 For a detailed example, users can refer to the [example directory](https://github.com/dolphindb/api-java/tree/master/example).
@@ -254,7 +254,7 @@ DolphinDB offers several ways to save data to an in-memory table:
 - Save multiple rows of data in bulk with function `tableInsert`
 - Save a table object with function `tableInsert`
 
-It is not recommended to save data with function `append!`, as `append!` returns table schema that unnecessarily increases the network traffic.
+It is not recommended to save data with function `append!`, as `append!` returns all records of a table and unnecessarily increases the network traffic.
 
 The table in the following examples has 4 columns. Their data types are string, int, timestamp and double. The column names are cstring, cint, ctimestamp and cdouble, respectively.
 ```
@@ -273,7 +273,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 
 ##### 7.1.2 Save data in batches with `tableInsert`
 
-To save multiple records in batches, we can use `Arrays.asLIst` method to encapsulate multiple vectors in a List, then use function `tableInsert` to append it to a table.
+Function `tableInsert` can save records in batches. If data in Java can be organized as a List, it can be saved with function `tableInsert`.
 
 ```
 public void test_save_TableInsert(List<String> strArray,List<Integer> intArray, List<Long> tsArray,List<Double> dblArray) throws IOException{
