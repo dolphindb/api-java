@@ -265,7 +265,7 @@ DolphinDB offers several ways to save data to an in-memory table:
 - Save multiple rows of data in bulk with function `tableInsert`
 - Save a table object with function `tableInsert`
 
-It is not recommended to save data with function `append!`, as `append!` returns all records of a table and unnecessarily increases the network traffic.
+It is not recommended to save data with function `append!`, as `append!` returns the schema of a table and unnecessarily increases the network traffic.
 
 The table in the following examples has 4 columns. Their data types are string, int, timestamp and double. The column names are cstring, cint, ctimestamp and cdouble, respectively.
 ```
