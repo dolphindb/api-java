@@ -252,8 +252,6 @@ public void testVoid() throws IOException{
 
 ### 7. Read from and write to DolphinDB tables
 
-Users may ingest data from other database systems or third-party APIs to a DolphinDB database. This section introduces how to upload and save data with Java API.
-
 There are 3 types of DolphinDB tables:
 
 - In-memory table: it has the fastest access speed, but if the node shuts down the data will be lost.
