@@ -76,7 +76,7 @@ conn.run("script");
 conn.run("x = [1,3,5];y = [2,4,6]")
 ```
 那么在Java端要对这两个向量做加法运算，只需直接使用run("script")即可。
-```
+```java
 public void testFunction() throws IOException{
     Vector result = (Vector)conn.run("add(x,y)");
     System.out.println(result.getString());
@@ -91,7 +91,7 @@ conn.run("x = [1,3,5]")
 ```
 而参数y要在Java客户端生成，这时就需要使用“部分应用”方式，把参数x固化在`add`函数内。具体请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
-```
+```java
 public void testFunction() throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     BasicDoubleVector y = new BasicDoubleVector(3);
@@ -104,7 +104,7 @@ public void testFunction() throws IOException{
 }
 ```
 * 两个参数都待由Java客户端赋值
-```
+```java
 import java.util.List;
 import java.util.ArrayList;
 
@@ -129,7 +129,7 @@ public void testFunction() throws IOException{
 
 可使用`upload`方法，将本地的数据上传到DolphinDB服务器并分配给一个变量。变量名称可以使用三种类型的字符：字母，数字或下划线，第一个字符必须是字母。
 
-```
+```java
 public void testFunction() throws IOException{
     Map<String, Entity> vars = new HashMap<String, Entity>();
     BasicDoubleVector vec = new BasicDoubleVector(3);
@@ -162,7 +162,7 @@ rand(`IBM`MSFT`GOOG`BIDU,10)
 ```
 可使用`rows`方法获取向量的长度；可使用`getString`方法按照索引访问向量元素。
 
-```
+```java
 public void testStringVector() throws IOException{
     BasicStringVector vector = (BasicStringVector)conn.run("rand(`IBM`MSFT`GOOG`BIDU, 10)");
     int size = vector.rows();
@@ -173,7 +173,7 @@ public void testStringVector() throws IOException{
 ```
 
 用类似的方式，也可以处理INT, DOUBLE, FLOAT以及其它数据类型的向量或者元组。
-```
+```java
 public void testDoubleVector() throws IOException{
     BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0, 10)");
     int size = vector.rows();
@@ -183,19 +183,41 @@ public void testDoubleVector() throws IOException{
 }
 ```
 
-```
+```java
 public void testAnyVector() throws IOException{
     BasicAnyVector result = (BasicAnyVector)conn.run("[`GS, 2, [1,3,5],[0.9, [0.8]]]");
-    System.out.println(result.getString());
+    //获取元素0的形式，数据类型，内容
+	System.out.println(result.getEntity(0).getDataForm()); //DF_SCALAR
+	System.out.println(result.getEntity(0).getDataType()); //DT_STRING
+	System.out.println(result.getEntity(0).getString());   //"GS"
+    //获取元素1的形式，数据类型，内容
+	System.out.println(result.getEntity(1).getDataForm()); //DF_SCALAR
+	System.out.println(result.getEntity(1).getDataType()); //DT_INT
+	System.out.println(((BasicInt)result.getEntity(1)).getInt()); //2
+    //获取元素2的形式，数据类型，内容
+	System.out.println(result.getEntity(2).getDataForm()); //DF_VECTOR
+	System.out.println(result.getEntity(2).getDataType()); //DT_INT
+	System.out.println(result.getEntity(2).getString()); //"[1,3,5]"
+	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(0)); //1
+	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(1)); //3
+	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(2)); //5
+    //获取元素3, AnyVector的形式，数据类型，内容。
+	System.out.println(result.getEntity(3).getDataForm()); //DF_VECTOR
+	System.out.println(result.getEntity(3).getDataType()); //DT_ANY
+	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(0).getDataForm()); //DF_SCALAR
+	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(0).getDataType()); //DT_DOUBLE
+	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(1).getDataForm()); //DF_VECTOR
+	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(1).getDataType()); //DT_DOUBLE
 }
 ```
 
 - 集合
 
-```
+```java
 public void testSet() throws IOException{
-    BasicSet result = (BasicSet)conn.run("set(1+3*1..100)");
-    System.out.println(result.getString());
+	BasicSet result = (BasicSet)conn.run("set(1..100)");
+	System.out.println(result.rows()==100);
+	System.out.println(((BasicInt)result.keys().get(0)).getInt()==1);
 }
 ```
 
@@ -203,10 +225,17 @@ public void testSet() throws IOException{
 
 要从整数矩阵中检索一个元素，可以使用`getInt`。 要获取行数和列数，可以使用函数`rows`和`columns`。
 
-```
+```java
 public void testIntMatrix() throws IOException {
-    BasicIntMatrix matrix = (BasicIntMatrix)conn.run("1..6$3:2");
-    System.out.println(matrix.getString());
+	//1..6$3:2
+	//------
+	//  1  4
+	//  2  5
+	//  3  6
+	BasicIntMatrix matrix = (BasicIntMatrix)conn.run("1..6$3:2");
+	System.out.println(matrix.getInt(0,1)==4);
+	System.out.println(matrix.rows()==3);
+	System.out.println(matrix.columns()==2);
 }
 ```
 
@@ -214,11 +243,13 @@ public void testIntMatrix() throws IOException {
 
 用函数`keys`和`values`可以从字典取得所有的键和值。要获得一个键对应的值，可以调用`get`。
 
-```
+```java
 public void testDictionary() throws IOException{
-    BasicDictionary dict = (BasicDictionary)conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
-    //to print the corresponding value for key 1.
-    System.out.println(dict.get(new BasicInt(1)).getString());
+		BasicDictionary dict = (BasicDictionary)conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
+        System.out.println(dict.keys());  //[1, 2, 3]
+		System.out.println(dict.values()); //[IBM, MSFT, GOOG]
+		//to print the corresponding value for key 1.
+		System.out.println(dict.get(new BasicInt(1)).getString()); //IBM
 }
 ```
 
@@ -226,7 +257,7 @@ public void testDictionary() throws IOException{
 
 要获取一个表中某列，可以用`table.getColumn(index)`。使用`table.columns()`和`table.rows()`来分别获取一个表的列数和行数。
 
-```
+```java
 public void testTable() throws IOException{
     StringBuilder sb =new StringBuilder();
     sb.append("n=2000\n");
@@ -240,10 +271,10 @@ public void testTable() throws IOException{
 - NULL对象
 
 要判断一个对象是否为NULL，我们可以使用`obj.getDataType()`。
-```
+```java
 public void testVoid() throws IOException{
-    Entity obj = conn.run("NULL");
-    System.out.println(obj.getDataType());
+	Entity obj = conn.run("NULL");
+	System.out.println(obj.getDataType().equals(Entity.DATA_TYPE.DT_VOID)); //true
 }
 ```
 
@@ -297,7 +328,7 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,L
 
 若Java程序获取的数据处理后组织成BasicTable对象，`tableInsert`函数也可以接受一个表对象作为参数，批量添加数据。
 
-```
+```java
 public void test_save_table(BasicTable table1) throws IOException {
     List<Entity> args = Arrays.asList(table1);
     conn.run("tableInsert{shareTable}", args);
@@ -317,7 +348,7 @@ db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
 DolphinDB提供`loadTable`方法可以加载分布式表，通过`tableInsert`方式追加数据，具体的脚本示例如下：
 
-```
+```java
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     args.add(table1);
@@ -327,7 +358,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 
 Java程序中的数组或列表，也可以很方便的构造出BasicTable用于追加数据。例如若有 boolArray, intArray, dblArray, dateArray, strArray 这5个列表对象(List\<T\>),可以通过以下语句构造BasicTable对象：
 
-```
+```java
 List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
 List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
 BasicTable table1 = new BasicTable(colNames,cols);
@@ -347,7 +378,7 @@ db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
 DolphinDB提供`loadTable`方法同样可以加载本地磁盘表，通过`tableInsert`追加数据。
-```
+```java
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     args.add(table1);
@@ -360,7 +391,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 
 以下例子中参数BasicTable的有4个列，列名分别为cstring, cint, ctimestamp, cdouble，数据类型分别是STRING, INT, TIMESTAMP, DOUBLE。
 
-```
+```java
 public void test_loop_basicTable(BasicTable table1) throws Exception{
     BasicStringVector stringv = (BasicStringVector) table1.getColumn("cstring");
     BasicIntVector intv = (BasicIntVector) table1.getColumn("cint");
@@ -387,7 +418,7 @@ Java API提供了一组以Basic+\<DataType\>方式命名的类，分别对应Dol
 - 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供date, month, time, minute, second, datetime, timestamp, nanotime和nanotimestamp九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html)。由于Java也提供了LocalDate, LocalTime, LocalDateTime, YearMonth等数据类型，所以Java API在Utils类里提供了所有Java时间类型与int或long之间的转换函数。
 
 以下脚本展示Java API中DolphinDB时间类型与Java原生时间类型之间的对应关系：
-```
+```java
 //Date:2018.11.12
 BasicDate bd = new BasicDate(LocalDate.of(2018,11,12));
 
@@ -416,12 +447,12 @@ BasicNanoTime bnt = new BasicNanoTime(LocalTime.of(20,8,1,123456789));
 BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123456789));
 ```
 如果在第三方系统中时间以时间戳的方式存储，DolphinDB时间对象也可以用时间戳来实例化。Java API中的Utils类提供了各种时间类型与标准时间戳的转换算法，比如将毫秒级的时间戳转换为DolphinDB的BasicTimestamp对象:
-```
+```java
 LocalDateTime dt = Utils.parseTimestamp(1543494854000l);
 BasicTimestamp ts = new BasicTimestamp(dt);
 ```
 也可以将DolphinDB对象转换为整形或长整形的时间戳，比如：
-```
+```java
 LocalDateTime dt = ts.getTimestamp();
 long timestamp = Utils.countMilliseconds(dt);
 ```
@@ -439,7 +470,7 @@ Java程序可以通过API订阅流数据。Java API有两种获取数据的方�
 
 - 客户机上的应用程序定期去流数据表查询是否有新增数据，若有，应用程序会获取新增数据。
 
-```
+```java
 PollingClient client = new PollingClient(subscribePort);
 TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset);
 
@@ -459,7 +490,7 @@ poller1探测到流数据表有新增数据后，会拉取到新数据。无新�
 首先需要调用者定义数据处理器Handler，Handler需要实现com.xxdb.streaming.client.MessageHandler接口。
 
 
-```
+```java
 public class MyHandler implements MessageHandler {
        public void doEvent(IMessage msg) {
                BasicInt qty = msg.getValue(2);
@@ -470,7 +501,7 @@ public class MyHandler implements MessageHandler {
 
 在启动订阅时，把handler实例作为参数传入订阅函数。
 
-```
+```java
 ThreadedClient client = new ThreadedClient(subscribePort);
 client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
 ```
@@ -491,7 +522,7 @@ reconnect参数是一个布尔值，表示订阅意外中断后，是否会自�
 
 以下例子在订阅时，设置reconnect为true：
 
-```
+```java
 PollingClient client = new PollingClient(subscribePort);
 TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset, true);
 ```
@@ -502,7 +533,7 @@ filter参数是一个向量。该参数需要发布端配合`setStreamTableFilte
 
 以下例子将一个包含元素1和2的整数类型向量作为`subscribe`的filter参数：
 
-```
+```java
 BasicIntVector filter = new BasicIntVector(2);
 filter.setInt(0, 1);
 filter.setInt(1, 2);
