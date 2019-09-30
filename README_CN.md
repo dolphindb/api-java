@@ -43,7 +43,7 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 
 若未使用用户名及密码连接成功，则脚本在Guest权限下运行。后续运行中若需要提升权限，可以通过conn.login('admin','123456',true)登录获取权限。
 
-### 3.运行脚本
+### 3.运行DolphinDB脚本
 
 在Java中运行DolphinDB脚本：
 ```
@@ -51,7 +51,7 @@ conn.run("script");
 ```
 脚本的最大长度为65,535字节。
 
-### 4. 运行函数
+### 4. 运行DolphinDB函数
 
 可使用`run`命令在远程DolphinDB服务器上执行DolphinDB内置或用户自定义函数。
 
