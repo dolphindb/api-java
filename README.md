@@ -213,10 +213,17 @@ public void testSet() throws IOException{
 
 To retrieve an element from an integer matrix, we can use `getInt`. To get the number of rows and columns of a matrix, we can use functions `rows` and `columns`.
 
-```
+```java
 public void testIntMatrix() throws IOException {
-    BasicIntMatrix matrix = (BasicIntMatrix)conn.run("1..6$3:2");
-    System.out.println(matrix.getString());
+	//1..6$3:2
+	//------
+	//  1  4
+	//  2  5
+	//  3  6
+	BasicIntMatrix matrix = (BasicIntMatrix)conn.run("1..6$3:2");
+	System.out.println(matrix.getInt(0,1)==4);
+	System.out.println(matrix.rows()==3);
+	System.out.println(matrix.columns()==2);
 }
 ```
 
@@ -224,11 +231,13 @@ public void testIntMatrix() throws IOException {
 
 The keys and values of a dictionary can be retrieved with functions `keys` and `values`, respectively. To get the value for a key, use `get`.
 
-```
+```java
 public void testDictionary() throws IOException{
-    BasicDictionary dict = (BasicDictionary)conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
-    //to print the corresponding value for key 1.
-    System.out.println(dict.get(new BasicInt(1)).getString());
+		BasicDictionary dict = (BasicDictionary)conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
+        System.out.println(dict.keys());  //[1, 2, 3]
+		System.out.println(dict.values()); //[IBM, MSFT, GOOG]
+		//to print the corresponding value for key 1.
+		System.out.println(dict.get(new BasicInt(1)).getString()); //IBM
 }
 ```
 
@@ -236,7 +245,7 @@ public void testDictionary() throws IOException{
 
 To get a column of a table, use `table.getColumn(index)`; to get a column name, use `table.getColumnName(index)`. To get the number of columns and rows of a table, use `table.columns()` and `table.rows()`, respectively.
 
-```
+```java
 public void testTable() throws IOException{
     StringBuilder sb =new StringBuilder();
     sb.append("n=2000\n");
@@ -249,12 +258,12 @@ public void testTable() throws IOException{
 ```
 - NULL object
 
-To describe a NULL object, we can use `obj.getDataType()`.
+To determine if an object is NULL, we can use `obj.getDataType()`.
 
-```
+```java
 public void testVoid() throws IOException{
-    Entity obj = conn.run("NULL");
-    System.out.println(obj.getDataType());
+	Entity obj = conn.run("NULL");
+	System.out.println(obj.getDataType().equals(Entity.DATA_TYPE.DT_VOID)); //true
 }
 ```
 
