@@ -45,7 +45,7 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 
 ### 3.运行DolphinDB脚本
 
-在Java中运行DolphinDB脚本：
+使用`run("script")`方法在Java中运行DolphinDB脚本：
 ```
 conn.run("script");
 ```
