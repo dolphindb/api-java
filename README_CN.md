@@ -7,7 +7,7 @@
 - 上传本地对象到DolphinDB服务器
 - 读取数据示例
 - 读写DolphinDB数据表
-- Java原生类型向DolphinDB数据类型转换
+- Java数据类型转换为DolphinDB数据类型
 - Java流数据API
 
 ### 1. Java API 概述
@@ -382,7 +382,7 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 
 Java API提供了一组以Basic+\<DataType\>方式命名的类，分别对应DolphinDB的数据类型，比如BasicInt类，BasicDate类等等。
 
-大部分DolphinDB数据类型可以由Java原生类型构建，例如new BasicInt(4)对应integer，new BasicDouble(1.23)对应double，等等。但是也有一些DolphinDB数据类型，并不能由上述方法构建：
+大部分DolphinDB数据类型可以由对应的Java数据类型构建，例如new BasicInt(4)对应integer，new BasicDouble(1.23)对应double，等等。但是也有一些DolphinDB数据类型，并不能由上述方法构建：
 
 - CHAR类型：DolphinDB中的CHAR类型保存为一个byte，所以在Java API中用BasicByte类型来构造CHAR，例如new BasicByte((byte)'c')。
 - SYMBOL类型：DolphinDB中的SYMBOL类型将字符串存储为整形，可以提高对字符串数据存储和查询的效率，但是Java中并没有这种类型，所以Java API不提供BasicSymbol这种对象，直接用BasicString来处理即可。
