@@ -262,7 +262,7 @@ DolphinDB提供多种方式来保存数据到内存表：
 - 通过`tableInsert`函数批量保存多条数据
 - 通过`tableInsert`函数保存数据表
 
-一般不建议通过`append!`函数保存数据，因为`append!`函数会返回表的所有记录，产生不必要的通信量。
+一般不建议通过`append!`函数保存数据，因为`append!`函数会返回表的schema，产生不必要的通信量。
 
 下面分别介绍三种方式保存数据的实例，在例子中使用到的数据表有4个列，分别是string, int, timestamp, double类型，列名分别为cstring, cint, ctimestamp, cdouble。
 ```
