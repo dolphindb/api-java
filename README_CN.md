@@ -1,3 +1,15 @@
+本教程主要介绍以下内容：
+
+- Java API 概述
+- 建立DolphinDB连接
+- 运行DolphinDB脚本
+- 运行DolphinDB函数
+- 上传本地对象到DolphinDB服务器
+- 读取数据示例
+- 读写DolphinDB数据表
+- Java数据类型转换为DolphinDB数据类型
+- Java流数据API
+
 ### 1. Java API 概述
 Java API需要运行在Java 1.8或以上环境。
 
@@ -5,12 +17,12 @@ Java API遵循面向接口编程的原则。Java API使用接口类Entity来表�
 
 拓展的接口类|命名规则|例子
 ---|---|---
-scalar|`Basic<DataType>`|BasicInt, BasicDouble, BasicDate, etc.
-vector, matrix|`Basic<DataType><DataForm>`|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
-set, dictionary, table|`Basic<DataForm>`|BasicSet, BasicDictionary, BasicTable.
+scalar|Basic\<DataType\>|BasicInt, BasicDouble, BasicDate, etc.
+vector, matrix|Basic\<DataType\>\<DataForm\>|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
+set, dictionary, table|Basic\<DataForm\>|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
-"Basic"表示基本的数据类型接口，`<DataType>`表示DolphinDB数据类型名称，`<DataForm>`是一个DolphinDB数据形式名称。接口和类的详细描述请参考[Java API手册](https://www.dolphindb.com/javaapi/)。
+"Basic"表示基本的数据类型接口，\<DataType\>表示DolphinDB数据类型名称，\<DataForm\>是一个DolphinDB数据形式名称。接口和类的详细描述请参考[Java API手册](https://www.dolphindb.com/javaapi/)。
 
 DolphinDB Java API提供的最核心的对象是DBConnection。Java应用可以通过它在DolphinDB服务器上执行脚本和函数，并在两者之间双向传递数据。DBConnection类提供如下主要方法：
 
@@ -28,7 +40,7 @@ Java API 的实际用例参见[example目录](https://github.com/dolphindb/api-j
 
 ### 2. 建立DolphinDB连接
 
-Java API通过TCP/IP协议连接到DolphinDB服务器。在以下例子中，我们连接正在运行的端口号为8848的本地DolphinDB服务器：
+Java API通过TCP/IP协议连接到DolphinDB服务器。连接正在运行的端口号为8848的本地DolphinDB服务器：
 
 ```
 import com.xxdb;
@@ -36,26 +48,26 @@ DBConnection conn = new DBConnection();
 boolean success = conn.connect("localhost", 8848);
 ```
 
-使用用户名和密码建立连接：
+输入用户名和密码建立连接：
 ```
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
 
-若未使用用户名及密码连接成功，则脚本在Guest权限下运行。后续运行中若需要提升权限，可以通过conn.login('admin','123456',true)登录获取权限。
+若未使用用户名及密码连接成功，则脚本在Guest权限下运行。后续运行中若需要提升权限，可以使用 conn.login('admin','123456',true) 登录获取权限。
 
-### 3.运行脚本
+### 3.运行DolphinDB脚本
 
-在Java中运行DolphinDB脚本：
+使用`run("script")`方法在Java中运行DolphinDB脚本：
 ```
 conn.run("script");
 ```
-脚本的最大长度为65,535字节。
+具体例子可参照下一节。脚本的最大长度为65,535字节。
 
-### 4. 运行函数
+### 4. 运行DolphinDB函数
 
-可使用`run`命令在远程DolphinDB服务器上执行DolphinDB内置或用户自定义函数。
+除了运行脚本之外，run命令还可以直接在远程DolphinDB服务器上执行DolphinDB内置或用户自定义函数。若`run`方法只有一个参数，则该参数为脚本；若`run`方法有两个参数，则第一个参数为DolphinDB中的函数名，第二个参数是该函数的参数。
 
-下面的示例展示Java程序调用DolphinDB内置的`add`函数。`add`函数有两个参数x和y。参数的存储位置不同，也会导致调用方式的不同。可能有以下三种情况：
+下面的示例展示Java程序调用DolphinDB内置的`add`函数。`add`函数有两个参数x和y。参数的所在位置不同，也会导致调用方式的不同。可能有以下三种情况：
 
 * 所有参数都在DolphinDB server端
 
@@ -64,14 +76,14 @@ conn.run("script");
 conn.run("x = [1,3,5];y = [2,4,6]")
 ```
 那么在Java端要对这两个向量做加法运算，只需直接使用run("script")即可。
-```
+```java
 public void testFunction() throws IOException{
     Vector result = (Vector)conn.run("add(x,y)");
     System.out.println(result.getString());
 }
 ```
 
-* 仅有一个参数在DolphinDB server端存在
+* 仅有一个参数在DolphinDB server端
 
 若变量x已经通过Java程序在服务器端生成，
 ```
@@ -79,7 +91,7 @@ conn.run("x = [1,3,5]")
 ```
 而参数y要在Java客户端生成，这时就需要使用“部分应用”方式，把参数x固化在`add`函数内。具体请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
-```
+```java
 public void testFunction() throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     BasicDoubleVector y = new BasicDoubleVector(3);
@@ -92,7 +104,7 @@ public void testFunction() throws IOException{
 }
 ```
 * 两个参数都待由Java客户端赋值
-```
+```java
 import java.util.List;
 import java.util.ArrayList;
 
@@ -117,7 +129,7 @@ public void testFunction() throws IOException{
 
 可使用`upload`方法，将本地的数据上传到DolphinDB服务器并分配给一个变量。变量名称可以使用三种类型的字符：字母，数字或下划线，第一个字符必须是字母。
 
-```
+```java
 public void testFunction() throws IOException{
     Map<String, Entity> vars = new HashMap<String, Entity>();
     BasicDoubleVector vec = new BasicDoubleVector(3);
@@ -135,7 +147,7 @@ public void testFunction() throws IOException{
 
 下面介绍通过DBConnection对象，读取DolphinDB不同类型的数据。
 
-首先导入DolphinDB数据类型包：
+需要导入DolphinDB数据类型包：
 
 ```
 import com.xxdb.data.*;
@@ -143,14 +155,14 @@ import com.xxdb.data.*;
 
 - 向量
 
-以下DolphinDB语句返回Java对象BasicStringVector。
+首先用字符串向量为例，解释Java使用哪种数据类型来接收DolphinDB返回的向量。以下DolphinDB语句返回Java对象BasicStringVector。
 
 ```
 rand(`IBM`MSFT`GOOG`BIDU,10)
 ```
-`rows`方法可以获取向量的元素数量。我们可以使用`getString`方法按照索引访问向量元素。
+可使用`rows`方法获取向量的长度；可使用`getString`方法按照索引访问向量元素。
 
-```
+```java
 public void testStringVector() throws IOException{
     BasicStringVector vector = (BasicStringVector)conn.run("rand(`IBM`MSFT`GOOG`BIDU, 10)");
     int size = vector.rows();
@@ -160,8 +172,8 @@ public void testStringVector() throws IOException{
 }
 ```
 
-类似的，也可以处理其它数据类型的向量或者元组。
-```
+用类似的方式，也可以处理INT, DOUBLE, FLOAT以及其它数据类型的向量或者元组。
+```java
 public void testDoubleVector() throws IOException{
     BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0, 10)");
     int size = vector.rows();
@@ -171,19 +183,41 @@ public void testDoubleVector() throws IOException{
 }
 ```
 
-```
+```java
 public void testAnyVector() throws IOException{
-    BasicAnyVector result = (BasicAnyVector)conn.run("[1, 2, [1,3,5],[0.9, [0.8]]]");
-    System.out.println(result.getString());
+    BasicAnyVector result = (BasicAnyVector)conn.run("[`GS, 2, [1,3,5],[0.9, [0.8]]]");
+    //获取元素0的形式，数据类型，内容
+	System.out.println(result.getEntity(0).getDataForm()); //DF_SCALAR
+	System.out.println(result.getEntity(0).getDataType()); //DT_STRING
+	System.out.println(result.getEntity(0).getString());   //"GS"
+    //获取元素1的形式，数据类型，内容
+	System.out.println(result.getEntity(1).getDataForm()); //DF_SCALAR
+	System.out.println(result.getEntity(1).getDataType()); //DT_INT
+	System.out.println(((BasicInt)result.getEntity(1)).getInt()); //2
+    //获取元素2的形式，数据类型，内容
+	System.out.println(result.getEntity(2).getDataForm()); //DF_VECTOR
+	System.out.println(result.getEntity(2).getDataType()); //DT_INT
+	System.out.println(result.getEntity(2).getString()); //"[1,3,5]"
+	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(0)); //1
+	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(1)); //3
+	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(2)); //5
+    //获取元素3, AnyVector的形式，数据类型，内容。
+	System.out.println(result.getEntity(3).getDataForm()); //DF_VECTOR
+	System.out.println(result.getEntity(3).getDataType()); //DT_ANY
+	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(0).getDataForm()); //DF_SCALAR
+	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(0).getDataType()); //DT_DOUBLE
+	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(1).getDataForm()); //DF_VECTOR
+	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(1).getDataType()); //DT_DOUBLE
 }
 ```
 
 - 集合
 
-```
+```java
 public void testSet() throws IOException{
-    BasicSet result = (BasicSet)conn.run("set(1+3*1..100)");
-    System.out.println(result.getString());
+	BasicSet result = (BasicSet)conn.run("set(1..100)");
+	System.out.println(result.rows()==100);
+	System.out.println(((BasicInt)result.keys().get(0)).getInt()==1);
 }
 ```
 
@@ -191,22 +225,31 @@ public void testSet() throws IOException{
 
 要从整数矩阵中检索一个元素，可以使用`getInt`。 要获取行数和列数，可以使用函数`rows`和`columns`。
 
-```
+```java
 public void testIntMatrix() throws IOException {
-    BasicIntMatrix matrix = (BasicIntMatrix)conn.run("1..6$3:2");
-    System.out.println(matrix.getString());
+	//1..6$3:2
+	//------
+	//  1  4
+	//  2  5
+	//  3  6
+	BasicIntMatrix matrix = (BasicIntMatrix)conn.run("1..6$3:2");
+	System.out.println(matrix.getInt(0,1)==4);
+	System.out.println(matrix.rows()==3);
+	System.out.println(matrix.columns()==2);
 }
 ```
 
 - 字典
 
-用函数`keys`和`values`可以从字典取得所有的键和值。要从一个键里取得它的值，可以调用`get`。
+用函数`keys`和`values`可以从字典取得所有的键和值。要获得一个键对应的值，可以调用`get`。
 
-```
+```java
 public void testDictionary() throws IOException{
-    BasicDictionary dict = (BasicDictionary)conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
-    //to print the corresponding value for key 1.
-    System.out.println(dict.get(new BasicInt(1)).getString());
+		BasicDictionary dict = (BasicDictionary)conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
+        System.out.println(dict.keys());  //[1, 2, 3]
+		System.out.println(dict.values()); //[IBM, MSFT, GOOG]
+		//to print the corresponding value for key 1.
+		System.out.println(dict.get(new BasicInt(1)).getString()); //IBM
 }
 ```
 
@@ -214,7 +257,7 @@ public void testDictionary() throws IOException{
 
 要获取一个表中某列，可以用`table.getColumn(index)`。使用`table.columns()`和`table.rows()`来分别获取一个表的列数和行数。
 
-```
+```java
 public void testTable() throws IOException{
     StringBuilder sb =new StringBuilder();
     sb.append("n=2000\n");
@@ -228,16 +271,14 @@ public void testTable() throws IOException{
 - NULL对象
 
 要判断一个对象是否为NULL，我们可以使用`obj.getDataType()`。
-```
+```java
 public void testVoid() throws IOException{
-    Entity obj = conn.run("NULL");
-    System.out.println(obj.getDataType());
+	Entity obj = conn.run("NULL");
+	System.out.println(obj.getDataType().equals(Entity.DATA_TYPE.DT_VOID)); //true
 }
 ```
 
 ### 7. 读写DolphinDB数据表
-
-使用Java API的一个重要场景是，用户从其他数据库系统或是第三方Web API中取得数据后存入DolphinDB数据库中。本节将介绍通过Java API将取到的数据上传并保存到DolphinDB的数据表中。
 
 DolphinDB数据表按存储方式分为三种:
 
@@ -247,12 +288,12 @@ DolphinDB数据表按存储方式分为三种:
 
 #### 7.1 保存数据到DolphinDB内存表
 
-DolphinDB提供多种方式来保存数据：
+DolphinDB提供多种方式来保存数据到内存表：
 - 通过`insert into`保存单条数据
 - 通过`tableInsert`函数批量保存多条数据
 - 通过`tableInsert`函数保存数据表
 
-一般不建议通过`append!`函数保存数据，因为`append!`函数会返回一个表结构，增加通信量。
+一般不建议通过`append!`函数保存数据，因为`append!`函数会返回表的schema，产生不必要的通信量。
 
 下面分别介绍三种方式保存数据的实例，在例子中使用到的数据表有4个列，分别是string, int, timestamp, double类型，列名分别为cstring, cint, ctimestamp, cdouble。
 ```
@@ -261,9 +302,9 @@ share t as sharedTable
 ```
 由于内存表是会话隔离的，所以该内存表只有当前会话可见。如果需要在其它会话中访问，需要通过`share`在会话间共享内存表。
 
-##### 7.1.1 使用`INSERT INTO`保存单条数据
+##### 7.1.1 使用 insert into 保存单条数据
 
-若每次将单条数据记录保存到DolphinDB，可以使用SQL语句`INSERT INTO`。
+若将单条数据记录保存到DolphinDB内存表，可以使用SQL语句insert into。
 ```
 public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
     conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
@@ -272,7 +313,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 
 ##### 7.1.2 使用`tableInsert`函数批量保存数组对象
 
-若Java程序获取的数据可以组织成List方式，`tableInsert`函数比较适合用来批量保存多条数据。这个函数可以接受多个数组作为参数，将数组追加到数据表中。
+`tableInsert`函数比较适合用来批量保存数据，它可将多个数组追加到DolphinDB内存表中。若Java程序获取的数据可以组织成List方式，可使用`tableInsert`函数保存。
 
 ```
 public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,List<Long> tsArray,List<Double> dblArray) throws IOException{
@@ -285,9 +326,9 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,L
 
 ##### 7.1.3 使用`tableInsert`函数保存BasicTable对象
 
-若Java程序获取的数据处理后组织成BasicTable对象，tableInsert函数也可以接受一个表对象作为参数，批量添加数据。
+若Java程序获取的数据处理后组织成BasicTable对象，`tableInsert`函数也可以接受一个表对象作为参数，批量添加数据。
 
-```
+```java
 public void test_save_table(BasicTable table1) throws IOException {
     List<Entity> args = Arrays.asList(table1);
     conn.run("tableInsert{shareTable}", args);
@@ -296,8 +337,6 @@ public void test_save_table(BasicTable table1) throws IOException {
 #### 7.2 保存数据到分布式表
 
 分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性。分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
-
-请注意只有启用enableDFS=1的集群环境才能使用分布式表。
 
 ```
 dbPath = 'dfs://testDatabase'
@@ -309,7 +348,7 @@ db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
 DolphinDB提供`loadTable`方法可以加载分布式表，通过`tableInsert`方式追加数据，具体的脚本示例如下：
 
-```
+```java
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     args.add(table1);
@@ -317,9 +356,9 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 }
 ```
 
-当用户在Java程序中取到的值是数组或列表时，也可以很方便的构造出BasicTable用于追加数据，例如若有 boolArray, intArray, dblArray, dateArray, strArray 5个列表对象(List<T>),可以通过以下语句构造BasicTable对象：
+Java程序中的数组或列表，也可以很方便的构造出BasicTable用于追加数据。例如若有 boolArray, intArray, dblArray, dateArray, strArray 这5个列表对象(List\<T\>),可以通过以下语句构造BasicTable对象：
 
-```
+```java
 List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
 List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
 BasicTable table1 = new BasicTable(colNames,cols);
@@ -327,7 +366,7 @@ BasicTable table1 = new BasicTable(colNames,cols);
 
 #### 7.3 保存数据到本地磁盘表
 
-本地磁盘表通用用于静态数据集的计算分析，既可以用于数据的输入，也可以作为计算的输出。它不支持事务，也不持支并发读写。
+本地磁盘表通常用于静态数据集的计算分析。它不支持事务，也不持支并发读写。
 
 使用DolphinDB脚本创建一个数据表：
 ```
@@ -339,7 +378,7 @@ db = database(dbPath,RANGE,2018.01.01..2018.12.31)
 db.createPartitionedTable(t,tbName,'ctimestamp')
 ```
 DolphinDB提供`loadTable`方法同样可以加载本地磁盘表，通过`tableInsert`追加数据。
-```
+```java
 public void test_save_table(String dbPath, BasicTable table1) throws IOException{
     List<Entity> args = new ArrayList<Entity>(1);
     args.add(table1);
@@ -350,9 +389,9 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 
 在Java API中，数据表保存为BasicTable对象。由于BasicTable是列式存储，所以若要在Java API中读取行数据需要先取出需要的列，再取出行。
 
-例子中参数BasicTable的有4个列，列名分别为cstring, cint, ctimestamp, cdouble，数据类型分别是STRING, INT, TIMESTAMP, DOUBLE。
+以下例子中参数BasicTable的有4个列，列名分别为cstring, cint, ctimestamp, cdouble，数据类型分别是STRING, INT, TIMESTAMP, DOUBLE。
 
-```
+```java
 public void test_loop_basicTable(BasicTable table1) throws Exception{
     BasicStringVector stringv = (BasicStringVector) table1.getColumn("cstring");
     BasicIntVector intv = (BasicIntVector) table1.getColumn("cint");
@@ -372,16 +411,14 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 
 Java API提供了一组以Basic+\<DataType\>方式命名的类，分别对应DolphinDB的数据类型，比如BasicInt类，BasicDate类等等。
 
-大部分Java原生类型可以通过构造函数直接创建对应的DolphinDB数据类型，比如new BasicInt(4)，new BasicDouble(1.23)。但是也有一些特殊的DolphinDB数据类型，并不能按前面所描述的方法简单转换，下面针对这些类型做出说明：
+大部分DolphinDB数据类型可以由对应的Java数据类型构建，例如new BasicInt(4)对应integer，new BasicDouble(1.23)对应double，等等。但是也有一些DolphinDB数据类型，并不能由上述方法构建：
 
-大部分DolphinDB数据类型可以由Java原生类型构建，例如new BasicInt(4)对应integer，new BasicDouble(1.23)对应double，等等。但是也有一些DolphinDB数据类型，并不能由上述方法构建：
-
-- CHAR类型：DolphinDB中的CHAR类型以Byte形式保存，所以在Java API中用BasicByte类型来构造CHAR，例如new BasicByte((byte)'c')。
-- SYMBOL类型：DolphinDB中的SYMBOL类型是对字符串的优化，可以提高DolphinDB对字符串数据存储和查询的效率，但是Java中并不需要这种类型，所以Java API不提供BasicSymbol这种对象，直接用BasicString来处理即可。
-- 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供date、month、time、minute、second、datetime、timestamp、nanotime、nanotimestamp九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html)。由于Java也提供了LocalDate、LocalTime、LocalDateTime、YearMonth等数据类型，所以Java API在Utils类里提供了所有Java时间类型与int或long之间的转换函数。
+- CHAR类型：DolphinDB中的CHAR类型保存为一个byte，所以在Java API中用BasicByte类型来构造CHAR，例如new BasicByte((byte)'c')。
+- SYMBOL类型：DolphinDB中的SYMBOL类型将字符串存储为整形，可以提高对字符串数据存储和查询的效率，但是Java中并没有这种类型，所以Java API不提供BasicSymbol这种对象，直接用BasicString来处理即可。
+- 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供date, month, time, minute, second, datetime, timestamp, nanotime和nanotimestamp九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html)。由于Java也提供了LocalDate, LocalTime, LocalDateTime, YearMonth等数据类型，所以Java API在Utils类里提供了所有Java时间类型与int或long之间的转换函数。
 
 以下脚本展示Java API中DolphinDB时间类型与Java原生时间类型之间的对应关系：
-```
+```java
 //Date:2018.11.12
 BasicDate bd = new BasicDate(LocalDate.of(2018,11,12));
 
@@ -410,48 +447,50 @@ BasicNanoTime bnt = new BasicNanoTime(LocalTime.of(20,8,1,123456789));
 BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123456789));
 ```
 如果在第三方系统中时间以时间戳的方式存储，DolphinDB时间对象也可以用时间戳来实例化。Java API中的Utils类提供了各种时间类型与标准时间戳的转换算法，比如将毫秒级的时间戳转换为DolphinDB的BasicTimestamp对象:
-```
+```java
 LocalDateTime dt = Utils.parseTimestamp(1543494854000l);
 BasicTimestamp ts = new BasicTimestamp(dt);
 ```
 也可以将DolphinDB对象转换为整形或长整形的时间戳，比如：
-```
+```java
 LocalDateTime dt = ts.getTimestamp();
 long timestamp = Utils.countMilliseconds(dt);
 ```
 如果时间戳以其他精度保存，Utils类还中提供如下方法，可以适应各种不同的精度：
-- Utils.countMonths：计算给定时间到1970.01之间的月份差，返回int
-- Utils.countDays：计算给定时间到1970.01.01之间的天数差，返回int
-- Utils.countMinutes：计算给定时间到1970.01.01T00:00之间的分钟差，返回int
-- Utils.countSeconds：计算给定时间到1970.01.01T00:00:00之间的秒数差，返回int
-- Utils.countMilliseconds：计算给定时间到1970.01.01T00:00:00之间的毫秒数差，返回long
-- Utils.countNanoseconds：计算给定时间到1970.01.01T00:00:00.000之间的纳秒数差，返回long
+- Utils.countMonths：计算给定时间到1970.01之间的月份差，返回INT.
+- Utils.countDays：计算给定时间到1970.01.01之间的天数差，返回INT.
+- Utils.countMinutes：计算给定时间到1970.01.01T00:00之间的分钟差，返回INT.
+- Utils.countSeconds：计算给定时间到1970.01.01T00:00:00之间的秒数差，返回INT.
+- Utils.countMilliseconds：计算给定时间到1970.01.01T00:00:00之间的毫秒数差，返回LONG.
+- Utils.countNanoseconds：计算给定时间到1970.01.01T00:00:00.000之间的纳秒数差，返回LONG.
 
 ### 9. Java流数据API
 
-Java程序可以通过API订阅流数据，当数据进入客户端后，Java API有两种处理数据的方式：
+Java程序可以通过API订阅流数据。Java API有两种获取数据的方式：
 
-- 客户机上的应用程序定期检查是否添加了新数据。如果添加了新数据，应用程序会获取数据并且在工作中使用它们。
+- 客户机上的应用程序定期去流数据表查询是否有新增数据，若有，应用程序会获取新增数据。
 
-```
+```java
 PollingClient client = new PollingClient(subscribePort);
 TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset);
 
 while (true) {
    ArrayList<IMessage> msgs = poller1.poll(1000);
    if (msgs.size() > 0) {
-         BasicInt value = msgs.get(0).getEntity(2);  //取数据中第一行第二个字段
+         BasicInt value = msgs.get(0).getEntity(2);  //取数据中第一行第三个字段
    }
 }
 ```
 
-每次流数据表发布新数据时，poller1会拉取到新数据。无新数据发布时，程序会阻塞在poller1.poll方法这里等待。
+poller1探测到流数据表有新增数据后，会拉取到新数据。无新数据发布时，Java程序会阻塞在poller1.poll方法这里等待。
 
-Java API使用预先设定的MessageHandler获取及处理新数据。首先需要调用者定义数据处理器Handler，Handler需要实现com.xxdb.streaming.client.MessageHandler接口。
 
-- Java API使用预先设定的MessageHandler直接使用新数据。
+- Java API使用MessageHandler获取新数据。
 
-```
+首先需要调用者定义数据处理器Handler，Handler需要实现com.xxdb.streaming.client.MessageHandler接口。
+
+
+```java
 public class MyHandler implements MessageHandler {
        public void doEvent(IMessage msg) {
                BasicInt qty = msg.getValue(2);
@@ -462,16 +501,18 @@ public class MyHandler implements MessageHandler {
 
 在启动订阅时，把handler实例作为参数传入订阅函数。
 
-```
+```java
 ThreadedClient client = new ThreadedClient(subscribePort);
 client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
 ```
 
-当每次流数据表有新数据发布时，Java API会调用MyHandler方法，并将新数据通过msg参数传入。
+当流数据表有新增数据时，系统会通知Java API调用MyHandler方法，将新数据通过msg参数传入。
 
 #### 断线重连
 
-`reconnect`参数是一个布尔值，表示订阅意外中断后，是否会自动重新订阅。默认值为`false`。如果`reconnect=true`，有以下三种情况：
+reconnect参数是一个布尔值，表示订阅意外中断后，是否会自动重新订阅。默认值为false。
+
+若reconnect设置为true时，订阅意外中断后系统是否以及如何自动重新订阅，取决于订阅中断由哪种原因导致：
 
 - 如果发布端与订阅端处于正常状态，但是网络中断，那么订阅端会在网络正常时，自动从中断位置重新订阅。
 - 如果发布端崩溃，订阅端会在发布端重启后不断尝试重新订阅。
@@ -479,20 +520,20 @@ client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
     - 如果发布端没有对流数据表启用持久化，那么订阅端将自动重新订阅失败。
 - 如果订阅端崩溃，订阅端重启后不会自动重新订阅，需要重新执行`subscribe`函数。
 
-以下例子在订阅时，设置`reconnect`为`true`：
+以下例子在订阅时，设置reconnect为true：
 
-```
+```java
 PollingClient client = new PollingClient(subscribePort);
 TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset, true);
 ```
 
 #### 启用filter
 
-`filter`参数是一个向量。该参数需要发布端配合`setStreamTableFilterColumn`函数一起使用。使用`setStreamTableFilterColumn`指定流数据表的过滤列，流数据表过滤列在`filter`中的数据才会发布到订阅端，不在`filter`中的数据不会发布。
+filter参数是一个向量。该参数需要发布端配合`setStreamTableFilterColumn`函数一起使用。使用`setStreamTableFilterColumn`指定流数据表的过滤列，流数据表过滤列在filter中的数据才会发布到订阅端，不在filter中的数据不会发布。
 
-以下例子将一个包含元素1和2的整数类型向量作为`subscribe`的`filter`参数：
+以下例子将一个包含元素1和2的整数类型向量作为`subscribe`的filter参数：
 
-```
+```java
 BasicIntVector filter = new BasicIntVector(2);
 filter.setInt(0, 1);
 filter.setInt(1, 2);
