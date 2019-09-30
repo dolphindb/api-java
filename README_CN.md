@@ -249,8 +249,6 @@ public void testVoid() throws IOException{
 
 ### 7. 读写DolphinDB数据表
 
-使用Java API的一个重要场景是，用户从其他数据库系统或是第三方Web API中取得数据后存入DolphinDB数据库中。本节将介绍通过Java API将取到的数据上传并保存到DolphinDB的数据表中。
-
 DolphinDB数据表按存储方式分为三种:
 
 - 内存表: 数据仅保存在内存中，存取速度最快，但是节点关闭后数据就不存在了。
