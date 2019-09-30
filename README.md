@@ -185,10 +185,18 @@ public void testDoubleVector() throws IOException{
 }
 ```
 
-```
+For the tuple [`GS, 2, [1,3,5],[0.9, [0.8]]], the following script gets the data form, data type and contents of the third element: 
+```java
 public void testAnyVector() throws IOException{
-    BasicAnyVector result = (BasicAnyVector)conn.run("[1, 2, [1,3,5],[0.9, [0.8]]]");
-    System.out.println(result.getString());
+    
+    BasicAnyVector result = (BasicAnyVector)conn.run("[`GS, 2, [1,3,5],[0.9, [0.8]]]");
+    
+    System.out.println(result.getEntity(2).getDataForm()); //DF_VECTOR
+	System.out.println(result.getEntity(2).getDataType()); //DT_INT
+	System.out.println(result.getEntity(2).getString()); //"[1,3,5]"
+	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(0)); //1
+	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(1)); //3
+	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(2)); //5
 }
 ```
 
