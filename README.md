@@ -7,7 +7,7 @@
 - Upload data to DolphinDB server
 - Read data
 - Read from and write to DolphinDB tables
-- Java原生类型向DolphinDB数据类型转换
+- Convert Java data types into DolphinDB data types
 - Java Streaming API
  
 
@@ -395,7 +395,7 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 
 Java API provides objects that correspond to DolphinDB data types. They are usually named as Basic+ \<DataType\>, such as BasicInt, BasicDate, etc.
 
-The majority of DolphinDB data types can be constructed based on basic Java types. For examples, INT in DolphinDB from 'new BasicInt(4)', DOUBLE in DolphinDB from 'new BasicDouble(1.23)'. The following Java types, however, need to be converted.
+The majority of DolphinDB data types can be constructed from corresponding Java data types. For examples, INT in DolphinDB from 'new BasicInt(4)', DOUBLE in DolphinDB from 'new BasicDouble(1.23)'. The following DolphinDB data types, however, need to be constructed in different ways: 
 
 - CHAR type: as the CHAR type in DolphinDB is stored as a byte, we can use the BasicByte type to construct CHAR in Java API, for example 'new BasicByte((byte)'c')'.
 - SYMBOL type: the SYMBOL type in DolphinDB is stored as INT to improve the efficiency of storage and query of strings. Java doesn't have this data type, so Java API does not provide BasicSymbol. SYMBOL type can be processed directly with BasicString. 
