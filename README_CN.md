@@ -49,7 +49,7 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
 conn.run("script");
 ```
-脚本的最大长度为65,535字节。
+具体例子可参照下一节。脚本的最大长度为65,535字节。
 
 ### 4. 运行DolphinDB函数
 
