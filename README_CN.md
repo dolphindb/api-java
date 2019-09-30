@@ -182,32 +182,18 @@ public void testDoubleVector() throws IOException{
        System.out.println(vector.getDouble(i));
 }
 ```
-
+以下代码获取[`GS, 2, [1,3,5],[0.9, [0.8]]]此元组的第3个元素的数据形式，数据类型以及内容：
 ```java
 public void testAnyVector() throws IOException{
+    
     BasicAnyVector result = (BasicAnyVector)conn.run("[`GS, 2, [1,3,5],[0.9, [0.8]]]");
-    //获取元素0的形式，数据类型，内容
-	System.out.println(result.getEntity(0).getDataForm()); //DF_SCALAR
-	System.out.println(result.getEntity(0).getDataType()); //DT_STRING
-	System.out.println(result.getEntity(0).getString());   //"GS"
-    //获取元素1的形式，数据类型，内容
-	System.out.println(result.getEntity(1).getDataForm()); //DF_SCALAR
-	System.out.println(result.getEntity(1).getDataType()); //DT_INT
-	System.out.println(((BasicInt)result.getEntity(1)).getInt()); //2
-    //获取元素2的形式，数据类型，内容
-	System.out.println(result.getEntity(2).getDataForm()); //DF_VECTOR
+    
+    System.out.println(result.getEntity(2).getDataForm()); //DF_VECTOR
 	System.out.println(result.getEntity(2).getDataType()); //DT_INT
 	System.out.println(result.getEntity(2).getString()); //"[1,3,5]"
 	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(0)); //1
 	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(1)); //3
 	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(2)); //5
-    //获取元素3, AnyVector的形式，数据类型，内容。
-	System.out.println(result.getEntity(3).getDataForm()); //DF_VECTOR
-	System.out.println(result.getEntity(3).getDataType()); //DT_ANY
-	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(0).getDataForm()); //DF_SCALAR
-	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(0).getDataType()); //DT_DOUBLE
-	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(1).getDataForm()); //DF_VECTOR
-	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(1).getDataType()); //DT_DOUBLE
 }
 ```
 
