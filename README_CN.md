@@ -41,7 +41,7 @@ boolean success = conn.connect("localhost", 8848);
 boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
 
-若未使用用户名及密码连接成功，则脚本在Guest权限下运行。后续运行中若需要提升权限，可以通过conn.login('admin','123456',true)登录获取权限。
+若未使用用户名及密码连接成功，则脚本在Guest权限下运行。后续运行中若需要提升权限，可以使用 conn.login('admin','123456',true) 登录获取权限。
 
 ### 3.运行DolphinDB脚本
 
