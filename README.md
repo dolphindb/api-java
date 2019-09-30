@@ -1,3 +1,16 @@
+本教程主要介绍以下内容：
+
+- Java API Introduction
+- Establish DolphinDB connection
+- Run DolphinDB script
+- Execute DolphinDB functions
+- Upload data to DolphinDB server
+- Read data
+- Read from and write to DolphinDB tables
+- Java原生类型向DolphinDB数据类型转换
+- Java Streaming API
+ 
+
 ### 1. Java API Introduction
 
 DolphinDB Java API requires Java 1.8 or higher environment.
@@ -27,7 +40,7 @@ The most important object provided by DolphinDB Java API is DBConnection. It all
 
 For a detailed example, users can refer to the [example directory](https://github.com/dolphindb/api-java/tree/master/example).
 
-### 2. Establish a DolphinDB connection
+### 2. Establish DolphinDB connection
 
 The Java API connects to the DolphinDB server via TCP/IP protocol. To connect to a local DolphinDB server with port number 8848:
 
@@ -42,7 +55,7 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
 If the connection is established without a username and password, we only have guest privileges. To be granted more privileges, we can log in by calling conn.login('admin', '123456', true).
 
-### 3.Run script
+### 3. Run DolphinDB script
 
 Use the method `run("script")` to run DolphinDB script in Java:
 ```
@@ -50,7 +63,7 @@ conn.run("script");
 ```
 Please refer to the following section for an example. The maximum length of the script is 65,535 bytes.
 
-### 4. Execute functions
+### 4. Execute DolphinDB functions
 
 Other than running script, method `run` can also execute DolphinDB built-in functions or user-defined functions on a remote DolphinDB server. If method `run` has only one parameter, the parameter is script. If method `run` has 2 parameters, the first parameter is a DolphinDB function name and the second parameter is the function's parameters.
 
@@ -113,7 +126,7 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 5. Upload data objects
+### 5. Upload data to DolphinDB server
 
 We can upload a binary data object to DolphinDB server and assign it to a variable for future use. Variable names can use 3 types of characters: letters, numbers and underscores. The first character must be a letter.
 
@@ -237,7 +250,7 @@ public void testVoid() throws IOException{
 }
 ```
 
-### 7. Read/write DolphinDB tables
+### 7. Read from and write to DolphinDB tables
 
 Users may ingest data from other database systems or third-party APIs to a DolphinDB database. This section introduces how to upload and save data with Java API.
 
@@ -378,7 +391,7 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 }
 ```
 
-### 8. Data type conversion between DolphinDB and Java
+### 8. Convert Java data types into DolphinDB data types
 
 Java API provides objects that correspond to DolphinDB data types. They are usually named as Basic+ \<DataType\>, such as BasicInt, BasicDate, etc.
 
