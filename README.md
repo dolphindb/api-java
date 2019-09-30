@@ -1,4 +1,4 @@
-本教程主要介绍以下内容：
+This tutorial covers the following topics:
 
 - Java API Introduction
 - Establish DolphinDB connection
