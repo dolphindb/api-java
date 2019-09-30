@@ -44,11 +44,11 @@ If the connection is established without a username and password, we only have g
 
 ### 3.Run script
 
-Use the following statement to run DolphinDB script in Java:
+Use the method `run("script")` to run DolphinDB script in Java:
 ```
 conn.run("script");
 ```
-The maximum length of the script is 65,535 bytes.
+Please refer to the following section for an example. The maximum length of the script is 65,535 bytes.
 
 ### 4. Execute functions
 
