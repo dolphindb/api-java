@@ -52,7 +52,7 @@ Please refer to the following section for an example. The maximum length of the 
 
 ### 4. Execute functions
 
-We can use method `run` to execute DolphinDB built-in functions or user-defined functions on a remote DolphinDB server.
+Other than running script, method `run` can also execute DolphinDB built-in functions or user-defined functions on a remote DolphinDB server. If method `run` has only one parameter, the parameter is script. If method `run` has 2 parameters, the first parameter is a DolphinDB function name and the second parameter is the function's parameters.
 
 The following examples illustrate 3 ways to call DolphinDB's built-in function `add` in Java, depending on the locations of the parameters "x" and "y" of function `add`.
 
