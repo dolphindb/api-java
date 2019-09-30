@@ -8,7 +8,7 @@ This tutorial covers the following topics:
 - Read data
 - Read from and write to DolphinDB tables
 - Convert Java data types into DolphinDB data types
-- Java Streaming API
+- Java streaming API
  
 
 ### 1. Java API Introduction
