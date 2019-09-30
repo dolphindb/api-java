@@ -53,7 +53,7 @@ conn.run("script");
 
 ### 4. 运行DolphinDB函数
 
-可使用`run`命令在远程DolphinDB服务器上执行DolphinDB内置或用户自定义函数。
+除了运行脚本之外，run命令还可以直接在远程DolphinDB服务器上执行DolphinDB内置或用户自定义函数。若`run`方法只有一个参数，则该参数为脚本；若`run`方法有两个参数，则第一个参数为DolphinDB中的函数名，第二个参数是该函数的参数。
 
 下面的示例展示Java程序调用DolphinDB内置的`add`函数。`add`函数有两个参数x和y。参数的所在位置不同，也会导致调用方式的不同。可能有以下三种情况：
 
