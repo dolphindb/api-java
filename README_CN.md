@@ -24,7 +24,9 @@ chart||BasicChart
 
 "Basic"表示基本的数据类型接口，\<DataType\>表示DolphinDB数据类型名称，\<DataForm\>是一个DolphinDB数据形式名称。接口和类的详细描述请参考[Java API手册](https://www.dolphindb.com/javaapi/)。
 
-DolphinDB Java API提供的最核心的对象是DBConnection。Java应用可以通过它在DolphinDB服务器上执行脚本和函数，并在两者之间双向传递数据。DBConnection类提供如下主要方法：
+DolphinDB Java API提供的最核心的对象是DBConnection。Java应用可以通过它在DolphinDB服务器上执行脚本和函数，并在两者之间双向传递数据。
+
+DBConnection类提供如下主要方法：
 
 | 方法名        | 详情          |
 |:------------- |:-------------|
@@ -57,7 +59,7 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 
 ### 3.运行DolphinDB脚本
 
-使用`run("script")`方法在Java中运行DolphinDB脚本：
+在Java中运行DolphinDB脚本的语法如下：
 ```
 conn.run("script");
 ```
@@ -125,7 +127,7 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 5. 上传数据对象
+### 5. 上传本地对象到DolphinDB服务器
 
 可使用`upload`方法，将本地的数据上传到DolphinDB服务器并分配给一个变量。变量名称可以使用三种类型的字符：字母，数字或下划线，第一个字符必须是字母。
 
