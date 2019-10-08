@@ -243,7 +243,7 @@ public void testDictionary() throws IOException{
 
 - 表
 
-要获取一个表中某列，可以用`table.getColumn(index)`。使用`table.columns()`和`table.rows()`来分别获取一个表的列数和行数。
+要获取一个表中某列，可以用table.getColumn(index)。使用table.columns()和table.rows()来分别获取一个表的列数和行数。
 
 ```java
 public void testTable() throws IOException{
