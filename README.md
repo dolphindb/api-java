@@ -388,7 +388,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 
 In Java API, a table is saved as a BasicTable object. Since BasicTable is column based, to retrieve rows we need to get the necessary columns first and then get the rows.
 
-In the example below, the BasicTable has 4 columns: STRING, INT, TIMESTAMP and DOUBLE. The column names are cstring, cint, ctimestamp and cdouble.
+In the example below, the BasicTable has 4 columns with data types STRING, INT, TIMESTAMP and DOUBLE. The column names are cstring, cint, ctimestamp and cdouble.
 
 ```
 public void test_loop_basicTable(BasicTable table1) throws Exception{
@@ -446,7 +446,7 @@ LocalDateTime dt = Utils.parseTimestamp(1543494854000l);
 BasicTimestamp ts = new BasicTimestamp(dt);
 ```
 
-You can also convert a DolphinDB object to a timestamp of an integer or long integer. For examples:
+We can also convert a DolphinDB object to a timestamp of an integer or long integer. For examples:
 ```
 LocalDateTime dt = ts.getTimestamp();
 long timestamp = Utils.countMilliseconds(dt);
@@ -479,7 +479,7 @@ while (true) {
 
 After poller1 detects that new data is added to the streaming table, it will pull the new data. When there is no new data, the Java program is waiting at poller1.poll method. 
 
-- Java API uses MessageHandler to get new data
+- The API uses MessageHandler to get new data
 
 First we need to define the message handler, which needs to implement com.xxdb.streaming.client.MessageHandle interface. 
 
