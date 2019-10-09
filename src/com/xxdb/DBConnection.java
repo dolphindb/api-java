@@ -204,7 +204,7 @@ public class DBConnection {
 	private void login() throws IOException{
 		List<Entity> args = new ArrayList<>();
 		if(encrypted){
-	        BasicString keyCode = (BasicString) run("getDynamicPublicKey()");
+	        BasicString keyCode = (BasicString) run("getDynamicPublicKey",new ArrayList<Entity>());
 			PublicKey key = RSAUtils.getPublicKey(keyCode.getString());
 			byte[] usr =  RSAUtils.encryptByPublicKey(userId.getBytes(), key);
 		    byte[] pass = RSAUtils.encryptByPublicKey(password.getBytes(), key);
