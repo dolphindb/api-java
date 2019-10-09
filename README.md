@@ -57,7 +57,7 @@ If the connection is established without a username and password, we only have g
 
 ### 3. Run DolphinDB script
 
-Use the method `run("script")` to run DolphinDB script in Java:
+To run DolphinDB script in Java:
 ```
 conn.run("script");
 ```
@@ -128,7 +128,7 @@ public void testFunction() throws IOException{
 
 ### 5. Upload data to DolphinDB server
 
-We can upload a binary data object to DolphinDB server and assign it to a variable for future use. Variable names can use 3 types of characters: letters, numbers and underscores. The first character must be a letter.
+We can upload a data object to DolphinDB server and assign it to a variable for future use. Variable names can use 3 types of characters: letters, numbers and underscores. The first character must be a letter.
 
 ```
 public void testFunction() throws IOException{
@@ -211,7 +211,7 @@ public void testSet() throws IOException{
 
 - Matrix
 
-To retrieve an element from an integer matrix, we can use `getInt`. To get the number of rows and columns of a matrix, we can use functions `rows` and `columns`.
+To retrieve an element from an integer matrix, we can use `getInt`. To get the number of rows and columns of a matrix, we can use functions `rows` and `columns`, respectively.
 
 ```java
 public void testIntMatrix() throws IOException {
@@ -243,7 +243,7 @@ public void testDictionary() throws IOException{
 
 - Table
 
-To get a column of a table, use `table.getColumn(index)`; to get a column name, use `table.getColumnName(index)`. To get the number of columns and rows of a table, use `table.columns()` and `table.rows()`, respectively.
+To get a column of a table, use `getColumn`; to get a column name, use `getColumnName`. To get the number of columns and rows of a table, use `columns` and `rows`, respectively.
 
 ```java
 public void testTable() throws IOException{
@@ -258,7 +258,7 @@ public void testTable() throws IOException{
 ```
 - NULL object
 
-To determine if an object is NULL, we can use `obj.getDataType()`.
+To determine if an object is NULL, use `getDataType`.
 
 ```java
 public void testVoid() throws IOException{
@@ -320,7 +320,7 @@ public void test_save_table(BasicTable table1) throws IOException {
 }
 ```
 
-The example above uses partial application in DolphinDB to embed a table in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html).
+The example above uses partial application in DolphinDB to embed a table in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/help/PartialApplication.html).
 
 ##### 7.1.3 Use function `tableInsert` to save BasicTable objects
 
