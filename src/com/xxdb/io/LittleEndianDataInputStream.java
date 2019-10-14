@@ -42,4 +42,5 @@ public class LittleEndianDataInputStream  extends AbstractExtendedDataInputStrea
 	public boolean isLittleEndian() {
 		return true;
 	}
+
 }

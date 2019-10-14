@@ -1,8 +1,6 @@
 package com.xxdb;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.PublicKey;
@@ -12,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import com.xxdb.data.BasicBoolean;
 import com.xxdb.data.BasicEntityFactory;
 import com.xxdb.data.BasicInt;
@@ -282,27 +281,33 @@ public class DBConnection {
 		mutex.lock();
 		try{
 			boolean reconnect = false;
+			InputStream is = null;
 			if(socket == null || !socket.isConnected() || socket.isClosed()){
 				if(sessionID.isEmpty())
 					throw new IOException("Database connection is not established yet.");
 				else{
 					socket = new Socket(hostName, port);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-					in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
-						new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
+                    is = socket.getInputStream();
+                    BufferedInputStream bis = new BufferedInputStream(is);
+					in = remoteLittleEndian ? new LittleEndianDataInputStream(bis) :
+						new BigEndianDataInputStream(new BufferedInputStream(bis));
 				}
 			}
-	
 			String body = "script\n"+script;
 			String header = null;
 			try{
+
 				out.writeBytes((listener != null ? "API2 " : "API ")+sessionID+" ");
 				out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
-				out.writeBytes(" / 0_1_" + String.valueOf(priority) +"_" + String.valueOf(parallelism));
+				if(priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM){
+					out.writeBytes(" / 0_1_" + String.valueOf(priority) +"_" + String.valueOf(parallelism));
+				}
 				out.writeByte('\n');
 				out.writeBytes(body);
 				out.flush();
-				
+                if(in.available()==0)
+                    throw new IOException("Database connection is lost. please try again.");
 				header = in.readLine();
 			}
 			catch(IOException ex) {
@@ -315,11 +320,14 @@ public class DBConnection {
 					connect();
 					out.writeBytes((listener != null ? "API2 " : "API ")+sessionID+" ");
 					out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
-					out.writeBytes(" / 0_1_" + String.valueOf(priority) +"_" + String.valueOf(parallelism));
+					if(priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM){
+						out.writeBytes(" / 0_1_" + String.valueOf(priority) +"_" + String.valueOf(parallelism));
+					}
 					out.writeByte('\n');
 					out.writeBytes(body);
 					out.flush();
-					
+                    if(in.available()==0)
+                        throw new IOException("Database connection is lost. please try again.");
 					header = in.readLine();
 					reconnect = true;
 				}
@@ -336,13 +344,12 @@ public class DBConnection {
 					listener.progress(msg);
 				header = in.readLine();
 			}
-			
+
 			String[] headers = header.split(" ");
 			if(headers.length != 3){
 				socket = null;
 				throw new IOException("Received invalid header: " + header);
 			}
-			
 			if(reconnect) {
 				sessionID = headers[0];
 				if (userId.length() > 0 && password.length() > 0)
@@ -351,7 +358,7 @@ public class DBConnection {
 					run(startup);
 			}
 			int numObject = Integer.parseInt(headers[1]);
-			
+
 			String msg = in.readLine();
 			if(!msg.equals("OK"))
 				throw new IOException(msg);
@@ -370,7 +377,6 @@ public class DBConnection {
 				
 				Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
 				Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
-				
 				return factory.createEntity(df, dt, in);
 			}
 			catch(IOException ex){
@@ -420,6 +426,7 @@ public class DBConnection {
 		mutex.lock();
 		try{
 			boolean reconnect = false;
+
 			if(socket == null || !socket.isConnected() || socket.isClosed()){
 				if(sessionID.isEmpty())
 					throw new IOException("Database connection is not established yet.");
@@ -439,13 +446,14 @@ public class DBConnection {
 			try{
 				out.writeBytes("API "+sessionID+" ");
 				out.writeBytes(String.valueOf(body.length()));
-				out.writeBytes(" / 0_1_" + String.valueOf(priority) +"_" + String.valueOf(parallelism));
+				if(priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
+					out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+				}
 				out.writeByte('\n');
 				out.writeBytes(body);
 				for(int i=0; i<arguments.size(); ++i)
 					arguments.get(i).write(out);
 				out.flush();
-				
 				headers = in.readLine().split(" ");
 			}
 			catch(IOException ex) {
@@ -459,16 +467,19 @@ public class DBConnection {
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 					out.writeBytes("API "+sessionID+" ");
 					out.writeBytes(String.valueOf(body.length()));
-					out.writeBytes(" / 0_1_" + String.valueOf(priority) +"_" + String.valueOf(parallelism));
+					if(priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
+						out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+					}
 					out.writeByte('\n');
 					out.writeBytes(body);
 					for(int i=0; i<arguments.size(); ++i)
 						arguments.get(i).write(out);
 					out.flush();
-					
+
 					in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
 						new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
 					headers = in.readLine().split(" ");
+
 					reconnect = true;
 				}
 				catch(Exception e){
@@ -505,7 +516,6 @@ public class DBConnection {
 				
 				Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
 				Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
-				
 				return factory.createEntity(df, dt, in);
 			}
 			catch(IOException ex){
