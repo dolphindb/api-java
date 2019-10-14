@@ -8,7 +8,7 @@ This tutorial covers the following topics:
 - Read data
 - Read from and write to DolphinDB tables
 - Convert Java data types into DolphinDB data types
-- Java Streaming API
+- Java streaming API
  
 
 ### 1. Java API Introduction
@@ -24,7 +24,7 @@ vector, matrix|Basic\<DataType\>\<DataForm\>|BasicIntVector, BasicDoubleMatrix, 
 set, dictionary, table|Basic\<DataForm\>|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
-"Basic" indicates the basic implementation of a data form interface, \<DataType\> indicates a DolphinDB data type, and \<DataForm\> indicates a DolphinDB data form. For more information about interface and class, please refer to [Java API Manual](https://www.dolphindb.com/javaapi/).
+"Basic" indicates the basic implementation of a data form interface, \<DataType\> indicates a DolphinDB data type, and \<DataForm\> indicates a DolphinDB data form. 
 
 The most important object provided by DolphinDB Java API is DBConnection. It allows Java applications to execute script and functions on DolphinDB servers and transfer data between Java applications and DolphinDB servers in both directions. The DBConnection class provides the following main methods:
 
@@ -57,7 +57,7 @@ If the connection is established without a username and password, we only have g
 
 ### 3. Run DolphinDB script
 
-Use the method `run("script")` to run DolphinDB script in Java:
+To run DolphinDB script in Java:
 ```
 conn.run("script");
 ```
@@ -128,7 +128,7 @@ public void testFunction() throws IOException{
 
 ### 5. Upload data to DolphinDB server
 
-We can upload a binary data object to DolphinDB server and assign it to a variable for future use. Variable names can use 3 types of characters: letters, numbers and underscores. The first character must be a letter.
+We can upload a data object to DolphinDB server and assign it to a variable for future use. Variable names can use 3 types of characters: letters, numbers and underscores. The first character must be a letter.
 
 ```
 public void testFunction() throws IOException{
@@ -185,10 +185,18 @@ public void testDoubleVector() throws IOException{
 }
 ```
 
-```
+For the tuple [`GS, 2, [1,3,5],[0.9, [0.8]]], the following script gets the data form, data type and contents of the third element: 
+```java
 public void testAnyVector() throws IOException{
-    BasicAnyVector result = (BasicAnyVector)conn.run("[1, 2, [1,3,5],[0.9, [0.8]]]");
-    System.out.println(result.getString());
+    
+    BasicAnyVector result = (BasicAnyVector)conn.run("[`GS, 2, [1,3,5],[0.9, [0.8]]]");
+    
+    System.out.println(result.getEntity(2).getDataForm()); //DF_VECTOR
+	System.out.println(result.getEntity(2).getDataType()); //DT_INT
+	System.out.println(result.getEntity(2).getString()); //"[1,3,5]"
+	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(0)); //1
+	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(1)); //3
+	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(2)); //5
 }
 ```
 
@@ -203,12 +211,19 @@ public void testSet() throws IOException{
 
 - Matrix
 
-To retrieve an element from an integer matrix, we can use `getInt`. To get the number of rows and columns of a matrix, we can use functions `rows` and `columns`.
+To retrieve an element from an integer matrix, we can use `getInt`. To get the number of rows and columns of a matrix, we can use functions `rows` and `columns`, respectively.
 
-```
+```java
 public void testIntMatrix() throws IOException {
-    BasicIntMatrix matrix = (BasicIntMatrix)conn.run("1..6$3:2");
-    System.out.println(matrix.getString());
+	//1..6$3:2
+	//------
+	//  1  4
+	//  2  5
+	//  3  6
+	BasicIntMatrix matrix = (BasicIntMatrix)conn.run("1..6$3:2");
+	System.out.println(matrix.getInt(0,1)==4);
+	System.out.println(matrix.rows()==3);
+	System.out.println(matrix.columns()==2);
 }
 ```
 
@@ -216,19 +231,21 @@ public void testIntMatrix() throws IOException {
 
 The keys and values of a dictionary can be retrieved with functions `keys` and `values`, respectively. To get the value for a key, use `get`.
 
-```
+```java
 public void testDictionary() throws IOException{
-    BasicDictionary dict = (BasicDictionary)conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
-    //to print the corresponding value for key 1.
-    System.out.println(dict.get(new BasicInt(1)).getString());
+		BasicDictionary dict = (BasicDictionary)conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
+        System.out.println(dict.keys());  //[1, 2, 3]
+		System.out.println(dict.values()); //[IBM, MSFT, GOOG]
+		//to print the corresponding value for key 1.
+		System.out.println(dict.get(new BasicInt(1)).getString()); //IBM
 }
 ```
 
 - Table
 
-To get a column of a table, use `table.getColumn(index)`; to get a column name, use `table.getColumnName(index)`. To get the number of columns and rows of a table, use `table.columns()` and `table.rows()`, respectively.
+To get a column of a table, use `getColumn`; to get a column name, use `getColumnName`. To get the number of columns and rows of a table, use `columns` and `rows`, respectively.
 
-```
+```java
 public void testTable() throws IOException{
     StringBuilder sb =new StringBuilder();
     sb.append("n=2000\n");
@@ -241,12 +258,12 @@ public void testTable() throws IOException{
 ```
 - NULL object
 
-To describe a NULL object, we can use `obj.getDataType()`.
+To determine if an object is NULL, use `getDataType`.
 
-```
+```java
 public void testVoid() throws IOException{
-    Entity obj = conn.run("NULL");
-    System.out.println(obj.getDataType());
+	Entity obj = conn.run("NULL");
+	System.out.println(obj.getDataType().equals(Entity.DATA_TYPE.DT_VOID)); //true
 }
 ```
 
@@ -303,7 +320,7 @@ public void test_save_table(BasicTable table1) throws IOException {
 }
 ```
 
-The example above uses partial application in DolphinDB to embed a table in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html).
+The example above uses partial application in DolphinDB to embed a table in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/help/PartialApplication.html).
 
 ##### 7.1.3 Use function `tableInsert` to save BasicTable objects
 
@@ -371,7 +388,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 
 In Java API, a table is saved as a BasicTable object. Since BasicTable is column based, to retrieve rows we need to get the necessary columns first and then get the rows.
 
-In the example below, the BasicTable has 4 columns: STRING, INT, TIMESTAMP and DOUBLE. The column names are cstring, cint, ctimestamp and cdouble.
+In the example below, the BasicTable has 4 columns with data types STRING, INT, TIMESTAMP and DOUBLE. The column names are cstring, cint, ctimestamp and cdouble.
 
 ```
 public void test_loop_basicTable(BasicTable table1) throws Exception{
@@ -429,7 +446,7 @@ LocalDateTime dt = Utils.parseTimestamp(1543494854000l);
 BasicTimestamp ts = new BasicTimestamp(dt);
 ```
 
-You can also convert a DolphinDB object to a timestamp of an integer or long integer. For examples:
+We can also convert a DolphinDB object to a timestamp of an integer or long integer. For examples:
 ```
 LocalDateTime dt = ts.getTimestamp();
 long timestamp = Utils.countMilliseconds(dt);
@@ -462,7 +479,7 @@ while (true) {
 
 After poller1 detects that new data is added to the streaming table, it will pull the new data. When there is no new data, the Java program is waiting at poller1.poll method. 
 
-- Java API uses MessageHandler to get new data
+- The API uses MessageHandler to get new data
 
 First we need to define the message handler, which needs to implement com.xxdb.streaming.client.MessageHandle interface. 
 

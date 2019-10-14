@@ -58,7 +58,7 @@ public class DBConnection {
 	private int port;
 	private String userId;
 	private String password;
-	private String startup = null;
+	private String initialScript = null;
 	private boolean encrypted;
 	private String controllerHost = null;
 	private int controllerPort;
@@ -83,12 +83,12 @@ public class DBConnection {
 		return connect(hostName, port, "", "", null, false);
 	}
 
-	public boolean connect(String hostName, int port, String startup) throws IOException{
-		return connect(hostName, port, "", "", startup, false);
+	public boolean connect(String hostName, int port, String initialScript) throws IOException{
+		return connect(hostName, port, "", "", initialScript, false);
 	}
 	
-	public boolean connect(String hostName, int port, String startup, boolean highAvailability) throws IOException{
-		return connect(hostName, port, "", "", startup, highAvailability);
+	public boolean connect(String hostName, int port, String initialScript, boolean highAvailability) throws IOException{
+		return connect(hostName, port, "", "", initialScript, highAvailability);
 	}
 
 	public boolean connect(String hostName, int port, boolean highAvailability) throws IOException{
@@ -103,11 +103,11 @@ public class DBConnection {
 		return connect(hostName, port, userId, password, null, highAvailability);
 	}
 	
-	public boolean connect(String hostName, int port, String userId, String password, String startup) throws IOException{
-		return connect(hostName, port, userId, password, startup, false);
+	public boolean connect(String hostName, int port, String userId, String password, String initialScript) throws IOException{
+		return connect(hostName, port, userId, password, initialScript, false);
 	}
 	
-	public boolean connect(String hostName, int port, String userId, String password, String startup, boolean highAvailability) throws IOException{
+	public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean highAvailability) throws IOException{
 		mutex.lock();
 		try{
 			if(!sessionID.isEmpty()){
@@ -120,7 +120,7 @@ public class DBConnection {
 			this.userId = userId;
 			this.password = password;
 			this.encrypted = true;
-			this.startup = startup;
+			this.initialScript = initialScript;
 			this.highAvailability = highAvailability;
 			
 			return connect();
@@ -171,8 +171,8 @@ public class DBConnection {
 		if(!userId.isEmpty() && !password.isEmpty())
 			login();
 		
-		if (startup != null && startup.length() > 0)
-			run(startup);
+		if (initialScript != null && initialScript.length() > 0)
+			run(initialScript);
 		
 		if (highAvailability) {
 			try {
@@ -354,8 +354,8 @@ public class DBConnection {
 				sessionID = headers[0];
 				if (userId.length() > 0 && password.length() > 0)
 					login();
-				if (startup != null && startup.length() > 0)
-					run(startup);
+				if (initialScript != null && initialScript.length() > 0)
+					run(initialScript);
 			}
 			int numObject = Integer.parseInt(headers[1]);
 
