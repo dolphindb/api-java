@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import com.xxdb.data.BasicBoolean;
 import com.xxdb.data.BasicEntityFactory;
 import com.xxdb.data.BasicInt;
