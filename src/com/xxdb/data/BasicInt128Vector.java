@@ -33,6 +33,8 @@ public class BasicInt128Vector extends AbstractVector{
 	protected BasicInt128Vector(DATA_FORM df, int size){
 		super(df);
 		values = new Long2[size];
+		for(int i=0; i<size; ++i)
+			values[i] = new Long2(0, 0);
 	}
 	
 	protected BasicInt128Vector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -51,14 +53,16 @@ public class BasicInt128Vector extends AbstractVector{
 			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
 			if(littleEndian){
 				for (int i = 0; i < end; i++){
-					values[i + start].low = byteBuffer.getLong(i * 16);
-					values[i + start].high = byteBuffer.getLong(i * 16 + 8);
+					long low = byteBuffer.getLong(i * 16);
+					long high = byteBuffer.getLong(i * 16 + 8);
+					values[i + start] = new Long2(high, low);
 				}
 			}
 			else{
 				for (int i = 0; i < end; i++){
-					values[i + start].high = byteBuffer.getLong(i * 16);
-					values[i + start].low = byteBuffer.getLong(i * 16 + 8);
+					long high = byteBuffer.getLong(i * 16);
+					long low = byteBuffer.getLong(i * 16 + 8);
+					values[i + start] = new Long2(high, low);
 				}
 			}
 			off += len;
