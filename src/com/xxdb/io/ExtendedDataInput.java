@@ -7,5 +7,4 @@ public interface ExtendedDataInput extends DataInput{
 	boolean isLittleEndian();
 	String readString() throws IOException;
 	Long2 readLong2() throws IOException;
-	int available() throws IOException;
 }
