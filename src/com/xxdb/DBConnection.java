@@ -305,8 +305,6 @@ public class DBConnection {
 				out.writeByte('\n');
 				out.writeBytes(body);
 				out.flush();
-                if(in.available()==0)
-                    throw new IOException("Database connection is lost. please try again.");
 				header = in.readLine();
 			}
 			catch(IOException ex) {
@@ -325,8 +323,6 @@ public class DBConnection {
 					out.writeByte('\n');
 					out.writeBytes(body);
 					out.flush();
-                    if(in.available()==0)
-                        throw new IOException("Database connection is lost. please try again.");
 					header = in.readLine();
 					reconnect = true;
 				}
