@@ -25,24 +25,24 @@ public class BasicIPAddr extends BasicInt128 {
 	}
 	
 	public static String getString(Long2 value) {
-		if(value.low == 0 && (value.high & 0xfffffff) == 0){
+		if(value.high == 0 && (value.low >> 32) == 0){
 			//ip4
-			int ip4 = (int)(value.high >> 32);
-			return String.format("%d.%d.%d.%d", ip4 & 0xff, (ip4>>8) & 0xff, (ip4>>16) & 0xff, ip4>>24);
+			int ip4 = (int)(value.low);
+			return String.format("%d.%d.%d.%d", ip4>>24, (ip4>>16) & 0xff, (ip4>>8) & 0xff, ip4 & 0xff);
 		}
 		else{
 			//ip6
 			StringBuilder sb = new StringBuilder();
 			boolean consecutiveZeros = false;
 			int[] data = new int[8];
-			data[7] = (int)(value.high >> 48);
-			data[6] = (int)((value.high >> 32) & 0xffff);
-			data[5] = (int)((value.high >> 16) & 0xffff);
-			data[4] = (int)(value.high & 0xffff);
-			data[3] = (int)(value.low >> 48);
-			data[2] = (int)((value.low >> 32) & 0xffff);
-			data[1] = (int)((value.low >> 16) & 0xffff);
-			data[0] = (int)(value.low & 0xffff);
+			data[0] = (int)(value.high >> 48);
+			data[1] = (int)((value.high >> 32) & 0xffff);
+			data[2] = (int)((value.high >> 16) & 0xffff);
+			data[3] = (int)(value.high & 0xffff);
+			data[4] = (int)(value.low >> 48);
+			data[5] = (int)((value.low >> 32) & 0xffff);
+			data[6] = (int)((value.low >> 16) & 0xffff);
+			data[7] = (int)(value.low & 0xffff);
 			for(int i=0; i<8; ++i){
 				if(i > 0 && i<6 && !consecutiveZeros && data[i] == 0 && data[i+1]==0){
 					//consecutive zeros
@@ -74,12 +74,12 @@ public class BasicIPAddr extends BasicInt128 {
 		int byteIndex = 0;
 		int curByte = 0;
 		int len = str.length();
-		long high = 0;
+		long low = 0;
 		for(int i=0; i<=len; ++i){
 			if(i==len || str.charAt(i) == '.'){
-				if(curByte < 0 || curByte > 255 || byteIndex > 15)
+				if(curByte < 0 || curByte > 255 || byteIndex > 3)
 					return null;
-				high += curByte<<(byteIndex*8);
+				low += curByte<<((3 - byteIndex)*8);
 				byteIndex++;
 				curByte = 0;
 				continue;
@@ -91,7 +91,7 @@ public class BasicIPAddr extends BasicInt128 {
 		}
 		if(byteIndex != 4)
 			return null;
-		return new BasicIPAddr(high<<32, 0);
+		return new BasicIPAddr(0, low);
 	}
 
 	public static BasicIPAddr parseIP6(String str){
@@ -131,11 +131,11 @@ public class BasicIPAddr extends BasicInt128 {
 			curByte = (curByte<<4) + value;
 		}
 		if(byteIndex == 16){
-			long low = (buf[7] & 0xFFL) << 56 | (buf[6] & 0xFFL) << 48 | (buf[5] & 0xFFL) << 40 | (buf[4] & 0xFFL) << 32
-			 | (buf[3] & 0xFFL) << 24 | (buf[2] & 0xFFL) << 16 | (buf[1] & 0xFFL) << 8  | (buf[0] & 0xFFL);
+			long low = (buf[8] & 0xFFL) << 56 | (buf[9] & 0xFFL) << 48 | (buf[10] & 0xFFL) << 40 | (buf[11] & 0xFFL) << 32
+			 | (buf[12] & 0xFFL) << 24 | (buf[13] & 0xFFL) << 16 | (buf[14] & 0xFFL) << 8  | (buf[15] & 0xFFL);
 			
-			long high = (buf[15] & 0xFFL) << 56 | (buf[14] & 0xFFL) << 48 | (buf[13] & 0xFFL) << 40 | (buf[12] & 0xFFL) << 32
-					 | (buf[11] & 0xFFL) << 24 | (buf[10] & 0xFFL) << 16 | (buf[9] & 0xFFL) << 8  | (buf[8] & 0xFFL);
+			long high = (buf[0] & 0xFFL) << 56 | (buf[1] & 0xFFL) << 48 | (buf[2] & 0xFFL) << 40 | (buf[3] & 0xFFL) << 32
+					 | (buf[4] & 0xFFL) << 24 | (buf[5] & 0xFFL) << 16 | (buf[6] & 0xFFL) << 8  | (buf[7] & 0xFFL);
 			return new BasicIPAddr(high, low);
 		}
 		else
