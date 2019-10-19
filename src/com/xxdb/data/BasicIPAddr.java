@@ -27,7 +27,7 @@ public class BasicIPAddr extends BasicInt128 {
 	public static String getString(Long2 value) {
 		if(value.high == 0 && (value.low >> 32) == 0){
 			//ip4
-			int ip4 = (int)(value.low);
+			long ip4 = value.low;
 			return String.format("%d.%d.%d.%d", ip4>>24, (ip4>>16) & 0xff, (ip4>>8) & 0xff, ip4 & 0xff);
 		}
 		else{
