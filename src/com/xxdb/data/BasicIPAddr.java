@@ -52,7 +52,7 @@ public class BasicIPAddr extends BasicInt128 {
 				}
 				else{
 					//swap two bytes
-					sb.append(String.format("%1x", (short)((data[i]>>8) | (data[i] & 0xff)<<8)));
+					sb.append(String.format("%1x", (short)data[i]));
 				}
 				sb.append(':');
 			}
