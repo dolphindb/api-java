@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.xxdb.data.*;
@@ -21,6 +22,7 @@ class MessageParser implements Runnable{
 	Socket socket = null;
 	MessageDispatcher dispatcher;
 	String topic;
+	HashMap<String, Integer> nameToIndex = null;
 
 	public MessageParser(Socket socket, MessageDispatcher dispatcher){
 		this.socket = socket;
@@ -87,6 +89,13 @@ class MessageParser implements Runnable{
 			}
 			if (body.isTable()) {
 				assert(body.rows() == 0);
+				nameToIndex = new HashMap<>();
+				BasicTable schema = (BasicTable) body;
+				int columns = schema.columns();
+				for (int i = 0; i < columns; i++) {
+					String name = schema.getColumnName(i);
+					nameToIndex.put(name, i);
+				}
 			}
 			else if (body.isVector()){
 				dispatcher.setMsgId(topic, msgid);
@@ -96,7 +105,7 @@ class MessageParser implements Runnable{
 				int rowSize = dTable.getEntity(0).rows();
 				if(rowSize>=1){
 					if(rowSize==1){
-						BasicMessage rec = new BasicMessage(msgid,topic,dTable);
+						BasicMessage rec = new BasicMessage(msgid,topic,dTable,nameToIndex);
 						dispatcher.dispatch(rec);
 					} else {
 						List<IMessage> messages = new ArrayList<>(rowSize);
@@ -108,7 +117,7 @@ class MessageParser implements Runnable{
 									Entity entity = vector.get(i);
 									row.setEntity(j, entity);
 							}
-							BasicMessage rec = new BasicMessage(msgid,topic,row);
+							BasicMessage rec = new BasicMessage(msgid,topic,row,nameToIndex);
 							messages.add(rec);
 							msgid++;
 						}

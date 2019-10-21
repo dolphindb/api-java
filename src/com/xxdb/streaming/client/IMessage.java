@@ -7,4 +7,5 @@ public interface IMessage {
 	long getOffset();
 	Entity getEntity(int colIndex);
 	<T> T getValue(int colIndex);
+	<T> T getValue(String colName);
 }

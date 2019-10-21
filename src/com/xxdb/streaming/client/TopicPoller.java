@@ -18,15 +18,14 @@ public class TopicPoller {
     public void setQueue(BlockingQueue<List<IMessage>> queue) {
     	this.queue = queue;
     }
-   
+
     private void fillCache(long timeout) {
         assert(cache == null);
         List<IMessage> list = null;
         if (cache == null) {
             try {
-                if (timeout >= 0) {
+                if (timeout >= 0)
                     list = queue.poll(timeout, TimeUnit.MILLISECONDS);
-                }
                 else
                     list = queue.take();
             } catch (InterruptedException e) {
