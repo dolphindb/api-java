@@ -9,10 +9,10 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 	private static final int UTF8_STRING_LIMIT = 65535;
 	protected static final int BUF_SIZE = 4096;
 	protected byte[] buf;
-	private static final int longBufSize = BUF_SIZE / 8;
-	private static final int intBufSize = BUF_SIZE / 4;
-	private int[] intBuf;
-	private long[] longBuf;
+	protected static final int longBufSize = BUF_SIZE / 8;
+	protected static final int intBufSize = BUF_SIZE / 4;
+	protected int[] intBuf;
+	protected long[] longBuf;
 
 	public AbstractExtendedDataOutputStream(OutputStream out) {
 		super(out);
@@ -197,8 +197,6 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 			writeLongArray(longBuf, 0, pos);
 	}
 
-
-
 	@Override
 	public void writeFloatArray(float[] A) throws IOException {
 		writeFloatArray(A, 0, A.length);
@@ -261,4 +259,10 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 		if (pos > 0)
 			write(buf, 0, pos);
 	}
+	
+	@Override
+	public void writeLong2Array(Long2[] A) throws IOException {
+		writeLong2Array(A, 0, A.length);
+	}
+	
 }

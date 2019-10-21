@@ -30,6 +30,13 @@ public class BigEndianDataInputStream extends AbstractExtendedDataInputStream{
 		byte b8 = readAndCheckByte();
 		return fromBytes(b1, b2, b3, b4, b5, b6, b7, b8);
 	}
+	
+	
+	public Long2 readLong2() throws IOException {
+		long high = readLong();
+		long low = readLong();
+		return new Long2(high, low);
+	}
 
 	@Override
 	public int readUnsignedShort() throws IOException {

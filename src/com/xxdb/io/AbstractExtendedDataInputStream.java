@@ -16,7 +16,7 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 		super(in);
 	}
 
-	@Override
+    @Override
 	public boolean readBoolean() throws IOException {
 		return readUnsignedByte() != 0;
 	}
@@ -97,6 +97,7 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 	
 	@Override
 	public int readUnsignedByte() throws IOException {
+
 		int b1 = in.read();
 		if (0 > b1) {
 		    throw new EOFException();
