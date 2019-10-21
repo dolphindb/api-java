@@ -94,7 +94,7 @@ class MessageParser implements Runnable{
 				int columns = schema.columns();
 				for (int i = 0; i < columns; i++) {
 					String name = schema.getColumnName(i);
-					nameToIndex.put(name, i);
+					nameToIndex.put(name.toLowerCase(), i);
 				}
 			}
 			else if (body.isVector()){

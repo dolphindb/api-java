@@ -27,7 +27,7 @@ public class BasicMessage implements IMessage {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T getValue(String colName) {
-		int colIndex = nameToIndex.get(colName);
+		int colIndex = nameToIndex.get(colName.toLowerCase());
 		return (T)this.msg.getEntity(colIndex);
 	}
 
