@@ -16,7 +16,7 @@ public class DBConnectionTest {
 	}
 	public DBConnectionTest(String host, int port) throws IOException{
 		conn = new DBConnection();
-		if(!conn.connect(host,port)){
+		if(!conn.connect(host,port,"admin","123456")){
 			throw new IOException("Failed to connect to 2xdb server");
 		}
 	}
@@ -656,11 +656,18 @@ public class DBConnectionTest {
 		System.out.println(conn.run("string", args));
 	}
 
+	public void Test_ReLogin() throws IOException {
+		conn.run("if(existsDatabase('dfs://db1')) dropDatabase('dfs://db1'); db = database('dfs://db1', VALUE, 1..10);	t = table(1..100 as id);db.createPartitionedTable(t,'t1', 'id')");
+		conn.run("logout()");
+		conn.run("exec count(*) from loadTable('dfs://db1','t1')");
+		BasicInt re = (BasicInt)conn.run("exec count(*) from loadTable('dfs://db1','t1')");
+		System.out.println(re.getInt());
+	}
 	public static void main(String[] args){
 
 		try{
-			String host = "127.0.0.1";
-			int port = 8080;
+			String host = "192.168.1.201";
+			int port = 8848;
 			if(args.length>=2){
 				host = args[0];
 				port = Integer.parseInt(args[1]);
@@ -681,7 +688,8 @@ public class DBConnectionTest {
 			test.testDictionary();
 			test.testTable();
 			test.testFunction();
-			test.testAnyVector();
+			//test.testAnyVector();
+			test.Test_ReLogin();
 			/*test.testSet();
 			test.testChart();
 			test.testMatrixUpload();
