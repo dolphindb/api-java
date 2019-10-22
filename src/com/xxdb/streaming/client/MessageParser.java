@@ -11,8 +11,6 @@ import com.xxdb.data.*;
 import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.LittleEndianDataInputStream;
-import com.xxdb.streaming.client.BasicMessage;
-import com.xxdb.streaming.client.IMessage;
 
 class MessageParser implements Runnable{
 	private final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length -1;
@@ -98,7 +96,6 @@ class MessageParser implements Runnable{
 				}
 			}
 			else if (body.isVector()){
-				dispatcher.setMsgId(topic, msgid);
 				BasicAnyVector dTable = (BasicAnyVector)body;
 				
 				int colSize = dTable.rows();
@@ -124,6 +121,7 @@ class MessageParser implements Runnable{
 						dispatcher.batchDispatch(messages);
 					}
 				}
+				dispatcher.setMsgId(topic, msgid);
 				offset += rowSize;
 			} else {
 				throw new RuntimeException("message body has an invalid format. Vector or table is expected");
@@ -132,8 +130,10 @@ class MessageParser implements Runnable{
 	} catch (Exception e) {
 		if (dispatcher.isClosed(topic))
 			return;
-		else
+		else{
 			dispatcher.tryReconnect(topic);
+		}
+
 	} finally {
 		try {
 			socket.close();
