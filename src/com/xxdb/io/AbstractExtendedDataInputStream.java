@@ -17,22 +17,6 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 	}
 
     @Override
-    public int available() throws IOException {
-	    int re ;
-	    try {
-            for (int i=0;i<50;i++) {
-                re = super.available();
-                if (re > 0)
-                    return re;
-                Thread.sleep(10);
-            }
-        }catch(InterruptedException iex){
-	        iex.printStackTrace();
-        }
-        return 0;
-    }
-
-    @Override
 	public boolean readBoolean() throws IOException {
 		return readUnsignedByte() != 0;
 	}

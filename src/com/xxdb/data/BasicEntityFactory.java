@@ -32,6 +32,9 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[Entity.DATA_TYPE.DT_CODE.ordinal()] = new MetaCodeFactory();
 		factories[Entity.DATA_TYPE.DT_DATASOURCE.ordinal()] = new DataSourceFactory();
 		factories[Entity.DATA_TYPE.DT_RESOURCE.ordinal()] = new ResourceFactory();
+		factories[Entity.DATA_TYPE.DT_UUID.ordinal()] = new UuidFactory();
+		factories[Entity.DATA_TYPE.DT_INT128.ordinal()] = new Int128Factory();
+		factories[Entity.DATA_TYPE.DT_IPADDR.ordinal()] = new IPAddrFactory();
 	}
 	
 	@Override
@@ -299,6 +302,39 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createVectorWithDefaultValue(int size){ return new BasicNanoTimestampVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicNanoTimestampVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicNanoTimestampMatrix(rows, columns);}
+	}
+	
+	private class Int128Factory implements TypeFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicInt128(in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicInt128Vector(Entity.DATA_FORM.DF_VECTOR, in);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicInt128Vector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for INT128 not supported yet.");}
+		public Scalar createScalarWithDefaultValue() { return new BasicInt128(0, 0);}
+		public Vector createVectorWithDefaultValue(int size){ return new BasicInt128Vector(size);}
+		public Vector createPairWithDefaultValue(){ return new BasicInt128Vector(Entity.DATA_FORM.DF_PAIR, 2);}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for INT128 not supported yet.");}
+	}
+	
+	private class UuidFactory implements TypeFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicUuid(in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicUuidVector(Entity.DATA_FORM.DF_VECTOR, in);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicUuidVector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for UUID not supported yet.");}
+		public Scalar createScalarWithDefaultValue() { return new BasicUuid(0, 0);}
+		public Vector createVectorWithDefaultValue(int size){ return new BasicUuidVector(size);}
+		public Vector createPairWithDefaultValue(){ return new BasicUuidVector(Entity.DATA_FORM.DF_PAIR, 2);}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for UUID not supported yet.");}
+	}
+	
+	private class IPAddrFactory implements TypeFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicIPAddr(in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicIPAddrVector(Entity.DATA_FORM.DF_VECTOR, in);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicIPAddrVector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for IPADDR not supported yet.");}
+		public Scalar createScalarWithDefaultValue() { return new BasicIPAddr(0, 0);}
+		public Vector createVectorWithDefaultValue(int size){ return new BasicIPAddrVector(size);}
+		public Vector createPairWithDefaultValue(){ return new BasicIPAddrVector(Entity.DATA_FORM.DF_PAIR, 2);}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for IPADDR not supported yet.");}
 	}
 
 	private class StringFactory implements TypeFactory{

@@ -33,6 +33,11 @@ public class LittleEndianDataOutputStream extends AbstractExtendedDataOutputStre
 		out.write((int)(0xFF & (v >> 48)));
 		out.write((int)(0xFF & (v >> 56)));
 	}
+	
+	public void writeLong2(Long2 v) throws IOException {
+		writeLong(v.low);
+		writeLong(v.high);
+	}
 
 	@Override
 	public void writeIntArray(int [] A, int startIdx, int len) throws IOException{
@@ -103,5 +108,24 @@ public class LittleEndianDataOutputStream extends AbstractExtendedDataOutputStre
 		if (pos > 0) {
 			out.write(buf, 0, pos);
 		}
+	}
+	
+	@Override
+	public void writeLong2Array(Long2[] A, int startIdx, int len) throws IOException {
+		if (longBuf == null) {
+			longBuf = new long[longBufSize];
+		}
+		int end = startIdx + len;
+		int pos = 0;
+		for (int i = startIdx; i < end; ++i) {
+			if (pos >= longBufSize) {
+				writeLongArray(longBuf,0, pos);
+				pos = 0;
+			}
+			longBuf[pos++] = A[i].low;
+			longBuf[pos++] = A[i].high;
+		}
+		if (pos > 0)
+			writeLongArray(longBuf, 0, pos);
 	}
 }

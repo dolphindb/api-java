@@ -34,6 +34,12 @@ public class BigEndianDataOutputStream extends AbstractExtendedDataOutputStream{
 		out.write((int)(0xFF & (v >> 8)));
 		out.write((int)(0xFF & v));
 	}
+	
+	public void writeLong2(Long2 v) throws IOException {
+		writeLong(v.high);
+		writeLong(v.low);
+	}
+	
 	@Override
 	public void writeShortArray(short [] A, int startIdx, int len) throws IOException{
 		if (buf == null) {
@@ -103,5 +109,24 @@ public class BigEndianDataOutputStream extends AbstractExtendedDataOutputStream{
 		if (pos > 0) {
 			out.write(buf, 0, pos);
 		}
+	}
+	
+	@Override
+	public void writeLong2Array(Long2[] A, int startIdx, int len) throws IOException {
+		if (longBuf == null) {
+			longBuf = new long[longBufSize];
+		}
+		int end = startIdx + len;
+		int pos = 0;
+		for (int i = startIdx; i < end; ++i) {
+			if (pos >= longBufSize) {
+				writeLongArray(longBuf,0, pos);
+				pos = 0;
+			}
+			longBuf[pos++] = A[i].high;
+			longBuf[pos++] = A[i].low;
+		}
+		if (pos > 0)
+			writeLongArray(longBuf, 0, pos);
 	}
 }

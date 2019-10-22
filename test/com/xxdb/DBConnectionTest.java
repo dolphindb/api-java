@@ -647,18 +647,27 @@ public class DBConnectionTest {
 		BasicDouble rt1 = (BasicDouble)conn.run("WingModel", args);
 		System.out.println(rt1.getDouble());
 	}
+	
+	public void testUUID() throws IOException {
+		String uuidStr = "92274dfe-d589-4598-84a3-c381592fdf3f";
+		BasicUuid a = BasicUuid.fromString(uuidStr);
+		List<Entity> args = new ArrayList<Entity>(1);
+		args.add(a);
+		System.out.println(conn.run("string", args));
+	}
 
 	public static void main(String[] args){
 
 		try{
 			String host = "127.0.0.1";
-			int port = 8848;
+			int port = 8080;
 			if(args.length>=2){
 				host = args[0];
 				port = Integer.parseInt(args[1]);
 			}
 
 			DBConnectionTest test = new DBConnectionTest(host,port);
+			test.testUUID();
 			test.testVoid();
 			test.testFunctionDef();
 			test.testIntegerVector();
