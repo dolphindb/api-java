@@ -22,9 +22,11 @@ vector, matrix|Basic\<DataType\>\<DataForm\>|BasicIntVector, BasicDoubleMatrix, 
 set, dictionary, table|Basic\<DataForm\>|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
-"Basic"表示基本的数据类型接口，\<DataType\>表示DolphinDB数据类型名称，\<DataForm\>是一个DolphinDB数据形式名称。接口和类的详细描述请参考[Java API手册](https://www.dolphindb.com/javaapi/)。
+"Basic"表示基本的数据类型接口，\<DataType\>表示DolphinDB数据类型名称，\<DataForm\>是一个DolphinDB数据形式名称。
 
-DolphinDB Java API提供的最核心的对象是DBConnection。Java应用可以通过它在DolphinDB服务器上执行脚本和函数，并在两者之间双向传递数据。DBConnection类提供如下主要方法：
+DolphinDB Java API提供的最核心的对象是DBConnection。Java应用可以通过它在DolphinDB服务器上执行脚本和函数，并在两者之间双向传递数据。
+
+DBConnection类提供如下主要方法：
 
 | 方法名        | 详情          |
 |:------------- |:-------------|
@@ -57,7 +59,7 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 
 ### 3.运行DolphinDB脚本
 
-使用`run("script")`方法在Java中运行DolphinDB脚本：
+在Java中运行DolphinDB脚本的语法如下：
 ```
 conn.run("script");
 ```
@@ -125,7 +127,7 @@ public void testFunction() throws IOException{
 }
 ```
 
-### 5. 上传数据对象
+### 5. 上传本地对象到DolphinDB服务器
 
 可使用`upload`方法，将本地的数据上传到DolphinDB服务器并分配给一个变量。变量名称可以使用三种类型的字符：字母，数字或下划线，第一个字符必须是字母。
 
@@ -182,32 +184,18 @@ public void testDoubleVector() throws IOException{
        System.out.println(vector.getDouble(i));
 }
 ```
-
+以下代码获取[`GS, 2, [1,3,5],[0.9, [0.8]]]此元组的第3个元素的数据形式，数据类型以及内容：
 ```java
 public void testAnyVector() throws IOException{
+    
     BasicAnyVector result = (BasicAnyVector)conn.run("[`GS, 2, [1,3,5],[0.9, [0.8]]]");
-    //获取元素0的形式，数据类型，内容
-	System.out.println(result.getEntity(0).getDataForm()); //DF_SCALAR
-	System.out.println(result.getEntity(0).getDataType()); //DT_STRING
-	System.out.println(result.getEntity(0).getString());   //"GS"
-    //获取元素1的形式，数据类型，内容
-	System.out.println(result.getEntity(1).getDataForm()); //DF_SCALAR
-	System.out.println(result.getEntity(1).getDataType()); //DT_INT
-	System.out.println(((BasicInt)result.getEntity(1)).getInt()); //2
-    //获取元素2的形式，数据类型，内容
-	System.out.println(result.getEntity(2).getDataForm()); //DF_VECTOR
+    
+    System.out.println(result.getEntity(2).getDataForm()); //DF_VECTOR
 	System.out.println(result.getEntity(2).getDataType()); //DT_INT
 	System.out.println(result.getEntity(2).getString()); //"[1,3,5]"
 	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(0)); //1
 	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(1)); //3
 	System.out.println(((BasicIntVector)result.getEntity(2)).getInt(2)); //5
-    //获取元素3, AnyVector的形式，数据类型，内容。
-	System.out.println(result.getEntity(3).getDataForm()); //DF_VECTOR
-	System.out.println(result.getEntity(3).getDataType()); //DT_ANY
-	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(0).getDataForm()); //DF_SCALAR
-	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(0).getDataType()); //DT_DOUBLE
-	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(1).getDataForm()); //DF_VECTOR
-	System.out.println(((BasicAnyVector)result.getEntity(3)).getEntity(1).getDataType()); //DT_DOUBLE
 }
 ```
 
@@ -255,7 +243,7 @@ public void testDictionary() throws IOException{
 
 - 表
 
-要获取一个表中某列，可以用`table.getColumn(index)`。使用`table.columns()`和`table.rows()`来分别获取一个表的列数和行数。
+要获取一个表中某列，可以用table.getColumn(index)。使用table.columns()和table.rows()来分别获取一个表的列数和行数。
 
 ```java
 public void testTable() throws IOException{
@@ -284,7 +272,7 @@ DolphinDB数据表按存储方式分为三种:
 
 - 内存表: 数据仅保存在内存中，存取速度最快，但是节点关闭后数据就不存在了。
 - 本地磁盘表：数据保存在本地磁盘上。可以从磁盘加载到内存。
-- 分布式表：数据分布在不同的节点，通过DolphinDB的分布式计算引擎，仍然可以像本地表一样做统一查询。
+- 分布式表：数据分布在不同的节点，通过DolphinDB的分布式计算引擎，逻辑上仍然可以像本地表一样做统一查询。
 
 #### 7.1 保存数据到DolphinDB内存表
 
@@ -302,9 +290,9 @@ share t as sharedTable
 ```
 由于内存表是会话隔离的，所以该内存表只有当前会话可见。如果需要在其它会话中访问，需要通过`share`在会话间共享内存表。
 
-##### 7.1.1 使用 insert into 保存单条数据
+##### 7.1.1 使用 `insert into` 保存单条数据
 
-若将单条数据记录保存到DolphinDB内存表，可以使用SQL语句insert into。
+若将单条数据记录保存到DolphinDB内存表，可以使用类似SQL语句insert into。
 ```
 public void test_save_Insert(String str,int i, long ts,double dbl) throws IOException{
     conn.run(String.format("insert into sharedTable values('%s',%s,%s,%s)",str,i,ts,dbl));
@@ -366,7 +354,7 @@ BasicTable table1 = new BasicTable(colNames,cols);
 
 #### 7.3 保存数据到本地磁盘表
 
-本地磁盘表通常用于静态数据集的计算分析。它不支持事务，也不持支并发读写。
+通常本地磁盘表用于学习环境或者单机静态数据集测试，它不支持事务，不持支并发读写，不保证运行中的数据一致性，所以不建议在生产环境中使用。
 
 使用DolphinDB脚本创建一个数据表：
 ```
@@ -407,7 +395,7 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 }
 ```
 
-### 8. Java原生类型向DolphinDB数据类型转换
+### 8. Java原生类型转换为DolphinDB数据类型
 
 Java API提供了一组以Basic+\<DataType\>方式命名的类，分别对应DolphinDB的数据类型，比如BasicInt类，BasicDate类等等。
 
@@ -484,10 +472,9 @@ while (true) {
 
 poller1探测到流数据表有新增数据后，会拉取到新数据。无新数据发布时，Java程序会阻塞在poller1.poll方法这里等待。
 
-
 - Java API使用MessageHandler获取新数据。
 
-首先需要调用者定义数据处理器Handler，Handler需要实现com.xxdb.streaming.client.MessageHandler接口。
+首先需要调用者定义数据处理器handler。handler需要实现com.xxdb.streaming.client.MessageHandler接口。
 
 
 ```java
