@@ -359,8 +359,9 @@ public class DBConnection {
 				if (ServerExceptionUtils.isNotLogin(msg)) {
 					if (userId.length() > 0 && password.length() > 0)
 						login();
-				}
-				else{
+					else
+						throw new IOException(msg);
+				}else{
 					throw new IOException(msg);
 				}
 			}
