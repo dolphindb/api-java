@@ -355,8 +355,17 @@ public class DBConnection {
 			int numObject = Integer.parseInt(headers[1]);
 
 			String msg = in.readLine();
-			if(!msg.equals("OK"))
-				throw new IOException(msg);
+			if(!msg.equals("OK")){
+				if (ServerExceptionUtils.isNotLogin(msg)) {
+					if (userId.length() > 0 && password.length() > 0)
+						login();
+					else
+						throw new IOException(msg);
+				}else{
+					throw new IOException(msg);
+				}
+			}
+
 			
 			if(numObject == 0)
 				return new Void();
