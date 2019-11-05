@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.xxdb.data.BasicBoolean;
@@ -62,6 +63,7 @@ public class DBConnection {
 	private String controllerHost = null;
 	private int controllerPort;
 	private boolean highAvailability;
+	private String[] highAvailabilitySites = null;
 
 	public DBConnection(){
 		factory = new BasicEntityFactory();
@@ -79,41 +81,61 @@ public class DBConnection {
 	}
 	
 	public boolean connect(String hostName, int port) throws IOException{
-		return connect(hostName, port, "", "", null, false);
+		return connect(hostName, port, "", "", null, false, null);
 	}
 
 	public boolean connect(String hostName, int port, String initialScript) throws IOException{
-		return connect(hostName, port, "", "", initialScript, false);
+		return connect(hostName, port, "", "", initialScript, false, null);
 	}
 	
 	public boolean connect(String hostName, int port, String initialScript, boolean highAvailability) throws IOException{
-		return connect(hostName, port, "", "", initialScript, highAvailability);
+		return connect(hostName, port, "", "", initialScript, highAvailability, null);
 	}
 
 	public boolean connect(String hostName, int port, boolean highAvailability) throws IOException{
-		return connect(hostName, port, "", "", null, highAvailability);
+		return connect(hostName, port, "", "", null, highAvailability, null);
 	}
 	
+	public boolean connect(String hostName, int port, String[] highAvailabilitySites) throws IOException{
+		return connect(hostName, port, "", "", null, true, highAvailabilitySites);
+	}
+	
+	public boolean connect(String hostName, int port, String initialScript, String[] highAvailabilitySites) throws IOException{
+		return connect(hostName, port, "", "", initialScript, true, highAvailabilitySites);
+	}
+
 	public boolean connect(String hostName, int port, String userId, String password) throws IOException{
-		return connect(hostName, port, userId, password, null, false);
+		return connect(hostName, port, userId, password, null, false, null);
 	}
 
 	public boolean connect(String hostName, int port, String userId, String password, boolean highAvailability) throws IOException{
-		return connect(hostName, port, userId, password, null, highAvailability);
+		return connect(hostName, port, userId, password, null, highAvailability, null);
+	}
+	
+	public boolean connect(String hostName, int port, String userId, String password, String[] highAvailabilitySites) throws IOException{
+		return connect(hostName, port, userId, password, null, true, highAvailabilitySites);
 	}
 	
 	public boolean connect(String hostName, int port, String userId, String password, String initialScript) throws IOException{
-		return connect(hostName, port, userId, password, initialScript, false);
+		return connect(hostName, port, userId, password, initialScript, false, null);
 	}
 	
 	public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean highAvailability) throws IOException{
+		return connect(hostName, port, userId, password, initialScript, highAvailability, null);
+	}
+
+	public boolean connect(String hostName, int port, String userId, String password, String initialScript, String[] highAvailabilitySites) throws IOException{
+		return connect(hostName, port, userId, password, initialScript, true, highAvailabilitySites);
+	}
+	
+	public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean highAvailability, String[] highAvailabilitySites) throws IOException{
 		mutex.lock();
 		try{
 			if(!sessionID.isEmpty()){
 				mutex.unlock();
 				return true;
 			}
-			
+
 			this.hostName = hostName;
 			this.port = port;
 			this.userId = userId;
@@ -121,6 +143,13 @@ public class DBConnection {
 			this.encrypted = true;
 			this.initialScript = initialScript;
 			this.highAvailability = highAvailability;
+			this.highAvailabilitySites = highAvailabilitySites;
+			for (String site : highAvailabilitySites) {
+				String HASite[] = site.split(":");
+				if (HASite.length != 2)
+					throw new IllegalArgumentException("The site '" + site + "' is invalid.");
+			}
+			assert(highAvailabilitySites == null || highAvailability);
 			
 			return connect();
 		}
@@ -173,7 +202,7 @@ public class DBConnection {
 		if (initialScript != null && initialScript.length() > 0)
 			run(initialScript);
 		
-		if (highAvailability) {
+		if (highAvailability && highAvailabilitySites == null) {
 			try {
 				controllerHost = ((BasicString) run("rpc(getControllerAlias(), getNodeHost)")).getString();
 				controllerPort = ((BasicInt) run("rpc(getControllerAlias(), getNodePort)")).getInt();
@@ -224,18 +253,26 @@ public class DBConnection {
 	}
 	
 	private boolean switchToRandomAvailableSite() throws IOException {
-		if (controllerHost == null)
-			return false;
-		DBConnection tmp = new DBConnection();
-		tmp.connect(controllerHost, controllerPort);
-		BasicStringVector availableSites = (BasicStringVector) tmp.run("getClusterLiveDataNodes(false)");
-		tmp.close();
-		int size = availableSites.rows();
-		if (size <= 0)
-			return false;
-		String site[] = availableSites.getString(0).split(":");
-		hostName = site[0];
-		port = new Integer(site[1]);
+		if (highAvailabilitySites != null) {
+			int rnd = new Random().nextInt(highAvailabilitySites.length);
+			String site[] = highAvailabilitySites[rnd].split(":");
+			hostName = site[0];
+			port = new Integer(site[1]);
+		}
+		else {
+			if (controllerHost == null)
+				return false;
+			DBConnection tmp = new DBConnection();
+			tmp.connect(controllerHost, controllerPort);
+			BasicStringVector availableSites = (BasicStringVector) tmp.run("getClusterLiveDataNodes(false)");
+			tmp.close();
+			int size = availableSites.rows();
+			if (size <= 0)
+				return false;
+			String site[] = availableSites.getString(0).split(":");
+			hostName = site[0];
+			port = new Integer(site[1]);
+		}
 		try {
 			connect();
 		}
@@ -359,9 +396,8 @@ public class DBConnection {
 				if (ServerExceptionUtils.isNotLogin(msg)) {
 					if (userId.length() > 0 && password.length() > 0)
 						login();
-					else
-						throw new IOException(msg);
-				}else{
+				}
+				else{
 					throw new IOException(msg);
 				}
 			}
