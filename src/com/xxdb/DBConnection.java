@@ -144,10 +144,12 @@ public class DBConnection {
 			this.initialScript = initialScript;
 			this.highAvailability = highAvailability;
 			this.highAvailabilitySites = highAvailabilitySites;
-			for (String site : highAvailabilitySites) {
-				String HASite[] = site.split(":");
-				if (HASite.length != 2)
-					throw new IllegalArgumentException("The site '" + site + "' is invalid.");
+			if (highAvailabilitySites != null) {
+				for (String site : highAvailabilitySites) {
+					String HASite[] = site.split(":");
+					if (HASite.length != 2)
+						throw new IllegalArgumentException("The site '" + site + "' is invalid.");
+				}
 			}
 			assert(highAvailabilitySites == null || highAvailability);
 			
