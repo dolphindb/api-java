@@ -1,6 +1,7 @@
 package com.xxdb;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.PublicKey;
@@ -64,6 +65,7 @@ public class DBConnection {
 	private int controllerPort;
 	private boolean highAvailability;
 	private String[] highAvailabilitySites = null;
+	private boolean reconnect = false;
 
 	public DBConnection(){
 		factory = new BasicEntityFactory();
@@ -159,9 +161,18 @@ public class DBConnection {
 			mutex.unlock();
 		}
 	}
-	
+
 	private boolean connect() throws IOException {
-		socket = new Socket(hostName, port);
+		try {
+			socket = new Socket(hostName, port);
+		}
+		catch (ConnectException ex) {
+			if (reconnect)
+				return false;
+			if (switchToRandomAvailableSite())
+				return true;
+			throw ex;
+		}
 		socket.setKeepAlive(true);
 		socket.setTcpNoDelay(true);
 		out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
@@ -178,6 +189,8 @@ public class DBConnection {
 		int endPos = line.indexOf(' ');
 		if(endPos <= 0){
 			close();
+			if (switchToRandomAvailableSite())
+				return true;
 			return false;
 		}
 		sessionID = line.substring(0, endPos);
@@ -186,6 +199,8 @@ public class DBConnection {
 		endPos = line.indexOf(' ', startPos);
 		if(endPos != line.length()-2){
 			close();
+			if (switchToRandomAvailableSite())
+				return true;
 			return false;
 		}
 		
@@ -255,33 +270,40 @@ public class DBConnection {
 	}
 	
 	private boolean switchToRandomAvailableSite() throws IOException {
-		if (highAvailabilitySites != null) {
-			int rnd = new Random().nextInt(highAvailabilitySites.length);
-			String site[] = highAvailabilitySites[rnd].split(":");
-			hostName = site[0];
-			port = new Integer(site[1]);
-		}
-		else {
-			if (controllerHost == null)
-				return false;
-			DBConnection tmp = new DBConnection();
-			tmp.connect(controllerHost, controllerPort);
-			BasicStringVector availableSites = (BasicStringVector) tmp.run("getClusterLiveDataNodes(false)");
-			tmp.close();
-			int size = availableSites.rows();
-			if (size <= 0)
-				return false;
-			String site[] = availableSites.getString(0).split(":");
-			hostName = site[0];
-			port = new Integer(site[1]);
-		}
-		try {
-			connect();
-		}
-		catch (Exception e) {
+		if (!highAvailability)
 			return false;
+		while (true) {
+			reconnect = true;
+			if (highAvailabilitySites != null) {
+				int rnd = new Random().nextInt(highAvailabilitySites.length);
+				String site[] = highAvailabilitySites[rnd].split(":");
+				hostName = site[0];
+				port = new Integer(site[1]);
+			}
+			else {
+				if (controllerHost == null)
+					return false;
+				DBConnection tmp = new DBConnection();
+				tmp.connect(controllerHost, controllerPort);
+				BasicStringVector availableSites = (BasicStringVector) tmp.run("getClusterLiveDataNodes(false)");
+				tmp.close();
+				int size = availableSites.rows();
+				if (size <= 0)
+					return false;
+				String site[] = availableSites.getString(0).split(":");
+				hostName = site[0];
+				port = new Integer(site[1]);
+			}
+			try {
+				System.out.println("Trying to reconnect to " + hostName + ":" + port);
+				if (connect()) {
+					reconnect = false;
+					System.out.println("Successfully reconnected to " + hostName + ":" + port);
+					return true;
+				}
+			}
+			catch (Exception e) {}
 		}
-		return true;
 	}
 	
 	public Entity tryRun(String script) throws IOException{
@@ -667,6 +689,16 @@ public class DBConnection {
 			String msg = in.readLine();
 			if(!msg.equals("OK"))
 				throw new IOException(msg);
+		}
+		catch (Exception ex) {
+			if (socket != null || !highAvailability)
+				throw ex;
+			if (switchToRandomAvailableSite()) {
+				mutex.unlock();
+				upload(variableObjectMap);
+			}
+			else
+				throw ex;
 		}
 		finally{
 			mutex.unlock();
