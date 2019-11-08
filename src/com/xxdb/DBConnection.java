@@ -57,6 +57,8 @@ public class DBConnection {
 	private EntityFactory factory;
 	private String hostName;
 	private int port;
+	private String mainHostName;
+	private int mainPort;
 	private String userId;
 	private String password;
 	private String initialScript = null;
@@ -139,7 +141,9 @@ public class DBConnection {
 			}
 
 			this.hostName = hostName;
+			this.mainHostName = hostName;
 			this.port = port;
+			this.mainPort = port;
 			this.userId = userId;
 			this.password = password;
 			this.encrypted = true;
@@ -272,13 +276,21 @@ public class DBConnection {
 	private boolean switchToRandomAvailableSite() throws IOException {
 		if (!highAvailability)
 			return false;
+		int tryCount = 0;
 		while (true) {
 			reconnect = true;
 			if (highAvailabilitySites != null) {
-				int rnd = new Random().nextInt(highAvailabilitySites.length);
-				String site[] = highAvailabilitySites[rnd].split(":");
-				hostName = site[0];
-				port = new Integer(site[1]);
+				if (tryCount < 3) {
+					hostName = mainHostName;
+					port = mainPort;
+				}
+				else {
+					int rnd = new Random().nextInt(highAvailabilitySites.length);
+					String site[] = highAvailabilitySites[rnd].split(":");
+					hostName = site[0];
+					port = new Integer(site[1]);
+				}
+				tryCount++;
 			}
 			else {
 				if (controllerHost == null)
