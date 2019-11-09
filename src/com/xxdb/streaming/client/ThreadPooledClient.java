@@ -93,9 +93,13 @@ public class ThreadPooledClient extends AbstractClient {
         }
     }
     
-    protected void doReconnect(Site site) {
+    protected void doReconnect(Site[] sites) {
 		threadPool.shutdownNow();
+		int siteId = 0;
+		int siteNum = sites.length;
     	while (true) {
+			Site site = sites[siteId];
+			siteId = (siteId + 1) % siteNum;
 			try {
 				Thread.sleep(5000);
 				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter);
@@ -111,7 +115,7 @@ public class ThreadPooledClient extends AbstractClient {
     public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect,Vector filter) throws IOException {
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port,tableName,actionName,handler,offset,reconnect,filter);
         synchronized (queueHandlers) {
-            queueHandlers.put(tableNameToTopic.get(host + ":" + port + ":" + tableName), new QueueHandlerBinder(queue, handler));
+            queueHandlers.put(tableNameToTrueTopic.get(host + ":" + port + ":" + tableName), new QueueHandlerBinder(queue, handler));
         }
     }
     

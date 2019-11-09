@@ -318,6 +318,24 @@ public class DBConnection {
 		}
 	}
 	
+	private boolean handleNotLeaderException(Exception ex, String function) {
+		if (function == "publishTable")
+			return false;
+		String errMsg = ex.getMessage();
+		if (ServerExceptionUtils.isNotLeader(errMsg)) {
+			String newLeaderString = ServerExceptionUtils.newLeader(errMsg);
+			String[] newLeader = newLeaderString.split(":");
+			hostName = newLeader[0];
+			port = new Integer(newLeader[1]);
+			try {
+				return connect();
+			} catch (IOException e) {
+				return false;
+			}
+		}
+		return false;
+	}
+	
 	public Entity tryRun(String script) throws IOException{
 		return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
 	}
@@ -438,7 +456,6 @@ public class DBConnection {
 				}
 			}
 
-			
 			if(numObject == 0)
 				return new Void();
 			try{
@@ -461,6 +478,10 @@ public class DBConnection {
 			}
 		}
 		catch (Exception ex) {
+			if (handleNotLeaderException(ex, null)) {
+				mutex.unlock();
+				return run(script, listener, priority, parallelism);
+			}
 			if (socket != null || !highAvailability)
 				throw ex;
 			if (switchToRandomAvailableSite()) {
@@ -497,7 +518,7 @@ public class DBConnection {
 	public Entity run(String function, List<Entity> arguments, int priority) throws IOException{
 		return run(function, arguments, priority, DEFAULT_PARALLELISM);
 	}
-	
+
 	public Entity run(String function, List<Entity> arguments, int priority, int parallelism) throws IOException{
 		mutex.lock();
 		try{
@@ -592,6 +613,7 @@ public class DBConnection {
 				
 				Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
 				Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
+				
 				return factory.createEntity(df, dt, in);
 			}
 			catch(IOException ex){
@@ -600,6 +622,10 @@ public class DBConnection {
 			}
 		}
 		catch (Exception ex) {
+			if (handleNotLeaderException(ex, function)) {
+				mutex.unlock();
+				return run(function, arguments, priority, parallelism);
+			}
 			if (socket != null || !highAvailability)
 				throw ex;
 			if (switchToRandomAvailableSite()) {
@@ -716,7 +742,7 @@ public class DBConnection {
 			mutex.unlock();
 		}
 	}
-	
+
 	public void close(){
 		mutex.lock();
 		try{

@@ -43,11 +43,15 @@ public class ThreadedClient extends  AbstractClient {
     }
 	
 	@Override
-	protected void doReconnect(Site site) {
+	protected void doReconnect(Site[] sites) {
 		if (handlerLopper == null)
 			throw new RuntimeException("Subscribe thread is not started");
 		handlerLopper.interrupt();
+		int siteId = 0;
+		int siteNum = sites.length;
 		while (true) {
+			Site site = sites[siteId];
+			siteId = (siteId + 1) % siteNum;
 			try {
 				Thread.sleep(5000);
 				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter);

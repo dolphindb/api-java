@@ -128,8 +128,9 @@ class MessageParser implements Runnable{
 			}
 		}
 	} catch (Exception e) {
-		if (dispatcher.isClosed(topic))
+		if (dispatcher.isClosed(topic)) {
 			return;
+		}
 		else{
 			dispatcher.tryReconnect(topic);
 		}
