@@ -321,7 +321,7 @@ public class DBConnection {
 			catch (Exception e) {}
 		}
 	}
-	
+
 	private NotLeaderStatus handleNotLeaderException(Exception ex, String function) {
 		String errMsg = ex.getMessage();
 		if (ServerExceptionUtils.isNotLeader(errMsg)) {
@@ -331,6 +331,8 @@ public class DBConnection {
 			int newPort = new Integer(newLeader[1]);
 			if (hostName.equals(newHostName) && port == newPort) {
 				System.out.println("Got NotLeader exception. Waiting for new leader.");
+				try { Thread.sleep(1000); }
+				catch (Exception e) {}
 				return NotLeaderStatus.WAIT;
 			}
 			hostName = newHostName;
@@ -415,17 +417,24 @@ public class DBConnection {
 					socket = null;
 					throw ex;
 				}
-				
-				NotLeaderStatus status;
-				do {
-					status = handleNotLeaderException(ex, null);
-					if (status == NotLeaderStatus.NEW_LEADER)
-						return run(script, listener, priority, parallelism);
-					else if (status != NotLeaderStatus.WAIT)
-						break;
-					try { Thread.sleep(1000); }
-					catch (Exception e) {}
-				} while (status == NotLeaderStatus.WAIT);
+
+				NotLeaderStatus status = handleNotLeaderException(ex, null);
+				if (status == NotLeaderStatus.NEW_LEADER)
+					return run(script, listener, priority, parallelism);
+				else if (status == NotLeaderStatus.WAIT) {
+					if (!HAReconnect) {
+						HAReconnect = true;
+						while (true) {
+							try { 
+								Entity re = run(script, listener, priority, parallelism);
+								HAReconnect = false;
+								return re;
+							}
+							catch (Exception e) {}
+						}
+					}
+					throw ex;
+				}
 				
 				try {
 					connect();
@@ -496,16 +505,23 @@ public class DBConnection {
 			}
 		}
 		catch (Exception ex) {
-			NotLeaderStatus status;
-			do {
-				status = handleNotLeaderException(ex, null);
-				if (status == NotLeaderStatus.NEW_LEADER)
-					return run(script, listener, priority, parallelism);
-				else if (status != NotLeaderStatus.WAIT)
-					break;
-				try { Thread.sleep(1000); }
-				catch (Exception e) {}
-			} while (status == NotLeaderStatus.WAIT);
+			NotLeaderStatus status = handleNotLeaderException(ex, null);
+			if (status == NotLeaderStatus.NEW_LEADER)
+				return run(script, listener, priority, parallelism);
+			else if (status == NotLeaderStatus.WAIT) {
+				if (!HAReconnect) {
+					HAReconnect = true;
+					while (true) {
+						try { 
+							Entity re = run(script, listener, priority, parallelism);
+							HAReconnect = false;
+							return re;
+						}
+						catch (Exception e) {}
+					}
+				}
+				throw ex;
+			}
 
 			if (socket != null || !highAvailability)
 				throw ex;
@@ -582,16 +598,23 @@ public class DBConnection {
 					throw ex;
 				}
 
-				NotLeaderStatus status;
-				do {
-					status = handleNotLeaderException(ex, null);
-					if (status == NotLeaderStatus.NEW_LEADER)
-						return run(function, arguments, priority, parallelism);
-					else if (status != NotLeaderStatus.WAIT)
-						break;
-					try { Thread.sleep(1000); }
-					catch (Exception e) {}
-				} while (status == NotLeaderStatus.WAIT);
+				NotLeaderStatus status = handleNotLeaderException(ex, null);
+				if (status == NotLeaderStatus.NEW_LEADER)
+					return run(function, arguments, priority, parallelism);
+				else if (status == NotLeaderStatus.WAIT) {
+					if (!HAReconnect) {
+						HAReconnect = true;
+						while (true) {
+							try { 
+								Entity re = run(function, arguments, priority, parallelism);
+								HAReconnect = false;
+								return re;
+							}
+							catch (Exception e) {}
+						}
+					}
+					throw ex;
+				}
 
 				try {
 					connect();
@@ -656,16 +679,23 @@ public class DBConnection {
 			}
 		}
 		catch (Exception ex) {
-			NotLeaderStatus status;
-			do {
-				status = handleNotLeaderException(ex, null);
-				if (status == NotLeaderStatus.NEW_LEADER)
-					return run(function, arguments, priority, parallelism);
-				else if (status != NotLeaderStatus.WAIT)
-					break;
-				try { Thread.sleep(1000); }
-				catch (Exception e) {}
-			} while (status == NotLeaderStatus.WAIT);
+			NotLeaderStatus status = handleNotLeaderException(ex, null);
+			if (status == NotLeaderStatus.NEW_LEADER)
+				return run(function, arguments, priority, parallelism);
+			else if (status == NotLeaderStatus.WAIT) {
+				if (!HAReconnect) {
+					HAReconnect = true;
+					while (true) {
+						try { 
+							Entity re = run(function, arguments, priority, parallelism);
+							HAReconnect = false;
+							return re;
+						}
+						catch (Exception e) {}
+					}
+				}
+				throw ex;
+			}
 
 			if (socket != null || !highAvailability)
 				throw ex;
