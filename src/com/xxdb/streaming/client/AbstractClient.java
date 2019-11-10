@@ -296,8 +296,6 @@ abstract class AbstractClient implements MessageDispatcher{
 			synchronized (tableNameToTrueTopic) {
 				topic = tableNameToTrueTopic.get(fullTableName);
 			}
-			System.out.println("topic = " + topic);
-			System.out.println(localIP + ":" + this.listeningPort + ":" + tableName + ":" + actionName);
 			synchronized (trueTopicToSites) {
 				Site[] sites = trueTopicToSites.get(topic);
 				if (sites == null || sites.length == 0)
