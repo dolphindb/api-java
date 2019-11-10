@@ -66,9 +66,9 @@ abstract class AbstractClient implements MessageDispatcher{
 
 	public void tryReconnect(String topic) {
 		System.out.println("Trigger reconnect");
+    	topic = HATopicToTrueTopic.get(topic);
 		queueManager.removeQueue(topic);
     	Site[] sites = null;
-    	topic = HATopicToTrueTopic.get(topic);
     	synchronized (trueTopicToSites) {
 			sites = trueTopicToSites.get(topic);
 		}
@@ -97,6 +97,7 @@ abstract class AbstractClient implements MessageDispatcher{
 					params.add(new BasicString(localIP));
 					params.add(new BasicInt(listeningPort));
 					conn.run("activeClosePublishConnection", params);
+					System.out.println("Successfully closed publish connection");
 				} catch (IOException ioex) {
 					throw ioex;
 				} finally {
