@@ -6,7 +6,6 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 
 import com.xxdb.DBConnection;
-import com.xxdb.ServerExceptionUtils;
 import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicLong;
 import com.xxdb.data.BasicString;
@@ -69,6 +68,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		System.out.println("Trigger reconnect");
 		queueManager.removeQueue(topic);
     	Site[] sites = null;
+    	topic = HATopicToTrueTopic.get(topic);
     	synchronized (trueTopicToSites) {
 			sites = trueTopicToSites.get(topic);
 		}
@@ -220,21 +220,7 @@ abstract class AbstractClient implements MessageDispatcher{
 			params.add(new BasicLong(offset));
 			if (filter != null)
 				params.add(filter);
-			try {
-				re = dbConn.run("publishTable", params);
-			}
-			catch (IOException ex) {
-				String errMsg = ex.getMessage();
-				if (ServerExceptionUtils.isNotLeader(errMsg)) {
-					String newLeaderString = ServerExceptionUtils.newLeader(errMsg);
-					String[] newLeader = newLeaderString.split(":");
-					String newLeaderHost = newLeader[0];
-					int newLeaderPort = new Integer(newLeader[1]);
-					return subscribeInternal(newLeaderHost, newLeaderPort, tableName, actionName, handler, offset, reconnect, filter);
-				}
-				else
-					throw ex;
-			}
+			re = dbConn.run("publishTable", params);
 			if (re instanceof BasicAnyVector) {
 				BasicStringVector HASiteStrings = (BasicStringVector)(((BasicAnyVector) re).getEntity(1));
 				int HASiteNum = HASiteStrings.rows();
@@ -310,6 +296,8 @@ abstract class AbstractClient implements MessageDispatcher{
 			synchronized (tableNameToTrueTopic) {
 				topic = tableNameToTrueTopic.get(fullTableName);
 			}
+			System.out.println("topic = " + topic);
+			System.out.println(localIP + ":" + this.listeningPort + ":" + tableName + ":" + actionName);
 			synchronized (trueTopicToSites) {
 				Site[] sites = trueTopicToSites.get(topic);
 				if (sites == null || sites.length == 0)

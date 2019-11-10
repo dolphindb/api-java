@@ -8,6 +8,8 @@ public class ServerExceptionUtils {
     
     public static Boolean isNotLeader(String exMsg)
     {
+    	if (exMsg == null)
+    		return false;
         return exMsg.indexOf("<NotLeader>")>=0;
     }
     

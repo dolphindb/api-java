@@ -43,6 +43,9 @@ import com.xxdb.io.ProgressListener;
  */
 
 public class DBConnection {
+	private enum NotLeaderStatus {
+		NEW_LEADER, WAIT, CONN_FAIL, OTHER_EXCEPTION
+	}
 	private static final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length -1;
 	private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.values().length -1;
 	private static final int DEFAULT_PRIORITY = 4;
@@ -67,7 +70,7 @@ public class DBConnection {
 	private int controllerPort;
 	private boolean highAvailability;
 	private String[] highAvailabilitySites = null;
-	private boolean reconnect = false;
+	private boolean HAReconnect = false;
 
 	public DBConnection(){
 		factory = new BasicEntityFactory();
@@ -171,7 +174,7 @@ public class DBConnection {
 			socket = new Socket(hostName, port);
 		}
 		catch (ConnectException ex) {
-			if (reconnect)
+			if (HAReconnect)
 				return false;
 			if (switchToRandomAvailableSite())
 				return true;
@@ -276,9 +279,10 @@ public class DBConnection {
 	private boolean switchToRandomAvailableSite() throws IOException {
 		if (!highAvailability)
 			return false;
+		
 		int tryCount = 0;
 		while (true) {
-			reconnect = true;
+			HAReconnect = true;
 			if (highAvailabilitySites != null) {
 				if (tryCount < 3) {
 					hostName = mainHostName;
@@ -309,7 +313,7 @@ public class DBConnection {
 			try {
 				System.out.println("Trying to reconnect to " + hostName + ":" + port);
 				if (connect()) {
-					reconnect = false;
+					HAReconnect = false;
 					System.out.println("Successfully reconnected to " + hostName + ":" + port);
 					return true;
 				}
@@ -318,24 +322,32 @@ public class DBConnection {
 		}
 	}
 	
-	private boolean handleNotLeaderException(Exception ex, String function) {
-		if (function == "publishTable")
-			return false;
+	private NotLeaderStatus handleNotLeaderException(Exception ex, String function) {
 		String errMsg = ex.getMessage();
 		if (ServerExceptionUtils.isNotLeader(errMsg)) {
 			String newLeaderString = ServerExceptionUtils.newLeader(errMsg);
 			String[] newLeader = newLeaderString.split(":");
-			hostName = newLeader[0];
-			port = new Integer(newLeader[1]);
+			String newHostName = newLeader[0];
+			int newPort = new Integer(newLeader[1]);
+			if (hostName.equals(newHostName) && port == newPort) {
+				System.out.println("Got NotLeader exception. Waiting for new leader.");
+				return NotLeaderStatus.WAIT;
+			}
+			hostName = newHostName;
+			port = newPort;
 			try {
-				return connect();
+				System.out.println("Got NotLeader exception. Switching to " + hostName + ":" + port);
+				if (connect())
+					return NotLeaderStatus.NEW_LEADER;
+				else
+					return NotLeaderStatus.CONN_FAIL;
 			} catch (IOException e) {
-				return false;
+				return NotLeaderStatus.CONN_FAIL;
 			}
 		}
-		return false;
+		return NotLeaderStatus.OTHER_EXCEPTION;
 	}
-	
+
 	public Entity tryRun(String script) throws IOException{
 		return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
 	}
@@ -404,6 +416,17 @@ public class DBConnection {
 					throw ex;
 				}
 				
+				NotLeaderStatus status;
+				do {
+					status = handleNotLeaderException(ex, null);
+					if (status == NotLeaderStatus.NEW_LEADER)
+						return run(script, listener, priority, parallelism);
+					else if (status != NotLeaderStatus.WAIT)
+						break;
+					try { Thread.sleep(1000); }
+					catch (Exception e) {}
+				} while (status == NotLeaderStatus.WAIT);
+				
 				try {
 					connect();
 					out.writeBytes((listener != null ? "API2 " : "API ")+sessionID+" ");
@@ -436,13 +459,8 @@ public class DBConnection {
 				socket = null;
 				throw new IOException("Received invalid header: " + header);
 			}
-			if(reconnect) {
+			if(reconnect)
 				sessionID = headers[0];
-				if (userId.length() > 0 && password.length() > 0)
-					login();
-				if (initialScript != null && initialScript.length() > 0)
-					run(initialScript);
-			}
 			int numObject = Integer.parseInt(headers[1]);
 
 			String msg = in.readLine();
@@ -478,16 +496,21 @@ public class DBConnection {
 			}
 		}
 		catch (Exception ex) {
-			if (handleNotLeaderException(ex, null)) {
-				mutex.unlock();
-				return run(script, listener, priority, parallelism);
-			}
+			NotLeaderStatus status;
+			do {
+				status = handleNotLeaderException(ex, null);
+				if (status == NotLeaderStatus.NEW_LEADER)
+					return run(script, listener, priority, parallelism);
+				else if (status != NotLeaderStatus.WAIT)
+					break;
+				try { Thread.sleep(1000); }
+				catch (Exception e) {}
+			} while (status == NotLeaderStatus.WAIT);
+
 			if (socket != null || !highAvailability)
 				throw ex;
-			if (switchToRandomAvailableSite()) {
-				mutex.unlock();
+			if (switchToRandomAvailableSite())
 				return run(script, listener, priority, parallelism);
-			}
 			else
 				throw ex;
 		}
@@ -558,7 +581,18 @@ public class DBConnection {
 					socket = null;
 					throw ex;
 				}
-				
+
+				NotLeaderStatus status;
+				do {
+					status = handleNotLeaderException(ex, null);
+					if (status == NotLeaderStatus.NEW_LEADER)
+						return run(function, arguments, priority, parallelism);
+					else if (status != NotLeaderStatus.WAIT)
+						break;
+					try { Thread.sleep(1000); }
+					catch (Exception e) {}
+				} while (status == NotLeaderStatus.WAIT);
+
 				try {
 					connect();
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
@@ -622,16 +656,21 @@ public class DBConnection {
 			}
 		}
 		catch (Exception ex) {
-			if (handleNotLeaderException(ex, function)) {
-				mutex.unlock();
-				return run(function, arguments, priority, parallelism);
-			}
+			NotLeaderStatus status;
+			do {
+				status = handleNotLeaderException(ex, null);
+				if (status == NotLeaderStatus.NEW_LEADER)
+					return run(function, arguments, priority, parallelism);
+				else if (status != NotLeaderStatus.WAIT)
+					break;
+				try { Thread.sleep(1000); }
+				catch (Exception e) {}
+			} while (status == NotLeaderStatus.WAIT);
+
 			if (socket != null || !highAvailability)
 				throw ex;
-			if (switchToRandomAvailableSite()) {
-				mutex.unlock();
+			if (switchToRandomAvailableSite())
 				return run(function, arguments, priority, parallelism);
-			}
 			else
 				throw ex;
 		}
