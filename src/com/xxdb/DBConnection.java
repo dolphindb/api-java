@@ -43,6 +43,9 @@ import com.xxdb.io.ProgressListener;
  */
 
 public class DBConnection {
+	private enum NotLeaderStatus {
+		NEW_LEADER, WAIT, CONN_FAIL, OTHER_EXCEPTION
+	}
 	private static final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length -1;
 	private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.values().length -1;
 	private static final int DEFAULT_PRIORITY = 4;
@@ -67,7 +70,7 @@ public class DBConnection {
 	private int controllerPort;
 	private boolean highAvailability;
 	private String[] highAvailabilitySites = null;
-	private boolean reconnect = false;
+	private boolean HAReconnect = false;
 
 	public DBConnection(){
 		factory = new BasicEntityFactory();
@@ -171,7 +174,7 @@ public class DBConnection {
 			socket = new Socket(hostName, port);
 		}
 		catch (ConnectException ex) {
-			if (reconnect)
+			if (HAReconnect)
 				return false;
 			if (switchToRandomAvailableSite())
 				return true;
@@ -276,9 +279,10 @@ public class DBConnection {
 	private boolean switchToRandomAvailableSite() throws IOException {
 		if (!highAvailability)
 			return false;
+		
 		int tryCount = 0;
 		while (true) {
-			reconnect = true;
+			HAReconnect = true;
 			if (highAvailabilitySites != null) {
 				if (tryCount < 3) {
 					hostName = mainHostName;
@@ -309,7 +313,7 @@ public class DBConnection {
 			try {
 				System.out.println("Trying to reconnect to " + hostName + ":" + port);
 				if (connect()) {
-					reconnect = false;
+					HAReconnect = false;
 					System.out.println("Successfully reconnected to " + hostName + ":" + port);
 					return true;
 				}
@@ -317,7 +321,35 @@ public class DBConnection {
 			catch (Exception e) {}
 		}
 	}
-	
+
+	private NotLeaderStatus handleNotLeaderException(Exception ex, String function) {
+		String errMsg = ex.getMessage();
+		if (ServerExceptionUtils.isNotLeader(errMsg)) {
+			String newLeaderString = ServerExceptionUtils.newLeader(errMsg);
+			String[] newLeader = newLeaderString.split(":");
+			String newHostName = newLeader[0];
+			int newPort = new Integer(newLeader[1]);
+			if (hostName.equals(newHostName) && port == newPort) {
+				System.out.println("Got NotLeader exception. Waiting for new leader.");
+				try { Thread.sleep(1000); }
+				catch (Exception e) {}
+				return NotLeaderStatus.WAIT;
+			}
+			hostName = newHostName;
+			port = newPort;
+			try {
+				System.out.println("Got NotLeader exception. Switching to " + hostName + ":" + port);
+				if (connect())
+					return NotLeaderStatus.NEW_LEADER;
+				else
+					return NotLeaderStatus.CONN_FAIL;
+			} catch (IOException e) {
+				return NotLeaderStatus.CONN_FAIL;
+			}
+		}
+		return NotLeaderStatus.OTHER_EXCEPTION;
+	}
+
 	public Entity tryRun(String script) throws IOException{
 		return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
 	}
@@ -385,6 +417,24 @@ public class DBConnection {
 					socket = null;
 					throw ex;
 				}
+
+				NotLeaderStatus status = handleNotLeaderException(ex, null);
+				if (status == NotLeaderStatus.NEW_LEADER)
+					return run(script, listener, priority, parallelism);
+				else if (status == NotLeaderStatus.WAIT) {
+					if (!HAReconnect) {
+						HAReconnect = true;
+						while (true) {
+							try { 
+								Entity re = run(script, listener, priority, parallelism);
+								HAReconnect = false;
+								return re;
+							}
+							catch (Exception e) {}
+						}
+					}
+					throw ex;
+				}
 				
 				try {
 					connect();
@@ -418,13 +468,8 @@ public class DBConnection {
 				socket = null;
 				throw new IOException("Received invalid header: " + header);
 			}
-			if(reconnect) {
+			if(reconnect)
 				sessionID = headers[0];
-				if (userId.length() > 0 && password.length() > 0)
-					login();
-				if (initialScript != null && initialScript.length() > 0)
-					run(initialScript);
-			}
 			int numObject = Integer.parseInt(headers[1]);
 
 			String msg = in.readLine();
@@ -438,7 +483,6 @@ public class DBConnection {
 				}
 			}
 
-			
 			if(numObject == 0)
 				return new Void();
 			try{
@@ -461,12 +505,28 @@ public class DBConnection {
 			}
 		}
 		catch (Exception ex) {
+			NotLeaderStatus status = handleNotLeaderException(ex, null);
+			if (status == NotLeaderStatus.NEW_LEADER)
+				return run(script, listener, priority, parallelism);
+			else if (status == NotLeaderStatus.WAIT) {
+				if (!HAReconnect) {
+					HAReconnect = true;
+					while (true) {
+						try { 
+							Entity re = run(script, listener, priority, parallelism);
+							HAReconnect = false;
+							return re;
+						}
+						catch (Exception e) {}
+					}
+				}
+				throw ex;
+			}
+
 			if (socket != null || !highAvailability)
 				throw ex;
-			if (switchToRandomAvailableSite()) {
-				mutex.unlock();
+			if (switchToRandomAvailableSite())
 				return run(script, listener, priority, parallelism);
-			}
 			else
 				throw ex;
 		}
@@ -497,7 +557,7 @@ public class DBConnection {
 	public Entity run(String function, List<Entity> arguments, int priority) throws IOException{
 		return run(function, arguments, priority, DEFAULT_PARALLELISM);
 	}
-	
+
 	public Entity run(String function, List<Entity> arguments, int priority, int parallelism) throws IOException{
 		mutex.lock();
 		try{
@@ -537,7 +597,25 @@ public class DBConnection {
 					socket = null;
 					throw ex;
 				}
-				
+
+				NotLeaderStatus status = handleNotLeaderException(ex, null);
+				if (status == NotLeaderStatus.NEW_LEADER)
+					return run(function, arguments, priority, parallelism);
+				else if (status == NotLeaderStatus.WAIT) {
+					if (!HAReconnect) {
+						HAReconnect = true;
+						while (true) {
+							try { 
+								Entity re = run(function, arguments, priority, parallelism);
+								HAReconnect = false;
+								return re;
+							}
+							catch (Exception e) {}
+						}
+					}
+					throw ex;
+				}
+
 				try {
 					connect();
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
@@ -592,6 +670,7 @@ public class DBConnection {
 				
 				Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
 				Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
+				
 				return factory.createEntity(df, dt, in);
 			}
 			catch(IOException ex){
@@ -600,12 +679,28 @@ public class DBConnection {
 			}
 		}
 		catch (Exception ex) {
+			NotLeaderStatus status = handleNotLeaderException(ex, null);
+			if (status == NotLeaderStatus.NEW_LEADER)
+				return run(function, arguments, priority, parallelism);
+			else if (status == NotLeaderStatus.WAIT) {
+				if (!HAReconnect) {
+					HAReconnect = true;
+					while (true) {
+						try { 
+							Entity re = run(function, arguments, priority, parallelism);
+							HAReconnect = false;
+							return re;
+						}
+						catch (Exception e) {}
+					}
+				}
+				throw ex;
+			}
+
 			if (socket != null || !highAvailability)
 				throw ex;
-			if (switchToRandomAvailableSite()) {
-				mutex.unlock();
+			if (switchToRandomAvailableSite())
 				return run(function, arguments, priority, parallelism);
-			}
 			else
 				throw ex;
 		}
@@ -716,7 +811,7 @@ public class DBConnection {
 			mutex.unlock();
 		}
 	}
-	
+
 	public void close(){
 		mutex.lock();
 		try{
