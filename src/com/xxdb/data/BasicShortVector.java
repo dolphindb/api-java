@@ -68,7 +68,12 @@ public class BasicShortVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		values[index] = value.getNumber().shortValue();
+		if(value.isNull()){
+			values[index] = Short.MIN_VALUE;
+		}else{
+			values[index] = value.getNumber().shortValue();
+		}
+
 	}
 	
 	public void setShort(int index, short value){

@@ -68,7 +68,12 @@ public class BasicFloatVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		values[index] = value.getNumber().floatValue();
+		if(value.isNull()){
+			values[index] = -Float.MAX_VALUE;
+		}else{
+			values[index] = value.getNumber().floatValue();
+		}
+
 	}
 	
 	public void setFloat(int index, float value){

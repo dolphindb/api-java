@@ -68,7 +68,12 @@ public class BasicDoubleVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		values[index] = value.getNumber().doubleValue();
+		if(value.isNull()){
+			values[index] = -Double.MAX_VALUE;
+		}else{
+			values[index] = value.getNumber().doubleValue();
+		}
+
 	}
 	
 	public void setDouble(int index, double value){

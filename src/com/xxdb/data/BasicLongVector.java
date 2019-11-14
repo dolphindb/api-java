@@ -68,7 +68,13 @@ public class BasicLongVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		values[index] = value.getNumber().longValue();
+		if(value.isNull()){
+			values[index] = Long.MIN_VALUE;
+		}else{
+			values[index] = value.getNumber().longValue();
+		}
+
+
 	}
 	
 	public void setLong(int index, long value){
