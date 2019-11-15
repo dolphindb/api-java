@@ -2,6 +2,7 @@ package com.xxdb;
 
 import java.io.IOException;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -663,10 +664,137 @@ public class DBConnectionTest {
 		BasicInt re = (BasicInt)conn.run("exec count(*) from loadTable('dfs://db1','t1')");
 		System.out.println(re.getInt());
 	}
+
+	public void test_set_nullvalue() throws IOException {
+		try{
+			List<String> colNames =  Arrays.asList("cint","cdouble","clong","cfloat","cshort");
+			List<Vector> colData = Arrays.asList(new BasicIntVector(1),new BasicDoubleVector(1),new BasicLongVector(1),new BasicFloatVector(1),new BasicShortVector(1));
+			BasicTable bt = new BasicTable(colNames,colData);
+			bt.getColumn("cint").set(0,new BasicInt(Integer.MIN_VALUE));
+			bt.getColumn("cdouble").set(0,new BasicDouble(-Double.MIN_VALUE));
+			bt.getColumn("clong").set(0,new BasicLong(Long.MIN_VALUE));
+			bt.getColumn("cfloat").set(0,new BasicFloat(-Float.MAX_VALUE));
+			bt.getColumn("cshort").set(0,new BasicShort(Short.MIN_VALUE));
+			bt.getColumn("cshort").set(0,new BasicShort(Short.MIN_VALUE));
+			bt.getColumn("cshort").set(0,new BasicShort(Short.MIN_VALUE));
+			System.out.println(bt.toString());
+		}catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+
+	public BasicTable buildTable(List<String> colNames , List<String> colTypes, int msgSize) throws Exception{
+		List<Vector> colData = new ArrayList<Vector>();
+		for (String colType:colTypes) {
+			switch (colType){
+				case "SYMBOL":
+					colData.add(new BasicStringVector(msgSize));
+					break;
+				case "DATE":
+					colData.add(new BasicDateVector(msgSize));
+					break;
+				case "FLOAT":
+					colData.add(new BasicFloatVector(msgSize));
+					break;
+				case "INT":
+					colData.add(new BasicIntVector(msgSize));
+					break;
+				case "LONG":
+					colData.add(new BasicLongVector(msgSize));
+					break;
+				case "STRING":
+					colData.add(new BasicStringVector(msgSize));
+					break;
+				case "TIME":
+					colData.add(new BasicTimeVector(msgSize));
+					break;
+				case "TIMESTAMP":
+					colData.add(new BasicTimestampVector(msgSize));
+					break;
+			}
+		}
+		return new BasicTable(colNames,colData);
+	}
+
+
+	private void bulk_load() throws Exception{
+		//示例，实际数据从csv文件中构建
+		List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
+		List<String> colTypes = Arrays.asList("BOOL","INT","DOUBLE","DATE","SYMBOL");
+		//msgSize
+		int msgSize = 100;
+		BasicTable table1 = buildTable(colNames,colTypes, msgSize);
+		for(int i=0;i<msgSize;i++){ //行数
+			for(int j=0;j<colNames.size();j++){ //列数，从key中取
+				String key = "colName1";
+				String val = "1234";//假设value是string
+				setTableValue(table1,i,key, val);
+			}
+		}
+		List<Entity> args = new ArrayList<Entity>(1);
+		args.add(table1);
+		conn.run("tableInsert{market_data}", args);
+	}
+
+	private void setTableValue(BasicTable bt, int rowIndex, String key, String value) throws Exception {
+		Scalar v = null;
+		switch (bt.getColumn(key).getDataType()){
+			case DT_STRING:
+				v = new BasicString(value);
+				break;
+			case DT_DOUBLE:
+				v = new BasicDouble(Double.parseDouble(value));
+				break;
+			case DT_FLOAT:
+				v = new BasicFloat(Float.parseFloat(value));
+				break;
+			case DT_LONG:
+				v = new BasicLong(Long.parseLong(value));
+				break;
+			case DT_INT:
+				v = new BasicInt(Integer.parseInt(value));
+				break;
+			case DT_DATE:
+				if(value.equals("")){
+					v = new BasicDate(LocalDate.now());
+					v.setNull();
+				}else {
+					v = new BasicDate(LocalDate.parse(value));
+				}
+				// vlaue 是毫秒值用如下方式
+				//v = new BasicDate(Utils.parseDate(Integer.parseInt(value)));
+				break;
+			case DT_TIMESTAMP:
+				if(value.equals("")) {
+					v = new BasicTimestamp(LocalDateTime.now());
+					v.setNull();
+				}else {
+					v = new BasicTimestamp(LocalDateTime.parse(value));
+				}
+				// vlaue 是毫秒值用如下方式
+				//v = new BasicTimestamp(Utils.parseTimestamp(Long.parseLong(value)));
+				break;
+			case DT_TIME:
+				if(value.equals("")) {
+					v = new BasicTime(LocalTime.now());
+					v.setNull();
+				}else {
+					v = new BasicTime(LocalTime.parse(value));
+				}
+				// vlaue 是毫秒值用如下方式
+				//v = new BasicTime(Utils.parseTime(Integer.parseInt(value)));
+				break;
+		}
+		bt.getColumn(key).set(rowIndex,v);
+	}
+
+
+
+
 	public static void main(String[] args){
 
 		try{
-			String host = "192.168.1.201";
+			String host = "192.168.1.142";
 			int port = 8848;
 			if(args.length>=2){
 				host = args[0];
@@ -674,20 +802,20 @@ public class DBConnectionTest {
 			}
 
 			DBConnectionTest test = new DBConnectionTest(host,port);
-			test.testUUID();
-			test.testVoid();
-			test.testFunctionDef();
-			test.testIntegerVector();
-			test.testStringVector();
-			test.testSymbolVector();
-			test.testDoubleVector();
-			test.testDateVector();
-			test.testDateTimeVector();
-			test.testIntMatrix();
-			test.testIntMatrixWithLabel();
-			test.testDictionary();
-			test.testTable();
-			test.testFunction();
+//			test.testUUID();
+//			test.testVoid();
+//			test.testFunctionDef();
+//			test.testIntegerVector();
+//			test.testStringVector();
+//			test.testSymbolVector();
+//			test.testDoubleVector();
+//			test.testDateVector();
+//			test.testDateTimeVector();
+//			test.testIntMatrix();
+//			test.testIntMatrixWithLabel();
+//			test.testDictionary();
+//			test.testTable();
+//			test.testFunction();
 			//test.testAnyVector();
 			test.Test_ReLogin();
 			/*test.testSet();
