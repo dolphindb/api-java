@@ -353,7 +353,7 @@ public class DBConnection {
 	public Entity tryRun(String script) throws IOException{
 		return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
 	}
-	
+
 	public Entity tryRun(String script, int priority, int parallelism) throws IOException{
 		if(!mutex.tryLock())
 			return null;

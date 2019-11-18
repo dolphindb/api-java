@@ -52,7 +52,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		}
 	}
 	
-	abstract protected void doReconnect(Site[] sites);
+	abstract protected void doReconnect(Site site);
 	
 	public void setMsgId(String topic, long msgId) {
 		synchronized (trueTopicToSites) {
@@ -78,11 +78,11 @@ abstract class AbstractClient implements MessageDispatcher{
     		if (!sites[0].reconnect)
     			return;
     	}
-		activeCloseConnection(sites);
-		doReconnect(sites);
+		Site site = activeCloseConnection(sites);
+		doReconnect(site);
 	}
 	
-	private void activeCloseConnection(Site[] sites) {
+	private Site activeCloseConnection(Site[] sites) {
 		int siteId = 0;
 		int siteNum = sites.length;
 		while (true) {
@@ -98,12 +98,12 @@ abstract class AbstractClient implements MessageDispatcher{
 					params.add(new BasicInt(listeningPort));
 					conn.run("activeClosePublishConnection", params);
 					System.out.println("Successfully closed publish connection");
+					return site;
 				} catch (IOException ioex) {
 					throw ioex;
 				} finally {
 					conn.close();
 				}
-				return;
 			} catch (Exception ex) {
 				System.out.println("Unable to actively close the publish connection from site " + site.host + ":" + site.port);
 			}

@@ -93,13 +93,9 @@ public class ThreadPooledClient extends AbstractClient {
         }
     }
     
-    protected void doReconnect(Site[] sites) {
+    protected void doReconnect(Site site) {
 		threadPool.shutdownNow();
-		int siteId = 0;
-		int siteNum = sites.length;
-    	while (true) {
-			Site site = sites[siteId];
-			siteId = (siteId + 1) % siteNum;
+		while (true) {
 			try {
 				Thread.sleep(5000);
 				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter);
