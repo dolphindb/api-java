@@ -61,7 +61,13 @@ public class BasicBooleanVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		values[index] = value.getNumber().byteValue();
+		if(value.isNull()){
+			values[index] = Byte.MIN_VALUE;
+		}else{
+			values[index] = value.getNumber().byteValue();
+		}
+
+
 	}
 	
 	public void setBoolean(int index, boolean value){

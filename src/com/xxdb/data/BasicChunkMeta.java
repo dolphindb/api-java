@@ -10,9 +10,8 @@ import com.xxdb.io.ExtendedDataOutput;
 
 public class BasicChunkMeta extends AbstractEntity implements Entity{
 	private String path;
-	private byte[] id;
+	private BasicUuid id;
 	private int version;
-	//TODO: we may change this field to long type
 	private int size;
 	private byte flag;
 	private List<String> sites;
@@ -20,8 +19,7 @@ public class BasicChunkMeta extends AbstractEntity implements Entity{
 	public BasicChunkMeta(ExtendedDataInput in) throws IOException{
 		in.readShort(); //skip the length of the data
 		path = in.readString();
-		id  = new byte[16];
-		in.readFully(id);
+		id = new BasicUuid(in);
 		version = in.readInt();
 		size = in.readInt();
 		flag = in.readByte();
@@ -35,8 +33,8 @@ public class BasicChunkMeta extends AbstractEntity implements Entity{
 		return path;
 	}
 	
-	public String getId(){
-		return getUUIDString(id);
+	public BasicUuid getId(){
+		return id;
 	}
 	
 	public int getVersion(){
@@ -93,7 +91,7 @@ public class BasicChunkMeta extends AbstractEntity implements Entity{
 		StringBuilder str = new StringBuilder(isTablet() ? "Tablet[" : "FileBlock[");
 		str.append(path);
 		str.append(", ");
-		str.append(getUUIDString(id));
+		str.append(id.getString());
 		str.append(", {");
 		for(int i=0; i<sites.size(); ++i){
 			if(i>0)
@@ -118,40 +116,12 @@ public class BasicChunkMeta extends AbstractEntity implements Entity{
 			length += AbstractExtendedDataOutputStream.getUTFlength(site, 0, 0);
 		output.writeShort(length);
 		output.writeString(path);
-		output.write(id);
+		output.writeLong2(id.getLong2());
 		output.writeInt(version);
 		output.writeInt(size);
 		output.writeByte(flag);
 		output.writeByte(sites.size());
 		for(String site : sites)
 			output.writeUTF(site);
-	}
-	
-	private String getUUIDString(byte[] uuid){
-		char[] buf = new char[37];
-	
-		buf[8] = '-';
-		buf[13] = '-';
-		buf[18] = '-';
-		buf[23] = '-';
-		buf[36] = 0;
-		for(int i=0; i<4; ++i)
-			charToHexPair(uuid[i], buf, 2*i);
-		charToHexPair(uuid[4], buf, 9);
-		charToHexPair(uuid[5], buf, 11);
-		charToHexPair(uuid[6], buf, 14);
-		charToHexPair(uuid[7], buf, 16);
-		charToHexPair(uuid[8], buf, 19);
-		charToHexPair(uuid[9], buf, 21);
-		for(int i=10; i<16; ++i)
-			charToHexPair(uuid[i], buf, 4 + 2*i);
-		return new String(buf);
-	}
-	
-	private void charToHexPair(byte v, char[] buf, int offset){
-		int low  = v & 15;
-		int high = (v & 255) >> 4;
-		buf[0 + offset] = (char)(high<10 ? high + 48 : high + 87);
-		buf[1 + offset] = (char)(low<10 ? low + 48 : low + 87);
 	}
 }

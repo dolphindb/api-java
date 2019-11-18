@@ -1,6 +1,7 @@
 package com.xxdb;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.PublicKey;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.xxdb.data.BasicBoolean;
@@ -41,6 +43,9 @@ import com.xxdb.io.ProgressListener;
  */
 
 public class DBConnection {
+	private enum NotLeaderStatus {
+		NEW_LEADER, WAIT, CONN_FAIL, OTHER_EXCEPTION
+	}
 	private static final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length -1;
 	private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.values().length -1;
 	private static final int DEFAULT_PRIORITY = 4;
@@ -55,6 +60,8 @@ public class DBConnection {
 	private EntityFactory factory;
 	private String hostName;
 	private int port;
+	private String mainHostName;
+	private int mainPort;
 	private String userId;
 	private String password;
 	private String initialScript = null;
@@ -62,6 +69,8 @@ public class DBConnection {
 	private String controllerHost = null;
 	private int controllerPort;
 	private boolean highAvailability;
+	private String[] highAvailabilitySites = null;
+	private boolean HAReconnect = false;
 
 	public DBConnection(){
 		factory = new BasicEntityFactory();
@@ -79,48 +88,79 @@ public class DBConnection {
 	}
 	
 	public boolean connect(String hostName, int port) throws IOException{
-		return connect(hostName, port, "", "", null, false);
+		return connect(hostName, port, "", "", null, false, null);
 	}
 
 	public boolean connect(String hostName, int port, String initialScript) throws IOException{
-		return connect(hostName, port, "", "", initialScript, false);
+		return connect(hostName, port, "", "", initialScript, false, null);
 	}
 	
 	public boolean connect(String hostName, int port, String initialScript, boolean highAvailability) throws IOException{
-		return connect(hostName, port, "", "", initialScript, highAvailability);
+		return connect(hostName, port, "", "", initialScript, highAvailability, null);
 	}
 
 	public boolean connect(String hostName, int port, boolean highAvailability) throws IOException{
-		return connect(hostName, port, "", "", null, highAvailability);
+		return connect(hostName, port, "", "", null, highAvailability, null);
 	}
 	
+	public boolean connect(String hostName, int port, String[] highAvailabilitySites) throws IOException{
+		return connect(hostName, port, "", "", null, true, highAvailabilitySites);
+	}
+	
+	public boolean connect(String hostName, int port, String initialScript, String[] highAvailabilitySites) throws IOException{
+		return connect(hostName, port, "", "", initialScript, true, highAvailabilitySites);
+	}
+
 	public boolean connect(String hostName, int port, String userId, String password) throws IOException{
-		return connect(hostName, port, userId, password, null, false);
+		return connect(hostName, port, userId, password, null, false, null);
 	}
 
 	public boolean connect(String hostName, int port, String userId, String password, boolean highAvailability) throws IOException{
-		return connect(hostName, port, userId, password, null, highAvailability);
+		return connect(hostName, port, userId, password, null, highAvailability, null);
+	}
+	
+	public boolean connect(String hostName, int port, String userId, String password, String[] highAvailabilitySites) throws IOException{
+		return connect(hostName, port, userId, password, null, true, highAvailabilitySites);
 	}
 	
 	public boolean connect(String hostName, int port, String userId, String password, String initialScript) throws IOException{
-		return connect(hostName, port, userId, password, initialScript, false);
+		return connect(hostName, port, userId, password, initialScript, false, null);
 	}
 	
 	public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean highAvailability) throws IOException{
+		return connect(hostName, port, userId, password, initialScript, highAvailability, null);
+	}
+
+	public boolean connect(String hostName, int port, String userId, String password, String initialScript, String[] highAvailabilitySites) throws IOException{
+		return connect(hostName, port, userId, password, initialScript, true, highAvailabilitySites);
+	}
+	
+	public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean highAvailability, String[] highAvailabilitySites) throws IOException{
 		mutex.lock();
 		try{
 			if(!sessionID.isEmpty()){
 				mutex.unlock();
 				return true;
 			}
-			
+
 			this.hostName = hostName;
+			this.mainHostName = hostName;
 			this.port = port;
+			this.mainPort = port;
 			this.userId = userId;
 			this.password = password;
 			this.encrypted = true;
 			this.initialScript = initialScript;
 			this.highAvailability = highAvailability;
+			this.highAvailabilitySites = highAvailabilitySites;
+			if (highAvailabilitySites != null) {
+				for (String site : highAvailabilitySites) {
+					String HASite[] = site.split(":");
+					if (HASite.length != 2)
+						throw new IllegalArgumentException("The site '" + site + "' is invalid.");
+				}
+			}
+			assert(highAvailabilitySites == null || highAvailability);
 			
 			return connect();
 		}
@@ -128,9 +168,18 @@ public class DBConnection {
 			mutex.unlock();
 		}
 	}
-	
+
 	private boolean connect() throws IOException {
-		socket = new Socket(hostName, port);
+		try {
+			socket = new Socket(hostName, port);
+		}
+		catch (ConnectException ex) {
+			if (HAReconnect)
+				return false;
+			if (switchToRandomAvailableSite())
+				return true;
+			throw ex;
+		}
 		socket.setKeepAlive(true);
 		socket.setTcpNoDelay(true);
 		out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
@@ -147,6 +196,8 @@ public class DBConnection {
 		int endPos = line.indexOf(' ');
 		if(endPos <= 0){
 			close();
+			if (switchToRandomAvailableSite())
+				return true;
 			return false;
 		}
 		sessionID = line.substring(0, endPos);
@@ -155,6 +206,8 @@ public class DBConnection {
 		endPos = line.indexOf(' ', startPos);
 		if(endPos != line.length()-2){
 			close();
+			if (switchToRandomAvailableSite())
+				return true;
 			return false;
 		}
 		
@@ -173,7 +226,7 @@ public class DBConnection {
 		if (initialScript != null && initialScript.length() > 0)
 			run(initialScript);
 		
-		if (highAvailability) {
+		if (highAvailability && highAvailabilitySites == null) {
 			try {
 				controllerHost = ((BasicString) run("rpc(getControllerAlias(), getNodeHost)")).getString();
 				controllerPort = ((BasicInt) run("rpc(getControllerAlias(), getNodePort)")).getInt();
@@ -224,27 +277,79 @@ public class DBConnection {
 	}
 	
 	private boolean switchToRandomAvailableSite() throws IOException {
-		if (controllerHost == null)
+		if (!highAvailability)
 			return false;
-		DBConnection tmp = new DBConnection();
-		tmp.connect(controllerHost, controllerPort);
-		BasicStringVector availableSites = (BasicStringVector) tmp.run("getClusterLiveDataNodes(false)");
-		tmp.close();
-		int size = availableSites.rows();
-		if (size <= 0)
-			return false;
-		String site[] = availableSites.getString(0).split(":");
-		hostName = site[0];
-		port = new Integer(site[1]);
-		try {
-			connect();
+		
+		int tryCount = 0;
+		while (true) {
+			HAReconnect = true;
+			if (highAvailabilitySites != null) {
+				if (tryCount < 3) {
+					hostName = mainHostName;
+					port = mainPort;
+				}
+				else {
+					int rnd = new Random().nextInt(highAvailabilitySites.length);
+					String site[] = highAvailabilitySites[rnd].split(":");
+					hostName = site[0];
+					port = new Integer(site[1]);
+				}
+				tryCount++;
+			}
+			else {
+				if (controllerHost == null)
+					return false;
+				DBConnection tmp = new DBConnection();
+				tmp.connect(controllerHost, controllerPort);
+				BasicStringVector availableSites = (BasicStringVector) tmp.run("getClusterLiveDataNodes(false)");
+				tmp.close();
+				int size = availableSites.rows();
+				if (size <= 0)
+					return false;
+				String site[] = availableSites.getString(0).split(":");
+				hostName = site[0];
+				port = new Integer(site[1]);
+			}
+			try {
+				System.out.println("Trying to reconnect to " + hostName + ":" + port);
+				if (connect()) {
+					HAReconnect = false;
+					System.out.println("Successfully reconnected to " + hostName + ":" + port);
+					return true;
+				}
+			}
+			catch (Exception e) {}
 		}
-		catch (Exception e) {
-			return false;
-		}
-		return true;
 	}
-	
+
+	private NotLeaderStatus handleNotLeaderException(Exception ex, String function) {
+		String errMsg = ex.getMessage();
+		if (ServerExceptionUtils.isNotLeader(errMsg)) {
+			String newLeaderString = ServerExceptionUtils.newLeader(errMsg);
+			String[] newLeader = newLeaderString.split(":");
+			String newHostName = newLeader[0];
+			int newPort = new Integer(newLeader[1]);
+			if (hostName.equals(newHostName) && port == newPort) {
+				System.out.println("Got NotLeader exception. Waiting for new leader.");
+				try { Thread.sleep(1000); }
+				catch (Exception e) {}
+				return NotLeaderStatus.WAIT;
+			}
+			hostName = newHostName;
+			port = newPort;
+			try {
+				System.out.println("Got NotLeader exception. Switching to " + hostName + ":" + port);
+				if (connect())
+					return NotLeaderStatus.NEW_LEADER;
+				else
+					return NotLeaderStatus.CONN_FAIL;
+			} catch (IOException e) {
+				return NotLeaderStatus.CONN_FAIL;
+			}
+		}
+		return NotLeaderStatus.OTHER_EXCEPTION;
+	}
+
 	public Entity tryRun(String script) throws IOException{
 		return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
 	}
@@ -312,6 +417,24 @@ public class DBConnection {
 					socket = null;
 					throw ex;
 				}
+
+				NotLeaderStatus status = handleNotLeaderException(ex, null);
+				if (status == NotLeaderStatus.NEW_LEADER)
+					return run(script, listener, priority, parallelism);
+				else if (status == NotLeaderStatus.WAIT) {
+					if (!HAReconnect) {
+						HAReconnect = true;
+						while (true) {
+							try { 
+								Entity re = run(script, listener, priority, parallelism);
+								HAReconnect = false;
+								return re;
+							}
+							catch (Exception e) {}
+						}
+					}
+					throw ex;
+				}
 				
 				try {
 					connect();
@@ -345,13 +468,8 @@ public class DBConnection {
 				socket = null;
 				throw new IOException("Received invalid header: " + header);
 			}
-			if(reconnect) {
+			if(reconnect)
 				sessionID = headers[0];
-				if (userId.length() > 0 && password.length() > 0)
-					login();
-				if (initialScript != null && initialScript.length() > 0)
-					run(initialScript);
-			}
 			int numObject = Integer.parseInt(headers[1]);
 
 			String msg = in.readLine();
@@ -365,7 +483,6 @@ public class DBConnection {
 				}
 			}
 
-			
 			if(numObject == 0)
 				return new Void();
 			try{
@@ -388,12 +505,28 @@ public class DBConnection {
 			}
 		}
 		catch (Exception ex) {
+			NotLeaderStatus status = handleNotLeaderException(ex, null);
+			if (status == NotLeaderStatus.NEW_LEADER)
+				return run(script, listener, priority, parallelism);
+			else if (status == NotLeaderStatus.WAIT) {
+				if (!HAReconnect) {
+					HAReconnect = true;
+					while (true) {
+						try { 
+							Entity re = run(script, listener, priority, parallelism);
+							HAReconnect = false;
+							return re;
+						}
+						catch (Exception e) {}
+					}
+				}
+				throw ex;
+			}
+
 			if (socket != null || !highAvailability)
 				throw ex;
-			if (switchToRandomAvailableSite()) {
-				mutex.unlock();
+			if (switchToRandomAvailableSite())
 				return run(script, listener, priority, parallelism);
-			}
 			else
 				throw ex;
 		}
@@ -424,7 +557,7 @@ public class DBConnection {
 	public Entity run(String function, List<Entity> arguments, int priority) throws IOException{
 		return run(function, arguments, priority, DEFAULT_PARALLELISM);
 	}
-	
+
 	public Entity run(String function, List<Entity> arguments, int priority, int parallelism) throws IOException{
 		mutex.lock();
 		try{
@@ -464,7 +597,25 @@ public class DBConnection {
 					socket = null;
 					throw ex;
 				}
-				
+
+				NotLeaderStatus status = handleNotLeaderException(ex, null);
+				if (status == NotLeaderStatus.NEW_LEADER)
+					return run(function, arguments, priority, parallelism);
+				else if (status == NotLeaderStatus.WAIT) {
+					if (!HAReconnect) {
+						HAReconnect = true;
+						while (true) {
+							try { 
+								Entity re = run(function, arguments, priority, parallelism);
+								HAReconnect = false;
+								return re;
+							}
+							catch (Exception e) {}
+						}
+					}
+					throw ex;
+				}
+
 				try {
 					connect();
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
@@ -519,6 +670,7 @@ public class DBConnection {
 				
 				Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
 				Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
+				
 				return factory.createEntity(df, dt, in);
 			}
 			catch(IOException ex){
@@ -527,12 +679,28 @@ public class DBConnection {
 			}
 		}
 		catch (Exception ex) {
+			NotLeaderStatus status = handleNotLeaderException(ex, null);
+			if (status == NotLeaderStatus.NEW_LEADER)
+				return run(function, arguments, priority, parallelism);
+			else if (status == NotLeaderStatus.WAIT) {
+				if (!HAReconnect) {
+					HAReconnect = true;
+					while (true) {
+						try { 
+							Entity re = run(function, arguments, priority, parallelism);
+							HAReconnect = false;
+							return re;
+						}
+						catch (Exception e) {}
+					}
+				}
+				throw ex;
+			}
+
 			if (socket != null || !highAvailability)
 				throw ex;
-			if (switchToRandomAvailableSite()) {
-				mutex.unlock();
+			if (switchToRandomAvailableSite())
 				return run(function, arguments, priority, parallelism);
-			}
 			else
 				throw ex;
 		}
@@ -629,11 +797,21 @@ public class DBConnection {
 			if(!msg.equals("OK"))
 				throw new IOException(msg);
 		}
+		catch (Exception ex) {
+			if (socket != null || !highAvailability)
+				throw ex;
+			if (switchToRandomAvailableSite()) {
+				mutex.unlock();
+				upload(variableObjectMap);
+			}
+			else
+				throw ex;
+		}
 		finally{
 			mutex.unlock();
 		}
 	}
-	
+
 	public void close(){
 		mutex.lock();
 		try{

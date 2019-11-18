@@ -17,6 +17,10 @@ public class BasicInt128 extends AbstractScalar {
 		value = in.readLong2();
 	}
 	
+	public Long2 getLong2(){
+		return value;
+	}
+	
 	@Override
 	public boolean isNull() {
 		return value.isNull();
