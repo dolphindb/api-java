@@ -128,14 +128,18 @@ abstract class AbstractClient implements MessageDispatcher{
 	}
 
 	private void addMessageToCache(IMessage msg) {
-		String topic = msg.getTopic();
-		topic = HATopicToTrueTopic.get(topic);
-		List<IMessage> cache = messageCache.get(topic);
-		if (cache == null) {
-			cache = new ArrayList<>();
-			messageCache.put(topic, cache);
+		String topicString = msg.getTopic();
+		String[] topics = topicString.split(",");
+		for (String topic:topics) {
+			topic = HATopicToTrueTopic.get(topic);
+			List<IMessage> cache = messageCache.get(topic);
+			if (cache == null) {
+				cache = new ArrayList<>();
+				messageCache.put(topic, cache);
+			}
+			cache.add(msg);
 		}
-		cache.add(msg);
+
 	}
 	
 	private void flushToQueue() {
@@ -151,13 +155,16 @@ abstract class AbstractClient implements MessageDispatcher{
 	}
 
 	public void dispatch(IMessage msg) {
-		String topic = msg.getTopic();
-		topic = HATopicToTrueTopic.get(topic);
-		BlockingQueue<List<IMessage>> queue = queueManager.getQueue(topic);
-		try {
-			queue.put(Arrays.asList(msg));
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		String topicString = msg.getTopic();
+		String[] topics = topicString.split(",");
+		for (String topic:topics) {
+			topic = HATopicToTrueTopic.get(topic);
+			BlockingQueue<List<IMessage>> queue = queueManager.getQueue(topic);
+			try {
+				queue.put(Arrays.asList(msg));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	

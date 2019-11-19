@@ -132,6 +132,7 @@ class MessageParser implements Runnable{
 			return;
 		}
 		else{
+			e.printStackTrace();
 			dispatcher.tryReconnect(topic);
 		}
 
