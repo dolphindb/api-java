@@ -3,16 +3,13 @@ package com.xxdb.streaming.client;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.*;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import com.xxdb.DBConnection;
-import com.xxdb.data.BasicInt;
-import com.xxdb.data.BasicLong;
-import com.xxdb.data.BasicString;
-import com.xxdb.data.BasicStringVector;
-import com.xxdb.data.BasicAnyVector;
-import com.xxdb.data.Entity;
+import com.xxdb.data.*;
 import com.xxdb.data.Vector;
+import com.xxdb.data.Void;
 import com.xxdb.streaming.client.IMessage;
 
 abstract class AbstractClient implements MessageDispatcher{
@@ -193,7 +190,7 @@ abstract class AbstractClient implements MessageDispatcher{
 
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
 			String tableName, String actionName, MessageHandler handler,
-			long offset, boolean reconnect, Vector filter)
+			long offset, boolean reconnect, Vector filter, boolean allowExistTopic)
 			throws IOException,RuntimeException {
 		Entity re;
 		String topic = "";
@@ -221,6 +218,11 @@ abstract class AbstractClient implements MessageDispatcher{
 			params.add(new BasicLong(offset));
 			if (filter != null)
 				params.add(filter);
+			else{
+				//params.add(new Void());
+			}
+			//params.add(new BasicBoolean(allowExistTopic));
+
 			re = dbConn.run("publishTable", params);
 			if (re instanceof BasicAnyVector) {
 				BasicStringVector HASiteStrings = (BasicStringVector)(((BasicAnyVector) re).getEntity(1));
@@ -269,7 +271,7 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
 			String tableName, String actionName, long offset, boolean reconnect)
 			throws IOException,RuntimeException {
-		return subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, null);
+		return subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, null,false);
 	}
 
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName, long offset) throws IOException,RuntimeException {

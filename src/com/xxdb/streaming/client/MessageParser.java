@@ -128,13 +128,13 @@ class MessageParser implements Runnable{
 			}
 		}
 	} catch (Exception e) {
-		if (dispatcher.isClosed(topic)) {
-			return;
-		}
-		else{
-			dispatcher.tryReconnect(topic);
-		}
-
+			if (dispatcher.isClosed(topic)) {
+				return;
+			}
+			else{
+				e.printStackTrace();
+				dispatcher.tryReconnect(topic);
+			}
 	} finally {
 		try {
 			socket.close();

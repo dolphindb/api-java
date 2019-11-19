@@ -54,7 +54,7 @@ public class ThreadedClient extends  AbstractClient {
 			siteId = (siteId + 1) % siteNum;
 			try {
 				Thread.sleep(5000);
-				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter);
+				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter,true);
 				System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
 				return;
 			} catch (Exception ex) {
@@ -64,18 +64,18 @@ public class ThreadedClient extends  AbstractClient {
 		}
 	}
 
-    public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect,Vector filter) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName,actionName,handler,offset,reconnect,filter);
+    public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect,Vector filter, boolean allowExistTopic) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName,actionName,handler,offset,reconnect,filter,allowExistTopic);
         handlerLopper = new HandlerLopper(queue, handler);
         handlerLopper.start();
     }
     
     public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect) throws IOException {
-        subscribe(host, port, tableName, actionName, handler, offset, reconnect, null);
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, null,false );
     }
     
     public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,Vector filter) throws IOException {
-		subscribe(host, port, tableName, actionName, handler, offset, false, filter);
+		subscribe(host, port, tableName, actionName, handler, offset, false, filter,false);
 	}
     
     public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset) throws IOException {

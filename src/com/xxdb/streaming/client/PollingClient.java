@@ -25,7 +25,7 @@ public class PollingClient extends AbstractClient{
 			siteId = (siteId + 1) % siteNum;
     		try {
 				Thread.sleep(5000);
-    			BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter);
+    			BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter,true);
 				System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
     			topicPoller.setQueue(queue);
     			return;
@@ -37,7 +37,7 @@ public class PollingClient extends AbstractClient{
     }
     
     public TopicPoller subscribe(String host,int port,String tableName,String actionName,long offset,boolean reconnect,Vector filter) throws IOException{
-    	BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName,actionName,null,offset,reconnect,filter);
+    	BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName,actionName,null,offset,reconnect,filter,false);
     	topicPoller = new TopicPoller(queue);
     	return topicPoller;
 	}
