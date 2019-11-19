@@ -319,6 +319,10 @@ public class DBConnection {
 				}
 			}
 			catch (Exception e) {}
+			try {
+				Thread.sleep(1000);
+			}
+			catch (Exception e) {}
 		}
 	}
 
