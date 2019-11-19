@@ -17,12 +17,8 @@ public class PollingClient extends AbstractClient{
     }
     
     @Override
-    protected void doReconnect(Site[] sites) {
-		int siteId = 0;
-		int siteNum = sites.length;
+    protected void doReconnect(Site site) {
     	while (true) {
-			Site site = sites[siteId];
-			siteId = (siteId + 1) % siteNum;
     		try {
 				Thread.sleep(5000);
     			BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter);
