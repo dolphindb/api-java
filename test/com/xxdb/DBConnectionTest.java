@@ -788,7 +788,10 @@ public class DBConnectionTest {
 		bt.getColumn(key).set(rowIndex,v);
 	}
 
-
+	public static void test_timeout() throws IOException{
+		DBConnection db = new DBConnection();
+		db.connect("192.168.1.142",20001,1000);
+	}
 
 
 	public static void main(String[] args){
@@ -817,7 +820,7 @@ public class DBConnectionTest {
 //			test.testTable();
 //			test.testFunction();
 			//test.testAnyVector();
-			test.Test_ReLogin();
+//			test.Test_ReLogin();
 			/*test.testSet();
 			test.testChart();
 			test.testMatrixUpload();
@@ -845,6 +848,7 @@ public class DBConnectionTest {
 			//test.test_partialFunction();
 			//test.testFunction2();
 			//test.testFunction3();
+			test.test_timeout();
 			System.out.println("test cases :" + test.failedCount + "/" + test.caseCount);
 		}
 

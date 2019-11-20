@@ -71,7 +71,7 @@ public class DBConnection {
 	private boolean highAvailability;
 	private String[] highAvailabilitySites = null;
 	private boolean HAReconnect = false;
-
+	private int connTimeout = 0;
 	public DBConnection(){
 		factory = new BasicEntityFactory();
 		mutex = new ReentrantLock();
@@ -91,6 +91,10 @@ public class DBConnection {
 		return connect(hostName, port, "", "", null, false, null);
 	}
 
+	public boolean connect(String hostName, int port, int timeout) throws IOException {
+		this.connTimeout = timeout;
+		return connect(hostName, port, "", "", null, false, null);
+	}
 	public boolean connect(String hostName, int port, String initialScript) throws IOException{
 		return connect(hostName, port, "", "", initialScript, false, null);
 	}
@@ -180,7 +184,11 @@ public class DBConnection {
 				return true;
 			throw ex;
 		}
+		if(this.connTimeout>0){
+			socket.setSoTimeout(this.connTimeout);
+		}
 		socket.setKeepAlive(true);
+
 		socket.setTcpNoDelay(true);
 		out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		@SuppressWarnings("resource")
