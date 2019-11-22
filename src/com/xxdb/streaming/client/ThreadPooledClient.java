@@ -97,12 +97,12 @@ public class ThreadPooledClient extends AbstractClient {
 		threadPool.shutdownNow();
 		while (true) {
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(1000);
 				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.allowExistTopic);
 				System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
 				return;
 			} catch (Exception ex) {
-				System.out.println("Unable to subscribe table. Will try again after 5 seconds.");
+				System.out.println("Unable to subscribe table. Will try again after 1 seconds.");
 				ex.printStackTrace();
 			}
 		}

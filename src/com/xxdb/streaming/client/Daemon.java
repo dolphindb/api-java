@@ -32,19 +32,19 @@ class Daemon  implements Runnable{
 				MessageParser listener = new MessageParser(socket, dispatcher);
 				Thread listeningThread = new Thread(listener);
 				listeningThread.start();
-				if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
-					new Thread(new ConnectionDetector(socket)).start();
+//				if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
+//					new Thread(new ConnectionDetector(socket)).start();
 			}catch (Exception ex){
 				try {
 					Thread.sleep(100);
 				}catch (Exception ex1){
-
+					ex1.printStackTrace();
 				}
 			}catch (Throwable t){
 				try {
 					Thread.sleep(100);
 				}catch (Exception ex1){
-
+					ex1.printStackTrace();
 				}
 			}
 		}
@@ -80,7 +80,6 @@ class Daemon  implements Runnable{
 						continue;
 
 					try {
-						System.out.println("send Urgent Data !!!");
 						socket.close();
 						return;
 					} catch (Exception e) {

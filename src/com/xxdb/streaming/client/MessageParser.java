@@ -43,12 +43,22 @@ class MessageParser implements Runnable {
 
         Socket socket = this.socket;
         try {
+
             if (bis == null) bis = new BufferedInputStream(socket.getInputStream());
-            long offset = -1;
             ExtendedDataInput in = null;
 
             while (true) {
                 try {
+
+                    try {
+                        if (bis.available() <= 0) {
+                            Thread.sleep(100);
+                            continue;
+                        }
+                    } catch(IOException ioe){
+                        Thread.sleep(100);
+                        continue;
+                    }
 
                     if (in == null) {
                         Boolean isLittle = bis.read() != 0;
@@ -62,11 +72,7 @@ class MessageParser implements Runnable {
 
                     in.readLong();
                     long msgid = in.readLong();
-                    if (offset == -1) {
-                        offset = msgid;
-                    } else {
-                        assert (offset == msgid);
-                    }
+
                     topic = in.readString();
 
                     short flag = in.readShort();
@@ -85,11 +91,9 @@ class MessageParser implements Runnable {
                     Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
                     Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
                     Entity body;
-                    try {
-                        body = factory.createEntity(df, dt, in);
-                    } catch (Exception exception) {
-                        throw exception;
-                    }
+
+                    body = factory.createEntity(df, dt, in);
+
                     if (body.isTable()) {
                         assert (body.rows() == 0);
                         nameToIndex = new HashMap<>();
@@ -110,6 +114,7 @@ class MessageParser implements Runnable {
                                 dispatcher.dispatch(rec);
                             } else {
                                 List<IMessage> messages = new ArrayList<>(rowSize);
+                                long startMsgId = msgid - rowSize + 1;
                                 for (int i = 0; i < rowSize; i++) {
                                     BasicAnyVector row = new BasicAnyVector(colSize);
 
@@ -118,15 +123,13 @@ class MessageParser implements Runnable {
                                         Entity entity = vector.get(i);
                                         row.setEntity(j, entity);
                                     }
-                                    BasicMessage rec = new BasicMessage(msgid, topic, row, nameToIndex);
+                                    BasicMessage rec = new BasicMessage(startMsgId + i, topic, row, nameToIndex);
                                     messages.add(rec);
-                                    msgid++;
                                 }
                                 dispatcher.batchDispatch(messages);
                             }
                         }
                         dispatcher.setMsgId(topic, msgid);
-                        offset += rowSize;
                     } else {
                         System.out.println("message body has an invalid format. Vector or table is expected");
                     }
