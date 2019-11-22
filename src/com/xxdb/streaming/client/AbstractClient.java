@@ -235,7 +235,7 @@ abstract class AbstractClient implements MessageDispatcher{
 			params.add(new BasicBoolean(allowExistTopic));
 
 			re = dbConn.run("publishTable", params);
-			System.out.println("publishTable out put : " + re.getString());
+
 			if (re instanceof BasicAnyVector) {
 				BasicStringVector HASiteStrings = (BasicStringVector)(((BasicAnyVector) re).getEntity(1));
 				int HASiteNum = HASiteStrings.rows();
