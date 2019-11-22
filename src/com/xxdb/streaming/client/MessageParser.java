@@ -3,6 +3,7 @@ package com.xxdb.streaming.client;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,26 +41,13 @@ class MessageParser implements Runnable {
     }
 
     public void run() {
-
+        System.out.println("new messageParser!!");
         Socket socket = this.socket;
         try {
-
             if (bis == null) bis = new BufferedInputStream(socket.getInputStream());
             ExtendedDataInput in = null;
 
             while (true) {
-                try {
-
-                    try {
-                        if (bis.available() <= 0) {
-                            Thread.sleep(100);
-                            continue;
-                        }
-                    } catch(IOException ioe){
-                        Thread.sleep(100);
-                        continue;
-                    }
-
                     if (in == null) {
                         Boolean isLittle = bis.read() != 0;
                         if (isLittle == true)
@@ -133,19 +121,25 @@ class MessageParser implements Runnable {
                     } else {
                         System.out.println("message body has an invalid format. Vector or table is expected");
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    if (dispatcher.isClosed(topic)) {
-                        return;
-                    } else {
-                        dispatcher.tryReconnect(topic);
-                    }
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        catch (Exception e) {
+            e.printStackTrace();
+            if (dispatcher.isClosed(topic)) {
+                return;
+            } else {
+                dispatcher.tryReconnect(topic);
+            }
+            } catch (Throwable t) {
+                 t.printStackTrace();
+         }finally {
+            try{
+                socket.close();
+            }catch (Exception se){
+                se.printStackTrace();
+            }
+
+        }
+
     }
 }

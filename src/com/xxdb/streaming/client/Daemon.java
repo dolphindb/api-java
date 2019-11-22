@@ -7,8 +7,8 @@ import java.net.Socket;
 class Daemon  implements Runnable{
 	private int listeningPort = 0;
 	private MessageDispatcher dispatcher;
-	private static final int KEEPALIVE_IDLE = 30000;
-	private static final int KEEPALIVE_INTERVAL = 5000;
+	private static final int KEEPALIVE_IDLE = 5000;
+	private static final int KEEPALIVE_INTERVAL = 1000;
 	private static final int KEEPALIVE_COUNT = 3;
 	
 	public Daemon(int port, MessageDispatcher dispatcher) {
@@ -28,12 +28,15 @@ class Daemon  implements Runnable{
 		{
 			try {
 				Socket socket = ssocket.accept();
+				System.out.println("socket accepted");
+//				socket.setSoTimeout(1000);
 				socket.setKeepAlive(true);
 				MessageParser listener = new MessageParser(socket, dispatcher);
 				Thread listeningThread = new Thread(listener);
+				System.out.println("new  MessageParser thread start!");
 				listeningThread.start();
-//				if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
-//					new Thread(new ConnectionDetector(socket)).start();
+				if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
+					new Thread(new ConnectionDetector(socket)).start();
 			}catch (Exception ex){
 				try {
 					Thread.sleep(100);
@@ -67,6 +70,7 @@ class Daemon  implements Runnable{
 						try {
 							socket.sendUrgentData(0xFF);
 						} catch (Exception ex0) {
+							System.out.println("ConnectionDetector failCount!!");
 							failCount++;
 						}
 						
@@ -80,6 +84,7 @@ class Daemon  implements Runnable{
 						continue;
 
 					try {
+						System.out.println("ConnectionDetector!!");
 						socket.close();
 						return;
 					} catch (Exception e) {
