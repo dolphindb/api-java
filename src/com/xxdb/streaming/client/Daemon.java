@@ -21,8 +21,12 @@ class Daemon  implements Runnable{
 		ServerSocket ssocket = null;
 		try {
 			ssocket = new ServerSocket(this.listeningPort);
-			while(true)
-			{
+		}catch (IOException e) {
+			e.printStackTrace();
+		}
+		while(true)
+		{
+			try {
 				Socket socket = ssocket.accept();
 				socket.setKeepAlive(true);
 				MessageParser listener = new MessageParser(socket, dispatcher);
@@ -30,17 +34,19 @@ class Daemon  implements Runnable{
 				listeningThread.start();
 				if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
 					new Thread(new ConnectionDetector(socket)).start();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		finally{
-			if(ssocket!=null)
+			}catch (Exception ex){
 				try {
-					ssocket.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+					Thread.sleep(100);
+				}catch (Exception ex1){
+
 				}
+			}catch (Throwable t){
+				try {
+					Thread.sleep(100);
+				}catch (Exception ex1){
+
+				}
+			}
 		}
 	}
 	
@@ -74,6 +80,7 @@ class Daemon  implements Runnable{
 						continue;
 
 					try {
+						System.out.println("send Urgent Data !!!");
 						socket.close();
 						return;
 					} catch (Exception e) {

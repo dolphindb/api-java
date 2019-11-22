@@ -3,16 +3,13 @@ package com.xxdb.streaming.client;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.*;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import com.xxdb.DBConnection;
-import com.xxdb.data.BasicInt;
-import com.xxdb.data.BasicLong;
-import com.xxdb.data.BasicString;
-import com.xxdb.data.BasicStringVector;
-import com.xxdb.data.BasicAnyVector;
-import com.xxdb.data.Entity;
+import com.xxdb.data.*;
 import com.xxdb.data.Vector;
+import com.xxdb.data.Void;
 import com.xxdb.streaming.client.IMessage;
 
 abstract class AbstractClient implements MessageDispatcher{
@@ -38,9 +35,9 @@ abstract class AbstractClient implements MessageDispatcher{
 		boolean reconnect;
 		Vector filter = null;
 		boolean closed = false;
-
+		boolean allowExistTopic = false;
 		Site(String host, int port, String tableName, String actionName,
-				MessageHandler handler, long msgId, boolean reconnect, Vector filter) {
+				MessageHandler handler, long msgId, boolean reconnect, Vector filter, boolean allowExistTopic) {
 			this.host = host;
 			this.port = port;
 			this.tableName = tableName;
@@ -49,6 +46,7 @@ abstract class AbstractClient implements MessageDispatcher{
 			this.msgId = msgId;
 			this.reconnect = reconnect;
 			this.filter = filter;
+			this.allowExistTopic = allowExistTopic;
 		}
 	}
 	
@@ -142,11 +140,13 @@ abstract class AbstractClient implements MessageDispatcher{
 
 	}
 	
-	private void flushToQueue() {
+	private synchronized void flushToQueue() {
 		Set<String> keySet = messageCache.keySet();
 		for(String topic : keySet) {
 			try {
-				queueManager.getQueue(topic).put(messageCache.get(topic));
+				BlockingQueue<List<IMessage>> q = queueManager.getQueue(topic);
+				if(q!=null)
+					q.put(messageCache.get(topic));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -154,14 +154,15 @@ abstract class AbstractClient implements MessageDispatcher{
 		messageCache.clear();
 	}
 
-	public void dispatch(IMessage msg) {
+	public synchronized void dispatch(IMessage msg) {
 		String topicString = msg.getTopic();
 		String[] topics = topicString.split(",");
 		for (String topic:topics) {
 			topic = HATopicToTrueTopic.get(topic);
 			BlockingQueue<List<IMessage>> queue = queueManager.getQueue(topic);
 			try {
-				queue.put(Arrays.asList(msg));
+				if(queue!=null)
+					queue.put(Arrays.asList(msg));
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -183,7 +184,7 @@ abstract class AbstractClient implements MessageDispatcher{
 			return false;
 	}
 	
-	public boolean isClosed(String topic) {
+	public synchronized boolean isClosed(String topic) {
 		topic = HATopicToTrueTopic.get(topic);
 		synchronized (trueTopicToSites) {
 			Site[] sites = trueTopicToSites.get(topic);
@@ -200,7 +201,7 @@ abstract class AbstractClient implements MessageDispatcher{
 
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
 			String tableName, String actionName, MessageHandler handler,
-			long offset, boolean reconnect, Vector filter)
+			long offset, boolean reconnect, Vector filter, boolean allowExistTopic)
 			throws IOException,RuntimeException {
 		Entity re;
 		String topic = "";
@@ -228,7 +229,13 @@ abstract class AbstractClient implements MessageDispatcher{
 			params.add(new BasicLong(offset));
 			if (filter != null)
 				params.add(filter);
+			else{
+				params.add(new Void());
+			}
+			params.add(new BasicBoolean(allowExistTopic));
+
 			re = dbConn.run("publishTable", params);
+			System.out.println("publishTable out put : " + re.getString());
 			if (re instanceof BasicAnyVector) {
 				BasicStringVector HASiteStrings = (BasicStringVector)(((BasicAnyVector) re).getEntity(1));
 				int HASiteNum = HASiteStrings.rows();
@@ -239,7 +246,7 @@ abstract class AbstractClient implements MessageDispatcher{
 					String HASiteHost = HASiteHostAndPort[0];
 					int HASitePort = new Integer(HASiteHostAndPort[1]);
 					String HASiteAlias = HASiteHostAndPort[2];
-					sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter);
+					sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, allowExistTopic);
 					synchronized (tableNameToTrueTopic) {
 						tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + ":" + tableName, topic);
 					}
@@ -253,7 +260,7 @@ abstract class AbstractClient implements MessageDispatcher{
 				}
 			}
 			else {
-				Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter)};
+				Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter,allowExistTopic)};
 				synchronized (tableNameToTrueTopic) {
 					tableNameToTrueTopic.put(host + ":" + port + ":" + tableName, topic);
 				}
@@ -276,7 +283,7 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
 			String tableName, String actionName, long offset, boolean reconnect)
 			throws IOException,RuntimeException {
-		return subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, null);
+		return subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, null,false);
 	}
 
 	protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName, long offset) throws IOException,RuntimeException {

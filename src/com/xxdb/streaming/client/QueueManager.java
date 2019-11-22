@@ -19,7 +19,7 @@ class QueueManager {
 	}
 
 	public synchronized BlockingQueue<List<IMessage>> getQueue(String topic) {
-		BlockingQueue<List<IMessage>> q = queueMap.get(topic);;
+		BlockingQueue<List<IMessage>> q = queueMap.get(topic);
 		return q;
 	}
 	

@@ -28,10 +28,10 @@ public class ThreadedClient extends  AbstractClient {
             this.handler = handler;
         }
         public void run() {
+            System.out.println("Handler thread  started");
             while(true) {
                 try {
                     List<IMessage> msgs = queue.take();
-                    System.out.println("get");
                     for (IMessage msg : msgs) {
                         handler.doEvent(msg);
                     }
@@ -49,8 +49,8 @@ public class ThreadedClient extends  AbstractClient {
 		handlerLopper.interrupt();
 		while (true) {
 			try {
-				Thread.sleep(5000);
-				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter);
+				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter,site.allowExistTopic);
+                Thread.sleep(100);
 				System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
 				return;
 			} catch (Exception ex) {
@@ -60,18 +60,18 @@ public class ThreadedClient extends  AbstractClient {
 		}
 	}
 
-    public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect,Vector filter) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName,actionName,handler,offset,reconnect,filter);
+    public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect,Vector filter, boolean allowExistTopic) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName,actionName,handler,offset,reconnect,filter,allowExistTopic);
         handlerLopper = new HandlerLopper(queue, handler);
         handlerLopper.start();
     }
     
     public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect) throws IOException {
-        subscribe(host, port, tableName, actionName, handler, offset, reconnect, null);
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, null,false );
     }
     
     public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,Vector filter) throws IOException {
-		subscribe(host, port, tableName, actionName, handler, offset, false, filter);
+		subscribe(host, port, tableName, actionName, handler, offset, false, filter,false);
 	}
     
     public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset) throws IOException {
