@@ -5,7 +5,9 @@ import java.net.SocketException;
 import java.util.*;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.lang.Iterable;
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
@@ -16,6 +18,9 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected static final int DEFAULT_PORT = 8849;
 	protected static final String DEFAULT_HOST = "localhost";
 	protected static final String DEFAULT_ACTION_NAME = "javaStreamingApi";
+
+	protected ConcurrentHashMap<String, AtomicBoolean> reconnectTable = new ConcurrentHashMap<String, AtomicBoolean>();
+
 	protected int listeningPort;
 	protected QueueManager queueManager = new QueueManager();
 	protected HashMap<String, List<IMessage>> messageCache = new HashMap<>();
@@ -24,7 +29,24 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected HashMap<String, Boolean> hostEndian = new HashMap<>();
 	protected Thread pThread;
 	protected HashMap<String, Site[]> trueTopicToSites = new HashMap<>();
-	
+
+	public void setNeedReconnect(String topic ,boolean v){
+			reconnectTable.put(topic, new AtomicBoolean(v));
+			System.out.println("set reconnect signal " + String.valueOf(v));
+	}
+
+	public boolean getNeedReconnect(String topic){
+		AtomicBoolean isRec = this.reconnectTable.get(topic);
+		if(isRec!=null)
+			return isRec.get();
+		else
+			return false;
+	}
+
+	public List<String> getAllTopics(){
+		return queueManager.getAllTopic();
+	}
+
 	protected class Site {
 		String host;
 		int port;
@@ -64,20 +86,24 @@ abstract class AbstractClient implements MessageDispatcher{
 
 	public void tryReconnect(String topic) {
 		System.out.println("Trigger reconnect");
-    	topic = HATopicToTrueTopic.get(topic);
-		queueManager.removeQueue(topic);
-    	Site[] sites = null;
-    	synchronized (trueTopicToSites) {
-			sites = trueTopicToSites.get(topic);
+		AtomicBoolean recSignal = reconnectTable.get(topic);
+		if(recSignal==null) return;
+		synchronized (recSignal) {
+			topic = HATopicToTrueTopic.get(topic);
+			queueManager.removeQueue(topic);
+			Site[] sites = null;
+			synchronized (trueTopicToSites) {
+				sites = trueTopicToSites.get(topic);
+			}
+			if (sites == null || sites.length == 0)
+				return;
+			if (sites.length == 1) {
+				if (!sites[0].reconnect)
+					return;
+			}
+			Site site = activeCloseConnection(sites);
+			doReconnect(site);
 		}
-    	if (sites == null || sites.length == 0)
-    		return;
-    	if (sites.length == 1) {
-    		if (!sites[0].reconnect)
-    			return;
-    	}
-		Site site = activeCloseConnection(sites);
-		doReconnect(site);
 	}
 	
 	private Site activeCloseConnection(Site[] sites) {

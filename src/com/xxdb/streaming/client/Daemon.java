@@ -28,13 +28,14 @@ class Daemon  implements Runnable{
 		{
 			try {
 				Socket socket = ssocket.accept();
-				System.out.println("socket accepted");
-//				socket.setSoTimeout(1000);
 				socket.setKeepAlive(true);
+
 				MessageParser listener = new MessageParser(socket, dispatcher);
 				Thread listeningThread = new Thread(listener);
-				System.out.println("new  MessageParser thread start!");
 				listeningThread.start();
+
+				new Thread(new ReconnectDetector(dispatcher)).start();
+
 				if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
 					new Thread(new ConnectionDetector(socket)).start();
 			}catch (Exception ex){
@@ -52,7 +53,30 @@ class Daemon  implements Runnable{
 			}
 		}
 	}
-	
+	class ReconnectDetector implements Runnable {
+		MessageDispatcher dispatcher = null;
+		public ReconnectDetector(MessageDispatcher d) {
+			this.dispatcher = d;
+		}
+		@Override
+		public void run() {
+
+			while(true){
+				for(String topic : this.dispatcher.getAllTopics()){
+					if(dispatcher.getNeedReconnect(topic)) {
+						dispatcher.tryReconnect(topic);
+					}
+				}
+
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
 	class ConnectionDetector implements Runnable {
 		Socket socket = null;
 		public ConnectionDetector(Socket socket) {
@@ -70,7 +94,6 @@ class Daemon  implements Runnable{
 						try {
 							socket.sendUrgentData(0xFF);
 						} catch (Exception ex0) {
-							System.out.println("ConnectionDetector failCount!!");
 							failCount++;
 						}
 						
@@ -84,7 +107,7 @@ class Daemon  implements Runnable{
 						continue;
 
 					try {
-						System.out.println("ConnectionDetector!!");
+						System.out.println("Connection lost!!");
 						socket.close();
 						return;
 					} catch (Exception e) {

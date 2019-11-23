@@ -41,7 +41,6 @@ class MessageParser implements Runnable {
     }
 
     public void run() {
-        System.out.println("new messageParser!!");
         Socket socket = this.socket;
         try {
             if (bis == null) bis = new BufferedInputStream(socket.getInputStream());
@@ -83,6 +82,8 @@ class MessageParser implements Runnable {
                     body = factory.createEntity(df, dt, in);
 
                     if (body.isTable()) {
+
+                        dispatcher.setNeedReconnect(topic,false);
                         assert (body.rows() == 0);
                         nameToIndex = new HashMap<>();
                         BasicTable schema = (BasicTable) body;
@@ -128,11 +129,13 @@ class MessageParser implements Runnable {
             if (dispatcher.isClosed(topic)) {
                 return;
             } else {
-                dispatcher.tryReconnect(topic);
+//                dispatcher.tryReconnect(topic);
+                dispatcher.setNeedReconnect(topic, true);
             }
             } catch (Throwable t) {
                  t.printStackTrace();
-         }finally {
+         }
+         finally {
             try{
                 socket.close();
             }catch (Exception se){
