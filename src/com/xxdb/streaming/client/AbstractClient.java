@@ -22,13 +22,13 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected ConcurrentHashMap<String, AtomicBoolean> reconnectTable = new ConcurrentHashMap<String, AtomicBoolean>();
 
 	protected int listeningPort;
-	protected QueueManager queueManager = new QueueManager();
+//	protected QueueManager queueManager = new QueueManager();
 	protected HashMap<String, List<IMessage>> messageCache = new HashMap<>();
 	protected HashMap<String, String> tableNameToTrueTopic = new HashMap<>();
-	protected HashMap<String, String> HATopicToTrueTopic = new HashMap<>();
+//	protected HashMap<String, String> HATopicToTrueTopic = new HashMap<>();
 	protected HashMap<String, Boolean> hostEndian = new HashMap<>();
 	protected Thread pThread;
-	protected HashMap<String, Site[]> trueTopicToSites = new HashMap<>();
+//	protected HashMap<String, Site[]> trueTopicToSites = new HashMap<>();
 
 	public void setNeedReconnect(String topic ,boolean v){
 			reconnectTable.put(topic, new AtomicBoolean(v));
@@ -44,7 +44,7 @@ abstract class AbstractClient implements MessageDispatcher{
 	}
 
 	public List<String> getAllTopics(){
-		return queueManager.getAllTopic();
+		return TopicManager.getInstance().getAllTopic();
 	}
 
 	protected class Site {
@@ -75,8 +75,8 @@ abstract class AbstractClient implements MessageDispatcher{
 	abstract protected void doReconnect(Site site);
 	
 	public void setMsgId(String topic, long msgId) {
-		synchronized (trueTopicToSites) {
-			Site[] sites = trueTopicToSites.get(topic);
+		Site[] sites = TopicManager.getInstance().getSites(topic);
+		synchronized (sites) {
 			if (sites == null || sites.length == 0)
 				return;
 			if (sites.length == 1)
@@ -89,12 +89,9 @@ abstract class AbstractClient implements MessageDispatcher{
 		AtomicBoolean recSignal = reconnectTable.get(topic);
 		if(recSignal==null) return;
 		synchronized (recSignal) {
-			topic = HATopicToTrueTopic.get(topic);
-			queueManager.removeQueue(topic);
-			Site[] sites = null;
-			synchronized (trueTopicToSites) {
-				sites = trueTopicToSites.get(topic);
-			}
+			Site[] sites = TopicManager.getInstance().getSites(topic);
+			TopicManager.getInstance().removeTopic(topic);
+
 			if (sites == null || sites.length == 0)
 				return;
 			if (sites.length == 1) {
@@ -155,7 +152,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		String topicString = msg.getTopic();
 		String[] topics = topicString.split(",");
 		for (String topic:topics) {
-			topic = HATopicToTrueTopic.get(topic);
+			topic = TopicManager.getInstance().getTopic(topic);
 			List<IMessage> cache = messageCache.get(topic);
 			if (cache == null) {
 				cache = new ArrayList<>();
@@ -163,14 +160,13 @@ abstract class AbstractClient implements MessageDispatcher{
 			}
 			cache.add(msg);
 		}
-
 	}
 	
 	private synchronized void flushToQueue() {
 		Set<String> keySet = messageCache.keySet();
 		for(String topic : keySet) {
 			try {
-				BlockingQueue<List<IMessage>> q = queueManager.getQueue(topic);
+				BlockingQueue<List<IMessage>> q = TopicManager.getInstance().getMessageQueue(topic);
 				if(q!=null)
 					q.put(messageCache.get(topic));
 			} catch (Exception e) {
@@ -184,8 +180,8 @@ abstract class AbstractClient implements MessageDispatcher{
 		String topicString = msg.getTopic();
 		String[] topics = topicString.split(",");
 		for (String topic:topics) {
-			topic = HATopicToTrueTopic.get(topic);
-			BlockingQueue<List<IMessage>> queue = queueManager.getQueue(topic);
+			topic = TopicManager.getInstance().getTopic(topic);
+			BlockingQueue<List<IMessage>> queue = TopicManager.getInstance().getMessageQueue(topic);
 			try {
 				if(queue!=null)
 					queue.put(Arrays.asList(msg));
@@ -211,14 +207,13 @@ abstract class AbstractClient implements MessageDispatcher{
 	}
 	
 	public synchronized boolean isClosed(String topic) {
-		topic = HATopicToTrueTopic.get(topic);
-		synchronized (trueTopicToSites) {
-			Site[] sites = trueTopicToSites.get(topic);
+		topic = TopicManager.getInstance().getTopic(topic);
+		Site[] sites = TopicManager.getInstance().getSites(topic);
 			if (sites == null || sites.length == 0)
 				return true;
 			else
 				return sites[0].closed;
-		}
+
 	}
 	
 	private String getTopic(String host, int port, String alias, String tableName, String actionName) {
@@ -277,32 +272,25 @@ abstract class AbstractClient implements MessageDispatcher{
 						tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + ":" + tableName, topic);
 					}
 					String HATopic = getTopic(HASiteHost, HASitePort, HASiteAlias, tableName, actionName);
-					synchronized (HATopicToTrueTopic) {
-						HATopicToTrueTopic.put(HATopic, topic);
-					}
+					TopicManager.getInstance().addTopic(HATopic);
 				}
-				synchronized (trueTopicToSites) {
-					trueTopicToSites.put(topic, sites);
-				}
+
+				TopicManager.getInstance().setSites(topic,sites);
 			}
 			else {
 				Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter,allowExistTopic)};
 				synchronized (tableNameToTrueTopic) {
 					tableNameToTrueTopic.put(host + ":" + port + ":" + tableName, topic);
 				}
-				synchronized (HATopicToTrueTopic) {
-					HATopicToTrueTopic.put(topic, topic);
-				}
-				synchronized (trueTopicToSites) {
-					trueTopicToSites.put(topic, sites);
-				}
+				TopicManager.getInstance().addTopic(topic);
+				TopicManager.getInstance().setSites(topic,sites);
 			}
 		} catch (Exception ex) {
 			throw ex;
 		} finally {
 			dbConn.close();
 		}
-		BlockingQueue<List<IMessage>> queue = queueManager.addQueue(topic);
+		BlockingQueue<List<IMessage>> queue = TopicManager.getInstance().addMessageQueue(topic);
 		return queue;
 	}
 	
@@ -337,13 +325,11 @@ abstract class AbstractClient implements MessageDispatcher{
 			synchronized (tableNameToTrueTopic) {
 				topic = tableNameToTrueTopic.get(fullTableName);
 			}
-			synchronized (trueTopicToSites) {
-				Site[] sites = trueTopicToSites.get(topic);
-				if (sites == null || sites.length == 0)
-					;
-				for (int i = 0; i < sites.length; i++)
-					sites[i].closed = true;
-			}
+			Site[] sites = TopicManager.getInstance().getSites(topic);
+			if (sites == null || sites.length == 0)
+				;
+			for (int i = 0; i < sites.length; i++)
+				sites[i].closed = true;
 			System.out.println("Successfully unsubscribed table " + fullTableName);
 		} catch (Exception ex) {
 			throw ex;

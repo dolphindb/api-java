@@ -82,10 +82,10 @@ class MessageParser implements Runnable {
                     body = factory.createEntity(df, dt, in);
 
                     if (body.isTable()) {
-
+                        TopicManager.getInstance().addTopic(topic);
                         dispatcher.setNeedReconnect(topic,false);
                         assert (body.rows() == 0);
-                        nameToIndex = new HashMap<>();
+                        nameToIndex = TopicManager.getInstance().getNameToIndex(topic);
                         BasicTable schema = (BasicTable) body;
                         int columns = schema.columns();
                         for (int i = 0; i < columns; i++) {
