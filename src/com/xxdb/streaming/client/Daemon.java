@@ -63,8 +63,16 @@ class Daemon  implements Runnable{
 
 			while(true){
 				for(String topic : this.dispatcher.getAllTopics()){
-					if(dispatcher.getNeedReconnect(topic)) {
-						dispatcher.tryReconnect(topic);
+					if(dispatcher.getNeedReconnect(topic)>0) { // need reconnect or reconnecting
+						if(dispatcher.getNeedReconnect(topic)==1) {
+							dispatcher.setNeedReconnect(topic, 2);
+							dispatcher.tryReconnect(topic);
+						}else if(dispatcher.getNeedReconnect(topic)==2){ // try reconnect after 3 second when reconnecting stat
+							long ts = dispatcher.getReconnectTimestamp(topic);
+							if(System.currentTimeMillis()>(ts + 3000)){
+								dispatcher.tryReconnect(topic);
+							}
+						}
 					}
 				}
 

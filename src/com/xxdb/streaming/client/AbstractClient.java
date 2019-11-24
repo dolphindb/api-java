@@ -6,21 +6,23 @@ import java.util.*;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.lang.Iterable;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 import com.xxdb.data.Void;
-import com.xxdb.streaming.client.IMessage;
 
 abstract class AbstractClient implements MessageDispatcher{
 	protected static final int DEFAULT_PORT = 8849;
 	protected static final String DEFAULT_HOST = "localhost";
 	protected static final String DEFAULT_ACTION_NAME = "javaStreamingApi";
 
-	protected ConcurrentHashMap<String, AtomicBoolean> reconnectTable = new ConcurrentHashMap<String, AtomicBoolean>();
 
+	protected ConcurrentHashMap<String, ReconnectItem> reconnectTable = new ConcurrentHashMap<String, ReconnectItem>();
+
+	protected long lastReconnectTimestamp = 0;
 	protected int listeningPort;
 	protected QueueManager queueManager = new QueueManager();
 	protected HashMap<String, List<IMessage>> messageCache = new HashMap<>();
@@ -30,17 +32,54 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected Thread pThread;
 	protected HashMap<String, Site[]> trueTopicToSites = new HashMap<>();
 
-	public void setNeedReconnect(String topic ,boolean v){
-			reconnectTable.put(topic, new AtomicBoolean(v));
-			System.out.println("set reconnect signal " + String.valueOf(v));
+	class ReconnectItem {
+		//0: reconnect success, 1: need reconnect 2, reconnecting
+		int reconnectState ;
+		long lastReconnectTimestamp ;
+
+		public ReconnectItem(int v ,long t){
+			reconnectState = v;
+			lastReconnectTimestamp = t;
+		}
+
+		public void setState(int v){
+			reconnectState = v;
+		}
+		public int getState(){
+			return reconnectState;
+		}
+		public void setTimestamp(long v){
+			lastReconnectTimestamp = v;
+		}
+		public long getTimestamp(){
+			return lastReconnectTimestamp;
+		}
 	}
 
-	public boolean getNeedReconnect(String topic){
-		AtomicBoolean isRec = this.reconnectTable.get(topic);
-		if(isRec!=null)
-			return isRec.get();
+	public void setNeedReconnect(String topic ,int v){
+		if(!reconnectTable.contains(topic))
+			reconnectTable.put(topic, new ReconnectItem(v, System.currentTimeMillis()));
+		else{
+			ReconnectItem item = reconnectTable.get(topic);
+			item.setState(v);
+			item.setTimestamp(System.currentTimeMillis());
+		}
+	}
+
+	public int getNeedReconnect(String topic){
+		ReconnectItem item = this.reconnectTable.get(topic);
+		if(item!=null)
+			return item.getState();
 		else
-			return false;
+			return 0;
+	}
+
+	public long getReconnectTimestamp(String topic){
+		ReconnectItem item = this.reconnectTable.get(topic);
+		if(item!=null)
+			return item.getTimestamp();
+		else
+			return 0;
 	}
 
 	public List<String> getAllTopics(){
@@ -86,7 +125,7 @@ abstract class AbstractClient implements MessageDispatcher{
 
 	public void tryReconnect(String topic) {
 		System.out.println("Trigger reconnect");
-		AtomicBoolean recSignal = reconnectTable.get(topic);
+		ReconnectItem recSignal = reconnectTable.get(topic);
 		if(recSignal==null) return;
 		synchronized (recSignal) {
 			topic = HATopicToTrueTopic.get(topic);

@@ -11,7 +11,9 @@ interface MessageDispatcher {
     void batchDispatch(List<IMessage> message);
     void tryReconnect(String topic);
     void setMsgId(String topic, long msgId);
-    void setNeedReconnect(String topic , boolean v);
-    boolean getNeedReconnect(String topic);
+    void setNeedReconnect(String topic , int v);
+    int getNeedReconnect(String topic);
+    long getReconnectTimestamp(String topic);
+
     List<String> getAllTopics();
 }
