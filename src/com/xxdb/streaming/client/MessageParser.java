@@ -105,7 +105,7 @@ class MessageParser implements Runnable {
                         int rowSize = dTable.getEntity(0).rows();
                         if (rowSize >= 1) {
                             if (rowSize == 1) {
-                                BasicMessage rec = new BasicMessage(msgid, topic, dTable, topicNameToIndex.get(topic));
+                                BasicMessage rec = new BasicMessage(msgid, topic, dTable, topicNameToIndex.get(topic.split(",")[0]));
                                 dispatcher.dispatch(rec);
                             } else {
                                 List<IMessage> messages = new ArrayList<>(rowSize);
@@ -118,7 +118,7 @@ class MessageParser implements Runnable {
                                         Entity entity = vector.get(i);
                                         row.setEntity(j, entity);
                                     }
-                                    BasicMessage rec = new BasicMessage(startMsgId + i, topic, row, topicNameToIndex.get(topic));
+                                    BasicMessage rec = new BasicMessage(startMsgId + i, topic, row, topicNameToIndex.get(topic.split(",")[0]));
                                     messages.add(rec);
                                 }
                                 dispatcher.batchDispatch(messages);
