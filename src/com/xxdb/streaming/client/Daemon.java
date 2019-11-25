@@ -24,8 +24,8 @@ class Daemon  implements Runnable{
 		}catch (IOException e) {
 			e.printStackTrace();
 		}
-		while(true)
-		{
+		
+		while(true)	{
 			try {
 				Socket socket = ssocket.accept();
 				socket.setKeepAlive(true);
@@ -53,6 +53,7 @@ class Daemon  implements Runnable{
 			}
 		}
 	}
+	
 	class ReconnectDetector implements Runnable {
 		MessageDispatcher dispatcher = null;
 		public ReconnectDetector(MessageDispatcher d) {
@@ -60,16 +61,17 @@ class Daemon  implements Runnable{
 		}
 		@Override
 		public void run() {
-
 			while(true){
 				for(String topic : this.dispatcher.getAllTopics()){
 					if(dispatcher.getNeedReconnect(topic)>0) { // need reconnect or reconnecting
 						if(dispatcher.getNeedReconnect(topic)==1) {
-							dispatcher.setNeedReconnect(topic, 2);
 							dispatcher.tryReconnect(topic);
-						}else if(dispatcher.getNeedReconnect(topic)==2){ // try reconnect after 3 second when reconnecting stat
+							dispatcher.setNeedReconnect(topic, 2);
+						}
+						else{ 
+							// try reconnect after 3 second when reconnecting stat
 							long ts = dispatcher.getReconnectTimestamp(topic);
-							if(System.currentTimeMillis()>(ts + 3000)){
+							if(System.currentTimeMillis() >= ts + 3000){
 								dispatcher.tryReconnect(topic);
 							}
 						}

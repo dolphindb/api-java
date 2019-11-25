@@ -135,20 +135,19 @@ class MessageParser implements Runnable {
             if (dispatcher.isClosed(topic)) {
                 return;
             } else {
-//                dispatcher.tryReconnect(topic);
                 dispatcher.setNeedReconnect(topic, 1);
             }
-            } catch (Throwable t) {
-                 t.printStackTrace();
-         }
-         finally {
-            try{
-                socket.close();
-            }catch (Exception se){
-                se.printStackTrace();
-            }
-
+        } 
+        catch (Throwable t) {
+             t.printStackTrace();
         }
-
+	    finally {
+	        try{
+	            socket.close();
+	        }catch (Exception se){
+	            se.printStackTrace();
+	        }
+	
+	    }
     }
 }
