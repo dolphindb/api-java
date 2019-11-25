@@ -95,7 +95,6 @@ public class ThreadPooledClient extends AbstractClient {
     
     protected void doReconnect(Site site) {
 		threadPool.shutdownNow();
-		while (true) {
 			try {
 				Thread.sleep(1000);
 				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.allowExistTopic);
@@ -105,7 +104,6 @@ public class ThreadPooledClient extends AbstractClient {
 				System.out.println("Unable to subscribe table. Will try again after 1 seconds.");
 				ex.printStackTrace();
 			}
-		}
     }
 
     public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect,Vector filter, boolean allowExistTopic ) throws IOException {

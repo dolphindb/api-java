@@ -28,7 +28,6 @@ public class ThreadedClient extends  AbstractClient {
             this.handler = handler;
         }
         public void run() {
-            System.out.println("Handler thread  started");
             while(true) {
                 try {
                     List<IMessage> msgs = queue.take();
@@ -47,17 +46,14 @@ public class ThreadedClient extends  AbstractClient {
 		if (handlerLopper == null)
 			throw new RuntimeException("Subscribe thread is not started");
 		handlerLopper.interrupt();
-		while (true) {
-			try {
+		try {
 				subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter,site.allowExistTopic);
-                Thread.sleep(1000);
 				System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
 				return;
 			} catch (Exception ex) {
 				System.out.println("Unable to subscribe table. Will try again after 1 seconds.");
 				ex.printStackTrace();
 			}
-		}
 	}
 
     public void subscribe(String host,int port,String tableName,String actionName,MessageHandler handler,long offset,boolean reconnect,Vector filter, boolean allowExistTopic) throws IOException {

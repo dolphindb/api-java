@@ -85,8 +85,7 @@ class MessageParser implements Runnable {
                     Entity body;
 
                     body = factory.createEntity(df, dt, in);
-
-                    if (body.isTable()) {
+                    if (body.isTable() && body.rows()==0) {
                         dispatcher.setNeedReconnect(topic,0);
 
                         assert (body.rows() == 0);
@@ -141,13 +140,5 @@ class MessageParser implements Runnable {
                  t.printStackTrace();
                 dispatcher.setNeedReconnect(topic, 1);
          }
-         finally {
-            try{
-                socket.close();
-            }catch (Exception se){
-                se.printStackTrace();
-            }
-
-        }
     }
 }

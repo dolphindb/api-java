@@ -16,8 +16,6 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected static final int DEFAULT_PORT = 8849;
 	protected static final String DEFAULT_HOST = "localhost";
 	protected static final String DEFAULT_ACTION_NAME = "javaStreamingApi";
-
-
 	protected ConcurrentHashMap<String, ReconnectItem> reconnectTable = new ConcurrentHashMap<String, ReconnectItem>();
 
 	protected long lastReconnectTimestamp = 0;
@@ -104,7 +102,12 @@ abstract class AbstractClient implements MessageDispatcher{
 	}
 
 	public List<String> getAllTopics(){
-		return queueManager.getAllTopic();
+		java.util.Iterator<String> its = reconnectTable.keySet().iterator();
+		List<String> re = new ArrayList<>();
+		while(its.hasNext()){
+			re.add(its.next());
+		}
+		return re;
 	}
 
 	protected class Site {
@@ -144,10 +147,10 @@ abstract class AbstractClient implements MessageDispatcher{
 		}
 	}
 
-	public void tryReconnect(String topic) {
+	public boolean tryReconnect(String topic) {
 		System.out.println("Trigger reconnect");
 		ReconnectItem recSignal = reconnectTable.get(topic);
-		if(recSignal==null) return;
+		if(recSignal==null) return false;
 		synchronized (recSignal) {
 			topic = HATopicToTrueTopic.get(topic);
 			queueManager.removeQueue(topic);
@@ -156,20 +159,27 @@ abstract class AbstractClient implements MessageDispatcher{
 				sites = trueTopicToSites.get(topic);
 			}
 			if (sites == null || sites.length == 0)
-				return;
+				return false;
 			if (sites.length == 1) {
 				if (!sites[0].reconnect)
-					return;
+					return false;
 			}
 			Site site = activeCloseConnection(sites);
-			doReconnect(site);
+			if(site!=null) {
+				doReconnect(site);
+				return true;
+			}else{
+				return false;
+			}
+
 		}
 	}
 	
 	private Site activeCloseConnection(Site[] sites) {
 		int siteId = 0;
 		int siteNum = sites.length;
-		while (true) {
+
+		for(int i=0;i<siteNum;i++){
 			Site site = sites[siteId];
 			siteId = (siteId + 1) % siteNum;
 			try {
@@ -191,13 +201,14 @@ abstract class AbstractClient implements MessageDispatcher{
 			} catch (Exception ex) {
 				System.out.println("Unable to actively close the publish connection from site " + site.host + ":" + site.port);
 			}
-			
+
 			try {
 				Thread.sleep(1000);
 			} catch (Exception e) {
-
+				e.printStackTrace();
 			}
 		}
+		return null;
 	}
 
 	public AbstractClient() throws SocketException {
