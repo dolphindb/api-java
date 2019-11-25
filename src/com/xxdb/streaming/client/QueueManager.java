@@ -18,12 +18,12 @@ class QueueManager {
 		throw new RuntimeException("Topic " + topic + " already subscribed");
 	}
 
-	public BlockingQueue<List<IMessage>> getQueue(String topic) {
+	public synchronized BlockingQueue<List<IMessage>> getQueue(String topic) {
 		BlockingQueue<List<IMessage>> q = queueMap.get(topic);
 		return q;
 	}
 
-	public List<String> getAllTopic(){
+	public synchronized List<String> getAllTopic(){
 		java.util.Iterator<String> its = queueMap.keySet().iterator();
 		List<String> re = new ArrayList<>();
 		while(its.hasNext()){

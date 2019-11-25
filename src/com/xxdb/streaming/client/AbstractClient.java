@@ -6,45 +6,108 @@ import java.util.*;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.lang.Iterable;
+
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 import com.xxdb.data.Void;
-import com.xxdb.streaming.client.IMessage;
 
 abstract class AbstractClient implements MessageDispatcher{
 	protected static final int DEFAULT_PORT = 8849;
 	protected static final String DEFAULT_HOST = "localhost";
 	protected static final String DEFAULT_ACTION_NAME = "javaStreamingApi";
+	protected ConcurrentHashMap<String, ReconnectItem> reconnectTable = new ConcurrentHashMap<String, ReconnectItem>();
 
-	protected ConcurrentHashMap<String, AtomicBoolean> reconnectTable = new ConcurrentHashMap<String, AtomicBoolean>();
-
+	protected long lastReconnectTimestamp = 0;
 	protected int listeningPort;
-//	protected QueueManager queueManager = new QueueManager();
+	protected QueueManager queueManager = new QueueManager();
 	protected HashMap<String, List<IMessage>> messageCache = new HashMap<>();
 	protected HashMap<String, String> tableNameToTrueTopic = new HashMap<>();
-//	protected HashMap<String, String> HATopicToTrueTopic = new HashMap<>();
+	protected HashMap<String, String> HATopicToTrueTopic = new HashMap<>();
 	protected HashMap<String, Boolean> hostEndian = new HashMap<>();
 	protected Thread pThread;
-//	protected HashMap<String, Site[]> trueTopicToSites = new HashMap<>();
+	protected HashMap<String, Site[]> trueTopicToSites = new HashMap<>();
 
-	public void setNeedReconnect(String topic ,boolean v){
-			reconnectTable.put(topic, new AtomicBoolean(v));
-			System.out.println("set reconnect signal " + String.valueOf(v));
+	class ReconnectItem {
+		/**
+		 * 0: connected and received message schema
+		 * 1: not requested yet
+		 * 2: requested, but not received message schema yet
+		 */
+		private int reconnectState ;
+		private long lastReconnectTimestamp ;
+
+		public ReconnectItem(int v ,long t){
+			reconnectState = v;
+			lastReconnectTimestamp = t;
+		}
+
+		public void setState(int v){
+			reconnectState = v;
+		}
+		
+		public int getState(){
+			return reconnectState;
+		}
+		
+		public void setTimestamp(long v){
+			lastReconnectTimestamp = v;
+		}
+		
+		public long getTimestamp(){
+			return lastReconnectTimestamp;
+		}
 	}
 
-	public boolean getNeedReconnect(String topic){
-		AtomicBoolean isRec = this.reconnectTable.get(topic);
-		if(isRec!=null)
-			return isRec.get();
+	public int getQueueCount(String topic){
+		BlockingQueue<List<IMessage>> queue = queueManager.getQueue(topic);
+		if(queue!=null)
+			return queue.size();
 		else
-			return false;
+			return 0;
+	}
+	public void setNeedReconnect(String topic ,int v){
+		if(!reconnectTable.contains(topic)) {
+			reconnectTable.put(topic, new ReconnectItem(v, System.currentTimeMillis()));
+			System.out.println("new topic, timestamp = " + reconnectTable.get(topic).lastReconnectTimestamp);
+		}
+		else{
+			ReconnectItem item = reconnectTable.get(topic);
+			item.setState(v);
+			item.setTimestamp(System.currentTimeMillis());
+			System.out.println("topic exists, timestamp = " + item.lastReconnectTimestamp);
+		}
+	}
+
+	public int getNeedReconnect(String topic){
+		ReconnectItem item = this.reconnectTable.get(topic);
+		if(item!=null)
+			return item.getState();
+		else
+			return 0;
+	}
+
+	public long getReconnectTimestamp(String topic){
+		ReconnectItem item = this.reconnectTable.get(topic);
+		if(item!=null)
+			return item.getTimestamp();
+		else
+			return 0;
+	}
+
+	public void setReconnectTimestamp(String topic, long v){
+		ReconnectItem item = this.reconnectTable.get(topic);
+		if(item!=null)
+			item.setTimestamp(v);
 	}
 
 	public List<String> getAllTopics(){
-		return TopicManager.getInstance().getAllTopic();
+		java.util.Iterator<String> its = reconnectTable.keySet().iterator();
+		List<String> re = new ArrayList<>();
+		while(its.hasNext()){
+			re.add(its.next());
+		}
+		return re;
 	}
 
 	protected class Site {
@@ -75,8 +138,8 @@ abstract class AbstractClient implements MessageDispatcher{
 	abstract protected void doReconnect(Site site);
 	
 	public void setMsgId(String topic, long msgId) {
-		Site[] sites = TopicManager.getInstance().getSites(topic);
-		synchronized (sites) {
+		synchronized (trueTopicToSites) {
+			Site[] sites = trueTopicToSites.get(topic);
 			if (sites == null || sites.length == 0)
 				return;
 			if (sites.length == 1)
@@ -84,29 +147,39 @@ abstract class AbstractClient implements MessageDispatcher{
 		}
 	}
 
-	public void tryReconnect(String topic) {
+	public boolean tryReconnect(String topic) {
 		System.out.println("Trigger reconnect");
-		AtomicBoolean recSignal = reconnectTable.get(topic);
-		if(recSignal==null) return;
+		ReconnectItem recSignal = reconnectTable.get(topic);
+		if(recSignal==null) return false;
 		synchronized (recSignal) {
-			Site[] sites = TopicManager.getInstance().getSites(topic);
-			TopicManager.getInstance().removeTopic(topic);
-
+			topic = HATopicToTrueTopic.get(topic);
+			queueManager.removeQueue(topic);
+			Site[] sites = null;
+			synchronized (trueTopicToSites) {
+				sites = trueTopicToSites.get(topic);
+			}
 			if (sites == null || sites.length == 0)
-				return;
+				return false;
 			if (sites.length == 1) {
 				if (!sites[0].reconnect)
-					return;
+					return false;
 			}
 			Site site = activeCloseConnection(sites);
-			doReconnect(site);
+			if(site!=null) {
+				doReconnect(site);
+				return true;
+			}else{
+				return false;
+			}
+
 		}
 	}
 	
 	private Site activeCloseConnection(Site[] sites) {
 		int siteId = 0;
 		int siteNum = sites.length;
-		while (true) {
+
+		for(int i=0;i<siteNum;i++){
 			Site site = sites[siteId];
 			siteId = (siteId + 1) % siteNum;
 			try {
@@ -128,13 +201,14 @@ abstract class AbstractClient implements MessageDispatcher{
 			} catch (Exception ex) {
 				System.out.println("Unable to actively close the publish connection from site " + site.host + ":" + site.port);
 			}
-			
+
 			try {
 				Thread.sleep(1000);
 			} catch (Exception e) {
-
+				e.printStackTrace();
 			}
 		}
+		return null;
 	}
 
 	public AbstractClient() throws SocketException {
@@ -152,7 +226,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		String topicString = msg.getTopic();
 		String[] topics = topicString.split(",");
 		for (String topic:topics) {
-			topic = TopicManager.getInstance().getTopic(topic);
+			topic = HATopicToTrueTopic.get(topic);
 			List<IMessage> cache = messageCache.get(topic);
 			if (cache == null) {
 				cache = new ArrayList<>();
@@ -160,13 +234,14 @@ abstract class AbstractClient implements MessageDispatcher{
 			}
 			cache.add(msg);
 		}
+
 	}
 	
 	private synchronized void flushToQueue() {
 		Set<String> keySet = messageCache.keySet();
 		for(String topic : keySet) {
 			try {
-				BlockingQueue<List<IMessage>> q = TopicManager.getInstance().getMessageQueue(topic);
+				BlockingQueue<List<IMessage>> q = queueManager.getQueue(topic);
 				if(q!=null)
 					q.put(messageCache.get(topic));
 			} catch (Exception e) {
@@ -180,8 +255,8 @@ abstract class AbstractClient implements MessageDispatcher{
 		String topicString = msg.getTopic();
 		String[] topics = topicString.split(",");
 		for (String topic:topics) {
-			topic = TopicManager.getInstance().getTopic(topic);
-			BlockingQueue<List<IMessage>> queue = TopicManager.getInstance().getMessageQueue(topic);
+			topic = HATopicToTrueTopic.get(topic);
+			BlockingQueue<List<IMessage>> queue = queueManager.getQueue(topic);
 			try {
 				if(queue!=null)
 					queue.put(Arrays.asList(msg));
@@ -207,13 +282,14 @@ abstract class AbstractClient implements MessageDispatcher{
 	}
 	
 	public synchronized boolean isClosed(String topic) {
-		topic = TopicManager.getInstance().getTopic(topic);
-		Site[] sites = TopicManager.getInstance().getSites(topic);
+		topic = HATopicToTrueTopic.get(topic);
+		synchronized (trueTopicToSites) {
+			Site[] sites = trueTopicToSites.get(topic);
 			if (sites == null || sites.length == 0)
 				return true;
 			else
 				return sites[0].closed;
-
+		}
 	}
 	
 	private String getTopic(String host, int port, String alias, String tableName, String actionName) {
@@ -272,25 +348,32 @@ abstract class AbstractClient implements MessageDispatcher{
 						tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + ":" + tableName, topic);
 					}
 					String HATopic = getTopic(HASiteHost, HASitePort, HASiteAlias, tableName, actionName);
-					TopicManager.getInstance().addTopic(HATopic);
+					synchronized (HATopicToTrueTopic) {
+						HATopicToTrueTopic.put(HATopic, topic);
+					}
 				}
-
-				TopicManager.getInstance().setSites(topic,sites);
+				synchronized (trueTopicToSites) {
+					trueTopicToSites.put(topic, sites);
+				}
 			}
 			else {
 				Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter,allowExistTopic)};
 				synchronized (tableNameToTrueTopic) {
 					tableNameToTrueTopic.put(host + ":" + port + ":" + tableName, topic);
 				}
-				TopicManager.getInstance().addTopic(topic);
-				TopicManager.getInstance().setSites(topic,sites);
+				synchronized (HATopicToTrueTopic) {
+					HATopicToTrueTopic.put(topic, topic);
+				}
+				synchronized (trueTopicToSites) {
+					trueTopicToSites.put(topic, sites);
+				}
 			}
 		} catch (Exception ex) {
 			throw ex;
 		} finally {
 			dbConn.close();
 		}
-		BlockingQueue<List<IMessage>> queue = TopicManager.getInstance().addMessageQueue(topic);
+		BlockingQueue<List<IMessage>> queue = queueManager.addQueue(topic);
 		return queue;
 	}
 	
@@ -325,11 +408,13 @@ abstract class AbstractClient implements MessageDispatcher{
 			synchronized (tableNameToTrueTopic) {
 				topic = tableNameToTrueTopic.get(fullTableName);
 			}
-			Site[] sites = TopicManager.getInstance().getSites(topic);
-			if (sites == null || sites.length == 0)
-				;
-			for (int i = 0; i < sites.length; i++)
-				sites[i].closed = true;
+			synchronized (trueTopicToSites) {
+				Site[] sites = trueTopicToSites.get(topic);
+				if (sites == null || sites.length == 0)
+					;
+				for (int i = 0; i < sites.length; i++)
+					sites[i].closed = true;
+			}
 			System.out.println("Successfully unsubscribed table " + fullTableName);
 		} catch (Exception ex) {
 			throw ex;

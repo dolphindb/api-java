@@ -7,7 +7,9 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
+import com.xxdb.FileLog;
 import com.xxdb.data.*;
 import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.ExtendedDataInput;
@@ -23,9 +25,12 @@ class MessageParser implements Runnable {
     String topic;
     HashMap<String, Integer> nameToIndex = null;
 
+    ConcurrentHashMap<String,HashMap<String, Integer>> topicNameToIndex = null;
+
     public MessageParser(Socket socket, MessageDispatcher dispatcher) {
         this.socket = socket;
         this.dispatcher = dispatcher;
+        this.topicNameToIndex = new ConcurrentHashMap<>();
     }
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
@@ -80,18 +85,18 @@ class MessageParser implements Runnable {
                     Entity body;
 
                     body = factory.createEntity(df, dt, in);
+                    if (body.isTable() && body.rows()==0) {
+                        dispatcher.setNeedReconnect(topic,0);
 
-                    if (body.isTable()) {
-                        TopicManager.getInstance().addTopic(topic);
-                        dispatcher.setNeedReconnect(topic,false);
                         assert (body.rows() == 0);
-                        nameToIndex = TopicManager.getInstance().getNameToIndex(topic);
+                        nameToIndex = new HashMap<>();
                         BasicTable schema = (BasicTable) body;
                         int columns = schema.columns();
                         for (int i = 0; i < columns; i++) {
                             String name = schema.getColumnName(i);
                             nameToIndex.put(name.toLowerCase(), i);
                         }
+                        topicNameToIndex.put(topic, nameToIndex);
                     } else if (body.isVector()) {
                         BasicAnyVector dTable = (BasicAnyVector) body;
 
@@ -99,7 +104,7 @@ class MessageParser implements Runnable {
                         int rowSize = dTable.getEntity(0).rows();
                         if (rowSize >= 1) {
                             if (rowSize == 1) {
-                                BasicMessage rec = new BasicMessage(msgid, topic, dTable, nameToIndex);
+                                BasicMessage rec = new BasicMessage(msgid, topic, dTable, topicNameToIndex.get(topic.split(",")[0]));
                                 dispatcher.dispatch(rec);
                             } else {
                                 List<IMessage> messages = new ArrayList<>(rowSize);
@@ -112,7 +117,7 @@ class MessageParser implements Runnable {
                                         Entity entity = vector.get(i);
                                         row.setEntity(j, entity);
                                     }
-                                    BasicMessage rec = new BasicMessage(startMsgId + i, topic, row, nameToIndex);
+                                    BasicMessage rec = new BasicMessage(startMsgId + i, topic, row, topicNameToIndex.get(topic.split(",")[0]));
                                     messages.add(rec);
                                 }
                                 dispatcher.batchDispatch(messages);
@@ -129,20 +134,11 @@ class MessageParser implements Runnable {
             if (dispatcher.isClosed(topic)) {
                 return;
             } else {
-//                dispatcher.tryReconnect(topic);
-                dispatcher.setNeedReconnect(topic, true);
+                dispatcher.setNeedReconnect(topic, 1);
             }
-            } catch (Throwable t) {
+        } catch (Throwable t) {
                  t.printStackTrace();
+                dispatcher.setNeedReconnect(topic, 1);
          }
-         finally {
-            try{
-                socket.close();
-            }catch (Exception se){
-                se.printStackTrace();
-            }
-
-        }
-
     }
 }

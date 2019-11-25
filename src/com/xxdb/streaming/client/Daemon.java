@@ -7,9 +7,9 @@ import java.net.Socket;
 class Daemon  implements Runnable{
 	private int listeningPort = 0;
 	private MessageDispatcher dispatcher;
-	private static final int KEEPALIVE_IDLE = 5000;
+	private static final int KEEPALIVE_IDLE = 1000;
 	private static final int KEEPALIVE_INTERVAL = 1000;
-	private static final int KEEPALIVE_COUNT = 3;
+	private static final int KEEPALIVE_COUNT = 5;
 	
 	public Daemon(int port, MessageDispatcher dispatcher) {
 		this.listeningPort = port;
@@ -24,8 +24,9 @@ class Daemon  implements Runnable{
 		}catch (IOException e) {
 			e.printStackTrace();
 		}
-		while(true)
-		{
+		new Thread(new ReconnectDetector(dispatcher)).start();
+
+		while(true)	{
 			try {
 				Socket socket = ssocket.accept();
 				socket.setKeepAlive(true);
@@ -33,8 +34,6 @@ class Daemon  implements Runnable{
 				MessageParser listener = new MessageParser(socket, dispatcher);
 				Thread listeningThread = new Thread(listener);
 				listeningThread.start();
-
-				new Thread(new ReconnectDetector(dispatcher)).start();
 
 				if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
 					new Thread(new ConnectionDetector(socket)).start();
@@ -53,6 +52,7 @@ class Daemon  implements Runnable{
 			}
 		}
 	}
+	
 	class ReconnectDetector implements Runnable {
 		MessageDispatcher dispatcher = null;
 		public ReconnectDetector(MessageDispatcher d) {
@@ -60,14 +60,27 @@ class Daemon  implements Runnable{
 		}
 		@Override
 		public void run() {
-
 			while(true){
-				for(String topic : this.dispatcher.getAllTopics()){
-					if(dispatcher.getNeedReconnect(topic)) {
-						dispatcher.tryReconnect(topic);
+				try {
+					for (String topic : this.dispatcher.getAllTopics()) {
+						if (dispatcher.getNeedReconnect(topic) > 0) { // need reconnect or reconnecting
+							if (dispatcher.getNeedReconnect(topic) == 1) {
+								if(dispatcher.tryReconnect(topic)) {
+									dispatcher.setNeedReconnect(topic, 2);
+								}
+							} else {
+								// try reconnect after 3 second when reconnecting stat
+								long ts = dispatcher.getReconnectTimestamp(topic);
+								if (System.currentTimeMillis() >= ts + 3000) {
+									if(dispatcher.tryReconnect(topic))
+										dispatcher.setReconnectTimestamp(topic, System.currentTimeMillis());
+								}
+							}
+						}
 					}
+				}catch(Exception e0){
+					e0.printStackTrace();
 				}
-
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -107,7 +120,7 @@ class Daemon  implements Runnable{
 						continue;
 
 					try {
-						System.out.println("Connection lost!!");
+						System.out.println("Connection closed!!");
 						socket.close();
 						return;
 					} catch (Exception e) {
