@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.xxdb.FileLog;
 import com.xxdb.data.*;
 import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.ExtendedDataInput;
@@ -86,7 +87,6 @@ class MessageParser implements Runnable {
                     body = factory.createEntity(df, dt, in);
 
                     if (body.isTable()) {
-
                         dispatcher.setNeedReconnect(topic,0);
 
                         assert (body.rows() == 0);
@@ -135,11 +135,11 @@ class MessageParser implements Runnable {
             if (dispatcher.isClosed(topic)) {
                 return;
             } else {
-//                dispatcher.tryReconnect(topic);
                 dispatcher.setNeedReconnect(topic, 1);
             }
-            } catch (Throwable t) {
+        } catch (Throwable t) {
                  t.printStackTrace();
+                dispatcher.setNeedReconnect(topic, 1);
          }
          finally {
             try{

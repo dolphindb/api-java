@@ -14,6 +14,6 @@ interface MessageDispatcher {
     void setNeedReconnect(String topic , int v);
     int getNeedReconnect(String topic);
     long getReconnectTimestamp(String topic);
-
+    void setReconnectTimestamp(String topic,long v);
     List<String> getAllTopics();
 }

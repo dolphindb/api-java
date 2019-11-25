@@ -71,6 +71,7 @@ class Daemon  implements Runnable{
 							long ts = dispatcher.getReconnectTimestamp(topic);
 							if(System.currentTimeMillis()>(ts + 3000)){
 								dispatcher.tryReconnect(topic);
+								dispatcher.setReconnectTimestamp(topic, System.currentTimeMillis());
 							}
 						}
 					}

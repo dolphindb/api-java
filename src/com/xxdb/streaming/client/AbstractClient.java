@@ -56,13 +56,23 @@ abstract class AbstractClient implements MessageDispatcher{
 		}
 	}
 
+	public int getQueueCount(String topic){
+		BlockingQueue<List<IMessage>> queue = queueManager.getQueue(topic);
+		if(queue!=null)
+			return queue.size();
+		else
+			return 0;
+	}
 	public void setNeedReconnect(String topic ,int v){
-		if(!reconnectTable.contains(topic))
+		if(!reconnectTable.contains(topic)) {
 			reconnectTable.put(topic, new ReconnectItem(v, System.currentTimeMillis()));
+			System.out.println("new topic, timestamp = " + reconnectTable.get(topic).lastReconnectTimestamp);
+		}
 		else{
 			ReconnectItem item = reconnectTable.get(topic);
 			item.setState(v);
 			item.setTimestamp(System.currentTimeMillis());
+			System.out.println("topic exists, timestamp = " + item.lastReconnectTimestamp);
 		}
 	}
 
@@ -80,6 +90,12 @@ abstract class AbstractClient implements MessageDispatcher{
 			return item.getTimestamp();
 		else
 			return 0;
+	}
+
+	public void setReconnectTimestamp(String topic, long v){
+		ReconnectItem item = this.reconnectTable.get(topic);
+		if(item!=null)
+			item.setTimestamp(v);
 	}
 
 	public List<String> getAllTopics(){
