@@ -6,8 +6,6 @@ import java.util.*;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
@@ -33,9 +31,13 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected HashMap<String, Site[]> trueTopicToSites = new HashMap<>();
 
 	class ReconnectItem {
-		//0: reconnect success, 1: need reconnect 2, reconnecting
-		int reconnectState ;
-		long lastReconnectTimestamp ;
+		/**
+		 * 0: connected and received message schema
+		 * 1: not requested yet
+		 * 2: requested, but not received message schema yet
+		 */
+		private int reconnectState ;
+		private long lastReconnectTimestamp ;
 
 		public ReconnectItem(int v ,long t){
 			reconnectState = v;
@@ -45,12 +47,15 @@ abstract class AbstractClient implements MessageDispatcher{
 		public void setState(int v){
 			reconnectState = v;
 		}
+		
 		public int getState(){
 			return reconnectState;
 		}
+		
 		public void setTimestamp(long v){
 			lastReconnectTimestamp = v;
 		}
+		
 		public long getTimestamp(){
 			return lastReconnectTimestamp;
 		}

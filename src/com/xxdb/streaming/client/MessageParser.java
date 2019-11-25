@@ -149,6 +149,5 @@ class MessageParser implements Runnable {
             }
 
         }
-
     }
 }
