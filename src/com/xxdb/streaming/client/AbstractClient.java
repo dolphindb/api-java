@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
@@ -16,9 +17,9 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected static final int DEFAULT_PORT = 8849;
 	protected static final String DEFAULT_HOST = "localhost";
 	protected static final String DEFAULT_ACTION_NAME = "javaStreamingApi";
+	//site => topics
 	protected ConcurrentHashMap<String, ReconnectItem> reconnectTable = new ConcurrentHashMap<String, ReconnectItem>();
 
-	protected long lastReconnectTimestamp = 0;
 	protected int listeningPort;
 	protected QueueManager queueManager = new QueueManager();
 	protected HashMap<String, List<IMessage>> messageCache = new HashMap<>();
@@ -28,6 +29,9 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected Thread pThread;
 	protected HashMap<String, Site[]> trueTopicToSites = new HashMap<>();
 
+	protected HashMap<String, List<String>> siteToTopic = new HashMap<>();
+
+	protected Set<String> waitReconnectTopic = new HashSet<>();
 	class ReconnectItem {
 		/**
 		 * 0: connected and received message schema
@@ -36,10 +40,12 @@ abstract class AbstractClient implements MessageDispatcher{
 		 */
 		private int reconnectState ;
 		private long lastReconnectTimestamp ;
+		private	List<String> topics ;
 
 		public ReconnectItem(int v ,long t){
 			reconnectState = v;
 			lastReconnectTimestamp = t;
+			topics = new ArrayList<>();
 		}
 
 		public void setState(int v){
@@ -57,60 +63,116 @@ abstract class AbstractClient implements MessageDispatcher{
 		public long getTimestamp(){
 			return lastReconnectTimestamp;
 		}
+
+		public void putTopic(String topic){
+			if(this.topics == null){
+				topics = new ArrayList<>();
+				topics.add(topic);
+			}else{
+				if(!this.topics.contains(topics)){
+					this.topics.add(topic);
+				}
+			}
+		}
+
+		public List<String> getTopics(){
+			return topics;
+		}
 	}
 
-	public int getQueueCount(String topic){
-		BlockingQueue<List<IMessage>> queue = queueManager.getQueue(topic);
-		if(queue!=null)
-			return queue.size();
-		else
-			return 0;
-	}
+
+
 	public void setNeedReconnect(String topic ,int v){
-		if(!reconnectTable.contains(topic)) {
-			reconnectTable.put(topic, new ReconnectItem(v, System.currentTimeMillis()));
-			System.out.println("new topic, timestamp = " + reconnectTable.get(topic).lastReconnectTimestamp);
+		if(topic.equals("")) return;
+		String site = topic.substring(0,topic.indexOf("/"));
+		if(!reconnectTable.contains(site)) {
+			ReconnectItem item = new  ReconnectItem(v, System.currentTimeMillis());
+			item.putTopic(topic);
+			reconnectTable.put(site, item);
+//			System.out.println("new topic, timestamp = " + reconnectTable.get(site).lastReconnectTimestamp);
 		}
 		else{
-			ReconnectItem item = reconnectTable.get(topic);
+			ReconnectItem item = reconnectTable.get(site);
 			item.setState(v);
 			item.setTimestamp(System.currentTimeMillis());
+			item.putTopic(topic);
 			System.out.println("topic exists, timestamp = " + item.lastReconnectTimestamp);
 		}
 	}
 
-	public int getNeedReconnect(String topic){
-		ReconnectItem item = this.reconnectTable.get(topic);
+	public int getNeedReconnect(String site){
+		ReconnectItem item = this.reconnectTable.get(site);
 		if(item!=null)
 			return item.getState();
 		else
 			return 0;
 	}
 
-	public long getReconnectTimestamp(String topic){
-		ReconnectItem item = this.reconnectTable.get(topic);
+	public long getReconnectTimestamp(String site){
+		ReconnectItem item = this.reconnectTable.get(site);
 		if(item!=null)
 			return item.getTimestamp();
 		else
 			return 0;
 	}
 
-	public void setReconnectTimestamp(String topic, long v){
-		ReconnectItem item = this.reconnectTable.get(topic);
+	public void setReconnectTimestamp(String site, long v){
+		ReconnectItem item = this.reconnectTable.get(site);
 		if(item!=null)
 			item.setTimestamp(v);
 	}
 
-	public List<String> getAllTopics(){
-		java.util.Iterator<String> its = reconnectTable.keySet().iterator();
+	public List<String> getAllTopicsBySite(String site){
 		List<String> re = new ArrayList<>();
-		while(its.hasNext()){
-			re.add(its.next());
+		for(String topic :this.trueTopicToSites.keySet()){
+			String s = topic.substring(0,topic.indexOf("/"));
+			if(s.equals(site)){
+				re.add(topic);
+			}
+		}
+		return re;
+//		ReconnectItem item  = this.reconnectTable.get(site);
+//		if(item!=null)
+//			return item.getTopics();
+//		else
+//			return null;
+	}
+
+//	public void addTopicToReconnectTable(String topic){
+//		String site = topic.substring(0,topic.indexOf("/"));
+//		if(this.reconnectTable.contains(site)){
+//			this.reconnectTable.get(site).putTopic(topic);
+//		}
+//	}
+	public Set<String> getAllReconnectTopic(){
+		return waitReconnectTopic;
+	}
+
+	public List<String> getAllReconnectSites(){
+		List<String> re = new ArrayList<>();
+		for(String site :  reconnectTable.keySet()) {
+			ReconnectItem item = reconnectTable.get(site);
+			if(item.getState()>0){
+				re.add(site);
+			}
 		}
 		return re;
 	}
 
-	protected class Site {
+	public Site getSiteByName(String site){
+		List<String> topics = this.getAllTopicsBySite(site);
+		if(topics.size()>0){
+			Site[] sites = trueTopicToSites.get(topics.get(0));
+			if(sites.length>0)
+				return getActiveSite(sites);
+		}
+		return null	;
+	}
+
+
+
+
+	public class Site {
 		String host;
 		int port;
 		String tableName;
@@ -135,7 +197,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		}
 	}
 	
-	abstract protected void doReconnect(Site site);
+	abstract protected boolean doReconnect(Site site);
 	
 	public void setMsgId(String topic, long msgId) {
 		synchronized (trueTopicToSites) {
@@ -149,9 +211,7 @@ abstract class AbstractClient implements MessageDispatcher{
 
 	public boolean tryReconnect(String topic) {
 		System.out.println("Trigger reconnect");
-		ReconnectItem recSignal = reconnectTable.get(topic);
-		if(recSignal==null) return false;
-		synchronized (recSignal) {
+		synchronized (reconnectTable) {
 			topic = HATopicToTrueTopic.get(topic);
 			queueManager.removeQueue(topic);
 			Site[] sites = null;
@@ -164,24 +224,55 @@ abstract class AbstractClient implements MessageDispatcher{
 				if (!sites[0].reconnect)
 					return false;
 			}
-			Site site = activeCloseConnection(sites);
+			System.out.println("prepare to get active site");
+			Site site = getActiveSite(sites);
+			System.out.println("get active site " + site.host + ":" + site.port);
 			if(site!=null) {
-				doReconnect(site);
-				return true;
+				if(!doReconnect(site)){
+					waitReconnectTopic.add(topic);
+					return false;
+				}else{
+					waitReconnectTopic.remove(topic);
+					return true;
+				}
 			}else{
 				return false;
 			}
 
 		}
 	}
-	
-	private Site activeCloseConnection(Site[] sites) {
+
+	private Site getActiveSite(Site[] sites){
 		int siteId = 0;
 		int siteNum = sites.length;
 
-		for(int i=0;i<siteNum;i++){
+		while(true){
 			Site site = sites[siteId];
 			siteId = (siteId + 1) % siteNum;
+			try {
+				DBConnection conn = new DBConnection();
+				conn.connect(site.host, site.port);
+				try {
+					conn.run("1");
+					return site;
+				} catch (IOException ioex) {
+					throw ioex;
+				} finally {
+					conn.close();
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+
+			try {
+				Thread.sleep(500);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void activeCloseConnection(Site site) {
 			try {
 				DBConnection conn = new DBConnection();
 				conn.connect(site.host, site.port);
@@ -190,15 +281,16 @@ abstract class AbstractClient implements MessageDispatcher{
 					List<Entity> params = new ArrayList<>();
 					params.add(new BasicString(localIP));
 					params.add(new BasicInt(listeningPort));
+					params.add(new BasicBoolean(true));
 					conn.run("activeClosePublishConnection", params);
 					System.out.println("Successfully closed publish connection");
-					return site;
 				} catch (IOException ioex) {
 					throw ioex;
 				} finally {
 					conn.close();
 				}
 			} catch (Exception ex) {
+				ex.printStackTrace();
 				System.out.println("Unable to actively close the publish connection from site " + site.host + ":" + site.port);
 			}
 
@@ -207,8 +299,6 @@ abstract class AbstractClient implements MessageDispatcher{
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
-		return null;
 	}
 
 	public AbstractClient() throws SocketException {
@@ -234,7 +324,6 @@ abstract class AbstractClient implements MessageDispatcher{
 			}
 			cache.add(msg);
 		}
-
 	}
 	
 	private synchronized void flushToQueue() {

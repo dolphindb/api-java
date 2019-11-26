@@ -17,16 +17,17 @@ public class PollingClient extends AbstractClient{
     }
     
     @Override
-    protected void doReconnect(Site site) {
+    protected boolean doReconnect(Site site) {
     		try {
 				Thread.sleep(1000);
     			BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter,site.allowExistTopic);
 				System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
     			topicPoller.setQueue(queue);
-    			return;
+    			return true;
     		} catch (Exception ex) {
 				System.out.println("Unable to subscribe table. Will try again after 1 seconds.");
 				ex.printStackTrace();
+				return  false;
     		}
     }
     

@@ -3,6 +3,7 @@ package com.xxdb.streaming.client;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 
 class Daemon  implements Runnable{
 	private int listeningPort = 0;
@@ -62,22 +63,37 @@ class Daemon  implements Runnable{
 		public void run() {
 			while(true){
 				try {
-					for (String topic : this.dispatcher.getAllTopics()) {
-						if (dispatcher.getNeedReconnect(topic) > 0) { // need reconnect or reconnecting
-							if (dispatcher.getNeedReconnect(topic) == 1) {
-								if(dispatcher.tryReconnect(topic)) {
-									dispatcher.setNeedReconnect(topic, 2);
+					for (String site : this.dispatcher.getAllReconnectSites()) {
+						if (dispatcher.getNeedReconnect(site) == 1) {
+								System.out.println("this " + site  + " getNeedReconnect state is 1");
+								AbstractClient.Site s = dispatcher.getSiteByName(site);
+								dispatcher.activeCloseConnection(s);
+								String lastTopic = "";
+								System.out.println(dispatcher.getAllTopicsBySite(site));
+								for(String topic : dispatcher.getAllTopicsBySite(site)) {
+									System.out.println("try to reconnect topic " + topic);
+									dispatcher.tryReconnect(topic);
+
+									lastTopic = topic;
 								}
+								dispatcher.setNeedReconnect(lastTopic, 2);
 							} else {
 								// try reconnect after 3 second when reconnecting stat
-								long ts = dispatcher.getReconnectTimestamp(topic);
+								System.out.println("this " + site  + " getNeedReconnect state is 2");
+								long ts = dispatcher.getReconnectTimestamp(site);
 								if (System.currentTimeMillis() >= ts + 3000) {
-									if(dispatcher.tryReconnect(topic))
-										dispatcher.setReconnectTimestamp(topic, System.currentTimeMillis());
+									AbstractClient.Site s = dispatcher.getSiteByName(site);
+									dispatcher.activeCloseConnection(s);
+									for(String topic : dispatcher.getAllTopicsBySite(site)) {
+										dispatcher.tryReconnect(topic);
+									}
+									dispatcher.setReconnectTimestamp(site, System.currentTimeMillis());
 								}
 							}
 						}
-					}
+						for(String topic : dispatcher.getAllReconnectTopic()){
+							dispatcher.tryReconnect(topic);
+						}
 				}catch(Exception e0){
 					e0.printStackTrace();
 				}

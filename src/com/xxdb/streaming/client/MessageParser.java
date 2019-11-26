@@ -86,8 +86,10 @@ class MessageParser implements Runnable {
 
                     body = factory.createEntity(df, dt, in);
                     if (body.isTable() && body.rows()==0) {
-                        dispatcher.setNeedReconnect(topic,0);
-
+                        for(String t : topic.split(",")){
+                            System.out.println("set ");
+                            dispatcher.setNeedReconnect(t,0);
+                        }
                         assert (body.rows() == 0);
                         nameToIndex = new HashMap<>();
                         BasicTable schema = (BasicTable) body;
@@ -132,13 +134,23 @@ class MessageParser implements Runnable {
         catch (Exception e) {
             e.printStackTrace();
             if (dispatcher.isClosed(topic)) {
+                System.out.println("check " + topic + " is unsubscribed");
                 return;
             } else {
-                dispatcher.setNeedReconnect(topic, 1);
+//                List<String> allTopicOfThisSite = dispatcher.getAllTopicsOnSite(topic);
+//                for(String tp : allTopicOfThisSite){
+//                    System.out.println("set " + tp + " reconnect state = 1");
+                    dispatcher.setNeedReconnect(topic, 1);
+//                }
+
             }
         } catch (Throwable t) {
-                 t.printStackTrace();
+            t.printStackTrace();
+//            List<String> allTopicOfThisSite = dispatcher.getAllTopicsOnSite(topic);
+//            for(String tp : allTopicOfThisSite){
+//                System.out.println("set " + tp + " reconnect state = 1");
                 dispatcher.setNeedReconnect(topic, 1);
+//            }
          }
     }
 }
