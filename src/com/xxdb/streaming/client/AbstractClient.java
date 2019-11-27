@@ -326,12 +326,12 @@ abstract class AbstractClient implements MessageDispatcher{
 		}
 	}
 	
-	private synchronized void flushToQueue() {
+	private void flushToQueue() {
 		Set<String> keySet = messageCache.keySet();
-		for(String topic : keySet) {
+		for (String topic : keySet) {
 			try {
 				BlockingQueue<List<IMessage>> q = queueManager.getQueue(topic);
-				if(q!=null)
+				if (q != null)
 					q.put(messageCache.get(topic));
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -355,7 +355,7 @@ abstract class AbstractClient implements MessageDispatcher{
 		}
 	}
 	
-	public void batchDispatch(List<IMessage> messags) {
+	public synchronized void batchDispatch(List<IMessage> messags) {
 		for (int i = 0; i < messags.size(); ++i) {
 			addMessageToCache(messags.get(i));
 		}
