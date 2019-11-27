@@ -3,6 +3,7 @@ package com.xxdb.streaming.client;
 import com.xxdb.streaming.client.IMessage;
 
 import java.util.List;
+import java.util.Set;
 
 interface MessageDispatcher {
 	boolean isRemoteLittleEndian(String host);
@@ -12,8 +13,12 @@ interface MessageDispatcher {
     boolean tryReconnect(String topic);
     void setMsgId(String topic, long msgId);
     void setNeedReconnect(String topic , int v);
-    int getNeedReconnect(String topic);
-    long getReconnectTimestamp(String topic);
-    void setReconnectTimestamp(String topic,long v);
-    List<String> getAllTopics();
+    int getNeedReconnect(String site);
+    long getReconnectTimestamp(String site);
+    void setReconnectTimestamp(String site,long v);
+    List<String> getAllReconnectSites();
+    AbstractClient.Site getSiteByName(String site);
+    void activeCloseConnection(AbstractClient.Site site);
+    List<String> getAllTopicsBySite(String site);
+    Set<String> getAllReconnectTopic();
 }
