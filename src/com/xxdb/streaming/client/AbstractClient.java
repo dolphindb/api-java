@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
@@ -22,16 +23,16 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected long lastReconnectTimestamp = 0;
 	protected int listeningPort;
 	protected QueueManager queueManager = new QueueManager();
-	protected HashMap<String, List<IMessage>> messageCache = new HashMap<>();
+	protected ConcurrentHashMap<String, List<IMessage>> messageCache = new ConcurrentHashMap<>();
 	protected HashMap<String, String> tableNameToTrueTopic = new HashMap<>();
 	protected HashMap<String, String> HATopicToTrueTopic = new HashMap<>();
 	protected HashMap<String, Boolean> hostEndian = new HashMap<>();
 	protected Thread pThread;
-	protected HashMap<String, Site[]> trueTopicToSites = new HashMap<>();
+	protected ConcurrentHashMap<String, Site[]> trueTopicToSites = new ConcurrentHashMap<>();
 
 	protected HashMap<String, List<String>> siteToTopic = new HashMap<>();
 
-	protected Set<String> waitReconnectTopic = new HashSet<>();
+	protected CopyOnWriteArraySet<String> waitReconnectTopic = new CopyOnWriteArraySet<>();
 	class ReconnectItem {
 		/**
 		 * 0: connected and received message schema
@@ -137,12 +138,12 @@ abstract class AbstractClient implements MessageDispatcher{
 
 	public List<String> getAllReconnectSites(){
 		List<String> re = new ArrayList<>();
-		for(String site :  reconnectTable.keySet()) {
-			ReconnectItem item = reconnectTable.get(site);
-			if(item.getState()>0){
-				re.add(site);
+			for (String site : reconnectTable.keySet()) {
+				ReconnectItem item = reconnectTable.get(site);
+				if (item.getState() > 0) {
+					re.add(site);
+				}
 			}
-		}
 		return re;
 	}
 
@@ -402,7 +403,9 @@ abstract class AbstractClient implements MessageDispatcher{
 			else{
 				params.add(new Void());
 			}
-			params.add(new BasicBoolean(allowExistTopic));
+			if(allowExistTopic){
+				params.add(new BasicBoolean(allowExistTopic));
+			}
 
 			re = dbConn.run("publishTable", params);
 

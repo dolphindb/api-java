@@ -657,6 +657,15 @@ public class DBConnectionTest {
 		System.out.println(conn.run("string", args));
 	}
 
+	public void testIPADDR_V6() throws IOException {
+		String ipv6Str = "aba8:f04:e12c:e0aa:b967:f4bf:481c:d400";
+		BasicIPAddr b = BasicIPAddr.fromString(ipv6Str);
+		List<Entity> args = new ArrayList<Entity>(1);
+		args.add(b);
+		BasicIPAddr reip = (BasicIPAddr)conn.run("ipaddr", args);
+		BasicString re = (BasicString)conn.run("string", args);
+		System.out.println(re.getString());
+	}
 	public void Test_ReLogin() throws IOException {
 		conn.run("if(existsDatabase('dfs://db1')) dropDatabase('dfs://db1'); db = database('dfs://db1', VALUE, 1..10);	t = table(1..100 as id);db.createPartitionedTable(t,'t1', 'id')");
 		conn.run("logout()");
@@ -805,7 +814,8 @@ public class DBConnectionTest {
 			}
 
 			DBConnectionTest test = new DBConnectionTest(host,port);
-//			test.testUUID();
+			test.testUUID();
+			test.testIPADDR_V6();
 //			test.testVoid();
 //			test.testFunctionDef();
 //			test.testIntegerVector();
@@ -848,7 +858,7 @@ public class DBConnectionTest {
 			//test.test_partialFunction();
 			//test.testFunction2();
 			//test.testFunction3();
-			test.test_timeout();
+			//test.test_timeout();
 			System.out.println("test cases :" + test.failedCount + "/" + test.caseCount);
 		}
 

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
+import java.util.Set;
 
 class Daemon  implements Runnable{
 	private int listeningPort = 0;
@@ -88,9 +89,13 @@ class Daemon  implements Runnable{
 								}
 							}
 						}
-						for(String topic : dispatcher.getAllReconnectTopic()){
+					Set<String> waitReconnectTopic = dispatcher.getAllReconnectTopic();
+					synchronized (waitReconnectTopic){
+						for(String topic : waitReconnectTopic){
 							dispatcher.tryReconnect(topic);
 						}
+					}
+
 				}catch(Exception e0){
 					e0.printStackTrace();
 				}
