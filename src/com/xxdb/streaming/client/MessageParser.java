@@ -87,7 +87,6 @@ class MessageParser implements Runnable {
                     body = factory.createEntity(df, dt, in);
                     if (body.isTable() && body.rows()==0) {
                         for(String t : topic.split(",")){
-                            System.out.println("set ");
                             dispatcher.setNeedReconnect(t,0);
                         }
                         assert (body.rows() == 0);
