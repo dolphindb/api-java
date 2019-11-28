@@ -666,6 +666,17 @@ public class DBConnectionTest {
 		BasicString re = (BasicString)conn.run("string", args);
 		System.out.println(re.getString());
 	}
+
+	public void testIPADDR_V4() throws IOException {
+		String ipv4Str = "192.168.1.142";
+		BasicIPAddr b = BasicIPAddr.fromString(ipv4Str);
+		List<Entity> args = new ArrayList<Entity>(1);
+		args.add(new BasicString(ipv4Str));
+		BasicIPAddr reip = (BasicIPAddr)conn.run("ipaddr", args);
+		BasicString re = (BasicString)conn.run("string", args);
+		System.out.println(re.getString());
+	}
+
 	public void Test_ReLogin() throws IOException {
 		conn.run("if(existsDatabase('dfs://db1')) dropDatabase('dfs://db1'); db = database('dfs://db1', VALUE, 1..10);	t = table(1..100 as id);db.createPartitionedTable(t,'t1', 'id')");
 		conn.run("logout()");
@@ -816,6 +827,7 @@ public class DBConnectionTest {
 			DBConnectionTest test = new DBConnectionTest(host,port);
 			test.testUUID();
 			test.testIPADDR_V6();
+			test.testIPADDR_V4();
 //			test.testVoid();
 //			test.testFunctionDef();
 //			test.testIntegerVector();
