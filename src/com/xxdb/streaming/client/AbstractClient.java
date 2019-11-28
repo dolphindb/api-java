@@ -258,12 +258,16 @@ abstract class AbstractClient implements MessageDispatcher{
 	}
 
 	private int GetVersionNumber(String ver){
-		String[] s = ver.split(" ");
-		if(s.length>=2){
-			String verstr = s[0];
-			String vernum = verstr.replace(".","");
-			return Integer.parseInt(vernum);
-		}else{
+		try {
+			String[] s = ver.split(" ");
+			if (s.length >= 2) {
+				String verstr = s[0];
+				String vernum = verstr.replace(".", "");
+				return Integer.parseInt(vernum);
+			}
+		}catch (Exception ex){
+
+		}finally {
 			return 0;
 		}
 	}
