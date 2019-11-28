@@ -257,16 +257,32 @@ abstract class AbstractClient implements MessageDispatcher{
 		}
 	}
 
+	private int GetVersionNumber(String ver){
+		String[] s = ver.split(" ");
+		if(s.length>=2){
+			String verstr = s[0];
+			String vernum = verstr.replace(".","");
+			return Integer.parseInt(vernum);
+		}else{
+			return 0;
+		}
+	}
+
 	public void activeCloseConnection(Site site) {
 			try {
 				DBConnection conn = new DBConnection();
 				conn.connect(site.host, site.port);
+
 				try {
+					BasicString version = (BasicString)conn.run("version()");
+					int verNum = GetVersionNumber(version.getString());
+
 					String localIP = conn.getLocalAddress().getHostAddress();
 					List<Entity> params = new ArrayList<>();
 					params.add(new BasicString(localIP));
 					params.add(new BasicInt(listeningPort));
-					params.add(new BasicBoolean(true));
+					if(verNum>=995)
+						params.add(new BasicBoolean(true));
 					conn.run("activeClosePublishConnection", params);
 					System.out.println("Successfully closed publish connection");
 				} catch (IOException ioex) {
