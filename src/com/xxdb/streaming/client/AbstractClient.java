@@ -29,9 +29,7 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected HashMap<String, Boolean> hostEndian = new HashMap<>();
 	protected Thread pThread;
 	protected ConcurrentHashMap<String, Site[]> trueTopicToSites = new ConcurrentHashMap<>();
-
 	protected HashMap<String, List<String>> siteToTopic = new HashMap<>();
-
 	protected CopyOnWriteArraySet<String> waitReconnectTopic = new CopyOnWriteArraySet<>();
 	class ReconnectItem {
 		/**

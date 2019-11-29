@@ -7,10 +7,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class TopicManager{
-    private HashMap<String, TopicInfo> topicQueue = new HashMap<>();
 
+    private HashMap<String, TopicInfo> topicQueue = new HashMap<>();
+    private ConcurrentHashMap<String, SiteInfo> siteQueue = new ConcurrentHashMap<>();
     //singleton
     private static TopicManager uniqueInstance = null;
     private TopicManager(){ }
@@ -45,7 +48,7 @@ public class TopicManager{
         }
     }
 
-    public HashMap<String,Integer> getNameToIndex(String topic){
+    public ConcurrentHashMap<String,Integer> getNameToIndex(String topic){
         TopicInfo ti = getTopicInfo(topic);
         if(ti!=null){
             return ti.nameToIndex;
@@ -97,16 +100,86 @@ public class TopicManager{
 
 
     private class TopicInfo {
-        private String originTopic;
-        private List<String> HATopicWithTableName;
+        private String originTopic; // originTopic is same to
         private BlockingQueue<List<IMessage>> messageQueue;
-        private HashMap<String,Integer> nameToIndex;
+        private ConcurrentHashMap<String,Integer> nameToIndex;
         private AbstractClient.Site[] sites;
+        private int reconnectStat ;
 
         public TopicInfo(String topic){
             this.originTopic = topic;
-            this.HATopicWithTableName = new ArrayList<>();
-            this.nameToIndex = new HashMap<>();
+            this.reconnectStat = 0;
+        }
+
+        public void setOriginTopic(String originTopic){
+            this.originTopic = originTopic;
+        }
+
+        public String getOriginTopic(){
+            return this.originTopic;
+        }
+
+        public void setNameToIndex(ConcurrentHashMap<String,Integer> nameToIndex){
+            this.nameToIndex = nameToIndex;
+        }
+
+        public ConcurrentHashMap<String, Integer> getNameToIndex(){
+            return this.nameToIndex;
+        }
+
+        public void setReconnectStat(int stat){
+            this.reconnectStat = stat;
+        }
+
+        public int getReconnectStat(){
+            return this.reconnectStat;
+        }
+
+        public void setSites(AbstractClient.Site[] sites){
+            this.sites = sites;
+        }
+
+        public AbstractClient.Site[] getSites(){
+            return this.sites;
+        }
+    }
+
+
+    private class SiteInfo{
+        ConcurrentHashMap<String,TopicInfo> topicQueue;
+        private int reconnectStat ;
+
+        public SiteInfo(){
+            topicQueue = new ConcurrentHashMap<>();
+            reconnectStat = 0;
+        }
+
+        public void addTopic(String topic){
+            if(!topicQueue.containsKey(topic)){
+                topicQueue.put(topic, new TopicInfo(topic));
+            }
+        }
+
+        public TopicInfo getTopic(String topic){
+            if(topicQueue.containsKey(topic))
+                return topicQueue.get(topic);
+            else
+                return null;
+        }
+        public int getReconnectStat(){
+            return this.reconnectStat;
+        }
+
+        public void setReconnectStat(int state){
+            this.reconnectStat = state;
+        }
+    }
+
+
+    public static class Utils {
+        public static String getSiteFromTopic(String topic){
+            String site = topic.substring(0,topic.indexOf("/"));
+            return site;
         }
     }
 }
