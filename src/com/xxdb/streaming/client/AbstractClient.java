@@ -20,7 +20,6 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected static final String DEFAULT_ACTION_NAME = "javaStreamingApi";
 	protected ConcurrentHashMap<String, ReconnectItem> reconnectTable = new ConcurrentHashMap<String, ReconnectItem>();
 
-	protected long lastReconnectTimestamp = 0;
 	protected int listeningPort;
 	protected QueueManager queueManager = new QueueManager();
 	protected ConcurrentHashMap<String, List<IMessage>> messageCache = new ConcurrentHashMap<>();
@@ -29,7 +28,6 @@ abstract class AbstractClient implements MessageDispatcher{
 	protected HashMap<String, Boolean> hostEndian = new HashMap<>();
 	protected Thread pThread;
 	protected ConcurrentHashMap<String, Site[]> trueTopicToSites = new ConcurrentHashMap<>();
-	protected HashMap<String, List<String>> siteToTopic = new HashMap<>();
 	protected CopyOnWriteArraySet<String> waitReconnectTopic = new CopyOnWriteArraySet<>();
 	class ReconnectItem {
 		/**
@@ -154,9 +152,6 @@ abstract class AbstractClient implements MessageDispatcher{
 		}
 		return null	;
 	}
-
-
-
 
 	public class Site {
 		String host;

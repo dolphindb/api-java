@@ -486,7 +486,7 @@ public class DBConnection {
 
 			String msg = in.readLine();
 			if(!msg.equals("OK")){
-				if (ServerExceptionUtils.isNotLogin(msg)) {
+				if (reconnect&&ServerExceptionUtils.isNotLogin(msg)) {
 					if (userId.length() > 0 && password.length() > 0)
 						login();
 				}
