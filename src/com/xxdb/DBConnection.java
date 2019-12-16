@@ -395,6 +395,11 @@ public class DBConnection {
 	
 	public Entity run(String script, ProgressListener listener, int priority, int parallelism) throws IOException{
 		mutex.lock();
+
+		boolean isUrgentCancelJob = false;
+		if(script.startsWith("cancelJob(") || script.startsWith("cancelConsoleJob("))
+			isUrgentCancelJob = true;
+
 		try{
 			boolean reconnect = false;
 			InputStream is = null;
@@ -418,6 +423,8 @@ public class DBConnection {
 				out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
 				if(priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM){
 					out.writeBytes(" / 0_1_" + String.valueOf(priority) +"_" + String.valueOf(parallelism));
+				}else if (isUrgentCancelJob){
+					out.writeBytes(" / 1_1_8_8");
 				}
 				out.writeByte('\n');
 				out.writeBytes(body);
