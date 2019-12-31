@@ -2,7 +2,6 @@ package com.xxdb;
 
 import java.io.IOException;
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -817,7 +816,7 @@ public class DBConnectionTest {
 	public static void main(String[] args){
 
 		try{
-			String host = "192.168.1.142";
+			String host = "localhost";
 			int port = 8848;
 			if(args.length>=2){
 				host = args[0];
@@ -865,10 +864,10 @@ public class DBConnectionTest {
 //			test.test_save_TableInsert(dbPath,tbName,sv,iv,dtv,dbv);
 			//test.test_save_localTable();
 			//test.test_loop_basicTable();
-			//test.testFunction1();
-			//test.test_partialFunction();
-			//test.testFunction2();
-			//test.testFunction3();
+			test.testFunction1();
+			test.test_partialFunction();
+			test.testFunction2();
+			test.testFunction3();
 			test.test_timeout();
 			System.out.println("test cases :" + test.failedCount + "/" + test.caseCount);
 		}
