@@ -42,7 +42,11 @@ public class DBConnectionTest {
 	
 	public void testFunctionDef() throws IOException{
 		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
+		caseCount++
 		Entity obj = conn.run("def(a,b){return a+b}");
+		if(obj.getDataType()!= Entity.DATA_TYPE.DT_FUNCTIONDEF){
+			failedCount++
+		}
 //		System.out.println(obj.getString());
 	}
 	
