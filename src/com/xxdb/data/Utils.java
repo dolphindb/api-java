@@ -89,13 +89,18 @@ public class Utils {
 		return days * 86400 + (hour *60 + minute) * 60 + second;
 	}
 	
-	public static LocalDateTime parseDateTime(int seconds){
-		LocalDate date;
-		int days= seconds / 86400;
-		if (seconds >= 0)
-			date = Utils.parseDate(days);
+	public static int divide(int x, int y){
+		int tmp=x / y;
+		if(x>=0)
+			return tmp;
+		else if(x%y<0)
+			return tmp-1;
 		else
-			date = Utils.parseDate(days - 1);
+			return tmp;
+	}
+	
+	public static LocalDateTime parseDateTime(int seconds){
+		LocalDate date = Utils.parseDate(divide(seconds, 86400));
 		seconds = seconds % 86400;
 		if(seconds < 0)
 			seconds += 86400;
@@ -116,12 +121,7 @@ public class Utils {
 	}
 	
 	public static LocalDateTime parseDateHour(int hours){
-		LocalDate date;
-		int days = hours / 24;
-		if (hours >= 0)
-			date = Utils.parseDate(days);
-		else
-			date = Utils.parseDate(days - 1);
+		LocalDate date = Utils.parseDate(divide(hours, 24));
 		hours = hours % 24;
 		if (hours < 0)
 			hours += 24;
