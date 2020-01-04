@@ -42,10 +42,10 @@ public class DBConnectionTest {
 	
 	public void testFunctionDef() throws IOException{
 		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++
+		caseCount++;
 		Entity obj = conn.run("def(a,b){return a+b}");
 		if(obj.getDataType()!= Entity.DATA_TYPE.DT_FUNCTIONDEF){
-			failedCount++
+			failedCount++;
 		}
 //		System.out.println(obj.getString());
 	}
@@ -741,7 +741,6 @@ public class DBConnectionTest {
 
 
 	private void bulk_load() throws Exception{
-		//示例，实际数据从csv文件中构建
 		List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
 		List<String> colTypes = Arrays.asList("BOOL","INT","DOUBLE","DATE","SYMBOL");
 		//msgSize
@@ -784,7 +783,6 @@ public class DBConnectionTest {
 				}else {
 					v = new BasicDate(LocalDate.parse(value));
 				}
-				// vlaue 是毫秒值用如下方式
 				//v = new BasicDate(Utils.parseDate(Integer.parseInt(value)));
 				break;
 			case DT_TIMESTAMP:
@@ -794,7 +792,6 @@ public class DBConnectionTest {
 				}else {
 					v = new BasicTimestamp(LocalDateTime.parse(value));
 				}
-				// vlaue 是毫秒值用如下方式
 				//v = new BasicTimestamp(Utils.parseTimestamp(Long.parseLong(value)));
 				break;
 			case DT_TIME:
@@ -804,7 +801,6 @@ public class DBConnectionTest {
 				}else {
 					v = new BasicTime(LocalTime.parse(value));
 				}
-				// vlaue 是毫秒值用如下方式
 				//v = new BasicTime(Utils.parseTime(Integer.parseInt(value)));
 				break;
 		}
