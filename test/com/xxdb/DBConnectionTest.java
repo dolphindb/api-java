@@ -6,20 +6,40 @@ import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
+import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 
-public class DBConnectionTest {
-	private DBConnection conn;
-	public DBConnectionTest(){
+public class DBConnectionTest{
 
-	}
-	public DBConnectionTest(String host, int port) throws IOException{
+	private DBConnection conn;
+	private String HOST  = "localhost";
+	private Integer PORT = 8848;
+
+	@Before
+	public  void setUp(){
 		conn = new DBConnection();
-		if(!conn.connect(host,port,"admin","123456")){
-			throw new IOException("Failed to connect to 2xdb server");
+		try{
+			if(!conn.connect(HOST,PORT,"admin","123456")){
+				throw new IOException("Failed to connect to 2xdb server");
+			}
+		}catch(IOException ex){
+			ex.printStackTrace();
 		}
 	}
+
+	@After
+	public void tearDown() throws Exception {
+		conn.close();
+	}
+
 	public int caseCount = 0;
 	public int failedCount = 0;
 
@@ -27,126 +47,63 @@ public class DBConnectionTest {
 		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
 		caseCount++;
 	}
-	
+	@Test
 	public void testStringVector() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		BasicStringVector vector = (BasicStringVector)conn.run("`IBM`GOOG`YHOO");
 		int size = vector.rows();
-		if(size != 3) {
-			failedCount++;
-			System.out.println(" failed");
-		}
+		assertEquals(3, size);
 	}
-	
+	@Test
 	public void testFunctionDef() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		Entity obj = conn.run("def(a,b){return a+b}");
-		if(obj.getDataType()!= Entity.DATA_TYPE.DT_FUNCTIONDEF){
-			failedCount++;
-			System.out.println(" failed");
-		}
+		assertEquals(Entity.DATA_TYPE.DT_FUNCTIONDEF,obj.getDataType());
 	}
-	
+	@Test
 	public void testSymbolVector() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		BasicStringVector vector = (BasicStringVector)conn.run("rand(`IBM`MSFT`GOOG`BIDU,10)");
 		int size = vector.rows();
-//		System.out.println("size: "+size);
-//		for(int i=0; i<size; ++i)
-//			System.out.println(vector.getString(i));
-		if(size != 10){
-			failedCount++;
-			System.out.println(" failed");
-		}
+		assertEquals(10,size);
 	}
-	
+	@Test
 	public void testIntegerVector() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
-		Date start = new Date();
 		BasicIntVector vector = (BasicIntVector)conn.run("rand(10000,1000000)");
 		int size = vector.rows();
-//		System.out.println("size: "+size);
-//		for(int i=0; i<20; ++i)
-//			System.out.println(vector.getInt(i));
-//		System.out.println("Time used:" + ((new Date()).getTime() - start.getTime()));
-		if(size != 1000000) {
-			failedCount++;
-			System.out.println(" failed");
-		}
+		assertEquals(1000000,size);
 	}
-	
+	@Test
 	public void testDoubleVector() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		BasicDoubleVector vector = (BasicDoubleVector)conn.run("rand(10.0,10)");
 		int size = vector.rows();
-//		System.out.println("size: "+size);
-//		for(int i=0; i<size; ++i)
-//			System.out.println(vector.getDouble(i));
-		if(size != 10) {
-			failedCount++;
-			System.out.println("failed");
-		}
+		assertEquals(10,size);
 	}
-	
+	@Test
 	public void testDateVector() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		BasicDateVector vector = (BasicDateVector)conn.run("2012.10.01 +1..10");
 		int size = vector.rows();
-//		System.out.println("size: "+size);
-//		for(int i=0; i<size; ++i)
-//			System.out.println(vector.getDate(i).toString());
-		if(size != 10) {
-			failedCount++;
-			System.out.println("failed");
-		}
+		assertEquals(10,size);
 	}
-	
+	@Test
 	public void testDateTimeVector() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
+
 		BasicDateTimeVector vector = (BasicDateTimeVector)conn.run("2012.10.01 15:00:04 + (rand(10000,10))");
 		int size = vector.rows();
-//		System.out.println("size: "+size);
-//		for(int i=0; i<size; ++i)
-//			System.out.println(vector.getDateTime(i).toString());
-		if(size != 10) {
-			failedCount++;
-			System.out.println("failed");
-		}
+		assertEquals(10,size);
 	}
-	
+	@Test
 	public void testIntMatrix() throws IOException {
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		BasicIntMatrix matrix = (BasicIntMatrix)conn.run("1..6$2:3");
-//		System.out.println(matrix.getString());
-		if(matrix.rows()!=2) {
-			failedCount++;
-			System.out.println("failed");
-
-		}
+		assertEquals(2,matrix.rows());
+		assertEquals(3,matrix.columns());
 	}
-	
+	@Test
 	public void testIntMatrixWithLabel() throws IOException {
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		BasicIntMatrix matrix = (BasicIntMatrix)conn.run("cross(add,1..5,1..10)");
-		if(matrix.rows()!=5) {
-			failedCount++;
-			System.out.println("failed");
-		}
-		//System.out.println(matrix.getString());
+		assertEquals(5,matrix.rows());
+		assertEquals(10,matrix.columns());
+		assertEquals("1", matrix.getRowLabel(0).getString());
 	}
-	
+	@Test
 	public void testTable() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		StringBuilder sb =new StringBuilder();
 		sb.append("n=20000\n");
 		sb.append("syms=`IBM`C`MS`MSFT`JPM`ORCL`BIDU`SOHU`GE`EBAY`GOOG`FORD`GS`PEP`USO`GLD`GDX`EEM`FXI`SLV`SINA`BAC`AAPL`PALL`YHOO`KOH`TSLA`CS`CISO`SUN\n");
@@ -154,42 +111,26 @@ public class DBConnectionTest {
 		sb.append("select qty,price from mytrades where sym==`IBM;");
 		BasicTable table = (BasicTable)conn.run(sb.toString());
 		Integer q = ((BasicInt)table.getColumn("qty").get(0)).getInt();
-		if(table.rows()<=0 || q <= 10) {
-			failedCount++;
-			System.out.println("failed");
-		}
+		assertTrue(table.rows()>0);
+		assertTrue(q>10);
 	}
-	
+	@Test
 	public void testDictionary() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		BasicDictionary dict = (BasicDictionary)conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
-//		System.out.println(dict.get(new BasicInt(1)).getString());
-		if(dict.rows()!=3) {
-			failedCount++;
-			System.out.println("failed");
-		}
+		assertEquals(3,dict.rows());
 	}
-	
+
+	@Test
 	public void testFunction() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		List<Entity> args = new ArrayList<Entity>(1);
 		double[] array = {1.5, 2.5, 7};
 		BasicDoubleVector vec = new BasicDoubleVector(array);
 		args.add(vec);
 		Scalar result = (Scalar)conn.run("sum", args);
-		if(((BasicDouble)result).getDouble()==4.7) {
-			failedCount++;
-			System.out.println("failed");
-		}
-//		System.out.println(result.getString());
-
+		assertEquals(11, ((BasicDouble)result).getDouble(),2);
 	}
-
+	@Test
 	public void testFunction1() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		Map<String, Entity> vars = new HashMap<String, Entity>();
 		BasicDoubleVector vec = new BasicDoubleVector(3);
 		vec.setDouble(0, 1.5);
@@ -198,59 +139,36 @@ public class DBConnectionTest {
 		vars.put("a",vec);
 		conn.upload(vars);
 		Entity result = conn.run("accumulate(+,a)");
-		if(((BasicDoubleVector)result).getDouble(2)!=11) {
-			failedCount++;
-			System.out.println("failed");
-		}
-//		System.out.println(result.getString());
+		assertEquals(11,((BasicDoubleVector)result).getDouble(2), 1);
 	}
 
+	@Test
 	public void testAnyVector() throws IOException, Exception{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
 		BasicAnyVector result = (BasicAnyVector)conn.run("(1, 2, (1,3, 5),(0.9, 0.8))");
-		caseCount++;
-		if(result.get(0).getNumber().intValue()!=1) {
-			failedCount++;
-			System.out.println("failed");
-		}
+		assertEquals(1,result.get(0).getNumber().intValue());
 
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		result = (BasicAnyVector)conn.run("eachRight(def(x,y):x+y,1,(1,2,3))");
-		if(result.get(0).getNumber().intValue()!=2) {
-			failedCount++;
-			System.out.println("failed");
-		}
+		assertEquals(2,result.get(0).getNumber().intValue());
 	}
-	
+	@Test
 	public void testSet() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		BasicSet result = (BasicSet)conn.run("set(1+3*1..100)");
-		if(result.getDataType()!=Entity.DATA_TYPE.DT_INT || result.getDataForm()!=Entity.DATA_FORM.DF_SET) {
-			failedCount++;
-			System.out.println("failed");
-		}
+		assertEquals(Entity.DATA_TYPE.DT_INT,result.getDataType());
+		assertEquals(Entity.DATA_FORM.DF_SET,result.getDataForm());
 	}
-	
+	@Test
 	public void testChart() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		StringBuilder sb =new StringBuilder();
 		sb.append("dates=(2012.01.01..2016.07.31)[def(x):weekday(x) between 1:5]\n");
 		sb.append("chartData=each(cumsum,reshape(rand(10000,dates.size()*5)-4500, dates.size():5))\n");
 		sb.append("chartData.rename!(dates, \"Strategy#\"+string(1..5))\n");
 		sb.append("plot(chartData,,[\"Cumulative Pnls of Five Strategies\",\"date\",\"pnl\"],LINE)");
 		BasicChart chart = (BasicChart)conn.run(sb.toString());
-		if(!chart.getTitle().equals("Cumulative Pnls of Five Strategies") || !chart.isChart()) {
-			failedCount++;
-			System.out.println("failed");
-		}
+		assertTrue(chart.getTitle().equals("Cumulative Pnls of Five Strategies"));
+		assertTrue(chart.isChart());
 	}
-
+	@Test
 	public void testMatrixUpload() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
 		Entity a = conn.run("cross(+, 1..5, 1..5)");
 		Entity b = conn.run("1..25$5:5");
 		Map<String, Entity> map = new HashMap<String, Entity>();
@@ -258,15 +176,12 @@ public class DBConnectionTest {
 		map.put("b", b);
 		conn.upload(map);
 		Entity matrix = conn.run("a+b");
-		if(matrix.rows()!=5 || matrix.columns()!=5 || !((BasicIntMatrix)matrix).get(0,0).getString().equals("3")) {
-			failedCount++;
-			System.out.println("failed");
-		}
+		assertEquals(5,matrix.rows());
+		assertEquals(5,matrix.columns());
+		assertTrue(((BasicIntMatrix)matrix).get(0,0).getString().equals("3"));
 	}
-
+	@Test
     public void testUserDefineFunction() throws IOException{
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
         conn.run("def f(a,b) {return a+b};");
         List<Entity> args = new ArrayList<Entity>(2);
         BasicInt arg = new BasicInt(1);
@@ -274,16 +189,10 @@ public class DBConnectionTest {
         args.add(arg);
         args.add(arg2);
         BasicInt result = (BasicInt)conn.run("f", args);
-
-		if(result.getInt()!=3) {
-			failedCount++;
-			System.out.println("failed");
-		}
+		assertEquals(3,result.getInt());
     }
-    
+	@Test
     public void testFunctionIntMatrix(final int nrow, final int ncol) throws Exception {
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
         List<int[]> data = new ArrayList<int[]>();
         for (int i=0; i<ncol; ++i) {
         	int[] array = IntStream.range(i*nrow,i*nrow+nrow).toArray();
@@ -298,15 +207,10 @@ public class DBConnectionTest {
         List<Entity> args = new ArrayList<Entity>(1);
         args.add(matrix);
         BasicIntVector vector = (BasicIntVector)conn.run("flatten", args);
-		if(vector.getInt(4)!=4) {
-			failedCount++;
-			System.out.println("failed");
-		}
+        assertEquals(4,vector.getInt(4));
     }
-    
+	@Test
     public void testFunctionDoubleMatrix(final int nrow, final int ncol) throws Exception {
-		System.out.println("Running "+ Thread.currentThread().getStackTrace()[1].getMethodName());
-		caseCount++;
         List<double[]> data = new ArrayList<double[]>();
         for (int i=0; i<ncol; ++i) {
         	double[] array = DoubleStream.iterate(i*nrow, n->n+1).limit(nrow).toArray();
@@ -317,10 +221,7 @@ public class DBConnectionTest {
         args.add(matrix);
         BasicDoubleVector vector = (BasicDoubleVector) conn.run("flatten", args);
 		Double re = vector.getDouble(4);
-		if(re.equals(3.0)) {
-			failedCount++;
-			System.out.println("failed");
-		}
+		assertEquals(3.0,re,1);
     }
     
     public void testFunctionStrMatrix() throws Exception {
@@ -882,53 +783,53 @@ public class DBConnectionTest {
 
 	public static void main(String[] args){
 
-		try{
-			String host = "localhost";
-			int port = 8848;
-			if(args.length>=2){
-				host = args[0];
-				port = Integer.parseInt(args[1]);
-			}
-
-			DBConnectionTest test = new DBConnectionTest(host,port);
-			test.testUUID();
-			test.testIPADDR_V6();
-			test.testIPADDR_V4();
-			test.testVoid();
-			test.testFunctionDef();
-			test.testIntegerVector();
-			test.testStringVector();
-			test.testSymbolVector();
-			test.testDoubleVector();
-			test.testDateVector();
-			test.testDateTimeVector();
-			test.testIntMatrix();
-			test.testIntMatrixWithLabel();
-			test.testDictionary();
-			test.testTable();
-			test.testFunction();
-			test.testAnyVector();
-//			test.Test_ReLogin();
-			test.testSet();
-			test.testChart();
-			test.testMatrixUpload();
-			test.testUserDefineFunction();
-			test.testFunctionIntMatrix(4, 2);
-			test.testFunctionDoubleMatrix(4, 2);
-			test.testFunctionStrMatrix();
-			test.testTableUpload();
-			test.Test_upload_table();
-			test.test_save_memoryTable();
-			test.test_save_dfsTable();
-			test.testFunction1();
-			test.test_partialFunction();
-			test.test_timeout();
-			System.out.println("test cases :" + test.failedCount + "/" + test.caseCount);
-		}
-
-		catch(Exception ex){
-			ex.printStackTrace();
-			System.out.println(ex.getMessage());
-		}
+////		try{
+////			String host = "localhost";
+////			int port = 8848;
+////			if(args.length>=2){
+////				host = args[0];
+////				port = Integer.parseInt(args[1]);
+////			}
+////
+////			DBConnectionTest test = new DBConnectionTest();
+////			test.testUUID();
+////			test.testIPADDR_V6();
+////			test.testIPADDR_V4();
+////			test.testVoid();
+////			test.testFunctionDef();
+////			test.testIntegerVector();
+////			test.testStringVector();
+////			test.testSymbolVector();
+////			test.testDoubleVector();
+////			test.testDateVector();
+////			test.testDateTimeVector();
+////			test.testIntMatrix();
+////			test.testIntMatrixWithLabel();
+////			test.testDictionary();
+////			test.testTable();
+////			test.testFunction();
+////			test.testAnyVector();
+//////			test.Test_ReLogin();
+////			test.testSet();
+////			test.testChart();
+////			test.testMatrixUpload();
+////			test.testUserDefineFunction();
+////			test.testFunctionIntMatrix(4, 2);
+////			test.testFunctionDoubleMatrix(4, 2);
+////			test.testFunctionStrMatrix();
+////			test.testTableUpload();
+////			test.Test_upload_table();
+////			test.test_save_memoryTable();
+////			test.test_save_dfsTable();
+////			test.testFunction1();
+////			test.test_partialFunction();
+////			test.test_timeout();
+////			System.out.println("test cases :" + test.failedCount + "/" + test.caseCount);
+//		}
+//
+//		catch(Exception ex){
+//			ex.printStackTrace();
+//			System.out.println(ex.getMessage());
+//		}
 	}
 }
