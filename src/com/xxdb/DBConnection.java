@@ -188,7 +188,6 @@ public class DBConnection {
 			socket.setSoTimeout(this.connTimeout);
 		}
 		socket.setKeepAlive(true);
-
 		socket.setTcpNoDelay(true);
 		out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		@SuppressWarnings("resource")
@@ -408,6 +407,8 @@ public class DBConnection {
 					throw new IOException("Database connection is not established yet.");
 				else{
 					socket = new Socket(hostName, port);
+					socket.setKeepAlive(true);
+					socket.setTcpNoDelay(true);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                     is = socket.getInputStream();
                     BufferedInputStream bis = new BufferedInputStream(is);
@@ -587,6 +588,8 @@ public class DBConnection {
 					throw new IOException("Database connection is not established yet.");
 				else{
 					socket = new Socket(hostName, port);
+					socket.setKeepAlive(true);
+					socket.setTcpNoDelay(true);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 					in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
 						new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
@@ -752,6 +755,8 @@ public class DBConnection {
 				else{
 					reconnect = true;
 					socket = new Socket(hostName, port);
+					socket.setKeepAlive(true);
+					socket.setTcpNoDelay(true);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 					in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
 						new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
@@ -788,6 +793,8 @@ public class DBConnection {
 				
 				try {
 					socket = new Socket(hostName, port);
+					socket.setKeepAlive(true);
+					socket.setTcpNoDelay(true);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 					out.writeBytes("API "+sessionID+" ");
 					out.writeBytes(String.valueOf(body.length()));
