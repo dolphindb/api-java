@@ -81,6 +81,18 @@ public class BasicShortVector extends AbstractVector{
 	}
 	
 	@Override
+	public int hashBucket(int index, int buckets){
+		short value = values[index];
+		if(value >= 0)
+			return value % buckets;
+		else if(value == Short.MIN_VALUE)
+			return -1;
+		else{
+			return (int)((4294967296l + value) % buckets);
+		}
+	}
+	
+	@Override
 	public boolean isNull(int index) {
 		return values[index] == Short.MIN_VALUE;
 	}

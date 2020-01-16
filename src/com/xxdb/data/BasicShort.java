@@ -80,6 +80,17 @@ public class BasicShort extends AbstractScalar implements Comparable<BasicShort>
 		return new Short(value).hashCode();
 	}
 	
+	@Override
+	public int hashBucket(int buckets){
+		if(value >= 0)
+			return value % buckets;
+		else if(value == Short.MIN_VALUE)
+			return -1;
+		else{
+			return (int)((4294967296l + value) % buckets);
+		}
+	}
+	
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeShort(value);
 	}

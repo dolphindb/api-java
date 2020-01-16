@@ -84,6 +84,11 @@ public class BasicBoolean extends AbstractScalar implements Comparable<BasicBool
 		return new Byte(value).hashCode();
 	}
 	
+	@Override
+	public int hashBucket(int buckets){
+		return -1;
+	}
+	
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeByte(value);
 	}

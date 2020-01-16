@@ -84,6 +84,11 @@ public class BasicInt128Vector extends AbstractVector{
 	}
 	
 	@Override
+	public int hashBucket(int index, int buckets){
+		return values[index].hashBucket(buckets);
+	}
+	
+	@Override
 	public boolean isNull(int index) {
 		return values[index].isNull();
 	}

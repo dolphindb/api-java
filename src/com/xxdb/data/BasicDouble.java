@@ -90,6 +90,11 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 		return new Double(value).hashCode();
 	}
 	
+	@Override
+	public int hashBucket(int buckets){
+		return -1;
+	}
+	
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeDouble(value);
 	}

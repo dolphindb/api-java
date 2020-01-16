@@ -229,4 +229,41 @@ public class Utils {
 	public static LocalTime parseMinute(int minutes){
 		return LocalTime.of(minutes / 60, minutes % 60);
 	}
+	
+	public static int murmur32(final byte[] data, final int len, final int seed) {
+
+	    int h = len;
+	    int length4 = len / 4;
+
+	    // do the bulk of the input
+	    for (int i = 0; i < length4; i++) {
+	        final int i4 = i * 4;
+	        int k = (data[i4 + 0] & 0xff) + ((data[i4 + 1] & 0xff) << 8)
+	                + ((data[i4 + 2] & 0xff) << 16) + ((data[i4 + 3] & 0xff) << 24);
+	        k *= 0x5bd1e995;
+	        k ^= k >>> 24;
+	        k *= 0x5bd1e995;
+	        h *= 0x5bd1e995;
+	        h ^= k;
+	    }
+
+	    // Handle the last few bytes of the input array
+	    switch (len % 4) {
+	        case 3:
+	            h ^= (data[(len & ~3) + 2] & 0xff) << 16;
+	        case 2:
+	            h ^= (data[(len & ~3) + 1] & 0xff) << 8;
+	        case 1:
+	            h ^= (data[(len & ~3)] & 0xff);
+	            h *= 0x5bd1e995;
+	    }
+
+	    h ^= h >>> 13;
+	    h *= 0x5bd1e995;
+	    h ^= h >>> 15;
+
+	    return h;
+	}
+	
+	
 }

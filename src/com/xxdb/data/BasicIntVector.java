@@ -73,12 +73,22 @@ public class BasicIntVector extends AbstractVector{
 		}else{
 			values[index] = value.getNumber().intValue();
 		}
-
-
 	}
 	
 	public void setInt(int index, int value){
 		values[index] = value;
+	}
+	
+	@Override
+	public int hashBucket(int index, int buckets){
+		int value = values[index];
+		if(value >= 0)
+			return value % buckets;
+		else if(value == Integer.MIN_VALUE)
+			return -1;
+		else{
+			return (int)((4294967296l + value) % buckets);
+		}
 	}
 	
 	@Override
