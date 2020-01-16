@@ -1,4 +1,5 @@
 package com.xxdb;
+import com.xxdb.data.BasicStringTest;
 import com.xxdb.data.BasicTableTest;
 import com.xxdb.data.UtilsTest;
 import org.junit.runner.JUnitCore;
@@ -12,9 +13,10 @@ public class TestMain {
     public static void main(String[] args) {
         List<Result> results = new ArrayList<>();
 
-//        results.add(doTest(DBConnectionTest.class));
-//        results.add(doTest(BasicTableTest.class));
+        results.add(doTest(DBConnectionTest.class));
+        results.add(doTest(BasicTableTest.class));
         results.add(doTest(UtilsTest.class));
+        results.add(doTest(BasicStringTest.class));
 
         int failureCount = 0;
         int runCount = 0;
