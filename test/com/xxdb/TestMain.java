@@ -1,7 +1,5 @@
 package com.xxdb;
-import com.xxdb.data.BasicStringTest;
-import com.xxdb.data.BasicTableTest;
-import com.xxdb.data.UtilsTest;
+import com.xxdb.data.*;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
@@ -11,12 +9,19 @@ import java.util.List;
 
 public class TestMain {
     public static void main(String[] args) {
-        List<Result> results = new ArrayList<>();
 
+        List<Result> results = new ArrayList<>();
         results.add(doTest(DBConnectionTest.class));
         results.add(doTest(BasicTableTest.class));
         results.add(doTest(UtilsTest.class));
         results.add(doTest(BasicStringTest.class));
+        results.add(doTest(BasicLongTest.class));
+        results.add(doTest(BasicIntTest.class));
+        results.add(doTest(BasicByteTest.class));
+        results.add(doTest(BasicShortTest.class));
+        results.add(doTest(BasicUuidTest.class));
+        results.add(doTest(BasicIPAddrTest.class));
+        results.add(doTest(BasicInt128Test.class));
 
         int failureCount = 0;
         int runCount = 0;

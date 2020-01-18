@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BasicStringTest {
-    private  DBConnection conn;
+public class BasicUuidTest {
+    private DBConnection conn;
     @Before
     public  void setUp(){
         conn = new DBConnection();
@@ -30,8 +30,7 @@ public class BasicStringTest {
     public void tearDown() throws Exception {
         conn.close();
     }
-
-    private int getServerHash(Scalar s, int bucket) throws IOException{
+    private int getServerHash(Scalar s, int bucket) throws IOException {
         List<Entity> args = new ArrayList<>();
         args.add(s);
         args.add(new BasicInt(bucket));
@@ -40,14 +39,14 @@ public class BasicStringTest {
     }
 
     @Test
-    public void test_getHash() throws IOException{
+    public void test_getHash() throws  Exception{
         List<Integer> num = Arrays.asList(13,43,71,97,4097);
-        BasicStringVector v = new BasicStringVector(6);
-        v.setString(0,"!@#$%^&*()");
-        v.setString(1,"我是中文测试内容");
-        v.setString(2,"我是!@#$%^中文&*()");
-        v.setString(3,"e1281ls.zxl.d.,cxnv./';'sla");
-        v.setString(4,"abckdlskdful");
+        BasicUuidVector v = new BasicUuidVector(6);
+        v.set(0,BasicUuid.fromString("d4350822-e074-e1f6-4340-95b3148629bd"));
+        v.set(1,BasicUuid.fromString("1825c36f-092c-3ed5-e246-b289d57c89df"));
+        v.set(2,BasicUuid.fromString("776e76f8-40b8-c4ee-b2ae-068d75393362"));
+        v.set(3,BasicUuid.fromString("1783fcf9-3116-1d71-2d7b-6630d6792c94"));
+        v.set(4,BasicUuid.fromString("72b58dc4-9962-f690-2210-cc3a80507573"));
         v.setNull(5);
         for(int b : num){
             for(int i=0;i<v.rows();i++){

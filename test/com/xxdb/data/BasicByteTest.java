@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BasicStringTest {
-    private  DBConnection conn;
+public class BasicByteTest {
+    private DBConnection conn;
     @Before
     public  void setUp(){
         conn = new DBConnection();
@@ -30,7 +30,6 @@ public class BasicStringTest {
     public void tearDown() throws Exception {
         conn.close();
     }
-
     private int getServerHash(Scalar s, int bucket) throws IOException{
         List<Entity> args = new ArrayList<>();
         args.add(s);
@@ -40,14 +39,14 @@ public class BasicStringTest {
     }
 
     @Test
-    public void test_getHash() throws IOException{
+    public void test_getHash() throws  IOException{
         List<Integer> num = Arrays.asList(13,43,71,97,4097);
-        BasicStringVector v = new BasicStringVector(6);
-        v.setString(0,"!@#$%^&*()");
-        v.setString(1,"我是中文测试内容");
-        v.setString(2,"我是!@#$%^中文&*()");
-        v.setString(3,"e1281ls.zxl.d.,cxnv./';'sla");
-        v.setString(4,"abckdlskdful");
+        BasicByteVector v = new BasicByteVector(6);
+        v.setByte(0,(byte)127);
+        v.setByte(1,(byte)-127);
+        v.setByte(2,(byte)12);
+        v.setByte(3,(byte)0);
+        v.setByte(4,(byte)-128);
         v.setNull(5);
         for(int b : num){
             for(int i=0;i<v.rows();i++){

@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BasicStringTest {
-    private  DBConnection conn;
+public class BasicIPAddrTest {
+    private DBConnection conn;
     @Before
     public  void setUp(){
         conn = new DBConnection();
@@ -30,8 +30,7 @@ public class BasicStringTest {
     public void tearDown() throws Exception {
         conn.close();
     }
-
-    private int getServerHash(Scalar s, int bucket) throws IOException{
+    private int getServerHash(Scalar s, int bucket) throws IOException {
         List<Entity> args = new ArrayList<>();
         args.add(s);
         args.add(new BasicInt(bucket));
@@ -40,14 +39,14 @@ public class BasicStringTest {
     }
 
     @Test
-    public void test_getHash() throws IOException{
+    public void test_getHash() throws  Exception{
         List<Integer> num = Arrays.asList(13,43,71,97,4097);
-        BasicStringVector v = new BasicStringVector(6);
-        v.setString(0,"!@#$%^&*()");
-        v.setString(1,"我是中文测试内容");
-        v.setString(2,"我是!@#$%^中文&*()");
-        v.setString(3,"e1281ls.zxl.d.,cxnv./';'sla");
-        v.setString(4,"abckdlskdful");
+        BasicIPAddrVector v = new BasicIPAddrVector(6);
+        v.set(0,BasicIPAddr.fromString("dc70:a4c2:f0f7:81da:334:66e3:b915:a254"));
+        v.set(1,BasicIPAddr.fromString("72e1:e064:b242:5386:109:bdcb:639c:9e63"));
+        v.set(2,BasicIPAddr.fromString("5d42:fc4f:efb2:6735:e5be:1a5d:ebf8:b987"));
+        v.set(3,BasicIPAddr.fromString("fa6b:bf42:cfb4:1bea:3551:1cbc:2c99:9128"));
+        v.set(4,BasicIPAddr.fromString("6e01:2a6e:b3b0:323a:745:1527:1537:8019"));
         v.setNull(5);
         for(int b : num){
             for(int i=0;i<v.rows();i++){
