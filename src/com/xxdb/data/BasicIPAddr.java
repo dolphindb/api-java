@@ -72,7 +72,7 @@ public class BasicIPAddr extends BasicInt128 {
 	
 	public static BasicIPAddr parseIP4(String str){
 		int byteIndex = 0;
-		int curByte = 0;
+		long curByte = 0;
 		int len = str.length();
 		long low = 0;
 		for(int i=0; i<=len; ++i){

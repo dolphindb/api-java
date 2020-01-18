@@ -89,13 +89,18 @@ public class Utils {
 		return days * 86400 + (hour *60 + minute) * 60 + second;
 	}
 	
-	public static LocalDateTime parseDateTime(int seconds){
-		LocalDate date;
-		int days= seconds / 86400;
-		if (seconds >= 0)
-			date = Utils.parseDate(days);
+	public static int divide(int x, int y){
+		int tmp=x / y;
+		if(x>=0)
+			return tmp;
+		else if(x%y<0)
+			return tmp-1;
 		else
-			date = Utils.parseDate(days - 1);
+			return tmp;
+	}
+	
+	public static LocalDateTime parseDateTime(int seconds){
+		LocalDate date = Utils.parseDate(divide(seconds, 86400));
 		seconds = seconds % 86400;
 		if(seconds < 0)
 			seconds += 86400;
@@ -116,12 +121,7 @@ public class Utils {
 	}
 	
 	public static LocalDateTime parseDateHour(int hours){
-		LocalDate date;
-		int days = hours / 24;
-		if (hours >= 0)
-			date = Utils.parseDate(days);
-		else
-			date = Utils.parseDate(days - 1);
+		LocalDate date = Utils.parseDate(divide(hours, 24));
 		hours = hours % 24;
 		if (hours < 0)
 			hours += 24;
@@ -229,4 +229,41 @@ public class Utils {
 	public static LocalTime parseMinute(int minutes){
 		return LocalTime.of(minutes / 60, minutes % 60);
 	}
+	
+	public static int murmur32(final byte[] data, final int len, final int seed) {
+
+	    int h = len;
+	    int length4 = len / 4;
+
+	    // do the bulk of the input
+	    for (int i = 0; i < length4; i++) {
+	        final int i4 = i * 4;
+	        int k = (data[i4 + 0] & 0xff) + ((data[i4 + 1] & 0xff) << 8)
+	                + ((data[i4 + 2] & 0xff) << 16) + ((data[i4 + 3] & 0xff) << 24);
+	        k *= 0x5bd1e995;
+	        k ^= k >>> 24;
+	        k *= 0x5bd1e995;
+	        h *= 0x5bd1e995;
+	        h ^= k;
+	    }
+
+	    // Handle the last few bytes of the input array
+	    switch (len % 4) {
+	        case 3:
+	            h ^= (data[(len & ~3) + 2] & 0xff) << 16;
+	        case 2:
+	            h ^= (data[(len & ~3) + 1] & 0xff) << 8;
+	        case 1:
+	            h ^= (data[(len & ~3)] & 0xff);
+	            h *= 0x5bd1e995;
+	    }
+
+	    h ^= h >>> 13;
+	    h *= 0x5bd1e995;
+	    h ^= h >>> 15;
+
+	    return h;
+	}
+	
+	
 }

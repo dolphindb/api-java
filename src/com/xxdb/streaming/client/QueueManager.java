@@ -19,10 +19,19 @@ class QueueManager {
 	}
 
 	public synchronized BlockingQueue<List<IMessage>> getQueue(String topic) {
-		BlockingQueue<List<IMessage>> q = queueMap.get(topic);;
+		BlockingQueue<List<IMessage>> q = queueMap.get(topic);
 		return q;
 	}
-	
+
+	public synchronized List<String> getAllTopic(){
+		java.util.Iterator<String> its = queueMap.keySet().iterator();
+		List<String> re = new ArrayList<>();
+		while(its.hasNext()){
+			re.add(its.next());
+		}
+		return re;
+	}
+
 	public synchronized void removeQueue(String topic) {
 		queueMap.remove(topic);
 	}

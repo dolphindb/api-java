@@ -83,6 +83,17 @@ public class BasicByte extends AbstractScalar implements Comparable<BasicByte>{
 		return new Byte(value).hashCode();
 	}
 	
+	@Override
+	public int hashBucket(int buckets){
+		if(value >= 0)
+			return value % buckets;
+		else if(value == Byte.MIN_VALUE)
+			return -1;
+		else{
+			return (int)((4294967296l + value) % buckets);
+		}
+	}
+	
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeByte(value);
 	}

@@ -90,6 +90,11 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 		return new Float(value).hashCode();
 	}
 	
+	@Override
+	public int hashBucket(int buckets){
+		return -1;
+	}
+	
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeFloat(value);
 	}

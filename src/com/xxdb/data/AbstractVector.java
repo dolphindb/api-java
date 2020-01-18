@@ -25,6 +25,11 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		return 1;
 	}
 	
+	@Override
+	public int hashBucket(int index, int buckets){
+		return -1;
+	}
+	
 	public String getString(){
 		StringBuilder sb = new StringBuilder("[");
 		int size = Math.min(DISPLAY_ROWS, rows());

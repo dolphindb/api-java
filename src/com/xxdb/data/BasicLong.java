@@ -80,6 +80,17 @@ public class BasicLong extends AbstractScalar implements Comparable<BasicLong>{
 		return new Long(value).hashCode();
 	}
 	
+	@Override
+	public int hashBucket(int buckets){
+		if(value >= 0)
+			return (int)(value % buckets);
+		else if(value == Long.MIN_VALUE)
+			return -1;
+		else{
+			return (int)(((Long.MAX_VALUE % buckets) +2 + ((Long.MAX_VALUE + value) % buckets)) % buckets);
+		}
+	}
+	
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeLong(value);
 	}

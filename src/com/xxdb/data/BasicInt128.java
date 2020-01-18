@@ -78,8 +78,21 @@ public class BasicInt128 extends AbstractScalar {
 	}
 	
 	@Override
+	public int hashBucket(int buckets){
+		return value.hashBucket(buckets);
+	}
+	
+	@Override
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
 		out.writeLong2(value);
+	}
+	
+	public static BasicInt128 fromString(String num){
+		if(num.length() != 32)
+			throw new NumberFormatException("Invalid int128 string.");
+		long high = Long.parseUnsignedLong(num.substring(0, 16), 16);
+		long low = Long.parseUnsignedLong(num.substring(16), 16);
+		return new BasicInt128(high, low);
 	}
 
 }

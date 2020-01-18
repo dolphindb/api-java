@@ -71,7 +71,7 @@ public class DBConnection {
 	private boolean highAvailability;
 	private String[] highAvailabilitySites = null;
 	private boolean HAReconnect = false;
-
+	private int connTimeout = 0;
 	public DBConnection(){
 		factory = new BasicEntityFactory();
 		mutex = new ReentrantLock();
@@ -91,6 +91,10 @@ public class DBConnection {
 		return connect(hostName, port, "", "", null, false, null);
 	}
 
+	public boolean connect(String hostName, int port, int timeout) throws IOException {
+		this.connTimeout = timeout;
+		return connect(hostName, port, "", "", null, false, null);
+	}
 	public boolean connect(String hostName, int port, String initialScript) throws IOException{
 		return connect(hostName, port, "", "", initialScript, false, null);
 	}
@@ -179,6 +183,9 @@ public class DBConnection {
 			if (switchToRandomAvailableSite())
 				return true;
 			throw ex;
+		}
+		if(this.connTimeout>0){
+			socket.setSoTimeout(this.connTimeout);
 		}
 		socket.setKeepAlive(true);
 		socket.setTcpNoDelay(true);
@@ -319,6 +326,10 @@ public class DBConnection {
 				}
 			}
 			catch (Exception e) {}
+			try {
+				Thread.sleep(1000);
+			}
+			catch (Exception e) {}
 		}
 	}
 
@@ -353,7 +364,7 @@ public class DBConnection {
 	public Entity tryRun(String script) throws IOException{
 		return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
 	}
-	
+
 	public Entity tryRun(String script, int priority, int parallelism) throws IOException{
 		if(!mutex.tryLock())
 			return null;
@@ -383,6 +394,11 @@ public class DBConnection {
 	
 	public Entity run(String script, ProgressListener listener, int priority, int parallelism) throws IOException{
 		mutex.lock();
+
+		boolean isUrgentCancelJob = false;
+		if(script.startsWith("cancelJob(") || script.startsWith("cancelConsoleJob("))
+			isUrgentCancelJob = true;
+
 		try{
 			boolean reconnect = false;
 			InputStream is = null;
@@ -391,6 +407,8 @@ public class DBConnection {
 					throw new IOException("Database connection is not established yet.");
 				else{
 					socket = new Socket(hostName, port);
+					socket.setKeepAlive(true);
+					socket.setTcpNoDelay(true);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                     is = socket.getInputStream();
                     BufferedInputStream bis = new BufferedInputStream(is);
@@ -406,6 +424,8 @@ public class DBConnection {
 				out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
 				if(priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM){
 					out.writeBytes(" / 0_1_" + String.valueOf(priority) +"_" + String.valueOf(parallelism));
+				}else if (isUrgentCancelJob){
+					out.writeBytes(" / 1_1_8_8");
 				}
 				out.writeByte('\n');
 				out.writeBytes(body);
@@ -474,7 +494,7 @@ public class DBConnection {
 
 			String msg = in.readLine();
 			if(!msg.equals("OK")){
-				if (ServerExceptionUtils.isNotLogin(msg)) {
+				if (reconnect&&ServerExceptionUtils.isNotLogin(msg)) {
 					if (userId.length() > 0 && password.length() > 0)
 						login();
 				}
@@ -568,6 +588,8 @@ public class DBConnection {
 					throw new IOException("Database connection is not established yet.");
 				else{
 					socket = new Socket(hostName, port);
+					socket.setKeepAlive(true);
+					socket.setTcpNoDelay(true);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 					in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
 						new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
@@ -733,6 +755,8 @@ public class DBConnection {
 				else{
 					reconnect = true;
 					socket = new Socket(hostName, port);
+					socket.setKeepAlive(true);
+					socket.setTcpNoDelay(true);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 					in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
 						new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
@@ -769,6 +793,8 @@ public class DBConnection {
 				
 				try {
 					socket = new Socket(hostName, port);
+					socket.setKeepAlive(true);
+					socket.setTcpNoDelay(true);
 					out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 					out.writeBytes("API "+sessionID+" ");
 					out.writeBytes(String.valueOf(body.length()));

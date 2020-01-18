@@ -73,12 +73,22 @@ public class BasicLongVector extends AbstractVector{
 		}else{
 			values[index] = value.getNumber().longValue();
 		}
-
-
 	}
 	
 	public void setLong(int index, long value){
 		values[index] = value;
+	}
+	
+	@Override
+	public int hashBucket(int index, int buckets){
+		long value = values[index];
+		if(value >= 0)
+			return (int)(value % buckets);
+		else if(value == Long.MIN_VALUE)
+			return -1;
+		else{
+			return (int)(((Long.MAX_VALUE % buckets) +2 + ((Long.MAX_VALUE + value) % buckets)) % buckets);
+		}
 	}
 	
 	@Override

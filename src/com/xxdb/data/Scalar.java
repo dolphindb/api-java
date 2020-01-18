@@ -12,4 +12,5 @@ public interface Scalar extends Entity{
 	void setNull();
 	Number getNumber() throws Exception;
 	Temporal getTemporal() throws Exception;
+	int hashBucket(int buckets);
 }

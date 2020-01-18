@@ -69,6 +69,11 @@ public class BasicStringVector extends AbstractVector{
 	}
 	
 	@Override
+	public int hashBucket(int index, int buckets){
+		return BasicString.hashBucket(values[index], buckets);
+	}
+	
+	@Override
 	public boolean isNull(int index) {
 		return values[index] == null || values[index].isEmpty();
 	}

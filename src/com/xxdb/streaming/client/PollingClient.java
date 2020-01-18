@@ -17,27 +17,22 @@ public class PollingClient extends AbstractClient{
     }
     
     @Override
-    protected void doReconnect(Site[] sites) {
-		int siteId = 0;
-		int siteNum = sites.length;
-    	while (true) {
-			Site site = sites[siteId];
-			siteId = (siteId + 1) % siteNum;
+    protected boolean doReconnect(Site site) {
     		try {
-				Thread.sleep(5000);
-    			BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter);
+				Thread.sleep(1000);
+    			BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter,site.allowExistTopic);
 				System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
     			topicPoller.setQueue(queue);
-    			return;
+    			return true;
     		} catch (Exception ex) {
-				System.out.println("Unable to subscribe table. Will try again after 5 seconds.");
+				System.out.println("Unable to subscribe table. Will try again after 1 seconds.");
 				ex.printStackTrace();
+				return  false;
     		}
-    	}
     }
     
     public TopicPoller subscribe(String host,int port,String tableName,String actionName,long offset,boolean reconnect,Vector filter) throws IOException{
-    	BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName,actionName,null,offset,reconnect,filter);
+    	BlockingQueue<List<IMessage>> queue = subscribeInternal(host,port,tableName,actionName,null,offset,reconnect,filter,false);
     	topicPoller = new TopicPoller(queue);
     	return topicPoller;
 	}
