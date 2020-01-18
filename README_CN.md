@@ -382,7 +382,7 @@ BasicTable table1 = new BasicTable(colNames,cols);
 
 DolphinDB的分布式表支持并发读写，下面展示如何在Java客户端中将数据并发写入DolphinDB的分布式表。
 
-首先，在DolphinDB服务端执行以下脚本，创建分布式数据库"dfs://SampleDB"和分布式表"demoTable"。其中，数据库为组合分区，一级分区使用time列进行值分区，二、三级分区分别使用区域id和设备id进行哈希分区。
+首先，在DolphinDB服务端执行以下脚本，创建分布式数据库"dfs://DolphinDBUUID"和分布式表"device_status"。其中，数据库为组合分区，一级分区使用time列进行值分区，二、三级分区分别使用区域id和设备id进行哈希分区。
 
 ```
 login("admin","123456")

@@ -1,4 +1,4 @@
-package comm;
+package com.dolphindb;
 
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
