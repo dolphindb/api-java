@@ -20,7 +20,7 @@ import com.xxdb.data.Vector;
 public class DBConnectionTest{
 
 	private DBConnection conn;
-	public static String HOST  = "192.168.1.142";
+	public static String HOST  = "localhost";
 	public static Integer PORT = 8848;
 
 	@Before
