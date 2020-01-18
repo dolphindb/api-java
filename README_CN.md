@@ -322,37 +322,8 @@ public void test_save_table(BasicTable table1) throws IOException {
     conn.run("tableInsert{shareTable}", args);
 }
 ```
-#### 7.2 保存数据到分布式表
 
-分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性。分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
-
-```
-dbPath = 'dfs://testDatabase'
-tbName = 'tb1'
-
-if(existsDatabase(dbPath)){dropDatabase(dbPath)}
-db = database(dbPath,RANGE,2018.01.01..2018.12.31)
-db.createPartitionedTable(t,tbName,'ctimestamp')
-```
-DolphinDB提供`loadTable`方法可以加载分布式表，通过`tableInsert`方式追加数据，具体的脚本示例如下：
-
-```java
-public void test_save_table(String dbPath, BasicTable table1) throws IOException{
-    List<Entity> args = new ArrayList<Entity>(1);
-    args.add(table1);
-    conn.run(String.format("tableInsert{loadTable('%s','tb1')}",dbPath), args);
-}
-```
-
-Java程序中的数组或列表，也可以很方便的构造出BasicTable用于追加数据。例如若有 boolArray, intArray, dblArray, dateArray, strArray 这5个列表对象(List\<T\>),可以通过以下语句构造BasicTable对象：
-
-```java
-List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
-List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
-BasicTable table1 = new BasicTable(colNames,cols);
-```
-
-#### 7.3 保存数据到本地磁盘表
+#### 7.2 保存数据到本地磁盘表
 
 通常本地磁盘表用于学习环境或者单机静态数据集测试，它不支持事务，不持支并发读写，不保证运行中的数据一致性，所以不建议在生产环境中使用。
 
@@ -373,6 +344,68 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
     conn.run(String.format("tableInsert{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
+
+#### 7.3 保存数据到分布式表
+
+#### 7.3.1 使用`tableInsert`函数保存BasicTable对象
+
+分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性。分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
+
+```
+dbPath = 'dfs://testDatabase'
+tbName = 'tb1'
+
+if(existsDatabase(dbPath)){dropDatabase(dbPath)}
+db = database(dbPath,RANGE,2018.01.01..2018.12.31)
+db.createPartitionedTable(t,tbName,'ctimestamp')
+```
+
+DolphinDB提供`loadTable`方法可以加载分布式表，通过`tableInsert`方式追加数据，具体的脚本示例如下：
+
+```java
+public void test_save_table(String dbPath, BasicTable table1) throws IOException{
+    List<Entity> args = new ArrayList<Entity>(1);
+    args.add(table1);
+    conn.run(String.format("tableInsert{loadTable('%s','tb1')}",dbPath), args);
+}
+```
+
+Java程序中的数组或列表，也可以很方便的构造出BasicTable用于追加数据。例如若有 boolArray, intArray, dblArray, dateArray, strArray 这5个列表对象(List\<T\>),可以通过以下语句构造BasicTable对象：
+
+```java
+List<String> colNames =  Arrays.asList("cbool","cint","cdouble","cdate","cstring");
+List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicIntVector(intArray),new BasicDoubleVector(dblArray),new BasicDateVector(dateArray),new BasicStringVector(strArray));
+BasicTable table1 = new BasicTable(colNames,cols);
+```
+
+#### 7.3.2 分布式表的并发写入
+
+DolphinDB的分布式表支持并发读写，下面展示如何在Java客户端中将数据并发写入DolphinDB的分布式表。
+
+首先，在DolphinDB服务端执行以下脚本，创建分布式数据库"dfs://SampleDB"和分布式表"demoTable"。其中，数据库为组合分区，一级分区使用time列进行值分区，二、三级分区分别使用区域id和设备id进行哈希分区。
+
+```
+login("admin","123456")
+dbName="dfs://DolphinDBUUID"
+tableName="device_status"
+db1=database("",VALUE, 2019.11.01..2020.02.01)
+db2=database("",HASH,[UUID,10])
+db3=database("",HASH,[UUID,10])
+t = table(200:0,`time`areaId`deviceId`value,[TIMESTAMP,UUID,UUID,DOUBLE])
+db = database(dbName, COMPO,[db1,db2,db3])
+db.createPartitionedTable(t, tableName,  `time`areaId`deviceId)
+```
+
+> 请注意：DolphinDB不允许多个writer同时将数据写入到同一个分区，因此在客户端多线程并行写入数据时，需要确保每个线程分别写入不同的分区。
+
+DolphinDB Java API 提供了HashBucket函数来计算客户端数据的hash值。在客户端设计多线程并发写入分布式表时，根据哈希分区字段数据的哈希值分组，每组指定一个写线程。这样就能保证每个线程同时将数据写到不同的哈希分区。
+
+```java
+int key = areaUUID.hashBucket(10);
+```
+
+具体实现脚本可以参考附件[MultiWrite.java](./example/MultiWrite.java)。
+
 #### 7.4 读取和使用数据表
 
 在Java API中，数据表保存为BasicTable对象。由于BasicTable是列式存储，所以若要在Java API中读取行数据需要先取出需要的列，再取出行。
