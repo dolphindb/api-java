@@ -396,12 +396,89 @@ db = database(dbName, COMPO,[db1,db2,db3])
 db.createPartitionedTable(t, tableName,  `time`areaId`deviceId)
 ```
 
+记录哈希值分组，每组对应一个线程
+
+```java
+groups = new Hashtable<>();
+groups.put("group1", Arrays.asList(0,1,2));
+groups.put("group2", Arrays.asList(3,4,5));
+groups.put("group3", Arrays.asList(6,7));
+groups.put("group4", Arrays.asList(8,9));
+```
+
+开启DolphinDB消费线程
+
+```java
+new Thread(new TaskConsumer()).start();
+
+public class TaskConsumer implements Runnable {
+        public void run(){
+            for(String key:groups.keySet()){
+                new Thread(new DDBProxy(key)).start();
+            }
+        }
+    }
+```
+
+定义每组的数据队列
+
+ ```java
+static Hashtable<String, DBTaskItem> tables;
+for(String key:groups.keySet()){
+    tables.put(key , new DBTaskItem(null,null));
+}
+```
+
+根据数据首个hash分区列的哈希值将数据分流到对应组的队列中
+
+```java
+int key = areaUUID.hashBucket(10);
+String groupId = getGroupId(key);
+if(tables.containsKey(groupId))
+    if(tables.get(groupId).currentTable==null){
+        tables.get(groupId).currentTable = new BasicTableEx(createBasicTable(n));
+    }
+}else{
+    throw new Exception("group out of range");
+}
+if(tables.get(groupId).currentTable.add(areaUUID,deviceUUID){//具体数据
+    if(tables.get(groupId).currentTable.isFull()){
+        tables.get(groupId).pushToQueue();
+    }
+}
+```
+
 > 请注意：DolphinDB不允许多个writer同时将数据写入到同一个分区，因此在客户端多线程并行写入数据时，需要确保每个线程分别写入不同的分区。
 
 DolphinDB Java API 提供了`HashBucket`函数来计算客户端数据的hash值。在客户端设计多线程并发写入分布式表时，根据哈希分区字段数据的哈希值分组，每组指定一个写线程。这样就能保证每个线程同时将数据写到不同的哈希分区。
 
 ```java
 int key = areaUUID.hashBucket(10);
+```
+
+每组的写线程会轮询各自的数据队列，将入队的数据提取出来并写入DolphinDB
+
+```java
+public class DDBProxy implements Runnable {
+    String _key = null;
+    public DDBProxy(String key){
+        _key = key;
+    }
+    public void run(){
+        do {
+            if (tables.get(_key).TaskQueue.size() > 0) {
+                BasicTable data = tables.get(_key).TaskQueue.poll();
+                DBConnection conn = new DBConnection();
+                conn.connect(HOST,  PORT,String.format("def saveData(data){ loadTable('%s','%s').tableInsert(data)}", DBPATH,TBNAME));
+                conn.login("admin","123456",false);
+                List<Entity> arg = new ArrayList<Entity>(1);
+                arg.add(data);
+                conn.run("saveData", arg);
+                conn.close();
+            }
+        } while (true);
+    }
+}
 ```
 
 具体实现脚本可以参考附件[MultiWrite.java](./example/MultiWrite.java)。

@@ -1,3 +1,11 @@
+import com.xxdb.data.*;
+import com.xxdb.DBConnection;
+import com.xxdb.data.Vector;
+
+import java.io.IOException;
+import java.time.*;
+import java.util.*;
+
 public class table_writer {
     /**
      * This method bulk loads a table to DolphinDB partitioned historical database through Java API.
@@ -6,7 +14,11 @@ public class table_writer {
      * (2) Upload the table to DolphinDB Server
      * (3) Call savePartition function on server to a historical database
      */
-    public void testBulkLoad() throws IOException{
+
+    private DBConnection conn;
+    private int caseCount;
+    private int failedCount;
+    public void testBulkLoad() throws IOException {
         //prepare a table with five columns
         List<String> colNames = new ArrayList<String>();
         colNames.add("sym");
@@ -61,7 +73,7 @@ public class table_writer {
         Map<String, Entity> vars = new HashMap<String, Entity>();
         vars.put("t1", t1);
         LocalDateTime start = LocalDateTime.now();
-        conn.upload(vars);
+        //conn.upload(vars);
         Duration elapsed = Duration.between(start, LocalDateTime.now());
         System.out.println("Table upload time: " + elapsed.getSeconds() + " s " + (elapsed.getNano()/1000000));
 

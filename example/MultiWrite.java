@@ -36,9 +36,9 @@ public class MultiWrite {
 
         tables = new Hashtable<>();
 
-        ROWS = 20000;
-        CREATE_THREADS = 500;
-        HOST = "192.168.1.114"; //Your DolphinDB server HOST
+        ROWS = 2000;
+        CREATE_THREADS = 50;
+        HOST = "localhost"; //Your DolphinDB server HOST
         PORT = 8848; //Your DolphinDB server PORT
         DBPATH = "dfs://DolphinDBUUID";
         TBNAME = "device_status";
@@ -149,7 +149,7 @@ public class MultiWrite {
                     BasicTable data = tables.get(_key).TaskQueue.poll();
                     saveDataToDDB(data);
                     insertRowCount += data.rows();
-                    if(insertRowCount<200000 || insertRowCount>9000000)
+                    if(insertRowCount<2000 || insertRowCount>90000)
                         System.out.println(String.format("insertRowCount = %s ; now is %s ", insertRowCount ,  LocalDateTime.now()));
                 }
             } while (true);
@@ -166,7 +166,7 @@ public class MultiWrite {
             long st = System.currentTimeMillis();
             conn.run("saveData", arg);
             long ed = System.currentTimeMillis();
-//    System.out.println(String.format("insert %s rows, cost %s ms", data.rows(), ed-st));
+            System.out.println(String.format("insert %s rows, cost %s ms", data.rows(), ed-st));
 
         }catch (IOException ex){
             System.out.println(data.getColumn(1).getString());
