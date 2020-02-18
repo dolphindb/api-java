@@ -382,28 +382,30 @@ BasicTable table1 = new BasicTable(colNames,cols);
 
 DolphinDB的分布式表支持并发读写，下面展示如何在Java客户端中将数据并发写入DolphinDB的分布式表。
 
-首先，在DolphinDB服务端执行以下脚本，创建分布式数据库"dfs://DolphinDBUUID"和分布式表"device_status"。其中，数据库为组合分区，一级分区使用time列进行值分区，二、三级分区分别使用区域id和设备id进行哈希分区。
+首先，在DolphinDB服务端执行以下脚本，创建分布式数据库"dfs://DolphinDBVALUE"和分布式表"multiTable"。其中，数据库按time列的value进行分区。
 
 ```
 login("admin","123456")
-dbName="dfs://DolphinDBUUID"
-tableName="device_status"
-db1=database("",VALUE, 2019.11.01..2020.02.01)
-db2=database("",HASH,[UUID,10])
-db3=database("",HASH,[UUID,10])
-t = table(200:0,`time`areaId`deviceId`value,[TIMESTAMP,UUID,UUID,DOUBLE])
-db = database(dbName, COMPO,[db1,db2,db3])
-db.createPartitionedTable(t, tableName,  `time`areaId`deviceId)
+dbName="dfs://DolphinDBVALUE"
+tableName="multiTable"
+t = table(200:0,`timestamp`value,[TIMESTAMP,DOUBLE])
+if(existsDatabase(dbName)){
+dropDatabase(dbName)
+}
+db=database(dbName,VALUE, 2019.11.01..2020.02.01)
+db.createPartitionedTable(t, tableName, `timestamp)
 ```
 
-记录哈希值分组，每组对应一个线程
+> 请注意：DolphinDB不允许多个writer同时将数据写入到同一个分区，因此在客户端多线程并行写入数据时，需要确保每个线程分别写入不同的分区。
+
+定义每个线程的数据，为了确保每个线程分别写入不同的分区，本例中一个线程对应一个BasicTable，每个BasicTable中的数据的时间列的日期都相同。
 
 ```java
-groups = new Hashtable<>();
-groups.put("group1", Arrays.asList(0,1,2));
-groups.put("group2", Arrays.asList(3,4,5));
-groups.put("group3", Arrays.asList(6,7));
-groups.put("group4", Arrays.asList(8,9));
+BasicTable tables=new BasicTable[threadCount];
+for(int i= 0;i<threadCount;i++)
+{
+    tables[i]=createBasicTable(Rows,i+1);//每个table中包含Row条数据,time列为：2020.01.i+1T01:01:01.000)
+}
 ```
 
 开启DolphinDB消费线程
@@ -412,76 +414,41 @@ groups.put("group4", Arrays.asList(8,9));
 new Thread(new TaskConsumer()).start();
 
 public class TaskConsumer implements Runnable {
-        public void run(){
-            for(String key:groups.keySet()){
-                new Thread(new DDBProxy(key)).start();
-            }
+    public void run(){
+        for(int i=0;i<4;i++){
+            new Thread(new com.dolphindb.MultiWriteByValue.DDBProxy(i)).start();
         }
     }
-```
-
-定义每组的数据队列
-
- ```java
-static Hashtable<String, DBTaskItem> tables;
-for(String key:groups.keySet()){
-    tables.put(key , new DBTaskItem(null,null));
 }
 ```
 
-根据数据首个hash分区列的哈希值将数据分流到对应组的队列中
-
-```java
-int key = areaUUID.hashBucket(10);
-String groupId = getGroupId(key);
-if(tables.containsKey(groupId))
-    if(tables.get(groupId).currentTable==null){
-        tables.get(groupId).currentTable = new BasicTableEx(createBasicTable(n));
-    }
-}else{
-    throw new Exception("group out of range");
-}
-if(tables.get(groupId).currentTable.add(areaUUID,deviceUUID){//具体数据
-    if(tables.get(groupId).currentTable.isFull()){
-        tables.get(groupId).pushToQueue();
-    }
-}
-```
-
-> 请注意：DolphinDB不允许多个writer同时将数据写入到同一个分区，因此在客户端多线程并行写入数据时，需要确保每个线程分别写入不同的分区。
-
-DolphinDB Java API 提供了`HashBucket`函数来计算客户端数据的hash值。在客户端设计多线程并发写入分布式表时，根据哈希分区字段数据的哈希值分组，每组指定一个写线程。这样就能保证每个线程同时将数据写到不同的哈希分区。
-
-```java
-int key = areaUUID.hashBucket(10);
-```
-
-每组的写线程会轮询各自的数据队列，将入队的数据提取出来并写入DolphinDB
+每个线程开始向DolphinDB写入数据
 
 ```java
 public class DDBProxy implements Runnable {
-    String _key = null;
-    public DDBProxy(String key){
-        _key = key;
-    }
-    public void run(){
-        do {
-            if (tables.get(_key).TaskQueue.size() > 0) {
-                BasicTable data = tables.get(_key).TaskQueue.poll();
-                DBConnection conn = new DBConnection();
-                conn.connect(HOST,  PORT,String.format("def saveData(data){ loadTable('%s','%s').tableInsert(data)}", DBPATH,TBNAME));
-                conn.login("admin","123456",false);
-                List<Entity> arg = new ArrayList<Entity>(1);
-                arg.add(data);
-                conn.run("saveData", arg);
-                conn.close();
-            }
-        } while (true);
-    }
+   int _key = -1;
+   public DDBProxy(int key){
+       _key = key;
+   }
+   public void run(){
+       do {
+           if (tables[_key]!=null) {
+               BasicTable data = tables[_key];
+               DBConnection conn = new DBConnection();
+               conn.connect(HOST,  PORT,String.format("def saveData(data){ loadTable('%s','%s').tableInsert(data)}", DBPATH,TBNAME));
+               conn.login("admin","123456",false);
+               List<Entity> arg = new ArrayList<Entity>(1);
+               arg.add(data);
+               conn.run("saveData", arg);
+               conn.close();
+               tables[_key]=null;
+           }
+       } while (true);
+   }
 }
 ```
 
-具体实现脚本可以参考附件[MultiWrite.java](./example/MultiWrite.java)。
+更多分布式表的并发写入案例可以参考附件[MultiWrite.java](./example/MultiWrite.java)。
 
 #### 7.4 读取和使用数据表
 
