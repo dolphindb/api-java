@@ -140,7 +140,7 @@ public class TableWrite {
             new TableWrite().write_dfsTable();
         }catch (IOException e)
         {
-            System.out.println("error");
+            System.out.println("Writing error");
         }
     }
 
