@@ -398,7 +398,12 @@ db.createPartitionedTable(t, tableName, `timestamp)
 
 > 请注意：DolphinDB不允许多个writer同时将数据写入到同一个分区，因此在客户端多线程并行写入数据时，需要确保每个线程分别写入不同的分区。
 
-定义每个线程的数据，为了确保每个线程分别写入不同的分区，本例中一个线程对应一个BasicTable，每个BasicTable中的数据的时间列的日期都相同。
+对于按哈希值进行分区的分布式表， DolphinDB Java API 提供了HashBucket函数来计算客户端数据的hash值。在客户端设计多线程并发写入分布式表时，根据哈希分区字段数据的哈希值分组，每组指定一个写线程。这样就能保证每个线程同时将数据写到不同的哈希分区。
+```java
+int key = areaUUID.hashBucket(10);
+```
+
+本例按value进行分区，为了确保每个线程分别写入不同的分区，一个线程对应一个BasicTable，每个BasicTable中的数据的时间列的日期都相同。
 
 ```java
 BasicTable tables=new BasicTable[threadCount];
