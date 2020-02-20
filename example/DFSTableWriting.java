@@ -9,7 +9,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DFSTableWrite {
+public class DFSTableWriting {
     private static DBConnection conn;
     public static String HOST  = "localhost";
     public static Integer PORT = 8848;
@@ -111,14 +111,14 @@ public class DFSTableWrite {
         BasicTable t1 = new BasicTable(colNames, cols);
         return t1;
     }
-    public void write_dfsTable() throws IOException {
+    public void writeDfsTable() throws IOException {
         BasicTable table1 = createBasicTable();
         conn.login("admin","123456",false);
         conn.run("t = table(10000:0,`cbool`cchar`cshort`cint`clong`cdate`cmonth`ctime`cminute`csecond`cdatetime`ctimestamp`cnanotime`cnanotimestamp`cfloat`cdouble`csymbol`cstring,[BOOL,CHAR,SHORT,INT,LONG,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING])\n");
         conn.run("if(existsDatabase('dfs://testDatabase')){dropDatabase('dfs://testDatabase')}");
         conn.run("db = database('dfs://testDatabase',RANGE,2018.01.01..2018.12.31)");
         conn.run("db.createPartitionedTable(t,'tb1','cdate')");
-        conn.run("def saveData(data){ loadTable('dfs://testDatabase','tb1').append!(data)}");
+        conn.run("def saveData(data){ loadTable('dfs://testDatabase','tb1').tableInsert(data)}");
         List<Entity> args = new ArrayList<Entity>(1);
         args.add(table1);
         conn.run("saveData", args);
@@ -137,7 +137,7 @@ public class DFSTableWrite {
             e.printStackTrace();
         }
         try{
-            new DFSTableWrite().write_dfsTable();
+            new DFSTableWriting().writeDfsTable();
         }catch (IOException e)
         {
             System.out.println("Writing error");

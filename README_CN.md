@@ -610,3 +610,8 @@ filter.setInt(1, 2);
 PollingClient client = new PollingClient(subscribePort);
 TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, actionName, offset, filter);
 ```
+
+#### 取消订阅
+每一个订阅都有一个订阅主题topic作为唯一标识。如果订阅时topic已经存在，那么会订阅失败。这时需要通过unsubscribeTable函数取消订阅才能再次订阅。
+```java
+client.unsubscribe(serverIP, serverPort, tableName,actionName);

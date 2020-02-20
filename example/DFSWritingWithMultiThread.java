@@ -7,13 +7,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
-/*
-Java 代码概要:
-1、服务端数据库格式说明，因为单日数据量很大，使用了小时加两层Hash共三层分区，以控制每个分区的大小。
-2、客户端为了提升IO, 采用多线程写入方式。可以将数据根据哈希值分组，每组指定一个写线程。主线程采集数据，并根据数据首个hash分区列的哈希值将数据分流到对应组的队列中，每组的写线程会轮询各自的数据队列，将入队的数据提取出来并写入DolphinDB。
-3、Java API 提供了HashBucket函数来计算客户端数据的hash值，每一个数据类型都有对应的Hash计算函数，本例中使用了UUID类型。
- */
-public class MultiWrite {
+
+public class DFSWritingWithMultiThread {
 
     static Hashtable<String, DBTaskItem> tables;
 
@@ -42,7 +37,7 @@ public class MultiWrite {
         PORT = 8848; //Your DolphinDB server PORT
         DBPATH = "dfs://DolphinDBUUID";
         TBNAME = "device_status";
-        new MultiWrite().generateData(tables,ROWS,CREATE_THREADS);
+        new com.dolphindb.DFSWritingWithMultiThread().generateData(tables,ROWS,CREATE_THREADS);
     }
 
     private BasicTable createBasicTable(int n) throws Exception{

@@ -7,28 +7,14 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
-/**
- * This example shows how to write data to streamTable and subscribe streaming data
- * To subscribe streaming data needs three steps:
- * (1) Java API can acquire streaming data in 2 ways. Choose one way in line 190 and 191.
- * (2) Run this program, and a streamTable will be created and  subscription will be started up.
- * (3) Run following scripts in server to publish data:
- *  for(x in 0:20000){
- *  time =time(now())
- *  sym= rand(`S`M`MS`GO, 1)
- *  qty= rand(1000..2000,1)
- *  price = rand(2335.34,1)
- *  insert into Trades values(x, time,sym, qty, price)
- *  }
- *  insert into Trades values(-1, time,sym, qty, price)
- */
-public class StreamingWriteAndSubscribe {
+
+public class streamingData {
     private static DBConnection conn;
     public static String HOST  = "localhost";
     public static Integer PORT = 8848;
     public static ThreadedClient client;
 
-    private	BasicTable createTable(){
+    private	BasicTable createBasicTable(){
         List<String> colNames = new ArrayList<String>();
         colNames.add("id");
         colNames.add("time");
@@ -60,12 +46,12 @@ public class StreamingWriteAndSubscribe {
         return t1;
     }
 
-    public void write_streamTable() throws IOException {
-        BasicTable table1 = createTable();
+    public void writeStreamTable() throws IOException {
+        BasicTable table1 = createBasicTable();
         conn.login("admin","123456",false);
         conn.run("t = streamTable(30000:0,`id`time`sym`qty`price,[INT,TIME,SYMBOL,INT,DOUBLE])\n");
         conn.run("share t as Trades");
-        conn.run("def saveData(data){ Trades.append!(data)}");
+        conn.run("def saveData(data){ Trades.tableInsert(data)}");
         List<Entity> args = new ArrayList<Entity>(1);
         args.add(table1);
         conn.run("saveData", args);
@@ -76,7 +62,7 @@ public class StreamingWriteAndSubscribe {
         }
     }
 
-    public void pollingClient()throws SocketException {
+    public void PollingClient()throws SocketException {
         PollingClient client = new PollingClient(8002);
         try {
             TopicPoller poller1 = client.subscribe("localhost", 8848, "Trades");
@@ -180,15 +166,31 @@ public class StreamingWriteAndSubscribe {
             e.printStackTrace();
         }
         try{
-            new StreamingWriteAndSubscribe().write_streamTable();
+            new streamingData().writeStreamTable();
         }catch (IOException e)
         {
             System.out.println("Writing error");
         }
         conn.close();
         try{
-            new StreamingWriteAndSubscribe().pollingClient();
-            //new StreamingWriteAndSubscribe().ThreadedClient();
+            while(true)
+            {
+                System.out.println("Choose the method to subscribe streaming data:\nP:PollingClient\nT:TreadedClient");
+                char method = (char)System.in.read();
+                System.in.read();
+                switch (method)
+                {
+                    case 'p':
+                    case'P':
+                        new streamingData().PollingClient();
+                        break;
+                    case 't':
+                    case 'T':
+                        new streamingData().ThreadedClient();
+                        break;
+                    default:
+                }
+            }
         }catch (IOException e)
         {
             System.out.println("Subscription error");
