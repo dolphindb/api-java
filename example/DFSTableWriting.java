@@ -130,6 +130,22 @@ public class DFSTableWriting {
     }
     public static void main(String[] args){
         conn = new DBConnection();
+        if(args.length==2)
+        {
+            try {
+                HOST = args[0];
+                PORT = Integer.parseInt(args[1]);
+            }
+            catch (Exception e)
+            {
+                System.out.println("Wrong arguments");
+            }
+        }
+        else if(args.length!=2&&args.length!=0)
+        {
+            System.out.println("wrong arguments");
+            return;
+        }
         try {
             conn.connect(HOST, PORT);
         } catch (IOException e) {

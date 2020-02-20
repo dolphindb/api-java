@@ -3,6 +3,8 @@ package com.dolphindb;
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
+
+import javax.net.ssl.HostnameVerifier;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -30,11 +32,29 @@ public class DFSWritingWithMultiThread {
         groups.put("group4", Arrays.asList(8,9));
 
         tables = new Hashtable<>();
-
-        ROWS = 2000;
-        CREATE_THREADS = 50;
-        HOST = "localhost"; //Your DolphinDB server HOST
-        PORT = 8848; //Your DolphinDB server PORT
+        if(args.length==0)
+        {
+            ROWS=2000;
+            CREATE_THREADS=50;
+            HOST = "localhost"; //Your DolphinDB server HOST
+            PORT = 8848; //Your DolphinDB server PORT
+        }
+        else if(args.length!=4) {
+            try {
+                ROWS = Integer.parseInt(args[0]);
+                CREATE_THREADS = Integer.parseInt(args[1]);
+                HOST = args[2];
+                PORT = Integer.parseInt(args[3]);
+            }catch (Exception e)
+            {
+                System.out.println("Wrong arguments");
+            }
+        }
+        else
+        {
+            System.out.println("Wrong arguments");
+            return;
+        }
         DBPATH = "dfs://DolphinDBUUID";
         TBNAME = "device_status";
         new com.dolphindb.DFSWritingWithMultiThread().generateData(tables,ROWS,CREATE_THREADS);

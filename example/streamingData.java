@@ -13,7 +13,8 @@ public class streamingData {
     public static String HOST  = "localhost";
     public static Integer PORT = 8848;
     public static ThreadedClient client;
-
+    public static char METHOD='P';
+    public static Integer subscribePORT = 8892;
     private	BasicTable createBasicTable(){
         List<String> colNames = new ArrayList<String>();
         colNames.add("id");
@@ -63,9 +64,9 @@ public class streamingData {
     }
 
     public void PollingClient()throws SocketException {
-        PollingClient client = new PollingClient(8002);
+        PollingClient client = new PollingClient(subscribePORT);
         try {
-            TopicPoller poller1 = client.subscribe("localhost", 8848, "Trades");
+            TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades");
             int count = 0;
             boolean started = false;
             long start = System.currentTimeMillis();
@@ -108,7 +109,7 @@ public class streamingData {
             }
             long end = System.currentTimeMillis();
             System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
-            client.unsubscribe("localhost", 8848, "Trades");
+            client.unsubscribe(HOST,PORT,"Trades");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -149,15 +150,35 @@ public class streamingData {
 
     public void ThreadedClient()throws SocketException
     {
-        ThreadedClient client = new ThreadedClient(8997);
+        ThreadedClient client = new ThreadedClient(subscribePORT);
         try {
-            client.subscribe("localhost", 8848, "Trades", "", new SampleMessageHandler());
+            client.subscribe(HOST, PORT, "Trades", "", new SampleMessageHandler());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public static void main(String[] args){
+        if(args.length==4)
+        {
+            try {
+                HOST = args[0];
+                PORT = Integer.parseInt(args[1]);
+                subscribePORT=Integer.parseInt(args[2]);
+                METHOD=args[3].charAt(0);
+                if(METHOD!='p'&&METHOD!='P'&&METHOD!='T'&&METHOD!='t')
+                    throw new Exception();
+            }
+            catch (Exception e)
+            {
+                System.out.println("Wrong arguments");
+            }
+        }
+        else if(args.length!=4&&args.length!=0)
+        {
+            System.out.println("wrong arguments");
+            return;
+        }
         conn = new DBConnection();
         try {
             conn.connect(HOST, PORT);
@@ -173,23 +194,13 @@ public class streamingData {
         }
         conn.close();
         try{
-            while(true)
-            {
-                System.out.println("Choose the method to subscribe streaming data:\nP:PollingClient\nT:TreadedClient");
-                char method = (char)System.in.read();
-                System.in.read();
-                switch (method)
-                {
-                    case 'p':
-                    case'P':
-                        new streamingData().PollingClient();
-                        break;
-                    case 't':
-                    case 'T':
-                        new streamingData().ThreadedClient();
-                        break;
-                    default:
-                }
+            switch (METHOD) {
+                case 'p':
+                case 'P':
+                    new streamingData().PollingClient();
+                case 't':
+                case 'T':
+                    new streamingData().ThreadedClient();
             }
         }catch (IOException e)
         {
