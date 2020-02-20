@@ -9,7 +9,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TableWrite {
+public class DFSTableWrite {
     private static DBConnection conn;
     public static String HOST  = "localhost";
     public static Integer PORT = 8848;
@@ -137,7 +137,7 @@ public class TableWrite {
             e.printStackTrace();
         }
         try{
-            new TableWrite().write_dfsTable();
+            new DFSTableWrite().write_dfsTable();
         }catch (IOException e)
         {
             System.out.println("Writing error");

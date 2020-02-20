@@ -129,7 +129,7 @@ public class StreamingWriteAndSubscribe {
         System.exit(0);
     }
 
-    public class SampleMessageHandler implements MessageHandler {
+    public static class SampleMessageHandler implements MessageHandler {
         private AtomicLong count = new AtomicLong();
         private long start = 0;
 
