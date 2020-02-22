@@ -12,10 +12,9 @@
 本文下面对每个例子分别进行简单的说明，包括运行和使用帮助等。
 ### 2. 数据库写入例子
 #### 2.1 代码说明
-本例实现了用单线程往分布式数据库写入数据的功能。本例子中使用了append往表中批量插入数据。在源代码中，主要有3个函数：
-* createBasicTable函数，用于定义待写入的数据，该函数创建了一个本地的表对象,BasicTable。
-* writeDfsTable函数，用于java客户端在DolphinDB创建分布式表，加载分布式表，并用 tableInsert 脚本插入数据
-* main函数，其中先与DolphinDB server建立连接，然后调用函数 writeDfsTable 插入数据。
+本例实现了用单线程往分布式数据库写入数据的功能。本例子中使用了append往表中批量插入数据。在源代码中，主要有2个函数：
+* createBasicTable函数，定义写入的数据，该函数创建了一个本地的表对象BasicTable。
+* writeDfsTable函数，通过API在DolphinDB创建待写入的分布式表，并用`run("tableInsert",args)`函数将Java端的BasicTable上传和写入分布式表。
 #### 2.2 运行
 将代码打包成xxx.jar 执行 
 ```
@@ -24,23 +23,20 @@ java -jar xxx.jar [serverIP] [serverPort]
 若不传入serverIP和serverPort参数，默认serverIP="localhost"，serverPort==8848
 ### 3. 数据库多线程并行写入例子
 #### 3.1 代码说明
-客户端为了提升IO, 可以采用多线程写入方式，本例实现了如何在Java客户端中将数据并发写入DolphinDB的分布式表，主要有几个函数和类如下：
+客户端为了提升IO, 可以采用多线程写入方式，本例实现了如何在Java应用中将数据并行写入DolphinDB的分布式表，主要有几个函数和类如下：
 * generateData函数，用于定义每组的数据队列，开启写DolphinDB消费线程，循环生成客户端数据并加入消费队列。
 * generateOneRow函数，用于产生每一条模拟数据，并根据数据首个hash分区列的哈希值将数据分流到对应组的队列中。
-* createBasicTable函数，用于产生存放数据的表对象，返回BasicTable。
-* BasicTableEx类，将产生的数据存入表对象，实现批量写入，并记录本地表对象的数据量。
+* createBasicTable函数，创建本地BasicTable对象作为数据容器。
+* BasicTableEx类，对于BasicTable的扩展，维护一个当前数据量，当数据量达到指定大小时，将数据提交写入线程。
 * DBTaskItem类，将数据满了的本地表对象加入数据队列中。
-* TaskConsumer类，DolphinDB消费线程，根据哈希值的分组情况，为每个组开启写线程。
-* DDBProxy类，并发线程，将数据从数据队列取出，写入DolphinDB。
-* saveDataToDDB函数，用run函数运行tableInsert脚本把模拟数据写入数据库。
-* main函数，记录哈希值分组，每组对应一个线程，与DolphinDB server建立连接。
-
+* TaskConsumer类，Java消费线程，根据哈希值的分组情况，为每个组开启写线程。
+* DDBProxy类，负责每一组的数据写入DolphinDB。
 >请注意：DolphinDB不允许多个writer同时将数据写入到同一个分区，因此在客户端多线程并行写入数据时，需要确保每个线程分别写入不同的分区。
-* 本例将数据根据哈希值分组，每组指定一个写线程。主线程采集数据，并根据数据首个hash分区列的哈希值将数据分流到对应组的队列中，每组的写线程会轮询各自的数据队列，将入队的数据提取出来并写入DolphinDB。
+* 本例将数据根据哈希值分组，每组指定一个写线程。主线程采集数据，并根据分区列数据的哈希值将数据分流到对应组的队列中，每组的写线程会轮询各自的数据队列，将入队的数据提取出来并写入DolphinDB。
 * Java API 提供了HashBucket函数来计算客户端数据的hash值，每一个数据类型都有对应的Hash计算函数，本例中使用了UUID类型。
 
 DolphinDB 服务端脚本说明：
-* 在DolphinDB 服务端建立创建分布式数据库"dfs://DolphinDBUUID"和分布式表"device_status"，因为单日数据量很大，使用了小时加两层Hash共三层分区，以控制每个分区的大小。其中，一级分区使用time列进行值分区，二、三级分区分别使用区域id和设备id进行哈希分区。
+* 在DolphinDB 服务端建立创建分布式数据库"dfs://DolphinDBUUID"和分布式表"device_status"，在单日数据量很大的时候，可以使用小时(DateHour)进行三层分区，以控制每个分区在合适的大小。其中，一级分区使用time列进行值分区，二、三级分区分别使用区域id和设备id进行哈希分区。
 
 #### 3.2 运行
 将代码打包成xxx.jar
@@ -59,11 +55,11 @@ db.createPartitionedTable(t, tableName,  `time`areaId`deviceId)
 ```
 执行
 ```
-java -jar xxx.jar [rows] [createThread] [serverIP] [serverPort]
+java -jar xxx.jar [batchSize] [freq] [serverIP] [serverPort]
 ```
-rows表示每次加入数据队列的数据量，createThread表示并发写入次数，总写入数据量为rows*createThread
+rows表示每次加入数据队列的数据量，createThread表示并发写入次数，总写入数据量为batchSize*freq
 
-若不传入参数，默认rows=2000，createThread=50，serverIP="localhost"，serverPort==8848
+若不传入参数，默认batchSize=2000，freq=50，serverIP="localhost"，serverPort==8848
 
 ### 4. 流数据写入和订阅例子
 #### 4.1 代码说明

@@ -19,8 +19,8 @@ public class DFSWritingWithMultiThread {
     static int PORT ;
     static String DBPATH ;
     static String TBNAME;
-    static int CREATE_THREADS ;
-    static int ROWS;
+    static int FREQ ;
+    static int BATCHSIZE;
 
     static int insertRowCount =0 ;
     public static void main(String[] args) throws Exception{
@@ -34,15 +34,15 @@ public class DFSWritingWithMultiThread {
         tables = new Hashtable<>();
         if(args.length==0)
         {
-            ROWS=2000;
-            CREATE_THREADS=50;
+            BATCHSIZE=2000;
+            FREQ=50;
             HOST = "localhost"; //Your DolphinDB server HOST
             PORT = 8848; //Your DolphinDB server PORT
         }
         else if(args.length!=4) {
             try {
-                ROWS = Integer.parseInt(args[0]);
-                CREATE_THREADS = Integer.parseInt(args[1]);
+                FREQ = Integer.parseInt(args[0]);
+                BATCHSIZE = Integer.parseInt(args[1]);
                 HOST = args[2];
                 PORT = Integer.parseInt(args[3]);
             }catch (Exception e)
@@ -57,7 +57,7 @@ public class DFSWritingWithMultiThread {
         }
         DBPATH = "dfs://DolphinDBUUID";
         TBNAME = "device_status";
-        new com.dolphindb.DFSWritingWithMultiThread().generateData(tables,ROWS,CREATE_THREADS);
+        new com.dolphindb.DFSWritingWithMultiThread().generateData(tables,BATCHSIZE,FREQ);
     }
 
     private BasicTable createBasicTable(int n) throws Exception{
@@ -83,7 +83,7 @@ public class DFSWritingWithMultiThread {
         return new BasicTable(colNames, cols);
     }
 
-    public void generateData(Hashtable<String,DBTaskItem> tbs, int Rows, int threadCount) throws Exception{
+    public void generateData(Hashtable<String,DBTaskItem> tbs, int batchSize, int freq) throws Exception{
         //定义每组的数据队列
         for(String key:groups.keySet()){
             tables.put(key , new DBTaskItem(null,null));
@@ -101,7 +101,7 @@ public class DFSWritingWithMultiThread {
         new Thread(new TaskConsumer()).start();
         //循环生成客户端数据并加入消费队列
         long st = System.currentTimeMillis();
-        for(int j=0;j<ROWS * CREATE_THREADS;j++){
+        for(int j=0;j<batchSize * freq;j++){
             generateOneRow(tbs, areas,devices, ROWS);
         }
         long ed = System.currentTimeMillis();
