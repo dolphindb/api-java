@@ -23,6 +23,9 @@ public class ThreadedClient extends AbstractClient {
         super(subscribePort);
     }
 
+    public ThreadedClient(String subscribeHost, int subscribePort) throws SocketException {
+        super(subscribeHost, subscribePort);
+    }
     class HandlerLopper extends Thread {
         BlockingQueue<List<IMessage>> queue;
         MessageHandler handler;

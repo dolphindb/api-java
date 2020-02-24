@@ -29,11 +29,15 @@ public class ThreadPooledClient extends AbstractClient {
     private HashMap<String, QueueHandlerBinder> queueHandlers = new HashMap<>();
 
     public ThreadPooledClient() throws SocketException {
-        this(DEFAULT_PORT, CORES);
+        this("", DEFAULT_PORT, CORES);
     }
 
     public ThreadPooledClient(int subscribePort, int threadCount) throws SocketException {
-        super(subscribePort);
+        this("", subscribePort, threadCount);
+    }
+
+    public ThreadPooledClient(String subscribeHost, int subscribePort, int threadCount) throws SocketException {
+        super(subscribeHost, subscribePort);
         threadPool = Executors.newFixedThreadPool(threadCount);
         new Thread() {
             private LinkedList<IMessage> backlog = new LinkedList<>();

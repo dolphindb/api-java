@@ -21,6 +21,7 @@ abstract class AbstractClient implements MessageDispatcher {
     protected ConcurrentHashMap<String, ReconnectItem> reconnectTable = new ConcurrentHashMap<String, ReconnectItem>();
 
     protected int listeningPort;
+    protected String listeningHost = "";
     protected QueueManager queueManager = new QueueManager();
     protected ConcurrentHashMap<String, List<IMessage>> messageCache = new ConcurrentHashMap<>();
     protected HashMap<String, String> tableNameToTrueTopic = new HashMap<>();
@@ -274,7 +275,9 @@ abstract class AbstractClient implements MessageDispatcher {
                 BasicString version = (BasicString) conn.run("version()");
                 int verNum = GetVersionNumber(version.getString());
 
-                String localIP = conn.getLocalAddress().getHostAddress();
+                String localIP = this.listeningHost;
+                if(localIP.equals(""))
+                    localIP = conn.getLocalAddress().getHostAddress();
                 List<Entity> params = new ArrayList<>();
                 params.add(new BasicString(localIP));
                 params.add(new BasicInt(listeningPort));
@@ -304,6 +307,14 @@ abstract class AbstractClient implements MessageDispatcher {
     }
 
     public AbstractClient(int subscribePort) throws SocketException {
+        this.listeningPort = subscribePort;
+        Daemon daemon = new Daemon(subscribePort, this);
+        pThread = new Thread(daemon);
+        pThread.start();
+    }
+
+    public AbstractClient(String subsribeHost, int subscribePort) throws SocketException {
+        this.listeningHost = subsribeHost;
         this.listeningPort = subscribePort;
         Daemon daemon = new Daemon(subscribePort, this);
         pThread = new Thread(daemon);
@@ -392,7 +403,9 @@ abstract class AbstractClient implements MessageDispatcher {
         DBConnection dbConn = new DBConnection();
         dbConn.connect(host, port);
         try {
-            String localIP = dbConn.getLocalAddress().getHostAddress();
+            String localIP = this.listeningHost;
+            if (localIP.equals(""))
+                localIP = dbConn.getLocalAddress().getHostAddress();
 
             if (!hostEndian.containsKey(host)) {
                 hostEndian.put(host, dbConn.getRemoteLittleEndian());

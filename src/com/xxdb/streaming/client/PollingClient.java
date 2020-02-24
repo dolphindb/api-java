@@ -16,6 +16,10 @@ public class PollingClient extends AbstractClient {
         super(subscribePort);
     }
 
+    public PollingClient(String subscribeHost, int subscribePort) throws SocketException {
+        super(subscribeHost, subscribePort);
+    }
+
     @Override
     protected boolean doReconnect(Site site) {
         try {
