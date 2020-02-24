@@ -32,7 +32,7 @@ import java.util.ArrayList;
 public class PollingClientTester {
     public static void main(String args[]) throws SocketException {
         PollingClient client = new PollingClient(8992);
-        
+
         try {
             TopicPoller poller1 = client.subscribe("192.168.1.25", 8847, "Trades");
             int count = 0;
@@ -56,20 +56,20 @@ public class PollingClientTester {
                     String symbol = msgs.get(i).getEntity(0).getString();
                     if (!PartitionedByRangeTableAppenderTest.symbolSet.contains(symbol))
                         assert PartitionedByRangeTableAppenderTest.symbolSet.contains(symbol);
-                    Double price = ((BasicDouble)msgs.get(i).getEntity(3)).getDouble();
+                    Double price = ((BasicDouble) msgs.get(i).getEntity(3)).getDouble();
                     if (!PartitionedByRangeTableAppenderTest.doubleSet.contains(price))
                         assert PartitionedByRangeTableAppenderTest.doubleSet.contains(price);
-                    Integer size =  ((BasicInt)msgs.get(i).getEntity(4)).getInt();
+                    Integer size = ((BasicInt) msgs.get(i).getEntity(4)).getInt();
                     if (!PartitionedByRangeTableAppenderTest.intSet.contains(size))
                         assert PartitionedByRangeTableAppenderTest.intSet.contains(size);
-                    byte ex = ((BasicByte)msgs.get(i).getEntity(8)).getByte();
+                    byte ex = ((BasicByte) msgs.get(i).getEntity(8)).getByte();
                     if (ex != 'B')
-                        assert(ex == 'B');
+                        assert (ex == 'B');
                 }
 
                 //System.out.println("get message " + count);
                 if (msgs.size() > 0) {
-                    if (((BasicInt)msgs.get(msgs.size() - 1).getEntity(2)).getInt() == -1) {
+                    if (((BasicInt) msgs.get(msgs.size() - 1).getEntity(2)).getInt() == -1) {
                         break;
                     }
                 }

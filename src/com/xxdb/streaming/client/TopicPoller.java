@@ -10,17 +10,17 @@ import java.util.concurrent.TimeUnit;
 public class TopicPoller {
     BlockingQueue<List<IMessage>> queue;
     ArrayList<IMessage> cache = null;
-    
+
     public TopicPoller(BlockingQueue<List<IMessage>> queue) {
         this.queue = queue;
     }
-    
+
     public void setQueue(BlockingQueue<List<IMessage>> queue) {
-    	this.queue = queue;
+        this.queue = queue;
     }
 
     private void fillCache(long timeout) {
-        assert(cache == null);
+        assert (cache == null);
         List<IMessage> list = null;
         if (cache == null) {
             try {
@@ -38,7 +38,7 @@ public class TopicPoller {
         }
     }
 
-    public ArrayList<IMessage> poll(long timeout){
+    public ArrayList<IMessage> poll(long timeout) {
         if (cache == null) {
             fillCache(timeout);
         }
@@ -48,7 +48,7 @@ public class TopicPoller {
     }
 
     // take one message from the topic, block if necessary
-    public IMessage take(){
+    public IMessage take() {
         if (cache == null)
             fillCache(-1);
         return cache.remove(0);

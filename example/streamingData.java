@@ -10,37 +10,39 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class streamingData {
     private static DBConnection conn;
-    public static String HOST  = "localhost";
+    public static String HOST = "localhost";
     public static Integer PORT = 8848;
     public static ThreadedClient client;
-    public static char METHOD='P';
+    public static char METHOD = 'P';
     public static Integer subscribePORT = 8892;
-    private	BasicTable createBasicTable(){
+
+    private BasicTable createBasicTable() {
         List<String> colNames = new ArrayList<String>();
         colNames.add("id");
         colNames.add("time");
         colNames.add("sym");
         colNames.add("qty");
         colNames.add("price");
-        List<Vector> cols = new ArrayList<Vector>(){};
+        List<Vector> cols = new ArrayList<Vector>() {
+        };
         //id
-        int[] vid = new int[]{0,1};
+        int[] vid = new int[]{0, 1};
         BasicIntVector bidv = new BasicIntVector(vid);
         cols.add(bidv);
         //time
-        int[] vtime = new int[]{Utils.countMilliseconds(16,46,05,123),Utils.countMilliseconds(18,32,05,321)};
+        int[] vtime = new int[]{Utils.countMilliseconds(16, 46, 05, 123), Utils.countMilliseconds(18, 32, 05, 321)};
         BasicTimeVector btimev = new BasicTimeVector(vtime);
         cols.add(btimev);
         //sym
-        String[] vsymbol = new String[]{"GOOG","MS"};
+        String[] vsymbol = new String[]{"GOOG", "MS"};
         BasicStringVector bsymbolv = new BasicStringVector(vsymbol);
         cols.add(bsymbolv);
         //qty
-        int[] vint = new int[]{1000,2000};
+        int[] vint = new int[]{1000, 2000};
         BasicIntVector bintv = new BasicIntVector(vint);
         cols.add(bintv);
         //price
-        double[] vdouble = new double[]{24546.54,4356.23};
+        double[] vdouble = new double[]{24546.54, 4356.23};
         BasicDoubleVector bdoublev = new BasicDoubleVector(vdouble);
         cols.add(bdoublev);
         BasicTable t1 = new BasicTable(colNames, cols);
@@ -49,21 +51,21 @@ public class streamingData {
 
     public void writeStreamTable() throws IOException {
         BasicTable table1 = createBasicTable();
-        conn.login("admin","123456",false);
+        conn.login("admin", "123456", false);
         conn.run("t = streamTable(30000:0,`id`time`sym`qty`price,[INT,TIME,SYMBOL,INT,DOUBLE])\n");
         conn.run("share t as Trades");
         conn.run("def saveData(data){ Trades.tableInsert(data)}");
         List<Entity> args = new ArrayList<Entity>(1);
         args.add(table1);
         conn.run("saveData", args);
-        BasicTable dt = (BasicTable)conn.run("select * from t");
+        BasicTable dt = (BasicTable) conn.run("select * from t");
         System.out.println(dt.getString());
-        if(dt.rows()!=2){
+        if (dt.rows() != 2) {
             System.out.println("failed");
         }
     }
 
-    public void PollingClient()throws SocketException {
+    public void PollingClient() throws SocketException {
         PollingClient client = new PollingClient(subscribePORT);
         try {
             TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades");
@@ -86,16 +88,16 @@ public class streamingData {
                 count += msgs.size();
                 for (int i = 0; i < msgs.size(); ++i) {
                     BasicTime time = (BasicTime) msgs.get(i).getEntity(1);
-                    System.out.print("time:"+time+" ");
+                    System.out.print("time:" + time + " ");
                     String symbol = msgs.get(i).getEntity(2).getString();
-                    System.out.print("sym:"+symbol+" ");
-                    Integer qty =  ((BasicInt)msgs.get(i).getEntity(3)).getInt();
-                    System.out.print("qty:"+qty+" ");
-                    Double price = ((BasicDouble)msgs.get(i).getEntity(4)).getDouble();
-                    System.out.print("price:"+price+" \n");
+                    System.out.print("sym:" + symbol + " ");
+                    Integer qty = ((BasicInt) msgs.get(i).getEntity(3)).getInt();
+                    System.out.print("qty:" + qty + " ");
+                    Double price = ((BasicDouble) msgs.get(i).getEntity(4)).getDouble();
+                    System.out.print("price:" + price + " \n");
                 }
                 if (msgs.size() > 0) {
-                    if (((BasicInt)msgs.get(msgs.size() - 1).getEntity(0)).getInt() == -1) {
+                    if (((BasicInt) msgs.get(msgs.size() - 1).getEntity(0)).getInt() == -1) {
                         break;
                     }
                 }
@@ -109,7 +111,7 @@ public class streamingData {
             }
             long end = System.currentTimeMillis();
             System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count / ((end - start) / 1000.0) + " messages/s");
-            client.unsubscribe(HOST,PORT,"Trades");
+            client.unsubscribe(HOST, PORT, "Trades");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -121,6 +123,7 @@ public class streamingData {
         private long start = 0;
 
         private boolean started = false;
+
         @Override
         public void doEvent(IMessage msg) {
             if (started == false) {
@@ -128,13 +131,13 @@ public class streamingData {
                 start = System.currentTimeMillis();
             }
             BasicTime time = (BasicTime) msg.getEntity(1);
-            System.out.print("time:"+time+" ");
+            System.out.print("time:" + time + " ");
             String symbol = msg.getEntity(2).getString();
-            System.out.print("sym:"+symbol+" ");
-            Integer qty =  ((BasicInt)msg.getEntity(3)).getInt();
-            System.out.print("qty:"+qty+" ");
-            Double price = ((BasicDouble)msg.getEntity(4)).getDouble();
-            System.out.print("price:"+price+" \n");
+            System.out.print("sym:" + symbol + " ");
+            Integer qty = ((BasicInt) msg.getEntity(3)).getInt();
+            System.out.print("qty:" + qty + " ");
+            Double price = ((BasicDouble) msg.getEntity(4)).getDouble();
+            System.out.print("price:" + price + " \n");
             count.incrementAndGet();
             System.out.println(count.get());
             if (count.get() % 10000 == 0) {
@@ -148,8 +151,7 @@ public class streamingData {
         }
     }
 
-    public void ThreadedClient()throws SocketException
-    {
+    public void ThreadedClient() throws SocketException {
         ThreadedClient client = new ThreadedClient(subscribePORT);
         try {
             client.subscribe(HOST, PORT, "Trades", "", new SampleMessageHandler());
@@ -158,24 +160,19 @@ public class streamingData {
         }
     }
 
-    public static void main(String[] args){
-        if(args.length==4)
-        {
+    public static void main(String[] args) {
+        if (args.length == 4) {
             try {
                 HOST = args[0];
                 PORT = Integer.parseInt(args[1]);
-                subscribePORT=Integer.parseInt(args[2]);
-                METHOD=args[3].charAt(0);
-                if(METHOD!='p'&&METHOD!='P'&&METHOD!='T'&&METHOD!='t')
+                subscribePORT = Integer.parseInt(args[2]);
+                METHOD = args[3].charAt(0);
+                if (METHOD != 'p' && METHOD != 'P' && METHOD != 'T' && METHOD != 't')
                     throw new Exception();
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 System.out.println("Wrong arguments");
             }
-        }
-        else if(args.length!=4&&args.length!=0)
-        {
+        } else if (args.length != 4 && args.length != 0) {
             System.out.println("wrong arguments");
             return;
         }
@@ -186,14 +183,13 @@ public class streamingData {
             System.out.println("Connection error");
             e.printStackTrace();
         }
-        try{
+        try {
             new streamingData().writeStreamTable();
-        }catch (IOException e)
-        {
+        } catch (IOException e) {
             System.out.println("Writing error");
         }
         conn.close();
-        try{
+        try {
             switch (METHOD) {
                 case 'p':
                 case 'P':
@@ -202,8 +198,7 @@ public class streamingData {
                 case 'T':
                     new streamingData().ThreadedClient();
             }
-        }catch (IOException e)
-        {
+        } catch (IOException e) {
             System.out.println("Subscription error");
         }
     }
