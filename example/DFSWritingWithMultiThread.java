@@ -3,8 +3,6 @@ package com.dolphindb;
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
-
-import javax.net.ssl.HostnameVerifier;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -96,7 +94,7 @@ public class DFSWritingWithMultiThread {
 
         long st = System.currentTimeMillis();
         for (int j = 0; j < batchSize * freq; j++) {
-            generateOneRow(tbs, areas, devices, ROWS);
+            generateOneRow(tbs, areas, devices, BATCHSIZE);
         }
         long ed = System.currentTimeMillis();
         System.out.println("create data cost : " + (ed - st));
