@@ -72,7 +72,7 @@ batchSize表示每次加入数据队列的数据量，freq表示并发写入次�
 若不传入参数，默认batchSize=2000，freq=50，serverIP="localhost"，serverPort==8848
 
 ### 4. 流数据写入和订阅例子
-Java API提供了ThreadedClient、ThreadPooledClient和PollingClient三种订阅模式订阅流表的数据。三种模式的主要区别在于收取数据的方式。
+Java API提供了ThreadedClient、ThreadPooledClient和PollingClient三种订阅模式订阅流表的数据。三种模式的主要区别在于收取数据的方式：
 
 ThreadedClient单线程执行，并且对收到的消息直接执行用户定义的handler函数进行处理；
 
