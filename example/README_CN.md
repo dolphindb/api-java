@@ -1,7 +1,7 @@
-## DolphinDB java API例子
+## DolphinDB Java API例子
 
 ### 1. 概述
-目前已有3个java API的例子，如下表所示：
+目前已有3个Java API的例子，如下表所示：
 
 | 例子主题        | 文件名称          |
 |:-------------- |:-------------|
