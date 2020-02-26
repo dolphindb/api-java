@@ -7,7 +7,7 @@
 |:-------------- |:-------------|
 |数据库写入|DFSTableWriting.java|
 |多线程并行写入数据库|DFSWritingWithMultiThread.java|
-|流数据写入和订阅|streamingData.java|
+|流数据写入和订阅|StreamingData.java|
 
 本文下面对每个例子分别进行简单的说明，包括运行和使用帮助等。
 ### 2. 数据库写入例子
