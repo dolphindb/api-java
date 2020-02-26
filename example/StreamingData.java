@@ -8,7 +8,7 @@ import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class streamingData {
+public class StreamingData {
     private static DBConnection conn;
     public static String HOST = "localhost";
     public static Integer PORT = 8848;
@@ -52,8 +52,7 @@ public class streamingData {
     public void writeStreamTable() throws IOException {
         BasicTable table1 = createBasicTable();
         conn.login("admin", "123456", false);
-        conn.run("t = streamTable(30000:0,`id`time`sym`qty`price,[INT,TIME,SYMBOL,INT,DOUBLE])\n");
-        conn.run("share t as Trades");
+        conn.run("share streamTable(30000:0,`id`time`sym`qty`price,[INT,TIME,SYMBOL,INT,DOUBLE]) as Trades\n");
         conn.run("def saveData(data){ Trades.tableInsert(data)}");
         List<Entity> args = new ArrayList<Entity>(1);
         args.add(table1);
@@ -168,7 +167,7 @@ public class streamingData {
                 subscribePORT = Integer.parseInt(args[2]);
                 METHOD = args[3].charAt(0);
                 if (METHOD != 'p' && METHOD != 'P' && METHOD != 'T' && METHOD != 't')
-                    throw new Exception();
+                    throw new Exception("the 4th parameter 'subscribeMethod' must be 'P' or 'T'");
             } catch (Exception e) {
                 System.out.println("Wrong arguments");
             }
@@ -184,7 +183,7 @@ public class streamingData {
             e.printStackTrace();
         }
         try {
-            new streamingData().writeStreamTable();
+            new StreamingData().writeStreamTable();
         } catch (IOException e) {
             System.out.println("Writing error");
         }
@@ -193,10 +192,10 @@ public class streamingData {
             switch (METHOD) {
                 case 'p':
                 case 'P':
-                    new streamingData().PollingClient();
+                    new StreamingData().PollingClient();
                 case 't':
                 case 'T':
-                    new streamingData().ThreadedClient();
+                    new StreamingData().ThreadedClient();
             }
         } catch (IOException e) {
             System.out.println("Subscription error");
