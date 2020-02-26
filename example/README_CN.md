@@ -15,9 +15,9 @@
 本例实现了用Java API往分布式数据库写入数据的功能。例子中的目标数据库是一个按日期分区的分布式数据库。
 
 #### 2.1 代码说明
-在源代码中，主要有2个函数：
-* createBasicTable函数，定义写入的数据，该函数创建了一个本地的表对象BasicTable。
-* writeDfsTable函数，通过API在DolphinDB创建待写入的分布式表，并用`run("tableInsert",args)`函数将Java端的BasicTable上传和写入分布式表。
+主要有2个函数：
+* createBasicTable函数 : 定义写入的数据，该函数创建了一个本地的表对象BasicTable。
+* writeDfsTable函数 : 通过API在DolphinDB创建待写入的分布式表，并用`run("tableInsert",args)`函数将Java端的BasicTable上传和写入分布式表。
 #### 2.2 运行
 将代码打包成xxx.jar 执行 
 ```
@@ -25,7 +25,9 @@ java -jar xxx.jar [serverIP] [serverPort]
 ```
 若不传入serverIP和serverPort参数，默认serverIP="localhost"，serverPort==8848
 ### 3. 数据库多线程并行写入例子
-当数据写入流量较大时，需要使用并行写入的方式来提升IO。DolphinDB中不允许多个线程并行写入同一个分区，所以要从整体上实现并行写入，需要确保每个线程分别写入不同分区的数据。本例以一个VALUE-HASH-HASH三层分区数据库作为写入目标，实现了如何在Java应用中将数据并行写入DolphinDB分布式表。
+当数据写入流量较大时，需要使用并行写入的方式来提升IO。DolphinDB中不允许多个线程并行写入同一个分区，所以要从整体上实现并行写入，需要确保每个线程分别写入不同分区的数据。
+
+本例以一个VALUE-HASH-HASH三层分区数据库作为写入目标，实现了如何在Java应用中将数据并行写入DolphinDB分布式表。
 
 * 数据库分区脚本
 ```
