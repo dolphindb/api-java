@@ -114,3 +114,7 @@ for(x in 0:1000){
     sleep(100)
 }
 ```
+在PollingClient订阅时，若需要中途停止订阅，可以向流表写入 id = -1的记录，示例程序会停止运行
+```
+insert into Trades values(-1,time(now()),`a, 0, 0)
+```
