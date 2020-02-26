@@ -69,7 +69,7 @@ db.createPartitionedTable(t, tableName,  `time`areaId`deviceId)
 ```
 java -jar xxx.jar [batchSize] [freq] [serverIP] [serverPort]
 ```
-batchSize表示每次加入数据队列的数据量，freq表示并发写入次数，总写入数据量为batchSize*freq
+batchSize表示每批次向DolphinDB写入的数据量，freq表示并发写入次数，总写入数据量为batchSize*freq
 
 若不传入参数，默认batchSize=2000，freq=50，serverIP="localhost"，serverPort==8848
 
@@ -80,17 +80,17 @@ ThreadedClient单线程执行，并且对收到的消息直接执行用户定义
 
 ThreadPooledClient多线程执行，对收到的消息进行多线程并行调用用户定义的handler函数进行处理；
 
-PollingClient返回一个消息队列，用户可以通过轮询的方式获取和处理数据。
+PollingClient返回一个消息队列，用户可以通过轮询队列的方式获取和处理数据。
 
 在本例流数据订阅的源代码中，选择用ThreadedClient，PollingClient两种方式。ThreadPooledClient可以参照ThreadedClient使用方式。
 
 #### 4.1 代码说明
 本例实现了流数据表的写入和流数据订阅的功能，订阅服务端发布的数据并在Java应用端打印出来，主要有5个函数和类如下：
-* writeStreamTable函数，用于创建流数据表，以及用run函数运行tableInsert脚本把模拟数据写入流表，并显示写入的结果。
-* createBasicTable函数，定义待写入的数据，该函数创建了一个本地的表对象BasicTable。
-* pollingClient类，用PollingClient订阅模式订阅流表的数据，并在主线程中获取的数据展示出来。
-* ThreadedClient类，用ThreadedClient订阅模式订阅流表的数据。
-* SampleMessageHandler类，处理ThreadedClient订阅的流表数据，将获取的数据展示出来
+* writeStreamTable函数 ：用于创建流数据表，以及将模拟数据写入流表。
+* createBasicTable函数 ：定义待写入的数据结构，该函数创建了一个本地的表对象BasicTable。
+* pollingClient类 ：用PollingClient订阅模式订阅流表的数据，并在主线程中获取的数据展示出来。
+* ThreadedClient类 ：用ThreadedClient订阅模式订阅流表的数据。
+* SampleMessageHandler类 ： 处理ThreadedClient订阅的流表数据，将获取的数据展示出来
 
 #### 4.2 运行
 将代码打包成xxx.jar 执行 
