@@ -16,7 +16,7 @@ public class StreamingData {
     public static char METHOD = 'P';
     public static Integer subscribePORT = 8892;
 
-    public void writeStreamTable() throws IOException {
+    public void createStreamTable() throws IOException {
         conn.login("admin", "123456", false);
         conn.run("share streamTable(30000:0,`id`time`sym`qty`price,[INT,TIME,SYMBOL,INT,DOUBLE]) as Trades\n");
         conn.run("def saveData(data){ Trades.tableInsert(data)}");
@@ -141,7 +141,7 @@ public class StreamingData {
             e.printStackTrace();
         }
         try {
-            new StreamingData().writeStreamTable();
+            new StreamingData().createStreamTable();
         } catch (IOException e) {
             System.out.println("Writing error");
         }

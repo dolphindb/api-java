@@ -86,7 +86,7 @@ PollingClient返回一个消息队列，用户可以通过轮询队列的方式�
 
 #### 4.1 代码说明
 本例实现了流数据表的写入和流数据订阅的功能，订阅服务端发布的数据并在Java应用端打印出来，主要有5个函数和类如下：
-* writeStreamTable函数 ：用于在DolphinDB中创建流数据表。
+* createStreamTable函数 ：用于在DolphinDB中创建流数据表。
 * pollingClient类 ：用PollingClient订阅模式订阅流表的数据，并在主线程中获取的数据展示出来。
 * ThreadedClient类 ：用ThreadedClient订阅模式订阅流表的数据。
 * SampleMessageHandler类 ： 处理ThreadedClient订阅的流表数据，将获取的数据展示出来。
