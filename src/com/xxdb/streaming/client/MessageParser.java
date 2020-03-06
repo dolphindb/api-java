@@ -25,7 +25,7 @@ class MessageParser implements Runnable {
     String topic;
     HashMap<String, Integer> nameToIndex = null;
 
-    ConcurrentHashMap<String,HashMap<String, Integer>> topicNameToIndex = null;
+    ConcurrentHashMap<String, HashMap<String, Integer>> topicNameToIndex = null;
 
     public MessageParser(Socket socket, MessageDispatcher dispatcher) {
         this.socket = socket;
@@ -52,85 +52,84 @@ class MessageParser implements Runnable {
             ExtendedDataInput in = null;
 
             while (true) {
-                    if (in == null) {
-                        Boolean isLittle = bis.read() != 0;
-                        if (isLittle == true)
-                            in = new LittleEndianDataInputStream(bis);
-                        else
-                            in = new BigEndianDataInputStream(bis);
-                    } else {
-                        in.readBoolean();
+                if (in == null) {
+                    Boolean isLittle = bis.read() != 0;
+                    if (isLittle == true)
+                        in = new LittleEndianDataInputStream(bis);
+                    else
+                        in = new BigEndianDataInputStream(bis);
+                } else {
+                    in.readBoolean();
+                }
+
+                in.readLong();
+                long msgid = in.readLong();
+
+                topic = in.readString();
+
+                short flag = in.readShort();
+                EntityFactory factory = new BasicEntityFactory();
+                int form = flag >> 8;
+
+                int type = flag & 0xff;
+
+                if (form < 0 || form > MAX_FORM_VALUE)
+                    throw new IOException("Invalid form value: " + form);
+                if (type < 0 || type > MAX_TYPE_VALUE) {
+                    throw new IOException("Invalid type value: " + type);
+
+                }
+
+                Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
+                Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
+                Entity body;
+
+                body = factory.createEntity(df, dt, in);
+                if (body.isTable() && body.rows() == 0) {
+                    for (String t : topic.split(",")) {
+                        dispatcher.setNeedReconnect(t, 0);
                     }
-
-                    in.readLong();
-                    long msgid = in.readLong();
-
-                    topic = in.readString();
-
-                    short flag = in.readShort();
-                    EntityFactory factory = new BasicEntityFactory();
-                    int form = flag >> 8;
-
-                    int type = flag & 0xff;
-
-                    if (form < 0 || form > MAX_FORM_VALUE)
-                        throw new IOException("Invalid form value: " + form);
-                    if (type < 0 || type > MAX_TYPE_VALUE) {
-                        throw new IOException("Invalid type value: " + type);
-
+                    assert (body.rows() == 0);
+                    nameToIndex = new HashMap<>();
+                    BasicTable schema = (BasicTable) body;
+                    int columns = schema.columns();
+                    for (int i = 0; i < columns; i++) {
+                        String name = schema.getColumnName(i);
+                        nameToIndex.put(name.toLowerCase(), i);
                     }
+                    topicNameToIndex.put(topic, nameToIndex);
+                } else if (body.isVector()) {
+                    BasicAnyVector dTable = (BasicAnyVector) body;
 
-                    Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
-                    Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
-                    Entity body;
+                    int colSize = dTable.rows();
+                    int rowSize = dTable.getEntity(0).rows();
+                    if (rowSize >= 1) {
+                        if (rowSize == 1) {
+                            BasicMessage rec = new BasicMessage(msgid, topic, dTable, topicNameToIndex.get(topic.split(",")[0]));
+                            dispatcher.dispatch(rec);
+                        } else {
+                            List<IMessage> messages = new ArrayList<>(rowSize);
+                            long startMsgId = msgid - rowSize + 1;
+                            for (int i = 0; i < rowSize; i++) {
+                                BasicAnyVector row = new BasicAnyVector(colSize);
 
-                    body = factory.createEntity(df, dt, in);
-                    if (body.isTable() && body.rows()==0) {
-                        for(String t : topic.split(",")){
-                            dispatcher.setNeedReconnect(t,0);
-                        }
-                        assert (body.rows() == 0);
-                        nameToIndex = new HashMap<>();
-                        BasicTable schema = (BasicTable) body;
-                        int columns = schema.columns();
-                        for (int i = 0; i < columns; i++) {
-                            String name = schema.getColumnName(i);
-                            nameToIndex.put(name.toLowerCase(), i);
-                        }
-                        topicNameToIndex.put(topic, nameToIndex);
-                    } else if (body.isVector()) {
-                        BasicAnyVector dTable = (BasicAnyVector) body;
-
-                        int colSize = dTable.rows();
-                        int rowSize = dTable.getEntity(0).rows();
-                        if (rowSize >= 1) {
-                            if (rowSize == 1) {
-                                BasicMessage rec = new BasicMessage(msgid, topic, dTable, topicNameToIndex.get(topic.split(",")[0]));
-                                dispatcher.dispatch(rec);
-                            } else {
-                                List<IMessage> messages = new ArrayList<>(rowSize);
-                                long startMsgId = msgid - rowSize + 1;
-                                for (int i = 0; i < rowSize; i++) {
-                                    BasicAnyVector row = new BasicAnyVector(colSize);
-
-                                    for (int j = 0; j < colSize; j++) {
-                                        AbstractVector vector = (AbstractVector) dTable.getEntity(j);
-                                        Entity entity = vector.get(i);
-                                        row.setEntity(j, entity);
-                                    }
-                                    BasicMessage rec = new BasicMessage(startMsgId + i, topic, row, topicNameToIndex.get(topic.split(",")[0]));
-                                    messages.add(rec);
+                                for (int j = 0; j < colSize; j++) {
+                                    AbstractVector vector = (AbstractVector) dTable.getEntity(j);
+                                    Entity entity = vector.get(i);
+                                    row.setEntity(j, entity);
                                 }
-                                dispatcher.batchDispatch(messages);
+                                BasicMessage rec = new BasicMessage(startMsgId + i, topic, row, topicNameToIndex.get(topic.split(",")[0]));
+                                messages.add(rec);
                             }
+                            dispatcher.batchDispatch(messages);
                         }
-                        dispatcher.setMsgId(topic, msgid);
-                    } else {
-                        System.out.println("message body has an invalid format. Vector or table is expected");
                     }
+                    dispatcher.setMsgId(topic, msgid);
+                } else {
+                    System.out.println("message body has an invalid format. Vector or table is expected");
+                }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             if (dispatcher.isClosed(topic)) {
                 System.out.println("check " + topic + " is unsubscribed");
@@ -140,7 +139,7 @@ class MessageParser implements Runnable {
             }
         } catch (Throwable t) {
             t.printStackTrace();
-                dispatcher.setNeedReconnect(topic, 1);
-         }
+            dispatcher.setNeedReconnect(topic, 1);
+        }
     }
 }

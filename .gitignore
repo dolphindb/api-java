@@ -20,3 +20,6 @@ hs_err_pid*
 .idea/workspace.xml
 dolphindb_javaapi.iml
 .idea/.name
+/.idea
+.idea/api-java.iml
+*.iml

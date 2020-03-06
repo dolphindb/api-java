@@ -9,13 +9,13 @@ import java.util.Date;
 public class FileLog {
 
 
-    public static void Log(String s){
+    public static void Log(String s) {
         File dir = new File("");
 
         File f = new File(dir.getAbsolutePath() + "\\JavaApi.log");
         FileWriter fw = null;
         try {
-            fw = new FileWriter(f , true);
+            fw = new FileWriter(f, true);
         } catch (IOException e1) {
             e1.printStackTrace();
         }
