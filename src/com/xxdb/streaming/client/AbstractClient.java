@@ -495,7 +495,9 @@ abstract class AbstractClient implements MessageDispatcher {
         DBConnection dbConn = new DBConnection();
         dbConn.connect(host, port);
         try {
-            String localIP = dbConn.getLocalAddress().getHostAddress();
+            String localIP = this.listeningHost;
+            if(localIP.equals(""))
+                localIP = dbConn.getLocalAddress().getHostAddress();
             List<Entity> params = new ArrayList<Entity>();
             params.add(new BasicString(localIP));
             params.add(new BasicInt(this.listeningPort));
