@@ -1,19 +1,15 @@
 package com.xxdb.streaming.client;
 
-import org.omg.CORBA.INTERNAL;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class TopicManager {
 
     private HashMap<String, TopicInfo> topicQueue = new HashMap<>();
-    private ConcurrentHashMap<String, SiteInfo> siteQueue = new ConcurrentHashMap<>();
     //singleton
     private static TopicManager uniqueInstance = null;
 

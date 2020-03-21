@@ -6,7 +6,6 @@ import java.util.*;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import com.xxdb.DBConnection;
@@ -251,7 +250,7 @@ abstract class AbstractClient implements MessageDispatcher {
         }
     }
 
-    private int GetVersionNumber(String ver) {
+    private int getVersionNumber(String ver) {
         try {
             String[] s = ver.split(" ");
             if (s.length >= 2) {
@@ -259,11 +258,9 @@ abstract class AbstractClient implements MessageDispatcher {
                 String vernum = verstr.replace(".", "");
                 return Integer.parseInt(vernum);
             }
-        } catch (Exception ex) {
-
-        } finally {
-            return 0;
-        }
+        } 
+        catch (Exception ex) {}
+        return 0;
     }
 
     public void activeCloseConnection(Site site) {
@@ -273,7 +270,7 @@ abstract class AbstractClient implements MessageDispatcher {
 
             try {
                 BasicString version = (BasicString) conn.run("version()");
-                int verNum = GetVersionNumber(version.getString());
+                int verNum = getVersionNumber(version.getString());
 
                 String localIP = this.listeningHost;
                 if(localIP.equals(""))
