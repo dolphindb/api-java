@@ -329,7 +329,8 @@ public class DBConnectionTest {
         String sql = "v=1..5;table(2019.01.01 12:00:00.000+v as OPDATE, `sd`d`d`d`d as OPMODE, take(`ss,5) as tsymbol, 4+v as tint, 3+v as tlong, take(true,5) as tbool, 2.5+v as tfloat)";
         BasicTable data = (BasicTable)conn.run(sql);
         List<Entity> args = Arrays.asList(data);
-        BasicInt re = (BasicInt)conn.run("tableInsert{loadTable('dfs://TESTDB','tb1')}", args);
+        conn.run("tb=table(100:0,`OPDATE`OPMODE`tsymbol`tint`tlong`tbool`tfloat,[TIMESTAMP,CHAR,SYMBOL,INT,LONG,BOOL,FLOAT])");
+        BasicInt re = (BasicInt)conn.run("tableInsert{tb}", args);
         assertEquals(5, re.getInt());
     }
 
