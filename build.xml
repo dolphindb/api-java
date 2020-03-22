@@ -38,7 +38,7 @@
    <jar jarfile="${test_jar}" basedir="${classes_test}"/>
 </target>
 <target name="run" depends="buildtest">
-    <junit printsummary="true">
+    <junit printsummary="true" haltonfailure="no">
         <classpath path="tmp;${junit_jar};${hamcrest_jar};${test_jar};${src_jar}"></classpath>
 		<formatter type="plain"/>
         <test name="com.xxdb.DBConnectionTest"></test>
