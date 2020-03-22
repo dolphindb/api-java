@@ -39,7 +39,7 @@
 </target>
 <target name="run" depends="buildtest">
     <junit printsummary="true">
-        <classpath path="tmp;${junit_jar};${test_jar};${src_jar};${hamcrest_jar}"></classpath>
+        <classpath path="tmp;${junit_jar};${hamcrest_jar};${test_jar};${src_jar}"></classpath>
 		<formatter type="plain"/>
         <test name="com.xxdb.DBConnectionTest"></test>
     </junit>
