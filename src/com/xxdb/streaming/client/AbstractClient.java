@@ -254,8 +254,7 @@ abstract class AbstractClient implements MessageDispatcher {
         try {
             String[] s = ver.split(" ");
             if (s.length >= 2) {
-                String verstr = s[0];
-                String vernum = verstr.replace(".", "");
+                String vernum = s[0].replace(".", "");
                 return Integer.parseInt(vernum);
             }
         } 
