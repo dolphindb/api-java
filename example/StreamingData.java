@@ -8,7 +8,7 @@ import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class streamingData {
+public class StreamingData {
     private static DBConnection conn;
     public static String HOST = "localhost";
     public static Integer PORT = 8848;
@@ -16,53 +16,10 @@ public class streamingData {
     public static char METHOD = 'P';
     public static Integer subscribePORT = 8892;
 
-    private BasicTable createBasicTable() {
-        List<String> colNames = new ArrayList<String>();
-        colNames.add("id");
-        colNames.add("time");
-        colNames.add("sym");
-        colNames.add("qty");
-        colNames.add("price");
-        List<Vector> cols = new ArrayList<Vector>() {
-        };
-        //id
-        int[] vid = new int[]{0, 1};
-        BasicIntVector bidv = new BasicIntVector(vid);
-        cols.add(bidv);
-        //time
-        int[] vtime = new int[]{Utils.countMilliseconds(16, 46, 05, 123), Utils.countMilliseconds(18, 32, 05, 321)};
-        BasicTimeVector btimev = new BasicTimeVector(vtime);
-        cols.add(btimev);
-        //sym
-        String[] vsymbol = new String[]{"GOOG", "MS"};
-        BasicStringVector bsymbolv = new BasicStringVector(vsymbol);
-        cols.add(bsymbolv);
-        //qty
-        int[] vint = new int[]{1000, 2000};
-        BasicIntVector bintv = new BasicIntVector(vint);
-        cols.add(bintv);
-        //price
-        double[] vdouble = new double[]{24546.54, 4356.23};
-        BasicDoubleVector bdoublev = new BasicDoubleVector(vdouble);
-        cols.add(bdoublev);
-        BasicTable t1 = new BasicTable(colNames, cols);
-        return t1;
-    }
-
-    public void writeStreamTable() throws IOException {
-        BasicTable table1 = createBasicTable();
+    public void createStreamTable() throws IOException {
         conn.login("admin", "123456", false);
-        conn.run("t = streamTable(30000:0,`id`time`sym`qty`price,[INT,TIME,SYMBOL,INT,DOUBLE])\n");
-        conn.run("share t as Trades");
+        conn.run("share streamTable(30000:0,`id`time`sym`qty`price,[INT,TIME,SYMBOL,INT,DOUBLE]) as Trades\n");
         conn.run("def saveData(data){ Trades.tableInsert(data)}");
-        List<Entity> args = new ArrayList<Entity>(1);
-        args.add(table1);
-        conn.run("saveData", args);
-        BasicTable dt = (BasicTable) conn.run("select * from t");
-        System.out.println(dt.getString());
-        if (dt.rows() != 2) {
-            System.out.println("failed");
-        }
     }
 
     public void PollingClient() throws SocketException {
@@ -168,7 +125,7 @@ public class streamingData {
                 subscribePORT = Integer.parseInt(args[2]);
                 METHOD = args[3].charAt(0);
                 if (METHOD != 'p' && METHOD != 'P' && METHOD != 'T' && METHOD != 't')
-                    throw new Exception();
+                    throw new Exception("the 4th parameter 'subscribeMethod' must be 'P' or 'T'");
             } catch (Exception e) {
                 System.out.println("Wrong arguments");
             }
@@ -184,7 +141,7 @@ public class streamingData {
             e.printStackTrace();
         }
         try {
-            new streamingData().writeStreamTable();
+            new StreamingData().createStreamTable();
         } catch (IOException e) {
             System.out.println("Writing error");
         }
@@ -193,10 +150,10 @@ public class streamingData {
             switch (METHOD) {
                 case 'p':
                 case 'P':
-                    new streamingData().PollingClient();
+                    new StreamingData().PollingClient();
                 case 't':
                 case 'T':
-                    new streamingData().ThreadedClient();
+                    new StreamingData().ThreadedClient();
             }
         } catch (IOException e) {
             System.out.println("Subscription error");

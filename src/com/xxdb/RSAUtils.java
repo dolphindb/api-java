@@ -38,24 +38,4 @@ public class RSAUtils {
             throw new IOException(ex.getMessage());
         }
     }
-
-    public static byte[] encrypt(byte[] content, PublicKey publicKey) throws IOException {
-        try {
-            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            return cipher.doFinal(content);
-        } catch (Exception ex) {
-            throw new IOException(ex.getMessage());
-        }
-    }
-
-    public static byte[] decrypt(byte[] content, PrivateKey privateKey) throws IOException {
-        try {
-            Cipher cipher = Cipher.getInstance("RSA");
-            cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            return cipher.doFinal(content);
-        } catch (Exception ex) {
-            throw new IOException(ex.getMessage());
-        }
-    }
 }

@@ -3,13 +3,11 @@ package com.xxdb.streaming.client;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.xxdb.FileLog;
 import com.xxdb.data.*;
 import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.ExtendedDataInput;

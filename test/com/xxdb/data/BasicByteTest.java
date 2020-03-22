@@ -56,25 +56,4 @@ public class BasicByteTest {
             }
         }
     }
-
-    @Test
-    public void getByte() {
-    }
-
-    @Test
-    public void isNull() {
-    }
-
-    @Test
-    public void setNull() {
-    }
-
-    @Test
-    public void getDataCategory() {
-    }
-
-    @Test
-    public void getDataType() {
-    }
-
 }

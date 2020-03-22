@@ -26,6 +26,7 @@ public class ThreadedClient extends AbstractClient {
     public ThreadedClient(String subscribeHost, int subscribePort) throws SocketException {
         super(subscribeHost, subscribePort);
     }
+
     class HandlerLopper extends Thread {
         BlockingQueue<List<IMessage>> queue;
         MessageHandler handler;
@@ -57,12 +58,12 @@ public class ThreadedClient extends AbstractClient {
         try {
             subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.allowExistTopic);
             Date d = new Date();
-            DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");//设置显示格式
+            DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             System.out.println(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
             return true;
         } catch (Exception ex) {
             Date d = new Date();
-            DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");//设置显示格式
+            DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             System.out.println(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.host + ":" + site.port + ":" + site.tableName);
             ex.printStackTrace();
             return false;

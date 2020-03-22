@@ -7,11 +7,6 @@ import java.net.SocketException;
 
 public class ThreadedClientTester {
 
-
-    public static void stopPublish() {
-
-    }
-
     public static void main(String args[]) throws SocketException {
 
         ThreadedClient client = new ThreadedClient(8997);

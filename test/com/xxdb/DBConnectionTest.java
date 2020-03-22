@@ -12,7 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.xxdb.data.*;
@@ -23,6 +22,7 @@ public class DBConnectionTest {
     private DBConnection conn;
     public static String HOST = "127.0.0.1";
     public static Integer PORT = 28848;
+
 
     @Before
     public void setUp() {
@@ -327,6 +327,17 @@ public class DBConnectionTest {
         BasicTable re = (BasicTable) conn.run("sharedTable");
         assertEquals(53, re.rows());
     }
+
+    @Test
+    public void test_tableInsertPartialFunction() throws IOException {
+
+        String sql = "v=1..5;table(2019.01.01 12:00:00.000+v as OPDATE, `sd`d`d`d`d as OPMODE, take(`ss,5) as tsymbol, 4+v as tint, 3+v as tlong, take(true,5) as tbool, 2.5+v as tfloat)";
+        BasicTable data = (BasicTable)conn.run(sql);
+        List<Entity> args = Arrays.asList(data);
+        BasicInt re = (BasicInt)conn.run("tableInsert{loadTable('dfs://TESTDB','tb1')}", args);
+        assertEquals(5, re.getInt());
+    }
+
 
     @Test
     public void testUUID() throws IOException {
