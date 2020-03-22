@@ -36,10 +36,10 @@
 <target name="buildtest" depends="compiletest">
    <jar jarfile="${test_jar}" basedir="${classes_test}"/>
 </target>
-<target name="run" depends="buildsrc">
+<target name="run" depends="buildtest">
     <junit printsummary="true">
         <classpath path="tmp;${junit_jar}"></classpath>
-		<formatter type="xml"/>
+		<formatter type="plain"/>
         <test name="com.xxdb.DBConnectionTest"></test>
     </junit>
 </target>

@@ -1,19 +1,14 @@
 package com.xxdb;
 
 import java.io.IOException;
-import java.time.*;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
-
-import junit.framework.TestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 
