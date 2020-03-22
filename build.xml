@@ -39,6 +39,7 @@
 <target name="run" depends="buildsrc">
     <junit printsummary="true">
         <classpath path="tmp;${junit_jar}"></classpath>
+		<formatter type="xml"/>
         <test name="com.xxdb.DBConnectionTest"></test>
     </junit>
 </target>
