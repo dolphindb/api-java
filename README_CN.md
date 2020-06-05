@@ -14,7 +14,7 @@
   - [7.3 保存数据到分布式表](https://2xdb.net/dolphindb/api-java/-/blob/master/README_CN.md#73-%E4%BF%9D%E5%AD%98%E6%95%B0%E6%8D%AE%E5%88%B0%E5%88%86%E5%B8%83%E5%BC%8F%E8%A1%A8)
    - [7.3.1 使用tableInsert函数保存BasicTable对象](https://2xdb.net/dolphindb/api-java/-/blob/master/README_CN.md#731-%E4%BD%BF%E7%94%A8tableinsert%E5%87%BD%E6%95%B0%E4%BF%9D%E5%AD%98basictable%E5%AF%B9%E8%B1%A1)
    - [7.3.2 分布式表的并发写入](https://2xdb.net/dolphindb/api-java/-/blob/master/README_CN.md#732-%E5%88%86%E5%B8%83%E5%BC%8F%E8%A1%A8%E7%9A%84%E5%B9%B6%E5%8F%91%E5%86%99%E5%85%A5) 
- - [7.4 读取和使用数据表](https://2xdb.net/dolphindb/api-java/-/blob/master/README_CN.md#74-%E8%AF%BB%E5%8F%96%E5%92%8C%E4%BD%BF%E7%94%A8%E6%95%B0%E6%8D%AE%E8%A1%A8)
+  - [7.4 读取和使用数据表](https://2xdb.net/dolphindb/api-java/-/blob/master/README_CN.md#74-%E8%AF%BB%E5%8F%96%E5%92%8C%E4%BD%BF%E7%94%A8%E6%95%B0%E6%8D%AE%E8%A1%A8)
 - [8. Java原生类型转换为DolphinDB数据类型](https://2xdb.net/dolphindb/api-java/-/blob/master/README_CN.md#8-java%E5%8E%9F%E7%94%9F%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2%E4%B8%BAdolphindb%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B)
 - [9. Java流数据API](https://2xdb.net/dolphindb/api-java/-/blob/master/README_CN.md#9-java%E6%B5%81%E6%95%B0%E6%8D%AEapi)
 
