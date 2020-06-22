@@ -15,10 +15,18 @@ import com.xxdb.data.Vector;
 public class DBConnectionTest {
 
     private DBConnection conn;
-    public static String HOST = "127.0.0.1";
-    public static Integer PORT = 28848;
-
-
+ //   public static String HOST = "127.0.0.1";
+  //  public static Integer PORT = 28848;
+    private DBConnection controllerConn;
+    private DBConnection node1Conn;
+    public static String HOST  = "localhost";
+    public static Integer PORT = 8848;
+    public static Integer NODE1PORT = 18921;
+    public static Integer CONTROLLERPORT = 18910;
+    public static String NODE4NAME="DFS_NODE4";
+    private int getConnCount() throws IOException{
+        return ((BasicInt)conn.run("getClusterPerf().connectionNum[0]")).getInt();
+    }
     @Before
     public void setUp() {
         conn = new DBConnection();
@@ -35,7 +43,111 @@ public class DBConnectionTest {
     public void tearDown() throws Exception {
         conn.close();
     }
-
+    @Test
+    public  void  testCharScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("'a'");
+        assertEquals('a',((BasicByte)scalar).getByte());
+    }
+    @Test
+    public void testShortScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("11h");
+        assertEquals(11,((BasicShort)scalar).getShort());
+    }
+    @Test
+    public  void  testIntScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("6");
+        assertEquals(6,((BasicInt)scalar).getInt());
+    }
+    @Test
+    public  void  testLongScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("22l");
+        assertEquals(22,((BasicLong)scalar).getLong());
+    }
+    @Test
+    public  void  testDateScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("2013.06.13");
+        assertEquals(15869,((BasicDate)scalar).getInt());
+    }
+    @Test
+    public  void  testMonthScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("2012.06M");
+        assertEquals(24149,((BasicMonth)scalar).getInt());
+    }
+    @Test
+    public  void  testTimeScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("13:30:10.008");
+        assertEquals(48610008,((BasicTime)scalar).getInt());
+    }
+    @Test
+    public  void  testMinuteScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("13:30m");
+        assertEquals(810,((BasicMinute)scalar).getInt());
+    }
+    @Test
+    public  void  testSecondScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("13:30:10");
+        assertEquals(48610,((BasicSecond)scalar).getInt());
+    }
+    @Test
+    public  void  testTimeStampScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("2012.06.13 13:30:10");
+        assertEquals(1339594210,((BasicDateTime)scalar).getInt());
+    }
+    @Test
+    public  void  testDateTimeScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("2012.06.13 13:30:10.008");
+        assertEquals(1339594210008l,((BasicTimestamp)scalar).getLong());
+    }
+    @Test
+    public  void  testNanoTimeScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("13:30:10.008007006");
+        assertEquals(48610008007006l,((BasicNanoTime)scalar).getLong());
+    }
+    @Test
+    public  void  testNanoTimeStampScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("2012.06.13 13:30:10.008007006");
+        assertEquals(1339594210008007006l,((BasicNanoTimestamp)scalar).getLong());
+    }
+    @Test
+    public  void  testStringScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("`IBM");
+        assertEquals("IBM",((BasicString)scalar).getString());
+    }
+    @Test
+    public  void  testBooleanScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("true");
+        assertEquals(true,((BasicBoolean)scalar).getBoolean());
+    }
+    @Test
+    public  void  testFloatScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("1.2f");
+        assertEquals(1.2,((BasicFloat)scalar).getFloat(),2);
+    }
+    @Test
+    public  void  testDoubleScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("1.22");
+        assertEquals(1.22,((BasicDouble)scalar).getDouble(),2);
+    }
+    @Test
+    public  void  testUuidScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("uuid('5d212a78-cc48-e3b1-4235-b4d91473ee87')");
+        assertEquals("5d212a78-cc48-e3b1-4235-b4d91473ee87",((BasicUuid)scalar).getString());
+    }
+    @Test
+    public  void  testDateHourScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("datehour(2012.06.13 13:30:10)");
+        assertEquals(372109,((BasicDateHour)scalar).getInt());
+    }
+    @Test
+    public  void  testIpAddrScalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("ipaddr('192.168.1.13')");
+        assertEquals("192.168.1.13",((BasicIPAddr)scalar).getString());
+    }
+    @Test
+    public  void testInt128Scalar() throws IOException {
+        Scalar scalar = (Scalar) conn.run("int128('e1671797c52e15f763380b45e841ec32')");
+        assertEquals("e1671797c52e15f763380b45e841ec32",((BasicInt128)scalar).getString());
+    }
     @Test
     public void testStringVector() throws IOException {
         BasicStringVector vector = (BasicStringVector) conn.run("`IBM`GOOG`YHOO");
@@ -47,8 +159,115 @@ public class DBConnectionTest {
     public void testFunctionDef() throws IOException {
         Entity obj = conn.run("def(a,b){return a+b}");
         assertEquals(Entity.DATA_TYPE.DT_FUNCTIONDEF, obj.getDataType());
+        Entity AnonymousDef= conn.run("each(def(a,b):a+b, 1..10, 2..11);");
+        int length = AnonymousDef.rows();
+        assertEquals(10,length);
+        StringBuilder sb = new StringBuilder();
+        sb.append("a=100;");
+        sb.append("g=add{a*a};");
+        sb.append("g(8);");
+        BasicInt res = (BasicInt) conn.run(sb.toString());
+        assertEquals(10008,res.getInt());
+        StringBuilder sb1 = new StringBuilder();
+        sb1.append("def f(x):x pow 2 + 3*x + 4.0;");
+        sb1.append("f(2);");
+        BasicDouble lambda = (BasicDouble) conn.run(sb1.toString());
+        assertEquals(14.0,lambda.getDouble(),2);
+        StringBuilder sb2 = new StringBuilder();
+        sb2.append("g=def(a){return def(b): a pow b};");
+        sb2.append("g(10)(5);");
+        BasicDouble closed = (BasicDouble) conn.run(sb2.toString());
+        assertEquals(100000.0,closed.getDouble(),2);
+        StringBuilder sb3 = new StringBuilder();
+        sb3.append("h=xdb('"+HOST+"',"+NODE1PORT+"); ");
+        sb3.append("h('sum',take(100, 1000));");
+        BasicLong Remote = (BasicLong) conn.run(sb3.toString());
+        assertEquals(100000l,Remote.getLong());
+        StringBuilder sb4 = new StringBuilder();
+        sb4.append("x=[9,6,8];");
+        sb4.append("def wage(x){if(x<=8) return 10*x; else return 20*x-80};");
+        sb4.append("each(wage,x);");
+        BasicIntVector each = (BasicIntVector) conn.run(sb4.toString());
+        assertEquals(100,each.getInt(0));
+        StringBuilder sb5 = new StringBuilder();
+        sb5.append("t = table(1 2 3 as id, 4 5 6 as value,`IBM`MSFT`GOOG as name);");
+        sb5.append("loop(max, t.values());");
+        BasicAnyVector loop = (BasicAnyVector) conn.run(sb5.toString());
+        assertEquals("3",loop.getEntity(0).getString());
     }
+    @Test
+    public void testFunctionView() throws IOException {
+        controllerConn = new DBConnection();
+        try{
+            if(!controllerConn.connect(HOST,CONTROLLERPORT,"admin","123456")){
+                throw new IOException("Failed to connect to  server");
+            }
+        }catch(IOException ex){
+            ex.printStackTrace();
+        }
+        StringBuilder sb = new StringBuilder();
+        //用户已存在时不创建
+        //sb.append("createUser(`user1,`123456);");
+        //sb.append("createUser(`user2,`123456);");
+        sb.append("def getCount(){return exec count(*) from table(1..10 as id,1..10 as val) ;};");
+        //sb.append("addFunctionView(getCount);");
+        sb.append("grant(`user1, VIEW_EXEC,`getCount);");
+        controllerConn.run(sb.toString());
+        node1Conn = new DBConnection();
+        try{
+            if(!node1Conn.connect(HOST,NODE1PORT,"admin","123456")){
+                throw new IOException("Failed to connect to server");
+            }
+        }catch(IOException ex){
+            ex.printStackTrace();
+        }
+        StringBuilder sb1 = new StringBuilder();
+        sb1.append("login(`user1,`123456);");
+        sb1.append("getCount();");
+        BasicInt user1 = (BasicInt) node1Conn.run(sb1.toString());
+        assertEquals(10,user1.getInt());
+        StringBuilder sb2 = new StringBuilder();
+        sb2.append("login(`user2,`123456);");
+        sb2.append("getCount();");
+        try{
+            node1Conn.run(sb2.toString());
+        }catch(IOException ex){
+            assertEquals("No access to view getCount",ex.getMessage());
+        }
+        //group
+        //	controllerConn.run("createGroup(`funcView,`user1);");
+        controllerConn.run("addGroupMember(`user2,`funcView);");
+        controllerConn.run("grant(`funcView,VIEW_EXEC,`getCount);");
+        BasicInt user2 = (BasicInt) node1Conn.run(sb2.toString());
+        assertEquals(10,user2.getInt());
+        controllerConn.run("deleteGroupMember(`user2,`funcView);");
+        try{
+            node1Conn.run(sb2.toString());
+        }catch(IOException ex){
+            assertEquals("No access to view getCount",ex.getMessage());
+        }
+        controllerConn.close();
+    }
+    @Test
+    public void testFuncRpc(){
 
+    }
+    @Test
+    public void testScriptOutOfRange(){
+
+    }
+    @Test
+    public void testBoolVector() throws IOException{
+        BasicBooleanVector vector = (BasicBooleanVector)conn.run("rand(1b 0b true false,10)");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
+    @Test
+    public void testCharVector() throws IOException{
+        BasicByteVector vector = (BasicByteVector)conn.run("rand('d' '1' '@',10)");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
     @Test
     public void testSymbolVector() throws IOException {
         BasicStringVector vector = (BasicStringVector) conn.run("rand(`IBM`MSFT`GOOG`BIDU,10)");
@@ -69,20 +288,102 @@ public class DBConnectionTest {
         int size = vector.rows();
         assertEquals(10, size);
     }
-
+    @Test
+    public void testFloatVector() throws IOException{
+        BasicFloatVector vector = (BasicFloatVector)conn.run("rand(10.0f,10)");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
+    @Test
+    public void testLongVector() throws IOException{
+        BasicLongVector vector = (BasicLongVector)conn.run("rand(0l..11l,10)");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
+    @Test
+    public void testShortVector() throws IOException{
+        BasicShortVector vector = (BasicShortVector)conn.run("rand(1h..22h,10)");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
     @Test
     public void testDateVector() throws IOException {
         BasicDateVector vector = (BasicDateVector) conn.run("2012.10.01 +1..10");
         int size = vector.rows();
         assertEquals(10, size);
     }
-
+    @Test
+    public void testMonthVector() throws IOException{
+        BasicMonthVector vector = (BasicMonthVector)conn.run("2012.06M +1..10");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
+    @Test
+    public void testTimeVector() throws IOException{
+        BasicTimeVector vector = (BasicTimeVector)conn.run("13:30:10.008 +1..10");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
+    @Test
+    public void testMinuteVector() throws IOException{
+        BasicMinuteVector vector = (BasicMinuteVector)conn.run("13:30m +1..10");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
+    @Test
+    public void testSecondVector() throws IOException{
+        BasicSecondVector vector = (BasicSecondVector)conn.run("13:30:10 +1..10");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
+    @Test
+    public void testTimeStampVector() throws IOException{
+        BasicTimestampVector vector = (BasicTimestampVector)conn.run("2012.06.13 13:30:10.008 +1..10");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
+    @Test
+    public void testNanoTimeVector() throws IOException{
+        BasicNanoTimeVector vector = (BasicNanoTimeVector)conn.run("13:30:10.008007006 +1..10");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
+    @Test
+    public void testNanoTimeStampVector() throws IOException{
+        BasicNanoTimestampVector vector = (BasicNanoTimestampVector)conn.run("2012.06.13 13:30:10.008007006 +1..10");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
     @Test
     public void testDateTimeVector() throws IOException {
 
         BasicDateTimeVector vector = (BasicDateTimeVector) conn.run("2012.10.01 15:00:04 + (rand(10000,10))");
         int size = vector.rows();
         assertEquals(10, size);
+    }
+    @Test
+    public void testUuidVector() throws IOException{
+        BasicUuidVector vector = (BasicUuidVector)conn.run("take(uuid('5d212a78-cc48-e3b1-4235-b4d91473ee87'),10)");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
+    @Test
+    public void testDateHourVector() throws IOException{
+        BasicDateHourVector vector = (BasicDateHourVector)conn.run("datehour('2012.06.13T13')+1..10");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
+    @Test
+    public void testIpAddrVector() throws IOException{
+        BasicIPAddrVector vector = (BasicIPAddrVector)conn.run("rand(ipaddr('192.168.0.1'),10)");
+        int size = vector.rows();
+        assertEquals(10,size);
+    }
+    @Test
+    public void testInt128Vector() throws IOException{
+        BasicInt128Vector vector = (BasicInt128Vector)conn.run("rand(int128('e1671797c52e15f763380b45e841ec32'),10)");
+        int size = vector.rows();
+        assertEquals(10,size);
     }
 
     @Test
@@ -112,7 +413,244 @@ public class DBConnectionTest {
         assertTrue(table.rows() > 0);
         assertTrue(q > 10);
     }
+    @Test
+    public void testLongMatrix() throws IOException {
+        BasicLongMatrix matrix = (BasicLongMatrix)conn.run("1l..6l$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testLongMatrixWithLabel() throws IOException {
+        BasicLongMatrix matrix = (BasicLongMatrix)conn.run("cross(add,1l..5l,1l..10l)");
+        assertEquals(5,matrix.rows());
+        assertEquals(10,matrix.columns());
+        assertEquals("1", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testShortMatrix() throws IOException {
+        BasicShortMatrix matrix = (BasicShortMatrix)conn.run("1h..6h$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testShortMatrixWithLabel() throws IOException {
+        BasicShortMatrix matrix = (BasicShortMatrix)conn.run("short(cross(add,1h..5h,1h..10h))");
+        assertEquals(5,matrix.rows());
+        assertEquals(10,matrix.columns());
+        assertEquals("1", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testSymbolMatrix() throws IOException {
+        BasicStringMatrix matrix = (BasicStringMatrix)conn.run("matrix(`SYMBOL,2,2, ,`T)");
+        assertEquals(2,matrix.rows());
+        assertEquals(2,matrix.columns());
+    }
+    @Test
+    public void testSymbolMatrixWithLabel() throws IOException {
+        try{
+            BasicStringMatrix matrix = (BasicStringMatrix)conn.run("cross(add,matrix(`SYMBOL,2,2, ,`T),matrix(`SYMBOL,2,2, ,`T))");
+            assertEquals(0,matrix.rows());
+            assertEquals(0,matrix.columns());
+        }catch (IOException ex){
+            assertEquals("The add function does not support symbol data",ex.getMessage());
+        }
+    }
 
+    @Test
+    public void testDoubleMatrix() throws IOException {
+        BasicDoubleMatrix matrix = (BasicDoubleMatrix)conn.run("2.1 1.1 2.6$1:3");
+        assertEquals(1,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testDoubleMatrixWithLabel() throws IOException {
+        BasicDoubleMatrix matrix = (BasicDoubleMatrix)conn.run("cross(pow,2.1 5.0 4.88,1.0 9.6 5.2)");
+        assertEquals(3,matrix.rows());
+        assertEquals(3,matrix.columns());
+        assertEquals("2.1", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testFloatMatrix() throws IOException {
+        BasicFloatMatrix matrix = (BasicFloatMatrix)conn.run("2.1f 1.1f 2.6f$1:3");
+        assertEquals(1,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testFloatMatrixWithLabel() throws IOException {
+        BasicFloatMatrix matrix = (BasicFloatMatrix)conn.run("float(cross(pow,2.1f 5.0f 4.88f,1.0f 9.6f 5.2f))");
+        assertEquals(3,matrix.rows());
+        assertEquals(3,matrix.columns());
+        assertEquals("2.1", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testBooleanMatrix() throws IOException {
+        BasicBooleanMatrix matrix = (BasicBooleanMatrix)conn.run("rand(true false,6)$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testBooleanMatrixWithLabel() throws IOException {
+        BasicBooleanMatrix matrix = (BasicBooleanMatrix)conn.run("bool(cross(add,true false,false true))");
+        assertEquals(2,matrix.rows());
+        assertEquals(2,matrix.columns());
+        assertEquals("true", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testByteMatrix() throws IOException {
+        BasicByteMatrix matrix = (BasicByteMatrix)conn.run("rand('q' '1' '*',6)$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testByteMatrixWithLabel() throws IOException {
+        BasicByteMatrix matrix = (BasicByteMatrix)conn.run("cross(add,true false,false true)");
+        assertEquals(2,matrix.rows());
+        assertEquals(2,matrix.columns());
+        assertEquals("true", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testDateHourMatrix() throws IOException {
+        BasicDateHourMatrix matrix = (BasicDateHourMatrix)conn.run("rand(datehour([2012.06.15 15:32:10.158,2012.06.15 17:30:10.008]),6)$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testDateHourMatrixWithLabel() throws IOException {
+        BasicDateHourMatrix matrix = (BasicDateHourMatrix)conn.run("datehour(cross(add,2012.06.15 15:32:10.158 2012.06.15 15:32:10.158,2012.06.15 17:30:10.008 2012.06.15 15:32:10.158))");
+        assertEquals(2,matrix.rows());
+        assertEquals(2,matrix.columns());
+        assertEquals("2012.06.15T15:32:10.158", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testMinuteMatrix() throws IOException {
+        BasicMinuteMatrix matrix = (BasicMinuteMatrix)conn.run("rand(13:30m 16:19m,6)$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testMinuteMatrixWithLabel() throws IOException {
+        BasicMinuteMatrix matrix = (BasicMinuteMatrix)conn.run("minute(cross(add,13:30m 13:15m,14:30m 13:20m))");
+        assertEquals(2,matrix.rows());
+        assertEquals(2,matrix.columns());
+        assertEquals("13:30m", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testSecondMatrix() throws IOException {
+        BasicSecondMatrix matrix = (BasicSecondMatrix)conn.run("rand(13:30:12 13:30:10,6)$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testSecondMatrixWithLabel() throws IOException {
+        BasicSecondMatrix matrix = (BasicSecondMatrix)conn.run("second(cross(add,13:30:12 13:30:10,13:30:12 13:30:10))");
+        assertEquals(2,matrix.rows());
+        assertEquals(2,matrix.columns());
+        assertEquals("13:30:12", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testMonthMatrix() throws IOException {
+        BasicMonthMatrix matrix = (BasicMonthMatrix)conn.run("rand(2015.06M 2012.09M,6)$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testMonthMatrixWithLabel() throws IOException {
+        BasicMonthMatrix matrix = (BasicMonthMatrix)conn.run("month(cross(add,2015.06M 2012.09M,2015.06M 2012.09M))");
+        assertEquals(2,matrix.rows());
+        assertEquals(2,matrix.columns());
+        assertEquals("2015.06M", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testNanoTimeMatrix() throws IOException {
+        BasicNanoTimeMatrix matrix = (BasicNanoTimeMatrix)conn.run("rand(17:30:10.008007006 17:35:10.008007006,6)$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testNanoTimeMatrixWithLabel() throws IOException {
+        BasicNanoTimeMatrix matrix = (BasicNanoTimeMatrix)conn.run("nanotime(cross(add,17:30:10.008007006 17:35:10.008007006,17:30:10.008007006 17:35:10.008007006))");
+        assertEquals(2,matrix.rows());
+        assertEquals(2,matrix.columns());
+        assertEquals("17:30:10.008007006", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testNanoTimestampMatrix() throws IOException {
+        BasicNanoTimestampMatrix matrix = (BasicNanoTimestampMatrix)conn.run("rand(2014.06.13T13:30:10.008007006 2012.06.13T13:30:10.008007006,6)$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testNanoTimestampMatrixWithLabel() throws IOException {
+        BasicNanoTimestampMatrix matrix = (BasicNanoTimestampMatrix)conn.run("nanotimestamp(cross(add,2012.06.13T13:30:10.008007006 2012.06.14T13:30:10.008007006,2012.06.13T13:30:10.008007006))");
+        assertEquals(2,matrix.rows());
+        assertEquals(1,matrix.columns());
+        assertEquals("2012.06.13T13:30:10.008007006", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testDateMatrix() throws IOException {
+        BasicDateMatrix matrix = (BasicDateMatrix)conn.run("rand(date([2013.06.13,2014.06.13]),6)$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testDateMatrixWithLabel() throws IOException {
+        BasicDateMatrix matrix = (BasicDateMatrix)conn.run("date(cross(add,2013.06.13 2015.03.13,2012.06.15 2012.06.19))");
+        assertEquals(2,matrix.rows());
+        assertEquals(2,matrix.columns());
+        assertEquals("2013.06.13", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testDateTimeMatrix() throws IOException {
+        BasicDateTimeMatrix matrix = (BasicDateTimeMatrix)conn.run("rand(datetime([2012.06.13T13:30:10,2012.06.13T16:30:10]),6)$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testDateTimeMatrixWithLabel() throws IOException {
+        BasicDateTimeMatrix matrix = (BasicDateTimeMatrix)conn.run("datetime(cross(add,2012.06.13T13:30:10 2019.06.13T16:30:10,2013.06.13T13:30:10 2014.06.13T16:30:10))");
+        assertEquals(2,matrix.rows());
+        assertEquals(2,matrix.columns());
+        assertEquals("2012.06.13T13:30:10", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testTimeMatrix() throws IOException {
+        BasicTimeMatrix matrix = (BasicTimeMatrix)conn.run("rand(time([13:31:10.008,12:30:10.008]),6)$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testTimeMatrixWithLabel() throws IOException {
+        BasicTimeMatrix matrix = (BasicTimeMatrix)conn.run("time(cross(add,13:31:10.008 12:30:10.008,13:31:10.008 12:30:10.008))");
+        assertEquals(2,matrix.rows());
+        assertEquals(2,matrix.columns());
+        assertEquals("13:31:10.008", matrix.getRowLabel(0).getString());
+    }
+    @Test
+    public void testTimestampMatrix() throws IOException {
+        BasicTimestampMatrix matrix = (BasicTimestampMatrix)conn.run("rand(timestamp([2012.06.13T13:30:10.008,2014.06.13T13:30:10.008]),6)$2:3");
+        assertEquals(2,matrix.rows());
+        assertEquals(3,matrix.columns());
+    }
+    @Test
+    public void testTimestampMatrixWithLabel() throws IOException {
+        BasicTimestampMatrix matrix = (BasicTimestampMatrix)conn.run("timestamp(cross(add,2012.06.13T13:30:10.008 2014.06.13T13:30:10.008,2012.06.13T13:30:10.008 2014.06.13T13:30:10.008))");
+        assertEquals(2,matrix.rows());
+        assertEquals(2,matrix.columns());
+        assertEquals("2012.06.13T13:30:10.008", matrix.getRowLabel(0).getString());
+    }
+
+  /*  @Test
+    public void testTable() throws IOException{
+        StringBuilder sb =new StringBuilder();
+        sb.append("n=20000\n");
+        sb.append("syms=`IBM`C`MS`MSFT`JPM`ORCL`BIDU`SOHU`GE`EBAY`GOOG`FORD`GS`PEP`USO`GLD`GDX`EEM`FXI`SLV`SINA`BAC`AAPL`PALL`YHOO`KOH`TSLA`CS`CISO`SUN\n");
+        sb.append("mytrades=table(09:30:00+rand(18000,n) as timestamp,rand(syms,n) as sym, 10*(1+rand(100,n)) as qty,5.0+rand(100.0,n) as price);\n");
+        sb.append("select qty,price from mytrades where sym==`IBM;");
+        BasicTable table = (BasicTable)conn.run(sb.toString());
+        Integer q = ((BasicInt)table.getColumn("qty").get(0)).getInt();
+        assertTrue(table.rows()>0);
+        assertTrue(q>10);
+    }*/
     @Test
     public void testDictionary() throws IOException {
         BasicDictionary dict = (BasicDictionary) conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
@@ -312,7 +850,15 @@ public class DBConnectionTest {
         BasicTable table = (BasicTable) conn.run("lj(t1, t2, `id)");
         assertEquals(5, table.rows());
     }
+    @Test
+    public void TestShareTable() throws IOException {
+        conn.run("share table(1 2 as id ,3 4 as val) as sharedT1");
+        BasicTable tb = (BasicTable) conn.run("select count(*) from sharedT1");
+        BasicInt res = (BasicInt) conn.run("exec count(*) from sharedT1");
+        assertEquals(1,tb.rows());
+        assertEquals(2,res.getInt());
 
+    }
     @Test
     public void test_partialFunction() throws IOException {
         conn.run("share table(1..50 as id) as sharedTable");
@@ -377,6 +923,148 @@ public class DBConnectionTest {
         } catch (IOException ex) {
             assertTrue(ServerExceptionUtils.isNotLogin(ex.getMessage()));
         }
+    }
+    @Test
+    public void TestPartitionTable() throws IOException {
+        //createPartitionTable
+        StringBuilder sb = new StringBuilder();
+        sb.append("n=10000;");
+        sb.append("t = table(rand(1 2 3,n)as id,rand(1..10,n)as val);");
+        sb.append("if(existsDatabase('dfs://db1')){ dropDatabase('dfs://db1')}");
+        sb.append("db = database('dfs://db1',VALUE ,1 2);");
+        sb.append("pt = db.createPartitionedTable(t,`pt,`id).append!(t);");
+        conn.run(sb.toString());
+        BasicLong res = (BasicLong) conn.run("exec count(*) from pt");
+        assertEquals(true,res.getLong()>0);
+        //addValuePartitions
+        sb.append("addValuePartitions(db,3);");
+        sb.append("pt.append!(t);");
+        conn.run(sb.toString());
+        BasicBoolean res3 = (BasicBoolean) conn.run("existsPartition('dfs://db1/3');");
+        assertEquals(true,res3.getBoolean());
+        //dropPartition
+        conn.run("dropPartition(db,3);");
+        res3 = (BasicBoolean) conn.run("existsPartition('dfs://db1/3');");
+        assertEquals(false,res3.getBoolean());
+        //addColumn
+        sb.append("addColumn(pt,[\"x\", \"y\"],[INT, INT]);");
+        sb.append("t1 = table(rand(1 2 3 4,n) as id,rand(1..10,n) as val,rand(1..5,n) as x,rand(1..10,n) as y );");
+        sb.append("pt.append!(t1);");
+        conn.run(sb.toString());
+        BasicLong res_x = (BasicLong) conn.run("exec count(*) from pt where x=1");
+        assertEquals(true,res_x.getLong()>0);
+        //PartitionTableJoin
+        sb.append("t2 = table(1 as id,2 as val);");
+        sb.append("pt2 = db.createPartitionedTable(t2,`pt2,`id).append!(t2);");
+        conn.run(sb.toString());
+        BasicLong resej = (BasicLong) conn.run("exec count(*) from ej(pt,pt2,`id);");
+        BasicLong respt = (BasicLong) conn.run("exec count(*) from pt;");
+        assertEquals(true,resej.getLong()<respt.getLong());
+    }
+    @Test
+    public  void  TestConnectSuccess() {
+        conn = new DBConnection();
+        try {
+            conn.connect(HOST, PORT, "admin", "123456");
+        } catch (IOException ex) {
+            assertEquals("Failed to connect db", ex.getMessage());
+            //ex.printStackTrace();
+        }
+    }
+    @Test
+    public  void  TestConnectHostAndPortAreNull() {
+        DBConnection conn1 = new DBConnection();
+        try {
+            conn1.connect(null, -1, "admin", "123456");
+        } catch ( Exception ex) {
+            assertEquals("host and post are null", ex.getMessage());
+        }
+    }
+    @Test
+    public void TestConnectErrorHostFormat() {
+        DBConnection conn1 = new DBConnection();
+        try {
+            conn1.connect("fee", PORT, "admin", "123456");
+        } catch (IOException ex) {
+            assertEquals("error HOST format", ex.getMessage());
+        }
+    }
+    @Test
+    public void TestConnectErrorHostValue() {
+        DBConnection conn1 = new DBConnection();
+        try {
+            conn1.connect("192.168.1.103", PORT, "admin", "123456");
+        } catch (IOException ex) {
+            assertEquals("error HOST value", ex.getMessage());
+        }
+    }
+    @Test
+    public  void TestConnectErrorPort() {
+        DBConnection conn1 = new DBConnection();
+        try {
+            conn1.connect(HOST, 44, "admin", "123456");
+        } catch (IOException ex) {
+            assertEquals("error PORT", ex.getMessage());
+        }
+    }
+    @Test
+    public void TestConnectNullUserId() {
+        DBConnection conn1 = new DBConnection();
+        try {
+            conn1.connect(HOST, PORT, null, "123456");
+        } catch (Exception ex) {
+            assertEquals("userId null", ex.getMessage());
+        }
+    }
+    @Test
+    public void TestConnectNullUserIdAndPwd() {
+        DBConnection conn1 = new DBConnection();
+        try {
+            conn1.connect(HOST, PORT, null,"");
+        } catch (Exception ex) {
+            assertEquals(" null userId and password", ex.getMessage());
+        }
+    }
+    @Test
+    public void TestConnectWrongPassWord(){
+        DBConnection conn1 = new DBConnection();
+        try{
+            conn1.connect(HOST,PORT,"admin","111");
+        }catch(IOException ex){
+            assertEquals("password is wrong", ex.getMessage());
+        }
+    }
 
+    @Test
+    public void TestCloseOnce() throws IOException {
+        DBConnection connClose = new DBConnection();
+        //连接一次
+        try {
+            connClose.connect(HOST, PORT, "admin", "123456");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        int connCount = getConnCount();
+        connClose.close();
+        int connCount1 = getConnCount();
+        assertEquals(connCount - 1, connCount1);
+    }
+    @Test
+    public void TestClose() throws IOException {
+        //连接多次
+        DBConnection connNew = new DBConnection();
+        for(int i=0;i<10;i++){
+            try{
+                if(!connNew.connect(HOST,PORT,"admin","123456")){
+                    throw new IOException("Failed to connect to  server");
+                }
+            }catch(IOException ex){
+                ex.printStackTrace();
+            }
+            int connCount = getConnCount();
+            connNew.close();
+            int  connCount1 = getConnCount();
+            assertEquals(connCount-1,connCount1);
+        }
     }
 }
