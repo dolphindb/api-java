@@ -210,7 +210,7 @@ public class DBConnectionTest {
         //sb.append("createUser(`user1,`123456);");
         //sb.append("createUser(`user2,`123456);");
         sb.append("def getCount(){return exec count(*) from table(1..10 as id,1..10 as val) ;};");
-        //sb.append("addFunctionView(getCount);");
+        sb.append("addFunctionView(getCount);");
         sb.append("grant(`user1, VIEW_EXEC,`getCount);");
         controllerConn.run(sb.toString());
         node1Conn = new DBConnection();
@@ -249,12 +249,26 @@ public class DBConnectionTest {
         controllerConn.close();
     }
     @Test
-    public void testFuncRpc(){
-
+    public void testFuncRpc() throws IOException {
+        node1Conn = new DBConnection();
+        try{
+            if(!node1Conn.connect(HOST,NODE1PORT,"admin","123456")){
+                throw new IOException("Failed to connect to server");
+            }
+        }catch(IOException ex){
+            ex.printStackTrace();
+        }
+        BasicInt res = (BasicInt) node1Conn.run("rpc(\"DFS_NODE2\", def(x,y):x+y, 10, 15);");
+        assertEquals(25,res.getInt());
     }
     @Test
-    public void testScriptOutOfRange(){
-
+    public void testScriptOutOfRange() throws IOException {
+        try {
+            conn.run("rand(1..10,10000000000000);");
+        }
+        catch(IOException ex){
+            assertEquals("Out of memory",ex.getMessage());
+        }
     }
     @Test
     public void testBoolVector() throws IOException{
@@ -639,18 +653,6 @@ public class DBConnectionTest {
         assertEquals("2012.06.13T13:30:10.008", matrix.getRowLabel(0).getString());
     }
 
-  /*  @Test
-    public void testTable() throws IOException{
-        StringBuilder sb =new StringBuilder();
-        sb.append("n=20000\n");
-        sb.append("syms=`IBM`C`MS`MSFT`JPM`ORCL`BIDU`SOHU`GE`EBAY`GOOG`FORD`GS`PEP`USO`GLD`GDX`EEM`FXI`SLV`SINA`BAC`AAPL`PALL`YHOO`KOH`TSLA`CS`CISO`SUN\n");
-        sb.append("mytrades=table(09:30:00+rand(18000,n) as timestamp,rand(syms,n) as sym, 10*(1+rand(100,n)) as qty,5.0+rand(100.0,n) as price);\n");
-        sb.append("select qty,price from mytrades where sym==`IBM;");
-        BasicTable table = (BasicTable)conn.run(sb.toString());
-        Integer q = ((BasicInt)table.getColumn("qty").get(0)).getInt();
-        assertTrue(table.rows()>0);
-        assertTrue(q>10);
-    }*/
     @Test
     public void testDictionary() throws IOException {
         BasicDictionary dict = (BasicDictionary) conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
@@ -706,6 +708,93 @@ public class DBConnectionTest {
         BasicChart chart = (BasicChart) conn.run(sb.toString());
         assertTrue(chart.getTitle().equals("Cumulative Pnls of Five Strategies"));
         assertTrue(chart.isChart());
+    }
+    @Test
+    public void testScalarUpload() throws IOException {
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        BasicInt a = (BasicInt) conn.run("1");
+        map.put("a",a);
+        BasicFloat f = (BasicFloat) conn.run("1.1f");
+        map.put("f",f);
+        BasicDouble d = (BasicDouble) conn.run("1.1");
+        map.put("d",d);
+        BasicLong l = (BasicLong) conn.run("1l");
+        map.put("l",l);
+        BasicShort s = (BasicShort) conn.run("1h");
+        map.put("s",s);
+        BasicBoolean b = (BasicBoolean) conn.run("true");
+        map.put("b",b);
+        BasicByte c = (BasicByte) conn.run("'a'");
+        map.put("c",c);
+        BasicString str = (BasicString) conn.run("`hello");
+        map.put("str",str);
+        BasicDate date = (BasicDate) conn.run("2013.06.13");
+        map.put("date",date);
+        BasicMonth month = (BasicMonth) conn.run("2012.06M");
+        map.put("month",month);
+        BasicTime time = (BasicTime) conn.run("13:30:10.008");
+        map.put("time",time);
+        BasicMinute minute = (BasicMinute) conn.run("13:30m");
+        map.put("minute",minute);
+        BasicSecond second = (BasicSecond) conn.run("13:30:10");
+        map.put("second",second);
+        BasicDateTime dateTime = (BasicDateTime) conn.run("2012.06.13 13:30:10");
+        map.put("dateTime",dateTime);
+        BasicTimestamp timestamp = (BasicTimestamp) conn.run("2012.06.13 13:30:10.008");
+        map.put("timestamp",timestamp);
+        BasicNanoTime nanoTime = (BasicNanoTime) conn.run("13:30:10.008007006");
+        map.put("nanoTime",nanoTime);
+        BasicNanoTimestamp nanoTimestamp = (BasicNanoTimestamp) conn.run("2012.06.13T13:30:10.008007006");
+        map.put("nanoTimestamp",nanoTimestamp);
+        BasicUuid uuid = (BasicUuid) conn.run("uuid(\"5d212a78-cc48-e3b1-4235-b4d91473ee87\")");
+        map.put("uuid",uuid);
+        BasicDateHour dateHour = (BasicDateHour) conn.run("datehour(\"2012.06.13T13\")");
+        map.put("dateHour",dateHour);
+        BasicIPAddr ipAddr = (BasicIPAddr) conn.run("ipaddr(\"192.168.1.13\")");
+        map.put("ipAddr",ipAddr);
+        BasicInt128 int128 = (BasicInt128) conn.run("int128(\"e1671797c52e15f763380b45e841ec32\")");
+        map.put("int128",int128);
+        conn.upload(map);
+        BasicInt scalarInt = (BasicInt) conn.run("a");
+        assertEquals(1,scalarInt.getInt());
+        BasicFloat scalarFloat= (BasicFloat) conn.run("f");
+        assertEquals(1.1,scalarFloat.getFloat(),2);
+        BasicDouble scalarDouble= (BasicDouble) conn.run("d");
+        assertEquals(1.1,scalarDouble.getDouble(),2);
+        BasicLong scalarLong= (BasicLong) conn.run("l");
+        assertEquals(1,scalarLong.getLong());
+        BasicShort scalarShort= (BasicShort) conn.run("s");
+        assertEquals(1,scalarShort.getShort());
+        BasicBoolean scalarBool= (BasicBoolean) conn.run("b");
+        assertEquals(true,scalarBool.getBoolean());
+        BasicByte scalarChar= (BasicByte) conn.run("c");
+        assertEquals('a',scalarChar.getByte());
+        BasicString scalarStr= (BasicString) conn.run("str");
+        assertEquals("hello",scalarStr.getString());
+        BasicDate scalarDate= (BasicDate) conn.run("date");
+        assertEquals(15869,scalarDate.getInt());
+        BasicMonth scalarMonth= (BasicMonth) conn.run("month");
+        assertEquals(24149,scalarMonth.getInt());
+        BasicTime scalarTime= (BasicTime) conn.run("time");
+        assertEquals(48610008,scalarTime.getInt());
+        BasicMinute scalarMinute= (BasicMinute) conn.run("minute");
+        assertEquals(810,scalarMinute.getInt());
+        BasicSecond scalarSecond= (BasicSecond) conn.run("second");
+        assertEquals(48610,scalarSecond.getInt());
+        BasicDateTime scalarDateTime= (BasicDateTime) conn.run("dateTime");
+        assertEquals(1339594210,scalarDateTime.getInt());
+        BasicTimestamp scalarTimeStamp= (BasicTimestamp) conn.run("timestamp");
+        assertEquals(1339594210008l,scalarTimeStamp.getLong());
+        BasicNanoTimestamp scalarNanoTimeStamp= (BasicNanoTimestamp) conn.run("nanoTimestamp");
+        assertEquals(1339594210008007006l,scalarNanoTimeStamp.getLong());
+        BasicUuid scalarUuid= (BasicUuid) conn.run("uuid");
+        assertEquals("5d212a78-cc48-e3b1-4235-b4d91473ee87",scalarUuid.getString());
+        BasicDateHour scalarDateHour= (BasicDateHour) conn.run("dateHour");
+        assertEquals(372109,scalarDateHour.getInt());
+        BasicIPAddr scalarIPaddr= (BasicIPAddr) conn.run("ipAddr");
+        assertEquals("192.168.1.13",scalarIPaddr.getString());
+        BasicInt128 scalarInt182= (BasicInt128) conn.run("int128");
+        assertEquals("e1671797c52e15f763380b45e841ec32",scalarInt182.getString());
     }
 
     @Test
