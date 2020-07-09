@@ -207,8 +207,8 @@ public class DBConnectionTest {
         }
         StringBuilder sb = new StringBuilder();
         //用户已存在时不创建
-        //sb.append("createUser(`user1,`123456);");
-        //sb.append("createUser(`user2,`123456);");
+        sb.append("createUser(`user1,`123456);");
+        sb.append("createUser(`user2,`123456);");
         sb.append("def getCount(){return exec count(*) from table(1..10 as id,1..10 as val) ;};");
         sb.append("addFunctionView(getCount);");
         sb.append("grant(`user1, VIEW_EXEC,`getCount);");
@@ -660,6 +660,18 @@ public class DBConnectionTest {
     }
 
     @Test
+    public void testDictionaryUpload() throws IOException {
+        Entity dict = conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("dict",dict);
+        conn.upload(map);
+        Entity dict1 = conn.run("dict");
+        assertEquals(3, dict1.rows());
+    }
+
+
+
+    @Test
     public void testFunction() throws IOException {
         List<Entity> args = new ArrayList<Entity>(1);
         double[] array = {1.5, 2.5, 7};
@@ -696,6 +708,18 @@ public class DBConnectionTest {
         BasicSet result = (BasicSet) conn.run("set(1+3*1..100)");
         assertEquals(Entity.DATA_TYPE.DT_INT, result.getDataType());
         assertEquals(Entity.DATA_FORM.DF_SET, result.getDataForm());
+
+    }
+
+    @Test
+    public void testSetUpload() throws IOException {
+        Entity set = conn.run("set(1+3*1..100)");
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("set",set);
+        conn.upload(map);
+        Entity sets = conn.run("set");
+        assertEquals(Entity.DATA_TYPE.DT_INT, sets.getDataType());
+        assertEquals(Entity.DATA_FORM.DF_SET, sets.getDataForm());
     }
 
     @Test
@@ -713,89 +737,179 @@ public class DBConnectionTest {
     public void testScalarUpload() throws IOException {
         Map<String, Entity> map = new HashMap<String, Entity>();
         BasicInt a = (BasicInt) conn.run("1");
-        map.put("a",a);
+        map.put("a", a);
         BasicFloat f = (BasicFloat) conn.run("1.1f");
-        map.put("f",f);
+        map.put("f", f);
         BasicDouble d = (BasicDouble) conn.run("1.1");
-        map.put("d",d);
+        map.put("d", d);
         BasicLong l = (BasicLong) conn.run("1l");
-        map.put("l",l);
+        map.put("l", l);
         BasicShort s = (BasicShort) conn.run("1h");
-        map.put("s",s);
+        map.put("s", s);
         BasicBoolean b = (BasicBoolean) conn.run("true");
-        map.put("b",b);
+        map.put("b", b);
         BasicByte c = (BasicByte) conn.run("'a'");
-        map.put("c",c);
+        map.put("c", c);
         BasicString str = (BasicString) conn.run("`hello");
-        map.put("str",str);
+        map.put("str", str);
         BasicDate date = (BasicDate) conn.run("2013.06.13");
-        map.put("date",date);
+        map.put("date", date);
         BasicMonth month = (BasicMonth) conn.run("2012.06M");
-        map.put("month",month);
+        map.put("month", month);
         BasicTime time = (BasicTime) conn.run("13:30:10.008");
-        map.put("time",time);
+        map.put("time", time);
         BasicMinute minute = (BasicMinute) conn.run("13:30m");
-        map.put("minute",minute);
+        map.put("minute", minute);
         BasicSecond second = (BasicSecond) conn.run("13:30:10");
-        map.put("second",second);
+        map.put("second", second);
         BasicDateTime dateTime = (BasicDateTime) conn.run("2012.06.13 13:30:10");
-        map.put("dateTime",dateTime);
+        map.put("dateTime", dateTime);
         BasicTimestamp timestamp = (BasicTimestamp) conn.run("2012.06.13 13:30:10.008");
-        map.put("timestamp",timestamp);
+        map.put("timestamp", timestamp);
         BasicNanoTime nanoTime = (BasicNanoTime) conn.run("13:30:10.008007006");
-        map.put("nanoTime",nanoTime);
+        map.put("nanoTime", nanoTime);
         BasicNanoTimestamp nanoTimestamp = (BasicNanoTimestamp) conn.run("2012.06.13T13:30:10.008007006");
-        map.put("nanoTimestamp",nanoTimestamp);
+        map.put("nanoTimestamp", nanoTimestamp);
         BasicUuid uuid = (BasicUuid) conn.run("uuid(\"5d212a78-cc48-e3b1-4235-b4d91473ee87\")");
-        map.put("uuid",uuid);
+        map.put("uuid", uuid);
         BasicDateHour dateHour = (BasicDateHour) conn.run("datehour(\"2012.06.13T13\")");
-        map.put("dateHour",dateHour);
+        map.put("dateHour", dateHour);
         BasicIPAddr ipAddr = (BasicIPAddr) conn.run("ipaddr(\"192.168.1.13\")");
-        map.put("ipAddr",ipAddr);
+        map.put("ipAddr", ipAddr);
         BasicInt128 int128 = (BasicInt128) conn.run("int128(\"e1671797c52e15f763380b45e841ec32\")");
-        map.put("int128",int128);
+        map.put("int128", int128);
         conn.upload(map);
         BasicInt scalarInt = (BasicInt) conn.run("a");
-        assertEquals(1,scalarInt.getInt());
-        BasicFloat scalarFloat= (BasicFloat) conn.run("f");
-        assertEquals(1.1,scalarFloat.getFloat(),2);
-        BasicDouble scalarDouble= (BasicDouble) conn.run("d");
-        assertEquals(1.1,scalarDouble.getDouble(),2);
-        BasicLong scalarLong= (BasicLong) conn.run("l");
-        assertEquals(1,scalarLong.getLong());
-        BasicShort scalarShort= (BasicShort) conn.run("s");
-        assertEquals(1,scalarShort.getShort());
-        BasicBoolean scalarBool= (BasicBoolean) conn.run("b");
-        assertEquals(true,scalarBool.getBoolean());
-        BasicByte scalarChar= (BasicByte) conn.run("c");
-        assertEquals('a',scalarChar.getByte());
-        BasicString scalarStr= (BasicString) conn.run("str");
-        assertEquals("hello",scalarStr.getString());
-        BasicDate scalarDate= (BasicDate) conn.run("date");
-        assertEquals(15869,scalarDate.getInt());
-        BasicMonth scalarMonth= (BasicMonth) conn.run("month");
-        assertEquals(24149,scalarMonth.getInt());
-        BasicTime scalarTime= (BasicTime) conn.run("time");
-        assertEquals(48610008,scalarTime.getInt());
-        BasicMinute scalarMinute= (BasicMinute) conn.run("minute");
-        assertEquals(810,scalarMinute.getInt());
-        BasicSecond scalarSecond= (BasicSecond) conn.run("second");
-        assertEquals(48610,scalarSecond.getInt());
-        BasicDateTime scalarDateTime= (BasicDateTime) conn.run("dateTime");
-        assertEquals(1339594210,scalarDateTime.getInt());
-        BasicTimestamp scalarTimeStamp= (BasicTimestamp) conn.run("timestamp");
-        assertEquals(1339594210008l,scalarTimeStamp.getLong());
-        BasicNanoTimestamp scalarNanoTimeStamp= (BasicNanoTimestamp) conn.run("nanoTimestamp");
-        assertEquals(1339594210008007006l,scalarNanoTimeStamp.getLong());
-        BasicUuid scalarUuid= (BasicUuid) conn.run("uuid");
-        assertEquals("5d212a78-cc48-e3b1-4235-b4d91473ee87",scalarUuid.getString());
-        BasicDateHour scalarDateHour= (BasicDateHour) conn.run("dateHour");
-        assertEquals(372109,scalarDateHour.getInt());
-        BasicIPAddr scalarIPaddr= (BasicIPAddr) conn.run("ipAddr");
-        assertEquals("192.168.1.13",scalarIPaddr.getString());
-        BasicInt128 scalarInt182= (BasicInt128) conn.run("int128");
-        assertEquals("e1671797c52e15f763380b45e841ec32",scalarInt182.getString());
+        assertEquals(1, scalarInt.getInt());
+        BasicFloat scalarFloat = (BasicFloat) conn.run("f");
+        assertEquals(1.1, scalarFloat.getFloat(), 2);
+        BasicDouble scalarDouble = (BasicDouble) conn.run("d");
+        assertEquals(1.1, scalarDouble.getDouble(), 2);
+        BasicLong scalarLong = (BasicLong) conn.run("l");
+        assertEquals(1, scalarLong.getLong());
+        BasicShort scalarShort = (BasicShort) conn.run("s");
+        assertEquals(1, scalarShort.getShort());
+        BasicBoolean scalarBool = (BasicBoolean) conn.run("b");
+        assertEquals(true, scalarBool.getBoolean());
+        BasicByte scalarChar = (BasicByte) conn.run("c");
+        assertEquals('a', scalarChar.getByte());
+        BasicString scalarStr = (BasicString) conn.run("str");
+        assertEquals("hello", scalarStr.getString());
+        BasicDate scalarDate = (BasicDate) conn.run("date");
+        assertEquals(15869, scalarDate.getInt());
+        BasicMonth scalarMonth = (BasicMonth) conn.run("month");
+        assertEquals(24149, scalarMonth.getInt());
+        BasicTime scalarTime = (BasicTime) conn.run("time");
+        assertEquals(48610008, scalarTime.getInt());
+        BasicMinute scalarMinute = (BasicMinute) conn.run("minute");
+        assertEquals(810, scalarMinute.getInt());
+        BasicSecond scalarSecond = (BasicSecond) conn.run("second");
+        assertEquals(48610, scalarSecond.getInt());
+        BasicDateTime scalarDateTime = (BasicDateTime) conn.run("dateTime");
+        assertEquals(1339594210, scalarDateTime.getInt());
+        BasicTimestamp scalarTimeStamp = (BasicTimestamp) conn.run("timestamp");
+        assertEquals(1339594210008l, scalarTimeStamp.getLong());
+        BasicNanoTimestamp scalarNanoTimeStamp = (BasicNanoTimestamp) conn.run("nanoTimestamp");
+        assertEquals(1339594210008007006l, scalarNanoTimeStamp.getLong());
+        BasicUuid scalarUuid = (BasicUuid) conn.run("uuid");
+        assertEquals("5d212a78-cc48-e3b1-4235-b4d91473ee87", scalarUuid.getString());
+        BasicDateHour scalarDateHour = (BasicDateHour) conn.run("dateHour");
+        assertEquals(372109, scalarDateHour.getInt());
+        BasicIPAddr scalarIPaddr = (BasicIPAddr) conn.run("ipAddr");
+        assertEquals("192.168.1.13", scalarIPaddr.getString());
+        BasicInt128 scalarInt182 = (BasicInt128) conn.run("int128");
+        assertEquals("e1671797c52e15f763380b45e841ec32", scalarInt182.getString());
     }
+        @Test
+        public void testVectorUpload() throws IOException {
+            Map<String, Entity> map = new HashMap<String, Entity>();
+            BasicBooleanVector boolv = (BasicBooleanVector) conn.run("rand(1b 0b true false,10)");
+            BasicByteVector bytev = (BasicByteVector) conn.run("rand('d' '1' '@',10)");
+            BasicStringVector stringv = (BasicStringVector) conn.run("rand(`IBM`MSFT`GOOG`BIDU,10)");
+            BasicIntVector intv = (BasicIntVector) conn.run("rand(1..10,10000)");
+            BasicDoubleVector doublev = (BasicDoubleVector) conn.run("take(10.0,10)");
+            BasicFloatVector floatV = (BasicFloatVector) conn.run("take(10.0f,10)");
+            BasicLongVector longv = (BasicLongVector) conn.run("rand(1l..11l,10)");
+            BasicShortVector shortv = (BasicShortVector) conn.run("take(22h,10)");
+            BasicDateVector datev = (BasicDateVector) conn.run("2012.10.01 +1..10");
+            BasicMonthVector monthv = (BasicMonthVector) conn.run("2012.06M +1..10");
+            BasicTimeVector timev = (BasicTimeVector) conn.run("13:30:10.008 +1..10");
+            BasicMinuteVector minutev = (BasicMinuteVector) conn.run("13:30m +1..10");
+            BasicSecondVector secondv = (BasicSecondVector) conn.run("13:30:10 +1..10");
+            BasicTimestampVector timestampv = (BasicTimestampVector) conn.run("2012.06.13 13:30:10.008 +1..10");
+            BasicNanoTimeVector nanotimev = (BasicNanoTimeVector) conn.run("13:30:10.008007006 +1..10");
+            BasicNanoTimestampVector nanotimestampv = (BasicNanoTimestampVector) conn.run("2012.06.13 13:30:10.008007006 +1..10");
+            BasicDateTimeVector datetimev = (BasicDateTimeVector) conn.run("2012.10.01 15:00:04 + (rand(10000,10))");
+            BasicUuidVector uuidv = (BasicUuidVector) conn.run("take(uuid('5d212a78-cc48-e3b1-4235-b4d91473ee87'),98)");
+            BasicDateHourVector datehourv = (BasicDateHourVector) conn.run("datehour('2012.06.13T13')+1..10");
+            BasicIPAddrVector ipaddrv = (BasicIPAddrVector) conn.run("rand(ipaddr('192.168.0.1'),10)");
+            BasicInt128Vector int128v = (BasicInt128Vector) conn.run("rand(int128('e1671797c52e15f763380b45e841ec32'),10)");
+            map.put("boolv", boolv);
+            map.put("bytev", bytev);
+            map.put("stringv", stringv);
+            map.put("intv", intv);
+            map.put("doublev", doublev);
+            map.put("floatV", floatV);
+            map.put("longv", longv);
+            map.put("shortv", shortv);
+            map.put("datev", datev);
+            map.put("monthv", monthv);
+            map.put("timev", timev);
+            map.put("minutev", minutev);
+            map.put("secondv", secondv);
+            map.put("timestampv", timestampv);
+            map.put("nanotimev", nanotimev);
+            map.put("nanotimestampv", nanotimestampv);
+            map.put("datetimev", datetimev);
+            map.put("uuidv", uuidv);
+            map.put("datehourv", datehourv);
+            map.put("ipaddrv", ipaddrv);
+            map.put("int128v", int128v);
+            conn.upload(map);
+            BasicBooleanVector boolvRes = (BasicBooleanVector) conn.run("boolv");
+            BasicByteVector bytevRes = (BasicByteVector) conn.run("bytev");
+            BasicStringVector stringvRes = (BasicStringVector) conn.run("stringv");
+            BasicIntVector intvRes = (BasicIntVector) conn.run("intv");
+            BasicDoubleVector doublevRes = (BasicDoubleVector) conn.run("doublev");
+            BasicFloatVector floatVRes = (BasicFloatVector) conn.run("floatV");
+            BasicLongVector longvRes = (BasicLongVector) conn.run("longv");
+            BasicShortVector shortvRes = (BasicShortVector) conn.run("shortv");
+            BasicDateVector datevRes = (BasicDateVector) conn.run("datev");
+            BasicMonthVector monthvRes = (BasicMonthVector) conn.run("monthv");
+            BasicTimeVector timevRes = (BasicTimeVector) conn.run("timev");
+            BasicMinuteVector minutevRes = (BasicMinuteVector) conn.run("minutev");
+            BasicSecondVector secondvRes = (BasicSecondVector) conn.run("secondv");
+            BasicTimestampVector timestampvRes = (BasicTimestampVector) conn.run("timestampv");
+            BasicNanoTimeVector nanotimevRes = (BasicNanoTimeVector) conn.run("nanotimev");
+            BasicNanoTimestampVector nanotimestampvRes = (BasicNanoTimestampVector) conn.run("nanotimestampv");
+            BasicDateTimeVector datetimevRes = (BasicDateTimeVector) conn.run("datetimev");
+            BasicUuidVector uuidvRes = (BasicUuidVector) conn.run("uuidv");
+            BasicDateHourVector datehourvRes = (BasicDateHourVector) conn.run("datehourv");
+            BasicIPAddrVector ipaddrvRes = (BasicIPAddrVector) conn.run("ipaddrv");
+            BasicInt128Vector int128vRes = (BasicInt128Vector) conn.run("int128v");
+            assertEquals(10,boolvRes.rows());
+            assertEquals(10,bytevRes.rows());
+            assertEquals(10000,intvRes.rows());
+            assertEquals(10,stringvRes.rows());
+            assertEquals(10,boolvRes.rows());
+            assertEquals(10,doublevRes.rows());
+            assertEquals(10,floatVRes.rows());
+            assertEquals(10,longvRes.rows());
+            assertEquals(10,shortvRes.rows());
+            assertEquals(10,datevRes.rows());
+            assertEquals(10,monthvRes.rows());
+            assertEquals(10,timevRes.rows());
+            assertEquals(10,minutevRes.rows());
+            assertEquals(10,secondvRes.rows());
+            assertEquals(10,timestampvRes.rows());
+            assertEquals(10,nanotimevRes.rows());
+            assertEquals(10,nanotimestampvRes.rows());
+            assertEquals(10,datetimevRes.rows());
+            assertEquals(98,uuidvRes.rows());
+            assertEquals(10,datehourvRes.rows());
+            assertEquals(10,ipaddrvRes.rows());
+            assertEquals(10,int128vRes.rows());
+        }
 
     @Test
     public void testMatrixUpload() throws IOException {
@@ -809,8 +923,188 @@ public class DBConnectionTest {
         assertEquals(5, matrix.rows());
         assertEquals(5, matrix.columns());
         assertTrue(((BasicIntMatrix) matrix).get(0, 0).getString().equals("3"));
+
+        Entity matrixDoubleCross = conn.run("cross(pow,2.1 5.0 4.88,1.0 9.6 5.2)");
+        Entity matrixDouble= conn.run("1..9$3:3");
+        map.put("matrixDoubleCross", matrixDoubleCross);
+        map.put("matrixDouble", matrixDouble);
+        conn.upload(map);
+        Entity matrixDoubleRes =  conn.run("matrixDoubleCross + matrixDouble");
+        assertEquals(3, matrixDoubleRes.rows());
+        assertEquals(3, matrixDoubleRes.columns());
+        assertTrue(((BasicDoubleMatrix) matrixDoubleRes).get(0, 0).getString().equals("3.1"));
+
+        Entity matrixFloatCross = conn.run("cross(pow,2.1f 5.0f 4.88f,1.0f 9.6f 5.2f)");
+        Entity matrixFloat= conn.run("take(2.33f,9)$3:3");
+        map.put("matrixFloatCross", matrixFloatCross);
+        map.put("matrixFloat", matrixFloat);
+        conn.upload(map);
+        Entity matrixFloatRes =  conn.run("matrixFloatCross + matrixFloat");
+        assertEquals(3, matrixFloatRes.rows());
+        assertEquals(3, matrixFloatRes.columns());
+        assertTrue(((BasicDoubleMatrix) matrixFloatRes).get(0, 0).getString().equals("4.43"));
+
+        Entity matrixlc = conn.run("cross(+, 1l..6l, -6l..-1l)");
+        Entity matrixl= conn.run("1l..36l$6:6");
+        map.put("matrixlc", matrixlc);
+        map.put("matrixl", matrixl);
+        conn.upload(map);
+        Entity matrixlRes = conn.run("matrixlc+matrixl");
+        assertEquals(6, matrixlRes.rows());
+        assertEquals(6, matrixlRes.columns());
+        assertTrue(((BasicLongMatrix) matrixlRes).get(0, 0).getString().equals("-4"));
+
+        Entity matrixBoolCross = conn.run("bool(cross(add,true false,false true))");
+        Entity matrixBool= conn.run("true true false false$2:2");
+        map.put("matrixBoolCross", matrixBoolCross);
+        map.put("matrixBool", matrixBool);
+        conn.upload(map);
+        Entity matrixBoolRes = conn.run("matrixBoolCross+matrixBool");
+        assertEquals(2, matrixBoolRes.rows());
+        assertEquals(2, matrixBoolRes.columns());
+        assertTrue(((BasicByteMatrix) matrixBoolRes).get(0, 0).getString().equals("2"));
+
+        Entity matrixDateHourCross = conn.run("datehour(cross(add,2012.06.15 15:32:10.158 2012.06.15 15:32:10.158,2012.06.15 17:30:10.008 2012.06.15 15:32:10.158))");
+        Entity matrixDateHour= conn.run("take(datehour([2012.06.15 15:32:10.158]),4)$2:2");
+        map.put("matrixDateHourCross", matrixDateHourCross);
+        map.put("matrixDateHour", matrixDateHour);
+        conn.upload(map);
+        Entity matrixDateHourRes = conn.run("datehour(matrixDateHourCross+matrixDateHour)");
+        assertEquals(2, matrixBoolRes.rows());
+        assertEquals(2, matrixBoolRes.columns());
+        assertTrue(((BasicDateHourMatrix) matrixDateHourRes).get(0, 0).getString().equals("+55468.01.20T21"));
+
+        Entity matrixMinuteCross = conn.run("minute(cross(add,13:30m 13:15m 13:17m,0 1 -1))");
+        Entity matrixMinute= conn.run("take(13:30m,9)$3:3");
+        map.put("matrixMinuteCross", matrixMinuteCross);
+        map.put("matrixMinute", matrixMinute);
+        conn.upload(map);
+        Entity matrixMinuteCrossRes = conn.run("matrixMinuteCross");
+        Entity matrixMinuteRes = conn.run("matrixMinute");
+        assertEquals(3, matrixMinuteCrossRes.rows());
+        assertEquals(3, matrixMinuteCrossRes.columns());
+        assertEquals(3, matrixMinuteRes.rows());
+        assertEquals(3, matrixMinuteRes.columns());
+        assertTrue(((BasicMinuteMatrix) matrixMinuteRes).get(0, 0).getString().equals("13:30m"));
+        assertTrue(((BasicMinuteMatrix) matrixMinuteCrossRes).get(2, 2).getString().equals("13:16m"));
+
+        Entity matrixSecondCross = conn.run("second(cross(add,13:30:12 13:30:10,1 10))");
+        Entity matrixSecond= conn.run("take(13:30:10,4)$2:2");
+        map.put("matrixSecondCross", matrixSecondCross);
+        map.put("matrixSecond", matrixSecond);
+        conn.upload(map);
+        Entity matrixSecondRes = conn.run("matrixSecondCross+matrixSecond");
+        assertEquals(2, matrixSecondRes.rows());
+        assertEquals(2, matrixSecondRes.columns());
+        assertTrue(((BasicIntMatrix) matrixSecondRes).get(0, 0).getString().equals("97223"));
+
+        Entity matrixMonthCross = conn.run("month(cross(add,2016.06M 2015.06M 2015.07M ,0 1 -1))");
+        Entity matrixMonth = conn.run("take(2017.06M,9)$3:3");
+        map.put("matrixMonthCross", matrixMonthCross);
+        map.put("matrixMonth", matrixMonth);
+        conn.upload(map);
+        Entity matrixMonthRes = conn.run("month(matrixMonthCross+matrixMonth)");
+        assertEquals(3, matrixMonthRes.rows());
+        assertEquals(3, matrixMonthRes.columns());
+        assertTrue(((BasicMonthMatrix) matrixMonthRes).get(0, 0).getString().equals("4033.11M"));
+
+        Entity matrixNanoTimeCross = conn.run("nanotime(cross(add,17:30:10.008007006 17:35:10.008007006,1 10))");
+        Entity matrixNanoTime= conn.run("take(17:30:10.008007006,4)$2:2");
+        map.put("matrixNanoTimeCross", matrixNanoTimeCross);
+        map.put("matrixNanoTime", matrixNanoTime);
+        conn.upload(map);
+        Entity matrixNanoTimeCrossRes = conn.run("matrixNanoTimeCross");
+        Entity matrixNanoTimeRes = conn.run("matrixNanoTime");
+        assertEquals(2, matrixNanoTimeCross.rows());
+        assertEquals(2, matrixNanoTimeCross.columns());
+        assertEquals(2, matrixNanoTime.rows());
+        assertEquals(2, matrixNanoTime.columns());
+        assertTrue(((BasicNanoTimeMatrix) matrixNanoTimeRes).get(0, 0).getString().equals("17:30:10.008007006"));
+        assertTrue(((BasicNanoTimeMatrix) matrixNanoTimeCrossRes).get(1, 1).getString().equals("17:35:10.008007016"));
+
+        Entity matrixNanotsCross = conn.run("nanotimestamp(cross(add,2012.06.13T13:30:10.008007006 2012.06.14T13:30:10.008007006,100 102 63))");
+        Entity matrixNanots = conn.run("take(2012.06.13T13:30:10.008007006,6)$2:3");
+        map.put("matrixNanotsCross", matrixNanotsCross);
+        map.put("matrixNanots", matrixNanots);
+        conn.upload(map);
+        Entity matrixNanotsRes = conn.run("nanotimestamp(matrixNanotsCross+matrixNanots)");
+        assertEquals(2, matrixNanotsRes.rows());
+        assertEquals(3, matrixNanotsRes.columns());
+        assertTrue(((BasicNanoTimestampMatrix) matrixNanotsRes).get(0, 1).getString().equals("2054.11.25T03:00:20.016014114"));
+
+        Entity matrixDateCross = conn.run("date(cross(add,2013.06.13 2015.03.13,2 -2 6))");
+        Entity matrixDate = conn.run("take(1998.06.13,6)$2:3");
+        map.put("matrixDateCross", matrixDateCross);
+        map.put("matrixDate", matrixDate);
+        conn.upload(map);
+        Entity matrixDateRes = conn.run("date(matrixDate+matrixDateCross)");
+        assertEquals(2, matrixDateRes.rows());
+        assertEquals(3, matrixDateRes.columns());
+        assertTrue(((BasicDateMatrix) matrixDateRes).get(0, 1).getString().equals("2041.11.21"));
+
+        Entity matrixDateTimeCross = conn.run("datetime(cross(add,2012.06.13T13:30:10 2019.06.13T16:30:10,0 5 9 -9))");
+        Entity matrixDateTime = conn.run("take(2012.06.13T13:30:10,8)$2:4");
+        map.put("matrixDateTimeCross", matrixDateTimeCross);
+        map.put("matrixDateTime", matrixDateTime);
+        conn.upload(map);
+        Entity matrixDateTimeRes = conn.run("datetime(matrixDateTimeCross+matrixDateTime)");
+        assertEquals(2, matrixDateTimeRes.rows());
+        assertEquals(4, matrixDateTimeRes.columns());
+        assertTrue(((BasicDateTimeMatrix) matrixDateTimeRes).get(1, 1).getString().equals("1925.10.18T23:32:09"));
+
+        Entity matrixTimeCross = conn.run("time(cross(add,13:31:10.008 12:30:10.008,1 2 3 -4))");
+        Entity matrixTime= conn.run("take(1900.06.13T13:30:10,8)$4:2");
+        map.put("matrixTimeCross", matrixTimeCross);
+        map.put("matrixTime", matrixTime);
+        conn.upload(map);
+        Entity matrixTimeCrossRes = conn.run("matrixTimeCross");
+        Entity matrixTimeRes = conn.run("matrixTime");
+        assertEquals(2, matrixTimeCross.rows());
+        assertEquals(4, matrixTimeCross.columns());
+        assertEquals(4, matrixTime.rows());
+        assertEquals(2, matrixTime.columns());
+        assertTrue(((BasicTimeMatrix) matrixTimeCrossRes).get(1, 1).getString().equals("12:30:10.010"));
+
+        Entity matrixTimeStampCross = conn.run("timestamp(cross(add,2012.06.13T13:30:10.008 2014.06.13T13:30:10.008,12 23 64))");
+        Entity matrixTimeStamp = conn.run("take(2015.06.14T13:30:10.008,6)$2:3");
+        map.put("matrixTimeStampCross", matrixTimeStampCross);
+        map.put("matrixTimeStamp", matrixTimeStamp);
+        conn.upload(map);
+        Entity matrixTimeStampRes = conn.run("timestamp(matrixTimeStampCross+matrixTimeStamp)");
+        assertEquals(2, matrixTimeStampRes.rows());
+        assertEquals(3, matrixTimeStampRes.columns());
+        assertTrue(((BasicTimestampMatrix) matrixTimeStampRes).get(1, 0).getString().equals("2059.11.25T03:00:20.028"));
+
     }
 
+    @Test
+    public void testStringMatrixUpload() throws IOException {
+        HashMap<String, Entity> map = new HashMap<String, Entity>();
+        Entity matrixString = conn.run("matrix(`SYMBOL,2,4, ,`T)");
+        map.put("matrixString",matrixString);
+        Entity matrixStringRes = conn.run("matrixString");
+        assertEquals(2,matrixStringRes.rows());
+        assertEquals(4,matrixStringRes.columns());
+    }
+//@Test
+/*public void testShortMatrixUpload() throws IOException {
+    HashMap<String, Entity> map = new HashMap<String, Entity>();
+    Entity matrixShort= conn.run("1h..36h$6:6");
+    map.put("matrixShort", matrixShort);
+    conn.upload(map);
+    Entity matrixShortRes =  conn.run("matrixShort");
+    assertEquals(6,matrixShortRes.rows());
+    assertEquals(6,matrixShortRes.columns());
+    map = new HashMap<String, Entity>();
+    Entity matrixShortCross = conn.run("cross(+, 1h..6h, -6h..-1h)");
+    map.put("matrixShort", matrixShort);
+    map.put("matrixShortCross", matrixShortCross);
+    conn.upload(map);
+    assertEquals(6, matrixShortRes.rows());
+    assertEquals(6, matrixShortRes.columns());
+    assertTrue(((BasicShortMatrix) matrixShortRes).get(0, 0).getString().equals("-4"));
+
+}*/
     @Test
     public void testUserDefineFunction() throws IOException {
         conn.run("def f(a,b) {return a+b};");
@@ -1156,4 +1450,5 @@ public class DBConnectionTest {
             assertEquals(connCount-1,connCount1);
         }
     }
+
 }
