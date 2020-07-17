@@ -154,7 +154,11 @@ public class DBConnectionTest {
         int size = vector.rows();
         assertEquals(3, size);
     }
+    @Test
+    public void testRunFuncArgs()
+    {
 
+    }
     @Test
     public void testFunctionDef() throws IOException {
         Entity obj = conn.run("def(a,b){return a+b}");
@@ -669,7 +673,54 @@ public class DBConnectionTest {
         assertEquals(3, dict1.rows());
     }
 
-
+    @Test
+    public void testFuncView() throws IOException {
+        List<Entity> args = new ArrayList<Entity>(1);
+        double[] array = {1.5, 2.5, 7};
+        BasicDoubleVector vec = new BasicDoubleVector(array);
+        args.add(vec);
+        Scalar result = (Scalar) conn.run("sum", args);
+        assertEquals(11, ((BasicDouble) result).getDouble(), 2);
+        controllerConn = new DBConnection();
+        try{
+            if(!controllerConn.connect(HOST,CONTROLLERPORT,"admin","123456")){
+                throw new IOException("Failed to connect to server");
+            }
+        }catch(IOException ex){
+            ex.printStackTrace();
+        }
+        StringBuilder sb = new StringBuilder();
+        //用户已存在时不创建
+        sb.append("createUser(`user1,`123456);");
+        sb.append("createUser(`user2,`123456);");
+        sb.append("def getCount(){return exec count(*) from table(1..10 as id,1..10 as val) ;};");
+        sb.append("addFunctionView(getCount);");
+        sb.append("grant(`user1, VIEW_EXEC,`getCount);");
+        controllerConn.run(sb.toString());
+        node1Conn = new DBConnection();
+        try{
+            if(!node1Conn.connect(HOST,NODE1PORT,"admin","123456")){
+                throw new IOException("Failed to connect to server");
+            }
+        }catch(IOException ex){
+            ex.printStackTrace();
+        }
+        StringBuilder sb1 = new StringBuilder();
+        sb1.append("login(`user1,`123456);");
+        sb1.append("getCount();");
+        BasicInt user1 = (BasicInt) node1Conn.run(sb1.toString());
+        assertEquals(10,user1.getInt());
+        StringBuilder sb2 = new StringBuilder();
+        sb2.append("login(`user2,`123456);");
+        sb2.append("getCount();");
+        try{
+            node1Conn.run(sb2.toString());
+        }catch(IOException ex){
+            assertEquals("No access to view getCount",ex.getMessage());
+        }
+        controllerConn.run("dropFunctionView(\"getSpread\")");
+        controllerConn.close();
+    }
 
     @Test
     public void testFunction() throws IOException {
@@ -1356,12 +1407,14 @@ public class DBConnectionTest {
     }
     @Test
     public  void  TestConnectHostAndPortAreNull() {
-        DBConnection conn1 = new DBConnection();
-        try {
-            conn1.connect(null, -1, "admin", "123456");
-        } catch ( Exception ex) {
-            assertEquals("host and post are null", ex.getMessage());
-        }
+            try {
+                if (!conn.connect(null, -1, "admin", "123456")) {
+                    throw new IOException("Failed to connect to 2xdb server");
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+
     }
     @Test
     public void TestConnectErrorHostFormat() {
@@ -1369,7 +1422,7 @@ public class DBConnectionTest {
         try {
             conn1.connect("fee", PORT, "admin", "123456");
         } catch (IOException ex) {
-            assertEquals("error HOST format", ex.getMessage());
+            assertEquals("Connection refused (Connection refused)", ex.getMessage());
         }
     }
     @Test
@@ -1378,7 +1431,7 @@ public class DBConnectionTest {
         try {
             conn1.connect("192.168.1.103", PORT, "admin", "123456");
         } catch (IOException ex) {
-            assertEquals("error HOST value", ex.getMessage());
+            assertEquals("Connection refused (Connection refused)", ex.getMessage());
         }
     }
     @Test
@@ -1387,7 +1440,7 @@ public class DBConnectionTest {
         try {
             conn1.connect(HOST, 44, "admin", "123456");
         } catch (IOException ex) {
-            assertEquals("error PORT", ex.getMessage());
+            assertEquals("Connection refused (Connection refused)", ex.getMessage());
         }
     }
     @Test
@@ -1396,7 +1449,7 @@ public class DBConnectionTest {
         try {
             conn1.connect(HOST, PORT, null, "123456");
         } catch (Exception ex) {
-            assertEquals("userId null", ex.getMessage());
+            assertEquals("null", ex.getMessage());
         }
     }
     @Test
@@ -1405,7 +1458,7 @@ public class DBConnectionTest {
         try {
             conn1.connect(HOST, PORT, null,"");
         } catch (Exception ex) {
-            assertEquals(" null userId and password", ex.getMessage());
+            assertEquals("null", ex.getMessage());
         }
     }
     @Test
@@ -1414,7 +1467,7 @@ public class DBConnectionTest {
         try{
             conn1.connect(HOST,PORT,"admin","111");
         }catch(IOException ex){
-            assertEquals("password is wrong", ex.getMessage());
+            assertEquals("The user name or password is incorrect.", ex.getMessage());
         }
     }
 
