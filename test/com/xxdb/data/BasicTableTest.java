@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -138,4 +139,15 @@ public class BasicTableTest {
         BasicTable t1 = new BasicTable(colNames, cols);
         return t1;
     }
+
+
+    @Test
+    public void test_table_copy(){
+        BasicTable t1 = createBasicTable();
+        BasicTable t2 = createBasicTable();
+        BasicTable t3 = t1.combine(t2);
+        Assert.assertEquals(t3.rows(),t1.rows()+t2.rows());
+    }
+
+
 }

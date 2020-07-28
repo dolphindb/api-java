@@ -27,7 +27,7 @@ public class BasicByteVector extends AbstractVector{
 				values[i] = list.get(i);
 		}
 	}
-	
+
 	public BasicByteVector(byte[] array){
 		super(DATA_FORM.DF_VECTOR);
 		values = array.clone();
@@ -51,7 +51,15 @@ public class BasicByteVector extends AbstractVector{
 			off += len;
 		}
 	}
-	
+
+	public Vector combine(Vector vector){
+		BasicByteVector v = (BasicByteVector)vector;
+		int newSize = this.rows() + v.rows();
+		byte[] newValue = new byte[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicByteVector(newValue);
+	}
 	public Scalar get(int index){
 		return new BasicByte(values[index]);
 	}

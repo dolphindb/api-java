@@ -1,10 +1,14 @@
 package com.xxdb;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
+
+import com.xxdb.io.LittleEndianDataInputStream;
+import com.xxdb.io.LittleEndianDataOutputStream;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import com.xxdb.data.*;
@@ -22,6 +26,7 @@ public class DBConnectionTest {
     private int getConnCount() throws IOException{
         return ((BasicInt)conn.run("getClusterPerf().connectionNum[0]")).getInt();
     }
+
     @Before
     public void setUp() {
         conn = new DBConnection();
@@ -582,6 +587,34 @@ public class DBConnectionTest {
         assertEquals("2012.06.13T13:30:10.008", matrix.getRowLabel(0).getString());
     }
 
+    @Test
+    public void testBasicTableSerialize() throws IOException{
+        StringBuilder sb = new StringBuilder();
+        sb.append("n=20000\n");
+        sb.append("syms=`IBM`C`MS`MSFT`JPM`ORCL`BIDU`SOHU`GE`EBAY`GOOG`FORD`GS`PEP`USO`GLD`GDX`EEM`FXI`SLV`SINA`BAC`AAPL`PALL`YHOO`KOH`TSLA`CS`CISO`SUN\n");
+        sb.append("mytrades=table(09:30:00+rand(18000,n) as timestamp,rand(syms,n) as sym, 10*(1+rand(100,n)) as qty,5.0+rand(100.0,n) as price);\n");
+        sb.append("select qty,price from mytrades where sym==`IBM;");
+        BasicTable table = (BasicTable) conn.run(sb.toString());
+
+        File f = new File("F:\\tmp\\test.dat");
+        FileOutputStream fos = new FileOutputStream(f);
+        BufferedOutputStream bos = new BufferedOutputStream(fos);
+        LittleEndianDataOutputStream dataStream = new LittleEndianDataOutputStream(bos);
+        table.write(dataStream);
+        bos.flush();
+        dataStream.close();
+        fos.close();
+    }
+    @Test
+    public void testBasicTableDeserialize() throws IOException{
+
+        File f = new File("F:\\tmp\\test.dat");
+        FileInputStream fis = new FileInputStream("F:\\tmp\\test.dat");
+        BufferedInputStream bis = new BufferedInputStream(fis);
+        LittleEndianDataInputStream dataStream = new LittleEndianDataInputStream(bis);
+        short flag = dataStream.readShort();
+        BasicTable table = new BasicTable(dataStream);
+    }
     @Test
     public void testDictionary() throws IOException {
         BasicDictionary dict = (BasicDictionary) conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
@@ -1396,5 +1429,4 @@ public void testShortMatrixUpload() throws IOException {
             assertEquals(connCount-1,connCount1);
         }
     }
-
 }

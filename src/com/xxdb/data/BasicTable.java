@@ -205,4 +205,12 @@ public class BasicTable extends AbstractEntity implements Table{
 		for(Vector vector : columns_)
 			vector.write(out);
 	}
+
+	public BasicTable combine(BasicTable table){
+		List<Vector> newCol = new ArrayList<>();
+		for (int i=0; i< this.columns();i++) {
+			newCol.add(this.getColumn(i).combine(table.getColumn(i)));
+		}
+		return new BasicTable(this.names_,newCol);
+	}
 }

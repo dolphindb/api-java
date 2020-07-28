@@ -79,7 +79,17 @@ public class BasicFloatVector extends AbstractVector{
 	public void setFloat(int index, float value){
 		values[index] = value;
 	}
-	
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicFloatVector v = (BasicFloatVector)vector;
+		int newSize = this.rows() + v.rows();
+		float[] newValue = new float[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicFloatVector(newValue);
+	}
+
 	@Override
 	public boolean isNull(int index) {
 		return values[index] == -Float.MAX_VALUE;
