@@ -91,7 +91,17 @@ public class BasicShortVector extends AbstractVector{
 			return (int)((4294967296l + value) % buckets);
 		}
 	}
-	
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicShortVector v = (BasicShortVector)vector;
+		int newSize = this.rows() + v.rows();
+		short[] newValue = new short[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicShortVector(newValue);
+	}
+
 	@Override
 	public boolean isNull(int index) {
 		return values[index] == Short.MIN_VALUE;

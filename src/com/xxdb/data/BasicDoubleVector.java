@@ -79,7 +79,17 @@ public class BasicDoubleVector extends AbstractVector{
 	public void setDouble(int index, double value){
 		values[index] = value;
 	}
-	
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicDoubleVector v = (BasicDoubleVector)vector;
+		int newSize = this.rows() + v.rows();
+		double[] newValue = new double[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicDoubleVector(newValue);
+	}
+
 	@Override
 	public boolean isNull(int index) {
 		return values[index] == -Double.MAX_VALUE;

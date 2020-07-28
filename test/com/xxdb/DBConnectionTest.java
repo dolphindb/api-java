@@ -1,10 +1,14 @@
 package com.xxdb;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
+
+import com.xxdb.io.LittleEndianDataInputStream;
+import com.xxdb.io.LittleEndianDataOutputStream;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -16,7 +20,7 @@ public class DBConnectionTest {
 
     private DBConnection conn;
     public static String HOST = "127.0.0.1";
-    public static Integer PORT = 28848;
+    public static Integer PORT = 8848;
 
 
     @Before
@@ -113,6 +117,34 @@ public class DBConnectionTest {
         assertTrue(q > 10);
     }
 
+    @Test
+    public void testBasicTableSerialize() throws IOException{
+        StringBuilder sb = new StringBuilder();
+        sb.append("n=20000\n");
+        sb.append("syms=`IBM`C`MS`MSFT`JPM`ORCL`BIDU`SOHU`GE`EBAY`GOOG`FORD`GS`PEP`USO`GLD`GDX`EEM`FXI`SLV`SINA`BAC`AAPL`PALL`YHOO`KOH`TSLA`CS`CISO`SUN\n");
+        sb.append("mytrades=table(09:30:00+rand(18000,n) as timestamp,rand(syms,n) as sym, 10*(1+rand(100,n)) as qty,5.0+rand(100.0,n) as price);\n");
+        sb.append("select qty,price from mytrades where sym==`IBM;");
+        BasicTable table = (BasicTable) conn.run(sb.toString());
+
+        File f = new File("F:\\tmp\\test.dat");
+        FileOutputStream fos = new FileOutputStream(f);
+        BufferedOutputStream bos = new BufferedOutputStream(fos);
+        LittleEndianDataOutputStream dataStream = new LittleEndianDataOutputStream(bos);
+        table.write(dataStream);
+        bos.flush();
+        dataStream.close();
+        fos.close();
+    }
+    @Test
+    public void testBasicTableDeserialize() throws IOException{
+
+        File f = new File("F:\\tmp\\test.dat");
+        FileInputStream fis = new FileInputStream("F:\\tmp\\test.dat");
+        BufferedInputStream bis = new BufferedInputStream(fis);
+        LittleEndianDataInputStream dataStream = new LittleEndianDataInputStream(bis);
+        short flag = dataStream.readShort();
+        BasicTable table = new BasicTable(dataStream);
+    }
     @Test
     public void testDictionary() throws IOException {
         BasicDictionary dict = (BasicDictionary) conn.run("dict(1 2 3,`IBM`MSFT`GOOG)");
@@ -378,5 +410,19 @@ public class DBConnectionTest {
             assertTrue(ServerExceptionUtils.isNotLogin(ex.getMessage()));
         }
 
+    }
+
+    @Test
+    public void testConnect(){
+        DBConnection connClose = new DBConnection();
+        try {
+            connClose.connect(HOST, PORT, "admin", "123456");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        int connCount = getConnCount();
+        connClose.close();
+        int connCount1 = getConnCount();
+        assertEquals(connCount - 1, connCount1);
     }
 }
