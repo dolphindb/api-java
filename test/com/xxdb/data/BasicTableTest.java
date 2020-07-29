@@ -139,7 +139,50 @@ public class BasicTableTest {
         BasicTable t1 = new BasicTable(colNames, cols);
         return t1;
     }
+    public final static Integer ARRAY_NUM = 100000;
+    private	BasicTable createBigArrayTable(){
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("cbool");
+        colNames.add("cchar");
+        List<Vector> cols = new ArrayList<Vector>(){};
 
+        //boolean
+        byte[] vbool = new byte[ARRAY_NUM];
+        byte[] vchar = new byte[ARRAY_NUM];
+
+        for (int i =0;i<ARRAY_NUM;i++){
+            vbool[i]  = 1;
+            vchar[i] = '1';
+        }
+        BasicBooleanVector bbv = new BasicBooleanVector(vbool);
+        cols.add(bbv);
+        //char
+        BasicByteVector bcv = new BasicByteVector(vchar);
+        cols.add(bcv);
+
+        BasicTable t1 = new BasicTable(colNames, cols);
+        return t1;
+    }
+
+    private	BasicTable createSimpleTable(){
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("cbool");
+        colNames.add("cchar");
+        List<Vector> cols = new ArrayList<Vector>(){};
+
+        //boolean
+        byte[] vbool = new byte[]{1};
+        byte[] vchar = new byte[]{'r'};
+
+        BasicBooleanVector bbv = new BasicBooleanVector(vbool);
+        cols.add(bbv);
+        //char
+        BasicByteVector bcv = new BasicByteVector(vchar);
+        cols.add(bcv);
+
+        BasicTable t1 = new BasicTable(colNames, cols);
+        return t1;
+    }
 
     @Test
     public void test_table_copy(){
@@ -147,7 +190,36 @@ public class BasicTableTest {
         BasicTable t2 = createBasicTable();
         BasicTable t3 = t1.combine(t2);
         Assert.assertEquals(t3.rows(),t1.rows()+t2.rows());
+        for (int i = 0;i<t3.rows();i++){
+            for (int j=0;j<t3.getColumn(i).columns();j++){
+                for (int k=0;k<t3.getColumn(i).rows();k++){
+                    if (k<t1.rows()) {
+                        assertEquals(t1.getColumn(j).get(k).getString(), t3.getColumn(j).get(k).getString());
+                    }else{
+                        assertEquals(t2.getColumn(j).get(k-(t1.rows())).getString(), t3.getColumn(j).get(k).getString());
+                    }
+                }
+            }
+        }
     }
 
+    @Test
+    public void testCombineBigArrayTable(){
+        BasicTable t1 = createBigArrayTable();
+        BasicTable t2 = createBigArrayTable();
+        long startTime = System.currentTimeMillis();
+        t1.combine(t2);
+        long endTime = System.currentTimeMillis();
+        long timeBigTable =endTime - startTime;
+        BasicTable t3 = createSimpleTable();
+        long  startTime1 = System.currentTimeMillis();
+        for (int i = 0; i<ARRAY_NUM;i++){
+            t1.combine(t3);
+        }
+        long endTime1 = System.currentTimeMillis();
+        long timeSimpleTable = endTime1-startTime1;
+        long time = timeSimpleTable-timeBigTable;
+        System.out.println(time);
+    }
 
 }
