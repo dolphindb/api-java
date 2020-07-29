@@ -84,20 +84,20 @@ public class BasicIPAddrTest {
     @Test
     public void TestCombineIpAddr_v4Vector() throws Exception {
         BasicIPAddrVector v = new BasicIPAddrVector(2);
-        v.set(0,BasicIPAddr.fromString("192.168.1.142"));
+        v.set(0,BasicIPAddr.fromString("192.168.1.13"));
         v.set(1,BasicIPAddr.fromString("192.168.1.142"));
         BasicIPAddrVector vector2 = new BasicIPAddrVector(2 );
         vector2.set(0,BasicIPAddr.fromString("192.168.1.142"));
         vector2.set(1,BasicIPAddr.fromString("192.168.1.142"));
         BasicIPAddrVector res= (BasicIPAddrVector) v.combine(vector2);
         BasicIPAddrVector res128 = new BasicIPAddrVector(4);
-        res128.set(0,BasicIPAddr.fromString("192.168.1.142"));
+        res128.set(0,BasicIPAddr.fromString("192.168.1.13"));
         res128.set(1,BasicIPAddr.fromString("192.168.1.142"));
-        res128.set(0,BasicIPAddr.fromString("192.168.1.142"));
-        res128.set(1,BasicIPAddr.fromString("192.168.1.142"));
+        res128.set(2,BasicIPAddr.fromString("192.168.1.142"));
+        res128.set(3,BasicIPAddr.fromString("192.168.1.142"));
         for (int i=0;i<res.rows();i++){
             assertEquals(res128.get(i).toString(),res.get(i).toString());
         }
-        assertEquals(6,res.rows());
+        assertEquals(4,res.rows());
     }
 }
