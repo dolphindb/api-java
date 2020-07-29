@@ -15,7 +15,7 @@ import com.xxdb.io.ExtendedDataOutput;
  */
 
 public class BasicLongVector extends AbstractVector{
-	private long[] values;
+	protected long[] values;
 	
 	public BasicLongVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);

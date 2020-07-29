@@ -63,4 +63,14 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 	public Class<?> getElementClass(){
 		return BasicNanoTimestamp.class;
 	}
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicNanoTimestampVector v = (BasicNanoTimestampVector)vector;
+		int newSize = this.rows() + v.rows();
+		long[] newValue = new long[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicNanoTimestampVector(newValue);
+	}
 }

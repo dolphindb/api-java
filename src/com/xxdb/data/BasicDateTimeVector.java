@@ -64,4 +64,13 @@ public class BasicDateTimeVector extends BasicIntVector{
 		return BasicDateTime.class;
 	}
 
+	@Override
+	public Vector combine(Vector vector) {
+		BasicDateTimeVector v = (BasicDateTimeVector)vector;
+		int newSize = this.rows() + v.rows();
+		int[] newValue = new int[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicDateTimeVector(newValue);
+	}
 }

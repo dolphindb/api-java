@@ -15,7 +15,7 @@ import com.xxdb.io.ExtendedDataOutput;
  */
 
 public class BasicIntVector extends AbstractVector{
-	private int[] values;
+	protected int[] values;
 	
 	public BasicIntVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);

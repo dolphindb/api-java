@@ -81,7 +81,7 @@ public class BasicBooleanVector extends AbstractVector{
 		byte[] newValue = new byte[newSize];
 		System.arraycopy(this.values,0, newValue,0,this.rows());
 		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
-		return new BasicByteVector(newValue);
+		return new BasicBooleanVector(newValue);
 	}
 
 	@Override
