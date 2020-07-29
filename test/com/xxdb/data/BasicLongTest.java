@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
 public class BasicLongTest {
     private DBConnection conn;
     @Before
@@ -55,5 +57,20 @@ public class BasicLongTest {
                 Assert.assertEquals(expected, v.get(i).hashBucket(b));
             }
         }
+    }
+
+    @Test
+    public void TestCombineLongVector() throws Exception {
+        Long[] data = {1l,-1l,3l};
+        BasicLongVector v = new BasicLongVector(Arrays.asList(data));
+        Long[] data2 = {1l,-1l,3l,9l};
+        BasicLongVector vector2 = new BasicLongVector( Arrays.asList(data2));
+        BasicLongVector res= (BasicLongVector) v.combine(vector2);
+        Long[] datas = {1l,-1l,3l,1l,-1l,3l,9l};
+        for (int i=0;i<res.rows();i++){
+            assertEquals(datas[i],res.get(i).getNumber());
+
+        }
+        assertEquals(7,res.rows());
     }
 }

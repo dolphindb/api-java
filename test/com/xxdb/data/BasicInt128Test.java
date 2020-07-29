@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
 public class BasicInt128Test {
     private DBConnection conn;
     @Before
@@ -57,5 +59,29 @@ public class BasicInt128Test {
                 Assert.assertEquals(expected, v.get(i).hashBucket(b));
             }
         }
+    }
+
+    @Test
+    public void TestCombineInt128Vector() throws Exception {
+        BasicInt128Vector v = new BasicInt128Vector(4);
+        v.set(0,BasicInt128.fromString("4b7545dc735379254fbf804dec34977f"));
+        v.set(1,BasicInt128.fromString("6f29ffbf80722c9fd386c6e48ca96340"));
+        v.set(2,BasicInt128.fromString("dd92685907f08a99ec5f8235c15a1588"));
+        v.set(3,BasicInt128.fromString("4f5387611b41d1385e272e6e866f862d"));
+        BasicInt128Vector vector2 = new BasicInt128Vector(2 );
+        vector2.set(0,BasicInt128.fromString("4f5387611b41d1385e272e6e866f862d"));
+        vector2.set(1,BasicInt128.fromString("130d6d5a0536c99ac7f9a01363b107c0"));
+        BasicInt128Vector res= (BasicInt128Vector) v.combine(vector2);
+        BasicInt128Vector res128 = new BasicInt128Vector(6);
+        res128.set(0,BasicInt128.fromString("4b7545dc735379254fbf804dec34977f"));
+        res128.set(1,BasicInt128.fromString("6f29ffbf80722c9fd386c6e48ca96340"));
+        res128.set(2,BasicInt128.fromString("dd92685907f08a99ec5f8235c15a1588"));
+        res128.set(3,BasicInt128.fromString("4f5387611b41d1385e272e6e866f862d"));
+        res128.set(4,BasicInt128.fromString("4f5387611b41d1385e272e6e866f862d"));
+        res128.set(5,BasicInt128.fromString("130d6d5a0536c99ac7f9a01363b107c0"));
+        for (int i=0;i<res.rows();i++){
+            assertEquals(res128.get(i).toString(),res.get(i).toString());
+        }
+        assertEquals(6,res.rows());
     }
 }
