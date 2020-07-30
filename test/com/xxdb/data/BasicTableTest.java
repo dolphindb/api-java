@@ -214,6 +214,7 @@ public class BasicTableTest {
                     }
                 }
             }
+            
         long endTime1 = System.currentTimeMillis();
         long timeSimpleTable = endTime1-startTime1;
         long time = timeSimpleTable/timeBigTable;
