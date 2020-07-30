@@ -154,11 +154,7 @@ public class DBConnectionTest {
         int size = vector.rows();
         assertEquals(3, size);
     }
-    @Test
-    public void testRunFuncArgs()
-    {
 
-    }
     @Test
     public void testFunctionDef() throws IOException {
         Entity obj = conn.run("def(a,b){return a+b}");
@@ -1064,8 +1060,7 @@ public void testShortMatrixUpload() throws IOException {
     assertEquals(6, matrixShortCross.rows());
     assertEquals(6, matrixShortCross.columns());
     assertTrue(((BasicIntMatrix) matrixShortCross).get(0, 0).getString().equals("-5"));
-
-}
+    }
     @Test
     public void testUserDefineFunction() throws IOException {
         conn.run("def f(a,b) {return a+b};");
@@ -1307,6 +1302,14 @@ public void testShortMatrixUpload() throws IOException {
         assertEquals(true,resej.getLong()<respt.getLong());
     }
 
+    @Test
+    public void testConcurrent(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("t=table(take(1..10, 10) as ID, take(1,10) as x);");
+        sb.append("db=database(\"\", RANGE,  0 5 10);");
+        sb.append("pt=db.createPartitionedTable(t, `pt, `ID);");
+        sb.append("pt.append!(t)");
+    }
 
     @Test
     public  void  TestConnectSuccess() {
@@ -1341,6 +1344,7 @@ public void testShortMatrixUpload() throws IOException {
             e.printStackTrace();
         }
     }
+
     @Test
     public void TestConnectErrorHostValue() {
         DBConnection conn1 = new DBConnection();
@@ -1352,6 +1356,7 @@ public void testShortMatrixUpload() throws IOException {
             ex.printStackTrace();
         }
     }
+
     @Test
     public  void TestConnectErrorPort() {
         DBConnection conn1 = new DBConnection();
@@ -1363,6 +1368,7 @@ public void testShortMatrixUpload() throws IOException {
             ex.printStackTrace();
         }
     }
+
     @Test
     public void TestConnectNullUserId() {
         DBConnection conn1 = new DBConnection();
@@ -1374,6 +1380,7 @@ public void testShortMatrixUpload() throws IOException {
             ex.printStackTrace();
         }
     }
+
     @Test
     public void TestConnectNullUserIdAndPwd() {
         DBConnection conn1 = new DBConnection();
@@ -1385,6 +1392,7 @@ public void testShortMatrixUpload() throws IOException {
             ex.printStackTrace();
         }
     }
+
     @Test
     public void TestConnectWrongPassWord(){
         DBConnection conn1 = new DBConnection();
@@ -1398,7 +1406,7 @@ public void testShortMatrixUpload() throws IOException {
     }
 
     @Test
-    public void TestCloseOnce() throws IOException {
+    public void TestCloseOnce() throws IOException, InterruptedException {
         DBConnection connClose = new DBConnection();
         //连接一次
         try {
@@ -1406,16 +1414,19 @@ public void testShortMatrixUpload() throws IOException {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+        Thread.sleep(5000);
         int connCount = getConnCount();
         connClose.close();
+        Thread.sleep(5000);
         int connCount1 = getConnCount();
         assertEquals(connCount - 1, connCount1);
     }
+
     @Test
-    public void TestClose() throws IOException {
+    public void TestClose() throws IOException, InterruptedException {
         //连接多次
         DBConnection connNew = new DBConnection();
-        for(int i=0;i<10;i++){
+        for(int i=0;i<5;i++){
             try{
                 if(!connNew.connect(HOST,PORT,"admin","123456")){
                     throw new IOException("Failed to connect to  server");
@@ -1423,10 +1434,13 @@ public void testShortMatrixUpload() throws IOException {
             }catch(IOException ex){
                 ex.printStackTrace();
             }
+            Thread.sleep(5000);
             int connCount = getConnCount();
             connNew.close();
+            Thread.sleep(5000);
             int  connCount1 = getConnCount();
             assertEquals(connCount-1,connCount1);
         }
     }
+
 }
