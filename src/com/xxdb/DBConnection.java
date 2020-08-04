@@ -799,7 +799,9 @@ public class DBConnection {
 
             if (reconnect)
                 sessionID = headers[0];
+
             int numObject = Integer.parseInt(headers[1]);
+
             String msg = in.readLine();
             if (!msg.equals("OK"))
                 throw new IOException(msg);
