@@ -799,9 +799,30 @@ public class DBConnection {
 
             if (reconnect)
                 sessionID = headers[0];
+            int numObject = Integer.parseInt(headers[1]);
             String msg = in.readLine();
             if (!msg.equals("OK"))
                 throw new IOException(msg);
+
+            if (numObject > 0) {
+                try {
+                    short flag = in.readShort();
+                    int form = flag >> 8;
+                    int type = flag & 0xff;
+
+                    if (form < 0 || form > MAX_FORM_VALUE)
+                        throw new IOException("Invalid form value: " + form);
+                    if (type < 0 || type > MAX_TYPE_VALUE)
+                        throw new IOException("Invalid type value: " + type);
+
+                    Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
+                    Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
+                    Entity re =  factory.createEntity(df, dt, in);
+                } catch (IOException ex) {
+                    socket = null;
+                    throw ex;
+                }
+            }
         } catch (Exception ex) {
             if (socket != null || !highAvailability)
                 throw ex;
