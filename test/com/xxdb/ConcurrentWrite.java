@@ -5,7 +5,7 @@ import com.xxdb.data.Entity;
 import java.io.IOException;
 import java.util.Random;
 
-public class ConcurrentRead implements Runnable{
+public class ConcurrentWrite implements Runnable{
     private static DBConnection conn;
     public static String HOST  = "localhost";
     public static Integer PORT = 8848;
@@ -37,31 +37,27 @@ public class ConcurrentRead implements Runnable{
     public void run() {
         DBConnection conn1= new DBConnection();
         StringBuilder sb = new StringBuilder();
-        sb.append("exec count(*) from t where qty=");
+        sb.append("t=table(rand(2018.08.01,10) as date,rand(`AAPL`MS`C`YHOO,10) as sym,rand(1..1000,10) as qty,rand(100.0,10) as price);");
+        sb.append("tb= loadTable(\"dfs://db1\", `trades);");
+        sb.append("tb.append!(t);");
         int i =  new Random().nextInt(1000);
         sb.append(i);
         try {
-            Thread.sleep(1000);
             if (!conn1.connect(HOST, PORT, "admin", "123456")) {
                 throw new IOException("Failed to connect to 2xdb server");
             }
-        } catch (IOException | InterruptedException ex) {
+            conn1.run(sb.toString());
+        } catch (IOException ex) {
             ex.printStackTrace();
         }
-        try {
-          conn1.run("t= loadTable(\"dfs://db1\", `trades)");
-          Entity res = conn1.run(sb.toString());
-          System.out.println(res);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-       conn1.close();
+        conn1.close();
+
     }
 
     public static void main(String[] args) throws InterruptedException, IOException {
         setUp();
         for (int i=0;i<100;i++){
-            new Thread(new ConcurrentRead()).start();
+            new Thread(new ConcurrentWrite()).start();
         }
         Thread.sleep(1000);
     }
