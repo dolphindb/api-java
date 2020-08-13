@@ -2,17 +2,24 @@ package com.xxdb;
 
 import com.xxdb.data.Entity;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Properties;
 import java.util.Random;
 
 public class ConcurrentRead implements Runnable{
     private static DBConnection conn;
-    public static String HOST  = "localhost";
-    public static Integer PORT = 8848;
+    public static String HOST ;
+    public static Integer PORT ;
 
     public static void setUp() throws IOException {
         conn = new DBConnection();
         try {
+            Properties props = new Properties();
+            FileInputStream in= new FileInputStream( "test/com/xxdb/setup/settings.properties");
+            props.load(in);
+            PORT =Integer.parseInt(props.getProperty ("PORT"));
+            HOST  =props.getProperty ("HOST");
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
                 throw new IOException("Failed to connect to 2xdb server");
             }

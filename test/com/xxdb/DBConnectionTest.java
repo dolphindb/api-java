@@ -7,6 +7,7 @@ import java.util.stream.IntStream;
 
 import com.xxdb.io.LittleEndianDataInputStream;
 import com.xxdb.io.LittleEndianDataOutputStream;
+import jdk.nashorn.internal.ir.AccessNode;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -19,16 +20,23 @@ import static org.junit.Assert.*;
 public class DBConnectionTest {
 
     private DBConnection conn;
- //   public static String HOST = "127.0.0.1";
-  //  public static Integer PORT = 28848;
-    public static String HOST  = "localhost";
-    public static Integer PORT = 8848;
+    //   public static String HOST = "127.0.0.1";
+    //  public static Integer PORT = 28848;
+    public static String HOST ;
+    public static Integer PORT ;
+
+
     private int getConnCount() throws IOException{
         return ((BasicInt)conn.run("getClusterPerf().connectionNum[0]")).getInt();
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
+        Properties props = new Properties();
+        FileInputStream in= new FileInputStream( "test/com/xxdb/setup/settings.properties");
+        props.load(in);
+        PORT =Integer.parseInt(props.getProperty ("PORT"));
+        HOST  =props.getProperty ("HOST");
         conn = new DBConnection();
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
@@ -1440,6 +1448,16 @@ public void testShortMatrixUpload() throws IOException {
             Thread.sleep(5000);
             int  connCount1 = getConnCount();
             assertEquals(connCount-1,connCount1);
+        }
+    }
+
+    @Test
+    public void TestAddConn() throws IOException {
+        List<DBConnection> connx = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            DBConnection cn = new DBConnection();
+            cn.connect(HOST, PORT, "admin", "123456");
+            connx.add(cn);
         }
     }
 
