@@ -1,5 +1,4 @@
 *.class
-*.properties
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
@@ -28,3 +27,4 @@ dolphindb_javaapi.iml
 /.idea
 /.project
 *.bat
+/test/com/xxdb/setup/settings.properties
