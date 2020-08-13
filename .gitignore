@@ -27,4 +27,4 @@ dolphindb_javaapi.iml
 /.idea
 /.project
 *.bat
-/test/com/xxdb/setup/settings.properties
+test/com/xxdb/setup/settings.properties
