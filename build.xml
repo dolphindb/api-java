@@ -6,32 +6,51 @@
 <property name="classes_test" value="tmp\classes_test"/>
 <property name="test_jar" value="tmp\testJavaApi.jar"/>
 <property name="src_jar" value="tmp\dolphindb.jar"/>
+<property name="lib.dir" value="lib"/>
+<property name="junit_jar" value="${lib.dir}/junit-4.12.jar"/>
+<property name="hamcrest_jar" value="${lib.dir}/hamcrest-core-1.3.jar"/>
+<path id="compile.path">
+    <pathelement location="${lib.dir}/junit-4.12.jar"/>
+</path>
 <target name="init">
    <mkdir dir="${classes_src}"/>
    <mkdir dir="${classes_test}"/>
 </target>
 
 <target name="compilesrc" depends="init">
-   <!-- <javac srcdir="${test}" destdir="${dest}"/> -->
-   <javac srcdir="${src}" destdir="${classes_src}" includeantruntime="false" />
+   <javac srcdir="${src}" classpath="${junit_jar}" destdir="${classes_src}" includeantruntime="false" />
 </target>
+
 <target name="buildsrc" depends="compilesrc">
-   <jar jarfile="${src_jar}" basedir="${classes_src}"/>
+   <jar jarfile="${src_jar}" basedir="${classes_src}" />
 </target>
+
+<target name="JUNIT">
+     <available property="junit.present" classname="junit.framework.TestCase" />
+</target>
+
 <target name="compiletest" depends="buildsrc">
    <!-- <javac srcdir="${test}" destdir="${dest}"/> -->
-   <javac srcdir="${test}" classpath="${src_jar}" destdir="${classes_test}" includeantruntime="false" />
+   <javac srcdir="${test}" classpath="${src_jar};${junit_jar}" destdir="${classes_test}" includeantruntime="false" classpathref="compile.path"/>
 </target>
+
 <target name="buildtest" depends="compiletest">
    <jar jarfile="${test_jar}" basedir="${classes_test}"/>
 </target>
 <target name="run" depends="buildtest">
-   <java classname="com.xxdb.DBConnectionTest" classpath="${test_jar};${src_jar}">
+    <junit printsummary="true" haltonfailure="no">
+        <classpath path="tmp;${junit_jar};${hamcrest_jar};${test_jar};${src_jar}"></classpath>
+		<formatter type="plain"/>
+        <test name="com.xxdb.DBConnectionTest"></test>
+    </junit>
+</target>
+<!-- <target name="run" depends="buildtest">
+   <java classname="com.xxdb.TestMain" classpath="${test_jar};${src_jar}">
       <arg value="127.0.0.1"/>
-      <arg value="8848"/>
+      <arg value="28848"/>
    </java>
 </target>
-<!-- <target name="clean">
+<target name="clean">
    <delete file="${dest}" />
    <delete file="${helloant_jar}" />
 </target>
