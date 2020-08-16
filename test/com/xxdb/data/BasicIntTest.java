@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
 public class BasicIntTest {
     private DBConnection conn;
     @Before
@@ -55,5 +57,19 @@ public class BasicIntTest {
                 Assert.assertEquals(expected, v.get(i).hashBucket(b));
             }
         }
+    }
+
+    @Test
+    public void TestCombineIntVector() throws Exception {
+        int[] data = {4, 5, 3, 6};
+        BasicIntVector v = new BasicIntVector(data );
+        int[] data2 = { 2, 5, 1};
+        BasicIntVector vector2 = new BasicIntVector(data2 );
+        BasicIntVector res= (BasicIntVector) v.combine(vector2);
+        int[] datas = {4, 5, 3, 6, 2, 5, 1};
+        for (int i=0;i<res.rows();i++){
+            assertEquals(datas[i],res.get(i).getNumber());
+        }
+        assertEquals(7,res.rows());
     }
 }

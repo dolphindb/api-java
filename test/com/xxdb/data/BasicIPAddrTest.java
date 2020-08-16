@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
 public class BasicIPAddrTest {
     private DBConnection conn;
     @Before
@@ -55,5 +57,47 @@ public class BasicIPAddrTest {
                 Assert.assertEquals(expected, v.get(i).hashBucket(b));
             }
         }
+    }
+    @Test
+    public void TestCombineIpAddrVector() throws Exception {
+        BasicIPAddrVector v = new BasicIPAddrVector(4);
+        v.set(0,BasicIPAddr.fromString("dc70:a4c2:f0f7:81da:334:66e3:b915:a254"));
+        v.set(1,BasicIPAddr.fromString("72e1:e064:b242:5386:109:bdcb:639c:9e63"));
+        v.set(2,BasicIPAddr.fromString("5d42:fc4f:efb2:6735:e5be:1a5d:ebf8:b987"));
+        v.set(3,BasicIPAddr.fromString("fa6b:bf42:cfb4:1bea:3551:1cbc:2c99:9128"));
+        BasicIPAddrVector vector2 = new BasicIPAddrVector(2 );
+        vector2.set(0,BasicIPAddr.fromString("fa6b:bf42:cfb4:1bea:3551:1cbc:2c99:9128"));
+        vector2.set(1,BasicIPAddr.fromString("6e01:2a6e:b3b0:323a:745:1527:1537:8019"));
+        BasicIPAddrVector res= (BasicIPAddrVector) v.combine(vector2);
+        BasicIPAddrVector res128 = new BasicIPAddrVector(6);
+        res128.set(0,BasicIPAddr.fromString("dc70:a4c2:f0f7:81da:334:66e3:b915:a254"));
+        res128.set(1,BasicIPAddr.fromString("72e1:e064:b242:5386:109:bdcb:639c:9e63"));
+        res128.set(2,BasicIPAddr.fromString("5d42:fc4f:efb2:6735:e5be:1a5d:ebf8:b987"));
+        res128.set(3,BasicIPAddr.fromString("fa6b:bf42:cfb4:1bea:3551:1cbc:2c99:9128"));
+        res128.set(4,BasicIPAddr.fromString("fa6b:bf42:cfb4:1bea:3551:1cbc:2c99:9128"));
+        res128.set(5,BasicIPAddr.fromString("6e01:2a6e:b3b0:323a:745:1527:1537:8019"));
+        for (int i=0;i<res.rows();i++){
+            assertEquals(res128.get(i).toString(),res.get(i).toString());
+        }
+        assertEquals(6,res.rows());
+    }
+    @Test
+    public void TestCombineIpAddr_v4Vector() throws Exception {
+        BasicIPAddrVector v = new BasicIPAddrVector(2);
+        v.set(0,BasicIPAddr.fromString("192.168.1.13"));
+        v.set(1,BasicIPAddr.fromString("192.168.1.142"));
+        BasicIPAddrVector vector2 = new BasicIPAddrVector(2 );
+        vector2.set(0,BasicIPAddr.fromString("192.168.1.142"));
+        vector2.set(1,BasicIPAddr.fromString("192.168.1.142"));
+        BasicIPAddrVector res= (BasicIPAddrVector) v.combine(vector2);
+        BasicIPAddrVector res128 = new BasicIPAddrVector(4);
+        res128.set(0,BasicIPAddr.fromString("192.168.1.13"));
+        res128.set(1,BasicIPAddr.fromString("192.168.1.142"));
+        res128.set(2,BasicIPAddr.fromString("192.168.1.142"));
+        res128.set(3,BasicIPAddr.fromString("192.168.1.142"));
+        for (int i=0;i<res.rows();i++){
+            assertEquals(res128.get(i).toString(),res.get(i).toString());
+        }
+        assertEquals(4,res.rows());
     }
 }
