@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * 
@@ -59,7 +60,12 @@ public class BasicAnyVector extends AbstractVector{
 	public void setEntity(int index, Entity value){
 		values[index] = value;
 	}
-	
+
+	@Override
+	public Vector combine(Vector vector) {
+		throw new NotImplementedException();
+	}
+
 	@Override
 	public boolean isNull(int index) {
 		return values[index] == null || (values[index].isScalar() && ((Scalar)values[index]).isNull());

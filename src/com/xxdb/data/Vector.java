@@ -7,7 +7,7 @@ package com.xxdb.data;
 
 public interface Vector extends Entity{
 	final int DISPLAY_ROWS = 10;
-	
+	Vector combine(Vector vector);
 	boolean isNull(int index);
 	void setNull(int index);
 	int hashBucket(int index, int buckets);

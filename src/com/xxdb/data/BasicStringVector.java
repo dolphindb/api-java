@@ -72,7 +72,17 @@ public class BasicStringVector extends AbstractVector{
 	public int hashBucket(int index, int buckets){
 		return BasicString.hashBucket(values[index], buckets);
 	}
-	
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicStringVector v = (BasicStringVector)vector;
+		int newSize = this.rows() + v.rows();
+		String[] newValue = new String[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicStringVector(newValue);
+	}
+
 	@Override
 	public boolean isNull(int index) {
 		return values[index] == null || values[index].isEmpty();

@@ -87,7 +87,17 @@ public class BasicInt128Vector extends AbstractVector{
 	public int hashBucket(int index, int buckets){
 		return values[index].hashBucket(buckets);
 	}
-	
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicInt128Vector v = (BasicInt128Vector)vector;
+		int newSize = this.rows() + v.rows();
+		Long2[] newValue = new Long2[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicInt128Vector(newValue);
+	}
+
 	@Override
 	public boolean isNull(int index) {
 		return values[index].isNull();

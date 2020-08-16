@@ -73,7 +73,17 @@ public class BasicBooleanVector extends AbstractVector{
 	public void setBoolean(int index, boolean value){
 		values[index] = value ? (byte)1 : (byte)0;
 	}
-	
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicBooleanVector v = (BasicBooleanVector)vector;
+		int newSize = this.rows() + v.rows();
+		byte[] newValue = new byte[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicBooleanVector(newValue);
+	}
+
 	@Override
 	public boolean isNull(int index) {
 		return values[index] == Byte.MIN_VALUE;

@@ -32,7 +32,7 @@ public class BasicDateHourVector extends BasicIntVector {
 	protected BasicDateHourVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
 		super(df, in);
 	}
-	
+
 	@Override
 	public DATA_CATEGORY getDataCategory() {
 		return Entity.DATA_CATEGORY.TEMPORAL;
@@ -61,5 +61,15 @@ public class BasicDateHourVector extends BasicIntVector {
 	@Override
 	public Class<?> getElementClass(){
 		return BasicDateHour.class;
+	}
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicDateHourVector v = (BasicDateHourVector)vector;
+		int newSize = this.rows() + v.rows();
+		int[] newValue = new int[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicDateHourVector(newValue);
 	}
 }

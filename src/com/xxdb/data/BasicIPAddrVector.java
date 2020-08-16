@@ -27,7 +27,16 @@ public class BasicIPAddrVector extends BasicInt128Vector {
 	protected BasicIPAddrVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
 		super(df, in);
 	}
-	
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicIPAddrVector v = (BasicIPAddrVector)vector;
+		int newSize = this.rows() + v.rows();
+		Long2[] newValue = new Long2[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicIPAddrVector(newValue);
+	}
 	public Scalar get(int index){
 		return new BasicIPAddr(values[index].high, values[index].low);
 	}

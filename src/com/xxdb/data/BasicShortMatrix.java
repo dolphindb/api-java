@@ -96,6 +96,6 @@ public class BasicShortMatrix extends AbstractMatrix{
 
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		for(short value : values)
-			out.writeInt(value);
+			out.writeShort(value);
 	}
 }

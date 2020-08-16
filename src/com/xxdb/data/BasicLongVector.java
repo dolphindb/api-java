@@ -15,7 +15,7 @@ import com.xxdb.io.ExtendedDataOutput;
  */
 
 public class BasicLongVector extends AbstractVector{
-	private long[] values;
+	protected long[] values;
 	
 	public BasicLongVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -90,7 +90,17 @@ public class BasicLongVector extends AbstractVector{
 			return (int)(((Long.MAX_VALUE % buckets) +2 + ((Long.MAX_VALUE + value) % buckets)) % buckets);
 		}
 	}
-	
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicLongVector v = (BasicLongVector)vector;
+		int newSize = this.rows() + v.rows();
+		long[] newValue = new long[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicLongVector(newValue);
+	}
+
 	@Override
 	public boolean isNull(int index) {
 		return values[index] == Long.MIN_VALUE;

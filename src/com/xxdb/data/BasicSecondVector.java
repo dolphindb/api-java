@@ -63,4 +63,14 @@ public class BasicSecondVector extends BasicIntVector{
 	public Class<?> getElementClass(){
 		return BasicSecond.class;
 	}
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicSecondVector v = (BasicSecondVector)vector;
+		int newSize = this.rows() + v.rows();
+		int[] newValue = new int[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicSecondVector(newValue);
+	}
 }

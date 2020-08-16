@@ -15,7 +15,7 @@ import com.xxdb.io.ExtendedDataOutput;
  */
 
 public class BasicIntVector extends AbstractVector{
-	private int[] values;
+	protected int[] values;
 	
 	public BasicIntVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -90,7 +90,17 @@ public class BasicIntVector extends AbstractVector{
 			return (int)((4294967296l + value) % buckets);
 		}
 	}
-	
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicIntVector v = (BasicIntVector)vector;
+		int newSize = this.rows() + v.rows();
+		int[] newValue = new int[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicIntVector(newValue);
+	}
+
 	@Override
 	public boolean isNull(int index) {
 		return values[index] == Integer.MIN_VALUE;
