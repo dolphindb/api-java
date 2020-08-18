@@ -37,6 +37,10 @@ public class DBConnectionTest {
         props.load(in);
         PORT =Integer.parseInt(props.getProperty ("PORT"));
         HOST  =props.getProperty ("HOST");
+        System.out.println("=====Start=====");
+        System.out.println(HOST);
+        System.out.println(PORT);
+        System.out.println("======End======");
         conn = new DBConnection();
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
