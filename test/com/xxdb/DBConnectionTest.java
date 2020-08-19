@@ -1345,17 +1345,17 @@ public void testShortMatrixUpload() throws IOException {
         }
     }
 
-    @Test
-    public void TestConnectErrorHostFormat() {
-        DBConnection conn1 = new DBConnection();
-        try {
-            if(!conn1.connect("fee", PORT, "admin", "123456")) {
-                throw new IOException("The host is error.");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    @Test
+//    public void TestConnectErrorHostFormat() {
+//        DBConnection conn1 = new DBConnection();
+//        try {
+//            if(!conn1.connect("fee", PORT, "admin", "123456")) {
+//                throw new IOException("The host is error.");
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 //    @Test
 //    public void TestConnectErrorHostValue() {
