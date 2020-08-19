@@ -1357,65 +1357,65 @@ public void testShortMatrixUpload() throws IOException {
         }
     }
 
-    @Test
-    public void TestConnectErrorHostValue() {
-        DBConnection conn1 = new DBConnection();
-        try {
-            if(! conn1.connect("192.168.1.103", PORT, "admin", "123456")){
-                throw new IOException("The host is error.");
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
+//    @Test
+//    public void TestConnectErrorHostValue() {
+//        DBConnection conn1 = new DBConnection();
+//        try {
+//            if(! conn1.connect("192.168.1.103", PORT, "admin", "123456")){
+//                throw new IOException("The host is error.");
+//            }
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//    }
 
-    @Test
-    public  void TestConnectErrorPort() {
-        DBConnection conn1 = new DBConnection();
-        try {
-            if(!conn1.connect(HOST, 44, "admin", "123456")){
-                throw new IOException("The port is error.");
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
+//    @Test
+//    public  void TestConnectErrorPort() {
+//        DBConnection conn1 = new DBConnection();
+//        try {
+//            if(!conn1.connect(HOST, 44, "admin", "123456")){
+//                throw new IOException("The port is error.");
+//            }
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//    }
 
-    @Test
-    public void TestConnectNullUserId() {
-        DBConnection conn1 = new DBConnection();
-        try {
-            if(!conn1.connect(HOST, PORT, null, "123456")){
-                throw new IOException("The user name or password is null.");
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
+//    @Test
+//    public void TestConnectNullUserId() {
+//        DBConnection conn1 = new DBConnection();
+//        try {
+//            if(!conn1.connect(HOST, PORT, null, "123456")){
+//                throw new IOException("The user name or password is null.");
+//            }
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
+//    }
 
-    @Test
-    public void TestConnectNullUserIdAndPwd() {
-        DBConnection conn1 = new DBConnection();
-        try {
-            if(!conn1.connect(HOST, PORT, null,"")){
-                throw new IOException("The user name or password is null.");
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
+//    @Test
+//    public void TestConnectNullUserIdAndPwd() {
+//        DBConnection conn1 = new DBConnection();
+//        try {
+//            if(!conn1.connect(HOST, PORT, null,"")){
+//                throw new IOException("The user name or password is null.");
+//            }
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
+//    }
 
-    @Test
-    public void TestConnectWrongPassWord(){
-        DBConnection conn1 = new DBConnection();
-        try {
-            if (!conn1.connect(HOST,PORT,"admin","111")) {
-                throw new IOException("The user name or password is incorrect.");
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
+//    @Test
+//    public void TestConnectWrongPassWord(){
+//        DBConnection conn1 = new DBConnection();
+//        try {
+//            if (!conn1.connect(HOST,PORT,"admin","111")) {
+//                throw new IOException("The user name or password is incorrect.");
+//            }
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//    }
 
     @Test
     public void TestCloseOnce() throws IOException, InterruptedException {
