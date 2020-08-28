@@ -145,7 +145,12 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 			pos = 0;
 		}while (i < len);
 	}
-
+	@Override
+	public void writeBlob(String value) throws IOException {
+		int len = value.length();
+		writeInt(len);
+		writeString(value);
+	}
 	public static int getUTFlength(String value, int start, int sum) throws IOException {
 		int len = value.length();
 		for (int i = start; i < len && sum <= 65535; ++i){

@@ -2,7 +2,6 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.temporal.Temporal;
-
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -18,11 +17,18 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 	public BasicString(String value){
 		this.value = value;
 	}
-	
+
 	public BasicString(ExtendedDataInput in) throws IOException{
 		value = in.readString();
 	}
-	
+
+	public BasicString(ExtendedDataInput in, boolean blob) throws IOException{
+		if(!blob)
+			value = in.readString();
+		else
+			value = in.readBlob();
+	}
+
 	public String getString(){
 		return value;
 	}
@@ -194,6 +200,15 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 	
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeString(value);
+	}
+
+	protected void writeScalarToOutputStream(ExtendedDataOutput out, boolean blob) throws IOException{
+		if(!blob) {
+			out.writeString(value);
+		} else {
+			out.writeBlob(value);
+		}
+
 	}
 
 	@Override
