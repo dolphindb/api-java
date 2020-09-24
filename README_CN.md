@@ -479,6 +479,18 @@ public class DDBProxy implements Runnable {
 
 #### 7.4 读取和使用数据表
 
+#### 7.4.1 读取分布式表
+在Java API中读取分布式表使用如下代码
+```java
+String dbPath = "dfs://testDatabase";
+String tbName = "tb1";
+DBConnection conn = new DBConnection();
+conn.connect(SERVER, PORT, USER, PASSWORD);
+BasicTable table = (BasicTable)conn.run(String.format("select * from loadTable('%s','%s') where cdate = 2017.05.03",dbPath,tbName));
+```
+
+
+#### 7.4.2 使用BasicTable对象
 在Java API中，数据表保存为BasicTable对象。由于BasicTable是列式存储，所以若要在Java API中读取行数据需要先取出需要的列，再取出行。
 
 以下例子中参数BasicTable的有4个列，列名分别为cstring, cint, ctimestamp, cdouble，数据类型分别是STRING, INT, TIMESTAMP, DOUBLE。
