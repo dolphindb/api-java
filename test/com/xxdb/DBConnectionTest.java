@@ -7,6 +7,7 @@ import java.util.stream.IntStream;
 
 import com.xxdb.io.LittleEndianDataInputStream;
 import com.xxdb.io.LittleEndianDataOutputStream;
+import com.xxdb.io.ProgressListener;
 import jdk.nashorn.internal.ir.AccessNode;
 import org.junit.After;
 import org.junit.Assert;
@@ -32,24 +33,24 @@ public class DBConnectionTest {
 
     @Before
     public void setUp() throws IOException {
-        Properties props = new Properties();
-        FileInputStream in= new FileInputStream( "test/com/xxdb/setup/settings.properties");
-        props.load(in);
-        PORT =Integer.parseInt(props.getProperty ("PORT"));
-        HOST  =props.getProperty ("HOST");
-        conn = new DBConnection();
-        try {
-            if (!conn.connect(HOST, PORT, "admin", "123456")) {
-                throw new IOException("Failed to connect to 2xdb server");
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+//        Properties props = new Properties();
+//        FileInputStream in= new FileInputStream( "test/com/xxdb/setup/settings.properties");
+//        props.load(in);
+//        PORT =Integer.parseInt(props.getProperty ("PORT"));
+//        HOST  =props.getProperty ("HOST");
+//        conn = new DBConnection();
+//        try {
+//            if (!conn.connect(HOST, PORT, "admin", "123456")) {
+//                throw new IOException("Failed to connect to 2xdb server");
+//            }
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
     }
 
     @After
     public void tearDown() throws Exception {
-        conn.close();
+//        conn.close();
     }
     @Test
     public  void  testCharScalar() throws IOException {
@@ -430,6 +431,7 @@ public class DBConnectionTest {
     @Test
     public void testFloatMatrixWithLabel() throws IOException {
         BasicFloatMatrix matrix = (BasicFloatMatrix)conn.run("float(cross(pow,2.1f 5.0f 4.88f,1.0f 9.6f 5.2f))");
+
         assertEquals(3,matrix.rows());
         assertEquals(3,matrix.columns());
         assertEquals("2.1", matrix.getRowLabel(0).getString());
@@ -1459,6 +1461,33 @@ public void testShortMatrixUpload() throws IOException {
             cn.connect(HOST, PORT, "admin", "123456");
             connx.add(cn);
         }
+    }
+
+    @Test
+    public void TestFetchData()  throws IOException{
+        DBConnection conn = new DBConnection();
+        conn.connect("192.168.1.142", 8848, "admin","123456");
+        FetchAnyVector v = (FetchAnyVector)conn.run("table(1..22486 as id)",(ProgressListener) null,4,4,10000);
+        BasicTable data = (BasicTable)v.read();
+        while(true){
+            BasicTable t = (BasicTable)v.read();
+            if(t==null){
+                break;
+            }
+            data = data.combine(t);
+        }
+        Assert.assertEquals(22486, data.rows());
+    }
+
+    @Test
+    public void TestFetchDataSkip()  throws IOException{
+        DBConnection conn = new DBConnection();
+        conn.connect("192.168.1.142", 8848, "admin","123456");
+        FetchAnyVector v = (FetchAnyVector)conn.run("table(1..12486 as id)",(ProgressListener) null,4,4,10000);
+        BasicTable data = (BasicTable)v.read();
+        v.skip();
+        BasicTable t1 = (BasicTable)conn.run("table(1..100 as id1");
+        assertEquals(100,t1.rows());
     }
 
 }
