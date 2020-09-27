@@ -404,9 +404,6 @@ public class DBConnection {
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize) throws IOException {
         if(fetchSize>0){
-            if(getVersionNumber(ServerVersion)<1204){
-                throw new IOException("Parameter 'fetchSize' is only supported in DolphinDB versions above 1.20.5 ");
-            }
             if(fetchSize<8192){
                 throw new IOException("fetchSize must be greater than 8192");
             }
@@ -607,9 +604,6 @@ public class DBConnection {
 
     public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize) throws IOException {
         if(fetchSize>0){
-            if(getVersionNumber(ServerVersion)<1205){
-                throw new IOException("Parameter 'fetchSize' is only supported in DolphinDB versions above 1.20.5 ");
-            }
             if(fetchSize<8192){
                 throw new IOException("fetchSize must be greater than 8192");
             }
