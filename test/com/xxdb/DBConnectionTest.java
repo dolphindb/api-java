@@ -1467,13 +1467,10 @@ public void testShortMatrixUpload() throws IOException {
     public void TestFetchData()  throws IOException{
         DBConnection conn = new DBConnection();
         conn.connect("192.168.1.142", 8848, "admin","123456");
-        FetchAnyVector v = (FetchAnyVector)conn.run("table(1..22486 as id)",(ProgressListener) null,4,4,10000);
+        EntityBlockReader v = (EntityBlockReader)conn.run("table(1..22486 as id)",(ProgressListener) null,4,4,10000);
         BasicTable data = (BasicTable)v.read();
-        while(true){
+        while(v.hasNext()){
             BasicTable t = (BasicTable)v.read();
-            if(t==null){
-                break;
-            }
             data = data.combine(t);
         }
         Assert.assertEquals(22486, data.rows());
@@ -1483,10 +1480,10 @@ public void testShortMatrixUpload() throws IOException {
     public void TestFetchDataSkip()  throws IOException{
         DBConnection conn = new DBConnection();
         conn.connect("192.168.1.142", 8848, "admin","123456");
-        FetchAnyVector v = (FetchAnyVector)conn.run("table(1..12486 as id)",(ProgressListener) null,4,4,10000);
+        EntityBlockReader v = (EntityBlockReader)conn.run("table(1..12486 as id)",(ProgressListener) null,4,4,10000);
         BasicTable data = (BasicTable)v.read();
-        v.skip();
-        BasicTable t1 = (BasicTable)conn.run("table(1..100 as id1");
+        v.skipAll();
+        BasicTable t1 = (BasicTable)conn.run("table(1..100 as id1)");
         assertEquals(100,t1.rows());
     }
 

@@ -540,7 +540,7 @@ public class DBConnection {
                 Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
                 Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
                 if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
-                    return new FetchAnyVector(in);
+                    return new EntityBlockReader(in);
                 }
                 return factory.createEntity(df, dt, in);
             } catch (IOException ex) {
@@ -734,7 +734,7 @@ public class DBConnection {
                 Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
                 Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
                 if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
-                    return new FetchAnyVector(in);
+                    return new EntityBlockReader(in);
                 }
                 return factory.createEntity(df, dt, in);
             } catch (IOException ex) {
