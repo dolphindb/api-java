@@ -1637,6 +1637,9 @@ public class DBConnectionTest {
        BasicTable t = (BasicTable) v.read();
        BasicTable t1 = (BasicTable) conn.run("table(1..100 as id,take(`Q`EW`,100) as sym, take(date([1,NULL]),100) as date)");
        assertEquals(t1.getString(),t.getString());
+       EntityBlockReader v1 = (EntityBlockReader) conn.run("table(1..100 as id,take(`Q`EW`,100) as sym, take(date([1,NULL]),100) as date)", (ProgressListener) null, 4, 4, 10000);
+       v1.skipAll();
+       assertFalse(v1.hasNext());
     }
 
     @Test
@@ -1653,5 +1656,15 @@ public class DBConnectionTest {
         thrown.expectMessage("fetchSize must be greater than 8192");
         thrown.expect(IOException.class);
         EntityBlockReader v = (EntityBlockReader) conn.run("table(1..22486 as id)", (ProgressListener) null, 4, 4, 8191);
+    }
+    @Test
+    public void TestFetchBigData() throws IOException {
+        EntityBlockReader v = (EntityBlockReader) conn.run("table(1..5008600 as id)", (ProgressListener) null, 4, 4, 10000);
+        BasicTable data = (BasicTable) v.read();
+        while (v.hasNext()) {
+            BasicTable t = (BasicTable) v.read();
+            data = data.combine(t);
+        }
+        Assert.assertEquals(5008600, data.rows());
     }
 }
