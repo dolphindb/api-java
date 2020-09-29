@@ -239,7 +239,6 @@ public class DBConnection {
         if (initialScript != null && initialScript.length() > 0)
             run(initialScript);
 
-        ServerVersion = ((BasicString)run("version()")).getString();
         if (highAvailability && highAvailabilitySites == null) {
             try {
                 controllerHost = ((BasicString) run("rpc(getControllerAlias(), getNodeHost)")).getString();
