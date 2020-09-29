@@ -503,7 +503,7 @@ while(v.hasNext()){
 }
 ```
 在使用上述分段读取的方法时，若数据未读取完毕，需要放弃后续数据的读取时，必须调用skipAll方法来显示忽略后续数据，否则会导致套接字缓冲区滞留数据，引发后续数据的反序列化失败。
-示例代码如下：
+正确使用的示例代码如下：
 ```java
     EntityBlockReader v = (EntityBlockReader)conn.run("table(1..12486 as id)",(ProgressListener) null,4,4,10000);
     BasicTable data = (BasicTable)v.read();
