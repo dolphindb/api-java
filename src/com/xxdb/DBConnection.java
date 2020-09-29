@@ -616,11 +616,6 @@ public class DBConnection {
                 if (sessionID.isEmpty())
                     throw new IOException("Database connection is not established yet.");
                 else {
-//                    if(!socket.isConnected() || socket.isClosed()) {
-//                        synchronized (socket) {
-//                            socket.close();
-//                        }
-//                    }
                     socket = new Socket(hostName, port);
                     socket.setKeepAlive(true);
                     socket.setTcpNoDelay(true);
