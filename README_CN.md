@@ -480,7 +480,7 @@ public class DDBProxy implements Runnable {
 #### 7.4 读取和使用数据表
 
 #### 7.4.1 读取分布式表
-在Java API中读取分布式表使用如下代码
+* 在Java API中读取分布式表使用如下代码一次性读取数据
 ```java
 String dbPath = "dfs://testDatabase";
 String tbName = "tb1";
@@ -488,7 +488,28 @@ DBConnection conn = new DBConnection();
 conn.connect(SERVER, PORT, USER, PASSWORD);
 BasicTable table = (BasicTable)conn.run(String.format("select * from loadTable('%s','%s') where cdate = 2017.05.03",dbPath,tbName));
 ```
+* 对于大数据量的表，API提供了分段读取方法。(此方法仅适用于DolphinDB 1.20.5及其以上版本)
 
+java API提供了 EntityBlockReader 对象，在run方法中使用参数 fetchSize指定分段大小，通过read()方法一段段的读取数据，示例如下：
+
+```java
+DBConnection conn = new DBConnection();
+conn.connect(SERVER, PORT, USER, PASSWORD);
+EntityBlockReader v = (EntityBlockReader)conn.run("table(1..22486 as id)",(ProgressListener) null,4,4,10000);
+BasicTable data = (BasicTable)v.read();
+while(v.hasNext()){
+    BasicTable t = (BasicTable)v.read();
+    data = data.combine(t);
+}
+```
+在使用上述分段读取的方法时，若数据未读取完毕，需要放弃后续数据的读取时，必须调用skipAll方法来显示忽略后续数据，否则会导致套接字缓冲区滞留数据，引发后续数据的反序列化失败。
+正确使用的示例代码如下：
+```java
+    EntityBlockReader v = (EntityBlockReader)conn.run("table(1..12486 as id)",(ProgressListener) null,4,4,10000);
+    BasicTable data = (BasicTable)v.read();
+    v.skipAll();
+    BasicTable t1 = (BasicTable)conn.run("table(1..100 as id1)"); //若没有skipAll此段会抛出异常。
+```
 
 #### 7.4.2 使用BasicTable对象
 在Java API中，数据表保存为BasicTable对象。由于BasicTable是列式存储，所以若要在Java API中读取行数据需要先取出需要的列，再取出行。

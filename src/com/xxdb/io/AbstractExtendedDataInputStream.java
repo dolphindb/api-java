@@ -65,7 +65,7 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 	public String readString() throws IOException {
 		return readUTF8((byte)0);
 	}
-	
+
 	private String readUTF8(byte terminator) throws IOException{
 		if(buf_ == null)
 			buf_ = new byte[2048];
@@ -84,7 +84,15 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 		}
 		return new String(buf_, 0, count, UTF8);
 	}
-	
+	@Override
+	public String readBlob() throws IOException{
+		int len = readInt();
+		if(buf_ == null)
+			buf_ = new byte[len];
+		int re = read(buf_,0,len);
+		return new String(buf_, 0, len , UTF8);
+	}
+
 	@Override
 	public short readShort() throws IOException {
 		return (short)readUnsignedShort();

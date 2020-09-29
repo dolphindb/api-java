@@ -27,6 +27,7 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[Entity.DATA_TYPE.DT_NANOTIMESTAMP.ordinal()] = new NanoTimestampFactory();
 		factories[Entity.DATA_TYPE.DT_SYMBOL.ordinal()] = new SymbolFactory();
 		factories[Entity.DATA_TYPE.DT_STRING.ordinal()] = new StringFactory();
+		factories[Entity.DATA_TYPE.DT_BLOB.ordinal()] = new BlobFactory();
 		factories[Entity.DATA_TYPE.DT_FUNCTIONDEF.ordinal()] = new FunctionDefFactory();
 		factories[Entity.DATA_TYPE.DT_HANDLE.ordinal()] = new SystemHandleFactory();
 		factories[Entity.DATA_TYPE.DT_CODE.ordinal()] = new MetaCodeFactory();
@@ -339,8 +340,8 @@ public class BasicEntityFactory implements EntityFactory{
 
 	private class StringFactory implements TypeFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicString(in);}
-		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, in);}
-		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, in, false);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in, false);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicString("");}
 		public Vector createVectorWithDefaultValue(int size){ return new BasicStringVector(size);}
@@ -350,15 +351,26 @@ public class BasicEntityFactory implements EntityFactory{
 	
 	private class SymbolFactory implements TypeFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicString(in);}
-		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, in);}
-		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, in,false);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in,false);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicString("");}
 		public Vector createVectorWithDefaultValue(int size){ return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, size, true);}
 		public Vector createPairWithDefaultValue(){ return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, 2, true);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicStringMatrix(rows, columns);}
 	}
-	
+
+	private class BlobFactory implements TypeFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicString(in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, in,true);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in,true);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in);}
+		public Scalar createScalarWithDefaultValue() { return new BasicString("");}
+		public Vector createVectorWithDefaultValue(int size){ return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, size, false,true);}
+		public Vector createPairWithDefaultValue(){ return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, 2, false,true);}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicStringMatrix(rows, columns);}
+	}
+
 	private class FunctionDefFactory extends StringFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, Entity.DATA_TYPE.DT_FUNCTIONDEF);}
 	}

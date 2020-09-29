@@ -15,7 +15,7 @@ import com.xxdb.io.ExtendedDataOutput;
 public class BasicStringVector extends AbstractVector{
 	private String[] values;
 	private boolean isSymbol;
-	
+	private boolean isBlob = false;
 	public BasicStringVector(int size){
 		this(DATA_FORM.DF_VECTOR, size, false);
 	}
@@ -29,27 +29,58 @@ public class BasicStringVector extends AbstractVector{
 		}
 		this.isSymbol = false;
 	}
-	
+
+	public BasicStringVector(List<String> list, boolean blob){
+		super(DATA_FORM.DF_VECTOR);
+		if (list != null) {
+			values = new String[list.size()];
+			for (int i=0; i<list.size(); ++i)
+				values[i] = list.get(i);
+		}
+		this.isSymbol = false;
+		this.isBlob = blob;
+	}
+
 	public BasicStringVector(String[] array){
 		super(DATA_FORM.DF_VECTOR);
 		values = array.clone();
 		this.isSymbol = false;
 	}
-	
+
+	public BasicStringVector(String[] array, boolean blob){
+		super(DATA_FORM.DF_VECTOR);
+		values = array.clone();
+		this.isSymbol = false;
+		this.isBlob = blob;
+	}
+
 	protected BasicStringVector(DATA_FORM df, int size, boolean isSymbol){
 		super(df);
 		values = new String[size];
 		this.isSymbol = isSymbol;
 	}
-	
-	protected BasicStringVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
+
+	protected BasicStringVector(DATA_FORM df, int size, boolean isSymbol, boolean isBlob){
 		super(df);
+		values = new String[size];
+		this.isBlob = isBlob;
+		this.isSymbol = isSymbol;
+	}
+
+	protected BasicStringVector(DATA_FORM df, ExtendedDataInput in, boolean blob) throws IOException{
+		super(df);
+		isBlob = blob;
 		int rows = in.readInt();
 		int columns = in.readInt();
 		int size = rows * columns;
 		values = new String[size];
-		for(int i=0; i<size; ++i)
-			values[i] = in.readString();
+		if(!blob) {
+			for (int i = 0; i < size; ++i)
+				values[i] = in.readString();
+		}else{
+			for (int i = 0; i < size; ++i)
+				values[i] = in.readBlob();
+		}
 	}
 	
 	public Scalar get(int index){
@@ -100,6 +131,7 @@ public class BasicStringVector extends AbstractVector{
 
 	@Override
 	public DATA_TYPE getDataType() {
+		if(isBlob) return DATA_TYPE.DT_BLOB;
 		return isSymbol ? DATA_TYPE.DT_SYMBOL : DATA_TYPE.DT_STRING;
 	}
 	
@@ -114,7 +146,12 @@ public class BasicStringVector extends AbstractVector{
 	}	
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		for (String str: values)
-			out.writeString(str);
+		if(!isBlob) {
+			for (String str : values)
+				out.writeString(str);
+		} else {
+			for (String str : values)
+				out.writeBlob(str);
+		}
 	}
 }

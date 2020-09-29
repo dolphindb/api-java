@@ -12,13 +12,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.xxdb.data.BasicBoolean;
-import com.xxdb.data.BasicEntityFactory;
-import com.xxdb.data.BasicInt;
-import com.xxdb.data.BasicString;
-import com.xxdb.data.BasicStringVector;
-import com.xxdb.data.Entity;
-import com.xxdb.data.EntityFactory;
+import com.xxdb.data.*;
 import com.xxdb.data.Void;
 import com.xxdb.io.AbstractExtendedDataOutputStream;
 import com.xxdb.io.BigEndianDataInputStream;
@@ -51,6 +45,7 @@ public class DBConnection {
     private static final int DEFAULT_PRIORITY = 4;
     private static final int DEFAULT_PARALLELISM = 2;
 
+    private String ServerVersion = "";
     private ReentrantLock mutex;
     private String sessionID;
     private Socket socket;
@@ -86,6 +81,18 @@ public class DBConnection {
             mutex.unlock();
             return false;
         }
+    }
+
+    private int getVersionNumber(String ver) {
+        try {
+            String[] s = ver.split(" ");
+            if (s.length >= 2) {
+                String vernum = s[0].replace(".", "");
+                return Integer.parseInt(vernum);
+            }
+        }
+        catch (Exception ex) {}
+        return 0;
     }
 
     public boolean connect(String hostName, int port) throws IOException {
@@ -362,10 +369,13 @@ public class DBConnection {
     }
 
     public Entity tryRun(String script, int priority, int parallelism) throws IOException {
+        return tryRun(script, priority, parallelism, 0);
+    }
+    public Entity tryRun(String script, int priority, int parallelism,int fetchSize) throws IOException {
         if (!mutex.tryLock())
             return null;
         try {
-            return run(script, (ProgressListener) null, priority, parallelism);
+            return run(script, (ProgressListener) null, priority, parallelism, fetchSize);
         } finally {
             mutex.unlock();
         }
@@ -388,8 +398,16 @@ public class DBConnection {
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism) throws IOException {
-        mutex.lock();
+        return run( script, listener, priority, parallelism, 0);
+    }
 
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize) throws IOException {
+        if(fetchSize>0){
+            if(fetchSize<8192){
+                throw new IOException("fetchSize must be greater than 8192");
+            }
+        }
+        mutex.lock();
         boolean isUrgentCancelJob = false;
         if (script.startsWith("cancelJob(") || script.startsWith("cancelConsoleJob("))
             isUrgentCancelJob = true;
@@ -421,6 +439,9 @@ public class DBConnection {
                     out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                 } else if (isUrgentCancelJob) {
                     out.writeBytes(" / 1_1_8_8");
+                }
+                if(fetchSize>0){
+                    out.writeBytes("__" + String.valueOf(fetchSize));
                 }
                 out.writeByte('\n');
                 out.writeBytes(body);
@@ -456,6 +477,11 @@ public class DBConnection {
                     out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
                     if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
                         out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                    }else if (isUrgentCancelJob) {
+                        out.writeBytes(" / 1_1_8_8");
+                    }
+                    if(fetchSize>0){
+                        out.writeBytes("__" + String.valueOf(fetchSize));
                     }
                     out.writeByte('\n');
                     out.writeBytes(body);
@@ -509,6 +535,9 @@ public class DBConnection {
 
                 Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
                 Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
+                if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
+                    return new EntityBlockReader(in);
+                }
                 return factory.createEntity(df, dt, in);
             } catch (IOException ex) {
                 socket = null;
@@ -532,7 +561,6 @@ public class DBConnection {
                 }
                 throw ex;
             }
-
             if (socket != null || !highAvailability)
                 throw ex;
             if (switchToRandomAvailableSite())
@@ -549,10 +577,13 @@ public class DBConnection {
     }
 
     public Entity tryRun(String function, List<Entity> arguments, int priority, int parallelism) throws IOException {
+            return tryRun(function, arguments, priority, parallelism,0);
+    }
+    public Entity tryRun(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize) throws IOException {
         if (!mutex.tryLock())
             return null;
         try {
-            return run(function, arguments, priority, parallelism);
+            return run(function, arguments, priority, parallelism, fetchSize);
         } finally {
             mutex.unlock();
         }
@@ -567,6 +598,15 @@ public class DBConnection {
     }
 
     public Entity run(String function, List<Entity> arguments, int priority, int parallelism) throws IOException {
+        return run(function, arguments, priority, parallelism, 0);
+    }
+
+    public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize) throws IOException {
+        if(fetchSize>0){
+            if(fetchSize<8192){
+                throw new IOException("fetchSize must be greater than 8192");
+            }
+        }
         mutex.lock();
         try {
             boolean reconnect = false;
@@ -594,6 +634,9 @@ public class DBConnection {
                 out.writeBytes(String.valueOf(body.length()));
                 if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
                     out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                }
+                if(fetchSize>0){
+                    out.writeBytes("__" + String.valueOf(fetchSize));
                 }
                 out.writeByte('\n');
                 out.writeBytes(body);
@@ -678,7 +721,9 @@ public class DBConnection {
 
                 Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
                 Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
-
+                if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
+                    return new EntityBlockReader(in);
+                }
                 return factory.createEntity(df, dt, in);
             } catch (IOException ex) {
                 socket = null;

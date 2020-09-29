@@ -5,6 +5,7 @@ import java.io.IOException;
 
 public interface ExtendedDataOutput extends DataOutput {
 	void writeString(String str) throws IOException;
+	void writeBlob(String v) throws IOException;
 	void writeLong2(Long2 v) throws IOException;
 	void flush() throws IOException;
 	void writeShortArray(short[] A) throws IOException;
