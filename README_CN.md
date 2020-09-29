@@ -490,7 +490,7 @@ BasicTable table = (BasicTable)conn.run(String.format("select * from loadTable('
 ```
 * 对于大数据量的表，API提供了分段读取方法。(此方法仅适用于DolphinDB 1.20.5及其以上版本)
 
-java API提供了 EntityBlockReader 对象，在run方法中使用参数 fetchSize指定分段大小，通过read()方法一段段的读取数据，示例如下：
+Java API提供了 EntityBlockReader 对象，在run方法中使用参数 fetchSize指定分段大小，通过read()方法一段段的读取数据，示例如下：
 
 ```java
 DBConnection conn = new DBConnection();
