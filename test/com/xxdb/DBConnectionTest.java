@@ -5,12 +5,9 @@ import java.net.ConnectException;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
-
-import com.sun.org.apache.xml.internal.resolver.readers.ExtendedXMLCatalogReader;
 import com.xxdb.io.LittleEndianDataInputStream;
 import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.ProgressListener;
-import jdk.nashorn.internal.ir.AccessNode;
 import org.junit.*;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
