@@ -8,7 +8,7 @@
 <property name="src_jar" value="tmp\dolphindb.jar"/>
 <property name="lib.dir" value="lib"/>
 <property name="junit_jar" value="${lib.dir}/junit-4.12.jar"/>
-<property name="hamcrest_jar" value="${lib.dir}/hamcrest-core-1.3.jar"/>
+<property name="hamcrest_jar" value="${lib.dir}/hamcrest-library-1.3.jar"/>
 <path id="compile.path">
     <pathelement location="${lib.dir}/junit-4.12.jar"/>
 </path>
