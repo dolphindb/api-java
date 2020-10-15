@@ -22,6 +22,10 @@ public class DBConnectionTest {
     //  public static Integer PORT = 28848;
     public static String HOST;
     public static Integer PORT;
+    
+    public int getConnCount() throws IOException {
+        return ((BasicInt) conn.run("getClusterPerf().connectionNum[0]")).getInt();
+    }
 
     @Rule
     public ExpectedException thrown= ExpectedException.none();
@@ -48,9 +52,7 @@ public class DBConnectionTest {
 //        conn.close();
     }
 
-    public int getConnCount() throws IOException {
-        return ((BasicInt) conn.run("getClusterPerf().connectionNum[0]")).getInt();
-    }
+
 
     @Test
     public void testCharScalar() throws IOException {
