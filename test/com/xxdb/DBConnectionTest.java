@@ -51,7 +51,7 @@ public class DBConnectionTest {
     private int getConnCount() throws IOException {
         return ((BasicInt) conn.run("getClusterPerf().connectionNum[0]")).getInt();
     }
-    
+
     @Test
     public void testCharScalar() throws IOException {
         Scalar scalar = (Scalar) conn.run("'a'");
