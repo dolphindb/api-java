@@ -24,7 +24,7 @@ public class DBConnectionTest {
     public static Integer PORT;
 
     @Rule
-//    public ExpectedException thrown= ExpectedException.none();
+    public ExpectedException thrown= ExpectedException.none();
     private int getConnCount() throws IOException {
         return ((BasicInt) conn.run("getClusterPerf().connectionNum[0]")).getInt();
     }
@@ -1648,12 +1648,12 @@ public class DBConnectionTest {
         assertFalse(v.hasNext());
     }
 
-//    @Test
-//    public void TestFetchSize() throws IOException {
-//        thrown.expectMessage("fetchSize must be greater than 8192");
-//        thrown.expect(IOException.class);
-//        EntityBlockReader v = (EntityBlockReader) conn.run("table(1..22486 as id)", (ProgressListener) null, 4, 4, 8191);
-//    }
+    @Test
+    public void TestFetchSize() throws IOException {
+        thrown.expectMessage("fetchSize must be greater than 8192");
+        thrown.expect(IOException.class);
+        EntityBlockReader v = (EntityBlockReader) conn.run("table(1..22486 as id)", (ProgressListener) null, 4, 4, 8191);
+    }
     @Test
     public void TestFetchBigData() throws IOException {
         EntityBlockReader v = (EntityBlockReader) conn.run("table(1..5008600 as id)", (ProgressListener) null, 4, 4, 10000);
