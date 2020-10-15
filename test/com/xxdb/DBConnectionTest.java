@@ -22,21 +22,18 @@ public class DBConnectionTest {
     //  public static Integer PORT = 28848;
     public static String HOST;
     public static Integer PORT;
-    
+
     public int getConnCount() throws IOException {
         return ((BasicInt) conn.run("getClusterPerf().connectionNum[0]")).getInt();
     }
-
-    @Rule
-    public ExpectedException thrown= ExpectedException.none();
 
     @Before
     public void setUp() throws IOException {
         Properties props = new Properties();
         FileInputStream in= new FileInputStream( "test/com/xxdb/setup/settings.properties");
         props.load(in);
-        PORT =Integer.parseInt(props.getProperty ("PORT"));
-        HOST  =props.getProperty ("HOST");
+        PORT  = Integer.parseInt(props.getProperty ("PORT"));
+        HOST  = props.getProperty ("HOST");
         conn = new DBConnection();
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
@@ -52,7 +49,8 @@ public class DBConnectionTest {
 //        conn.close();
     }
 
-
+    @Rule
+    public ExpectedException thrown= ExpectedException.none();
 
     @Test
     public void testCharScalar() throws IOException {
