@@ -48,7 +48,7 @@ public class DBConnectionTest {
 //        conn.close();
     }
 
-    private int getConnCount() throws IOException {
+    public int getConnCount() throws IOException {
         return ((BasicInt) conn.run("getClusterPerf().connectionNum[0]")).getInt();
     }
 
