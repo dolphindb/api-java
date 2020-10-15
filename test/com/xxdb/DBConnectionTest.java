@@ -49,8 +49,8 @@ public class DBConnectionTest {
 //        conn.close();
     }
 
-    @Rule
-    public ExpectedException thrown= ExpectedException.none();
+//    @Rule
+//    public ExpectedException thrown= ExpectedException.none();
 
     @Test
     public void testCharScalar() throws IOException {
@@ -1417,12 +1417,12 @@ public class DBConnectionTest {
         }
     }
 
-   @Test
-   public void TestConnectErrorHostFormat() throws IOException {
-        DBConnection conn1 = new DBConnection();
-        thrown.expectMessage("fee");
-        conn1.connect("fee", PORT, "admin", "123456");
-    }
+//   @Test
+//   public void TestConnectErrorHostFormat() throws IOException {
+//        DBConnection conn1 = new DBConnection();
+//        thrown.expectMessage("fee");
+//        conn1.connect("fee", PORT, "admin", "123456");
+//    }
 
   /*  @Test(expected = ConnectException.class)
     public void TestConnectErrorHostValue() throws IOException {
@@ -1649,12 +1649,12 @@ public class DBConnectionTest {
         assertFalse(v.hasNext());
     }
 
-    @Test
-    public void TestFetchSize() throws IOException {
-        thrown.expectMessage("fetchSize must be greater than 8192");
-        thrown.expect(IOException.class);
-        EntityBlockReader v = (EntityBlockReader) conn.run("table(1..22486 as id)", (ProgressListener) null, 4, 4, 8191);
-    }
+//    @Test
+//    public void TestFetchSize() throws IOException {
+//        thrown.expectMessage("fetchSize must be greater than 8192");
+//        thrown.expect(IOException.class);
+//        EntityBlockReader v = (EntityBlockReader) conn.run("table(1..22486 as id)", (ProgressListener) null, 4, 4, 8191);
+//    }
     @Test
     public void TestFetchBigData() throws IOException {
         EntityBlockReader v = (EntityBlockReader) conn.run("table(1..5008600 as id)", (ProgressListener) null, 4, 4, 10000);
