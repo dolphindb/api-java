@@ -31,7 +31,7 @@
 
 <target name="compiletest" depends="buildsrc">
    <!-- <javac srcdir="${test}" destdir="${dest}"/> -->
-   <javac srcdir="${test}" classpath="${src_jar};${junit_jar}" destdir="${classes_test}" includeantruntime="false" classpathref="compile.path"/>
+   <javac srcdir="${test}" classpath="${src_jar};${junit_jar};${hamcrest_jar}" destdir="${classes_test}" includeantruntime="false" classpathref="compile.path"/>
 </target>
 
 <target name="buildtest" depends="compiletest">
