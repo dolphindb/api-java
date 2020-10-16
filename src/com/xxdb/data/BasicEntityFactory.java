@@ -33,6 +33,7 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[Entity.DATA_TYPE.DT_CODE.ordinal()] = new MetaCodeFactory();
 		factories[Entity.DATA_TYPE.DT_DATASOURCE.ordinal()] = new DataSourceFactory();
 		factories[Entity.DATA_TYPE.DT_RESOURCE.ordinal()] = new ResourceFactory();
+		factories[Entity.DATA_TYPE.DT_COMPRESS.ordinal()] = new CompressFactory();
 		factories[Entity.DATA_TYPE.DT_UUID.ordinal()] = new UuidFactory();
 		factories[Entity.DATA_TYPE.DT_INT128.ordinal()] = new Int128Factory();
 		factories[Entity.DATA_TYPE.DT_IPADDR.ordinal()] = new IPAddrFactory();
@@ -386,10 +387,13 @@ public class BasicEntityFactory implements EntityFactory{
 	private class SystemHandleFactory extends StringFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, Entity.DATA_TYPE.DT_HANDLE);}
 	}
-	
+
 	private class ResourceFactory extends StringFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, Entity.DATA_TYPE.DT_RESOURCE);}
 	}
-	
 
+	private class CompressFactory extends StringFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, Entity.DATA_TYPE.DT_COMPRESS);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicByteVector(Entity.DATA_FORM.DF_VECTOR, in);}
+	}
 }
