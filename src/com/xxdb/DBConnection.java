@@ -678,6 +678,9 @@ public class DBConnection {
                 for (int i = 0; i < arguments.size(); ++i)
                     arguments.get(i).write(out);
                 out.flush();
+
+                if (asynTask) return null;
+
                 headers = in.readLine().split(" ");
             } catch (IOException ex) {
                 if (reconnect) {
@@ -722,6 +725,8 @@ public class DBConnection {
                     for (int i = 0; i < arguments.size(); ++i)
                         arguments.get(i).write(out);
                     out.flush();
+
+                    if (asynTask) return null;
 
                     in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
                             new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
