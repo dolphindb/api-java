@@ -244,8 +244,13 @@ public class DBConnection {
         in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
                 new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
 
-        if (!userId.isEmpty() && !password.isEmpty())
-            login();
+        if (!userId.isEmpty() && !password.isEmpty()) {
+            if (asynTask) {
+                login(userId, password, false);
+            } else {
+                login();
+            }
+        }
 
         if (initialScript != null && initialScript.length() > 0)
             run(initialScript);
@@ -657,7 +662,13 @@ public class DBConnection {
                 out.writeBytes("API " + sessionID + " ");
                 out.writeBytes(String.valueOf(body.length()));
                 if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
-                    out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                    if(asynTask) {
+                        out.writeBytes(" / 2_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                    }else{
+                        out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                    }
+                }else if(asynTask){
+                    out.writeBytes(" / 2_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
                 }
                 if(fetchSize>0){
                     out.writeBytes("__" + String.valueOf(fetchSize));
@@ -698,7 +709,13 @@ public class DBConnection {
                     out.writeBytes("API " + sessionID + " ");
                     out.writeBytes(String.valueOf(body.length()));
                     if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
-                        out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                        if(asynTask) {
+                            out.writeBytes(" / 2_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                        }else{
+                            out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                        }
+                    }else if(asynTask){
+                        out.writeBytes(" / 2_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
                     }
                     out.writeByte('\n');
                     out.writeBytes(body);
