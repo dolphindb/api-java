@@ -2,6 +2,7 @@ package com.xxdb;
 
 import java.io.*;
 import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -221,7 +222,7 @@ public class DBConnectionTest {
         assertEquals("3", loop.getEntity(0).getString());
     }
 
-    @Test(expected = OutOfMemoryError.class)
+    @Test(expected = Exception.class)
     public void testScriptOutOfRange() throws IOException {
         conn.run("rand(1..10,10000000000000);");
     }
@@ -680,7 +681,7 @@ public class DBConnectionTest {
         fos.close();
     }
 
-    @Test
+   /* @Test
     public void testBasicTableDeserialize() throws IOException {
 
         File f = new File("F:\\tmp\\test.dat");
@@ -689,7 +690,7 @@ public class DBConnectionTest {
         LittleEndianDataInputStream dataStream = new LittleEndianDataInputStream(bis);
         short flag = dataStream.readShort();
         BasicTable table = new BasicTable(dataStream);
-    }
+    }*/
 
     @Test
     public void testDictionary() throws IOException {
@@ -1417,12 +1418,12 @@ public class DBConnectionTest {
         }
     }
 
-//   @Test
-//   public void TestConnectErrorHostFormat() throws IOException {
-//        DBConnection conn1 = new DBConnection();
-//        thrown.expectMessage("fee");
-//        conn1.connect("fee", PORT, "admin", "123456");
-//    }
+    @Test(expected = UnknownHostException.class)
+    public void TestConnectErrorHostFormat() throws IOException {
+         DBConnection conn1 = new DBConnection();
+         //thrown.expectMessage("fee");
+         conn1.connect("fee", PORT, "admin", "123456");
+     }
 
   /*  @Test(expected = ConnectException.class)
     public void TestConnectErrorHostValue() throws IOException {
@@ -1630,39 +1631,79 @@ public class DBConnectionTest {
     }
 
     @Test
-    public void TestFetchSizeLessThanRow() throws IOException {
-       EntityBlockReader v = (EntityBlockReader) conn.run("table(1..100 as id,take(`Q`EW`,100) as sym, take(date([1,NULL]),100) as date)", (ProgressListener) null, 4, 4, 10000);
-       BasicTable t = (BasicTable) v.read();
-       BasicTable t1 = (BasicTable) conn.run("table(1..100 as id,take(`Q`EW`,100) as sym, take(date([1,NULL]),100) as date)");
-       assertEquals(t1.getString(),t.getString());
-       EntityBlockReader v1 = (EntityBlockReader) conn.run("table(1..100 as id,take(`Q`EW`,100) as sym, take(date([1,NULL]),100) as date)", (ProgressListener) null, 4, 4, 10000);
-       v1.skipAll();
-       assertFalse(v1.hasNext());
-    }
-
-    @Test
-    public void TestFetchDataSkip() throws IOException {
-       // DBConnection conn = new DBConnection();
-       // conn.connect("192.168.1.106", 8848, "admin", "123456");
-        EntityBlockReader v = (EntityBlockReader)conn.run("table(1..222288 as id,take(`Q`EW`,222288) as sym, take(date([1,NULL]),222288) as date)",(ProgressListener) null,4,4,10000);
-        v.skipAll();
-        assertFalse(v.hasNext());
-    }
-
-//    @Test
-//    public void TestFetchSize() throws IOException {
-//        thrown.expectMessage("fetchSize must be greater than 8192");
-//        thrown.expect(IOException.class);
-//        EntityBlockReader v = (EntityBlockReader) conn.run("table(1..22486 as id)", (ProgressListener) null, 4, 4, 8191);
-//    }
-    @Test
-    public void TestFetchBigData() throws IOException {
-        EntityBlockReader v = (EntityBlockReader) conn.run("table(1..5008600 as id)", (ProgressListener) null, 4, 4, 10000);
+    public void TestFetchDataPartition() throws IOException {
+        String script="\n" +
+                "n=1000000\n" +
+                "ID=rand(100, n)\n" +
+                "dates=2017.08.07..2017.08.11\n" +
+                "date=rand(dates, n)\n" +
+                "x=rand(10.0, n)\n" +
+                "t1=table(ID, date, x);\n" +
+                "dbDate = database(, VALUE, 2017.08.07..2017.08.11)\n" +
+                "dbID=database(, RANGE, 0 50 100);\n" +
+                "if(existsDatabase(\"dfs://compoDB\")){dropDatabase(\"dfs://compoDB\")}\n" +
+                "db = database(\"dfs://compoDB\", COMPO, [dbDate, dbID])\n" +
+                "pt = db.createPartitionedTable(t1, `pt, `date`ID).append!(t1)";
+        conn.run(script);
+        EntityBlockReader v = (EntityBlockReader) conn.run("select * from loadTable(\"dfs://compoDB\", `pt)", (ProgressListener) null, 4, 4, 10000);
         BasicTable data = (BasicTable) v.read();
         while (v.hasNext()) {
             BasicTable t = (BasicTable) v.read();
             data = data.combine(t);
         }
-        Assert.assertEquals(5008600, data.rows());
+        Assert.assertEquals(1000000, data.rows());
+        conn.run("dropDatabase(\"dfs://compoDB\")");
     }
+
+    @Test(expected = IOException.class)
+    public void TestFetchDataWithoutSkip() throws IOException {
+        EntityBlockReader v = (EntityBlockReader)conn.run("table(1..12486 as id)",(ProgressListener) null,4,4,10000);
+        BasicTable data = (BasicTable)v.read();
+        //v.skipAll();
+        BasicTable t1 = (BasicTable)conn.run("table(1..100 as id1)");
+    }
+    @Test
+    public void TestFetchDataSkip() throws IOException {
+        EntityBlockReader v = (EntityBlockReader)conn.run("table(1..12486 as id)",(ProgressListener) null,4,4,10000);
+        BasicTable data = (BasicTable)v.read();
+        v.skipAll();
+        BasicTable t1 = (BasicTable)conn.run("table(1..100 as id1)");
+    }
+
+     @Test(expected = IOException.class)
+     public void TestFetchSizeLessThan1892() throws IOException {
+        EntityBlockReader v = (EntityBlockReader) conn.run("table(1..22486 as id)", (ProgressListener) null, 4, 4, 8191);
+     }
+
+    @Test
+    public void TestFetchBigData() throws IOException {
+        EntityBlockReader v = (EntityBlockReader) conn.run("table(1..50080000 as id)", (ProgressListener) null, 4, 4, 8200);
+        BasicTable data = (BasicTable) v.read();
+        while (v.hasNext()) {
+            BasicTable t = (BasicTable) v.read();
+            data = data.combine(t);
+        }
+        Assert.assertEquals(50080000, data.rows());
+    }
+    @Test
+    public void TestBigFetchSize() throws IOException {
+        EntityBlockReader v = (EntityBlockReader) conn.run("table(1..50000 as id)", (ProgressListener) null, 4, 4, 2000000);
+        BasicTable data = (BasicTable) v.read();
+        while (v.hasNext()) {
+            BasicTable t = (BasicTable) v.read();
+            data = data.combine(t);
+        }
+        Assert.assertEquals(50000, data.rows());
+    }
+    @Test
+    public void TestFetchSizeEqRows() throws IOException {
+        EntityBlockReader v = (EntityBlockReader) conn.run("table(1..20000 as id)", (ProgressListener) null, 4, 4, 20000);
+        BasicTable data = (BasicTable) v.read();
+        while (v.hasNext()) {
+            BasicTable t = (BasicTable) v.read();
+            data = data.combine(t);
+        }
+        Assert.assertEquals(20000, data.rows());
+    }
+
 }
