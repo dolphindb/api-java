@@ -227,7 +227,9 @@ public class DBConnection {
         out.writeBytes("API 0 ");
         out.writeBytes(String.valueOf(body.length()));
         if(asynTask){
-            out.writeBytes(" / 2_1_" + String.valueOf(4) + "_" + String.valueOf(2));
+            out.writeBytes(" / 4_1_" + String.valueOf(4) + "_" + String.valueOf(2));
+        }else{
+            out.writeBytes(" / 0_1_" + String.valueOf(4) + "_" + String.valueOf(2));
         }
         out.writeByte('\n');
         out.writeBytes(body);
@@ -469,14 +471,14 @@ public class DBConnection {
                 out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
                 if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
                     if(asynTask) {
-                        out.writeBytes(" / 2_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                        out.writeBytes(" / 4_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                     }else{
                         out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                     }
                 }else if (isUrgentCancelJob) {
                     out.writeBytes(" / 1_1_8_8");
                 }else if(asynTask){
-                    out.writeBytes(" / 2_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                    out.writeBytes(" / 4_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
                 }
                 if(fetchSize>0){
                     out.writeBytes("__" + String.valueOf(fetchSize));
@@ -516,14 +518,14 @@ public class DBConnection {
                     out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
                     if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
                         if(asynTask) {
-                            out.writeBytes(" / 2_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                            out.writeBytes(" / 4_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                         }else{
                             out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                         }
                     }else if (isUrgentCancelJob) {
                         out.writeBytes(" / 1_1_8_8");
                     }else if(asynTask){
-                        out.writeBytes(" / 2_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                        out.writeBytes(" / 4_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
                     }
                     if(fetchSize>0){
                         out.writeBytes("__" + String.valueOf(fetchSize));
@@ -679,12 +681,12 @@ public class DBConnection {
                 out.writeBytes(String.valueOf(body.length()));
                 if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
                     if(asynTask) {
-                        out.writeBytes(" / 2_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                        out.writeBytes(" / 4_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                     }else{
                         out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                     }
                 }else if(asynTask){
-                    out.writeBytes(" / 2_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                    out.writeBytes(" / 4_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
                 }
                 if(fetchSize>0){
                     out.writeBytes("__" + String.valueOf(fetchSize));
@@ -729,12 +731,12 @@ public class DBConnection {
                     out.writeBytes(String.valueOf(body.length()));
                     if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
                         if(asynTask) {
-                            out.writeBytes(" / 2_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                            out.writeBytes(" / 4_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                         }else{
                             out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                         }
                     }else if(asynTask){
-                        out.writeBytes(" / 2_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                        out.writeBytes(" / 4_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
                     }
                     out.writeByte('\n');
                     out.writeBytes(body);
@@ -832,6 +834,7 @@ public class DBConnection {
     }
 
     public void upload(final Map<String, Entity> variableObjectMap) throws IOException {
+        if(asynTask) throw new IOException("Asynchronous upload is not allowed");
         if (variableObjectMap == null || variableObjectMap.isEmpty())
             return;
 

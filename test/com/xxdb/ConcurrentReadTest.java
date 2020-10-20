@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.Random;
 
-public class ConcurrentRead implements Runnable{
+public class ConcurrentReadTest implements Runnable{
     private static DBConnection conn;
     public static String HOST ;
     public static Integer PORT ;
@@ -68,7 +68,7 @@ public class ConcurrentRead implements Runnable{
     public static void main(String[] args) throws InterruptedException, IOException {
         setUp();
         for (int i=0;i<100;i++){
-            new Thread(new ConcurrentRead()).start();
+            new Thread(new ConcurrentReadTest()).start();
         }
         Thread.sleep(1000);
     }
