@@ -34,7 +34,8 @@ public class DBConnectionTest {
         props.load(in);
         PORT  = Integer.parseInt(props.getProperty ("PORT"));
         HOST  = props.getProperty ("HOST");
-        conn = new DBConnection();
+//        conn = new DBConnection();
+        conn = new DBConnection(false,true);
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
                 throw new IOException("Failed to connect to 2xdb server");

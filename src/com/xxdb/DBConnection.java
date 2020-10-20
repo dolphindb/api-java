@@ -5,6 +5,8 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.PublicKey;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -22,6 +24,11 @@ import com.xxdb.io.ExtendedDataOutput;
 import com.xxdb.io.LittleEndianDataInputStream;
 import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.ProgressListener;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * Sets up a connection to DolphinDB server through TCP/IP protocol
@@ -68,7 +75,7 @@ public class DBConnection {
     private boolean HAReconnect = false;
     private int connTimeout = 0;
     private boolean asynTask = false;
-
+    private boolean isUseSSL = false;
     public DBConnection() {
         factory = new BasicEntityFactory();
         mutex = new ReentrantLock();
@@ -81,7 +88,13 @@ public class DBConnection {
         sessionID = "";
         asynTask = asynchronousTask;
     }
-
+    public DBConnection(boolean asynchronousTask, boolean useSSL) {
+        factory = new BasicEntityFactory();
+        mutex = new ReentrantLock();
+        sessionID = "";
+        asynTask = asynchronousTask;
+        isUseSSL = useSSL;
+    }
     public boolean isBusy() {
         if (!mutex.tryLock())
             return true;
@@ -191,7 +204,10 @@ public class DBConnection {
 
     private boolean connect() throws IOException {
         try {
-            socket = new Socket(hostName, port);
+            if(isUseSSL)
+                socket = getSSLSocketFactory().createSocket(hostName,port);
+            else
+                socket = new Socket(hostName, port);
         } catch (ConnectException ex) {
             if (HAReconnect)
                 return false;
@@ -975,4 +991,32 @@ public class DBConnection {
     public boolean isConnected() {
         return socket != null && socket.isConnected();
     }
+
+    private SSLSocketFactory getSSLSocketFactory(){
+        try {
+            SSLContext context = SSLContext.getInstance("SSL");
+
+            // 初始化
+            context.init(null,
+                    new TrustManager[]{new X509TrustManager() {
+                        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+
+                        }
+
+                        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+
+                        }
+
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return null;
+                        }
+                    }
+                    },
+                    new java.security.SecureRandom());
+            return context.getSocketFactory();
+        }catch (Exception ex){
+            ex.printStackTrace();
+            return null;
+        }
+     }
 }
