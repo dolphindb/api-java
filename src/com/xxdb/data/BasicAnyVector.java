@@ -3,7 +3,6 @@ package com.xxdb.data;
 import java.io.IOException;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * 
@@ -32,10 +31,6 @@ public class BasicAnyVector extends AbstractVector{
 			short flag = in.readShort();
 			int form = flag>>8;
 			int type = flag & 0xff;
-			//if (form != 1)
-				//assert (form == 1);
-			//if (type != 4)
-				//assert(type == 4);
 			Entity obj = factory.createEntity(DATA_FORM.values()[form], DATA_TYPE.values()[type], in);
 			values[i] = obj;
 		}
@@ -63,7 +58,7 @@ public class BasicAnyVector extends AbstractVector{
 
 	@Override
 	public Vector combine(Vector vector) {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
