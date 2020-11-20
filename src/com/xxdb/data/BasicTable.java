@@ -193,7 +193,24 @@ public class BasicTable extends AbstractEntity implements Table{
 	    	resultStr.append("...\n");
 	    return resultStr.toString();
 	}
-	
+
+	public String getRowJson(int rowIndex){
+		StringBuilder jsonStr = new StringBuilder();
+		if(rowIndex<rows()){
+			jsonStr.append("{");
+			for(int i=0;i<names_.size();i++){
+				jsonStr.append(names_.get(i));
+				jsonStr.append(":");
+				jsonStr.append(columns_.get(i).get(rowIndex).getString());
+				if(i<names_.size()-1)
+					jsonStr.append(",");
+			}
+			jsonStr.delete(jsonStr.length()-1,jsonStr.length()-1);
+			jsonStr.append("}");
+		}
+		return jsonStr.toString();
+	}
+
 	public void write(ExtendedDataOutput out) throws IOException{
 		int flag = (DATA_FORM.DF_TABLE.ordinal() << 8) + getDataType().ordinal();
 		out.writeShort(flag);
