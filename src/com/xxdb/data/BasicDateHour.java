@@ -57,7 +57,12 @@ public class BasicDateHour extends BasicInt {
 		else
 			return getDateHour().format(format);
 	}
-	
+
+	@Override
+	public String getJsonString() {
+		if (isNull()) return "null";
+		return "\"" + getString() + "\"";
+	}
 	@Override
 	public boolean equals(Object o){
 		if(! (o instanceof BasicDateHour) || o == null)

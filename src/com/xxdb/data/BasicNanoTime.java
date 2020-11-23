@@ -56,7 +56,11 @@ public class BasicNanoTime extends BasicLong{
 		else
 			return getNanoTime().format(format);
 	}
-	
+	@Override
+	public String getJsonString() {
+		if (isNull()) return "null";
+		return "\"" + getString() + "\"";
+	}
 	@Override
 	public boolean equals(Object o){
 		if(! (o instanceof BasicNanoTime) || o == null)

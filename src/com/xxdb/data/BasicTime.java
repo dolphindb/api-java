@@ -57,7 +57,11 @@ public class BasicTime extends BasicInt{
 		else
 			return getTime().format(format);
 	}
-	
+	@Override
+	public String getJsonString() {
+		if (isNull()) return "null";
+		return "\"" + getString() + "\"";
+	}
 	@Override
 	public boolean equals(Object o){
 		if(! (o instanceof BasicTime) || o == null)

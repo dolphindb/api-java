@@ -57,7 +57,13 @@ public class BasicTimestamp extends BasicLong{
 		else
 			return getTimestamp().format(format);
 	}
-	
+
+	@Override
+	public String getJsonString() {
+		if (isNull()) return "null";
+		return "\"" + getString() + "\"";
+	}
+
 	@Override
 	public boolean equals(Object o){
 		if(! (o instanceof BasicTimestamp) || o == null)

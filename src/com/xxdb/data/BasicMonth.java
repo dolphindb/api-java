@@ -61,7 +61,11 @@ public class BasicMonth extends BasicInt{
 		else
 			return getMonth().format(format);
 	}
-	
+	@Override
+	public String getJsonString() {
+		if (isNull()) return "null";
+		return "\"" + getString() + "\"";
+	}
 	@Override
 	public boolean equals(Object o){
 		if(! (o instanceof BasicMonth) || o == null)

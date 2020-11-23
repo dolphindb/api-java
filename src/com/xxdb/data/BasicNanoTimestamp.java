@@ -57,7 +57,11 @@ public class BasicNanoTimestamp extends BasicLong{
 		else
 			return getNanoTimestamp().format(format);
 	}
-	
+	@Override
+	public String getJsonString() {
+		if (isNull()) return "null";
+		return "\"" + getString() + "\"";
+	}
 	@Override
 	public boolean equals(Object o){
 		if(! (o instanceof BasicNanoTimestamp) || o == null)
