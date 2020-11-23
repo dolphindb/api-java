@@ -6,6 +6,8 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
+
+import com.alibaba.fastjson.JSONObject;
 import com.xxdb.io.LittleEndianDataInputStream;
 import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.ProgressListener;
@@ -1707,4 +1709,37 @@ public class DBConnectionTest {
         Assert.assertEquals(20000, data.rows());
     }
 
+    @Test
+    public void TestgetRowJsonString() throws IOException {
+        StringBuilder sb =new StringBuilder();
+        sb.append("syms=`IBM`C`MS`MSFT`JPM`ORCL\n");
+        sb.append("mytrades=table(take(syms, 10) as sym)\n");
+        sb.append("select * from mytrades");
+        BasicTable table = (BasicTable)conn.run(sb.toString());
+        String t = table.getRowJson(1);
+        JSONObject json = new JSONObject().parseObject(t);
+
+    }
+    @Test
+    public void TestgetRowJsonnumber() throws IOException {
+        StringBuilder sb =new StringBuilder();
+        sb.append("mytrades=table(take([1.01,5.2,0.6,-8.2,double()], 5) as v1,1..5 as v2,take([1.01f,5.2f,0.6f,-8.2f,float()], 5) as v3,take(['a','2',' ','#'],5) as v4,take([true,false],5) as v5)\n");
+        sb.append("select * from mytrades");
+        BasicTable table = (BasicTable)conn.run(sb.toString());
+        Double[] darray ={1.01,5.2,0.6,-8.2,null};
+        Float[] farray ={1.01f,5.2f,0.6f,-8.2f,null};
+        String[] sarray={"a","2"," ","#","a"};
+        String t = table.getRowJson(4);
+        JSONObject json = new JSONObject().parseObject(t);
+        json.getDouble("v1");
+       /* for (int i =0;i<5;i++) {
+            String t = table.getRowJson(i);
+            JSONObject json = new JSONObject().parseObject(t);
+            assertEquals(0, json.getDouble("v1").compareTo(darray[i]));
+            assertEquals(0, json.getInteger("v2").compareTo(i+1));
+            assertEquals(0, json.getFloat("v3").compareTo(farray[i]));
+            assertEquals(0, json.getString("v4").compareTo(sarray[i]));
+        }*/
+
+    }
 }
