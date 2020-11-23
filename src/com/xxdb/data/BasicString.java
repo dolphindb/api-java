@@ -86,6 +86,7 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 
 	@Override
 	public String getJsonString() {
+		if(isNull()) return "null";
 		return "\"" + getString() + "\"";
 	}
 

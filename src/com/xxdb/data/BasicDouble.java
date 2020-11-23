@@ -97,6 +97,7 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 
 	@Override
 	public String getJsonString() {
+		if(isNull()) return "null";
 		return getString();
 	}
 

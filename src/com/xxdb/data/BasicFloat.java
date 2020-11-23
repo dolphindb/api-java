@@ -97,6 +97,7 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 
 	@Override
 	public String getJsonString() {
+		if(isNull()) return "null";
 		return getString();
 	}
 

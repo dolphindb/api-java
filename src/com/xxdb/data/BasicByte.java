@@ -97,6 +97,7 @@ public class BasicByte extends AbstractScalar implements Comparable<BasicByte>{
 
 	@Override
 	public String getJsonString() {
+		if(isNull()) return "null";
 		return getString();
 	}
 

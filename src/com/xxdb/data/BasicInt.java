@@ -93,6 +93,7 @@ public class BasicInt extends AbstractScalar implements Comparable<BasicInt>{
 
 	@Override
 	public String getJsonString() {
+		if(isNull()) return "null";
 		return getString();
 	}
 

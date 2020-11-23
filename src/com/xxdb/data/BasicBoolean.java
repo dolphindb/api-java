@@ -91,6 +91,7 @@ public class BasicBoolean extends AbstractScalar implements Comparable<BasicBool
 
 	@Override
 	public String getJsonString() {
+		if(isNull()) return "null";
 		return getString();
 	}
 

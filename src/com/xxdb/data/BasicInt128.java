@@ -84,6 +84,7 @@ public class BasicInt128 extends AbstractScalar {
 
 	@Override
 	public String getJsonString() {
+		if(isNull()) return "null";
 		return "\"" + getString() + "\"";
 	}
 
