@@ -22,7 +22,7 @@ public class DBConnectionTest {
 
     private DBConnection conn;
       public static String HOST = "localhost";
-     public static Integer PORT = 8848;
+     public static Integer PORT = 8849;
     //public static String HOST;
   //  public static Integer PORT;
 
@@ -1712,32 +1712,46 @@ public class DBConnectionTest {
     @Test
     public void TestgetRowJsonString() throws IOException {
         StringBuilder sb =new StringBuilder();
-        sb.append("mytrades=table(take(`IBM`C`MS`MSFT`JPM`ORCL, 10) as sym)\n");
+        sb.append("mytrades=table(take(`IBM`C`MS`MSFT`JPM`, 6) as sym)\n");
         sb.append("select * from mytrades");
         BasicTable table = (BasicTable)conn.run(sb.toString());
-        String t = table.getRowJson(0);
-        JSONObject json = new JSONObject().parseObject(t);
+        String[] s = {"IBM","C","MS","MSFT","JPM",null};
+        for (int i=0;i<s.length;i++) {
+            String t = table.getRowJson(i);
+            JSONObject json = new JSONObject().parseObject(t);
+            assertEquals(s[i],json.getString("sym"));
+        }
 
     }
     @Test
     public void TestgetRowJson() throws IOException {
         StringBuilder sb =new StringBuilder();
-        sb.append("mytrades=table(take([1.01,5.2,0.6,-8.2,double()], 5) as v1,1..5 as v2,take([1.01f,5.2f,0.6f,-8.2f,float()], 5)" +
-                " as v3,take(['a','2',' ','#'],5) as v4,take([true,false],5) as v5)\n");
+        sb.append("mytrades=table(take([1.01,5.2,0.6,-8.2,double()], 5) as v1" +
+                ",[1,2,3,4,int()] as v2,take([1.01f,5.2f,0.6f,-8.2f,float()], 5)" +
+                " as v3,take(['a','2',' ','#',char()],5) as v4,take([true,false,false,false,bool()],5) as v5)\n");
         sb.append("select * from mytrades");
         BasicTable table = (BasicTable)conn.run(sb.toString());
         Double[] darray ={1.01,5.2,0.6,-8.2,null};
         Float[] farray ={1.01f,5.2f,0.6f,-8.2f,null};
         String[] sarray={"a","2"," ","#","a"};
-
-       /* for (int i =0;i<5;i++) {
+        boolean[] barray={true,false,false,false};
+        for (int i =0;i<4;i++) {
             String t = table.getRowJson(i);
             JSONObject json = new JSONObject().parseObject(t);
             assertEquals(0, json.getDouble("v1").compareTo(darray[i]));
             assertEquals(0, json.getInteger("v2").compareTo(i+1));
             assertEquals(0, json.getFloat("v3").compareTo(farray[i]));
             assertEquals(0, json.getString("v4").compareTo(sarray[i]));
-        }*/
+            assertEquals(0, json.getBoolean("v5").compareTo(barray[i]));
+        }
+        String t = table.getRowJson(4);
+        JSONObject json = new JSONObject().parseObject(t);
+        assertNull(json.getJSONObject("v1"));
+        assertNull(json.getJSONObject("v2"));
+        assertNull(json.getJSONObject("v3"));
+        assertNull(json.getJSONObject("v4"));
+        assertNull(json.getJSONObject("v5"));
+
     }
     @Test
     public void TestgetRowJsonTime() throws IOException {
@@ -1755,23 +1769,31 @@ public class DBConnectionTest {
     }
     @Test
     public void TestgetRowJsonOtherTypes() throws IOException {
-        conn.run("t=table(take(uuid(\"5d212a78-cc48-e3b1-4235-b4d91473ee87\"),10) as val)");
+        conn.run("t=table(take([uuid(\"5d212a78-cc48-e3b1-4235-b4d91473ee87\"),uuid()],2) as val)");
         BasicTable table = (BasicTable)conn.run("select * from t ");
-        for (int j =0;j<10;j++) {
-            String t = table.getRowJson(j);
-            JSONObject json = new JSONObject().parseObject(t);
-        }
-        conn.run("t=table(take(ipaddr(\"192.168.1.13\"),10) as val)");
+        String t = table.getRowJson(0);
+        JSONObject json = new JSONObject().parseObject(t);
+        assertEquals(0,json.getString("val").compareTo("5d212a78-cc48-e3b1-4235-b4d91473ee87"));
+        t = table.getRowJson(1);
+        json = new JSONObject().parseObject(t);
+        assertNull(json.getJSONObject("val"));
+
+        conn.run("t=table(take([ipaddr(\"192.168.1.13\"),ipaddr()],10) as val)");
         BasicTable table1 = (BasicTable)conn.run("select * from t ");
-        for (int j =0;j<10;j++) {
-            String t = table1.getRowJson(j);
-            JSONObject json = new JSONObject().parseObject(t);
-        }
-        conn.run("t=table(take(int128(\"e1671797c52e15f763380b45e841ec32\"),10) as val)");
+        t = table1.getRowJson(0);
+        json = new JSONObject().parseObject(t);
+        assertEquals(0,json.getString("val").compareTo("192.168.1.13"));
+        t = table1.getRowJson(1);
+        json = new JSONObject().parseObject(t);
+        assertNull(json.getJSONObject("val"));
+
+        conn.run("t=table(take([int128(\"e1671797c52e15f763380b45e841ec32\"),int128()],2) as val)");
         BasicTable table2 = (BasicTable)conn.run("select * from t ");
-        for (int j =0;j<10;j++) {
-            String t = table2.getRowJson(j);
-            JSONObject json = new JSONObject().parseObject(t);
-        }
+        t = table2.getRowJson(0);
+        json = new JSONObject().parseObject(t);
+        assertEquals(0,json.getString("val").compareTo("e1671797c52e15f763380b45e841ec32"));
+        t = table2.getRowJson(1);
+        json = new JSONObject().parseObject(t);
+        assertNull(json.getJSONObject("val"));
     }
 }
