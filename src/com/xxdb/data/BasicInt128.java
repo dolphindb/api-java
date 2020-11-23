@@ -81,7 +81,12 @@ public class BasicInt128 extends AbstractScalar {
 	public int hashBucket(int buckets){
 		return value.hashBucket(buckets);
 	}
-	
+
+	@Override
+	public String getJsonString() {
+		return "\"" + getString() + "\"";
+	}
+
 	@Override
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
 		out.writeLong2(value);

@@ -57,7 +57,12 @@ public class Void extends AbstractScalar{
 	public int hashBucket(int buckets){
 		return -1;
 	}
-	
+
+	@Override
+	public String getJsonString() {
+		return getString();
+	}
+
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeBoolean(false); //explicit null value
 	}

@@ -69,7 +69,8 @@ public class BasicByte extends AbstractScalar implements Comparable<BasicByte>{
 		else
 			return String.valueOf(value);
 	}
-	
+
+
 	@Override
 	public boolean equals(Object o){
 		if(! (o instanceof BasicByte) || o == null)
@@ -93,7 +94,12 @@ public class BasicByte extends AbstractScalar implements Comparable<BasicByte>{
 			return (int)((4294967296l + value) % buckets);
 		}
 	}
-	
+
+	@Override
+	public String getJsonString() {
+		return getString();
+	}
+
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeByte(value);
 	}

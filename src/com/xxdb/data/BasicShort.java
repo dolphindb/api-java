@@ -90,7 +90,12 @@ public class BasicShort extends AbstractScalar implements Comparable<BasicShort>
 			return (int)((4294967296l + value) % buckets);
 		}
 	}
-	
+
+	@Override
+	public String getJsonString() {
+		return getString();
+	}
+
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeShort(value);
 	}
