@@ -1757,14 +1757,15 @@ public class DBConnectionTest {
     public void TestgetRowJsonTime() throws IOException {
         String[] type = {"time", "date", "month", "minute", "second", "datetime", "timestamp", "nanotime", "nanotimestamp", "datehour"};
         for (int i = 0; i < type.length; i++) {
-            conn.run("t=table(take(" + type[i] + "([1,2]),10) as id)");
+            conn.run("t=table(take(" + type[i] + "([1,NULL]),1) as id)");
+            String s = conn.run(type[i] +"(1)").toString();
             BasicTable table = (BasicTable)conn.run("select * from t ");
-            for (int j =0;j<10;j++) {
-                String t = table.getRowJson(j);
-                JSONObject json = new JSONObject().parseObject(t);
-                System.out.println(json);
-                //assertEquals(0, json.getDouble("v1").compareTo(darray[i]));
-            }
+            String t = table.getRowJson(0);
+            JSONObject json = new JSONObject().parseObject(t);
+            assertEquals(0, json.getString("id").compareTo(s));
+            t = table.getRowJson(1);
+            json = new JSONObject().parseObject(t);
+            assertNull(json.getJSONObject("id"));
         }
     }
     @Test
