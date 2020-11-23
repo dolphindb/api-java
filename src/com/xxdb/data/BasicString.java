@@ -83,7 +83,12 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 	public int hashBucket(int buckets){
 		return hashBucket(value, buckets);
 	}
-	
+
+	@Override
+	public String getJsonString() {
+		return "\"" + getString() + "\"";
+	}
+
 	public static int hashBucket(String str, int buckets){
 		int length = str.length();
 		

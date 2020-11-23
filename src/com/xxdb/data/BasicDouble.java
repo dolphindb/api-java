@@ -94,7 +94,12 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 	public int hashBucket(int buckets){
 		return -1;
 	}
-	
+
+	@Override
+	public String getJsonString() {
+		return getString();
+	}
+
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeDouble(value);
 	}

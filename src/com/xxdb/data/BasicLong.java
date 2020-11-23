@@ -90,7 +90,12 @@ public class BasicLong extends AbstractScalar implements Comparable<BasicLong>{
 			return (int)(((Long.MAX_VALUE % buckets) +2 + ((Long.MAX_VALUE + value) % buckets)) % buckets);
 		}
 	}
-	
+
+	@Override
+	public String getJsonString() {
+		return getString();
+	}
+
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeLong(value);
 	}
