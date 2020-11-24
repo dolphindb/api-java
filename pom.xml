@@ -147,7 +147,7 @@
                     </dependency>
                 </dependencies>
             </plugin>
-            <!-- Nexus staging
+            <!-- Nexus staging -->
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -158,7 +158,7 @@
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
-            </plugin> -->
+            </plugin>
         </plugins>
     </build>
 </project>
