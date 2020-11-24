@@ -21,10 +21,10 @@ import static org.junit.Assert.*;
 public class DBConnectionTest {
 
     private DBConnection conn;
-      public static String HOST = "localhost";
-     public static Integer PORT = 8849;
-    //public static String HOST;
-  //  public static Integer PORT;
+    // public static String HOST = "localhost";
+    // public static Integer PORT = 8849;
+    public static String HOST;
+    public static Integer PORT;
 
     public int getConnCount() throws IOException {
         return ((BasicInt) conn.run("getClusterPerf().connectionNum[0]")).getInt();
@@ -33,12 +33,12 @@ public class DBConnectionTest {
     @Before
     public void setUp() throws IOException {
         Properties props = new Properties();
-      /*  FileInputStream in= new FileInputStream( "test/com/xxdb/setup/settings.properties");
+        FileInputStream in= new FileInputStream( "test/com/xxdb/setup/settings.properties");
         props.load(in);
         PORT  = Integer.parseInt(props.getProperty ("PORT"));
-        HOST  = props.getProperty ("HOST");*/
+        HOST  = props.getProperty ("HOST");
 //        conn = new DBConnection();
-        conn = new DBConnection(false);
+        conn = new DBConnection(false,true);
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
                 throw new IOException("Failed to connect to 2xdb server");
@@ -225,7 +225,7 @@ public class DBConnectionTest {
         assertEquals("3", loop.getEntity(0).getString());
     }
 
-    @Test(expected = Exception.class)
+    @Test(expected = OutOfMemoryError.class)
     public void testScriptOutOfRange() throws IOException {
         conn.run("rand(1..10,10000000000000);");
     }
@@ -1757,7 +1757,7 @@ public class DBConnectionTest {
     public void TestgetRowJsonTime() throws IOException {
         String[] type = {"time", "date", "month", "minute", "second", "datetime", "timestamp", "nanotime", "nanotimestamp", "datehour"};
         for (int i = 0; i < type.length; i++) {
-            conn.run("t=table(take(" + type[i] + "([1,NULL]),1) as id)");
+            conn.run("t=table(take(" + type[i] + "([1,NULL]),2) as id)");
             String s = conn.run(type[i] +"(1)").toString();
             BasicTable table = (BasicTable)conn.run("select * from t ");
             String t = table.getRowJson(0);
