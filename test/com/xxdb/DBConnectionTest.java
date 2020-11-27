@@ -194,7 +194,7 @@ public class DBConnectionTest {
             assertEquals("",vectornull.getString(i));
         }
         assertEquals(3, size);
-        String[] l = null;
+        String[] l = {null,null};
         BasicStringVector v=new BasicStringVector(l);
     }
 
@@ -244,7 +244,7 @@ public class DBConnectionTest {
         BasicBooleanVector vector = (BasicBooleanVector) conn.run("rand(1b 0b true false,10)");
         int size = vector.rows();
         assertEquals(10, size);
-        byte[] l = null;
+        byte[] l = {};
         BasicBooleanVector v=new BasicBooleanVector(l);
     }
 
@@ -253,7 +253,7 @@ public class DBConnectionTest {
         BasicByteVector vector = (BasicByteVector) conn.run("rand('d' '1' '@',10)");
         int size = vector.rows();
         assertEquals(10, size);
-        byte[] l = null;
+        byte[] l = {};
         BasicByteVector v=new BasicByteVector(l);
     }
 
@@ -262,7 +262,7 @@ public class DBConnectionTest {
         BasicStringVector vector = (BasicStringVector) conn.run("rand(`IBM`MSFT`GOOG`BIDU,10)");
         int size = vector.rows();
         assertEquals(10, size);
-        String[] l = null;
+        String[] l = {null,null};
         BasicStringVector v=new BasicStringVector(l);
     }
 
@@ -271,7 +271,7 @@ public class DBConnectionTest {
         BasicIntVector vector = (BasicIntVector) conn.run("rand(10000,1000000)");
         int size = vector.rows();
         assertEquals(1000000, size);
-        int[] l = null;
+        int[] l = {};
         BasicIntVector v=new BasicIntVector(l);
     }
 
@@ -280,7 +280,7 @@ public class DBConnectionTest {
         BasicDoubleVector vector = (BasicDoubleVector) conn.run("rand(10.0,10)");
         int size = vector.rows();
         assertEquals(10, size);
-        double[] l = null;
+        double[] l = {};
         BasicDoubleVector v=new BasicDoubleVector(l);
     }
 
@@ -289,7 +289,7 @@ public class DBConnectionTest {
         BasicFloatVector vector = (BasicFloatVector) conn.run("rand(10.0f,10)");
         int size = vector.rows();
         assertEquals(10, size);
-        float[] l = null;
+        float[] l = {};
         BasicFloatVector v=new BasicFloatVector(l);
     }
 
@@ -298,7 +298,7 @@ public class DBConnectionTest {
         BasicLongVector vector = (BasicLongVector) conn.run("rand(0l..11l,10)");
         int size = vector.rows();
         assertEquals(10, size);
-        long[] l = null;
+        long[] l = {};
         BasicLongVector v=new BasicLongVector(l);
     }
 
@@ -307,7 +307,7 @@ public class DBConnectionTest {
         BasicShortVector vector = (BasicShortVector) conn.run("rand(1h..22h,10)");
         int size = vector.rows();
         assertEquals(10, size);
-        short[] l = null;
+        short[] l = {};
         BasicShortVector v=new BasicShortVector(l);
     }
 
@@ -316,7 +316,7 @@ public class DBConnectionTest {
         BasicDateVector vector = (BasicDateVector) conn.run("2012.10.01 +1..10");
         int size = vector.rows();
         assertEquals(10, size);
-        int[] l = null;
+        int[] l = {};
         BasicDateVector v=new BasicDateVector(l);
     }
 
@@ -325,7 +325,7 @@ public class DBConnectionTest {
         BasicMonthVector vector = (BasicMonthVector) conn.run("2012.06M +1..10");
         int size = vector.rows();
         assertEquals(10, size);
-        int[] l = null;
+        int[] l = {};
         BasicMonthVector v=new BasicMonthVector(l);
     }
 
@@ -334,7 +334,7 @@ public class DBConnectionTest {
         BasicTimeVector vector = (BasicTimeVector) conn.run("13:30:10.008 +1..10");
         int size = vector.rows();
         assertEquals(10, size);
-        int[] l = null;
+        int[] l = {};
         BasicTimeVector v=new BasicTimeVector(l);
     }
 
@@ -343,7 +343,7 @@ public class DBConnectionTest {
         BasicMinuteVector vector = (BasicMinuteVector) conn.run("13:30m +1..10");
         int size = vector.rows();
         assertEquals(10, size);
-        int[] l = null;
+        int[] l = {};
         BasicMinuteVector v=new BasicMinuteVector(l);
     }
 
@@ -352,7 +352,7 @@ public class DBConnectionTest {
         BasicSecondVector vector = (BasicSecondVector) conn.run("13:30:10 +1..10");
         int size = vector.rows();
         assertEquals(10, size);
-        int[] l = null;
+        int[] l = {};
         BasicSecondVector v=new BasicSecondVector(l);
     }
 
@@ -361,7 +361,7 @@ public class DBConnectionTest {
         BasicTimestampVector vector = (BasicTimestampVector) conn.run("2012.06.13 13:30:10.008 +1..10");
         int size = vector.rows();
         assertEquals(10, size);
-        long[] l = null;
+        long[] l = {};
         BasicTimestampVector v=new BasicTimestampVector(l);
     }
 
@@ -370,8 +370,9 @@ public class DBConnectionTest {
         BasicNanoTimeVector vector = (BasicNanoTimeVector) conn.run("13:30:10.008007006 +1..10");
         int size = vector.rows();
         assertEquals(10, size);
-        long[] l = null;
+        long[] l = {};
         BasicNanoTimeVector v=new BasicNanoTimeVector(l);
+        
     }
 
     @Test
@@ -379,7 +380,7 @@ public class DBConnectionTest {
         BasicNanoTimestampVector vector = (BasicNanoTimestampVector) conn.run("2012.06.13 13:30:10.008007006 +1..10");
         int size = vector.rows();
         assertEquals(10, size);
-        long[] l = null;
+        long[] l = {};
         BasicNanoTimestampVector v=new BasicNanoTimestampVector(l);
     }
 
@@ -389,7 +390,7 @@ public class DBConnectionTest {
         BasicDateTimeVector vector = (BasicDateTimeVector) conn.run("2012.10.01 15:00:04 + (rand(10000,10))");
         int size = vector.rows();
         assertEquals(10, size);
-        int[] l = null;
+        int[] l = {};
         BasicDateTimeVector v=new BasicDateTimeVector(l);
     }
 
@@ -398,7 +399,7 @@ public class DBConnectionTest {
         BasicUuidVector vector = (BasicUuidVector) conn.run("take(uuid('5d212a78-cc48-e3b1-4235-b4d91473ee87'),10)");
         int size = vector.rows();
         assertEquals(10, size);
-        Long2[] l = null;
+        Long2[] l = {};
         BasicUuidVector v=new BasicUuidVector(l);
     }
 
@@ -407,7 +408,7 @@ public class DBConnectionTest {
         BasicDateHourVector vector = (BasicDateHourVector) conn.run("datehour('2012.06.13T13')+1..10");
         int size = vector.rows();
         assertEquals(10, size);
-        int[] l = null;
+        int[] l = {};
         BasicDateHourVector v=new BasicDateHourVector(l);
     }
 
@@ -416,7 +417,7 @@ public class DBConnectionTest {
         BasicIPAddrVector vector = (BasicIPAddrVector) conn.run("rand(ipaddr('192.168.0.1'),10)");
         int size = vector.rows();
         assertEquals(10, size);
-        Long2[] l = null;
+        Long2[] l = {};
         BasicIPAddrVector v=new BasicIPAddrVector(l);
     }
 
@@ -425,7 +426,7 @@ public class DBConnectionTest {
         BasicInt128Vector vector = (BasicInt128Vector) conn.run("rand(int128('e1671797c52e15f763380b45e841ec32'),10)");
         int size = vector.rows();
         assertEquals(10, size);
-        Long2[] l = null;
+        Long2[] l = {};
         BasicInt128Vector v=new BasicInt128Vector(l);
     }
 
