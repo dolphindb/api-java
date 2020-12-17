@@ -108,7 +108,7 @@ public void testFunction() throws IOException{
     y.setDouble(0, 2.5);
     y.setDouble(1, 3.5);
     y.setDouble(2, 5);
-    args.Add(y);
+    args.add(y);
     Vector result = (Vector)conn.run("add{x}", args);
     System.out.println(result.getString());
 }
