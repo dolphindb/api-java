@@ -82,8 +82,15 @@ public class BasicStringMatrix extends AbstractMatrix{
 	protected void readMatrixFromInputStream(int rows, int columns,	ExtendedDataInput in)  throws IOException{
 		int size = rows * columns;
 		values =new String[size];
-		for(int i=0; i<size; ++i)
-			values[i] = in.readString();
+		if(extended){
+			SymbolBase symbase = new SymbolBase(in);
+			for(int i=0; i<size; ++i)
+				values[i] = symbase.getSymbol(in.readInt());
+		}
+		else{
+			for(int i=0; i<size; ++i)
+				values[i] = in.readString();
+		}
 	}
 
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{

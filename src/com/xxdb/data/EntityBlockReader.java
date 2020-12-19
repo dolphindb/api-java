@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.xxdb.data.Entity.DATA_TYPE;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -26,7 +27,10 @@ public class EntityBlockReader implements Entity {
         short flag = instream.readShort();
         int form = flag >> 8;
         int type = flag & 0xff;
-        currentValue = factory.createEntity(Entity.DATA_FORM.values()[form], Entity.DATA_TYPE.values()[type], instream);
+        boolean extended = type >= 128;
+        if(type >= 128)
+        	type -= 128;
+        currentValue = factory.createEntity(Entity.DATA_FORM.values()[form], Entity.DATA_TYPE.values()[type], instream, extended);
         currentIndex++;
         return currentValue;
     }
@@ -37,7 +41,10 @@ public class EntityBlockReader implements Entity {
             short flag = instream.readShort();
             int form = flag >> 8;
             int type = flag & 0xff;
-            currentValue = factory.createEntity(Entity.DATA_FORM.values()[form], Entity.DATA_TYPE.values()[type], instream);
+            boolean extended = type >= 128;
+            if(type >= 128)
+            	type -= 128;
+            currentValue = factory.createEntity(Entity.DATA_FORM.values()[form], Entity.DATA_TYPE.values()[type], instream, extended);
             currentIndex++;
         }
     }

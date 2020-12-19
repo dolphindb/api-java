@@ -67,7 +67,32 @@ public class BasicStringVector extends AbstractVector{
 		this.isSymbol = isSymbol;
 	}
 
-	protected BasicStringVector(DATA_FORM df, ExtendedDataInput in, boolean blob) throws IOException{
+	protected BasicStringVector(DATA_FORM df, ExtendedDataInput in, boolean isSymbol, boolean blob) throws IOException {
+		super(df);
+		this.isBlob = blob;
+		this.isSymbol = isSymbol;
+		int rows = in.readInt();
+		int columns = in.readInt();
+		int size = rows * columns;
+		values = new String[size];
+		if(!blob) {
+			if(isSymbol){
+				SymbolBase symbase = new SymbolBase(in);
+				for (int i = 0; i < size; ++i){
+					values[i] = symbase.getSymbol(in.readInt());
+				}
+			}
+			else{
+				for (int i = 0; i < size; ++i)
+					values[i] = in.readString();
+			}
+		}else{
+			for (int i = 0; i < size; ++i)
+				values[i] = in.readBlob();
+		}
+	}
+	
+	protected BasicStringVector(DATA_FORM df, ExtendedDataInput in, boolean blob, SymbolBaseCollection collection) throws IOException{
 		super(df);
 		isBlob = blob;
 		int rows = in.readInt();
@@ -75,8 +100,16 @@ public class BasicStringVector extends AbstractVector{
 		int size = rows * columns;
 		values = new String[size];
 		if(!blob) {
-			for (int i = 0; i < size; ++i)
-				values[i] = in.readString();
+			if(collection != null){
+				SymbolBase symbase = collection.add(in);
+				for (int i = 0; i < size; ++i){
+					values[i] = symbase.getSymbol(in.readInt());
+				}
+			}
+			else{
+				for (int i = 0; i < size; ++i)
+					values[i] = in.readString();
+			}
 		}else{
 			for (int i = 0; i < size; ++i)
 				values[i] = in.readBlob();

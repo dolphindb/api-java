@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.xxdb.data.Entity.DATA_FORM;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -33,21 +34,35 @@ public class BasicTable extends AbstractEntity implements Table{
 		}
 		
 		BasicEntityFactory factory = new BasicEntityFactory();
+		SymbolBaseCollection collection = null;
 		//read columns
 		for(int i=0; i<cols; ++i){
 			short flag = in.readShort();
 			int form = flag>>8;
 			int type = flag & 0xff;
+            boolean extended = type >= 128;
+            if(type >= 128)
+            	type -= 128;
 			
 			DATA_FORM df = DATA_FORM.values()[form];
 			DATA_TYPE dt = DATA_TYPE.values()[type];
 			if(df != DATA_FORM.DF_VECTOR)
 				throw new IOException("Invalid form for column [" + names_.get(i) + "] for table " + tableName);
-			Vector vector = (Vector)factory.createEntity(df, dt, in);
+			Vector vector;
+			if(dt == DATA_TYPE.DT_SYMBOL && extended){
+				if(collection == null)
+					collection = new SymbolBaseCollection();
+				vector = new BasicStringVector(df, in, false, collection);
+			}
+			else{
+				vector = (Vector)factory.createEntity(df, dt, in, extended);
+			}
 			if(vector.rows() != rows && vector.rows()!= 1)
 				throw new IOException("The number of rows for column " +names_.get(i) + " is not consistent with other columns");
 			columns_.add(vector);
 		}
+		if(collection != null)
+			collection.clear();
 	}
 	
     public BasicTable(final List<String> colNames, final List<Vector> cols) {

@@ -574,6 +574,9 @@ public class DBConnection {
                 short flag = in.readShort();
                 int form = flag >> 8;
                 int type = flag & 0xff;
+                boolean extended = type >= 128;
+                if(type >= 128)
+                	type -= 128;
 
                 if (form < 0 || form > MAX_FORM_VALUE)
                     throw new IOException("Invalid form value: " + form);
@@ -585,7 +588,7 @@ public class DBConnection {
                 if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
                     return new EntityBlockReader(in);
                 }
-                return factory.createEntity(df, dt, in);
+                return factory.createEntity(df, dt, in, extended);
             } catch (IOException ex) {
                 socket = null;
                 throw ex;
@@ -777,6 +780,9 @@ public class DBConnection {
                 short flag = in.readShort();
                 int form = flag >> 8;
                 int type = flag & 0xff;
+                boolean extended = type >= 128;
+                if(type >= 128)
+                	type -= 128;
 
                 if (form < 0 || form > MAX_FORM_VALUE)
                     throw new IOException("Invalid form value: " + form);
@@ -788,7 +794,7 @@ public class DBConnection {
                 if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
                     return new EntityBlockReader(in);
                 }
-                return factory.createEntity(df, dt, in);
+                return factory.createEntity(df, dt, in, extended);
             } catch (IOException ex) {
                 socket = null;
                 throw ex;
@@ -921,6 +927,9 @@ public class DBConnection {
                     short flag = in.readShort();
                     int form = flag >> 8;
                     int type = flag & 0xff;
+                    boolean extended = type >= 128;
+                    if(type >= 128)
+                    	type -= 128;
 
                     if (form < 0 || form > MAX_FORM_VALUE)
                         throw new IOException("Invalid form value: " + form);
@@ -929,7 +938,7 @@ public class DBConnection {
 
                     Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
                     Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
-                    Entity re =  factory.createEntity(df, dt, in);
+                    Entity re =  factory.createEntity(df, dt, in, extended);
                 } catch (IOException ex) {
                     socket = null;
                     throw ex;
@@ -999,7 +1008,6 @@ public class DBConnection {
         try {
             SSLContext context = SSLContext.getInstance("SSL");
 
-            // 初始化
             context.init(null,
                     new TrustManager[]{new X509TrustManager() {
                         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {

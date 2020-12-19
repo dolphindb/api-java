@@ -68,21 +68,21 @@ class MessageParser implements Runnable {
                 short flag = in.readShort();
                 EntityFactory factory = new BasicEntityFactory();
                 int form = flag >> 8;
-
                 int type = flag & 0xff;
-
+                boolean extended = type >= 128;
+                if(type >= 128)
+                	type -= 128;
+                
                 if (form < 0 || form > MAX_FORM_VALUE)
                     throw new IOException("Invalid form value: " + form);
-                if (type < 0 || type > MAX_TYPE_VALUE) {
+                if (type < 0 || type > MAX_TYPE_VALUE)
                     throw new IOException("Invalid type value: " + type);
-
-                }
 
                 Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
                 Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
                 Entity body;
 
-                body = factory.createEntity(df, dt, in);
+                body = factory.createEntity(df, dt, in, extended);
                 if (body.isTable() && body.rows() == 0) {
                     for (String t : topic.split(",")) {
                         dispatcher.setNeedReconnect(t, 0);
