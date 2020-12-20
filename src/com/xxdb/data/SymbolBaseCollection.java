@@ -12,8 +12,12 @@ public class SymbolBaseCollection {
 	
 	public SymbolBase add(ExtendedDataInput in) throws IOException{
 		int id = in.readInt();
-		if(symbaseMap.containsKey(id))
+		if(symbaseMap.containsKey(id)){
+			int size = in.readInt();
+			if(size != 0)
+				throw new IOException("Invalid symbol base.");
 			lastSymbase = symbaseMap.get(id);
+		}
 		else{
 			SymbolBase cur = new SymbolBase(id, in);
 			symbaseMap.put(id, cur);
