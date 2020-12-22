@@ -31,8 +31,15 @@ public class BasicLongVector extends AbstractVector{
 	}
 	
 	public BasicLongVector(long[] array){
+		this(array, true);
+	}
+	
+	protected BasicLongVector(long[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicLongVector(DATA_FORM df, int size){
@@ -61,6 +68,22 @@ public class BasicLongVector extends AbstractVector{
 	
 	public Scalar get(int index){
 		return new BasicLong(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		long[] sub = new long[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicLongVector(sub, false);
+	}
+	
+	protected long[] getSubArray(int[] indices){
+		int length = indices.length;
+		long[] sub = new long[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return sub;
 	}
 	
 	public long getLong(int index){

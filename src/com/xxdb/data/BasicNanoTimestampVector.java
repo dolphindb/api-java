@@ -25,6 +25,10 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 	public BasicNanoTimestampVector(long[] array){
 		super(array);
 	}
+	
+	protected BasicNanoTimestampVector(long[] array, boolean copy){
+		super(array, copy);
+	}
 
 	protected BasicNanoTimestampVector(DATA_FORM df, int size){
 		super(df, size);
@@ -46,6 +50,10 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 	
 	public Scalar get(int index){
 		return new BasicNanoTimestamp(getLong(index));
+	}
+	
+	public Vector getSubVector(int[] indices){
+		return new BasicNanoTimestampVector(getSubArray(indices), false);
 	}
 	
 	public LocalDateTime getNanoTimestamp(int index){

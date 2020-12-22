@@ -13,10 +13,17 @@ import com.xxdb.io.ExtendedDataOutput;
 public class BasicAnyVector extends AbstractVector{
 	private Entity[] values;
 	
-
 	public BasicAnyVector(int size){
 		super(DATA_FORM.DF_VECTOR);
 		values = new Entity[size];
+	}
+	
+	protected BasicAnyVector(Entity[] array, boolean copy){
+		super(DATA_FORM.DF_VECTOR);
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicAnyVector(ExtendedDataInput in) throws IOException{
@@ -37,7 +44,6 @@ public class BasicAnyVector extends AbstractVector{
 			Entity obj = factory.createEntity(DATA_FORM.values()[form], DATA_TYPE.values()[type], in, extended);
 			values[i] = obj;
 		}
-
 	}
 
 	public Entity getEntity(int index){
@@ -49,6 +55,14 @@ public class BasicAnyVector extends AbstractVector{
 			return (Scalar)values[index];
 		else
 			throw new RuntimeException("The element of the vector is not a scalar object.");
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		Entity[] sub = new Entity[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicAnyVector(sub, false);
 	}
 	
 	public void set(int index, Scalar value) throws Exception {

@@ -16,6 +16,7 @@ public class BasicStringVector extends AbstractVector{
 	private String[] values;
 	private boolean isSymbol;
 	private boolean isBlob = false;
+	
 	public BasicStringVector(int size){
 		this(DATA_FORM.DF_VECTOR, size, false);
 	}
@@ -42,14 +43,19 @@ public class BasicStringVector extends AbstractVector{
 	}
 
 	public BasicStringVector(String[] array){
-		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
-		this.isSymbol = false;
+		this(array, false, true);
 	}
 
 	public BasicStringVector(String[] array, boolean blob){
+		this(array, blob, true);
+	}
+	
+	protected BasicStringVector(String[] array, boolean blob, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 		this.isSymbol = false;
 		this.isBlob = blob;
 	}
@@ -118,6 +124,14 @@ public class BasicStringVector extends AbstractVector{
 	
 	public Scalar get(int index){
 		return new BasicString(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		String[] sub = new String[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicStringVector(sub, false, false);
 	}
 	
 	public String getString(int index){

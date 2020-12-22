@@ -31,8 +31,15 @@ public class BasicShortVector extends AbstractVector{
 	}
 	
 	public BasicShortVector(short[] array){
+		this(array, true);
+	}
+	
+	protected BasicShortVector(short[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicShortVector(DATA_FORM df, int size){
@@ -65,6 +72,14 @@ public class BasicShortVector extends AbstractVector{
 	
 	public Scalar get(int index){
 		return new BasicShort(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		short[] sub = new short[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicShortVector(sub, false);
 	}
 	
 	public void set(int index, Scalar value) throws Exception {

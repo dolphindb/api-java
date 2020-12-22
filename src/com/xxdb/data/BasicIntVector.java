@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
 
+import com.xxdb.data.Entity.DATA_FORM;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -31,8 +32,15 @@ public class BasicIntVector extends AbstractVector{
 	}
 	
 	public BasicIntVector(int[] array){
+		this(array, true);
+	}
+	
+	protected BasicIntVector(int[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicIntVector(DATA_FORM df, int size){
@@ -61,6 +69,22 @@ public class BasicIntVector extends AbstractVector{
 	
 	public Scalar get(int index){
 		return new BasicInt(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		int[] sub = new int[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicIntVector(sub, false);
+	}
+	
+	protected int[] getSubArray(int[] indices){
+		int length = indices.length;
+		int[] sub = new int[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return sub;
 	}
 	
 	public int getInt(int index){

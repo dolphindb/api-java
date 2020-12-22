@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.util.List;
 
+import com.xxdb.data.Entity.DATA_FORM;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -29,8 +30,15 @@ public class BasicByteVector extends AbstractVector{
 	}
 
 	public BasicByteVector(byte[] array){
+		this(array, true);
+	}
+	
+	protected BasicByteVector(byte[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicByteVector(DATA_FORM df, int size){
@@ -60,8 +68,17 @@ public class BasicByteVector extends AbstractVector{
 		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
 		return new BasicByteVector(newValue);
 	}
+	
 	public Scalar get(int index){
 		return new BasicByte(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		byte[] sub = new byte[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicByteVector(sub, false);
 	}
 	
 	public byte getByte(int index){

@@ -31,8 +31,15 @@ public class BasicFloatVector extends AbstractVector{
 	}
 	
 	public BasicFloatVector(float[] array){
+		this(array, true);
+	}
+	
+	protected BasicFloatVector(float[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicFloatVector(DATA_FORM df, int size){
@@ -61,6 +68,14 @@ public class BasicFloatVector extends AbstractVector{
 	
 	public Scalar get(int index){
 		return new BasicFloat(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		float[] sub = new float[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicFloatVector(sub, false);
 	}
 	
 	public float getFloat(int index){

@@ -89,7 +89,7 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 		int len = readInt();
 		if(buf_ == null)
 			buf_ = new byte[len];
-		int re = read(buf_,0,len);
+		read(buf_,0,len);
 		return new String(buf_, 0, len , UTF8);
 	}
 

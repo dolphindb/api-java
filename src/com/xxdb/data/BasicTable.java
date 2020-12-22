@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.xxdb.data.Entity.DATA_FORM;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -244,5 +243,13 @@ public class BasicTable extends AbstractEntity implements Table{
 			newCol.add(this.getColumn(i).combine(table.getColumn(i)));
 		}
 		return new BasicTable(this.names_,newCol);
+	}
+	
+	public Table getSubTable(int[] indices){
+		int colCount = columns_.size();
+		List<Vector> cols = new ArrayList<Vector>(colCount);
+		for(int i=0; i<colCount; ++i)
+			cols.add(columns_.get(i).getSubVector(indices));
+		return new BasicTable(names_, cols);
 	}
 }

@@ -26,6 +26,10 @@ public class BasicMinuteVector extends BasicIntVector{
 		super(array);
 	}
 	
+	public BasicMinuteVector(int[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicMinuteVector(DATA_FORM df, int size){
 		super(df, size);
 	}
@@ -46,6 +50,10 @@ public class BasicMinuteVector extends BasicIntVector{
 	
 	public Scalar get(int index){
 		return new BasicMinute(getInt(index));
+	}
+	
+	public Vector getSubVector(int[] indices){
+		return new BasicMinuteVector(getSubArray(indices), false);
 	}
 	
 	public LocalTime getMinute(int index){

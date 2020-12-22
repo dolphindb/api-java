@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 
+import com.xxdb.data.Entity.DATA_CATEGORY;
+import com.xxdb.data.Entity.DATA_TYPE;
+
 public class Utils {
 	public static final int DISPLAY_ROWS = 20;
 	public static final int DISPLAY_COLS = 100;
@@ -265,5 +268,26 @@ public class Utils {
 	    return h;
 	}
 	
-	
+	public static DATA_CATEGORY getCategory(DATA_TYPE type){
+		if(type== DATA_TYPE.DT_TIME || type==DATA_TYPE.DT_SECOND || type==DATA_TYPE.DT_MINUTE || type==DATA_TYPE.DT_DATE || type==DATA_TYPE.DT_DATEHOUR 
+				|| type==DATA_TYPE.DT_DATEMINUTE || type==DATA_TYPE.DT_DATETIME || type==DATA_TYPE.DT_MONTH || type==DATA_TYPE.DT_NANOTIME 
+				|| type==DATA_TYPE.DT_NANOTIMESTAMP || type==DATA_TYPE.DT_TIMESTAMP)
+			return DATA_CATEGORY.TEMPORAL;
+		else if(type==DATA_TYPE.DT_INT || type==DATA_TYPE.DT_LONG || type==DATA_TYPE.DT_SHORT || type==DATA_TYPE.DT_BYTE)
+			return DATA_CATEGORY.INTEGRAL;
+		else if(type==DATA_TYPE.DT_BOOL)
+			return DATA_CATEGORY.LOGICAL;
+		else if(type==DATA_TYPE.DT_DOUBLE || type==DATA_TYPE.DT_FLOAT)
+			return DATA_CATEGORY.FLOATING;
+		else if(type==DATA_TYPE.DT_STRING || type==DATA_TYPE.DT_SYMBOL)
+			return DATA_CATEGORY.LITERAL;
+		else if(type==DATA_TYPE.DT_INT128 || type==DATA_TYPE.DT_UUID || type==DATA_TYPE.DT_IPADDR)
+			return DATA_CATEGORY.BINARY;
+		else if(type==DATA_TYPE.DT_ANY)
+			return DATA_CATEGORY.MIXED;
+		else if(type==DATA_TYPE.DT_VOID)
+			return DATA_CATEGORY.NOTHING;
+		else
+			return DATA_CATEGORY.SYSTEM;
+	}
 }

@@ -26,6 +26,10 @@ public class BasicTimestampVector extends BasicLongVector{
 		super(array);
 	}
 	
+	public BasicTimestampVector(long[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicTimestampVector(DATA_FORM df, int size){
 		super(df, size);
 	}
@@ -46,6 +50,10 @@ public class BasicTimestampVector extends BasicLongVector{
 	
 	public Scalar get(int index){
 		return new BasicTimestamp(getLong(index));
+	}
+	
+	public Vector getSubVector(int[] indices){
+		return new BasicTimestampVector(getSubArray(indices), false);
 	}
 	
 	public LocalDateTime getTimestamp(int index){

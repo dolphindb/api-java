@@ -25,6 +25,10 @@ public class BasicNanoTimeVector extends BasicLongVector{
 	public BasicNanoTimeVector(long[] array){
 		super(array);
 	}
+	
+	protected BasicNanoTimeVector(long[] array, boolean copy){
+		super(array, copy);
+	}
 
 	protected BasicNanoTimeVector(DATA_FORM df, int size){
 		super(df, size);
@@ -46,6 +50,10 @@ public class BasicNanoTimeVector extends BasicLongVector{
 	
 	public Scalar get(int index){
 		return new BasicNanoTime(getLong(index));
+	}
+	
+	public Vector getSubVector(int[] indices){
+		return new BasicNanoTimeVector(getSubArray(indices), false);
 	}
 	
 	public LocalTime getNanoTime(int index){

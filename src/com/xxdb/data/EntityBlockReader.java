@@ -1,6 +1,5 @@
 package com.xxdb.data;
 
-import com.xxdb.data.Entity.DATA_TYPE;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
