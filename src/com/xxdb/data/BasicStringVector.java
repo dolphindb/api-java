@@ -201,4 +201,20 @@ public class BasicStringVector extends AbstractVector{
 				out.writeBlob(str);
 		}
 	}
+	
+	@Override
+	public int asof(Scalar value) {
+		String target = value.getString();
+		int start = 0;
+		int end = values.length - 1;
+		int mid;
+		while(start <= end){
+			mid = (start + end)/2;
+			if(values[mid].compareTo(target) <= 0)
+				start = mid + 1;
+			else
+				end = mid - 1;
+		}
+		return end;
+	}
 }

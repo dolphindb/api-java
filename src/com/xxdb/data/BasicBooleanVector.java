@@ -132,4 +132,9 @@ public class BasicBooleanVector extends AbstractVector{
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.write(values);
 	}
+	
+	@Override
+	public int asof(Scalar value) {
+		throw new RuntimeException("BasicBooleanVector.asof not supported.");
+	}
 }

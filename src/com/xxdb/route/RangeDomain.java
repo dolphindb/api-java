@@ -6,15 +6,15 @@ import java.util.List;
 import com.xxdb.data.Entity;
 import com.xxdb.data.Vector;
 
-public class HashDomain implements Domain{
-	private int buckets;
+public class RangeDomain implements Domain{
 	private Entity.DATA_TYPE type;
 	private Entity.DATA_CATEGORY cat;
+	private Vector range;
 
-	public HashDomain(int buckets, Entity.DATA_TYPE type, Entity.DATA_CATEGORY cat){
-		this.buckets = buckets;
+	public RangeDomain(Vector range, Entity.DATA_TYPE type, Entity.DATA_CATEGORY cat){
 		this.type = type;
 		this.cat = cat;
+		this.range = range;
 	}
 	
 	@Override
@@ -23,11 +23,16 @@ public class HashDomain implements Domain{
 			throw new RuntimeException("Data category incompatible.");
 		if(cat == Entity.DATA_CATEGORY.TEMPORAL && type != partitionCol.getDataType())
 			throw new RuntimeException("Data type incompatible.");
-		
-		int rows = partitionCol.rows();
+		int partitions = range.rows() - 1;
+ 		int rows = partitionCol.rows();
 		ArrayList<Integer> keys = new ArrayList<Integer>(rows);
-		for(int i=0; i<rows; ++i)
-			keys.add(partitionCol.hashBucket(i, buckets));
+		for(int i=0; i<rows; ++i){
+			int index = range.asof(partitionCol.get(i));
+			if(index >= partitions)
+				keys.add(-1);
+			else
+				keys.add(index);
+		}
 		return keys;
 	}
 }
