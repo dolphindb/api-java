@@ -127,4 +127,9 @@ public class BasicAnyVector extends AbstractVector{
 		for(Entity value : values)
 			value.write(out);
 	}
+	
+	@Override
+	public int asof(Scalar value) {
+		throw new RuntimeException("BasicAnyVector.asof not supported.");
+	}
 }

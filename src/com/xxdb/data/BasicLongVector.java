@@ -157,4 +157,27 @@ public class BasicLongVector extends AbstractVector{
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeLongArray(values);
 	}
+	
+	@Override
+	public int asof(Scalar value) {
+		long target;
+		try{
+			target = value.getNumber().longValue();
+		}
+		catch(Exception ex){
+			throw new RuntimeException(ex);
+		}
+		
+		int start = 0;
+		int end = values.length - 1;
+		int mid;
+		while(start <= end){
+			mid = (start + end)/2;
+			if(values[mid] <= target)
+				start = mid + 1;
+			else
+				end = mid - 1;
+		}
+		return end;
+	}
 }

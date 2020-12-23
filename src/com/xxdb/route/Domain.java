@@ -11,5 +11,4 @@ public interface Domain {
 	 * @return a list of partition keys
 	 */
 	List<Integer> getPartitionKeys(Vector partitionCol);
-	int getPartitionCount();
 }

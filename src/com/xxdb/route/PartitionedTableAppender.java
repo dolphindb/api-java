@@ -116,7 +116,9 @@ public class PartitionedTableAppender {
     	List<Integer> keys = domain.getPartitionKeys(table.getColumn(partitionColumnIdx));
     	int rows = keys.size();
     	for(int i=0; i<rows; ++i){
-    		chunkIndices.get(keys.get(i) % threadCount).add(i);
+    		int key = keys.get(i);
+    		if(key >= 0)
+    			chunkIndices.get(key % threadCount).add(i);
     	}
     	List<DBTask> tasks = new ArrayList<DBTask>(threadCount);
     	for(int i=0; i<threadCount; ++i){

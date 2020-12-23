@@ -154,5 +154,10 @@ public class BasicInt128Vector extends AbstractVector{
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeLong2Array(values);
 	}
+	
+	@Override
+	public int asof(Scalar value) {
+		throw new RuntimeException("BasicInt128Vector.asof not supported.");
+	}
 }
 
