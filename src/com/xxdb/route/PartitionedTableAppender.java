@@ -7,6 +7,7 @@ import com.xxdb.DBTask;
 import com.xxdb.ExclusiveDBConnectionPool;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
+import com.xxdb.data.Void;
 
 import java.io.IOException;
 import java.util.*;
@@ -27,7 +28,7 @@ public class PartitionedTableAppender {
     private List<ArrayList<Integer>> chunkIndices;
     private String appendScript;
 
-    public PartitionedTableAppender(String dbUrl, String tableName, String partitionColName, DBConnectionPool pool) throws Exception, IOException {
+    public PartitionedTableAppender(String dbUrl, String tableName, String partitionColName, String appendFunctionScript, DBConnectionPool pool) throws Exception, IOException {
     	this.pool = pool;
     	this.threadCount = pool.getConnectionCount();
     	chunkIndices = new ArrayList<ArrayList<Integer>>(threadCount);
@@ -49,6 +50,9 @@ public class PartitionedTableAppender {
             	task = new BasicDBTask("schema(loadTable(\"" + dbUrl + "\", \"" + tableName + "\"))");
             	appendScript = "tableInsert{loadTable('" + dbUrl + "', '" + tableName + "')}";
             }
+            if(appendFunctionScript!=null&&!appendFunctionScript.isEmpty()){
+            	appendScript = appendFunctionScript;
+			}
             pool.execute(task);
             if(!task.isSuccessful())
             	throw new RuntimeException(task.getErrorMsg());
@@ -132,8 +136,14 @@ public class PartitionedTableAppender {
     	int affected = 0;
     	for(int i=0; i<tasks.size(); ++i){
     		DBTask task = tasks.get(i);
-    		if(task.isSuccessful())
-    			affected += ((BasicInt)task.getResult()).getInt();
+    		if(task.isSuccessful()){
+    			Entity re = task.getResult();
+    			if(re.getDataType() == Entity.DATA_TYPE.DT_VOID){
+					affected = 0;
+				}else{
+					affected += ((BasicInt)task.getResult()).getInt();
+				}
+			}
     	}
     	return affected;
     }
@@ -151,7 +161,7 @@ public class PartitionedTableAppender {
     public static void main(String[] args){
     	try{
 	    	DBConnectionPool pool = new ExclusiveDBConnectionPool("localhost", 8801, "admin", "123456", 5, true, true);
-	    	PartitionedTableAppender appender = new PartitionedTableAppender("dfs://demohash", "pt", "id", pool);
+	    	PartitionedTableAppender appender = new PartitionedTableAppender("dfs://demohash", "pt", null,"id", pool);
 	    	List<String> colNames = new ArrayList<String>(2);
 	    	colNames.add("id");
 	    	colNames.add("value");
