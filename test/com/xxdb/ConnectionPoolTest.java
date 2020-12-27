@@ -254,8 +254,9 @@ public class ConnectionPoolTest {
             int m = appender.append(new BasicTable(colNames, cols));
             assertEquals(10000,m);
         }
-        BasicInt re = (BasicInt) conn.run("exec count(*) from loadTable(\"dfs://demohash\",`pt) where date=nanotimestamp('2020.01.01T02:05:22.000000000') and sym=2");
-        assertEquals(10000000,re.getInt());
+        BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
+                "exec count(*) from pt");
+        assertEquals(10000000,re.getLong());
     }
     @Test
     public void testRangeRangedatetime() throws Exception {
@@ -288,18 +289,26 @@ public class ConnectionPoolTest {
             sym.setInt(i, 1);
         }
         cols.add(sym);
+/*
+        BasicTable table1 = new BasicTable(colNames,cols);
+        List<Entity> args = new ArrayList<Entity>(1);
+        args.add(table1);
+        conn.run(String.format("tableInsert{loadTable('%s','pt')}",dburl), args);
+*/
+
         for (int i =0 ;i<1000;i++) {
             int m = appender.append(new BasicTable(colNames, cols));
             assertEquals(10000,m);
         }
-        BasicInt re = (BasicInt) conn.run("exec count(*) from loadTable(\"dfs://demohash\",`pt) where date=nanotimestamp('2020.01.01T02:05:22.000000000') and sym=2");
-        assertEquals(10000000,re.getInt());
+        BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
+                "exec count(*) from pt");
+        assertEquals(10000000,re.getLong());
     }
 
     @Test
     public void testHashRangeDate() throws Exception {
         String script = "\n" +
-                "t = table(datetime(1..10)  as date,symbol(string(1..10)) as sym)\n" +
+                "t = table(symbol(string(1..10)) as sym,datetime(1..10)  as date)\n" +
                 "db2=database(\"\",HASH,[SYMBOL,5])\n" +
                 "db1=database(\"\",RANGE,date(2020.02.02)+0..100)\n" +
                 "if(existsDatabase(\"dfs://demohash\")){\n" +
@@ -311,10 +320,14 @@ public class ConnectionPoolTest {
         pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true);
         appender = new PartitionedTableAppender(dburl, tableName, "date", pool);
         List<String> colNames = new ArrayList<String>(2);
-        colNames.add("date");
         colNames.add("sym");
+        colNames.add("date");
         List<Vector> cols = new ArrayList<Vector>(2);
         BasicDateTimeVector date = new BasicDateTimeVector(10000);
+        BasicStringVector sym = new BasicStringVector(10000);
+        for (int i =0 ;i<10000;i++)
+            sym.setString(i, "dss");
+        cols.add(sym);
         for (int i =0 ;i<10000;i+=4) {
             date.setDateTime(i, LocalDateTime.of(2020,02,02,01,01,02));
             date.setDateTime(i+1, LocalDateTime.of(2020,02,03,01,01,02));
@@ -322,10 +335,11 @@ public class ConnectionPoolTest {
             date.setDateTime(i+3, LocalDateTime.of(2020,02,05,01,01,02));
         }
         cols.add(date);
-        BasicStringVector sym = new BasicStringVector(10000);
-        for (int i =0 ;i<10000;i++)
-            sym.setString(i, "dss");
-        cols.add(sym);
+      /*  BasicTable table1 = new BasicTable(colNames,cols);
+        List<Entity> args = new ArrayList<Entity>(1);
+        args.add(table1);
+        conn.run(String.format("tableInsert{loadTable('%s','pt')}",dburl), args);
+        */
         for (int i =0 ;i<1000;i++) {
             int m = appender.append(new BasicTable(colNames, cols));
             assertEquals(10000,m);
