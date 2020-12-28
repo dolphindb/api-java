@@ -42,6 +42,7 @@ public class PartitionedTableAppender {
         BasicTable colDefs;
         BasicIntVector typeInts;
         int partitionType;
+        Entity.DATA_TYPE partitionColType;
         
         try {
         	DBTask task;
@@ -71,6 +72,7 @@ public class PartitionedTableAppender {
             	partitionColumnIdx = ((BasicInt)tableInfo.get(new BasicString("partitionColumnIndex"))).getInt();
             	partitionSchema = tableInfo.get(new BasicString("partitionSchema"));
             	partitionType = ((BasicInt) tableInfo.get(new BasicString("partitionType"))).getInt();
+            	partitionColType = Entity.DATA_TYPE.values()[((BasicInt) tableInfo.get(new BasicString("partitionColumnType"))).getInt()];
             }
             else{
             	BasicStringVector vec = (BasicStringVector)partColNames;
@@ -87,6 +89,7 @@ public class PartitionedTableAppender {
             	partitionColumnIdx = ((BasicIntVector)tableInfo.get(new BasicString("partitionColumnIndex"))).getInt(index);
             	partitionSchema = ((BasicAnyVector) tableInfo.get(new BasicString("partitionSchema"))).getEntity(index);
             	partitionType = ((BasicIntVector) tableInfo.get(new BasicString("partitionType"))).getInt(index);
+            	partitionColType = Entity.DATA_TYPE.values()[((BasicIntVector) tableInfo.get(new BasicString("partitionColumnType"))).getInt(index)];
             }
 
             colDefs = ((BasicTable) tableInfo.get(new BasicString("colDefs")));
@@ -99,7 +102,7 @@ public class PartitionedTableAppender {
                 this.columnCategories[i] = Entity.typeToCategory(this.columnTypes[i]);
             }
             
-            domain = DomainFactory.createDomain(Entity.PARTITION_TYPE.values()[partitionType], columnTypes[partitionColumnIdx], partitionSchema);
+            domain = DomainFactory.createDomain(Entity.PARTITION_TYPE.values()[partitionType], partitionColType, partitionSchema);
         } catch (IOException e) {
             throw e;
         } finally {
