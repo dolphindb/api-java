@@ -8,7 +8,9 @@ import java.util.Map;
 import com.xxdb.data.BasicAnyVector;
 import com.xxdb.data.Entity;
 import com.xxdb.data.Scalar;
+import com.xxdb.data.Utils;
 import com.xxdb.data.Vector;
+import com.xxdb.data.Entity.DATA_TYPE;
 
 public class ListDomain implements Domain {
 	private Entity.DATA_TYPE type;
@@ -39,8 +41,12 @@ public class ListDomain implements Domain {
 	public List<Integer> getPartitionKeys(Vector partitionCol) {
 		if(partitionCol.getDataCategory() != cat)
 			throw new RuntimeException("Data category incompatible.");
-		if(cat == Entity.DATA_CATEGORY.TEMPORAL && type != partitionCol.getDataType())
-			throw new RuntimeException("Data type incompatible.");
+		if(cat == Entity.DATA_CATEGORY.TEMPORAL && type != partitionCol.getDataType()){
+			DATA_TYPE old = partitionCol.getDataType();
+			partitionCol = (Vector)Utils.castDateTime(partitionCol, type);
+			if(partitionCol == null)
+				throw new RuntimeException("Can't convert type from " + old.name() + " to " + type.name());
+		}
 		
 		int rows = partitionCol.rows();
 		ArrayList<Integer> keys = new ArrayList<Integer>(rows);
