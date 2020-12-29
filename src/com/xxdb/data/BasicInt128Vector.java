@@ -26,8 +26,15 @@ public class BasicInt128Vector extends AbstractVector{
 	}
 	
 	public BasicInt128Vector(Long2[] array){
+		this(array, true);
+	}
+	
+	protected BasicInt128Vector(Long2[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicInt128Vector(DATA_FORM df, int size){
@@ -71,6 +78,22 @@ public class BasicInt128Vector extends AbstractVector{
 	
 	public Scalar get(int index){
 		return new BasicInt128(values[index].high, values[index].low);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		Long2[] sub = new Long2[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicInt128Vector(sub, false);
+	}
+	
+	protected Long2[] getSubArray(int[] indices){
+		int length = indices.length;
+		Long2[] sub = new Long2[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return sub;
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
@@ -130,6 +153,11 @@ public class BasicInt128Vector extends AbstractVector{
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeLong2Array(values);
+	}
+	
+	@Override
+	public int asof(Scalar value) {
+		throw new RuntimeException("BasicInt128Vector.asof not supported.");
 	}
 }
 

@@ -29,8 +29,15 @@ public class BasicByteVector extends AbstractVector{
 	}
 
 	public BasicByteVector(byte[] array){
+		this(array, true);
+	}
+	
+	protected BasicByteVector(byte[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicByteVector(DATA_FORM df, int size){
@@ -60,8 +67,17 @@ public class BasicByteVector extends AbstractVector{
 		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
 		return new BasicByteVector(newValue);
 	}
+	
 	public Scalar get(int index){
 		return new BasicByte(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		byte[] sub = new byte[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicByteVector(sub, false);
 	}
 	
 	public byte getByte(int index){
@@ -124,5 +140,28 @@ public class BasicByteVector extends AbstractVector{
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.write(values);
+	}
+	
+	@Override
+	public int asof(Scalar value) {
+		byte target;
+		try{
+			target = value.getNumber().byteValue();
+		}
+		catch(Exception ex){
+			throw new RuntimeException(ex);
+		}
+		
+		int start = 0;
+		int end = values.length - 1;
+		int mid;
+		while(start <= end){
+			mid = (start + end)/2;
+			if(values[mid] <= target)
+				start = mid + 1;
+			else
+				end = mid - 1;
+		}
+		return end;
 	}
 }

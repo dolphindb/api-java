@@ -16,6 +16,7 @@ public class BasicStringVector extends AbstractVector{
 	private String[] values;
 	private boolean isSymbol;
 	private boolean isBlob = false;
+	
 	public BasicStringVector(int size){
 		this(DATA_FORM.DF_VECTOR, size, false);
 	}
@@ -42,14 +43,19 @@ public class BasicStringVector extends AbstractVector{
 	}
 
 	public BasicStringVector(String[] array){
-		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
-		this.isSymbol = false;
+		this(array, false, true);
 	}
 
 	public BasicStringVector(String[] array, boolean blob){
+		this(array, blob, true);
+	}
+	
+	protected BasicStringVector(String[] array, boolean blob, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 		this.isSymbol = false;
 		this.isBlob = blob;
 	}
@@ -67,7 +73,32 @@ public class BasicStringVector extends AbstractVector{
 		this.isSymbol = isSymbol;
 	}
 
-	protected BasicStringVector(DATA_FORM df, ExtendedDataInput in, boolean blob) throws IOException{
+	protected BasicStringVector(DATA_FORM df, ExtendedDataInput in, boolean isSymbol, boolean blob) throws IOException {
+		super(df);
+		this.isBlob = blob;
+		this.isSymbol = isSymbol;
+		int rows = in.readInt();
+		int columns = in.readInt();
+		int size = rows * columns;
+		values = new String[size];
+		if(!blob) {
+			if(isSymbol){
+				SymbolBase symbase = new SymbolBase(in);
+				for (int i = 0; i < size; ++i){
+					values[i] = symbase.getSymbol(in.readInt());
+				}
+			}
+			else{
+				for (int i = 0; i < size; ++i)
+					values[i] = in.readString();
+			}
+		}else{
+			for (int i = 0; i < size; ++i)
+				values[i] = in.readBlob();
+		}
+	}
+	
+	protected BasicStringVector(DATA_FORM df, ExtendedDataInput in, boolean blob, SymbolBaseCollection collection) throws IOException{
 		super(df);
 		isBlob = blob;
 		int rows = in.readInt();
@@ -75,8 +106,16 @@ public class BasicStringVector extends AbstractVector{
 		int size = rows * columns;
 		values = new String[size];
 		if(!blob) {
-			for (int i = 0; i < size; ++i)
-				values[i] = in.readString();
+			if(collection != null){
+				SymbolBase symbase = collection.add(in);
+				for (int i = 0; i < size; ++i){
+					values[i] = symbase.getSymbol(in.readInt());
+				}
+			}
+			else{
+				for (int i = 0; i < size; ++i)
+					values[i] = in.readString();
+			}
 		}else{
 			for (int i = 0; i < size; ++i)
 				values[i] = in.readBlob();
@@ -85,6 +124,14 @@ public class BasicStringVector extends AbstractVector{
 	
 	public Scalar get(int index){
 		return new BasicString(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		String[] sub = new String[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicStringVector(sub, false, false);
 	}
 	
 	public String getString(int index){
@@ -153,5 +200,21 @@ public class BasicStringVector extends AbstractVector{
 			for (String str : values)
 				out.writeBlob(str);
 		}
+	}
+	
+	@Override
+	public int asof(Scalar value) {
+		String target = value.getString();
+		int start = 0;
+		int end = values.length - 1;
+		int mid;
+		while(start <= end){
+			mid = (start + end)/2;
+			if(values[mid].compareTo(target) <= 0)
+				start = mid + 1;
+			else
+				end = mid - 1;
+		}
+		return end;
 	}
 }

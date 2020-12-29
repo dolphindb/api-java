@@ -27,6 +27,10 @@ public class BasicMonthVector extends BasicIntVector{
 		super(array);
 	}
 	
+	protected BasicMonthVector(int[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicMonthVector(DATA_FORM df, int size){
 		super(df, size);
 	}
@@ -47,6 +51,10 @@ public class BasicMonthVector extends BasicIntVector{
 	
 	public Scalar get(int index){
 		return new BasicMonth(getInt(index));
+	}
+	
+	public Vector getSubVector(int[] indices){
+		return new BasicMonthVector(getSubArray(indices), false);
 	}
 	
 	public YearMonth getMonth(int index){

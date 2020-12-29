@@ -26,6 +26,10 @@ public class BasicDateVector extends BasicIntVector{
 		super(array);
 	}
 	
+	protected BasicDateVector(int[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicDateVector(DATA_FORM df, int size){
 		super(df,size);
 	}
@@ -46,6 +50,10 @@ public class BasicDateVector extends BasicIntVector{
 	
 	public Scalar get(int index){
 		return new BasicDate(getInt(index));
+	}
+	
+	public Vector getSubVector(int[] indices){
+		return new BasicDateVector(getSubArray(indices), false);
 	}
 	
 	public LocalDate getDate(int index){

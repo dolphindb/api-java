@@ -33,21 +33,35 @@ public class BasicTable extends AbstractEntity implements Table{
 		}
 		
 		BasicEntityFactory factory = new BasicEntityFactory();
+		SymbolBaseCollection collection = null;
 		//read columns
 		for(int i=0; i<cols; ++i){
 			short flag = in.readShort();
 			int form = flag>>8;
 			int type = flag & 0xff;
+            boolean extended = type >= 128;
+            if(type >= 128)
+            	type -= 128;
 			
 			DATA_FORM df = DATA_FORM.values()[form];
 			DATA_TYPE dt = DATA_TYPE.values()[type];
 			if(df != DATA_FORM.DF_VECTOR)
 				throw new IOException("Invalid form for column [" + names_.get(i) + "] for table " + tableName);
-			Vector vector = (Vector)factory.createEntity(df, dt, in);
+			Vector vector;
+			if(dt == DATA_TYPE.DT_SYMBOL && extended){
+				if(collection == null)
+					collection = new SymbolBaseCollection();
+				vector = new BasicStringVector(df, in, false, collection);
+			}
+			else{
+				vector = (Vector)factory.createEntity(df, dt, in, extended);
+			}
 			if(vector.rows() != rows && vector.rows()!= 1)
 				throw new IOException("The number of rows for column " +names_.get(i) + " is not consistent with other columns");
 			columns_.add(vector);
 		}
+		if(collection != null)
+			collection.clear();
 	}
 	
     public BasicTable(final List<String> colNames, final List<Vector> cols) {
@@ -229,5 +243,13 @@ public class BasicTable extends AbstractEntity implements Table{
 			newCol.add(this.getColumn(i).combine(table.getColumn(i)));
 		}
 		return new BasicTable(this.names_,newCol);
+	}
+	
+	public Table getSubTable(int[] indices){
+		int colCount = columns_.size();
+		List<Vector> cols = new ArrayList<Vector>(colCount);
+		for(int i=0; i<colCount; ++i)
+			cols.add(columns_.get(i).getSubVector(indices));
+		return new BasicTable(names_, cols);
 	}
 }

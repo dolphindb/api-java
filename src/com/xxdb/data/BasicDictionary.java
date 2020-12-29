@@ -31,23 +31,29 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 		short flag = in.readShort();
 		int form = flag>>8;
 		int type = flag & 0xff;
+        boolean extended = type >= 128;
+        if(type >= 128)
+        	type -= 128;
 		if(form != DATA_FORM.DF_VECTOR.ordinal())
 			throw new IOException("The form of dictionary keys must be vector");
 		if(type <0 || type >= types.length)
 			throw new IOException("Invalid key type: " + type);
 		keyType = types[type];
-		Vector keys = (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, types[type], in);
+		Vector keys = (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, types[type], in, extended);
 		
 		//read value vector
 		flag = in.readShort();
 		form = flag>>8;
 		type = flag & 0xff;
+        extended = type >= 128;
+        if(type >= 128)
+        	type -= 128;
 		if(form != DATA_FORM.DF_VECTOR.ordinal())
 			throw new IOException("The form of dictionary values must be vector");
 		if(type <0 || type >= types.length)
 			throw new IOException("Invalid value type: " + type);
 		
-		Vector values = (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, types[type], in);
+		Vector values = (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, types[type], in, extended);
 		
 		if(keys.rows() != values.rows()){
 			throw new IOException("The key size doesn't equate to value size.");

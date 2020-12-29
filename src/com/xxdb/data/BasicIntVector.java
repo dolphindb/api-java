@@ -31,8 +31,15 @@ public class BasicIntVector extends AbstractVector{
 	}
 	
 	public BasicIntVector(int[] array){
+		this(array, true);
+	}
+	
+	protected BasicIntVector(int[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicIntVector(DATA_FORM df, int size){
@@ -61,6 +68,22 @@ public class BasicIntVector extends AbstractVector{
 	
 	public Scalar get(int index){
 		return new BasicInt(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		int[] sub = new int[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicIntVector(sub, false);
+	}
+	
+	protected int[] getSubArray(int[] indices){
+		int length = indices.length;
+		int[] sub = new int[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return sub;
 	}
 	
 	public int getInt(int index){
@@ -133,5 +156,28 @@ public class BasicIntVector extends AbstractVector{
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeIntArray(values);
+	}
+	
+	@Override
+	public int asof(Scalar value) {
+		int target;
+		try{
+			target = value.getNumber().intValue();
+		}
+		catch(Exception ex){
+			throw new RuntimeException(ex);
+		}
+		
+		int start = 0;
+		int end = values.length - 1;
+		int mid;
+		while(start <= end){
+			mid = (start + end)/2;
+			if(values[mid] <= target)
+				start = mid + 1;
+			else
+				end = mid - 1;
+		}
+		return end;
 	}
 }

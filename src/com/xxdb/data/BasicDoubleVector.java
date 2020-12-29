@@ -31,8 +31,15 @@ public class BasicDoubleVector extends AbstractVector{
 	}
 	
 	public BasicDoubleVector(double[] array){
+		this(array, true);
+	}
+	
+	public BasicDoubleVector(double[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicDoubleVector(DATA_FORM df, int size){
@@ -61,6 +68,14 @@ public class BasicDoubleVector extends AbstractVector{
 	
 	public Scalar get(int index){
 		return new BasicDouble(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		double[] sub = new double[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicDoubleVector(sub, false);
 	}
 	
 	public double getDouble(int index){
@@ -124,4 +139,26 @@ public class BasicDoubleVector extends AbstractVector{
 		out.writeDoubleArray(values);
 	}
 
+	@Override
+	public int asof(Scalar value) {
+		double target;
+		try{
+			target = value.getNumber().doubleValue();
+		}
+		catch(Exception ex){
+			throw new RuntimeException(ex);
+		}
+		
+		int start = 0;
+		int end = values.length - 1;
+		int mid;
+		while(start <= end){
+			mid = (start + end)/2;
+			if(values[mid] <= target)
+				start = mid + 1;
+			else
+				end = mid - 1;
+		}
+		return end;
+	}
 }

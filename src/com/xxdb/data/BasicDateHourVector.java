@@ -25,6 +25,10 @@ public class BasicDateHourVector extends BasicIntVector {
 		super(array);
 	}
 	
+	protected BasicDateHourVector(int[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicDateHourVector(DATA_FORM df, int size){
 		super(df,size);
 	}
@@ -45,6 +49,10 @@ public class BasicDateHourVector extends BasicIntVector {
 	
 	public Scalar get(int index){
 		return new BasicDateHour(getInt(index));
+	}
+	
+	public Vector getSubVector(int[] indices){
+		return new BasicDateHourVector(getSubArray(indices), false);
 	}
 	
 	public LocalDateTime getDateHour(int index){

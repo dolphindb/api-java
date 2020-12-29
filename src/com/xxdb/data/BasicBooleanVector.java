@@ -29,8 +29,15 @@ public class BasicBooleanVector extends AbstractVector{
 	}
 	
 	public BasicBooleanVector(byte[] array){
+		this(array, true);
+	}
+	
+	protected BasicBooleanVector(byte[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicBooleanVector(DATA_FORM df, int size){
@@ -54,6 +61,14 @@ public class BasicBooleanVector extends AbstractVector{
 	
 	public Scalar get(int index){
 		return new BasicBoolean(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		byte[] sub = new byte[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicBooleanVector(sub, false);
 	}
 	
 	public boolean getBoolean(int index){
@@ -116,5 +131,10 @@ public class BasicBooleanVector extends AbstractVector{
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.write(values);
+	}
+	
+	@Override
+	public int asof(Scalar value) {
+		throw new RuntimeException("BasicBooleanVector.asof not supported.");
 	}
 }

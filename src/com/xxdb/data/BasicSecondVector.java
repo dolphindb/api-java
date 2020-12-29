@@ -26,6 +26,10 @@ public class BasicSecondVector extends BasicIntVector{
 		super(array);
 	}
 	
+	public BasicSecondVector(int[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicSecondVector(DATA_FORM df, int size){
 		super(df, size);
 	}
@@ -46,6 +50,10 @@ public class BasicSecondVector extends BasicIntVector{
 	
 	public Scalar get(int index){
 		return new BasicSecond(getInt(index));
+	}
+	
+	public Vector getSubVector(int[] indices){
+		return new BasicSecondVector(getSubArray(indices), false);
 	}
 	
 	public LocalTime getSecond(int index){

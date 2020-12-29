@@ -27,12 +27,15 @@ public class BasicSet extends AbstractEntity implements Set {
 		short flag = in.readShort();
 		int form = flag>>8;
 		int type = flag & 0xff;
+        boolean extended = type >= 128;
+        if(type >= 128)
+        	type -= 128;
 		if(form != DATA_FORM.DF_VECTOR.ordinal())
 			throw new IOException("The form of set keys must be vector");
 		if(type <0 || type >= types.length)
 			throw new IOException("Invalid key type: " + type);
 		
-		Vector keys = (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, types[type], in);
+		Vector keys = (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, types[type], in, extended);
 			
 		int size = keys.rows();
 		int capacity = (int)(size/0.75);

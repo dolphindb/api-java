@@ -5,6 +5,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 
+import com.xxdb.data.Entity.DATA_CATEGORY;
+import com.xxdb.data.Entity.DATA_FORM;
+import com.xxdb.data.Entity.DATA_TYPE;
+
 public class Utils {
 	public static final int DISPLAY_ROWS = 20;
 	public static final int DISPLAY_COLS = 100;
@@ -20,6 +24,36 @@ public class Utils {
 	}
 	
 	public static int countMonths(int year, int month){
+		return year * 12 + month -1;
+	}
+	
+	public static int countMonths(int days){
+		int year, month;
+		days += 719529;
+	    int circleIn400Years = days / 146097;
+	    int offsetIn400Years = days % 146097;
+	    int resultYear = circleIn400Years * 400;
+	    int similarYears = offsetIn400Years / 365;
+	    int tmpDays = similarYears * 365;
+	    if(similarYears > 0) tmpDays += (similarYears - 1) / 4 + 1 - (similarYears - 1) / 100;
+	    if(tmpDays >= offsetIn400Years) --similarYears;
+	    year = similarYears + resultYear;
+	    days -= circleIn400Years * 146097 + tmpDays;
+	    boolean leap = ( (year%4==0 && year%100!=0) || year%400==0 );
+	    if(days <= 0) {
+	        days += leap ? 366 : 365;
+	    }
+	    if(leap){
+			month=days/32+1;
+			if(days>cumLeapMonthDays[month])
+				month++;
+		}
+		else{
+			month=days/32+1;
+			if(days>cumMonthDays[month])
+				month++;
+		}
+		
 		return year * 12 + month -1;
 	}
 	
@@ -91,6 +125,16 @@ public class Utils {
 	
 	public static int divide(int x, int y){
 		int tmp=x / y;
+		if(x>=0)
+			return tmp;
+		else if(x%y<0)
+			return tmp-1;
+		else
+			return tmp;
+	}
+	
+	public static long divide(long x, long y){
+		long tmp=x / y;
 		if(x>=0)
 			return tmp;
 		else if(x%y<0)
@@ -265,5 +309,151 @@ public class Utils {
 	    return h;
 	}
 	
+	public static DATA_CATEGORY getCategory(DATA_TYPE type){
+		if(type== DATA_TYPE.DT_TIME || type==DATA_TYPE.DT_SECOND || type==DATA_TYPE.DT_MINUTE || type==DATA_TYPE.DT_DATE || type==DATA_TYPE.DT_DATEHOUR 
+				|| type==DATA_TYPE.DT_DATEMINUTE || type==DATA_TYPE.DT_DATETIME || type==DATA_TYPE.DT_MONTH || type==DATA_TYPE.DT_NANOTIME 
+				|| type==DATA_TYPE.DT_NANOTIMESTAMP || type==DATA_TYPE.DT_TIMESTAMP)
+			return DATA_CATEGORY.TEMPORAL;
+		else if(type==DATA_TYPE.DT_INT || type==DATA_TYPE.DT_LONG || type==DATA_TYPE.DT_SHORT || type==DATA_TYPE.DT_BYTE)
+			return DATA_CATEGORY.INTEGRAL;
+		else if(type==DATA_TYPE.DT_BOOL)
+			return DATA_CATEGORY.LOGICAL;
+		else if(type==DATA_TYPE.DT_DOUBLE || type==DATA_TYPE.DT_FLOAT)
+			return DATA_CATEGORY.FLOATING;
+		else if(type==DATA_TYPE.DT_STRING || type==DATA_TYPE.DT_SYMBOL)
+			return DATA_CATEGORY.LITERAL;
+		else if(type==DATA_TYPE.DT_INT128 || type==DATA_TYPE.DT_UUID || type==DATA_TYPE.DT_IPADDR)
+			return DATA_CATEGORY.BINARY;
+		else if(type==DATA_TYPE.DT_ANY)
+			return DATA_CATEGORY.MIXED;
+		else if(type==DATA_TYPE.DT_VOID)
+			return DATA_CATEGORY.NOTHING;
+		else
+			return DATA_CATEGORY.SYSTEM;
+	}
 	
+	public static Entity toMonth(Entity source){
+		long scaleFactor = 1;
+		int days;
+		
+		if(source.isScalar()){
+			switch(source.getDataType()){
+			case DT_NANOTIMESTAMP:
+				scaleFactor = 86400000000000l;
+				days = (int)divide(((BasicNanoTimestamp)source).getLong(), scaleFactor);
+				return new BasicMonth(countMonths(days));
+			case DT_TIMESTAMP:
+				scaleFactor = 86400000;
+				days = (int)divide(((BasicTimestamp)source).getLong(), scaleFactor);
+				return new BasicMonth(countMonths(days));
+			case DT_DATETIME:
+				scaleFactor = 86400;
+				days = divide(((BasicDateTime)source).getInt(), (int)scaleFactor);
+				return new BasicMonth(countMonths(days));
+			case DT_DATE:
+				return new BasicMonth(countMonths(((BasicDate)source).getInt()));
+			default:
+				throw new RuntimeException("The data type of the source data must be NANOTIMESTAMP, TIMESTAMP, DATETIME, or DATE.");
+			}
+		}
+		else{
+			int rows = source.rows();
+			int[] values = new int[rows];
+			
+			switch(source.getDataType()){
+			case DT_NANOTIMESTAMP:
+				scaleFactor = 86400000000000l;
+				BasicNanoTimestampVector ntsVec = (BasicNanoTimestampVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = countMonths((int)divide(ntsVec.getLong(i), scaleFactor));
+				}
+				return new BasicMonthVector(values);
+			case DT_TIMESTAMP:
+				scaleFactor = 86400000;
+				BasicTimestampVector tsVec = (BasicTimestampVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = countMonths((int)divide(tsVec.getLong(i), scaleFactor));
+				}
+				return new BasicMonthVector(values);
+			case DT_DATETIME:
+				scaleFactor = 86400;
+				BasicDateTimeVector dtVec = (BasicDateTimeVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = countMonths(divide(dtVec.getInt(i), (int)scaleFactor));
+				}
+				return new BasicMonthVector(values);
+			case DT_DATE:
+				BasicDateVector dVec = (BasicDateVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = countMonths(dVec.getInt(i));
+				}
+				return new BasicMonthVector(values);
+			default:
+				throw new RuntimeException("The data type of the source data must be NANOTIMESTAMP, TIMESTAMP, DATETIME, or DATE.");
+			}
+		}
+	}
+	
+	public static Entity toDate(Entity source){
+		if(source.isScalar()){
+			long scaleFactor = 1;
+			switch(source.getDataType()){
+			case DT_NANOTIMESTAMP:
+				scaleFactor = 86400000000000l;
+				return new BasicDate((int)divide(((BasicNanoTimestamp)source).getLong(), scaleFactor));
+			case DT_TIMESTAMP:
+				scaleFactor = 86400000;
+				return new BasicDate((int)divide(((BasicTimestamp)source).getLong(), scaleFactor));
+			case DT_DATETIME:
+				scaleFactor = 86400;
+				return new BasicDate(divide(((BasicDateTime)source).getInt(), (int)scaleFactor));
+			default:
+				throw new RuntimeException("The data type of the source data must be NANOTIMESTAMP, TIMESTAMP, or DATETIME.");
+			}
+		}
+		else{
+			long scaleFactor = 1;
+			int rows = source.rows();
+			int[] values = new int[rows];
+			
+			switch(source.getDataType()){
+			case DT_NANOTIMESTAMP:
+				scaleFactor = 86400000000000l;
+				BasicNanoTimestampVector ntsVec = (BasicNanoTimestampVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = (int)divide(ntsVec.getLong(i), scaleFactor);
+				}
+				return new BasicDateVector(values);
+			case DT_TIMESTAMP:
+				scaleFactor = 86400000;
+				BasicTimestampVector tsVec = (BasicTimestampVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = (int)divide(tsVec.getLong(i), scaleFactor);
+				}
+				return new BasicDateVector(values);
+			case DT_DATETIME:
+				scaleFactor = 86400;
+				BasicDateTimeVector dtVec = (BasicDateTimeVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = divide(dtVec.getInt(i), (int)scaleFactor);
+				}
+				return new BasicDateVector(values);
+			default:
+				throw new RuntimeException("The data type of the source data must be NANOTIMESTAMP, TIMESTAMP, or DATETIME.");
+			}
+		}
+	}
+	
+	public static Entity castDateTime(Entity source, DATA_TYPE newDateTimeType){
+		if(source.getDataForm() != DATA_FORM.DF_VECTOR && source.getDataForm() != DATA_FORM.DF_SCALAR)
+			throw new RuntimeException("The source data must be a temporal scalar/vector.");
+		switch(newDateTimeType){
+		case DT_MONTH :
+				return toMonth(source);
+		case DT_DATE :
+			return toDate(source);
+		default:
+			throw new RuntimeException("The target date/time type supports MONTH/DATE only for time being.");
+		}
+	}
 }

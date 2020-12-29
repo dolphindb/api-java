@@ -20,6 +20,10 @@ public class BasicIPAddrVector extends BasicInt128Vector {
 		super(array);
 	}
 	
+	public BasicIPAddrVector(Long2[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicIPAddrVector(DATA_FORM df, int size){
 		super(df, size);
 	}
@@ -39,6 +43,10 @@ public class BasicIPAddrVector extends BasicInt128Vector {
 	}
 	public Scalar get(int index){
 		return new BasicIPAddr(values[index].high, values[index].low);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		return new BasicIPAddrVector(getSubArray(indices), false);
 	}
 	
 	@Override
