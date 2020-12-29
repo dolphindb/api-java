@@ -22,7 +22,7 @@ public class ConnectionPoolTest {
     private static PartitionedTableAppender appender;
     private static DBConnection conn;
     private static String HOST="localhost";
-    private static int PORT = 8848;
+    private static int PORT = 8849;
     @Before
     public void setUp() throws IOException {
        conn = new DBConnection();
@@ -206,32 +206,28 @@ public class ConnectionPoolTest {
         for (int i =0 ;i<2500;i++) {
             date.setDateTime(i, LocalDateTime.of(2020,3,3,01,01,03));
         } for (int i =0 ;i<2500;i++) {
-            date.setDateTime(i+2500, LocalDateTime.of(2020,4,4,01,01,02));
+            date.setDateTime(i+2500, LocalDateTime.of(2020,2,2,01,01,02));
         } for (int i =0 ;i<2500;i++) {
-            date.setDateTime(i+5000, LocalDateTime.of(2020,5,7,01,01,04));
+            date.setDateTime(i+5000, LocalDateTime.of(2020,4,4,01,01,04));
         } for (int i =0 ;i<2500;i++) {
-            date.setDateTime(i+7500, LocalDateTime.of(2020,2,2,01,01,05));
+            date.setDateTime(i+7500, LocalDateTime.of(2020,5,7,01,01,05));
         }
         cols.add(date);
         BasicStringVector sym = new BasicStringVector(10000);
         for (int i =0 ;i<10000;i++) {
             sym.setString(i, "1");
         }
-        cols.add(sym);/*
-        BasicTable table1 = new BasicTable(colNames,cols);
-        List<Entity> args = new ArrayList<Entity>(1);
-        args.add(table1);*/
+        cols.add(sym);
         for (int i =0 ;i<1000;i++) {
-            //conn.run(String.format("tableInsert{loadTable('%s','pt')}",dburl), args);
             int m = appender.append(new BasicTable(colNames, cols));
             assertEquals(10000,m);
         }
         BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
         assertEquals(10000000,re.getLong());
-       /* BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
+        BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
         assertEquals(date.getString(),table.getColumn("date").getString());
-        assertEquals(sym.getString(),table.getColumn("sym").getString());*/
+        assertEquals(sym.getString(),table.getColumn("sym").getString());
     }
     @Test
     public void testRangeRangeInt() throws Exception {
