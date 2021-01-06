@@ -380,7 +380,7 @@ public class BasicEntityFactory implements EntityFactory{
 	}
 
 	private class BlobFactory implements TypeFactory{
-		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicString(in);}
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicString(in, true);}
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, in, false, true);}
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in, false, true);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in);}
