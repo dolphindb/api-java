@@ -440,44 +440,44 @@ public class DBConnection {
 
 
 
-    public Entity tryRun(String script, boolean cleanVar) throws IOException {
-        return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, cleanVar);
+    public Entity tryRun(String script, boolean clearSessionMemory) throws IOException {
+        return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, clearSessionMemory);
     }
 
-    public Entity tryRun(String script, int priority, int parallelism, boolean cleanVar) throws IOException {
-        return tryRun(script, priority, parallelism, 0, cleanVar);
+    public Entity tryRun(String script, int priority, int parallelism, boolean clearSessionMemory) throws IOException {
+        return tryRun(script, priority, parallelism, 0, clearSessionMemory);
     }
-    public Entity tryRun(String script, int priority, int parallelism,int fetchSize, boolean clearVar) throws IOException {
+    public Entity tryRun(String script, int priority, int parallelism,int fetchSize, boolean clearSessionMemory) throws IOException {
         if (!mutex.tryLock())
             return null;
         try {
-            return run(script, (ProgressListener) null, priority, parallelism, fetchSize, clearVar);
+            return run(script, (ProgressListener) null, priority, parallelism, fetchSize, clearSessionMemory);
         } finally {
             mutex.unlock();
         }
     }
 
-    public Entity run(String script, boolean cleanVar) throws IOException {
-        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, cleanVar);
+    public Entity run(String script, boolean clearSessionMemory) throws IOException {
+        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, clearSessionMemory);
     }
 
-    public Entity run(String script, int priority, boolean cleanVar) throws IOException {
-        return run(script, (ProgressListener) null, priority, DEFAULT_PARALLELISM, cleanVar);
+    public Entity run(String script, int priority, boolean clearSessionMemory) throws IOException {
+        return run(script, (ProgressListener) null, priority, DEFAULT_PARALLELISM, clearSessionMemory);
     }
 
-    public Entity run(String script, int priority, int parallelism, boolean cleanVar) throws IOException {
-        return run(script, (ProgressListener) null, priority, parallelism, cleanVar);
+    public Entity run(String script, int priority, int parallelism, boolean clearSessionMemory) throws IOException {
+        return run(script, (ProgressListener) null, priority, parallelism, clearSessionMemory);
     }
 
-    public Entity run(String script, ProgressListener listener, boolean cleanVar) throws IOException {
-        return run(script, listener, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, cleanVar);
+    public Entity run(String script, ProgressListener listener, boolean clearSessionMemory) throws IOException {
+        return run(script, listener, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, clearSessionMemory);
     }
 
-    public Entity run(String script, ProgressListener listener, int priority, int parallelism, boolean cleanVar) throws IOException {
-        return run( script, listener, priority, parallelism, 0, cleanVar);
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, boolean clearSessionMemory) throws IOException {
+        return run( script, listener, priority, parallelism, 0, clearSessionMemory);
     }
 
-    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean cleanVar) throws IOException {
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory) throws IOException {
         if(fetchSize>0){
             if(fetchSize<8192){
                 throw new IOException("fetchSize must be greater than 8192");
@@ -518,7 +518,7 @@ public class DBConnection {
                     int flag = 0;
                     if (asynTask)
                         flag += 4;
-                    if (cleanVar)
+                    if (clearSessionMemory)
                         flag += 16;
                     if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
                         out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
@@ -569,7 +569,7 @@ public class DBConnection {
                         int flag = 0;
                         if (asynTask)
                             flag += 4;
-                        if (cleanVar)
+                        if (clearSessionMemory)
                             flag += 16;
                         if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
                             out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
