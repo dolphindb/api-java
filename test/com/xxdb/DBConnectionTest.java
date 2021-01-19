@@ -1851,7 +1851,7 @@ public class DBConnectionTest {
         assertNull(json.getJSONObject("val"));
     }
     @Test
-    public void TestRunCleanVar() throws IOException{
+    public void TestRunClearSessionMemory() throws IOException{
         boolean noErro=true;
 
         conn.tryRun("testVar=1", true);
