@@ -399,43 +399,85 @@ public class DBConnection {
     }
 
     public Entity tryRun(String script) throws IOException {
-        return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
+        return tryRun(script, false);
     }
 
     public Entity tryRun(String script, int priority, int parallelism) throws IOException {
-        return tryRun(script, priority, parallelism, 0);
+        return tryRun(script, priority, parallelism, false);
     }
     public Entity tryRun(String script, int priority, int parallelism,int fetchSize) throws IOException {
         if (!mutex.tryLock())
             return null;
         try {
-            return run(script, (ProgressListener) null, priority, parallelism, fetchSize);
+            return run(script, (ProgressListener) null, priority, parallelism, fetchSize, false);
         } finally {
             mutex.unlock();
         }
     }
 
     public Entity run(String script) throws IOException {
-        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
+        return run(script,false);
     }
 
     public Entity run(String script, int priority) throws IOException {
-        return run(script, (ProgressListener) null, priority, DEFAULT_PARALLELISM);
+        return run(script, priority, false);
     }
 
     public Entity run(String script, int priority, int parallelism) throws IOException {
-        return run(script, (ProgressListener) null, priority, parallelism);
+        return run(script, priority, parallelism, false);
     }
 
     public Entity run(String script, ProgressListener listener) throws IOException {
-        return run(script, listener, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
+        return run(script, listener,false);
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism) throws IOException {
-        return run( script, listener, priority, parallelism, 0);
+        return run( script, listener, priority, parallelism, false);
+    }
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize) throws IOException{
+        return run(script, listener, priority, parallelism,fetchSize, false);
     }
 
-    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize) throws IOException {
+
+
+    public Entity tryRun(String script, boolean cleanVar) throws IOException {
+        return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, cleanVar);
+    }
+
+    public Entity tryRun(String script, int priority, int parallelism, boolean cleanVar) throws IOException {
+        return tryRun(script, priority, parallelism, 0, cleanVar);
+    }
+    public Entity tryRun(String script, int priority, int parallelism,int fetchSize, boolean clearVar) throws IOException {
+        if (!mutex.tryLock())
+            return null;
+        try {
+            return run(script, (ProgressListener) null, priority, parallelism, fetchSize, clearVar);
+        } finally {
+            mutex.unlock();
+        }
+    }
+
+    public Entity run(String script, boolean cleanVar) throws IOException {
+        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, cleanVar);
+    }
+
+    public Entity run(String script, int priority, boolean cleanVar) throws IOException {
+        return run(script, (ProgressListener) null, priority, DEFAULT_PARALLELISM, cleanVar);
+    }
+
+    public Entity run(String script, int priority, int parallelism, boolean cleanVar) throws IOException {
+        return run(script, (ProgressListener) null, priority, parallelism, cleanVar);
+    }
+
+    public Entity run(String script, ProgressListener listener, boolean cleanVar) throws IOException {
+        return run(script, listener, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, cleanVar);
+    }
+
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, boolean cleanVar) throws IOException {
+        return run( script, listener, priority, parallelism, 0, cleanVar);
+    }
+
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean cleanVar) throws IOException {
         if(fetchSize>0){
             if(fetchSize<8192){
                 throw new IOException("fetchSize must be greater than 8192");
@@ -469,16 +511,20 @@ public class DBConnection {
 
                 out.writeBytes((listener != null ? "API2 " : "API ") + sessionID + " ");
                 out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
-                if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
-                    if(asynTask) {
-                        out.writeBytes(" / 4_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                    }else{
-                        out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                    }
-                }else if (isUrgentCancelJob) {
+                if(isUrgentCancelJob){
                     out.writeBytes(" / 1_1_8_8");
-                }else if(asynTask){
-                    out.writeBytes(" / 4_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                }
+                else{
+                    int flag = 0;
+                    if (asynTask)
+                        flag += 4;
+                    if (cleanVar)
+                        flag += 16;
+                    if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
+                        out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                    } else {
+                        out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                    }
                 }
                 if(fetchSize>0){
                     out.writeBytes("__" + String.valueOf(fetchSize));
@@ -516,16 +562,20 @@ public class DBConnection {
                     connect();
                     out.writeBytes((listener != null ? "API2 " : "API ") + sessionID + " ");
                     out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
-                    if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
-                        if(asynTask) {
-                            out.writeBytes(" / 4_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                        }else{
-                            out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                        }
-                    }else if (isUrgentCancelJob) {
+                    if(isUrgentCancelJob){
                         out.writeBytes(" / 1_1_8_8");
-                    }else if(asynTask){
-                        out.writeBytes(" / 4_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                    }
+                    else{
+                        int flag = 0;
+                        if (asynTask)
+                            flag += 4;
+                        if (cleanVar)
+                            flag += 16;
+                        if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
+                            out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                        } else {
+                            out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                        }
                     }
                     if(fetchSize>0){
                         out.writeBytes("__" + String.valueOf(fetchSize));

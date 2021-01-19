@@ -1850,4 +1850,100 @@ public class DBConnectionTest {
         json = new JSONObject().parseObject(t);
         assertNull(json.getJSONObject("val"));
     }
+    @Test
+    public void TestRunCleanVar() throws IOException{
+        boolean noErro=true;
+
+        conn.tryRun("testVar=1", true);
+        try {
+            conn.run("print testVar");
+        }
+        catch (IOException ex){
+            String aa=ex.getMessage();
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.tryRun("testVar=1", 4, 4, true);
+        try {
+            conn.run("print testVar", 4, 4);
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.tryRun("testVar=1", 4, 4, 10000, true);
+        try {
+            conn.run("print testVar", 4, 4);
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("testVar=1", true);
+        try {
+            conn.run("print testVar");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("testVar=1", 4, true);
+        try {
+            conn.run("print testVar");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("testVar=1", 4, 4, true);
+        try {
+            conn.run("print testVar");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("testVar=1", (ProgressListener) null, true);
+        try {
+            conn.run("print testVar");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("testVar=1", (ProgressListener) null, 4, 4, true);
+        try {
+            conn.run("print testVar");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("testVar=1", (ProgressListener) null, 4, 4, 10000, true);
+        try {
+            conn.run("print testVar");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+    }
 }
