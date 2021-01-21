@@ -23,7 +23,7 @@ public class DBConnectionTest {
 
     private DBConnection conn;
     public static String HOST = "localhost";
-     public static Integer PORT = 8849;
+     public static Integer PORT = 8848;
     // public static String HOST;
     // public static Integer PORT;
 
@@ -1865,7 +1865,30 @@ public class DBConnectionTest {
         }
         assertTrue(noErro);
 
-        conn.run("testVar=1", true);
+        conn.tryRun("testVar=table(1 as id,2 as val);",true);
+        try {
+            conn.run("print testVar", 4, 4);
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("\n" +
+                "n=1000;" +
+                "t = table(1..n as id, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,n) as name, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,n) as name1)\n" +
+                "testVar= t.toStdJson()");
+        try {
+            conn.run(" testVar", 4, 4);
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("testVar=1..100000000", true);
         try {
             conn.run("print testVar");
         }
@@ -1875,15 +1898,241 @@ public class DBConnectionTest {
         }
         assertTrue(noErro);
 
-        conn.run("testVar=1", (ProgressListener) null, 4, 4, 10000, true);
+        conn.run("testVar=NULL", true);
         try {
             conn.run("print testVar");
         }
         catch (IOException ex){
             if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("testVar=bool()", true);
+        try {
+            conn.run("print testVar");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("testVar=float()",  true);
+        try {
+            conn.run("print testVar");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("testVar=`ghyib", (ProgressListener) null, 4, 4,10000, true);
+        try {
+            conn.run("print testVar");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testVar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("testVar=1;a=testVar", (ProgressListener) null, 4, 4, 10000, true);
+        try {
+            conn.run("print a");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token a"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        conn.run("testsym=symbol(string(1..100000));testchar=`ftycdfty;t=table(1..10 as id,string(1..10) as str);testm=1..9$3:3;testp=1:8;testdic=dict(INT,DATE);testdic[1]=date(now());def f(b){a=b}", true);
+        try {
+            conn.run("testsym;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testsym"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("testchar;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testchar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("t;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token t"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("testm;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testm"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("testp;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testp"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("testdic;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testdic"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("f(2);");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token f"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+
+        conn.run("testsym=char(1..100000);testchar=now();t=table(bool(1..10) as id,date(1..10) as str);testm=(1..9)$3:3;testp=1:8;testdic=dict(INT,DATE);testdic[1]=date(now());any=(1,1..10)",true);
+        try {
+            conn.run("testsym;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testsym"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("testchar;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testchar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("t;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token t"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("testm;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testm"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("testp;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testp"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("testdic;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testdic"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("any;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token any"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        conn.run("testsym=[int(),int()];testchar=string();t=table(10:0,`id`var,[DATE,SYMBOL]);testm=matrix(INT,1,1);testp=pair(int(),int());testdic=dict(INT,DATE);any=();def f(b){}", true);
+        try {
+            conn.run("testsym;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testsym"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("testchar;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testchar"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("t;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token t"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("testm;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testm"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("testp;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testp"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("testdic;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token testdic"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("any;");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token any"))
+                noErro=false;
+        }
+        assertTrue(noErro);
+        try {
+            conn.run("f(2);");
+        }
+        catch (IOException ex){
+            if(!ex.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token f"))
                 noErro=false;
         }
         assertTrue(noErro);
 
     }
+    @Test
+    public void p() throws IOException {
+    for (int i=0;i<10000;i++){
+        conn.run("testsym"+i+"=char(1..100000);testchar"+i+"=now();t"+i+"=table(bool(1..1000000) as id,date(1..1000000) as str);testm"+i+"=(1..900)$30:30;testp"+i+"=1:8;testdic"+i+"=dict(INT,DATE);testdic"+i+"[1]=date(now());any"+i+"=(1,1..10000)",true);
+    }
+}
 }
