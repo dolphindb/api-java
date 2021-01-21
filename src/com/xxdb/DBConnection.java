@@ -409,7 +409,7 @@ public class DBConnection {
         if (!mutex.tryLock())
             return null;
         try {
-            return run(script, (ProgressListener) null, priority, parallelism, fetchSize);
+            return run(script, (ProgressListener) null, priority, parallelism, fetchSize, false);
         } finally {
             mutex.unlock();
         }
@@ -436,6 +436,24 @@ public class DBConnection {
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize) throws IOException {
+        return run( script, listener, priority, parallelism, 0, false);
+    }
+
+    public Entity tryRun(String script, boolean clearSessionMemory) throws IOException {
+        if (!mutex.tryLock())
+            return null;
+        try {
+            return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false);
+        } finally {
+            mutex.unlock();
+        }
+    }
+
+    public Entity run(String script, boolean clearSessionMemory) throws IOException {
+        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM,0, clearSessionMemory);
+    }
+
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory) throws IOException {
         if(fetchSize>0){
             if(fetchSize<8192){
                 throw new IOException("fetchSize must be greater than 8192");
@@ -469,16 +487,20 @@ public class DBConnection {
 
                 out.writeBytes((listener != null ? "API2 " : "API ") + sessionID + " ");
                 out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
-                if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
-                    if(asynTask) {
-                        out.writeBytes(" / 4_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                    }else{
-                        out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                    }
-                }else if (isUrgentCancelJob) {
+                if(isUrgentCancelJob){
                     out.writeBytes(" / 1_1_8_8");
-                }else if(asynTask){
-                    out.writeBytes(" / 4_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                }
+                else{
+                    int flag = 0;
+                    if (asynTask)
+                        flag += 4;
+                    if (clearSessionMemory)
+                        flag += 16;
+                    if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
+                        out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                    } else {
+                        out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                    }
                 }
                 if(fetchSize>0){
                     out.writeBytes("__" + String.valueOf(fetchSize));
@@ -516,16 +538,20 @@ public class DBConnection {
                     connect();
                     out.writeBytes((listener != null ? "API2 " : "API ") + sessionID + " ");
                     out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
-                    if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
-                        if(asynTask) {
-                            out.writeBytes(" / 4_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                        }else{
-                            out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                        }
-                    }else if (isUrgentCancelJob) {
+                    if(isUrgentCancelJob){
                         out.writeBytes(" / 1_1_8_8");
-                    }else if(asynTask){
-                        out.writeBytes(" / 4_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                    }
+                    else{
+                        int flag = 0;
+                        if (asynTask)
+                            flag += 4;
+                        if (clearSessionMemory)
+                            flag += 16;
+                        if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
+                            out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                        } else {
+                            out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                        }
                     }
                     if(fetchSize>0){
                         out.writeBytes("__" + String.valueOf(fetchSize));
