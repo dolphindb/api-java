@@ -436,7 +436,7 @@ public class DBConnection {
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize) throws IOException {
-        return run( script, listener, priority, parallelism, 0, false);
+        return run( script, listener, priority, parallelism, fetchSize, false);
     }
 
     public Entity tryRun(String script, boolean clearSessionMemory) throws IOException {
