@@ -390,18 +390,34 @@ BasicTable table1 = new BasicTable(colNames,cols);
 
 DolphinDB的分布式表支持并发读写，下面展示如何在Java客户端中将数据并发写入DolphinDB的分布式表。
 
+> 请注意：DolphinDB不允许多个writer同时将数据写入到同一个分区，因此在客户端多线程并行写入数据时，需要确保每个线程分别写入不同的分区。Java API提供了自动按分区分流数据并行写入的简便方法，函数定义如下
+
+```java
+public PartitionedTableAppender(String dbUrl, String tableName, String partitionColName, String appendFunction, DBConnectionPool pool)
+```
+* dbUrl: 必填，分布式数据库地址
+* tableName: 必填，分布式表名
+* partitionColName: 必填，分区字段
+* appendFunction: 可选，自定义写入函数名，不填此参数则调用内置tableInsert函数。
+* pool: 连接池，并行写入数据。
+
+```java
+DBConnectionPool pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true);
+PartitionedTableAppender appender = new PartitionedTableAppender(dbUrl, tableName , "sym", pool);
+//
+```
+
 首先，在DolphinDB服务端执行以下脚本，创建分布式数据库"dfs://DolphinDBUUID"和分布式表"device_status"。其中，数据库按照VALUE-HASH-HASH的组合进行三级分区。
 
 ```
-login("admin","123456")
-dbName="dfs://DolphinDBUUID"
-tableName="device_status"
-db1=database("",VALUE, 2019.11.01..2020.02.01)
-db2=database("",HASH,[UUID,10])
-db3=database("",HASH,[UUID,10])
-t = table(200:0,`time`areaId`deviceId`value,[TIMESTAMP,UUID,UUID,DOUBLE])
-db = database(dbName, COMPO,[db1,db2,db3])
-db.createPartitionedTable(t, tableName,  `time`areaId`deviceId)
+t = table(timestamp(1..10)  as date,string(1..10) as sym)
+db1=database(\"\",HASH,[DATETIME,10])
+db2=database(\"\",HASH,[STRING,5])
+if(existsDatabase(\"dfs://demohash\")){
+    dropDatabase(\"dfs://demohash\")
+}
+db =database(\"dfs://demohash\",COMPO,[db2,db1])
+pt = db.createPartitionedTable(t,`pt,`sym`date)
 ```
 
 > 请注意：DolphinDB不允许多个writer同时将数据写入到同一个分区，因此在客户端多线程并行写入数据时，需要确保每个线程分别写入不同的分区。
