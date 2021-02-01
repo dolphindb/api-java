@@ -8,6 +8,7 @@ import java.net.SocketException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
@@ -30,16 +31,53 @@ public class ThreadedClient extends AbstractClient {
     class HandlerLopper extends Thread {
         BlockingQueue<List<IMessage>> queue;
         MessageHandler handler;
+        private int batchSize = -1;
+        private int throttle = -1;
 
         HandlerLopper(BlockingQueue<List<IMessage>> queue, MessageHandler handler) {
             this.queue = queue;
             this.handler = handler;
         }
 
+        HandlerLopper(BlockingQueue<List<IMessage>> queue, MessageHandler handler, int batchSize, int throttle) {
+            this.queue = queue;
+            this.handler = handler;
+            this.batchSize = batchSize;
+            this.throttle = throttle;
+        }
+
         public void run() {
             while (true) {
                 try {
-                    List<IMessage> msgs = queue.take();
+                    List<IMessage> msgs = null;
+                    if(batchSize == -1 && throttle == -1)
+                        msgs = queue.take();
+                    else if(batchSize != -1 && throttle != -1){
+                        LocalTime end = LocalTime.now().plusNanos(throttle*1000000);
+                        while ((msgs == null||msgs.size()<batchSize) && LocalTime.now().isBefore(end)){
+                            if(msgs == null)
+                                msgs = queue.poll();
+                            else
+                                msgs.addAll(queue.poll());
+                        }
+                    }
+                    else if(batchSize != -1){
+                        while (msgs == null||msgs.size()<batchSize){
+                            if(msgs == null)
+                                msgs = queue.take();
+                            else
+                                msgs.addAll(queue.take());
+                        }
+                    }
+                    else if(throttle != -1){
+                        LocalTime end = LocalTime.now().plusNanos(throttle*1000000);
+                        while (LocalTime.now().isBefore(end)){
+                            if(msgs == null)
+                                msgs = queue.poll();
+                            else
+                                msgs.addAll(queue.poll());
+                        }
+                    }
                     for (IMessage msg : msgs) {
                         handler.doEvent(msg);
                     }
@@ -73,6 +111,12 @@ public class ThreadedClient extends AbstractClient {
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic) throws IOException {
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, allowExistTopic);
         handlerLopper = new HandlerLopper(queue, handler);
+        handlerLopper.start();
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, int throttle) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, allowExistTopic);
+        handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle);
         handlerLopper.start();
     }
 
