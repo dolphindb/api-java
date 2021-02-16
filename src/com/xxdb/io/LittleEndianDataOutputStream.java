@@ -38,6 +38,11 @@ public class LittleEndianDataOutputStream extends AbstractExtendedDataOutputStre
 		writeLong(v.low);
 		writeLong(v.high);
 	}
+	
+	public void writeDouble2(Double2 v) throws IOException {
+		writeDouble(v.x);
+		writeDouble(v.y);
+	}
 
 	@Override
 	public void writeIntArray(int [] A, int startIdx, int len) throws IOException{

@@ -46,7 +46,10 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	}
 	
 	public void write(ExtendedDataOutput out) throws IOException{
-		int flag = (df_.ordinal() << 8) + getDataType().ordinal();
+		int dataType = getDataType().ordinal();
+		if(dataType == DATA_TYPE.DT_SYMBOL.ordinal())
+			dataType += 128;
+		int flag = (df_.ordinal() << 8) + dataType;
 		out.writeShort(flag);
 		out.writeInt(rows());
 		out.writeInt(columns());

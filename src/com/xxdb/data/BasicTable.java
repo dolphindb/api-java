@@ -51,7 +51,7 @@ public class BasicTable extends AbstractEntity implements Table{
 			if(dt == DATA_TYPE.DT_SYMBOL && extended){
 				if(collection == null)
 					collection = new SymbolBaseCollection();
-				vector = new BasicStringVector(df, in, false, collection);
+				vector = new BasicSymbolVector(df, in, collection);
 			}
 			else{
 				vector = (Vector)factory.createEntity(df, dt, in, extended);
@@ -233,8 +233,16 @@ public class BasicTable extends AbstractEntity implements Table{
 		out.writeString(""); //table name
 		for(String colName : names_)
 			out.writeString(colName);
-		for(Vector vector : columns_)
-			vector.write(out);
+		SymbolBaseCollection collection = null;
+		for(Vector vector : columns_){
+			if(vector.getDataType() != DATA_TYPE.DT_SYMBOL)
+				vector.write(out);
+			else {
+				if(collection == null)
+					collection = new SymbolBaseCollection();
+				((BasicSymbolVector)vector).write(out, collection);
+			}
+		}
 	}
 
 	public BasicTable combine(BasicTable table){
