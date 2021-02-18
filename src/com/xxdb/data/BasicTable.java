@@ -260,4 +260,11 @@ public class BasicTable extends AbstractEntity implements Table{
 			cols.add(columns_.get(i).getSubVector(indices));
 		return new BasicTable(names_, cols);
 	}
+
+	@Override
+	public void addColumn(String colName, Vector col) {
+		names_.add(colName);
+		name2index_.put(colName, name2index_.size());
+		columns_.add(col);
+	}
 }

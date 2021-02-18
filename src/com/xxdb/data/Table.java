@@ -11,4 +11,5 @@ public interface Table extends Entity{
 	Vector getColumn(String name);
 	String getColumnName(int index);
 	Table getSubTable(int[] indices);
+	void addColumn(String colName, Vector col);
 }
