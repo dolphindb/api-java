@@ -61,6 +61,8 @@ public class BasicComplex extends AbstractScalar{
 
 	@Override
 	public String getString() {
+		if(isNull())
+			return "";
 		StringBuilder sb = new StringBuilder();
 		sb.append(value.x);
 		if(value.y >= 0)

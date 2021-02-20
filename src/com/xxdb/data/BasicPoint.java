@@ -61,6 +61,8 @@ public class BasicPoint extends AbstractScalar{
 
 	@Override
 	public String getString() {
+		if(isNull())
+			return "(,)";
 		StringBuilder sb = new StringBuilder();
 		sb.append('(');
 		sb.append(value.x);
