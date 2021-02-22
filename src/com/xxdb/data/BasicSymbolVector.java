@@ -5,6 +5,11 @@ import java.util.List;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+/**
+ * 
+ * Corresponds to DolphinDB symbol vector
+ *
+ */
 public class BasicSymbolVector extends AbstractVector {
 	private SymbolBase base;
 	private int[] values;
@@ -77,6 +82,7 @@ public class BasicSymbolVector extends AbstractVector {
 		return new BasicSymbolVector(base, sub, false);
 	}
 	
+	@Override
 	public String getString(int index){
 		return base.getSymbol(values[index]);
 	}

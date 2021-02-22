@@ -15,6 +15,7 @@ public interface Vector extends Entity{
 	void setNull(int index);
 	int hashBucket(int index, int buckets);
 	Scalar get(int index);
+	String getString(int index);
 	void set(int index, Scalar value) throws Exception;
 	Class<?> getElementClass();
 }

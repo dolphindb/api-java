@@ -30,6 +30,11 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		return -1;
 	}
 	
+	@Override
+	public String getString(int index){
+		return get(index).getString();
+	}
+	
 	public String getString(){
 		StringBuilder sb = new StringBuilder("[");
 		int size = Math.min(DISPLAY_ROWS, rows());

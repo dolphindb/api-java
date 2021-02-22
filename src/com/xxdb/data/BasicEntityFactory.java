@@ -352,11 +352,11 @@ public class BasicEntityFactory implements EntityFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicComplex(in);}
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicComplexVector(Entity.DATA_FORM.DF_VECTOR, in);}
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicComplexVector(Entity.DATA_FORM.DF_PAIR, in);}
-		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for Complex not supported yet.");}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicComplexMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicComplex(0, 0);}
 		public Vector createVectorWithDefaultValue(int size){ return new BasicComplexVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicComplexVector(Entity.DATA_FORM.DF_PAIR, 2);}
-		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for Complex not supported yet.");}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicComplexMatrix(rows, columns);}
 	}
 	
 	private class PointFactory implements TypeFactory{

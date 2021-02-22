@@ -134,6 +134,7 @@ public class BasicStringVector extends AbstractVector{
 		return new BasicStringVector(sub, false, false);
 	}
 	
+	@Override
 	public String getString(int index){
 		return values[index];
 	}
