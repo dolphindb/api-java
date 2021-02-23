@@ -52,7 +52,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	
 	public void write(ExtendedDataOutput out) throws IOException{
 		int dataType = getDataType().ordinal();
-		if(dataType == DATA_TYPE.DT_SYMBOL.ordinal())
+		if(this instanceof BasicSymbolVector)
 			dataType += 128;
 		int flag = (df_.ordinal() << 8) + dataType;
 		out.writeShort(flag);

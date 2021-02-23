@@ -235,13 +235,13 @@ public class BasicTable extends AbstractEntity implements Table{
 			out.writeString(colName);
 		SymbolBaseCollection collection = null;
 		for(Vector vector : columns_){
-			if(vector.getDataType() != DATA_TYPE.DT_SYMBOL)
-				vector.write(out);
-			else {
+			if(vector instanceof BasicSymbolVector){
 				if(collection == null)
 					collection = new SymbolBaseCollection();
 				((BasicSymbolVector)vector).write(out, collection);
 			}
+			else
+				vector.write(out);
 		}
 	}
 

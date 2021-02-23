@@ -46,8 +46,10 @@ public class SymbolBase {
 			symMap = new HashMap<String, Integer>();
 			if(syms.size() > 0 && !syms.get(0).isEmpty()) 
 				throw new RuntimeException("A symbol base's first key must be empty string.");
-			if(syms.size() == 0)
+			if(syms.size() == 0){
 				symMap.put("", 0);
+				syms.add("");
+			}
 			else{
 				int count = syms.size();
 				for(int i=0; i<count; ++i)
@@ -58,12 +60,16 @@ public class SymbolBase {
 	}
 	
 	public int find(String key, boolean insertIfNotPresent){
+		if(key == null)
+			throw new RuntimeException("A symbol base key string can't be null.");
 		if(symMap == null){
 			symMap = new HashMap<String, Integer>();
 			if(syms.size() > 0 && !syms.get(0).isEmpty()) 
 				throw new RuntimeException("A symbol base's first key must be empty string.");
-			if(syms.size() == 0)
+			if(syms.size() == 0){
 				symMap.put("", 0);
+				syms.add("");
+			}
 			else{
 				int count = syms.size();
 				for(int i=0; i<count; ++i)
@@ -74,6 +80,7 @@ public class SymbolBase {
 		if(index == null){
 			index = symMap.size();
 			symMap.put(key, index);
+			syms.add(key);
 		}
 		return index;
 	}
