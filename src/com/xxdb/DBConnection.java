@@ -51,6 +51,7 @@ public class DBConnection {
     private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.values().length - 1;
     private static final int DEFAULT_PRIORITY = 4;
     private static final int DEFAULT_PARALLELISM = 2;
+    private static final int localAPIVersion = 100;
 
     private String ServerVersion = "";
     private ReentrantLock mutex;
@@ -196,7 +197,11 @@ public class DBConnection {
             }
             assert (highAvailabilitySites == null || highAvailability);
 
-            return connect();
+            boolean connectRet = connect();
+            if(!connectRet)
+                return false;
+            compareRequiredAPIVersion();
+            return true;
         } finally {
             mutex.unlock();
         }
@@ -1054,6 +1059,18 @@ public class DBConnection {
         }catch (Exception ex){
             ex.printStackTrace();
             return null;
+        }
+     }
+     private void compareRequiredAPIVersion() throws IOException {
+        try {
+            Entity ret = run("getRequiredAPIVersion(`java)");
+            if (localAPIVersion < ((BasicInt)((BasicAnyVector) ret).get(0)).getInt()) {
+                throw new IOException("API version is too low and needs to be upgraded");
+            }
+        }catch (IOException e){
+            if(!e.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token getRequiredAPIVersion")){
+                throw e;
+            }
         }
      }
 }
