@@ -101,7 +101,11 @@ public class autoFitTableAppender {
     public Entity append(BasicTable table) {
         Entity ret=new BasicBoolean(false);
         try {
-            String runScript="schema(loadTable(\"" + dbUrl_ + "\",\"" + tableName_ + "\"))";
+            String runScript;
+            if(dbUrl_=="")
+                runScript="schema(" + tableName_ + ")";
+            else
+                runScript="schema(loadTable(\"" + dbUrl_ + "\",\"" + tableName_ + "\"))";
             ret = con_.run(runScript);
             int columns = table.columns();
             BasicTable schema = (BasicTable)((BasicDictionary)ret).get(new BasicString("colDefs"));
@@ -467,10 +471,10 @@ public class autoFitTableAppender {
             List<Entity> param = new ArrayList<Entity>();
             BasicTable paramTable = new BasicTable(colName, cols);
             param.add(paramTable);
-
-            //ret=con_.run("dt=loadTable(\"dfs://autoFitTableAppender1\",\"testAppend\")");
-            //ret = con_.run("append!{dt}", param);
-            ret = con_.run("append!{loadTable(\"" + dbUrl_ + "\",\"" + tableName_ + "\"), }", param);
+            if(dbUrl_=="")
+                ret = con_.run("append!{" + tableName_ + "}", param);
+            else
+                ret = con_.run("append!{loadTable(\"" + dbUrl_ + "\",\"" + tableName_ + "\"), }", param);
             Entity.DATA_TYPE type=ret.getDataType();
         } catch (InterruptedException e) {
             e.printStackTrace();
