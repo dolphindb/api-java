@@ -7,493 +7,475 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
-public class autoFitTableAppender{
+public class autoFitTableAppender {
     String dbUrl_;
     String tableName_;
     boolean async_;
     DBConnection con_;
-    autoFitTableAppender(String dbUrl, String tableName, DBConnection con){
-        this.dbUrl_=dbUrl;
-        this.tableName_=tableName;
-        this.con_=con;
+
+    autoFitTableAppender(String dbUrl, String tableName, DBConnection con) {
+        this.dbUrl_ = dbUrl;
+        this.tableName_ = tableName;
+        this.con_ = con;
     }
-    public Entity append(List<Object> table){
-        Entity ret;
+
+    public String getDTString(Entity.DATA_TYPE type) {
+        switch (type) {
+            case DT_ANY:
+                return "ANY";
+            case DT_BLOB:
+                return "BLOB";
+            case DT_BOOL:
+                return "BOOL";
+            case DT_BYTE:
+                return "BYTE";
+            case DT_CODE:
+                return "CODE";
+            case DT_COMPRESS:
+                return "COMPRESS";
+            case DT_DATASOURCE:
+                return "DATASOURCE";
+            case DT_DATE:
+                return "DATE";
+            case DT_DATEHOUR:
+                return "DATEHOUR";
+            case DT_DATEMINUTE:
+                return "DATEMINUTE";
+            case DT_DATETIME:
+                return "DATETIME";
+            case DT_DICTIONARY:
+                return "DICTIONARY";
+            case DT_DOUBLE:
+                return "DOUBLE";
+            case DT_FLOAT:
+                return "FLOAT";
+            case DT_FUNCTIONDEF:
+                return "FUNCTIONDEF";
+            case DT_HANDLE:
+                return "HANDLE";
+            case DT_INT:
+                return "INT";
+            case DT_INT128:
+                return "INT128";
+            case DT_IPADDR:
+                return "IPADDR";
+            case DT_LONG:
+                return "LONG";
+            case DT_MINUTE:
+                return "MINUTE";
+            case DT_MONTH:
+                return "MONTH";
+            case DT_NANOTIME:
+                return "NANOTIME";
+            case DT_NANOTIMESTAMP:
+                return "NANOTIMESTAMP";
+            case DT_OBJECT:
+                return "OBJECT";
+            case DT_STRING:
+                return "STRING";
+            case DT_RESOURCE:
+                return "RESOURCE";
+            case DT_SECOND:
+                return "SECOND";
+            case DT_SHORT:
+                return "SHORT";
+            case DT_SYMBOL:
+                return "SYMBOL";
+            case DT_TIME:
+                return "TIME";
+            case DT_TIMESTAMP:
+                return "TIMESTAMP";
+            case DT_UUID:
+                return "UUID";
+            case DT_VOID:
+                return "VOID";
+        }
+        return "Unrecognized type";
+    }
+
+    public Entity append(BasicTable table) {
+        Entity ret=new BasicBoolean(false);
         try {
-            ret = con_.run("schema(loadTable(\"" + dbUrl_ + "\",\"" + tableName_ + "\")");
-            int colSize = table.size();
-            BasicTable schema = (BasicTable) ret;
-            BasicStringVector typeList=(BasicStringVector)schema.getColumn("type");
-            BasicStringVector nameList=(BasicStringVector)schema.getColumn("name");
-            List<String> fileName=new ArrayList<>();
-            List<Vector> col=new ArrayList<>();
-            for (int i = 0; i < colSize; ++i) {
-                String type=typeList.get(i).getString();
-                fileName.add(nameList.getString(i));
-                if(type == "DATE" || type == "MONTH" || type == "TIME" || type == "MINUTE" || type == "SECOND" || type == "DATETIME" || type == "DATE" || type == "DATEHOUR" || type == "TIMESTAMP" || type == "NANOTIME" || type == "NANOTIMESTAMP" || type == "DATEMINUTE") {
-                    col.add((Vector) fillTypeVector((ArrayList<Object>) (table.get(i)), type));
-                }
-                else
-                    col.add((Vector) table.get(i));
+            String runScript="schema(loadTable(\"" + dbUrl_ + "\",\"" + tableName_ + "\"))";
+            ret = con_.run(runScript);
+            int columns = table.columns();
+            BasicTable schema = (BasicTable)((BasicDictionary)ret).get(new BasicString("colDefs"));
+            BasicStringVector typeList = (BasicStringVector) schema.getColumn("typeString");
+            BasicStringVector nameList = (BasicStringVector) schema.getColumn("name");
+            List<String> colName = new ArrayList<>();
+            List<Vector> cols = new ArrayList<>();
+            for(int i=0;i<columns;++i){
+                colName.add(nameList.getString(i));
             }
-            List<Entity> param=new ArrayList<Entity>();
-            BasicTable paramTable=new BasicTable(fileName,col);
-            ret = con_.run("append!{loadTable(\"" + dbUrl_ + "\",\"" + tableName_ + "\")}",param);
-
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
-        return new BasicBoolean(true);
-    }
-    public static Entity fillSchema(List<ArrayList> data, List<String> fieldName, List<String> typestr) throws java.lang.Exception{
-        List<Vector> columns = new ArrayList<Vector>();
-        List<String> names = fieldName;
-        List<String> taggetTypeList=typestr;
-        int size=data.size();
-        for(int i=0;i<size;++i) {
-            String clumnName = names.get(i);
-            String targetTypeStr = taggetTypeList.get(i);
-            Entity.DATA_TYPE targetType;
-            switch (targetTypeStr) {
-                case "DATE":
-                    targetType = Entity.DATA_TYPE.DT_DATE;
-                    break;
-                case "MONTH":
-                    targetType = Entity.DATA_TYPE.DT_MONTH;
-                    break;
-                case "TIME":
-                    targetType = Entity.DATA_TYPE.DT_TIME;
-                    break;
-                case "MINUTE":
-                    targetType = Entity.DATA_TYPE.DT_MINUTE;
-                    break;
-                case "SECOND":
-                    targetType = Entity.DATA_TYPE.DT_SECOND;
-                    break;
-                case "DATETIME":
-                    targetType = Entity.DATA_TYPE.DT_DATETIME;
-                    break;
-                case "DATEHOUR":
-                    targetType = Entity.DATA_TYPE.DT_DATEHOUR;
-                    break;
-                case "TIMESTAMP":
-                    targetType = Entity.DATA_TYPE.DT_TIMESTAMP;
-                    break;
-                case "NANOTIME":
-                    targetType = Entity.DATA_TYPE.DT_NANOTIME;
-                    break;
-                case "NANOTIMESTAMP":
-                    targetType = Entity.DATA_TYPE.DT_NANOTIMESTAMP;
-                    break;
-                case "DATEMINUTE":
-                    targetType = Entity.DATA_TYPE.DT_DATETIME;
-                    break;
-                default:
-                    throw new RuntimeException("The type " + targetTypeStr + " is not supported");
-            }
-            ArrayList<Object> dataClumn = data.get(i);
-            int rowSize = dataClumn.size();
-            String originClassString = dataClumn.get(0).getClass().toString();
-            Vector tmpColmn;
-            switch (targetType) {
-                case DT_DATE: {
-                    int[] buffer = new int[rowSize];
-
-                    switch (originClassString) {
-                        case "class java.time.LocalDateTime": {
-                            for (int j = 0; j < rowSize; ++j) {
-                                LocalDateTime timeTmp = (LocalDateTime) dataClumn.get(j);
-                                buffer[j] = Utils.countDays(timeTmp.toLocalDate());
+            int rowSize = table.rows();
+            for (int i = 0; i < columns; ++i) {
+                String name = nameList.getString(i);
+                String dstType = typeList.get(i).getString();
+                Vector colOrigin = table.getColumn(name);
+                Vector dstVector;
+                switch (dstType) {
+                    case "DATE": {
+                        int[] buffer = new int[rowSize];
+                        switch (colOrigin.getDataType()) {
+                            case DT_DATE: {
+                                dstVector = (BasicDateVector) colOrigin;
+                                break;
                             }
-                            break;
-                        }
-                        case "class java.time.LocalDate": {
-                            for (int j = 0; j < rowSize; ++j) {
-                                LocalDate timeTmp = (LocalDate) dataClumn.get(j);
-                                buffer[j] = Utils.countDays(timeTmp);
+                            case DT_DATETIME: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = ((BasicDateTimeVector) colOrigin).getInt(j) / 86400;
+                                }
+                                dstVector = new BasicDateVector(buffer);
+                                break;
                             }
-                            break;
-                        }
-                        default:
-                            throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                    }
-                    tmpColmn = new BasicDateVector(buffer);
-                    break;
-                }
-                case DT_MONTH: {
-                    int[] buffer = new int[rowSize];
-
-                    switch (originClassString) {
-                        case "class java.time.LocalDateTime": {
-                            for (int j = 0; j < rowSize; ++j) {
-                                LocalDateTime timeTmp = (LocalDateTime) dataClumn.get(j);
-                                buffer[i] = timeTmp.getYear() * 12 + timeTmp.getMonth().getValue() - 1;
+                            case DT_TIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicNanoTimestampVector) colOrigin).getLong(j) / 8640000);
+                                }
+                                dstVector = new BasicDateVector(buffer);
+                                break;
                             }
-                            break;
-                        }
-                        case "class java.time.LocalDate": {
-                            for (int j = 0; j < rowSize; ++j) {
-                                LocalDate timeTmp = (LocalDate) dataClumn.get(j);
-                                buffer[j] = timeTmp.getYear() + 12 + timeTmp.getMonth().getValue() - 1;
+                            case DT_NANOTIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicTimestampVector) colOrigin).getLong(j) / 86400000000000L);
+                                }
+                                dstVector = new BasicDateVector(buffer);
+                                break;
                             }
-                            break;
-                        }
-                        default:
-                            throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                    }
-                    tmpColmn = new BasicDateVector(buffer);
-                    break;
-                }
-                case DT_TIME: {
-                    int[] buffer = new int[rowSize];
-
-                    switch (originClassString) {
-                        case "class java.time.LocalDateTime": {
-                            for (int j = 0; j < rowSize; ++j) {
-                                LocalDateTime timeTmp = (LocalDateTime) dataClumn.get(j);
-                                buffer[j] = ((timeTmp.getHour() * 12 + timeTmp.getMinute()) * 60 + timeTmp.getSecond() * 1000) + timeTmp.getNano();
+                            case DT_DATEHOUR: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicDateHourVector) colOrigin).getInt(j) / 24);
+                                }
+                                dstVector = new BasicDateVector(buffer);
+                                break;
                             }
-                            break;
-                        }
-                        case "class java.time.LocalTime": {
-                            for (int j = 0; j < rowSize; ++j) {
-                                LocalTime timeTmp = (LocalTime) dataClumn.get(j);
-                                buffer[j] = ((timeTmp.getHour() * 12 + timeTmp.getMinute()) * 60 + timeTmp.getSecond() * 1000) + timeTmp.getNano();
-                            }
-                            break;
-                        }
-                        default:
-                            throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                    }
-                    tmpColmn = new BasicDateVector(buffer);
-                    break;
-                }
-                case DT_MINUTE: {
-                    int[] buffer = new int[rowSize];
-
-                    switch (originClassString) {
-                        case "class java.time.LocalDateTime": {
-                            for (int j = 0; j < rowSize; ++j) {
-                                LocalDateTime timeTmp = (LocalDateTime) dataClumn.get(j);
-                                buffer[j] = timeTmp.getHour() * 12 + timeTmp.getMinute();
-                            }
-                            break;
-                        }
-                        case "class java.time.LocalTime": {
-                            for (int j = 0; j < rowSize; ++j) {
-                                LocalTime timeTmp = (LocalTime) dataClumn.get(j);
-                                buffer[j] = timeTmp.getHour() * 12 + timeTmp.getMinute();
-                            }
-                            break;
-                        }
-                        default:
-                            throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                    }
-                    tmpColmn = new BasicDateVector(buffer);
-                    break;
-                }
-                case DT_SECOND: {
-                    int[] buffer = new int[rowSize];
-
-                    switch (originClassString) {
-                        case "class java.time.LocalDateTime": {
-                            for (int j = 0; j < rowSize; ++j) {
-                                LocalDateTime timeTmp = (LocalDateTime) dataClumn.get(j);
-                                buffer[j] = (timeTmp.getHour() * 12 + timeTmp.getMinute()) * 60 + timeTmp.getSecond();
-                            }
-                            break;
-                        }
-                        case "class java.time.LocalTime": {
-                            for (int j = 0; j < rowSize; ++j) {
-                                LocalTime timeTmp = (LocalTime) dataClumn.get(j);
-                                buffer[j] = (timeTmp.getHour() * 12 + timeTmp.getMinute()) * 60 + timeTmp.getSecond();
-                            }
-                            break;
-                        }
-                        default:
-                            throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                    }
-                    tmpColmn = new BasicDateVector(buffer);
-                    break;
-                }
-                case DT_DATETIME: {
-                    int[] buffer = new int[rowSize];
-
-                    switch (originClassString) {
-                        case "class java.time.LocalDateTime": {
-                            for (int j = 0; j < rowSize; ++j) {
-                                LocalDateTime timeTmp = (LocalDateTime) dataClumn.get(j);
-                                buffer[j] = ((Utils.countDays(timeTmp.getYear(),timeTmp.getMonth().getValue(),timeTmp.getDayOfMonth())*24+timeTmp.getHour()) * 12 + timeTmp.getMinute()) * 60 + timeTmp.getSecond();
-                            }
-                            break;
-                        }
-                        default:
-                            throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                    }
-                    tmpColmn = new BasicDateVector(buffer);
-                    break;
-                }
-                case DT_TIMESTAMP: {
-                    int[] buffer = new int[rowSize];
-
-                    switch (originClassString) {
-                        default:
-                            throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                    }
-                    //tmpColmn = new BasicDateVector(buffer);
-                    //break;
-                }
-                case DT_NANOTIME: {
-                    int[] buffer = new int[rowSize];
-
-                    switch (originClassString) {
-                        case "":break;
-                        default:
-                            throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                    }
-                    tmpColmn = new BasicDateVector(buffer);
-                    break;
-                }
-                case DT_NANOTIMESTAMP: {
-                    int[] buffer = new int[rowSize];
-
-                    switch (originClassString) {
-                        default:
-                            throw new IllegalArgumentException("Can't convert from "+originClassString + " into " + targetTypeStr+" in DolphinDB");
-                    }
-//					tmpColmn = new BasicDateVector(buffer);
-//					break;
-                }
-                default:
-                    throw new IllegalArgumentException("Unsupported DolphinDB type");
-            }
-            columns.add(tmpColmn);
-        }
-        BasicTable ret=new BasicTable(names, columns);
-        return ret;
-    }
-
-    public static Entity fillTypeVector(ArrayList<Object> data, String typestr) throws java.lang.Exception{
-        List<Vector> columns = new ArrayList<Vector>();
-        int size=data.size();
-        AbstractVector ret;
-        String targetTypeStr = typestr;
-        Entity.DATA_TYPE targetType;
-        switch (targetTypeStr) {
-            case "DATE":
-                targetType = Entity.DATA_TYPE.DT_DATE;
-                break;
-            case "MONTH":
-                targetType = Entity.DATA_TYPE.DT_MONTH;
-                break;
-            case "TIME":
-                targetType = Entity.DATA_TYPE.DT_TIME;
-                break;
-            case "MINUTE":
-                targetType = Entity.DATA_TYPE.DT_MINUTE;
-                break;
-            case "SECOND":
-                targetType = Entity.DATA_TYPE.DT_SECOND;
-                break;
-            case "DATETIME":
-                targetType = Entity.DATA_TYPE.DT_DATETIME;
-                break;
-            case "DATEHOUR":
-                targetType = Entity.DATA_TYPE.DT_DATEHOUR;
-                break;
-            case "TIMESTAMP":
-                targetType = Entity.DATA_TYPE.DT_TIMESTAMP;
-                break;
-            case "NANOTIME":
-                targetType = Entity.DATA_TYPE.DT_NANOTIME;
-                break;
-            case "NANOTIMESTAMP":
-                targetType = Entity.DATA_TYPE.DT_NANOTIMESTAMP;
-                break;
-            case "DATEMINUTE":
-                targetType = Entity.DATA_TYPE.DT_DATETIME;
-                break;
-            default:
-                throw new RuntimeException("The type " + targetTypeStr + " is not supported");
-        }
-        int rowSize = data.size();
-        String originClassString = data.get(0).getClass().toString();
-        switch (targetType) {
-            case DT_DATE: {
-                int[] buffer = new int[rowSize];
-
-                switch (originClassString) {
-                    case "class java.time.LocalDateTime": {
-                        for (int j = 0; j < rowSize; ++j) {
-                            LocalDateTime timeTmp = (LocalDateTime) data.get(j);
-                            buffer[j] = Utils.countDays(timeTmp.toLocalDate());
+                            default:
+                                throw new InterruptedException("Can't convert from " + dstType + " into " + getDTString(colOrigin.getDataType()));
                         }
                         break;
                     }
-                    case "class java.time.LocalDate": {
-                        for (int j = 0; j < rowSize; ++j) {
-                            LocalDate timeTmp = (LocalDate) data.get(j);
-                            buffer[j] = Utils.countDays(timeTmp);
+                    case "MONTH": {
+                        int[] buffer = new int[rowSize];
+                        switch (colOrigin.getDataType()) {
+                            case DT_DATE: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    int tmp = ((BasicDateVector) colOrigin).getInt(j);
+                                    LocalDate localTmp = Utils.parseDate(tmp);
+                                    buffer[j] = localTmp.getYear() + localTmp.getMonthValue() - 1;
+                                }
+                                dstVector = new BasicMonthVector(buffer);
+                                break;
+                            }
+                            case DT_DATETIME: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    int tmp = ((BasicDateVector) colOrigin).getInt(j) / 86400;
+                                    LocalDate localTmp = Utils.parseDate(tmp);
+                                    buffer[j] = localTmp.getYear() + localTmp.getMonthValue() - 1;
+                                }
+                                dstVector = new BasicMonthVector(buffer);
+                                break;
+                            }
+                            case DT_DATEHOUR: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    int tmp = ((BasicDateHourVector) colOrigin).getInt(j) / 24;
+                                    LocalDate localTmp = Utils.parseDate(tmp);
+                                    buffer[j] = localTmp.getYear() + localTmp.getMonthValue() - 1;
+                                }
+                                dstVector = new BasicMonthVector(buffer);
+                                break;
+                            }
+                            case DT_MONTH: {
+                                dstVector = colOrigin;
+                                break;
+                            }
+                            case DT_TIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    int tmp = (int) (((BasicTimestampVector) colOrigin).getLong(j) / 86400000);
+                                    LocalDate localTmp = Utils.parseDate(tmp);
+                                    buffer[j] = localTmp.getYear() + localTmp.getMonthValue() - 1;
+                                }
+                                dstVector = new BasicMonthVector(buffer);
+                                break;
+                            }
+                            case DT_NANOTIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    int tmp = (int) (((BasicNanoTimestampVector) colOrigin).getLong(j) / 86400000000000L);
+                                    LocalDate localTmp = Utils.parseDate(tmp);
+                                    buffer[j] = localTmp.getYear() + localTmp.getMonthValue() - 1;
+                                }
+                                dstVector = new BasicMonthVector(buffer);
+                                break;
+                            }
+                            default:
+                                throw new InterruptedException("Can't convert from " + dstType + " into " + getDTString(colOrigin.getDataType()));
                         }
                         break;
                     }
-                    default:
-                        throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
+                    case "TIME": {
+                        int[] buffer = new int[rowSize];
+                        switch (colOrigin.getDataType()) {
+                            case DT_TIME: {
+                                dstVector = colOrigin;
+                                break;
+                            }
+                            case DT_NANOTIME: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicNanoTimeVector) colOrigin).getLong(j) / 1000000);
+                                }
+                                dstVector = new BasicTimeVector(buffer);
+                                break;
+                            }
+                            case DT_TIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicTimestampVector) colOrigin).getLong(j) % 86400000);
+                                }
+                                dstVector = new BasicTimeVector(buffer);
+                                break;
+                            }
+                            case DT_NANOTIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicNanoTimeVector) colOrigin).getLong(j) % 86400000000000L / 1000000);
+                                }
+                                dstVector = new BasicTimeVector(buffer);
+                                break;
+                            }
+                            default:
+                                throw new InterruptedException("Can't convert from " + dstType + " into " + getDTString(colOrigin.getDataType()));
+                        }
+                        break;
+                    }
+                    case "MINUTE": {
+                        int[] buffer = new int[rowSize];
+                        switch (colOrigin.getDataType()) {
+                            case DT_TIME: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicTimeVector) colOrigin).getInt(j) / 60000);
+                                }
+                                dstVector = new BasicMonthVector(buffer);
+                                break;
+                            }
+                            case DT_SECOND: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = ((BasicSecondVector) colOrigin).getInt(j) / 60;
+                                }
+                                dstVector = new BasicMonthVector(buffer);
+                                break;
+                            }
+                            case DT_MINUTE: {
+                                dstVector = colOrigin;
+                                break;
+                            }
+                            case DT_DATETIME: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = ((BasicMinuteVector) colOrigin).getInt(j) % 86400 / 60;
+                                }
+                                dstVector = new BasicMonthVector(buffer);
+                                break;
+                            }
+                            case DT_NANOTIME: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicNanoTimeVector) colOrigin).getLong(j) / 600000000000L);
+                                }
+                                dstVector = new BasicMonthVector(buffer);
+                                break;
+                            }
+                            case DT_TIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicNanoTimeVector) colOrigin).getLong(j) / 60000 % 1440);
+                                }
+                                dstVector = new BasicMonthVector(buffer);
+                                break;
+                            }
+                            case DT_NANOTIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicNanoTimeVector) colOrigin).getLong(j) / 60000000000L % 1440);
+                                }
+                                dstVector = new BasicMonthVector(buffer);
+                                break;
+                            }
+                            default:
+                                throw new InterruptedException("Can't convert from " + dstType + " into " + getDTString(colOrigin.getDataType()));
+                        }
+                        break;
+                    }
+                    case "SECOND": {
+                        int[] buffer = new int[rowSize];
+                        switch (colOrigin.getDataType()) {
+                            case DT_TIME: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = ((BasicTimeVector) colOrigin).getInt(j) / 1000;
+                                }
+                                dstVector = new BasicSecondVector(buffer);
+                                break;
+                            }
+                            case DT_SECOND: {
+                                dstVector = colOrigin;
+                                break;
+                            }
+                            case DT_DATETIME: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = ((BasicTimeVector) colOrigin).getInt(j) / 86400;
+                                }
+                                dstVector = new BasicSecondVector(buffer);
+                                break;
+                            }
+                            case DT_NANOTIME: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicNanoTimeVector) colOrigin).getLong(j) / 1000000000);
+                                }
+                                dstVector = new BasicSecondVector(buffer);
+                                break;
+                            }
+                            case DT_TIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicTimestampVector) colOrigin).getLong(j) / 1000 % 86400);
+                                }
+                                dstVector = new BasicSecondVector(buffer);
+                                break;
+                            }
+                            case DT_NANOTIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicNanoTimestampVector) colOrigin).getLong(j) / 1000000000);
+                                }
+                                dstVector = new BasicSecondVector(buffer);
+                                break;
+                            }
+                            default:
+                                throw new InterruptedException("Can't convert from " + dstType + " into " + getDTString(colOrigin.getDataType()));
+                        }
+                        break;
+                    }
+                    case "DATETIME": {
+                        int[] buffer = new int[rowSize];
+                        switch (colOrigin.getDataType()) {
+                            case DT_DATETIME: {
+                                dstVector = colOrigin;
+                                break;
+                            }
+                            case DT_TIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicTimestampVector) colOrigin).getLong(j) / 1000);
+                                }
+                                dstVector = new BasicDateTimeVector(buffer);
+                                break;
+                            }
+                            case DT_NANOTIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicTimestampVector) colOrigin).getLong(j) / 1000000000);
+                                }
+                                dstVector = new BasicDateTimeVector(buffer);
+                                break;
+                            }
+                            default:
+                                throw new InterruptedException("Can't convert from " + dstType + " into " + getDTString(colOrigin.getDataType()));
+                        }
+                        break;
+                    }
+                    case "TIMESTAMP": {
+                        long[] buffer = new long[rowSize];
+                        switch (colOrigin.getDataType()) {
+                            case DT_TIMESTAMP: {
+                                dstVector = colOrigin;
+                                break;
+                            }
+                            case DT_NANOTIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] =((BasicTimestampVector) colOrigin).getLong(j) % 86400000000000L;
+                                }
+                                dstVector = new BasicTimestampVector(buffer);
+                                break;
+                            }
+                            default:
+                                throw new InterruptedException("Can't convert from " + dstType + " into " + getDTString(colOrigin.getDataType()));
+                        }
+                        break;
+                    }
+                    case "NANOTIME": {
+                        long[] buffer = new long[rowSize];
+                        switch (colOrigin.getDataType()) {
+                            case DT_NANOTIME: {
+                                dstVector = colOrigin;
+                                break;
+                            }
+                            case DT_NANOTIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = ((BasicTimestampVector) colOrigin).getLong(j) % 86400000000000L;
+                                }
+                                dstVector = new BasicNanoTimeVector(buffer);
+                                break;
+                            }
+                            default:
+                                throw new InterruptedException("Can't convert from " + dstType + " into " + getDTString(colOrigin.getDataType()));
+                        }
+                        break;
+                    }
+                    case "NANOTIMESTAMP": {
+                        int[] buffer = new int[rowSize];
+                        switch (colOrigin.getDataType()) {
+                            case DT_NANOTIMESTAMP: {
+                                dstVector = colOrigin;
+                                break;
+                            }
+                            default:
+                                throw new InterruptedException("Can't convert from " + dstType + " into " + getDTString(colOrigin.getDataType()));
+                        }
+                        break;
+                    }
+                    case "DATEHOUR": {
+                        int[] buffer = new int[rowSize];
+                        switch (colOrigin.getDataType()) {
+                            case DT_DATETIME: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicDateTimeVector) colOrigin).getInt(j) % 3600);
+                                }
+                                dstVector = new BasicDateHourVector(buffer);
+                                break;
+                            }
+                            case DT_DATEHOUR: {
+                                dstVector = colOrigin;
+                                break;
+                            }
+                            case DT_TIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicTimestampVector) colOrigin).getLong(j) % 3600000);
+                                }
+                                dstVector = new BasicDateHourVector(buffer);
+                                break;
+                            }
+                            case DT_NANOTIMESTAMP: {
+                                for (int j = 0; j < rowSize; ++j) {
+                                    buffer[j] = (int) (((BasicNanoTimestampVector) colOrigin).getLong(j) % 3600000000000L);
+                                }
+                                dstVector = new BasicDateHourVector(buffer);
+                                break;
+                            }
+                            default:
+                                throw new InterruptedException("Can't convert from " + dstType + " into " + getDTString(colOrigin.getDataType()));
+                        }
+                    }
+                    default:dstVector=colOrigin;
+                    String aa= dstVector.getClass().toString();
+                    int gaa=1;
                 }
-                ret = new BasicDateVector(buffer);
-                break;
+                cols.add(dstVector);
             }
-            case DT_MONTH: {
-                int[] buffer = new int[rowSize];
+            List<Entity> param = new ArrayList<Entity>();
+            BasicTable paramTable = new BasicTable(colName, cols);
+            param.add(paramTable);
 
-                switch (originClassString) {
-                    case "class java.time.LocalDateTime": {
-                        for (int j = 0; j < rowSize; ++j) {
-                            LocalDateTime timeTmp = (LocalDateTime) data.get(j);
-                            buffer[j] = timeTmp.getYear() * 12 + timeTmp.getMonth().getValue() - 1;
-                        }
-                        break;
-                    }
-                    case "class java.time.LocalDate": {
-                        for (int j = 0; j < rowSize; ++j) {
-                            LocalDate timeTmp = (LocalDate) data.get(j);
-                            buffer[j] = timeTmp.getYear() + 12 + timeTmp.getMonth().getValue() - 1;
-                        }
-                        break;
-                    }
-                    default:
-                        throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                }
-                ret = new BasicDateVector(buffer);
-                break;
-            }
-            case DT_TIME: {
-                int[] buffer = new int[rowSize];
-
-                switch (originClassString) {
-                    case "class java.time.LocalDateTime": {
-                        for (int j = 0; j < rowSize; ++j) {
-                            LocalDateTime timeTmp = (LocalDateTime) data.get(j);
-                            buffer[j] = ((timeTmp.getHour() * 12 + timeTmp.getMinute()) * 60 + timeTmp.getSecond() * 1000) + timeTmp.getNano();
-                        }
-                        break;
-                    }
-                    case "class java.time.LocalTime": {
-                        for (int j = 0; j < rowSize; ++j) {
-                            LocalTime timeTmp = (LocalTime) data.get(j);
-                            buffer[j] = ((timeTmp.getHour() * 12 + timeTmp.getMinute()) * 60 + timeTmp.getSecond() * 1000) + timeTmp.getNano();
-                        }
-                        break;
-                    }
-                    default:
-                        throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                }
-                ret = new BasicDateVector(buffer);
-                break;
-            }
-            case DT_MINUTE: {
-                int[] buffer = new int[rowSize];
-
-                switch (originClassString) {
-                    case "class java.time.LocalDateTime": {
-                        for (int j = 0; j < rowSize; ++j) {
-                            LocalDateTime timeTmp = (LocalDateTime) data.get(j);
-                            buffer[j] = timeTmp.getHour() * 12 + timeTmp.getMinute();
-                        }
-                        break;
-                    }
-                    case "class java.time.LocalTime": {
-                        for (int j = 0; j < rowSize; ++j) {
-                            LocalTime timeTmp = (LocalTime) data.get(j);
-                            buffer[j] = timeTmp.getHour() * 12 + timeTmp.getMinute();
-                        }
-                        break;
-                    }
-                    default:
-                        throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                }
-                ret = new BasicDateVector(buffer);
-                break;
-            }
-            case DT_SECOND: {
-                int[] buffer = new int[rowSize];
-
-                switch (originClassString) {
-                    case "class java.time.LocalDateTime": {
-                        for (int j = 0; j < rowSize; ++j) {
-                            LocalDateTime timeTmp = (LocalDateTime) data.get(j);
-                            buffer[j] = (timeTmp.getHour() * 12 + timeTmp.getMinute()) * 60 + timeTmp.getSecond();
-                        }
-                        break;
-                    }
-                    case "class java.time.LocalTime": {
-                        for (int j = 0; j < rowSize; ++j) {
-                            LocalTime timeTmp = (LocalTime) data.get(j);
-                            buffer[j] = (timeTmp.getHour() * 12 + timeTmp.getMinute()) * 60 + timeTmp.getSecond();
-                        }
-                        break;
-                    }
-                    default:
-                        throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                }
-                ret = new BasicDateVector(buffer);
-                break;
-            }
-            case DT_DATETIME: {
-                int[] buffer = new int[rowSize];
-
-                switch (originClassString) {
-                    case "class java.time.LocalDateTime": {
-                        for (int j = 0; j < rowSize; ++j) {
-                            LocalDateTime timeTmp = (LocalDateTime) data.get(j);
-                            buffer[j] = ((Utils.countDays(timeTmp.getYear(),timeTmp.getMonth().getValue(),timeTmp.getDayOfMonth())*24+timeTmp.getHour()) * 12 + timeTmp.getMinute()) * 60 + timeTmp.getSecond();
-                        }
-                        break;
-                    }
-                    default:
-                        throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                }
-                ret = new BasicDateVector(buffer);
-                break;
-            }
-            case DT_TIMESTAMP: {
-                int[] buffer = new int[rowSize];
-
-                switch (originClassString) {
-                    default:
-                        throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                }
-                //tmpColmn = new BasicDateVector(buffer);
-                //break;
-            }
-            case DT_NANOTIME: {
-                int[] buffer = new int[rowSize];
-
-                switch (originClassString) {
-                    case "":break;
-                    default:
-                        throw new IllegalArgumentException("Can't convert " + originClassString + " into DolphinDB " + targetTypeStr);
-                }
-                ret = new BasicDateVector(buffer);
-                break;
-            }
-            case DT_NANOTIMESTAMP: {
-                int[] buffer = new int[rowSize];
-
-                switch (originClassString) {
-                    default:
-                        throw new IllegalArgumentException("Can't convert from "+originClassString + " into " + targetTypeStr+" in DolphinDB");
-                }
-//					tmpColmn = new BasicDateVector(buffer);
-//					break;
-            }
-            default:
-                throw new IllegalArgumentException("Unsupported DolphinDB type");
+            //ret=con_.run("dt=loadTable(\"dfs://autoFitTableAppender1\",\"testAppend\")");
+            //ret = con_.run("append!{dt}", param);
+            ret = con_.run("append!{loadTable(\"" + dbUrl_ + "\",\"" + tableName_ + "\"), }", param);
+            Entity.DATA_TYPE type=ret.getDataType();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return ret;
     }
