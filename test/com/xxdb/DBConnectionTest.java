@@ -22,8 +22,9 @@ import static org.junit.Assert.*;
 public class DBConnectionTest {
 
     private DBConnection conn;
-    public static String HOST = "localhost";
-     public static Integer PORT = 8848;
+    //do not modify HOST and PORT
+    public static String HOST = "127.0.0.1";
+    public static Integer PORT = 28848;
     // public static String HOST;
     // public static Integer PORT;
 
