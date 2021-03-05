@@ -19,8 +19,9 @@ import com.xxdb.data.Vector;
 public class DBConnectionTest {
 
     private DBConnection conn;
+    //do not modify HOST and PORT
     public static String HOST = "127.0.0.1";
-    public static Integer PORT = 8848;
+    public static Integer PORT = 28848;
 
 
     @Before
