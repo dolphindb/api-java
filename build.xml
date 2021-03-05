@@ -13,7 +13,7 @@
 <property name="fastjson_jar" value="${lib.dir}/fastjson-1.2.2.jar"/>
 <path id="compile.path">
     <!-- <pathelement location="${lib.dir}/junit-4.12.jar"/> -->
-    <fileset dir="${lib}">
+    <fileset dir="${lib.dir}">
         <include name="*.jar"/>
     </fileset>
 </path>
