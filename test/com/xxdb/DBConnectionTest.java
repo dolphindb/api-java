@@ -3,6 +3,7 @@ package com.xxdb;
 import java.io.*;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -12,6 +13,7 @@ import com.xxdb.io.LittleEndianDataInputStream;
 import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.Long2;
 import com.xxdb.io.ProgressListener;
+import javafx.geometry.HPos;
 import org.junit.*;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
@@ -23,7 +25,7 @@ public class DBConnectionTest {
 
     private DBConnection conn;
     public static String HOST = "localhost";
-     public static Integer PORT = 8848;
+    public static Integer PORT = 8848;
     // public static String HOST;
     // public static Integer PORT;
 
@@ -56,130 +58,137 @@ public class DBConnectionTest {
 
 //    @Rule
 //    public ExpectedException thrown= ExpectedException.none();
-
     @Test
-    public void testCharScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("'a'");
+    public void testCharScalar() throws Exception {
+        BasicByte scalar = (BasicByte) conn.run("'a'");
         assertEquals('a', ((BasicByte) scalar).getByte());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals("",scalar.getString());
+        scalar = (BasicByte) conn.run("'a'");
+        assertEquals(97,scalar.getNumber().intValue());
     }
 
     @Test
     public void testShortScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("11h");
+        BasicShort scalar = (BasicShort) conn.run("11h");
         assertEquals(11, ((BasicShort) scalar).getShort());
+        assertTrue(scalar.equals(scalar));
+        System.out.println();
     }
 
     @Test
     public void testIntScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("6");
+        BasicInt scalar = (BasicInt) conn.run("6");
         assertEquals(6, ((BasicInt) scalar).getInt());
     }
 
     @Test
     public void testLongScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("22l");
+        BasicLong scalar = (BasicLong) conn.run("22l");
         assertEquals(22, ((BasicLong) scalar).getLong());
     }
 
     @Test
     public void testDateScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("2013.06.13");
+        BasicDate scalar = (BasicDate) conn.run("2013.06.13");
         assertEquals(15869, ((BasicDate) scalar).getInt());
     }
 
     @Test
     public void testMonthScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("2012.06M");
+        BasicMonth scalar = (BasicMonth) conn.run("2012.06M");
         assertEquals(24149, ((BasicMonth) scalar).getInt());
     }
 
     @Test
     public void testTimeScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("13:30:10.008");
+        BasicTime scalar = (BasicTime) conn.run("13:30:10.008");
         assertEquals(48610008, ((BasicTime) scalar).getInt());
     }
 
     @Test
     public void testMinuteScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("13:30m");
+        BasicMinute scalar = (BasicMinute) conn.run("13:30m");
         assertEquals(810, ((BasicMinute) scalar).getInt());
     }
 
     @Test
     public void testSecondScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("13:30:10");
+        BasicSecond scalar = (BasicSecond) conn.run("13:30:10");
         assertEquals(48610, ((BasicSecond) scalar).getInt());
     }
 
     @Test
-    public void testTimeStampScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("2012.06.13 13:30:10");
-        assertEquals(1339594210, ((BasicDateTime) scalar).getInt());
+    public void testTimeStampScalar() throws Exception {
+        BasicTimestamp scalar = (BasicTimestamp) conn.run("2012.06.13 13:30:10.008");
+        assertEquals(1339594210008l, scalar.getNumber());
     }
 
     @Test
     public void testDateTimeScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("2012.06.13 13:30:10.008");
-        assertEquals(1339594210008l, ((BasicTimestamp) scalar).getLong());
+        BasicDateTime scalar = (BasicDateTime) conn.run("2012.06.13 13:30:10");
+        assertEquals(1339594210l, ((BasicDateTime) scalar).getInt());
     }
 
     @Test
     public void testNanoTimeScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("13:30:10.008007006");
+        BasicNanoTime scalar = (BasicNanoTime) conn.run("13:30:10.008007006");
         assertEquals(48610008007006l, ((BasicNanoTime) scalar).getLong());
     }
 
     @Test
     public void testNanoTimeStampScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("2012.06.13 13:30:10.008007006");
+        BasicNanoTimestamp scalar = (BasicNanoTimestamp) conn.run("2012.06.13 13:30:10.008007006");
         assertEquals(1339594210008007006l, ((BasicNanoTimestamp) scalar).getLong());
     }
 
     @Test
     public void testStringScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("`IBM");
+        BasicString scalar = (BasicString) conn.run("`IBM");
         assertEquals("IBM", ((BasicString) scalar).getString());
     }
 
     @Test
     public void testBooleanScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("true");
+        BasicBoolean scalar = (BasicBoolean) conn.run("true");
         assertEquals(true, ((BasicBoolean) scalar).getBoolean());
     }
 
     @Test
     public void testFloatScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("1.2f");
+        BasicFloat scalar = (BasicFloat) conn.run("1.2f");
         assertEquals(1.2, ((BasicFloat) scalar).getFloat(), 2);
     }
 
     @Test
     public void testDoubleScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("1.22");
+        BasicDouble scalar = (BasicDouble) conn.run("1.22");
         assertEquals(1.22, ((BasicDouble) scalar).getDouble(), 2);
     }
 
     @Test
     public void testUuidScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("uuid('5d212a78-cc48-e3b1-4235-b4d91473ee87')");
+        BasicUuid scalar = (BasicUuid) conn.run("uuid('5d212a78-cc48-e3b1-4235-b4d91473ee87')");
         assertEquals("5d212a78-cc48-e3b1-4235-b4d91473ee87", ((BasicUuid) scalar).getString());
     }
 
     @Test
     public void testDateHourScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("datehour(2012.06.13 13:30:10)");
+        BasicDateHour scalar = (BasicDateHour) conn.run("datehour(2012.06.13 13:30:10)");
         assertEquals(372109, ((BasicDateHour) scalar).getInt());
     }
 
     @Test
     public void testIpAddrScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("ipaddr('192.168.1.13')");
+        BasicIPAddr scalar = (BasicIPAddr) conn.run("ipaddr('192.168.1.13')");
         assertEquals("192.168.1.13", ((BasicIPAddr) scalar).getString());
     }
 
     @Test
     public void testInt128Scalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("int128('e1671797c52e15f763380b45e841ec32')");
+        BasicInt128 scalar = (BasicInt128) conn.run("int128('e1671797c52e15f763380b45e841ec32')");
         assertEquals("e1671797c52e15f763380b45e841ec32", ((BasicInt128) scalar).getString());
     }
 
@@ -199,7 +208,7 @@ public class DBConnectionTest {
     }
 
     @Test
-    public void testFunctionDef() throws IOException {
+    public void testFunctionDef() throws Exception {
         Entity obj = conn.run("def(a,b){return a+b}");
         assertEquals(Entity.DATA_TYPE.DT_FUNCTIONDEF, obj.getDataType());
         Entity AnonymousDef = conn.run("each(def(a,b):a+b, 1..10, 2..11);");
@@ -232,6 +241,24 @@ public class DBConnectionTest {
         sb5.append("loop(max, t.values());");
         BasicAnyVector loop = (BasicAnyVector) conn.run(sb5.toString());
         assertEquals("3", loop.getEntity(0).getString());
+        int[] i = {1,2};
+        assertEquals(2,loop.getSubVector(i).rows());
+        loop.set(2,new BasicInt(1));
+        assertEquals(1,loop.get(2).getNumber());
+        loop.setEntity(0,new BasicDouble(30.0));
+        assertEquals(30.0,loop.get(0).getNumber());
+        assertFalse(loop.isNull(0));
+        System.out.println();
+    }
+    @Test(expected=UnsupportedOperationException.class)
+    public void testBasicAnyVector() throws Exception {
+        StringBuilder sb5 = new StringBuilder();
+        sb5.append("t = table(1 2 3 as id, 4 5 6 as value,`IBM`MSFT`GOOG as name);");
+        sb5.append("loop(max, t.values());");
+        BasicAnyVector loop = (BasicAnyVector) conn.run(sb5.toString());
+        loop.combine(loop);
+        loop.asof(new BasicInt(1));
+
     }
 
     @Test(expected = IOException.class)
@@ -241,9 +268,14 @@ public class DBConnectionTest {
 
     @Test
     public void testBoolVector() throws IOException {
-        BasicBooleanVector vector = (BasicBooleanVector) conn.run("rand(1b 0b true false,10)");
+        BasicBooleanVector vector = (BasicBooleanVector) conn.run("take(1b 0b NULL false,10)");
         int size = vector.rows();
         assertEquals(10, size);
+        assertTrue(vector.isNull(2));
+        assertEquals("LOGICAL",vector.getDataCategory().toString());
+        assertEquals("DT_BOOL",vector.getDataType().toString());
+        System.out.println(vector);
+
         byte[] l = {};
         BasicBooleanVector v=new BasicBooleanVector(l);
     }
@@ -259,7 +291,7 @@ public class DBConnectionTest {
 
     @Test
     public void testSymbolVector() throws IOException {
-        BasicStringVector vector = (BasicStringVector) conn.run("rand(`IBM`MSFT`GOOG`BIDU,10)");
+        BasicStringVector vector = (BasicStringVector) conn.run("rand(symbol(`IBM`MSFT`GOOG`BIDU),10)");
         int size = vector.rows();
         assertEquals(10, size);
         String[] l = {null,null};
@@ -938,6 +970,11 @@ public class DBConnectionTest {
         BasicDateHourVector datehourv = (BasicDateHourVector) conn.run("datehour('2012.06.13T13')+1..10");
         BasicIPAddrVector ipaddrv = (BasicIPAddrVector) conn.run("rand(ipaddr('192.168.0.1'),10)");
         BasicInt128Vector int128v = (BasicInt128Vector) conn.run("rand(int128('e1671797c52e15f763380b45e841ec32'),10)");
+        String str[]= new String[10];
+        for (int i=0;i<10;i++){
+            str[i]="fdse";
+        }
+        BasicSymbolVector sym = new BasicSymbolVector(Arrays.asList(str));
         map.put("boolv", boolv);
         map.put("bytev", bytev);
         map.put("stringv", stringv);
@@ -959,6 +996,7 @@ public class DBConnectionTest {
         map.put("datehourv", datehourv);
         map.put("ipaddrv", ipaddrv);
         map.put("int128v", int128v);
+        map.put("sym",sym);
         conn.upload(map);
         BasicBooleanVector boolvRes = (BasicBooleanVector) conn.run("boolv");
         BasicByteVector bytevRes = (BasicByteVector) conn.run("bytev");
@@ -981,6 +1019,7 @@ public class DBConnectionTest {
         BasicDateHourVector datehourvRes = (BasicDateHourVector) conn.run("datehourv");
         BasicIPAddrVector ipaddrvRes = (BasicIPAddrVector) conn.run("ipaddrv");
         BasicInt128Vector int128vRes = (BasicInt128Vector) conn.run("int128v");
+       // BasicSymbolVector symv = conn.run("sym");
         assertEquals(10, boolvRes.rows());
         assertEquals(10, bytevRes.rows());
         assertEquals(10000, intvRes.rows());
@@ -1402,6 +1441,18 @@ public class DBConnectionTest {
         } catch (IOException ex) {
             assertTrue(ServerExceptionUtils.isNotLogin(ex.getMessage()));
         }
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,PORT);
+        conn1.login("admin", "123456", true);
+        conn1.run("if(existsDatabase('dfs://db1')) dropDatabase('dfs://db1'); db = database('dfs://db1', VALUE, 1..10);	t = table(1..100 as id);db.createPartitionedTable(t,'t1', 'id')");
+        conn1.run("logout()");
+        try {
+            conn1.run("exec count(*) from loadTable('dfs://db1','t1')");
+            BasicInt re = (BasicInt) conn1.run("exec count(*) from loadTable('dfs://db1','t1')");
+        } catch (IOException ex) {
+            assertTrue(ServerExceptionUtils.isNotLogin(ex.getMessage()));
+        }
+        conn1.close();
     }
 
     @Test
@@ -1440,6 +1491,39 @@ public class DBConnectionTest {
         BasicLong resej = (BasicLong) conn.run("exec count(*) from ej(pt,pt2,`id);");
         BasicLong respt = (BasicLong) conn.run("exec count(*) from pt;");
         assertEquals(true, resej.getLong() < respt.getLong());
+    }
+    @Test
+    public void testSymbolTableInsert() throws IOException {
+        String script="t=table(5000000:0,`val0`val1`val2`val3`val4`val5`val6`val7`val8`val9`val10`val11`val12`val13`val14`val15`val16`val17`val18`val19,[SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL])\n" +
+                "share t as sharedTable";
+        conn.run(script);
+        List<String> colNames = new ArrayList<>(20);
+        for (int i=0;i<20;i++){
+            String s="val"+i;
+            colNames.add(s);
+        }
+        String str[]= new String[10000];
+        for (int i=0;i<10000;i+=5){
+            str[i]="fdse";
+            str[i+1]="";
+            str[i+2]="tgufty";
+            str[i+3]="fgew4";
+            str[i+4]="ww";
+        }
+        BasicStringVector sb;
+        List<Vector> cols = new ArrayList<>(20);
+        for (int i=0;i<20;i++){
+            sb = new BasicStringVector(Arrays.asList(str));
+            cols.add(sb);
+        }
+        BasicTable table1 = new BasicTable(colNames,cols);
+        List<Entity> arg = Arrays.asList(table1);
+        conn.run("tableInsert{sharedTable}", arg);
+        BasicTable tb = (BasicTable) conn.run("sharedTable");
+        tb.getString();
+        assertEquals(20,tb.columns());
+        assertEquals(10000,tb.rows());
+
     }
 
     @Test
@@ -1884,7 +1968,7 @@ public class DBConnectionTest {
         conn.run("\n" +
                 "n=1000;" +
                 "t = table(1..n as id, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,n) as name, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,n) as name1)\n" +
-                "testVar= t.toStdJson()");
+                "testVar= t.toStdJson()",true);
         try {
             conn.run(" testVar", 4, 4);
         }
@@ -2134,4 +2218,6 @@ public class DBConnectionTest {
         }
         assertTrue(noErro);
     }
+
+
 }
