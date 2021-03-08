@@ -9,9 +9,13 @@
 <property name="lib.dir" value="lib"/>
 <property name="junit_jar" value="${lib.dir}/junit-4.12.jar"/>
 <property name="hamcrest_jar" value="${lib.dir}/hamcrest-library-1.3.jar"/>
+<property name="hamcrest_core_jar" value="${lib.dir}/hamcrest-core-1.3.jar"/>
 <property name="fastjson_jar" value="${lib.dir}/fastjson-1.2.2.jar"/>
 <path id="compile.path">
-    <pathelement location="${lib.dir}/junit-4.12.jar"/>
+    <!-- <pathelement location="${lib.dir}/junit-4.12.jar"/> -->
+    <fileset dir="${lib.dir}">
+        <include name="*.jar"/>
+    </fileset>
 </path>
 <target name="init">
    <mkdir dir="${classes_src}"/>
@@ -32,7 +36,7 @@
 
 <target name="compiletest" depends="buildsrc">
    <!-- <javac srcdir="${test}" destdir="${dest}"/> -->
-   <javac srcdir="${test}" classpath="${src_jar};${junit_jar};${hamcrest_jar};${fastjson_jar}" destdir="${classes_test}" includeantruntime="false" classpathref="compile.path"/>
+   <javac srcdir="${test}" classpath="${src_jar};${junit_jar};${hamcrest_jar};${hamcrest_core_jar};${fastjson_jar}" destdir="${classes_test}" includeantruntime="false" classpathref="compile.path"/>
 </target>
 
 <target name="buildtest" depends="compiletest">
@@ -40,7 +44,7 @@
 </target>
 <target name="run" depends="buildtest">
     <junit printsummary="true" haltonfailure="no">
-        <classpath path="tmp;${junit_jar};${hamcrest_jar};${fastjson_jar};${test_jar};${src_jar}"></classpath>
+        <classpath path="tmp;${junit_jar};${hamcrest_jar};${hamcrest_core_jar};${fastjson_jar};${test_jar};${src_jar}"></classpath>
 		<formatter type="plain"/>
         <test name="com.xxdb.DBConnectionTest"></test>
     </junit>
