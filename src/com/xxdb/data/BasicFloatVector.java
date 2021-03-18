@@ -34,7 +34,7 @@ public class BasicFloatVector extends AbstractVector{
 		this(array, true);
 	}
 	
-	protected BasicFloatVector(float[] array, boolean copy){
+	public BasicFloatVector(float[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
 		if(copy)
 			values = array.clone();

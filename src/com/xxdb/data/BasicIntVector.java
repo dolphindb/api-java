@@ -34,7 +34,7 @@ public class BasicIntVector extends AbstractVector{
 		this(array, true);
 	}
 	
-	protected BasicIntVector(int[] array, boolean copy){
+	public BasicIntVector(int[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
 		if(copy)
 			values = array.clone();

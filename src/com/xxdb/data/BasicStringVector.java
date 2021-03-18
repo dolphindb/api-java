@@ -50,7 +50,7 @@ public class BasicStringVector extends AbstractVector{
 		this(array, blob, true);
 	}
 	
-	protected BasicStringVector(String[] array, boolean blob, boolean copy){
+	public BasicStringVector(String[] array, boolean blob, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
 		if(copy)
 			values = array.clone();
