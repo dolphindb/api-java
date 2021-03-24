@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.xxdb.compression.Decompressor;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -52,9 +53,9 @@ public class BasicTable extends AbstractEntity implements Table{
 				if(collection == null)
 					collection = new SymbolBaseCollection();
 				vector = new BasicSymbolVector(df, in, collection);
-			} if (dt == DATA_TYPE.DT_COMPRESS) {
-				in.readByte()
-				vector = (Vector)factory.createEntity(df, dt, in, extended);
+			} else if (dt == DATA_TYPE.DT_COMPRESS) {
+				Decompressor decompressor = new Decompressor(in);
+				vector = (Vector)factory.createEntity(df, dt, decompressor.decompress(), extended);
 			}
 			else{
 				vector = (Vector)factory.createEntity(df, dt, in, extended);

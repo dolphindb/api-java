@@ -1,5 +1,10 @@
 package com.xxdb.compression;
 
+import com.xxdb.io.AbstractExtendedDataInputStream;
+import com.xxdb.io.ExtendedDataInput;
+
+import java.nio.ByteBuffer;
+
 public class DeltaOfDeltaDecoder {
     private long storedValue = 0;
     private long storedDelta = 0;
@@ -12,64 +17,57 @@ public class DeltaOfDeltaDecoder {
     public final static int FIRST_DELTA_BITS = Long.BYTES * 8;
 
     private final BitInput in;
+    private ByteBuffer dest;
 
-    public DeltaOfDeltaDecoder(BitInput input) {
-        in = input;
+    public DeltaOfDeltaDecoder(AbstractExtendedDataInputStream in, int blockSize, int dataSize) {
+        this.in = new BitInput(in);
+        this.dest = ByteBuffer.allocate(dataSize * Long.BYTES + 20);
+        int count = 0;
+        while ((count + 1) * blockSize <= dataSize) {
+            if (!decompress(blockSize)) throw new RuntimeException("Cannot decompress data: stop at" + this.in.getPosition());
+            count++;
+        }
+        if (dataSize - count * blockSize > 0)
+            if (!decompress(dataSize - count * blockSize))
+                throw new RuntimeException("Cannot decompress data: stop at" + this.in.getPosition());
     }
 
-    private void readHeader() {
-        long header = in.getLong(64);
-        blockValue = decodeZigZag64(header);
+    private boolean decompress(int blockSize) {
+        int start = in.getPosition();
+        if (!readHeader() || !first())
+            return false;
+        while (in.getPosition() < blockSize) {
+            if (!nextValue()) break;
+        }
+        return true;
+    }
+
+
+    private boolean readHeader() {
+        blockValue = decodeZigZag64(in.getLong(64));
         storedValue = blockValue;
+        dest.putLong(storedValue);
+        return true;
     }
 
-    /**
-     * Returns the next pair in the time series, if available.
-     *
-     * @return Pair if there's next value, null if series is done.
-     */
-    public long readValue() {
-        if (isHeader) {
-            readHeader();
-            isHeader = false;
-        } else
-            next();
-        if(endOfStream) {
-            return -1111111;
-        }
-        return storedValue;
-    }
-
-    private void next() {
-        // TODO I could implement a non-streaming solution also.. is there ever a need for streaming solution?
-
-        if(isFirst) {
-            first();
-            isFirst = false;
-            return;
-        }
-
-        nextValue();
-    }
-
-    private void first() {
-        // First item to read
+    private boolean first() {
         storedDelta = decodeZigZag64(in.getLong(FIRST_DELTA_BITS));
         if(storedDelta == 0XFFFFFFFFFFFFFFFFL) {
-            endOfStream = true;
-            return;
+            return false;
         }
         storedValue = storedValue + storedDelta;
+        dest.putLong(storedValue);
+        return true;
     }
 
-    private void nextValue() {
+    private boolean nextValue() {
         int readInstruction = in.nextClearBit(6);
         long deltaDelta;
 
         switch(readInstruction) {
             case 0x00:
                 storedValue += storedDelta;
-                return;
+                return true;
             case 0x02:
                 deltaDelta = in.getLong(7);
                 break;
@@ -86,35 +84,20 @@ public class DeltaOfDeltaDecoder {
                 deltaDelta = in.getLong(64);
                 // For storage save.. if this is the last available word, check if remaining bits are all 1
                 if (deltaDelta == 0xFFFFFFFFFFFFFFFFL) {
-                    // End of stream
-                    endOfStream = true;
-                    return;
+                    return false;
                 }
                 break;
             default:
-                System.out.println("====================1====================");
-                endOfStream = true;
-                return;
+                throw new RuntimeException("Fail to decompress value at position: " + in.getPosition());
         }
 
-        deltaDelta++;
+        deltaDelta++; //FIXME: why deltaDelta++?
         deltaDelta = decodeZigZag64(deltaDelta);
-        storedDelta = storedDelta + deltaDelta;
-
+        storedDelta += deltaDelta;
         storedValue += storedDelta;
+        return true;
     }
 
-    // START: From protobuf
-
-    /**
-     * Decode a ZigZag-encoded 32-bit value. ZigZag encodes signed integers into values that can be
-     * efficiently encoded with varint. (Otherwise, negative values must be sign-extended to 64 bits
-     * to be varint encoded, thus always taking 10 bytes on the wire.)
-     *
-     * @param n An unsigned 32-bit integer, stored in a signed int because Java has no explicit
-     *     unsigned support.
-     * @return A signed 32-bit integer.
-     */
     public static long decodeZigZag64(final long n) {
         return (n >>> 1) ^ -(n & 1);
     }
