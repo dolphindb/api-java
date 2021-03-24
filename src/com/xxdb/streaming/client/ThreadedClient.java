@@ -54,28 +54,26 @@ public class ThreadedClient extends AbstractClient {
                         msgs = queue.take();
                     else if(batchSize != -1 && throttle != -1){
                         LocalTime end = LocalTime.now().plusNanos(throttle*1000000);
-                        while ((msgs == null||msgs.size()<batchSize) && LocalTime.now().isBefore(end)){
-                            if(msgs == null)
-                                msgs = queue.poll();
-                            else
-                                msgs.addAll(queue.poll());
+                        while (msgs == null || ((msgs == null||msgs.size()<batchSize) && LocalTime.now().isBefore(end))){
+                            List<IMessage> tmp = queue.poll();
+                            if(tmp != null){
+                                if(msgs == null)
+                                    msgs = tmp;
+                                else
+                                    msgs.addAll(tmp);
+                            }
                         }
                     }
-                    else if(batchSize != -1){
-                        while (msgs == null||msgs.size()<batchSize){
-                            if(msgs == null)
-                                msgs = queue.take();
-                            else
-                                msgs.addAll(queue.take());
-                        }
-                    }
-                    else if(throttle != -1){
+                    else {
                         LocalTime end = LocalTime.now().plusNanos(throttle*1000000);
-                        while (LocalTime.now().isBefore(end)){
-                            if(msgs == null)
-                                msgs = queue.poll();
-                            else
-                                msgs.addAll(queue.poll());
+                        while (msgs == null || LocalTime.now().isBefore(end)){
+                            List<IMessage> tmp = queue.poll();
+                            if(tmp != null){
+                                if(msgs == null)
+                                    msgs = tmp;
+                                else
+                                    msgs.addAll(tmp);
+                            }
                         }
                     }
                     for (IMessage msg : msgs) {
@@ -115,8 +113,12 @@ public class ThreadedClient extends AbstractClient {
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, int throttle) throws IOException {
+        if(batchSize<=0)
+            throw new IllegalArgumentException("BatchSize must be greater than zero");
+        if(throttle<0)
+            throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, allowExistTopic);
-        handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle);
+        handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
     }
 

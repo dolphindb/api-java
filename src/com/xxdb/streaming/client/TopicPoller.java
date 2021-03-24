@@ -43,7 +43,7 @@ public class TopicPoller {
             List<IMessage> tmp = queue.poll();
             if(tmp != null){
                 if(list == null){
-                    list = queue.poll();
+                    list = tmp;
                 }
                 else{
                     list.addAll(tmp);
