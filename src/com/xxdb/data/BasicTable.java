@@ -52,6 +52,9 @@ public class BasicTable extends AbstractEntity implements Table{
 				if(collection == null)
 					collection = new SymbolBaseCollection();
 				vector = new BasicSymbolVector(df, in, collection);
+			} if (dt == DATA_TYPE.DT_COMPRESS) {
+				in.readByte()
+				vector = (Vector)factory.createEntity(df, dt, in, extended);
 			}
 			else{
 				vector = (Vector)factory.createEntity(df, dt, in, extended);
