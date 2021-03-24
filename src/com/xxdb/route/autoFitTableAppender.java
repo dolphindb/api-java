@@ -125,6 +125,7 @@ public class autoFitTableAppender {
                 switch (dstType) {
                     case "DATE": {
                         int[] buffer = new int[rowSize];
+
                         switch (colOrigin.getDataType()) {
                             case DT_DATE: {
                                 dstVector = (BasicDateVector) colOrigin;
@@ -139,14 +140,14 @@ public class autoFitTableAppender {
                             }
                             case DT_TIMESTAMP: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    buffer[j] = (int) (((BasicNanoTimestampVector) colOrigin).getLong(j) / 8640000);
+                                    buffer[j] = (int) (((BasicTimestampVector) colOrigin).getLong(j) / 86400000);
                                 }
                                 dstVector = new BasicDateVector(buffer);
                                 break;
                             }
                             case DT_NANOTIMESTAMP: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    buffer[j] = (int) (((BasicTimestampVector) colOrigin).getLong(j) / 86400000000000L);
+                                    buffer[j] = (int) (((BasicNanoTimestampVector) colOrigin).getLong(j) / 86400000000000L);
                                 }
                                 dstVector = new BasicDateVector(buffer);
                                 break;
@@ -170,16 +171,16 @@ public class autoFitTableAppender {
                                 for (int j = 0; j < rowSize; ++j) {
                                     int tmp = ((BasicDateVector) colOrigin).getInt(j);
                                     LocalDate localTmp = Utils.parseDate(tmp);
-                                    buffer[j] = localTmp.getYear() + localTmp.getMonthValue() - 1;
+                                    buffer[j] = localTmp.getYear()*12 + localTmp.getMonthValue() - 1;
                                 }
                                 dstVector = new BasicMonthVector(buffer);
                                 break;
                             }
                             case DT_DATETIME: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    int tmp = ((BasicDateVector) colOrigin).getInt(j) / 86400;
+                                    int tmp = ((BasicDateTimeVector) colOrigin).getInt(j) / 86400;
                                     LocalDate localTmp = Utils.parseDate(tmp);
-                                    buffer[j] = localTmp.getYear() + localTmp.getMonthValue() - 1;
+                                    buffer[j] = localTmp.getYear()*12 + localTmp.getMonthValue() - 1;
                                 }
                                 dstVector = new BasicMonthVector(buffer);
                                 break;
@@ -188,7 +189,7 @@ public class autoFitTableAppender {
                                 for (int j = 0; j < rowSize; ++j) {
                                     int tmp = ((BasicDateHourVector) colOrigin).getInt(j) / 24;
                                     LocalDate localTmp = Utils.parseDate(tmp);
-                                    buffer[j] = localTmp.getYear() + localTmp.getMonthValue() - 1;
+                                    buffer[j] = localTmp.getYear()*12 + localTmp.getMonthValue() - 1;
                                 }
                                 dstVector = new BasicMonthVector(buffer);
                                 break;
@@ -201,7 +202,7 @@ public class autoFitTableAppender {
                                 for (int j = 0; j < rowSize; ++j) {
                                     int tmp = (int) (((BasicTimestampVector) colOrigin).getLong(j) / 86400000);
                                     LocalDate localTmp = Utils.parseDate(tmp);
-                                    buffer[j] = localTmp.getYear() + localTmp.getMonthValue() - 1;
+                                    buffer[j] = localTmp.getYear()*12 + localTmp.getMonthValue() - 1;
                                 }
                                 dstVector = new BasicMonthVector(buffer);
                                 break;
@@ -210,7 +211,7 @@ public class autoFitTableAppender {
                                 for (int j = 0; j < rowSize; ++j) {
                                     int tmp = (int) (((BasicNanoTimestampVector) colOrigin).getLong(j) / 86400000000000L);
                                     LocalDate localTmp = Utils.parseDate(tmp);
-                                    buffer[j] = localTmp.getYear() + localTmp.getMonthValue() - 1;
+                                    buffer[j] = localTmp.getYear()*12 + localTmp.getMonthValue() - 1;
                                 }
                                 dstVector = new BasicMonthVector(buffer);
                                 break;
@@ -243,7 +244,7 @@ public class autoFitTableAppender {
                             }
                             case DT_NANOTIMESTAMP: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    buffer[j] = (int) (((BasicNanoTimeVector) colOrigin).getLong(j) % 86400000000000L / 1000000);
+                                    buffer[j] = (int) (((BasicNanoTimestampVector) colOrigin).getLong(j) % 86400000000000L / 1000000);
                                 }
                                 dstVector = new BasicTimeVector(buffer);
                                 break;
@@ -260,14 +261,14 @@ public class autoFitTableAppender {
                                 for (int j = 0; j < rowSize; ++j) {
                                     buffer[j] = (int) (((BasicTimeVector) colOrigin).getInt(j) / 60000);
                                 }
-                                dstVector = new BasicMonthVector(buffer);
+                                dstVector = new BasicMinuteVector(buffer);
                                 break;
                             }
                             case DT_SECOND: {
                                 for (int j = 0; j < rowSize; ++j) {
                                     buffer[j] = ((BasicSecondVector) colOrigin).getInt(j) / 60;
                                 }
-                                dstVector = new BasicMonthVector(buffer);
+                                dstVector = new BasicMinuteVector(buffer);
                                 break;
                             }
                             case DT_MINUTE: {
@@ -276,30 +277,30 @@ public class autoFitTableAppender {
                             }
                             case DT_DATETIME: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    buffer[j] = ((BasicMinuteVector) colOrigin).getInt(j) % 86400 / 60;
+                                    buffer[j] = ((BasicDateTimeVector) colOrigin).getInt(j) % 86400 / 60;
                                 }
-                                dstVector = new BasicMonthVector(buffer);
+                                dstVector = new BasicMinuteVector(buffer);
                                 break;
                             }
                             case DT_NANOTIME: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    buffer[j] = (int) (((BasicNanoTimeVector) colOrigin).getLong(j) / 600000000000L);
+                                    buffer[j] = (int) (((BasicNanoTimeVector) colOrigin).getLong(j) / 60000000000L);
                                 }
-                                dstVector = new BasicMonthVector(buffer);
+                                dstVector = new BasicMinuteVector(buffer);
                                 break;
                             }
                             case DT_TIMESTAMP: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    buffer[j] = (int) (((BasicNanoTimeVector) colOrigin).getLong(j) / 60000 % 1440);
+                                    buffer[j] = (int) (((BasicTimestampVector) colOrigin).getLong(j) / 60000 % 1440);
                                 }
-                                dstVector = new BasicMonthVector(buffer);
+                                dstVector = new BasicMinuteVector(buffer);
                                 break;
                             }
                             case DT_NANOTIMESTAMP: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    buffer[j] = (int) (((BasicNanoTimeVector) colOrigin).getLong(j) / 60000000000L % 1440);
+                                    buffer[j] = (int) (((BasicNanoTimestampVector) colOrigin).getLong(j) / 60000000000L % 1440);
                                 }
-                                dstVector = new BasicMonthVector(buffer);
+                                dstVector = new BasicMinuteVector(buffer);
                                 break;
                             }
                             default:
@@ -323,7 +324,7 @@ public class autoFitTableAppender {
                             }
                             case DT_DATETIME: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    buffer[j] = ((BasicTimeVector) colOrigin).getInt(j) / 86400;
+                                    buffer[j] = ((BasicDateTimeVector) colOrigin).getInt(j) % 86400;
                                 }
                                 dstVector = new BasicSecondVector(buffer);
                                 break;
@@ -344,7 +345,7 @@ public class autoFitTableAppender {
                             }
                             case DT_NANOTIMESTAMP: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    buffer[j] = (int) (((BasicNanoTimestampVector) colOrigin).getLong(j) / 1000000000);
+                                    buffer[j] = (int) (((BasicNanoTimestampVector) colOrigin).getLong(j) / 1000000000 % 86400);
                                 }
                                 dstVector = new BasicSecondVector(buffer);
                                 break;
@@ -370,7 +371,7 @@ public class autoFitTableAppender {
                             }
                             case DT_NANOTIMESTAMP: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    buffer[j] = (int) (((BasicTimestampVector) colOrigin).getLong(j) / 1000000000);
+                                    buffer[j] = (int) (((BasicNanoTimestampVector) colOrigin).getLong(j) / 1000000000);
                                 }
                                 dstVector = new BasicDateTimeVector(buffer);
                                 break;
@@ -389,7 +390,7 @@ public class autoFitTableAppender {
                             }
                             case DT_NANOTIMESTAMP: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    buffer[j] =((BasicTimestampVector) colOrigin).getLong(j) % 86400000000000L;
+                                    buffer[j] =((BasicNanoTimestampVector) colOrigin).getLong(j) / 1000000;
                                 }
                                 dstVector = new BasicTimestampVector(buffer);
                                 break;
@@ -408,7 +409,7 @@ public class autoFitTableAppender {
                             }
                             case DT_NANOTIMESTAMP: {
                                 for (int j = 0; j < rowSize; ++j) {
-                                    buffer[j] = ((BasicTimestampVector) colOrigin).getLong(j) % 86400000000000L;
+                                    buffer[j] = ((BasicNanoTimestampVector) colOrigin).getLong(j) % 86400000000000L;
                                 }
                                 dstVector = new BasicNanoTimeVector(buffer);
                                 break;
