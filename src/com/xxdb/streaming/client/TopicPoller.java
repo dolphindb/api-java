@@ -40,10 +40,15 @@ public class TopicPoller {
         List<IMessage> list = null;
         LocalTime end=LocalTime.now().plusNanos(timeout*1000000);
         while ((list==null||list.size()<size)&&LocalTime.now().isBefore(end)){
-            if(list==null)
-                list = queue.poll();
-            else
-                list.addAll(queue.poll());
+            List<IMessage> tmp = queue.poll();
+            if(tmp != null){
+                if(list == null){
+                    list = queue.poll();
+                }
+                else{
+                    list.addAll(tmp);
+                }
+            }
         }
         if (list != null) {
             cache = new ArrayList<>(list.size());
