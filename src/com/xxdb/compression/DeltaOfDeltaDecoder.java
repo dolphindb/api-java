@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 public class DeltaOfDeltaDecoder {
     int unitLength;
     int dataCount = 0;
+    int dataSize;
 
     private long storedValue = 0;
     private long storedDelta = 0;
@@ -20,6 +21,7 @@ public class DeltaOfDeltaDecoder {
         FIRST_DELTA_BITS = unitLength * 8;
         this.dest = dest;
         this.unitLength = unitLength;
+        this.dataSize = dataSize;
         int blockSize = 0;
         int count = 0;
         while (count < srcSize && dataCount < dataSize) {
@@ -52,6 +54,12 @@ public class DeltaOfDeltaDecoder {
 
     private boolean decompress(long[] bytes, int blockSize) {
         in = new BitInput(bytes);
+        boolean flag = in.readBit();
+        while (!flag) {
+            flag = in.readBit();
+            writeBuffer(dest, 0L);
+            if (in.getPosition() > bytes.length - 3 || dataCount >= dataSize) return true;
+        }
         if (!readHeader() || !first())
             return false;
         while (in.getPosition()/8 < blockSize) {
@@ -62,10 +70,6 @@ public class DeltaOfDeltaDecoder {
 
     private boolean readHeader() {
         try {
-            boolean flag = in.readBit();
-            while (!flag) {
-                flag = in.readBit();
-            }
             storedValue = decodeZigZag64(in.getLong(unitLength * 8));
             writeBuffer(dest, storedValue);
         } catch (Exception e) {
@@ -80,6 +84,17 @@ public class DeltaOfDeltaDecoder {
             boolean flag = in.readBit();
             while (!flag)
                 flag = in.readBit();
+            int sign = (int) in.getLong(5);
+            if (sign == 30) {
+                if (in.getLong(64) == 0xFFFFFFFFFFFFFFFFL)
+                    return false;
+                else {
+                    in.rollBack(64);
+                    in.rollBack(5);
+                }
+            } else {
+                in.rollBack(5);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -148,6 +163,7 @@ public class DeltaOfDeltaDecoder {
             return true;
         } catch (Exception e) {
             e.printStackTrace();
+            writeBuffer(dest, 0);
             return false;
         }
     }

@@ -13,7 +13,6 @@ import com.xxdb.io.LittleEndianDataInputStream;
 import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.Long2;
 import com.xxdb.io.ProgressListener;
-import javafx.geometry.HPos;
 import org.junit.*;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
