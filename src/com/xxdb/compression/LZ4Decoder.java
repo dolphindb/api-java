@@ -1,12 +1,10 @@
 package com.xxdb.compression;
+
 import com.xxdb.io.AbstractExtendedDataInputStream;
 import net.jpountz.lz4.LZ4Factory;
-import net.jpountz.lz4.LZ4FastDecompressor;
 import net.jpountz.lz4.LZ4SafeDecompressor;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 public class LZ4Decoder {
     byte[] dest;
@@ -21,7 +19,7 @@ public class LZ4Decoder {
         while (count < srcSize) {
             try {
                 blockSize = src.readInt();
-                count+=Integer.BYTES;
+                count += Integer.BYTES;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -30,12 +28,12 @@ public class LZ4Decoder {
             try {
                 byte[] srcArray = new byte[blockSize];
                 src.readFully(srcArray);
-                length+=decompressor.decompress(srcArray, 0, blockSize, dest, length);
+                length += decompressor.decompress(srcArray, 0, blockSize, dest, length);
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            count+=blockSize;
+            count += blockSize;
         }
     }
 

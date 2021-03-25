@@ -2,10 +2,6 @@ package com.xxdb.compression;
 
 public class BitInput {
 
-    private final long[] longArray;
-    private long lB;
-    private int position = 0;
-    private int bitsLeft = 0;
     public final static long[] MASK_ARRAY;
     public final static long[] BIT_SET_MASK;
 
@@ -21,10 +17,15 @@ public class BitInput {
         }
 
         BIT_SET_MASK = new long[64];
-        for(int i = 0; i < BIT_SET_MASK.length; i++) {
+        for (int i = 0; i < BIT_SET_MASK.length; i++) {
             BIT_SET_MASK[i] = (1L << i);
         }
     }
+
+    private final long[] longArray;
+    private long lB;
+    private int position = 0;
+    private int bitsLeft = 0;
 
     public BitInput(long[] array) {
         this.longArray = array;
@@ -44,7 +45,7 @@ public class BitInput {
     }
 
     private void checkAndFlipByte() {
-        if(bitsLeft == 0) {
+        if (bitsLeft == 0) {
             flipByte();
         }
     }
@@ -55,7 +56,7 @@ public class BitInput {
 
     public long getLong(int bits) {
         long value;
-        if(bits <= bitsLeft) {
+        if (bits <= bitsLeft) {
             // We can read from this word only
             // Shift to correct position and take only n least significant bits
             value = (lB >>> (bitsLeft - bits)) & MASK_ARRAY[bits - 1];
@@ -76,12 +77,11 @@ public class BitInput {
     public int nextClearBit(int maxBits) {
         int val = 0x00;
 
-        for(int i = 0; i < maxBits; i++) {
+        for (int i = 0; i < maxBits; i++) {
             val <<= 1;
-            // TODO This loop has too many branches and unnecessary boolean casts
             boolean bit = readBit();
 
-            if(bit) {
+            if (bit) {
                 val |= 0x01;
             } else {
                 break;
