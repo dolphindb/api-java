@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,7 +55,20 @@ public class BasicTable extends AbstractEntity implements Table{
 					collection = new SymbolBaseCollection();
 				vector = new BasicSymbolVector(df, in, collection);
 			} else if (dt == DATA_TYPE.DT_COMPRESS) {
-				Decompressor decompressor = new Decompressor(in);
+				int srcSize = in.readInt();
+				in.readInt();
+				byte version = in.readByte();
+				byte colFlag = in.readByte();
+				byte charCode = in.readByte();
+				int compression = in.readByte();
+				int dataType = in.readByte();
+				int unitLength = in.readByte();
+				short reserved = in.readShort();
+				int extra = in.readInt();
+				int dataSize = in.readInt();
+				int checkSum = in.readInt();
+				Decompressor decompressor = new Decompressor(in, srcSize - 20, dataSize, unitLength, compression);
+				dt = DATA_TYPE.values()[dataType];
 				vector = (Vector)factory.createEntity(df, dt, decompressor.decompress(), extended);
 			}
 			else{

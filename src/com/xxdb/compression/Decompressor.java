@@ -1,45 +1,54 @@
 package com.xxdb.compression;
 
-import com.xxdb.data.Entity;
-import com.xxdb.io.AbstractExtendedDataInputStream;
-import com.xxdb.io.BigEndianDataInputStream;
-import com.xxdb.io.ExtendedDataInput;
+import com.xxdb.io.*;
 
 import java.io.ByteArrayInputStream;
-import java.io.DataOutput;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
-//TODO: get data size
 public class Decompressor {
     AbstractExtendedDataInputStream in;
     int dataSize;
+    int srcSize;
+    int compression;
+    int unitLength;
 
-    public Decompressor(ExtendedDataInput in) {
+    public Decompressor(ExtendedDataInput in, int srcSize, int dataSize, int unitLength, int compression) {
         if (!(in instanceof AbstractExtendedDataInputStream)) {
             throw new RuntimeException("Cannot decompress the input: not a class of AbstractExtendedInputStream");
         }
         this.in = (AbstractExtendedDataInputStream) in;
-        try {
-            this.in.readInt();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.srcSize = srcSize;
         this.dataSize = dataSize;
+        this.compression = compression;
+        this.unitLength = unitLength;
     }
+
     public ExtendedDataInput decompress() {
         AbstractExtendedDataInputStream out = null;
-        try {
-            int decoder_type = this.in.readShort(); //TODO: which bit to use?
-            if (decoder_type == 1) {
-                DeltaOfDeltaDecoder decoder = new DeltaOfDeltaDecoder(this.in, 1<<16, dataSize);
-            } else if (decoder_type == 2) {
-                byte[] src = new byte[Long.BYTES * 1000];
-                this.in.readFully(src);
-                LZ4Decoder decoder = new LZ4Decoder(src, 1<<16, dataSize);
-                out = new BigEndianDataInputStream(new ByteArrayInputStream(decoder.decompress()));
+        if (compression == 2) {
+            ByteBuffer dest = ByteBuffer.allocate(unitLength * dataSize + 20);
+            dest.putInt(dataSize);
+            dest.putInt(1);
+            DeltaOfDeltaDecoder decoder = new DeltaOfDeltaDecoder(this.in, dest, srcSize, dataSize, unitLength);
+            out = new BigEndianDataInputStream(new ByteArrayInputStream(decoder.decompress()));
+        } else if (compression == 1) {
+            ByteBuffer dest = ByteBuffer.allocate(unitLength * dataSize + 20);
+            ByteBuffer header = ByteBuffer.allocate(8);
+            header.putInt(dataSize);
+            header.putInt(1);
+            header.flip();
+            LittleEndianDataInputStream bigIn = new LittleEndianDataInputStream(new ByteArrayInputStream(header.array()));
+            try {
+                dest.putInt(bigIn.readInt());
+                dest.putInt(bigIn.readInt());
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Fail to generater column header after decompressing");
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            LZ4Decoder decoder = new LZ4Decoder(in, srcSize, dataSize, unitLength);
+            dest.put(decoder.decompress());
+            out = new LittleEndianDataInputStream(new ByteArrayInputStream(dest.array()));
         }
         return out;
     }

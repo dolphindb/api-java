@@ -1,68 +1,84 @@
 package com.xxdb.compression;
 
-import com.xxdb.io.AbstractExtendedDataInputStream;
-
-import java.io.IOException;
-
 public class BitInput {
-    private AbstractExtendedDataInputStream is;
-    private byte b;
-    private int bitsLeft = 0;
-    private int position = 0;
 
-    public BitInput(AbstractExtendedDataInputStream is) {
-        this.is = is;
-        try {
-            flipByte();
-        } catch (IOException e) {
-            e.printStackTrace();
+    private final long[] longArray;
+    private long lB;
+    private int position = 0;
+    private int bitsLeft = 0;
+    public final static long[] MASK_ARRAY;
+    public final static long[] BIT_SET_MASK;
+
+    static {
+        MASK_ARRAY = new long[64];
+        long mask = 1;
+        long value = 0;
+        for (int i = 0; i < MASK_ARRAY.length; i++) {
+            value = value | mask;
+            mask = mask << 1;
+
+            MASK_ARRAY[i] = value;
         }
+
+        BIT_SET_MASK = new long[64];
+        for(int i = 0; i < BIT_SET_MASK.length; i++) {
+            BIT_SET_MASK[i] = (1L << i);
+        }
+    }
+
+    public BitInput(long[] array) {
+        this.longArray = array;
+        flipByte();
     }
 
     public boolean readBit() {
-        boolean bit = ((b >> (bitsLeft - 1)) & 1) == 1;
+        boolean bit = (lB & BIT_SET_MASK[bitsLeft - 1]) != 0;
         bitsLeft--;
-        try {
-            flipByte();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        position++;
+        checkAndFlipByte();
         return bit;
     }
 
-    public long getLong(int bits) {
-        long value = 0;
-        while(bits > 0) {
-            if(bits > bitsLeft || bits == Byte.SIZE) {
-                // Take only the bitsLeft "least significant" bits
-                byte d = (byte) (b & ((1<<bitsLeft) - 1));
-                value = (value << bitsLeft) + (d & 0xFF);
-                bits -= bitsLeft;
-                bitsLeft = 0;
-            } else {
-                // Shift to correct position and take only least significant bits
-                byte d = (byte) ((b >>> (bitsLeft - bits)) & ((1<<bits) - 1));
-                value = (value << bits) + (d & 0xFF);
-                bitsLeft -= bits;
-                bits = 0;
-            }
-            try {
-                flipByte();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        position+=bits;
-        return value;
+    private void flipByte() {
+        lB = longArray[position++];
+        bitsLeft = Long.SIZE;
     }
 
+    private void checkAndFlipByte() {
+        if(bitsLeft == 0) {
+            flipByte();
+        }
+    }
+
+    public int getInt() {
+        return (int) getLong(32);
+    }
+
+    public long getLong(int bits) {
+        long value;
+        if(bits <= bitsLeft) {
+            // We can read from this word only
+            // Shift to correct position and take only n least significant bits
+            value = (lB >>> (bitsLeft - bits)) & MASK_ARRAY[bits - 1];
+            bitsLeft -= bits; // We ate n bits from it
+            checkAndFlipByte();
+        } else {
+            // This word and next one, no more (max bits is 64)
+            value = lB & MASK_ARRAY[bitsLeft - 1]; // Read what's left first
+            bits -= bitsLeft;
+            flipByte(); // We need the next one
+            value <<= bits; // Give n bits of space to value
+            value |= (lB >>> (bitsLeft - bits));
+            bitsLeft -= bits;
+        }
+        return value;
+    }
 
     public int nextClearBit(int maxBits) {
         int val = 0x00;
 
         for(int i = 0; i < maxBits; i++) {
             val <<= 1;
+            // TODO This loop has too many branches and unnecessary boolean casts
             boolean bit = readBit();
 
             if(bit) {
@@ -74,15 +90,9 @@ public class BitInput {
         return val;
     }
 
-    private void flipByte() throws IOException {
-        if (bitsLeft == 0) {
-            b = is.readByte();
-            bitsLeft = Byte.SIZE;
-        }
-    }
-
     public int getPosition() {
         return position;
     }
+
 }
 
