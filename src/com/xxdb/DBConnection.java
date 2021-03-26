@@ -76,25 +76,29 @@ public class DBConnection {
     private int connTimeout = 0;
     private boolean asynTask = false;
     private boolean isUseSSL = false;
+    private boolean compress = false;
+    
     public DBConnection() {
-        factory = new BasicEntityFactory();
-        mutex = new ReentrantLock();
-        sessionID = "";
+    	this(false, false, false);
     }
 
     public DBConnection(boolean asynchronousTask) {
-        factory = new BasicEntityFactory();
-        mutex = new ReentrantLock();
-        sessionID = "";
-        asynTask = asynchronousTask;
+    	this(asynchronousTask, false, false);
     }
+    
     public DBConnection(boolean asynchronousTask, boolean useSSL) {
-        factory = new BasicEntityFactory();
-        mutex = new ReentrantLock();
-        sessionID = "";
-        asynTask = asynchronousTask;
-        isUseSSL = useSSL;
+       this(asynchronousTask, useSSL, false);
     }
+    
+    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress) {
+    	 factory = new BasicEntityFactory();
+         mutex = new ReentrantLock();
+         sessionID = "";
+         asynTask = asynchronousTask;
+         isUseSSL = useSSL;
+         this.compress = compress;
+    }
+    
     public boolean isBusy() {
         if (!mutex.tryLock())
             return true;
@@ -114,6 +118,17 @@ public class DBConnection {
         }
         catch (Exception ex) {}
         return 0;
+    }
+    
+    private int generateRequestFlag(boolean clearSessionMemory){
+    	int flag = 0;
+    	if(asynTask)
+    		flag += 4;
+    	if(clearSessionMemory)
+    		flag += 16;
+    	if(compress)
+    		flag += 64;
+    	return flag;
     }
 
     public boolean connect(String hostName, int port) throws IOException {
@@ -226,11 +241,8 @@ public class DBConnection {
         String body = "connect\n";
         out.writeBytes("API 0 ");
         out.writeBytes(String.valueOf(body.length()));
-        if(asynTask){
-            out.writeBytes(" / 4_1_" + String.valueOf(4) + "_" + String.valueOf(2));
-        }else{
-            out.writeBytes(" / 0_1_" + String.valueOf(4) + "_" + String.valueOf(2));
-        }
+        int flag = generateRequestFlag(false);
+        out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(4) + "_" + String.valueOf(2));
         out.writeByte('\n');
         out.writeBytes(body);
         out.flush();
@@ -438,8 +450,6 @@ public class DBConnection {
         return run(script, listener, priority, parallelism,fetchSize, false);
     }
 
-
-
     public Entity tryRun(String script, boolean clearSessionMemory) throws IOException {
         return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, clearSessionMemory);
     }
@@ -515,16 +525,8 @@ public class DBConnection {
                     out.writeBytes(" / 1_1_8_8");
                 }
                 else{
-                    int flag = 0;
-                    if (asynTask)
-                        flag += 4;
-                    if (clearSessionMemory)
-                        flag += 16;
-                    if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
-                        out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                    } else {
-                        out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
-                    }
+                	int flag = generateRequestFlag(false);
+                    out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                 }
                 if(fetchSize>0){
                     out.writeBytes("__" + String.valueOf(fetchSize));
@@ -566,16 +568,8 @@ public class DBConnection {
                         out.writeBytes(" / 1_1_8_8");
                     }
                     else{
-                        int flag = 0;
-                        if (asynTask)
-                            flag += 4;
-                        if (clearSessionMemory)
-                            flag += 16;
-                        if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
-                            out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                        } else {
-                            out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
-                        }
+                    	int flag = generateRequestFlag(false);
+                        out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                     }
                     if(fetchSize>0){
                         out.writeBytes("__" + String.valueOf(fetchSize));
@@ -732,15 +726,8 @@ public class DBConnection {
             try {
                 out.writeBytes("API " + sessionID + " ");
                 out.writeBytes(String.valueOf(body.length()));
-                if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
-                    if(asynTask) {
-                        out.writeBytes(" / 4_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                    }else{
-                        out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                    }
-                }else if(asynTask){
-                    out.writeBytes(" / 4_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
-                }
+                int flag = generateRequestFlag(false);
+                out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                 if(fetchSize>0){
                     out.writeBytes("__" + String.valueOf(fetchSize));
                 }
