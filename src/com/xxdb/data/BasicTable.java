@@ -56,17 +56,17 @@ public class BasicTable extends AbstractEntity implements Table{
 				vector = new BasicSymbolVector(df, in, collection);
 			} else if (dt == DATA_TYPE.DT_COMPRESS) {
 				int srcSize = in.readInt();
-				in.readInt();
-				byte version = in.readByte();
-				byte colFlag = in.readByte();
-				byte charCode = in.readByte();
+				in.readInt(); // cols
+				in.readByte();  // version, colflag, charCode
+				in.readByte();
+				in.readByte();
 				int compression = in.readByte();
 				int dataType = in.readByte();
 				int unitLength = in.readByte();
-				short reserved = in.readShort();
-				int extra = in.readInt();
+				in.readShort(); // reserved
+				in.readInt(); // extra
 				int dataSize = in.readInt();
-				int checkSum = in.readInt();
+				in.readInt(); // checkSum
 				Decompressor decompressor = new Decompressor(in, srcSize - 20, dataSize, unitLength, compression);
 				dt = DATA_TYPE.values()[dataType];
 				vector = (Vector)factory.createEntity(df, dt, decompressor.decompress(), extended);

@@ -1,71 +1,107 @@
 package com.xxdb.compression;
 
 import com.xxdb.io.AbstractExtendedDataInputStream;
+import com.xxdb.io.BigEndianDataInputStream;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class DeltaOfDeltaDecoder {
-    int unitLength;
-    int dataCount = 0;
-    int dataSize;
+public class DeltaOfDeltaDecoder implements Decoder {
+    byte[] out;
 
-    private long storedValue = 0;
-    private long storedDelta = 0;
+    public DeltaOfDeltaDecoder() { }
 
-    public final int FIRST_DELTA_BITS;
-
-    private BitInput in;
-    private final ByteBuffer dest;
-
-    public DeltaOfDeltaDecoder(AbstractExtendedDataInputStream in, ByteBuffer dest, int srcSize, int dataSize, int unitLength) {
-        FIRST_DELTA_BITS = unitLength * 8;
-        this.dest = dest;
-        this.unitLength = unitLength;
-        this.dataSize = dataSize;
-        int blockSize = 0;
+    @Override
+    public int decompress(AbstractExtendedDataInputStream in, int inLength, byte[] out, int outOff, int outLength, int unitLength) {
+        this.out = out;
+        ByteBuffer dest;
+        try {
+            dest = ByteBuffer.wrap(this.out, outOff, outLength);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
         int count = 0;
-        while (count < srcSize && dataCount < dataSize) {
+        DeltaOfDeltaBlockDecoder blockDecoder = new DeltaOfDeltaBlockDecoder(unitLength);
+        while (inLength > 0 && count < outLength) {
+            int blockSize;
             try {
                 blockSize = in.readInt();
-                count+=Integer.BYTES;
             } catch (IOException e) {
                 e.printStackTrace();
+                return count;
             }
-            if (blockSize == 0) break;
-            blockSize = Math.min(blockSize, srcSize - count);
-            long[] bytes = new long[blockSize/Long.BYTES];
-            try {
-                for (int i = 0; i < bytes.length; i++) {
-                    bytes[i] = in.readLong();
+            inLength -= Integer.BYTES;
+            blockSize = Math.min(blockSize, inLength);
+            if (blockSize == 0) return count;
+            //prepare src array
+            long[] src = new long[blockSize / Long.BYTES];
+            for (int i = 0; i < src.length; i++) {
+                try {
+                    src[i] = in.readLong();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return count;
                 }
-                if(!decompress(bytes, blockSize))
-                    break;
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-            count+=blockSize;
+            //decompress
+            count += blockDecoder.decompress(src, dest);
+            inLength -= blockSize;
         }
-        dest.flip();
+        return count;
     }
 
-    public byte[] decompress() {
-        return dest.array();
+    @Override
+    public AbstractExtendedDataInputStream getInputStream() {
+        return new BigEndianDataInputStream(new ByteArrayInputStream(out));
     }
 
-    private boolean decompress(long[] bytes, int blockSize) {
-        in = new BitInput(bytes);
+}
+
+class DeltaOfDeltaBlockDecoder {
+    private final int unitLength;
+    private final int FIRST_DELTA_BITS;
+
+    private DeltaBitInput in;
+    private ByteBuffer dest;
+    private long storedValue;
+    private long storedDelta;
+
+    public DeltaOfDeltaBlockDecoder(int unitLength) {
+        this.unitLength = unitLength;
+        this.FIRST_DELTA_BITS = unitLength * Byte.SIZE;
+    }
+
+    public static long decodeZigZag64(final long n) {
+        return (n >>> 1) ^ -(n & 1);
+    }
+
+    public int decompress(long[] src, ByteBuffer dest) {
+        this.dest = dest;
+        this.storedValue = 0;
+        this.storedDelta = 0;
+        int count = 0;
+        in = new DeltaBitInput(src);
         boolean flag = in.readBit();
         while (!flag) {
             flag = in.readBit();
-            writeBuffer(dest, 0L);
-            if (in.getPosition() > bytes.length - 3 || dataCount >= dataSize) return true;
+            writeBuffer(this.dest, 0L);
+            count++;
+            if (in.getPosition() > src.length - 3) return count;
         }
-        if (!readHeader() || !first())
-            return false;
-        while (in.getPosition()/8 < blockSize) {
-            if (!nextValue()) break;
+        if (!readHeader())
+            return count;
+        count++;
+        if (!first())
+            return count;
+        count++;
+        while (in.getPosition() < src.length) {
+            if (!nextValue())
+                return count;
+            count++;
         }
-        return true;
+        return count;
     }
 
     private boolean readHeader() {
@@ -110,27 +146,27 @@ public class DeltaOfDeltaDecoder {
         return true;
     }
 
-    private void writeBuffer(ByteBuffer dest, long storedValue) {
+    private boolean writeBuffer(ByteBuffer dest, long storedValue) {
+        if (dest.limit() - dest.position() < unitLength)
+            return false;
         if (unitLength == 2)
             dest.putShort((short) storedValue);
         else if (unitLength == 4)
             dest.putInt((int) storedValue);
         else if (unitLength == 8)
             dest.putLong(storedValue);
-        dataCount++;
+        return true;
     }
-
 
     private boolean nextValue() {
         try {
             int readInstruction = in.nextClearBit(6);
             long deltaDelta;
 
-            switch(readInstruction) {
+            switch (readInstruction) {
                 case 0x00:
                     storedValue += storedDelta;
-                    writeBuffer(dest, storedValue);
-                    return true;
+                    return writeBuffer(dest, storedValue);
                 case 0x02:
                     deltaDelta = in.getLong(7);
                     break;
@@ -153,22 +189,16 @@ public class DeltaOfDeltaDecoder {
                 case 0x3f:
                     return false;
                 default:
-                    throw new RuntimeException("Fail to decompress value at position: " + in.getPosition()/8 + " instruction: " + readInstruction);
+                    throw new RuntimeException("Fail to decompress value at position: " + in.getPosition() / 8 + " instruction: " + readInstruction);
             }
             deltaDelta++;
             deltaDelta = decodeZigZag64(deltaDelta);
             storedDelta += deltaDelta;
             storedValue += storedDelta;
-            writeBuffer(dest, storedValue);
-            return true;
+            return writeBuffer(dest, storedValue);
         } catch (Exception e) {
             e.printStackTrace();
-            writeBuffer(dest, 0);
             return false;
         }
-    }
-
-    public static long decodeZigZag64(final long n) {
-        return (n >>> 1) ^ -(n & 1);
     }
 }

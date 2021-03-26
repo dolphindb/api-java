@@ -1,6 +1,6 @@
 package com.xxdb.compression;
 
-public class BitInput {
+public class DeltaBitInput {
 
     public final static long[] MASK_ARRAY;
     public final static long[] BIT_SET_MASK;
@@ -27,7 +27,7 @@ public class BitInput {
     private int position = 0;
     private int bitsLeft = 0;
 
-    public BitInput(long[] array) {
+    public DeltaBitInput(long[] array) {
         this.longArray = array;
         flipByte();
     }
@@ -92,7 +92,7 @@ public class BitInput {
 
     public void rollBack(int bits) {
         if (Long.SIZE - bitsLeft >= bits) {
-            bitsLeft+=bits;
+            bitsLeft += bits;
         } else {
             position--;
             bitsLeft = bits - Long.SIZE + bitsLeft;
