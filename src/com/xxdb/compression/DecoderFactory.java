@@ -3,12 +3,13 @@ package com.xxdb.compression;
 public class DecoderFactory {
 
     private DecoderFactory() {}
-
-    public static Decoder createLZ4Decoder() {
-        return new LZ4Decoder();
-    }
-
-    public static Decoder createDeltaOfDeltaDecoder() {
-        return new DeltaOfDeltaDecoder();
+    
+    public static Decoder get(int method){
+    	if(method == 1)
+    		return new LZ4Decoder();
+    	else if(method == 2)
+    		return new DeltaOfDeltaDecoder();
+    	else
+    		throw new RuntimeException("Invalid compression method " + String.valueOf(method));
     }
 }
