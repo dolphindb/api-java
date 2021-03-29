@@ -306,6 +306,7 @@ abstract class AbstractClient implements MessageDispatcher {
         this.listeningPort = subscribePort;
         Daemon daemon = new Daemon(subscribePort, this);
         pThread = new Thread(daemon);
+        daemon.setRunningThread(pThread);
         pThread.start();
     }
 
@@ -314,6 +315,7 @@ abstract class AbstractClient implements MessageDispatcher {
         this.listeningPort = subscribePort;
         Daemon daemon = new Daemon(subscribePort, this);
         pThread = new Thread(daemon);
+        daemon.setRunningThread(pThread);
         pThread.start();
     }
 

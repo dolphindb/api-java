@@ -1,5 +1,9 @@
 package com.xxdb.streaming.client;
 
+import com.xxdb.DBConnection;
+import com.xxdb.data.BasicInt;
+import com.xxdb.data.BasicString;
+import com.xxdb.data.Entity;
 import com.xxdb.data.Vector;
 import com.xxdb.streaming.client.IMessage;
 
@@ -7,6 +11,7 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.time.LocalTime;
 import java.util.List;
@@ -47,40 +52,43 @@ public class ThreadedClient extends AbstractClient {
         }
 
         public void run() {
-            while (true) {
-                try {
-                    List<IMessage> msgs = null;
-                    if(batchSize == -1 && throttle == -1)
+            while (!isInterrupted()) {
+                List<IMessage> msgs = null;
+                if(batchSize == -1 && throttle == -1) {
+                    try {
                         msgs = queue.take();
-                    else if(batchSize != -1 && throttle != -1){
-                        LocalTime end = LocalTime.now().plusNanos(throttle*1000000);
-                        while (msgs == null || ((msgs == null||msgs.size()<batchSize) && LocalTime.now().isBefore(end))){
-                            List<IMessage> tmp = queue.poll();
-                            if(tmp != null){
-                                if(msgs == null)
-                                    msgs = tmp;
-                                else
-                                    msgs.addAll(tmp);
-                            }
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+                }
+                else if(batchSize != -1 && throttle != -1){
+                    LocalTime end = LocalTime.now().plusNanos(throttle*1000000);
+                    while (msgs == null || ((msgs == null||msgs.size()<batchSize) && LocalTime.now().isBefore(end))){
+                        List<IMessage> tmp = queue.poll();
+                        if(tmp != null){
+                            if(msgs == null)
+                                msgs = tmp;
+                            else
+                                msgs.addAll(tmp);
                         }
                     }
-                    else {
-                        LocalTime end = LocalTime.now().plusNanos(throttle*1000000);
-                        while (msgs == null || LocalTime.now().isBefore(end)){
-                            List<IMessage> tmp = queue.poll();
-                            if(tmp != null){
-                                if(msgs == null)
-                                    msgs = tmp;
-                                else
-                                    msgs.addAll(tmp);
-                            }
+                }
+                else {
+                    LocalTime end = LocalTime.now().plusNanos(throttle*1000000);
+                    while (msgs == null || LocalTime.now().isBefore(end)){
+                        List<IMessage> tmp = queue.poll();
+                        if(tmp != null){
+                            if(msgs == null)
+                                msgs = tmp;
+                            else
+                                msgs.addAll(tmp);
                         }
                     }
-                    for (IMessage msg : msgs) {
-                        handler.doEvent(msg);
-                    }
-                } catch (InterruptedException e) {
-                    System.out.println("Handler thread stopped.");
+                }
+                if(msgs == null)
+                    continue;
+                for (IMessage msg : msgs) {
+                    handler.doEvent(msg);
                 }
             }
         }
@@ -164,5 +172,43 @@ public class ThreadedClient extends AbstractClient {
 
     public void unsubscribe(String host, int port, String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName);
+    }
+
+    @Override
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
+        DBConnection dbConn = new DBConnection();
+        dbConn.connect(host, port);
+        try {
+            String localIP = this.listeningHost;
+            if(localIP.equals(""))
+                localIP = dbConn.getLocalAddress().getHostAddress();
+            List<Entity> params = new ArrayList<Entity>();
+            params.add(new BasicString(localIP));
+            params.add(new BasicInt(this.listeningPort));
+            params.add(new BasicString(tableName));
+            params.add(new BasicString(actionName));
+
+            dbConn.run("stopPublishTable", params);
+            String topic = null;
+            String fullTableName = host + ":" + port + ":" + tableName;
+            synchronized (tableNameToTrueTopic) {
+                topic = tableNameToTrueTopic.get(fullTableName);
+            }
+            synchronized (trueTopicToSites) {
+                Site[] sites = trueTopicToSites.get(topic);
+                if (sites == null || sites.length == 0)
+                    ;
+                for (int i = 0; i < sites.length; i++)
+                    sites[i].closed = true;
+            }
+            System.out.println("Successfully unsubscribed table " + fullTableName);
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            dbConn.close();
+            pThread.interrupt();
+            handlerLopper.interrupt();
+        }
+        return;
     }
 }
