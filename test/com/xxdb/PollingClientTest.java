@@ -58,7 +58,8 @@ public class PollingClientTest {
     }
 
     @AfterClass
-    public static void cls(){
+    public static void cls() throws IOException {
+        conn.run("dropStreamTable(`Trades)");
         conn.close();
     }
 
