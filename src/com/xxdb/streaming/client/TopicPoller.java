@@ -31,6 +31,7 @@ public class TopicPoller {
                     list = queue.take();
             } catch (InterruptedException e) {
                 e.printStackTrace();
+                return;
             }
         }
     }

@@ -49,7 +49,7 @@ class Daemon implements Runnable {
 
                     if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
                         new Thread(new ConnectionDetector(socket)).start();
-                }catch(Exception ex){
+                }catch(IOException ex){
                     try {
                         if(runningThread_.isInterrupted()) {
                             Iterator<Thread> it = threadSet.iterator();
@@ -103,7 +103,6 @@ class Daemon implements Runnable {
         @Override
         public void run() {
             while (!pThread.isInterrupted()) {
-                try {
                     for (String site : this.dispatcher.getAllReconnectSites()) {
                         if (dispatcher.getNeedReconnect(site) == 1) {
                             AbstractClient.Site s = dispatcher.getSiteByName(site);
@@ -136,13 +135,11 @@ class Daemon implements Runnable {
                         }
                     }
 
-                } catch (Exception e0) {
-                    e0.printStackTrace();
-                }
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                    break;
                 }
             }
         }
