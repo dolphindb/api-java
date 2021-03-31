@@ -206,9 +206,11 @@ public class ThreadedClient extends AbstractClient {
             throw ex;
         } finally {
             dbConn.close();
-            pThread.interrupt();
             handlerLopper.interrupt();
         }
         return;
+    }
+    public void close(){
+        pThread.interrupt();
     }
 }
