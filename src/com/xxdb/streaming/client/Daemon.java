@@ -36,7 +36,7 @@ class Daemon implements Runnable {
         Thread rcThread = new Thread(rcDetector);
         rcDetector.setRunningThread(rcThread);
         rcThread.start();
-        HashSet<Thread> threadSet = new HashSet<>();
+        HashSet<Socket> threadSet = new HashSet<>();
         while (!runningThread_.isInterrupted()) {
             try {
                     Socket socket = ssocket.accept();
@@ -44,7 +44,7 @@ class Daemon implements Runnable {
 
                     MessageParser listener = new MessageParser(socket, dispatcher);
                     Thread listeningThread = new Thread(listener);
-                    threadSet.add(listeningThread);
+                    threadSet.add(socket);
                     listeningThread.start();
 
                     if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
@@ -52,27 +52,11 @@ class Daemon implements Runnable {
                 }catch(IOException ex){
                     try {
                         if(runningThread_.isInterrupted()) {
-                            Iterator<Thread> it = threadSet.iterator();
-                            while(it.hasNext()){
-                                it.next().interrupt();
-                            }
-                            break;
+                            throw new InterruptedException();
                         }
                         Thread.sleep(100);
                     } catch (InterruptedException iEx) {
-                        Iterator<Thread> it = threadSet.iterator();
-                        while(it.hasNext()){
-                            it.next().interrupt();
-                        }
                         break;
-                    } catch (Exception ex1) {
-                        ex1.printStackTrace();
-                    }
-                } catch (Throwable t) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (Exception ex1) {
-                        ex1.printStackTrace();
                     }
                 }
         }
@@ -87,6 +71,14 @@ class Daemon implements Runnable {
             ssocket.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        Iterator<Socket> it = threadSet.iterator();
+        while(it.hasNext()){
+            try {
+                it.next().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

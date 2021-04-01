@@ -8,18 +8,17 @@ import com.xxdb.data.Vector;
 import com.xxdb.streaming.client.IMessage;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.net.SocketException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 
 public class ThreadedClient extends AbstractClient {
-    private HandlerLopper handlerLopper = null;
+    private HashMap<String, HandlerLopper> handlerLoppers = new HashMap<>();
 
     public ThreadedClient() throws SocketException {
         this(DEFAULT_PORT);
@@ -96,8 +95,13 @@ public class ThreadedClient extends AbstractClient {
 
     @Override
     protected boolean doReconnect(Site site) {
-        if (handlerLopper == null)
-            throw new RuntimeException("Subscribe thread is not started");
+        String topicStr = site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName;
+        Thread handlerLopper = null;
+        synchronized (handlerLoppers) {
+            if (!handlerLoppers.containsKey(topicStr))
+                throw new RuntimeException("Subscribe thread is not started");
+            handlerLopper = handlerLoppers.get(topicStr);
+        }
         handlerLopper.interrupt();
         try {
             subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.allowExistTopic);
@@ -116,8 +120,12 @@ public class ThreadedClient extends AbstractClient {
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic) throws IOException {
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, allowExistTopic);
-        handlerLopper = new HandlerLopper(queue, handler);
+        HandlerLopper handlerLopper = new HandlerLopper(queue, handler);
         handlerLopper.start();
+        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        synchronized (handlerLoppers) {
+            handlerLoppers.put(topicStr, handlerLopper);
+        }
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, int throttle) throws IOException {
@@ -126,8 +134,12 @@ public class ThreadedClient extends AbstractClient {
         if(throttle<0)
             throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, allowExistTopic);
-        handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
+        HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
+        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        synchronized (handlerLoppers) {
+            handlerLoppers.put(topicStr, handlerLopper);
+        }
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect) throws IOException {
@@ -201,16 +213,32 @@ public class ThreadedClient extends AbstractClient {
                 for (int i = 0; i < sites.length; i++)
                     sites[i].closed = true;
             }
+           synchronized (queueManager) {
+               queueManager.removeQueue(topic);
+           }
             System.out.println("Successfully unsubscribed table " + fullTableName);
         } catch (Exception ex) {
             throw ex;
         } finally {
             dbConn.close();
-            handlerLopper.interrupt();
+            String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+            HandlerLopper handlerLopper = null;
+            synchronized (handlerLoppers) {
+                handlerLopper = handlerLoppers.get(topicStr);
+                handlerLoppers.remove(topicStr);
+                handlerLopper.interrupt();
+            }
         }
         return;
     }
     public void close(){
+        synchronized (handlerLoppers) {
+            Iterator<HandlerLopper> it = handlerLoppers.values().iterator();
+            while (it.hasNext()) {
+                it.next().interrupt();
+            }
+            handlerLoppers.clear();
+        }
         pThread.interrupt();
     }
 }
