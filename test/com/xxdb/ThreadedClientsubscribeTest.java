@@ -52,6 +52,7 @@ public class ThreadedClientsubscribeTest {
         try {
             conn.run("dropStreamTable('Trades');" +
                     "dropStreamTable('Receive')");
+           // client.close();
         } catch (Exception e) {
 
         }
@@ -59,6 +60,7 @@ public class ThreadedClientsubscribeTest {
 
     @AfterClass
     public static void after() throws IOException {
+        client.close();
         conn.close();
     }
 
@@ -123,8 +125,6 @@ public class ThreadedClientsubscribeTest {
             BasicTable re = (BasicTable) conn.run("Receive");
             BasicTable tra = (BasicTable) conn.run("Trades");
             Thread.sleep(12000);
-            conn.run("dropStreamTable(`Trades)");
-            conn.run("dropStreamTable(`Receive)");
             assertEquals(re.rows(), tra.rows());
             for (int i = 0; i < re.rows(); i++) {
                 assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -136,7 +136,7 @@ public class ThreadedClientsubscribeTest {
             e.printStackTrace();
         }
     }
-/*
+
     @Test
     public void test_subscribe_ofst0() throws IOException {
         MessageHandler handler = new MessageHandler() {
@@ -161,8 +161,6 @@ public class ThreadedClientsubscribeTest {
             BasicTable tra = (BasicTable) conn.run("Trades");
             client.unsubscribe(HOST, PORT, "Trades", "javaStreamingApi");
             Thread.sleep(2000);
-            conn.run("dropStreamTable(`Trades)");
-            conn.run("dropStreamTable(`Receive)");
             assertEquals(re.rows(), tra.rows());
             for (int i = 0; i < re.rows(); i++) {
                 assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -193,9 +191,7 @@ public class ThreadedClientsubscribeTest {
         client.subscribe(HOST, PORT, "Trades", handler, ofst);
         try {
             Thread.sleep(2000);
-            client.unsubscribe(HOST, PORT, "Trades", "javaStreamingApi");
-            conn.run("dropStreamTable(`Trades)");
-            conn.run("dropStreamTable(`Receive)");
+            client.unsubscribe(HOST, PORT, "Trades");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -227,8 +223,6 @@ public class ThreadedClientsubscribeTest {
             BasicTable re = (BasicTable) conn.run("Receive");
             BasicTable tra = (BasicTable) conn.run("Trades");
             client.unsubscribe(HOST, PORT, "Trades", "javaStreamingApi");
-            conn.run("dropStreamTable(`Trades)");
-            conn.run("dropStreamTable(`Receive)");
             assertEquals(3000, re.rows());
             for (int i = 0; i < re.rows(); i++) {
                 assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i + 100));
@@ -267,8 +261,6 @@ public class ThreadedClientsubscribeTest {
             BasicTable re = (BasicTable) conn.run("Receive");
             BasicTable tra = (BasicTable) conn.run("Trades");
             client.unsubscribe(HOST, PORT, "Trades");
-            conn.run("dropStreamTable(`Trades)");
-            conn.run("dropStreamTable(`Receive)");
             assertEquals(3090, re.rows());
             for (int i = 0; i < re.rows(); i++) {
                 assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i + 10));
@@ -300,7 +292,7 @@ public class ThreadedClientsubscribeTest {
         client.subscribe(HOST, PORT, "Trades", handler, ofst);
 
 
-    }*/
+    }
 
     @Test
     public void test_subscribe_filter() throws Exception {
@@ -343,8 +335,6 @@ public class ThreadedClientsubscribeTest {
         BasicTable fil = (BasicTable) conn.run("filter");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades2");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades1");
-        conn.run("dropStreamTable(`Trades)");
-        conn.run("dropStreamTable(`Receive)");
         conn.run("dropStreamTable(`filter)");
         assertEquals(1000, re.rows());
         assertEquals(1000, fil.rows());
@@ -378,15 +368,12 @@ public class ThreadedClientsubscribeTest {
         };
         Vector filter1 = (Vector) conn.run("1..1000");
         client.subscribe(HOST, PORT, "Trades", "subTrades", handler, -1, true, filter1, true, 10000, 5);
-        conn.run("n=2000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        conn.run("n=2000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(5000);
-
         BasicTable re = (BasicTable) conn.run("Receive");
         BasicTable tra = (BasicTable) conn.run("Trades");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades");
-        conn.run("dropStreamTable(`Trades)");
-        conn.run("dropStreamTable(`Receive)");
         assertEquals(2000, re.rows());
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -396,6 +383,63 @@ public class ThreadedClientsubscribeTest {
             assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 10000));
             assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 10000).getNumber().doubleValue(), 4);
         }
+    }
 
+    @Test
+    public void test_subscribe_batchSize_throttle2() throws Exception {
+        MessageHandler handler = new MessageHandler() {
+            @Override
+            public void doEvent(IMessage msg) {
+                try {
+                    String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
+                    conn.run(script);
+                    //  System.out.println(msg.getEntity(0).getString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        Vector filter1 = (Vector) conn.run("1..1000");
+        client.subscribe(HOST, PORT, "Trades", "subTrades", handler, -1, true, filter1, true, 10000, 5);
+        conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
+        BasicTable re = (BasicTable) conn.run("Receive");
+        BasicTable tra = (BasicTable) conn.run("Trades");
+        client.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        assertEquals(200, re.rows());
+        for (int i = 0; i <re.rows();i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+        }
+    }
+
+    @Test
+    public void test_subscribe_unsubscribe_resubscribe() throws Exception {
+        MessageHandler handler = new MessageHandler() {
+            @Override
+            public void doEvent(IMessage msg) {
+                try {
+                    String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
+                    conn.run(script);
+                    //  System.out.println(msg.getEntity(0).getString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        Vector filter1 = (Vector) conn.run("1..1000");
+        for (int i=0;i<10;i++){
+        client.subscribe(HOST, PORT, "Trades", "subTrades1", handler, -1, true, filter1, true, 10000, 5);
+        client.subscribe(HOST, PORT, "Trades", "subTrades2", handler, -1, true, filter1, true, 10000, 5);
+        client.subscribe(HOST, PORT, "Trades", "subTrades3", handler, -1, true, filter1, true, 10000, 5);
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5200);
+        client.unsubscribe(HOST, PORT, "Trades", "subTrades1");
+        client.unsubscribe(HOST, PORT, "Trades", "subTrades2");
+        client.unsubscribe(HOST, PORT, "Trades", "subTrades3");
+        Thread.sleep(5200);
+        }
     }
 }
