@@ -69,7 +69,8 @@ public class ThreadPooledClient extends AbstractClient {
                     } else if (count > 0) {
                         Thread.yield();
                     } else {
-                        LockSupport.park();
+                        Thread.yield();
+                        //LockSupport.park();
                     }
                     count = count - 1;
                 }
