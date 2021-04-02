@@ -1,5 +1,9 @@
 package com.xxdb.streaming.client;
 
+import com.xxdb.DBConnection;
+import com.xxdb.data.BasicInt;
+import com.xxdb.data.BasicString;
+import com.xxdb.data.Entity;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.data.Vector;
 
@@ -164,5 +168,43 @@ public class ThreadPooledClient extends AbstractClient {
 
     public void unsubscribe(String host, int port, String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName);
+    }
+
+    @Override
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
+        DBConnection dbConn = new DBConnection();
+        dbConn.connect(host, port);
+        try {
+            String localIP = this.listeningHost;
+            if(localIP.equals(""))
+                localIP = dbConn.getLocalAddress().getHostAddress();
+            List<Entity> params = new ArrayList<Entity>();
+            params.add(new BasicString(localIP));
+            params.add(new BasicInt(this.listeningPort));
+            params.add(new BasicString(tableName));
+            params.add(new BasicString(actionName));
+
+            dbConn.run("stopPublishTable", params);
+            String topic = null;
+            String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+            synchronized (tableNameToTrueTopic) {
+                topic = tableNameToTrueTopic.get(fullTableName);
+            }
+            synchronized (trueTopicToSites) {
+                Site[] sites = trueTopicToSites.get(topic);
+                if (sites == null || sites.length == 0)
+                    ;
+                for (int i = 0; i < sites.length; i++)
+                    sites[i].closed = true;
+            }
+            synchronized (queueManager) {
+                queueManager.removeQueue(topic);
+            }
+            System.out.println("Successfully unsubscribed table " + fullTableName);
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            dbConn.close();
+        }
     }
 }
