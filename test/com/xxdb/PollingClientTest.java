@@ -141,10 +141,10 @@ public class PollingClientTest {
             for (int i=0;i<2;i++){//bigdata
                 conn.run("n=10000000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
                 msgs = poller1.poll(1000,10000);
-                if (msgs==null){
+               /* if (msgs==null){
                     continue;
-                }
-                else if (msgs.size() > 0) {
+                }*/
+                 if (msgs.size() > 0) {
                     BasicInt value = (BasicInt) msgs.get(0).getEntity(0);
                     assertTrue(msgs.size()>=10000);
                 }
