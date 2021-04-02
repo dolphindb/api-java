@@ -206,6 +206,20 @@ public class ThreadPooledClient extends AbstractClient {
             throw ex;
         } finally {
             dbConn.close();
+            String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+            QueueHandlerBinder queueHandler =null;
+            synchronized (queueHandlers){
+                queueHandler = queueHandlers.get(topicStr);
+                queueHandlers.remove(topicStr);
+            }
         }
+    }
+
+    public  void close(){
+        synchronized (queueHandlers) {
+            queueHandlers = null;
+        }
+        threadPool.shutdownNow();
+        pThread.interrupt();
     }
 }
