@@ -2,6 +2,9 @@ package com.xxdb.streaming.client;
 
 
 import com.xxdb.*;
+import com.xxdb.data.BasicInt;
+import com.xxdb.data.BasicString;
+import com.xxdb.data.Entity;
 import com.xxdb.data.Vector;
 import com.xxdb.streaming.client.IMessage;
 
