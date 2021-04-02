@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 public class DeltaOfDeltaDecoder extends AbstractDecoder {
 
     @Override
-    public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount) throws IOException{
+    public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian) throws IOException{
     	//TODO: handle the case of unitLength == 0 (String)
       	int offset = 8;
       	ByteBuffer dest = createColumnVector(elementCount, unitLength, false);
@@ -28,10 +28,10 @@ public class DeltaOfDeltaDecoder extends AbstractDecoder {
             length -= Integer.BYTES;
             blockSize = Math.min(blockSize, length);
             if (blockSize == 0) break;
-            
+            System.out.println(blockSize);
             long[] src = new long[blockSize / Long.BYTES];
             for (int i = 0; i < src.length; i++) {
-            	src[i] = in.readLong();
+                src[i] = in.readLong();
             }
             
             count += blockDecoder.decompress(src, dest) * unitLength;
@@ -89,6 +89,7 @@ class DeltaOfDeltaBlockDecoder {
     private boolean readHeader() {
         try {
             storedValue = decodeZigZag64(in.getLong(unitLength * 8));
+            System.out.println("header: " + storedValue);
             writeBuffer(dest, storedValue);
         } catch (Exception e) {
             e.printStackTrace();
@@ -124,6 +125,7 @@ class DeltaOfDeltaBlockDecoder {
             return false;
         }
         storedValue = storedValue + storedDelta;
+        System.out.println("Delta: " + storedDelta + " Val: " + storedValue);
         writeBuffer(dest, storedValue);
         return true;
     }

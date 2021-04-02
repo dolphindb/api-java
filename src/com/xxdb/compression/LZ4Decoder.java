@@ -1,5 +1,6 @@
 package com.xxdb.compression;
 
+import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.LittleEndianDataInputStream;
 import net.jpountz.lz4.LZ4Factory;
@@ -14,13 +15,13 @@ public class LZ4Decoder extends AbstractDecoder {
     private LZ4SafeDecompressor decompressor = null;
 
     @Override
-    public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount) throws IOException{
+    public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian) throws IOException{
     	if(decompressor == null){
 	        LZ4Factory factory = LZ4Factory.fastestInstance();
 	        decompressor = factory.safeDecompressor();
     	}
         int offset = 8;
-      	ByteBuffer dest = createColumnVector(elementCount, unitLength, true);
+      	ByteBuffer dest = createColumnVector(elementCount, unitLength, isLittleEndian);
     	byte[] out = dest.array();
         int outLength = out.length - offset;
         int count = 0;
@@ -39,6 +40,8 @@ public class LZ4Decoder extends AbstractDecoder {
             count += decompressor.decompress(src, 0, blockSize, out, count + offset);
             length -= blockSize;
         }
-        return new LittleEndianDataInputStream(new ByteArrayInputStream(out, 0, offset + count));
+        return isLittleEndian ?
+                new LittleEndianDataInputStream(new ByteArrayInputStream(out, 0, offset + count)) :
+                new BigEndianDataInputStream(new ByteArrayInputStream(out, 0, offset + count));
     }
 }

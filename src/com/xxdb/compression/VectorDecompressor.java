@@ -11,7 +11,7 @@ import com.xxdb.io.ExtendedDataInput;
 
 public class VectorDecompressor {
 	
-	public Vector decompress(EntityFactory factory, ExtendedDataInput in, boolean extended) throws IOException{
+	public Vector decompress(EntityFactory factory, ExtendedDataInput in, boolean extended, boolean isLittleEndian) throws IOException{
 		int compressedBytes = in.readInt();
 		in.skipBytes(7);
 		int compression = in.readByte();
@@ -20,9 +20,9 @@ public class VectorDecompressor {
 		in.skipBytes(6);
 		int elementCount = in.readInt();
 		//read checkSum
-		in.readInt(); 
+		in.readInt();
 		
-		ExtendedDataInput decompressedIn = DecoderFactory.get(compression).decompress(in, compressedBytes - 20, unitLength, elementCount);
+		ExtendedDataInput decompressedIn = DecoderFactory.get(compression).decompress(in, compressedBytes - 20, unitLength, elementCount, isLittleEndian);
 		DATA_TYPE dt = DATA_TYPE.values()[dataType];
 		return (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, dt, decompressedIn, extended);
 	}
