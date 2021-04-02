@@ -106,7 +106,7 @@ public class ThreadPooledClient extends AbstractClient {
         try {
             Thread.sleep(1000);
             subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.allowExistTopic);
-            System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
+            System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + site.actionName);
             return true;
         } catch (Exception ex) {
             System.out.println("Unable to subscribe table. Will try again after 1 seconds.");
@@ -118,7 +118,7 @@ public class ThreadPooledClient extends AbstractClient {
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic) throws IOException {
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, allowExistTopic);
         synchronized (queueHandlers) {
-            queueHandlers.put(tableNameToTrueTopic.get(host + ":" + port + ":" + tableName), new QueueHandlerBinder(queue, handler));
+            queueHandlers.put(tableNameToTrueTopic.get(host + ":" + port + "/" + tableName + "/" + actionName), new QueueHandlerBinder(queue, handler));
         }
     }
 

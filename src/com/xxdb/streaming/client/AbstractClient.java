@@ -444,7 +444,7 @@ abstract class AbstractClient implements MessageDispatcher {
                     String HASiteAlias = HASiteHostAndPort[2];
                     sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, allowExistTopic);
                     synchronized (tableNameToTrueTopic) {
-                        tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + ":" + tableName, topic);
+                        tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + "/" + tableName + "/" + actionName, topic);
                     }
                     String HATopic = getTopic(HASiteHost, HASitePort, HASiteAlias, tableName, actionName);
                     synchronized (HATopicToTrueTopic) {
@@ -457,7 +457,7 @@ abstract class AbstractClient implements MessageDispatcher {
             } else {
                 Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, allowExistTopic)};
                 synchronized (tableNameToTrueTopic) {
-                    tableNameToTrueTopic.put(host + ":" + port + ":" + tableName, topic);
+                    tableNameToTrueTopic.put(host + ":" + port + "/" + tableName + "/" + actionName, topic);
                 }
                 synchronized (HATopicToTrueTopic) {
                     HATopicToTrueTopic.put(topic, topic);
@@ -504,7 +504,7 @@ abstract class AbstractClient implements MessageDispatcher {
 
             dbConn.run("stopPublishTable", params);
             String topic = null;
-            String fullTableName = host + ":" + port + ":" + tableName;
+            String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
             synchronized (tableNameToTrueTopic) {
                 topic = tableNameToTrueTopic.get(fullTableName);
             }

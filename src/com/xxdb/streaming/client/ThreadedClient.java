@@ -107,12 +107,12 @@ public class ThreadedClient extends AbstractClient {
             subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.allowExistTopic);
             Date d = new Date();
             DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            System.out.println(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
+            System.out.println(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
             return true;
         } catch (Exception ex) {
             Date d = new Date();
             DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            System.out.println(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.host + ":" + site.port + ":" + site.tableName);
+            System.out.println(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
             ex.printStackTrace();
             return false;
         }
@@ -202,7 +202,7 @@ public class ThreadedClient extends AbstractClient {
 
             dbConn.run("stopPublishTable", params);
             String topic = null;
-            String fullTableName = host + ":" + port + ":" + tableName;
+            String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
             synchronized (tableNameToTrueTopic) {
                 topic = tableNameToTrueTopic.get(fullTableName);
             }
