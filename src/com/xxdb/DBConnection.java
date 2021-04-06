@@ -733,8 +733,12 @@ public class DBConnection {
                 }
                 out.writeByte('\n');
                 out.writeBytes(body);
-                for (int i = 0; i < arguments.size(); ++i)
-                    arguments.get(i).write(out);
+                for (int i = 0; i < arguments.size(); ++i) {
+                    if (compress && arguments.get(i).isTable()) {
+                        arguments.get(i).writeCompressed(out, 2);
+                    } else
+                        arguments.get(i).write(out);
+                }
                 out.flush();
 
                 if (asynTask) return null;

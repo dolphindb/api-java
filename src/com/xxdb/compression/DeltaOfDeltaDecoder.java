@@ -2,6 +2,7 @@ package com.xxdb.compression;
 
 import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.ExtendedDataInput;
+import com.xxdb.io.LittleEndianDataInputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
@@ -14,7 +15,7 @@ public class DeltaOfDeltaDecoder extends AbstractDecoder {
     public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian) throws IOException{
     	//TODO: handle the case of unitLength == 0 (String)
       	int offset = 8;
-      	ByteBuffer dest = createColumnVector(elementCount, unitLength, false);
+      	ByteBuffer dest = createColumnVector(elementCount, unitLength, isLittleEndian);
     	byte[] out = dest.array();
         int outLength = out.length - offset;
         int count = 0;
@@ -28,7 +29,6 @@ public class DeltaOfDeltaDecoder extends AbstractDecoder {
             length -= Integer.BYTES;
             blockSize = Math.min(blockSize, length);
             if (blockSize == 0) break;
-            System.out.println(blockSize);
             long[] src = new long[blockSize / Long.BYTES];
             for (int i = 0; i < src.length; i++) {
                 src[i] = in.readLong();
@@ -37,7 +37,9 @@ public class DeltaOfDeltaDecoder extends AbstractDecoder {
             count += blockDecoder.decompress(src, dest) * unitLength;
             length -= blockSize;
         }
-        return new BigEndianDataInputStream(new ByteArrayInputStream(out, 0, offset + count));
+        return isLittleEndian?
+                new LittleEndianDataInputStream(new ByteArrayInputStream(out)) :
+                new BigEndianDataInputStream(new ByteArrayInputStream(out));
     }
 }
 
@@ -89,7 +91,6 @@ class DeltaOfDeltaBlockDecoder {
     private boolean readHeader() {
         try {
             storedValue = decodeZigZag64(in.getLong(unitLength * 8));
-            System.out.println("header: " + storedValue);
             writeBuffer(dest, storedValue);
         } catch (Exception e) {
             e.printStackTrace();
@@ -125,7 +126,6 @@ class DeltaOfDeltaBlockDecoder {
             return false;
         }
         storedValue = storedValue + storedDelta;
-        System.out.println("Delta: " + storedDelta + " Val: " + storedValue);
         writeBuffer(dest, storedValue);
         return true;
     }

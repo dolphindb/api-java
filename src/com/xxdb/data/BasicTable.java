@@ -6,9 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.xxdb.compression.BasicTableCompressor;
 import com.xxdb.compression.VectorDecompressor;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+import com.xxdb.io.LittleEndianDataOutputStream;
 
 /**
  * 
@@ -44,7 +46,7 @@ public class BasicTable extends AbstractEntity implements Table{
             boolean extended = type >= 128;
             if(type >= 128)
             	type -= 128;
-			
+
 			DATA_FORM df = DATA_FORM.values()[form];
 			DATA_TYPE dt = DATA_TYPE.values()[type];
 			if(df != DATA_FORM.DF_VECTOR)
@@ -57,7 +59,7 @@ public class BasicTable extends AbstractEntity implements Table{
 			} else if (dt == DATA_TYPE.DT_COMPRESS) {
 				if(decompressor == null)
 					decompressor = new VectorDecompressor();
-				vector = decompressor.decompress(factory, in, extended);
+				vector = decompressor.decompress(factory, in, extended, true);
 			}
 			else{
 				vector = (Vector)factory.createEntity(df, dt, in, extended);
@@ -249,6 +251,12 @@ public class BasicTable extends AbstractEntity implements Table{
 			else
 				vector.write(out);
 		}
+	}
+
+	@Override
+	public void writeCompressed(ExtendedDataOutput output, int method) throws IOException {
+		BasicTableCompressor.compressBasicTable(this, method, output, output instanceof LittleEndianDataOutputStream);
+
 	}
 
 	public BasicTable combine(BasicTable table){

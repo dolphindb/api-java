@@ -1,6 +1,5 @@
 package com.xxdb.compression;
 
-import com.xxdb.io.ExtendedDataOutput;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 
@@ -21,9 +20,9 @@ public class LZ4Encoder extends AbstractEncoder{
         while (elementCount > 0 && count < maxCompressedLength) {
             int blockSize = Math.min(DEFAULT_BLOCK_SIZE, elementCount * unitLength);
             byte[] src = new byte[blockSize];
-            byte[] dest = new byte[blockSize];
+            byte[] dest = new byte[maxCompressedLength];
             in.get(src);
-            int compressedLength = compressor.compress(src, 0, blockSize, dest, 0);
+            int compressedLength = compressor.compress(src, dest);
             //write
             out.putInt(compressedLength);
             out.put(dest, 0, compressedLength);

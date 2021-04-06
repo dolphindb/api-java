@@ -1,8 +1,5 @@
 package com.xxdb.compression;
 
-import com.xxdb.io.ExtendedDataOutput;
-
-import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -10,14 +7,14 @@ import java.nio.ByteBuffer;
  * BasicTable -> BasicTable / vector -> vector
  * input: datainputstream, output: long[]
  */
-public class DeltaOfDeltaEncoder extends AbstractEncoder{
+public class DeltaOfDeltaEncoder extends AbstractEncoder {
     private static final int DEFAULT_BLOCK_SIZE = 65536;
 
     @Override
     public int compress(ByteBuffer in, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException {
         DeltaOfDeltaBlockEncoder blockEncoder = new DeltaOfDeltaBlockEncoder(unitLength);
         int count = 0;
-        while (elementCount > 0 && count < maxCompressedLength) {
+        while (elementCount > 0) {
             int blockSize = Math.min(elementCount * unitLength, DEFAULT_BLOCK_SIZE);
             long[] compressed = blockEncoder.compress(in, blockSize);
             //write blockSize+data
@@ -25,8 +22,8 @@ public class DeltaOfDeltaEncoder extends AbstractEncoder{
             for (long l : compressed) {
                 out.putLong(l);
             }
-            count+=Integer.BYTES + compressed.length * Long.BYTES;
-            elementCount-=blockSize / unitLength;
+            count += Integer.BYTES + compressed.length * Long.BYTES;
+            elementCount -= blockSize / unitLength;
         }
         return count;
     }
@@ -44,8 +41,8 @@ public class DeltaOfDeltaEncoder extends AbstractEncoder{
             for (long l : compressed) {
                 out.putLong(l);
             }
-            count+=Integer.BYTES + compressed.length * Long.BYTES;
-            elementCount-=blockSize / unitLength;
+            count += Integer.BYTES + compressed.length * Long.BYTES;
+            elementCount -= blockSize / unitLength;
         }
         return out;
     }
@@ -93,20 +90,18 @@ class DeltaOfDeltaBlockEncoder {
         return this.out.getLongArray();
     }
 
-    private boolean writeHeader() {
+    private void writeHeader() {
         storedValue = readBuffer(in);
         out.writeBit();
         out.writeBits(encodeZigZag64(storedValue), unitLength * Byte.SIZE);
-        return true;
     }
 
-    private boolean writeFirstDelta() {
+    private void writeFirstDelta() {
         out.writeBit();
         long value = readBuffer(in);
         storedDelta = value - storedValue;
         out.writeBits(encodeZigZag64(storedDelta), FIRST_DELTA_BITS);
         storedValue = value;
-        return true;
     }
 
     private boolean writeNull() {
@@ -114,7 +109,7 @@ class DeltaOfDeltaBlockEncoder {
         return true;
     }
 
-    private boolean writeNext() {
+    private void writeNext() {
         //TODO: NULL VALUE
         // if(null) -> writeNull;
         long value = readBuffer(in);
@@ -145,14 +140,12 @@ class DeltaOfDeltaBlockEncoder {
         }
         storedDelta = newDelta;
         storedValue = value;
-        return true;
     }
 
-    public boolean writeEnd() {
+    public void writeEnd() {
         out.writeBits(62, 6);
         out.writeBits(0xFFFFFFFFFFFFFFFFL, 64);
         out.skipBit();
-        return true;
     }
 
     private long readBuffer(ByteBuffer in) {
@@ -166,7 +159,6 @@ class DeltaOfDeltaBlockEncoder {
         count--;
         throw new RuntimeException("Compression fails: can only support integral or temporal type");
     }
-
 
 
 }
