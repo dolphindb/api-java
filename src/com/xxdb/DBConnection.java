@@ -735,7 +735,7 @@ public class DBConnection {
                 out.writeBytes(body);
                 for (int i = 0; i < arguments.size(); ++i) {
                     if (compress && arguments.get(i).isTable()) {
-                        arguments.get(i).writeCompressed(out, 2);
+                        arguments.get(i).writeCompressed(out, 1); //TODO: which compress method to use
                     } else
                         arguments.get(i).write(out);
                 }

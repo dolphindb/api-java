@@ -12,25 +12,26 @@ import java.nio.ByteOrder;
 public class BasicTableCompressor {
 
     public static void compressBasicTable(BasicTable table, int method, ExtendedDataOutput output, boolean isLittleEndian) throws IOException {
-        //FIXME: create header
-        int flag = (Entity.DATA_FORM.DF_TABLE.ordinal() << 8) + Entity.DATA_TYPE.DT_DICTIONARY.ordinal() & 0xff;
+        short flag = (short) (Entity.DATA_FORM.DF_TABLE.ordinal() << 8 | 8 & 0xff); //8: table type
+        output.writeShort(flag); //need to delete in local test
+
         int rows = table.rows();
         int cols = table.columns();
-        output.writeShort(flag);
         output.writeInt(rows);
         output.writeInt(cols);
         output.writeString(""); //table name
         for (int i = 0; i < cols; i++) {
             output.writeString(table.getColumnName(i));
         }
+
         for (int i = 0; i < cols; i++) {
             ByteBuffer compressedCol = compressVector(table.getColumn(i), rows * Long.BYTES + 100, isLittleEndian, method);
-            output.write(compressedCol.array(), 0, compressedCol.position() + 2);
+            output.write(compressedCol.array(), 0, compressedCol.position());
         }
+        return;
     }
 
     private static ByteBuffer compressVector(Vector v, int maxCompressedLength, boolean isLittleEndian, int method) throws IOException {
-        int elementCount = v.rows();
         int dataType = v.getDataType().ordinal();
         int unitLength;
         if (dataType >= 6 && dataType <= 11 || dataType == 4) {
@@ -42,9 +43,12 @@ public class BasicTableCompressor {
         } else {
             throw new RuntimeException("Compression Failed: only support integral and temporal data");
         }
+        int elementCount = v.rows();
         ByteBuffer out = isLittleEndian ?
                 ByteBuffer.allocate(elementCount * Long.BYTES + 100).order(ByteOrder.LITTLE_ENDIAN) :
                 ByteBuffer.allocate(elementCount * Long.BYTES + 100).order(ByteOrder.BIG_ENDIAN);
+        short flag = (short) (Entity.DATA_FORM.DF_VECTOR.ordinal() << 8 | Entity.DATA_TYPE.DT_COMPRESS.ordinal() & 0xff);
+        out.putShort(flag);
         out.putInt(0);//compressedBytes
         out.position(out.position() + 7);
         out.put((byte) method);
@@ -52,11 +56,11 @@ public class BasicTableCompressor {
         out.put((byte) unitLength);
         out.position(out.position() + 6);
         out.putInt(elementCount);
-        out.putInt(0); //TODO: checkSum
+        out.putInt(-1); //TODO: checkSum
         ByteBuffer in = ByteBuffer.allocate(elementCount * unitLength);
         readVector(v, in, unitLength);
         int compressedLength = EncoderFactory.get(method).compress(in, elementCount, unitLength, maxCompressedLength, out);
-        out.putInt(0, compressedLength + 20); //FIXME: what's compressedBytes
+        out.putInt(2, compressedLength + 20); //FIXME: what's compressedBytes
         return out;
     }
 

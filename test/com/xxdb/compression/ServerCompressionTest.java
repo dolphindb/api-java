@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class ServerCompressionTest {
 
@@ -32,6 +33,7 @@ public class ServerCompressionTest {
     @Test
     public void testCompressDelta() throws IOException {
 
+        Random rand = new Random();
         List<String> colNames = new ArrayList<>();
         colNames.add("date");
         colNames.add("val");
@@ -41,7 +43,7 @@ public class ServerCompressionTest {
         int baseTime = Utils.countDays(2000,1,1);
         for (int i = 0; i < 100000; i++) {
             time[i] = baseTime + (i % 15);
-            val[i] = 100000 - i;
+            val[i] = rand.nextInt();
         }
 
 
@@ -52,8 +54,10 @@ public class ServerCompressionTest {
         BasicTable table = new BasicTable(colNames, colVectors);
 
         List<Entity> args = Arrays.asList(table);
-        conn.run("tb=table(100:0,`tDate`tint,[DATE,INT])");
-        conn.run("tableInsert{tb}", args);
+        conn.run("share table(100:0,`tDate`tint,[DATE,INT]) as tb");
+        BasicInt count = (BasicInt) conn.run("tableInsert{tb}", args);
+        System.out.println(count.getInt());
+//        BasicTable newT = (BasicTable) conn.run("tb");
 
     }
 
