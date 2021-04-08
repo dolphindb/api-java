@@ -25,10 +25,9 @@ public class BasicTableCompressor {
         }
 
         for (int i = 0; i < cols; i++) {
-            ByteBuffer compressedCol = compressVector(table.getColumn(i), rows * Long.BYTES + 100, isLittleEndian, method);
+            ByteBuffer compressedCol = compressVector(table.getColumn(i), rows * Long.BYTES + 10000, isLittleEndian, method);
             output.write(compressedCol.array(), 0, compressedCol.position());
         }
-        return;
     }
 
     private static ByteBuffer compressVector(Vector v, int maxCompressedLength, boolean isLittleEndian, int method) throws IOException {
@@ -45,22 +44,28 @@ public class BasicTableCompressor {
         }
         int elementCount = v.rows();
         ByteBuffer out = isLittleEndian ?
-                ByteBuffer.allocate(elementCount * Long.BYTES + 100).order(ByteOrder.LITTLE_ENDIAN) :
-                ByteBuffer.allocate(elementCount * Long.BYTES + 100).order(ByteOrder.BIG_ENDIAN);
+                ByteBuffer.allocate(maxCompressedLength).order(ByteOrder.LITTLE_ENDIAN) :
+                ByteBuffer.allocate(maxCompressedLength).order(ByteOrder.BIG_ENDIAN);
         short flag = (short) (Entity.DATA_FORM.DF_VECTOR.ordinal() << 8 | Entity.DATA_TYPE.DT_COMPRESS.ordinal() & 0xff);
+
         out.putShort(flag);
-        out.putInt(0);//compressedBytes
-        out.position(out.position() + 7);
+        out.putInt(0);// compressedBytes
+        out.putInt(1);// cols
+        out.put((byte) 0); // version
+        out.put((byte) 1); // flag bit0:littleEndian bit1:containChecksum
+        out.put((byte) -1); // charcode
         out.put((byte) method);
         out.put((byte) dataType);
         out.put((byte) unitLength);
-        out.position(out.position() + 6);
+        out.position(out.position() + 2); //reserved
+        out.putInt(-1); //extra
         out.putInt(elementCount);
         out.putInt(-1); //TODO: checkSum
+
         ByteBuffer in = ByteBuffer.allocate(elementCount * unitLength);
         readVector(v, in, unitLength);
         int compressedLength = EncoderFactory.get(method).compress(in, elementCount, unitLength, maxCompressedLength, out);
-        out.putInt(2, compressedLength + 20); //FIXME: what's compressedBytes
+        out.putInt(2, compressedLength + 20);
         return out;
     }
 

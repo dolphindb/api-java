@@ -19,13 +19,20 @@ public class LZ4Encoder extends AbstractEncoder{
         int count = 0;
         while (elementCount > 0 && count < maxCompressedLength) {
             int blockSize = Math.min(DEFAULT_BLOCK_SIZE, elementCount * unitLength);
-            byte[] src = new byte[blockSize];
-            byte[] dest = new byte[maxCompressedLength];
-            in.get(src);
-            int compressedLength = compressor.compress(src, dest);
-            //write
-            out.putInt(compressedLength);
-            out.put(dest, 0, compressedLength);
+            byte[] srcBytes = new byte[blockSize];
+            in.get(srcBytes);
+            ByteBuffer src = ByteBuffer.wrap(srcBytes);
+            ByteBuffer dest = ByteBuffer.allocate(maxCompressedLength);
+            compressor.compress(src, dest);
+            int compressedLength = dest.position();
+            dest.flip();
+            for (int i = 0; i < compressedLength / Integer.BYTES - 1; i++) {
+                out.putInt(dest.getInt());
+            }
+            if (compressedLength % Integer.BYTES != 0) {
+                out.putInt(dest.getInt());
+                compressedLength = compressedLength - compressedLength % Integer.BYTES + Integer.BYTES;
+            }
             count+=Integer.BYTES + compressedLength;
             elementCount -= blockSize / unitLength;
         }
