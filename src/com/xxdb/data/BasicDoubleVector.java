@@ -46,7 +46,7 @@ public class BasicDoubleVector extends AbstractVector{
 		super(df);
 		values = new double[size];
 	}
-	
+
 	protected BasicDoubleVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
 		super(df);
 		int rows = in.readInt();
@@ -137,6 +137,13 @@ public class BasicDoubleVector extends AbstractVector{
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeDoubleArray(values);
+	}
+
+	@Override
+	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (double val: values) {
+			buffer.putDouble(val);
+		}
 	}
 
 	@Override

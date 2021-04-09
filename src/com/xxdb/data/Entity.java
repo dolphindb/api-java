@@ -19,7 +19,7 @@ public interface Entity {
 	int columns();
 	String getString();
 	void write(ExtendedDataOutput output) throws IOException;
-	default void writeCompressed(ExtendedDataOutput output, int method) throws IOException {
+	default void writeCompressed(ExtendedDataOutput output) throws IOException {
 		throw new IOException("Only BasicTable and BasicVector support compression");
 	}; //FIXME: "writeCompressed" modify name
 

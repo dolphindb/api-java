@@ -151,6 +151,13 @@ public class BasicShortVector extends AbstractVector{
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
 		out.writeShortArray(values);
 	}
+
+	@Override
+	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (short val: values) {
+			buffer.putShort(val);
+		}
+	}
 	
 	@Override
 	public int asof(Scalar value) {

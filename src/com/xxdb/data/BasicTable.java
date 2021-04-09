@@ -1,17 +1,14 @@
 package com.xxdb.data;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.xxdb.compression.BasicTableCompressor;
 import com.xxdb.compression.VectorDecompressor;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-import com.xxdb.io.LittleEndianDataOutputStream;
 
 /**
  * 
@@ -255,8 +252,23 @@ public class BasicTable extends AbstractEntity implements Table{
 	}
 
 	@Override
-	public void writeCompressed(ExtendedDataOutput output, int method) throws IOException {
-		BasicTableCompressor.compressBasicTable(this, method, output, output instanceof LittleEndianDataOutputStream);
+	public void writeCompressed(ExtendedDataOutput output) throws IOException {
+		short flag = (short) (Entity.DATA_FORM.DF_TABLE.ordinal() << 8 | 8 & 0xff); //8: table type TODO: add table type
+		output.writeShort(flag);
+
+		int rows = this.rows();
+		int cols = this.columns();
+		output.writeInt(rows);
+		output.writeInt(cols);
+		output.writeString(""); //table name
+		for (int i = 0; i < cols; i++) {
+			output.writeString(this.getColumnName(i));
+		}
+
+		for (int i = 0; i < cols; i++) {
+			AbstractVector v = (AbstractVector) this.getColumn(i);
+			v.writeCompressed(output);
+		}
 
 	}
 
