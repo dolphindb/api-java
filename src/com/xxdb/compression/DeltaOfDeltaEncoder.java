@@ -113,8 +113,8 @@ class DeltaOfDeltaBlockEncoder {
         //TODO: NULL VALUE
         // if(null) -> writeNull;
         long value = readBuffer(in);
-        long newDelta = value - storedValue;
-        long deltaD = newDelta - storedDelta;
+        long newDelta = Math.subtractExact(value, storedValue);
+        long deltaD = Math.subtractExact(newDelta, storedDelta);
         //FIXME: implement based on the c++ code
         if (deltaD == 0) {
             out.skipBit();
@@ -127,14 +127,14 @@ class DeltaOfDeltaBlockEncoder {
             } else if (deltaD < 1L << 9) {
                 out.writeBits(6L, 3); // store '110'
                 out.writeBits(deltaD, 9); // Use 9 bits
-            } else if (deltaD < 1L << 12) {
+            } else if (deltaD < 1L << 16) {
                 out.writeBits(14L, 4); // store '1110'
-                out.writeBits(deltaD, 12); // Use 12 bits
+                out.writeBits(deltaD, 16); // Use 12 bits
             } else if (deltaD < 1L << 32) {
-                out.writeBits(30L, 5); // Store '1111'
+                out.writeBits(30L, 5); // Store '11110'
                 out.writeBits(deltaD, 32); // Store delta using 32 bits
             } else {
-                out.writeBits(62L, 6); // Store '1111'
+                out.writeBits(62L, 6); // Store '111110'
                 out.writeBits(deltaD, 64); // Store delta using 64 bits
             }
         }

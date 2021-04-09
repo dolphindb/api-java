@@ -25,7 +25,7 @@ public class BasicTableCompressor {
         }
 
         for (int i = 0; i < cols; i++) {
-            ByteBuffer compressedCol = compressVector(table.getColumn(i), rows * Long.BYTES + 10000, isLittleEndian, method);
+            ByteBuffer compressedCol = compressVector(table.getColumn(i), rows * Long.BYTES * 2, isLittleEndian, method);
             output.write(compressedCol.array(), 0, compressedCol.position());
         }
     }

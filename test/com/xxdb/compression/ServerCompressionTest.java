@@ -16,6 +16,7 @@ import java.util.Random;
 
 public class ServerCompressionTest {
 
+    Random rand = new Random();
     private DBConnection conn;
     public static String HOST = "127.0.0.1";
     public static Integer PORT = 8848;
@@ -33,8 +34,55 @@ public class ServerCompressionTest {
     }
 
     @Test
+    public void testCompressTime() throws Exception {
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("minute");
+        colNames.add("second");
+        colNames.add("timestamp");
+        int[] date = new int[100000];
+        int[] minute = new int[100000];
+        int[] second = new int[100000];
+        long[] timestamp = new long[100000];
+
+        int baseDate = Utils.countDays(2000,1,1);
+        int baseMinute = Utils.countMinutes(13, 8);
+        int baseSecond = Utils.countSeconds(4, 5, 23);
+        long basicTimestamp = Utils.countMilliseconds(2013,1,25,10,0,0,1);
+        for (int i = 0; i < 100000; i++) {
+            if (i % 2 == 0) {
+                date[i] = baseDate + (i % 15);
+                minute[i] = baseMinute + ( i % 300);
+                second[i] = baseSecond + (i % 1800);
+                timestamp[i] = basicTimestamp - (i % 5000);
+            } else {
+                date[i] = baseDate - (i % 15);
+                minute[i] = baseMinute - ( i % 300);
+                second[i] = baseSecond - (i % 1800);
+                timestamp[i] = basicTimestamp + (i % 5000);
+            }
+        }
+
+        List<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(date));
+        colVectors.add(new BasicMinuteVector(minute));
+        colVectors.add(new BasicSecondVector(second));
+        colVectors.add(new BasicTimestampVector(timestamp));
+
+        BasicTable table = new BasicTable(colNames, colVectors);
+
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(100000:0,`date`minute`second`timestamp,[DATE,MINUTE,SECOND,TIMESTAMP])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(100000, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+        System.out.println(newT.getRowJson(0));
+    }
+
+    @Test
     public void testCompressLong() throws Exception {
-        Random rand = new Random();
         List<String> colNames = new ArrayList<>();
         colNames.add("date");
         colNames.add("val");
@@ -44,10 +92,7 @@ public class ServerCompressionTest {
         int baseTime = Utils.countDays(2000,1,1);
         for (int i = 0; i < 100000; i++) {
             time[i] = baseTime + (i % 15);
-            if (i % 2 == 0)
-                val[i] = Integer.MIN_VALUE - 300L;
-            else
-                val[i] = Integer.MIN_VALUE + 300L;
+            val[i] = rand.nextLong() >> 3;
         }
 
         List<Vector> colVectors = new ArrayList<>();
@@ -67,6 +112,7 @@ public class ServerCompressionTest {
 
     @Test
     public void testCompressDouble() throws Exception {
+
         List<String> colNames = new ArrayList<>();
         colNames.add("date");
         colNames.add("val");
@@ -76,10 +122,7 @@ public class ServerCompressionTest {
         int baseTime = Utils.countDays(2000,1,1);
         for (int i = 0; i < 100000; i++) {
             time[i] = baseTime + (i % 15);
-            if (i % 2 == 0)
-                val[i] = i;
-            else
-                val[i] = -i;
+            val[i] = rand.nextDouble();
         }
 
         List<Vector> colVectors = new ArrayList<>();
@@ -109,10 +152,7 @@ public class ServerCompressionTest {
         int baseTime = Utils.countDays(2000,1,1);
         for (int i = 0; i < 100000; i++) {
             time[i] = baseTime + (i % 15);
-            if (i % 2 == 0)
-                val[i] = i;
-            else
-                val[i] = -i;
+            val[i] = rand.nextInt() >> 1;
         }
 
         List<Vector> colVectors = new ArrayList<>();
