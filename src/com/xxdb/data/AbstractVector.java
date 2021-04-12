@@ -12,7 +12,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	private DATA_FORM df_;
 	protected static final int BUF_SIZE = 4096;
 	protected byte[] buf = new byte[BUF_SIZE];
-	protected int compressedMethod = 1;
+	protected int compressedMethod = Vector.COMPRESS_LZ4;
 	
 	protected abstract void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException;
 	

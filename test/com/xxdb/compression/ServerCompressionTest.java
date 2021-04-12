@@ -21,7 +21,7 @@ public class ServerCompressionTest {
     private DBConnection conn;
     public static String HOST = "127.0.0.1";
     public static Integer PORT = 8848;
-    int testPoints = 10000000;
+    int testPoints = 600000;
 
     BasicShortVector shortVector;
     BasicDateVector dateVector;
@@ -104,14 +104,14 @@ public class ServerCompressionTest {
         colNames.add("float");
         colNames.add("double");
 
-        shortVector.setCompressedMethod(1);
-        dateVector.setCompressedMethod(1);
-        minuteVector.setCompressedMethod(1);
-        secondVector.setCompressedMethod(1);
-        timestampVector.setCompressedMethod(1);
-        nanoTimestampVector.setCompressedMethod(1);
-        floatVector.setCompressedMethod(1);
-        doubleVector.setCompressedMethod(1);
+        shortVector.setCompressedMethod(Vector.COMPRESS_LZ4);
+        dateVector.setCompressedMethod(Vector.COMPRESS_LZ4);
+        minuteVector.setCompressedMethod(Vector.COMPRESS_LZ4);
+        secondVector.setCompressedMethod(Vector.COMPRESS_LZ4);
+        timestampVector.setCompressedMethod(Vector.COMPRESS_LZ4);
+        nanoTimestampVector.setCompressedMethod(Vector.COMPRESS_LZ4);
+        floatVector.setCompressedMethod(Vector.COMPRESS_LZ4);
+        doubleVector.setCompressedMethod(Vector.COMPRESS_LZ4);
 
         List<Vector> colVectors = new ArrayList<>();
         colVectors.add(shortVector);
@@ -146,12 +146,12 @@ public class ServerCompressionTest {
         colNames.add("timestamp");
         colNames.add("nanotimestamp");
 
-        shortVector.setCompressedMethod(1);
-        dateVector.setCompressedMethod(1);
-        minuteVector.setCompressedMethod(2);
-        secondVector.setCompressedMethod(2);
-        timestampVector.setCompressedMethod(2);
-        nanoTimestampVector.setCompressedMethod(2);
+        shortVector.setCompressedMethod(Vector.COMPRESS_LZ4);
+        dateVector.setCompressedMethod(Vector.COMPRESS_LZ4);
+        minuteVector.setCompressedMethod(Vector.COMPRESS_DELTA);
+        secondVector.setCompressedMethod(Vector.COMPRESS_DELTA);
+        timestampVector.setCompressedMethod(Vector.COMPRESS_DELTA);
+        nanoTimestampVector.setCompressedMethod(Vector.COMPRESS_DELTA);
 
 
         List<Vector> colVectors = new ArrayList<>();
