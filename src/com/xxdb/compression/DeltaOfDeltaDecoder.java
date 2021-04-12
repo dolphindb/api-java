@@ -1,62 +1,46 @@
 package com.xxdb.compression;
 
-import com.xxdb.io.AbstractExtendedDataInputStream;
 import com.xxdb.io.BigEndianDataInputStream;
+import com.xxdb.io.ExtendedDataInput;
+import com.xxdb.io.LittleEndianDataInputStream;
 
 import java.io.ByteArrayInputStream;
+import java.io.DataInput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class DeltaOfDeltaDecoder implements Decoder {
-    byte[] out;
-
-    public DeltaOfDeltaDecoder() { }
+public class DeltaOfDeltaDecoder extends AbstractDecoder {
 
     @Override
-    public int decompress(AbstractExtendedDataInputStream in, int inLength, byte[] out, int outOff, int outLength, int unitLength) {
-        this.out = out;
-        ByteBuffer dest;
-        try {
-            dest = ByteBuffer.wrap(this.out, outOff, outLength);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 0;
-        }
+    public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian) throws IOException{
+    	//TODO: handle the case of unitLength == 0 (String)
+      	int offset = 8;
+      	ByteBuffer dest = createColumnVector(elementCount, unitLength, isLittleEndian);
+    	byte[] out = dest.array();
+        int outLength = out.length - offset;
         int count = 0;
         DeltaOfDeltaBlockDecoder blockDecoder = new DeltaOfDeltaBlockDecoder(unitLength);
-        while (inLength > 0 && count < outLength) {
-            int blockSize;
-            try {
-                blockSize = in.readInt();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return count;
+        
+        while (length > 0 && count < outLength) {
+            int blockSize = in.readInt();
+            if(blockSize < 0){
+            	blockSize = blockSize & 2147483647;
             }
-            inLength -= Integer.BYTES;
-            blockSize = Math.min(blockSize, inLength);
-            if (blockSize == 0) return count;
-            //prepare src array
+            length -= Integer.BYTES;
+            blockSize = Math.min(blockSize, length);
+            if (blockSize == 0) break;
             long[] src = new long[blockSize / Long.BYTES];
             for (int i = 0; i < src.length; i++) {
-                try {
-                    src[i] = in.readLong();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return count;
-                }
+                src[i] = in.readLong();
             }
-            //decompress
-            count += blockDecoder.decompress(src, dest);
-            inLength -= blockSize;
+            
+            count += blockDecoder.decompress(src, dest) * unitLength;
+            length -= blockSize;
         }
-        return count;
+        return isLittleEndian?
+                new LittleEndianDataInputStream(new ByteArrayInputStream(out)) :
+                new BigEndianDataInputStream(new ByteArrayInputStream(out));
     }
-
-    @Override
-    public AbstractExtendedDataInputStream getInputStream() {
-        return new BigEndianDataInputStream(new ByteArrayInputStream(out));
-    }
-
 }
 
 class DeltaOfDeltaBlockDecoder {

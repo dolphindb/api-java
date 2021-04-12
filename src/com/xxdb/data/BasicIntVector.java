@@ -157,7 +157,14 @@ public class BasicIntVector extends AbstractVector{
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeIntArray(values);
 	}
-	
+
+	@Override
+	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (int val: values) {
+			buffer.putInt(val);
+		}
+	}
+
 	@Override
 	public int asof(Scalar value) {
 		int target;

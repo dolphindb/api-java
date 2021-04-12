@@ -1,13 +1,11 @@
 package com.xxdb.compression;
 
-import com.xxdb.io.AbstractExtendedDataInputStream;
+import java.io.DataInput;
+import java.io.IOException;
+
+import com.xxdb.io.ExtendedDataInput;
 
 public interface Decoder {
-
-    default int decompress(AbstractExtendedDataInputStream in, int inLength, byte[] out, int unitLength) {
-        return decompress(in, inLength, out, 0, out.length, unitLength);
-    }
-
     /**
      * This method takes in an input stream with many blocks and decompresses them all into a byte array
      * <p>
@@ -19,15 +17,9 @@ public interface Decoder {
      * ...
      *
      * @param in         input stream
-     * @param inLength   input length, continue from current position of input stream
-     * @param out        byte array of output
-     * @param outOff     offset of output
-     * @param outLength  the exact number of bytes you want (e.g. size of out - out offset )
-     * @param unitLength how many bytes does each unit contain
-     * @return number of bytes decompressed
+     * @param length     input length, continue from current position of input stream
+     * @param unitLength The length of an element in bytes. It is zero if the element is a string object.
+     * @return
      */
-    int decompress(AbstractExtendedDataInputStream in, int inLength, byte[] out, int outOff, int outLength, int unitLength);
-
-    AbstractExtendedDataInputStream getInputStream();
-
+    ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian) throws IOException;
 }

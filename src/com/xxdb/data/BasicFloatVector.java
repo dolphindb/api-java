@@ -138,6 +138,13 @@ public class BasicFloatVector extends AbstractVector{
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeFloatArray(values);
 	}
+
+	@Override
+	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (float val: values) {
+			buffer.putFloat(val);
+		}
+	}
 	
 	@Override
 	public int asof(Scalar value) {

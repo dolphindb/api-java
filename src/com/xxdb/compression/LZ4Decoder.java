@@ -1,57 +1,47 @@
 package com.xxdb.compression;
 
-import com.xxdb.io.AbstractExtendedDataInputStream;
+import com.xxdb.io.BigEndianDataInputStream;
+import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.LittleEndianDataInputStream;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4SafeDecompressor;
 
 import java.io.ByteArrayInputStream;
+import java.io.DataInput;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
-
-public class LZ4Decoder implements Decoder {
-
-    LZ4SafeDecompressor decompressor;
-    byte[] out;
+public class LZ4Decoder extends AbstractDecoder {
+    private LZ4SafeDecompressor decompressor = null;
 
     @Override
-    public int decompress(AbstractExtendedDataInputStream in, int inLength, byte[] out, int outOff, int outLength, int unitLength) {
-        LZ4Factory factory = LZ4Factory.fastestInstance();
-        this.decompressor = factory.safeDecompressor();
-        this.out = out;
+    public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian) throws IOException{
+    	if(decompressor == null){
+	        LZ4Factory factory = LZ4Factory.fastestInstance();
+	        decompressor = factory.safeDecompressor();
+    	}
+        int offset = 8;
+      	ByteBuffer dest = createColumnVector(elementCount, unitLength, isLittleEndian);
+    	byte[] out = dest.array();
+        int outLength = out.length - offset;
         int count = 0;
-        while (inLength > 0 && count < outLength) {
-            int blockSize;
-            try {
-                blockSize = in.readInt();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return count;
+        
+        while (length > 0 && count < outLength) {
+            int blockSize = in.readInt();
+            if(blockSize < 0){
+            	blockSize = blockSize & 2147483647;
             }
-            inLength -= Integer.BYTES;
-            blockSize = Math.min(blockSize, inLength);
-            if (blockSize == 0) return count;
+            length -= Integer.BYTES;
+            blockSize = Math.min(blockSize, length);
+            if (blockSize == 0) break;
+            
             byte[] src = new byte[blockSize];
-            try {
-                in.readFully(src);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return count;
-            }
-            count += decompress(src, this.out, blockSize, count + outOff);
-            inLength -= blockSize;
+            in.readFully(src);
+            count += decompressor.decompress(src, 0, blockSize, out, count + offset);
+            length -= blockSize;
         }
-        return count;
+        return isLittleEndian ?
+                new LittleEndianDataInputStream(new ByteArrayInputStream(out, 0, offset + count)) :
+                new BigEndianDataInputStream(new ByteArrayInputStream(out, 0, offset + count));
     }
-
-    @Override
-    public AbstractExtendedDataInputStream getInputStream() {
-        return new LittleEndianDataInputStream(new ByteArrayInputStream(out));
-    }
-
-    protected int decompress(byte[] src, byte[] dest, int blockSize, int destOff) {
-        return decompressor.decompress(src, 0, blockSize, dest, destOff);
-    }
-
-
 }
