@@ -34,7 +34,7 @@ public class BasicShortVector extends AbstractVector{
 		this(array, true);
 	}
 	
-	protected BasicShortVector(short[] array, boolean copy){
+	public BasicShortVector(short[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
 		if(copy)
 			values = array.clone();
