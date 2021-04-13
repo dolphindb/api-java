@@ -7,7 +7,10 @@ package com.xxdb.data;
  */
 
 public interface Vector extends Entity{
-	final int DISPLAY_ROWS = 10;
+	int DISPLAY_ROWS = 10;
+	int COMPRESS_LZ4 = 1;
+	int COMPRESS_DELTA = 2;
+
 	Vector combine(Vector vector);
 	Vector getSubVector(int[] indices);
 	int asof(Scalar value);
