@@ -51,6 +51,7 @@ class DeltaOfDeltaBlockDecoder {
     private ByteBuffer dest;
     private long storedValue;
     private long storedDelta;
+    private int count;
 
     public DeltaOfDeltaBlockDecoder(int unitLength) {
         this.unitLength = unitLength;
@@ -65,25 +66,21 @@ class DeltaOfDeltaBlockDecoder {
         this.dest = dest;
         this.storedValue = 0;
         this.storedDelta = 0;
-        int count = 0;
+        count = 0;
         in = new DeltaBitInput(src);
         boolean flag = in.readBit();
         while (!flag) {
+            writeNull(dest);
             flag = in.readBit();
-            writeBuffer(this.dest, 0L);
-            count++;
-            if (in.getPosition() > src.length - 3) return count;
+//            if (in.getPosition() == src.length - 2) return count;
         }
         if (!readHeader())
             return count;
-        count++;
         if (!first())
             return count;
-        count++;
         while (in.getPosition() < src.length) {
             if (!nextValue())
                 return count;
-            count++;
         }
         return count;
     }
@@ -102,15 +99,21 @@ class DeltaOfDeltaBlockDecoder {
     private boolean first() {
         try {
             boolean flag = in.readBit();
-            while (!flag)
+            while (!flag) {
+                writeNull(dest);
                 flag = in.readBit();
+            }
             int sign = (int) in.getLong(5);
             if (sign == 30) {
-                if (in.getLong(64) == 0xFFFFFFFFFFFFFFFFL)
+                try {
+                    if (in.getLong(64) == 0xFFFFFFFFFFFFFFFFL)
+                        return false;
+                    else {
+                        in.rollBack(64);
+                        in.rollBack(5);
+                    }
+                } catch (ArrayIndexOutOfBoundsException ex) {
                     return false;
-                else {
-                    in.rollBack(64);
-                    in.rollBack(5);
                 }
             } else {
                 in.rollBack(5);
@@ -139,7 +142,20 @@ class DeltaOfDeltaBlockDecoder {
             dest.putInt((int) storedValue);
         else if (unitLength == 8)
             dest.putLong(storedValue);
+        count++;
         return true;
+    }
+
+    private void writeNull(ByteBuffer dest) {
+        if (dest.limit() - dest.position() < unitLength)
+            return;
+        if (unitLength == 2)
+            dest.putShort(Short.MIN_VALUE);
+        else if (unitLength == 4)
+            dest.putInt(Integer.MIN_VALUE);
+        else if (unitLength == 8)
+            dest.putLong(Long.MIN_VALUE);
+        count++;
     }
 
     private boolean nextValue() {
@@ -171,7 +187,8 @@ class DeltaOfDeltaBlockDecoder {
                     }
                     break;
                 case 0x3f:
-                    return false;
+                    writeNull(dest);
+                    return true;
                 default:
                     throw new RuntimeException("Fail to decompress value at position: " + in.getPosition() / 8 + " instruction: " + readInstruction);
             }

@@ -6,7 +6,7 @@ import net.jpountz.lz4.LZ4Factory;
 import java.io.*;
 import java.nio.ByteBuffer;
 
-public class LZ4Encoder extends AbstractEncoder{
+public class LZ4Encoder implements Encoder {
     LZ4Compressor compressor;
     private static final int DEFAULT_BLOCK_SIZE = 65536;
 

@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
  * BasicTable -> BasicTable / vector -> vector
  * input: datainputstream, output: long[]
  */
-public class DeltaOfDeltaEncoder extends AbstractEncoder {
+public class DeltaOfDeltaEncoder implements Encoder {
     private static final int DEFAULT_BLOCK_SIZE = 65536;
 
     @Override
@@ -73,10 +73,6 @@ class DeltaOfDeltaBlockEncoder {
         this.out = new DeltaBitOutput();
         this.in = src;
         this.count = 0;
-//  TODO: if(src.read() == null) writeBit(0,1);
-//        while (count < dataSize) {
-//            count++;
-//        }
         writeHeader();
         writeFirstDelta();
         while (count * unitLength < blockSize) {
@@ -102,11 +98,6 @@ class DeltaOfDeltaBlockEncoder {
         storedDelta = value - storedValue;
         out.writeBits(encodeZigZag64(storedDelta), FIRST_DELTA_BITS);
         storedValue = value;
-    }
-
-    private boolean writeNull() {
-        out.writeBits(63L, 6);
-        return true;
     }
 
     private void writeNext() {

@@ -138,9 +138,4 @@ public class DeltaBitOutput {
         copy[copy.length - 1] = lB;
         return copy;
     }
-
-    public int getPosition() {
-        return position;
-    }
-
 }

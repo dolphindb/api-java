@@ -357,14 +357,14 @@ public class ServerCompressionTest {
     }
 
 
-    private static void compareBasicTable(BasicTable table, BasicTable newTable) throws Exception {
+    static void compareBasicTable(BasicTable table, BasicTable newTable) throws Exception {
         assertEquals("rows not equal", table.rows(), newTable.rows());
         assertEquals("cols not equal", table.columns(), newTable.columns());
         int count = 0;
         int cols = table.columns();
         for (int i = 0; i < cols; i++) {
             AbstractVector v1 = (AbstractVector) table.getColumn(i);
-            AbstractVector v2 = (AbstractVector) table.getColumn(i);
+            AbstractVector v2 = (AbstractVector) newTable.getColumn(i);
             if (!v1.equals(v2)) {
                 for (int j = 0; j < table.rows(); j++) {
                     Entity e1 = table.getColumn(i).get(j);

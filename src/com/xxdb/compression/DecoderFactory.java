@@ -10,6 +10,6 @@ public class DecoderFactory {
     	else if(method == 2)
     		return new DeltaOfDeltaDecoder();
     	else
-    		throw new RuntimeException("Invalid compression method " + String.valueOf(method));
+    		throw new RuntimeException("Invalid compression method " + method);
     }
 }

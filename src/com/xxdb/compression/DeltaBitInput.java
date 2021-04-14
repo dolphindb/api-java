@@ -100,7 +100,7 @@ public class DeltaBitInput {
     }
 
 
-    public int getPosition() {
+    protected int getPosition() {
         return position;
     }
 
