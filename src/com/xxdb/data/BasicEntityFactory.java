@@ -1,6 +1,8 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+
+import com.xxdb.data.Entity.DURATION;
 import com.xxdb.io.ExtendedDataInput;
 
 public class BasicEntityFactory implements EntityFactory{
@@ -41,6 +43,7 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[Entity.DATA_TYPE.DT_IPADDR.ordinal()] = new IPAddrFactory();
 		factories[Entity.DATA_TYPE.DT_COMPLEX.ordinal()] = new ComplexFactory();
 		factories[Entity.DATA_TYPE.DT_POINT.ordinal()] = new PointFactory();
+		factories[Entity.DATA_TYPE.DT_DURATION.ordinal()] = new DurationFactory();
 		factoriesExt[Entity.DATA_TYPE.DT_SYMBOL.ordinal()] = new ExtendedSymbolFactory();
 	}
 	
@@ -368,6 +371,17 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createVectorWithDefaultValue(int size){ return new BasicPointVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicPointVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for Point not supported yet.");}
+	}
+	
+	private class DurationFactory implements TypeFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicDuration(in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { throw new RuntimeException("Vector for Duration not supported yet.");}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicDurationVector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for Duration not supported yet.");}
+		public Scalar createScalarWithDefaultValue() { return new BasicDuration(DURATION.NS, 0);}
+		public Vector createVectorWithDefaultValue(int size){ throw new RuntimeException("Vector for Duration not supported yet.");}
+		public Vector createPairWithDefaultValue(){ return new BasicDurationVector(Entity.DATA_FORM.DF_PAIR, 2);}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for Duration not supported yet.");}
 	}
 
 	private class StringFactory implements TypeFactory{
