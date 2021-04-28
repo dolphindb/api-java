@@ -420,13 +420,18 @@ public class DBConnection {
     }
 
     public Entity tryRun(String script, int priority, int parallelism) throws IOException {
-        return tryRun(script, priority, parallelism, 0);
+        return tryRun(script, priority, parallelism, 0, false);
     }
-    public Entity tryRun(String script, int priority, int parallelism,int fetchSize) throws IOException {
+
+    public Entity tryRun(String script, int priority, int parallelism, boolean clearSessionMemory) throws IOException {
+        return tryRun(script, priority, parallelism, 0, clearSessionMemory);
+    }
+
+    public Entity tryRun(String script, int priority, int parallelism,int fetchSize, boolean clearSessionMemory) throws IOException {
         if (!mutex.tryLock())
             return null;
         try {
-            return run(script, (ProgressListener) null, priority, parallelism, fetchSize, false);
+            return run(script, (ProgressListener) null, priority, parallelism, fetchSize, clearSessionMemory);
         } finally {
             mutex.unlock();
         }
@@ -448,19 +453,35 @@ public class DBConnection {
         return run(script, listener, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
     }
 
-    public Entity run(String script, ProgressListener listener, int priority, int parallelism) throws IOException {
-        return run( script, listener, priority, parallelism, 0);
+    public Entity run(String script, ProgressListener listener, boolean clearSessionMemory) throws IOException {
+        return run(script, listener, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, clearSessionMemory);
     }
 
-    public Entity tryRun(String script, boolean clearSessionMemory) throws IOException {
-        return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, clearSessionMemory);
+    public Entity run(String script, int priority, boolean clearSessionMemory) throws IOException {
+        return run( script, null,  priority, DEFAULT_PARALLELISM, 0,clearSessionMemory);
+    }
+
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism) throws IOException {
+        return run( script, listener,  priority, parallelism, 0,false);
+    }
+
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, boolean clearSessionMemory) throws IOException {
+        return run( script, listener,  priority, parallelism, 0,clearSessionMemory);
+    }
+
+    public Entity run(String script, int priority, int parallelism, boolean clearSessionMemory) throws IOException {
+        return run( script, null,  priority, parallelism, 0,clearSessionMemory);
+    }
+
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize) throws IOException {
+        return run( script, listener,  priority, parallelism, fetchSize,false);
     }
 
     public Entity tryRun(String script, boolean clearSessionMemory) throws IOException {
         if (!mutex.tryLock())
             return null;
         try {
-            return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false);
+            return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, clearSessionMemory);
         } finally {
             mutex.unlock();
         }
