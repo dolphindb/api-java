@@ -22,7 +22,7 @@ public class ConnectionPoolTest {
     private static PartitionedTableAppender appender;
     private static DBConnection conn;
     private static String HOST="localhost";
-    private static int PORT = 8849;
+    private static int PORT = 8848;
     @Before
     public void setUp() throws IOException {
        conn = new DBConnection();
@@ -267,6 +267,58 @@ public class ConnectionPoolTest {
                 "exec count(*) from pt");
         assertEquals(10000000,re.getLong());
     }
+
+    @Test
+    public void testValueRangeInt() throws Exception {
+        String script = "\n" +
+                "t = table(timestamp(1..10)  as date,1..10 as sym,1.02+1..10 as flt,string(1..10) as str)\n" +
+                "db1=database(\"\",VALUE,date(2020.01.01)+0..10)\n" +
+                "db2=database(\"\",RANGE,0 2 4 6 8 10)\n" +
+                "if(existsDatabase(\"dfs://demohash\")){\n" +
+                "\tdropDatabase(\"dfs://demohash\")\n" +
+                "}\n" +
+                "db =database(\"dfs://demohash\",COMPO,[db1,db2])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`date`sym)";
+        conn.run(script);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true);
+        appender = new PartitionedTableAppender(dburl, tableName, "sym", pool);
+        List<String> colNames = new ArrayList<String>(4);
+        colNames.add("date");
+        colNames.add("sym");
+        colNames.add("flt");
+        colNames.add("str");
+        List<Vector> cols = new ArrayList<Vector>(4);
+        BasicTimestampVector date = new BasicTimestampVector(10000);
+        for (int i =0 ;i<10000;i++)
+            date.setTimestamp(i,LocalDateTime.of(2020,01,01,02,05,22));
+        cols.add(date);
+        BasicIntVector sym = new BasicIntVector(10000);
+        for (int i =0 ;i<10000;i+=4) {
+            sym.setInt(i, 1);
+            sym.setInt(i+1, 3);
+            sym.setInt(i+2, 5);
+            sym.setInt(i+3, 7);
+        }
+        BasicDoubleVector flt = new BasicDoubleVector(10000);
+        for (int i =0 ;i<10000;i++) {
+            flt.setDouble(i, 1.2);
+        }
+        cols.add(sym);
+        cols.add(flt);
+        BasicStringVector str = new BasicStringVector(10000);
+        for (int i =0 ;i<10000;i++) {
+         str.setString(i, "1.2");
+        }
+        cols.add(str);
+        for (int i =0 ;i<1000;i++) {
+            int m = appender.append(new BasicTable(colNames, cols));
+            assertEquals(10000,m);
+        }
+        BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
+                "exec count(*) from pt");
+        assertEquals(10000000,re.getLong());
+    }
+
     @Test
     public void testRangeRangemonth() throws Exception {
         String script = "\n" +
@@ -575,21 +627,23 @@ public class ConnectionPoolTest {
     @Test
     public void testRangeValueInt() throws Exception {
         String script = "\n" +
-                "t = table(timestamp(1..10)  as date,int(1..10) as sym)\n" +
-                "db1=database(\"\",RANGE,date(now())+0..100*5)\n" +
-                "db2=database(\"\",VALUE,int(1..10))\n" +
+                "t = table(timestamp(1..10)  as date,int(1..10) as sym,string(1..10) as str)\n" +
+                "db1=database(\"\",VALUE,date(now())+0..100)\n" +
+                "db2=database(\"\",RANGE,int(1..10))\n" +
                 "if(existsDatabase(\"dfs://demohash\")){\n" +
                 "\tdropDatabase(\"dfs://demohash\")\n" +
                 "}\n" +
-                "db =database(\"dfs://demohash\",COMPO,[db2,db1])\n" +
-                "pt = db.createPartitionedTable(t,`pt,`sym`date)\n";
+                "db =database(\"dfs://demohash\",COMPO,[db1,db2])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`date`sym)\n";
         conn.run(script);
         pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true);
         appender = new PartitionedTableAppender(dburl, tableName, "sym", pool);
-        List<String> colNames = new ArrayList<String>(2);
+        List<String> colNames = new ArrayList<String>(3);
         colNames.add("date");
         colNames.add("sym");
-        List<Vector> cols = new ArrayList<Vector>(2);
+        colNames.add("str");
+     //   colNames.add("flt");
+        List<Vector> cols = new ArrayList<Vector>(3);
         BasicTimestampVector date = new BasicTimestampVector(10000);
         for (int i =0 ;i<10000;i++)
             date.setTimestamp(i,LocalDateTime.now());
@@ -602,6 +656,17 @@ public class ConnectionPoolTest {
             sym.setInt(i + 3, 4);
         }
         cols.add(sym);
+        BasicStringVector str = new BasicStringVector(10000);
+        for (int i =0 ;i<10000;i++) {
+            str.setString(i,"32");
+        }
+        cols.add(str);
+     /*   BasicDoubleVector flt = new BasicDoubleVector(10000);
+        for (int i =0 ;i<10000;i+=4) {
+           flt.setDouble(i,2.3);
+        }
+        cols.add(flt);*/
+
         for (int i =0 ;i<1000;i++) {
             int m = appender.append(new BasicTable(colNames, cols));
             assertEquals(10000,m);

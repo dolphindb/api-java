@@ -36,6 +36,12 @@ public class LittleEndianDataInputStream  extends AbstractExtendedDataInputStrea
 		long high = readLong();
 		return new Long2(high, low);
 	}
+	
+	public Double2 readDouble2() throws IOException {
+		double x = readDouble();
+		double y = readDouble();
+		return new Double2(x, y);
+	}
 
 	@Override
 	public int readUnsignedShort() throws IOException {

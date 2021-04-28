@@ -34,7 +34,7 @@ public class BasicIntVector extends AbstractVector{
 		this(array, true);
 	}
 	
-	protected BasicIntVector(int[] array, boolean copy){
+	public BasicIntVector(int[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
 		if(copy)
 			values = array.clone();
@@ -157,7 +157,14 @@ public class BasicIntVector extends AbstractVector{
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeIntArray(values);
 	}
-	
+
+	@Override
+	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (int val: values) {
+			buffer.putInt(val);
+		}
+	}
+
 	@Override
 	public int asof(Scalar value) {
 		int target;

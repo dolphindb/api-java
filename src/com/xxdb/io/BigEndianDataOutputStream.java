@@ -40,6 +40,11 @@ public class BigEndianDataOutputStream extends AbstractExtendedDataOutputStream{
 		writeLong(v.low);
 	}
 	
+	public void writeDouble2(Double2 v) throws IOException {
+		writeDouble(v.x);
+		writeDouble(v.y);
+	}
+	
 	@Override
 	public void writeShortArray(short [] A, int startIdx, int len) throws IOException{
 		if (buf == null) {

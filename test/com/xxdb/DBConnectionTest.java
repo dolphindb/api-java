@@ -234,7 +234,7 @@ public class DBConnectionTest {
         assertEquals("3", loop.getEntity(0).getString());
     }
 
-    @Test(expected = OutOfMemoryError.class)
+    @Test(expected = IOException.class)
     public void testScriptOutOfRange() throws IOException {
         conn.run("rand(1..10,10000000000000);");
     }
@@ -453,6 +453,7 @@ public class DBConnectionTest {
         sb.append("mytrades=table(09:30:00+rand(18000,n) as timestamp,rand(syms,n) as sym, 10*(1+rand(100,n)) as qty,5.0+rand(100.0,n) as price);\n");
         sb.append("select qty,price from mytrades where sym==`IBM;");
         BasicTable table = (BasicTable) conn.run(sb.toString());
+
         Integer q = ((BasicInt) table.getColumn("qty").get(0)).getInt();
         assertTrue(table.rows() > 0);
         assertTrue(q > 10);
@@ -1851,6 +1852,12 @@ public class DBConnectionTest {
         assertNull(json.getJSONObject("val"));
     }
     @Test
+    public void LongString() throws IOException {
+      conn.run("t = table(1..10000000 as id, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,10000000) as name, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,10000000) as name1)\n");
+      BasicString s= (BasicString) conn.run("t.toStdJson()");
+    }
+
+    @Test
     public void TestRunClearSessionMemory() throws IOException{
         boolean noErro=true;
 
@@ -1865,7 +1872,7 @@ public class DBConnectionTest {
         }
         assertTrue(noErro);
 
-        conn.tryRun("testVar=table(1 as id,2 as val);",true);
+        conn.tryRun("testVar=table(1 as id,2 as val);", 4, 4, true);
         try {
             conn.run("print testVar", 4, 4);
         }
@@ -1898,7 +1905,7 @@ public class DBConnectionTest {
         }
         assertTrue(noErro);
 
-        conn.run("testVar=NULL", true);
+        conn.run("testVar=NULL", 4, true);
         try {
             conn.run("print testVar");
         }
@@ -1908,7 +1915,7 @@ public class DBConnectionTest {
         }
         assertTrue(noErro);
 
-        conn.run("testVar=bool()", true);
+        conn.run("testVar=bool()", 4, 4, true);
         try {
             conn.run("print testVar");
         }
@@ -1918,7 +1925,7 @@ public class DBConnectionTest {
         }
         assertTrue(noErro);
 
-        conn.run("testVar=float()",  true);
+        conn.run("testVar=float()", (ProgressListener) null, true);
         try {
             conn.run("print testVar");
         }
@@ -1928,7 +1935,7 @@ public class DBConnectionTest {
         }
         assertTrue(noErro);
 
-        conn.run("testVar=`ghyib", (ProgressListener) null, 4, 4,10000, true);
+        conn.run("testVar=`ghyib", (ProgressListener) null, 4, 4, true);
         try {
             conn.run("print testVar");
         }
@@ -2005,7 +2012,7 @@ public class DBConnectionTest {
         }
         assertTrue(noErro);
 
-        conn.run("testsym=char(1..100000);testchar=now();t=table(bool(1..10) as id,date(1..10) as str);testm=(1..9)$3:3;testp=1:8;testdic=dict(INT,DATE);testdic[1]=date(now());any=(1,1..10)",true);
+        conn.tryRun("testsym=char(1..100000);testchar=now();t=table(bool(1..10) as id,date(1..10) as str);testm=(1..9)$3:3;testp=1:8;testdic=dict(INT,DATE);testdic[1]=date(now());any=(1,1..10)", 4, 4, 10000, true);
         try {
             conn.run("testsym;");
         }
@@ -2127,12 +2134,35 @@ public class DBConnectionTest {
                 noErro=false;
         }
         assertTrue(noErro);
-
     }
     @Test
-    public void p() throws IOException {
-    for (int i=0;i<10000;i++){
-        conn.run("testsym"+i+"=char(1..100000);testchar"+i+"=now();t"+i+"=table(bool(1..1000000) as id,date(1..1000000) as str);testm"+i+"=(1..900)$30:30;testp"+i+"=1:8;testdic"+i+"=dict(INT,DATE);testdic"+i+"[1]=date(now());any"+i+"=(1,1..10000)",true);
+    public void testSymbolVectorUpload() throws IOException{
+//        String script="share table(100:0,`val0`val1`val2`val3`val4`val5`val6`val7`val8`val9`val10`val11`val12`val13`val14`val15`val16`val17`val18`val19,[SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL,SYMBOL]) as sharedTable";
+        String script="share table(100:0,`val0`val1,[SYMBOL,SYMBOL]) as sharedTable";
+        conn.run(script);
+        List<String> colNames = new ArrayList<>(2);
+        for (int i=0;i<2;i++){
+            String s="val"+i;
+            colNames.add(s);
+        }
+        String str[]= new String[10];
+        for (int i=0;i<10;i+=5){
+            str[i]="fdse";
+            str[i+1]="";
+            str[i+2]="tgufty";
+            str[i+3]="fgew4";
+            str[i+4]="ww";
+        }
+        BasicSymbolVector sb;
+        List<Vector> cols = new ArrayList<>(2);
+        for (int i=0;i<2;i++){
+            sb = new BasicSymbolVector(Arrays.asList(str));
+            cols.add(sb);
+        }
+        BasicTable table1 = new BasicTable(colNames,cols);
+        List<Entity> arg = Arrays.asList(table1);
+        conn.run("tableInsert{sharedTable}", arg);
+        conn.close();
     }
 }
 }

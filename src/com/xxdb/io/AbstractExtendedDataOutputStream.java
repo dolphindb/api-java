@@ -11,8 +11,10 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 	protected byte[] buf;
 	protected static final int longBufSize = BUF_SIZE / 8;
 	protected static final int intBufSize = BUF_SIZE / 4;
+	protected static final int doubleBufSize = BUF_SIZE / 8;
 	protected int[] intBuf;
 	protected long[] longBuf;
+	protected double[] doubleBuf;
 
 	public AbstractExtendedDataOutputStream(OutputStream out) {
 		super(out);
@@ -268,6 +270,30 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 	@Override
 	public void writeLong2Array(Long2[] A) throws IOException {
 		writeLong2Array(A, 0, A.length);
+	}
+	
+	@Override
+	public void writeDouble2Array(Double2[] A, int startIdx, int len) throws IOException {
+		if (doubleBuf == null) {
+			doubleBuf = new double[doubleBufSize];
+		}
+		int end = startIdx + len;
+		int pos = 0;
+		for (int i = startIdx; i < end; ++i) {
+			if (pos >= doubleBufSize) {
+				writeDoubleArray(doubleBuf,0, pos);
+				pos = 0;
+			}
+			doubleBuf[pos++] = A[i].x;
+			doubleBuf[pos++] = A[i].y;
+		}
+		if (pos > 0)
+			writeDoubleArray(doubleBuf, 0, pos);
+	}
+	
+	@Override
+	public void writeDouble2Array(Double2[] A) throws IOException {
+		writeDouble2Array(A, 0, A.length);
 	}
 	
 }

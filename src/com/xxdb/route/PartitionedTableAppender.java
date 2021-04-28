@@ -117,7 +117,6 @@ public class PartitionedTableAppender {
     		Vector curCol = table.getColumn(i);
     		checkColumnType(i, curCol.getDataCategory(), curCol.getDataType());
     	}
-    	
     	for(int i=0; i<threadCount; ++i)
     		chunkIndices.get(i).clear();
     	List<Integer> keys = domain.getPartitionKeys(table.getColumn(partitionColumnIdx));
@@ -141,6 +140,7 @@ public class PartitionedTableAppender {
     		args.add(subTable);
     		tasks.add(new BasicDBTask(appendScript, args));
     	}
+    	System.out.println("data prepare finished : " + System.currentTimeMillis());
     	pool.execute(tasks);
     	int affected = 0;
     	for(int i=0; i<tasks.size(); ++i){

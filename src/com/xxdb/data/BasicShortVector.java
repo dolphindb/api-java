@@ -34,7 +34,7 @@ public class BasicShortVector extends AbstractVector{
 		this(array, true);
 	}
 	
-	protected BasicShortVector(short[] array, boolean copy){
+	public BasicShortVector(short[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
 		if(copy)
 			values = array.clone();
@@ -150,6 +150,13 @@ public class BasicShortVector extends AbstractVector{
 	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
 		out.writeShortArray(values);
+	}
+
+	@Override
+	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (short val: values) {
+			buffer.putShort(val);
+		}
 	}
 	
 	@Override

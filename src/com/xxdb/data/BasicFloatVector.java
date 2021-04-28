@@ -34,7 +34,7 @@ public class BasicFloatVector extends AbstractVector{
 		this(array, true);
 	}
 	
-	protected BasicFloatVector(float[] array, boolean copy){
+	public BasicFloatVector(float[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
 		if(copy)
 			values = array.clone();
@@ -137,6 +137,13 @@ public class BasicFloatVector extends AbstractVector{
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeFloatArray(values);
+	}
+
+	@Override
+	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (float val: values) {
+			buffer.putFloat(val);
+		}
 	}
 	
 	@Override

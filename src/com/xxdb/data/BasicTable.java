@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.xxdb.compression.VectorDecompressor;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -33,6 +34,7 @@ public class BasicTable extends AbstractEntity implements Table{
 		}
 		
 		BasicEntityFactory factory = new BasicEntityFactory();
+		VectorDecompressor decompressor = null;
 		SymbolBaseCollection collection = null;
 		//read columns
 		for(int i=0; i<cols; ++i){
@@ -42,7 +44,7 @@ public class BasicTable extends AbstractEntity implements Table{
             boolean extended = type >= 128;
             if(type >= 128)
             	type -= 128;
-			
+
 			DATA_FORM df = DATA_FORM.values()[form];
 			DATA_TYPE dt = DATA_TYPE.values()[type];
 			if(df != DATA_FORM.DF_VECTOR)
@@ -51,7 +53,11 @@ public class BasicTable extends AbstractEntity implements Table{
 			if(dt == DATA_TYPE.DT_SYMBOL && extended){
 				if(collection == null)
 					collection = new SymbolBaseCollection();
-				vector = new BasicStringVector(df, in, false, collection);
+				vector = new BasicSymbolVector(df, in, collection);
+			} else if (dt == DATA_TYPE.DT_COMPRESS) {
+				if(decompressor == null)
+					decompressor = new VectorDecompressor();
+				vector = decompressor.decompress(factory, in, extended, true);
 			}
 			else{
 				vector = (Vector)factory.createEntity(df, dt, in, extended);
@@ -233,8 +239,37 @@ public class BasicTable extends AbstractEntity implements Table{
 		out.writeString(""); //table name
 		for(String colName : names_)
 			out.writeString(colName);
-		for(Vector vector : columns_)
-			vector.write(out);
+		SymbolBaseCollection collection = null;
+		for(Vector vector : columns_){
+			if(vector instanceof BasicSymbolVector){
+				if(collection == null)
+					collection = new SymbolBaseCollection();
+				((BasicSymbolVector)vector).write(out, collection);
+			}
+			else
+				vector.write(out);
+		}
+	}
+
+	@Override
+	public void writeCompressed(ExtendedDataOutput output) throws IOException {
+		short flag = (short) (Entity.DATA_FORM.DF_TABLE.ordinal() << 8 | 8 & 0xff); //8: table type TODO: add table type
+		output.writeShort(flag);
+
+		int rows = this.rows();
+		int cols = this.columns();
+		output.writeInt(rows);
+		output.writeInt(cols);
+		output.writeString(""); //table name
+		for (int i = 0; i < cols; i++) {
+			output.writeString(this.getColumnName(i));
+		}
+
+		for (int i = 0; i < cols; i++) {
+			AbstractVector v = (AbstractVector) this.getColumn(i);
+			v.writeCompressed(output);
+		}
+
 	}
 
 	public BasicTable combine(BasicTable table){
@@ -251,5 +286,12 @@ public class BasicTable extends AbstractEntity implements Table{
 		for(int i=0; i<colCount; ++i)
 			cols.add(columns_.get(i).getSubVector(indices));
 		return new BasicTable(names_, cols);
+	}
+
+	@Override
+	public void addColumn(String colName, Vector col) {
+		names_.add(colName);
+		name2index_.put(colName, name2index_.size());
+		columns_.add(col);
 	}
 }

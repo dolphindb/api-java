@@ -7,7 +7,10 @@ package com.xxdb.data;
  */
 
 public interface Vector extends Entity{
-	final int DISPLAY_ROWS = 10;
+	int DISPLAY_ROWS = 10;
+	int COMPRESS_LZ4 = 1;
+	int COMPRESS_DELTA = 2;
+
 	Vector combine(Vector vector);
 	Vector getSubVector(int[] indices);
 	int asof(Scalar value);
@@ -15,6 +18,7 @@ public interface Vector extends Entity{
 	void setNull(int index);
 	int hashBucket(int index, int buckets);
 	Scalar get(int index);
+	String getString(int index);
 	void set(int index, Scalar value) throws Exception;
 	Class<?> getElementClass();
 }
