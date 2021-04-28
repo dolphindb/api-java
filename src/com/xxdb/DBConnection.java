@@ -51,6 +51,7 @@ public class DBConnection {
     private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.values().length - 1;
     private static final int DEFAULT_PRIORITY = 4;
     private static final int DEFAULT_PARALLELISM = 2;
+    private static final int localAPIVersion = 100;
 
     private String ServerVersion = "";
     private ReentrantLock mutex;
@@ -211,7 +212,11 @@ public class DBConnection {
             }
             assert (highAvailabilitySites == null || highAvailability);
 
-            return connect();
+            boolean connectRet = connect();
+            if(!connectRet)
+                return false;
+            compareRequiredAPIVersion();
+            return true;
         } finally {
             mutex.unlock();
         }
@@ -411,11 +416,11 @@ public class DBConnection {
     }
 
     public Entity tryRun(String script) throws IOException {
-        return tryRun(script, false);
+        return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
     }
 
     public Entity tryRun(String script, int priority, int parallelism) throws IOException {
-        return tryRun(script, priority, parallelism, false);
+        return tryRun(script, priority, parallelism, 0);
     }
     public Entity tryRun(String script, int priority, int parallelism,int fetchSize) throws IOException {
         if (!mutex.tryLock())
@@ -428,63 +433,41 @@ public class DBConnection {
     }
 
     public Entity run(String script) throws IOException {
-        return run(script,false);
+        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
     }
 
     public Entity run(String script, int priority) throws IOException {
-        return run(script, priority, false);
+        return run(script, (ProgressListener) null, priority, DEFAULT_PARALLELISM);
     }
 
     public Entity run(String script, int priority, int parallelism) throws IOException {
-        return run(script, priority, parallelism, false);
+        return run(script, (ProgressListener) null, priority, parallelism);
     }
 
     public Entity run(String script, ProgressListener listener) throws IOException {
-        return run(script, listener,false);
+        return run(script, listener, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism) throws IOException {
-        return run( script, listener, priority, parallelism, false);
-    }
-    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize) throws IOException{
-        return run(script, listener, priority, parallelism,fetchSize, false);
+        return run( script, listener, priority, parallelism, 0);
     }
 
     public Entity tryRun(String script, boolean clearSessionMemory) throws IOException {
         return tryRun(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, clearSessionMemory);
     }
 
-    public Entity tryRun(String script, int priority, int parallelism, boolean clearSessionMemory) throws IOException {
-        return tryRun(script, priority, parallelism, 0, clearSessionMemory);
-    }
-    public Entity tryRun(String script, int priority, int parallelism,int fetchSize, boolean clearSessionMemory) throws IOException {
+    public Entity tryRun(String script, boolean clearSessionMemory) throws IOException {
         if (!mutex.tryLock())
             return null;
         try {
-            return run(script, (ProgressListener) null, priority, parallelism, fetchSize, clearSessionMemory);
+            return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false);
         } finally {
             mutex.unlock();
         }
     }
 
     public Entity run(String script, boolean clearSessionMemory) throws IOException {
-        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, clearSessionMemory);
-    }
-
-    public Entity run(String script, int priority, boolean clearSessionMemory) throws IOException {
-        return run(script, (ProgressListener) null, priority, DEFAULT_PARALLELISM, clearSessionMemory);
-    }
-
-    public Entity run(String script, int priority, int parallelism, boolean clearSessionMemory) throws IOException {
-        return run(script, (ProgressListener) null, priority, parallelism, clearSessionMemory);
-    }
-
-    public Entity run(String script, ProgressListener listener, boolean clearSessionMemory) throws IOException {
-        return run(script, listener, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, clearSessionMemory);
-    }
-
-    public Entity run(String script, ProgressListener listener, int priority, int parallelism, boolean clearSessionMemory) throws IOException {
-        return run( script, listener, priority, parallelism, 0, clearSessionMemory);
+        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM,0, clearSessionMemory);
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory) throws IOException {
@@ -1069,6 +1052,18 @@ public class DBConnection {
         }catch (Exception ex){
             ex.printStackTrace();
             return null;
+        }
+     }
+     private void compareRequiredAPIVersion() throws IOException {
+        try {
+            Entity ret = run("getRequiredAPIVersion(`java)");
+            if (localAPIVersion < ((BasicInt)((BasicAnyVector) ret).get(0)).getInt()) {
+                throw new IOException("API version is too low and needs to be upgraded");
+            }
+        }catch (IOException e){
+            if(!e.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token getRequiredAPIVersion")){
+                throw e;
+            }
         }
      }
 }
