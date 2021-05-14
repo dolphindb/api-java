@@ -28,7 +28,7 @@
 </target>
 
 <target name="buildsrc" depends="compilesrc">
-   <jar jarfile="${src_jar}" basedir="${classes_src}" classpath="${src_jar};${junit_jar};${hamcrest_jar};${hamcrest_core_jar};${fastjson_jar};${lz4_jar}"/>
+   <jar jarfile="${src_jar}" basedir="${classes_src}"/>
 </target>
 
 <target name="JUNIT">
