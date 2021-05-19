@@ -1474,7 +1474,7 @@ public class DBConnectionTest {
         }
     }
 
-    @Test(expected = UnknownHostException.class)
+    @Test(expected = ConnectException.class)
     public void TestConnectErrorHostFormat() throws IOException {
          DBConnection conn1 = new DBConnection();
          //thrown.expectMessage("fee");

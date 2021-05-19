@@ -12,16 +12,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class autoFitTableAppender {
+public class tableAppender {
+    enum APPEND_ACTION {fitColumnType}
     String dbUrl_;
     String tableName_;
     boolean async_;
     DBConnection con_;
-
-    autoFitTableAppender(String dbUrl, String tableName, DBConnection con) {
+    APPEND_ACTION _action;
+    tableAppender(String dbUrl, String tableName, DBConnection conn) {
         this.dbUrl_ = dbUrl;
         this.tableName_ = tableName;
-        this.con_ = con;
+        this.con_ = conn;
+        this._action = APPEND_ACTION.fitColumnType;
+    }
+
+    tableAppender(String dbUrl, String tableName, DBConnection conn, APPEND_ACTION action) {
+        this.dbUrl_ = dbUrl;
+        this.tableName_ = tableName;
+        this.con_ = conn;
+        this._action = action;
     }
 
     public String getDTString(Entity.DATA_TYPE type) {
@@ -464,8 +473,6 @@ public class autoFitTableAppender {
                         }
                     }
                     default:dstVector=colOrigin;
-                    String aa= dstVector.getClass().toString();
-                    int gaa=1;
                 }
                 cols.add(dstVector);
             }
@@ -476,7 +483,6 @@ public class autoFitTableAppender {
                 ret = con_.run("append!{" + tableName_ + "}", param);
             else
                 ret = con_.run("append!{loadTable(\"" + dbUrl_ + "\",\"" + tableName_ + "\"), }", param);
-            Entity.DATA_TYPE type=ret.getDataType();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (IOException e) {

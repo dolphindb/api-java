@@ -17,9 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class autoFitTableAppenderTest {
+public class tableAppenderTest {
 
-    private static String dburl="dfs://autoFitTableAppenderTest";
+    private static String dburl="dfs://tableAppenderTest";
     private static String tableName="testAppend";
     private static DBConnection conn;
     private static String HOST="115.239.209.223";
@@ -31,7 +31,7 @@ public class autoFitTableAppenderTest {
     }
     @After
     public void tearDown() throws Exception {
-        conn.run("if(existsDatabase(\"dfs://autoFitTableAppenderTest\")){\n" +"\tdropDatabase(\"dfs://autoFitTableAppenderTest\")\n" +                "}");
+        conn.run("if(existsDatabase(\"dfs://tableAppenderTest\")){\n" +"\tdropDatabase(\"dfs://tableAppenderTest\")\n" +                "}");
         conn.close();
     }
     @Test
@@ -60,15 +60,15 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(100:0,`id`time`data,[INT,TIME,DOUBLE])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`testAppend,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","testAppend",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","testAppend",conn);
         appender.append(insert);
-        Entity assertRet= conn.run("exec count(*) from loadTable(\"dfs://autoFitTableAppenderTest\", \"testAppend\")");
+        Entity assertRet= conn.run("exec count(*) from loadTable(\"dfs://tableAppenderTest\", \"testAppend\")");
         String ret=assertRet.getString();
 
         Assert.assertEquals(String.valueOf(size), assertRet.getString());
@@ -96,13 +96,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(10:0,`id`DTtoDATE,[INT,DATE])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestDateTimeToDATE,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestDateTimeToDATE",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestDateTimeToDATE",conn);
         appender.append(insert);
         BasicTable Btable=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Btable.rows();++ind) {
@@ -130,13 +130,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(10:0,`id`TimeStoDATE,[INT,DATE])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestTimeStampToDATE,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestTimeStampToDATE",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestTimeStampToDATE",conn);
         appender.append(insert);
         BasicTable Btable=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Btable.rows();++ind) {
@@ -164,13 +164,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(100:0,`id`NanoTimeStoDATE,[INT,DATE])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestNanoTimeStampToDATE,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestNanoTimeStampToDATE",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanoTimeStampToDATE",conn);
         appender.append(insert);
         BasicTable Btable=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Btable.rows();++ind) {
@@ -199,13 +199,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(100:0,`id`DATEHOURtoDATE,[INT,DATE])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestDateHourToDATE,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestDateHourToDATE",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestDateHourToDATE",conn);
         appender.append(insert);
         BasicTable Btable=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Btable.rows();++ind) {
@@ -233,13 +233,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`DATEtoMON,[INT,MONTH])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestDateToMON,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestDateToMON",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestDateToMON",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -267,13 +267,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`DATETIMEtoMON,[INT,MONTH])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestDateTimeToMON,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestDateTimeToMON",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestDateTimeToMON",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -301,13 +301,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`DATEHOURtoMON,[INT,MONTH])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestDateHourToMON,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestDateHourToMON",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestDateHourToMON",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -335,13 +335,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`TimeStoMon,[INT,MONTH])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestTimeStampToMON,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestTimeStampToMON",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestTimeStampToMON",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -369,13 +369,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`NanoTimeStoMon,[INT,MONTH])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestNanoTimeStampToMON,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestNanoTimeStampToMON",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanoTimeStampToMON",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -403,13 +403,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`NanoTimetoTime,[INT,TIME])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestNanoTimeToTIME,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestNanoTimeToTIME",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanoTimeToTIME",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -436,13 +436,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`TimeStampToTIME,[INT,TIME])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestTimeStampToTIME,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestTimeStampToTIME",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestTimeStampToTIME",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -469,13 +469,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`NanoTimeStampToTIME,[INT,TIME])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestNanoTimeStampToTIME,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestNanoTimeStampToTIME",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanoTimeStampToTIME",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -503,13 +503,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`TimeToMinute,[INT,MINUTE])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestTimeToMINUTE,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestTimeToMINUTE",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestTimeToMINUTE",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -537,13 +537,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`SecondToMinute,[INT,MINUTE])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestSecondToMINUTE,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestSecondToMINUTE",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestSecondToMINUTE",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -571,13 +571,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`DateTimeToMinute,[INT,MINUTE])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestDateTimeToMINUTE,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestDateTimeToMINUTE",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestDateTimeToMINUTE",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -604,13 +604,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`NanoTimeToMinute,[INT,MINUTE])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestNanoTimeToMINUTE,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestNanoTimeToMINUTE",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanoTimeToMINUTE",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -637,13 +637,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`TimeStampToMinute,[INT,MINUTE])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestTimeStampToMINUTE,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestTimeStampToMINUTE",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestTimeStampToMINUTE",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -671,13 +671,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`NanoTimeSToMinute,[INT,MINUTE])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestNanoTimeStampToMINUTE,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestNanoTimeStampToMINUTE",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanoTimeStampToMINUTE",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -705,13 +705,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`TimeToSecond,[INT,SECOND])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestTimeToSECOND,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestTimeToSECOND",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestTimeToSECOND",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -739,13 +739,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`DateTimeToSecond,[INT,SECOND])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestDateTimeToSECOND,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestDateTimeToSECOND",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestDateTimeToSECOND",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -773,13 +773,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`NanoTimeToSecond,[INT,SECOND])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestNanoTimeToSECOND,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestNanoTimeToSECOND",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanoTimeToSECOND",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -807,13 +807,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`TimeStampToSecond,[INT,SECOND])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestTimeStampToSECOND,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestTimeStampToSECOND",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestTimeStampToSECOND",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -841,13 +841,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`NanoTimeStampToSecond,[INT,SECOND])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestNanoTimeStampToSECOND,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestNanoTimeStampToSECOND",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanoTimeStampToSECOND",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -875,13 +875,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`TimeStampToDateTime,[INT,DATETIME])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestTimeStampToDATETIME,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestTimeStampToDATETIME",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestTimeStampToDATETIME",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -910,13 +910,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`NanoTimeStampToDateTime,[INT,DATETIME])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestNanoTimeStampToDATETIME,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestNanoTimeStampToDATETIME",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanoTimeStampToDATETIME",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -945,13 +945,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`NanoTimeStampToTimeStamp,[INT,TIMESTAMP])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestNanoTimeStampToTIMESTAMP,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestNanoTimeStampToTIMESTAMP",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanoTimeStampToTIMESTAMP",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
@@ -980,13 +980,13 @@ public class autoFitTableAppenderTest {
         BasicTable insert=new BasicTable(colName, cols);
         conn.run("\n" +
                 "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://autoFitTableAppenderTest\"\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
                 "if(existsDatabase(dbPath))\n" +
                 "dropDatabase(dbPath)\n" +
                 "t = table(1000:0,`id`NanoTimeStampToNanoTime,[INT,NANOTIME])\n" +
                 "db=database(dbPath,HASH, [INT,10])\n" +
                 "pt = db.createPartitionedTable(t,`TestNanoTimeStampToNANOTIME,`id)");
-        autoFitTableAppender appender=new autoFitTableAppender("dfs://autoFitTableAppenderTest","TestNanoTimeStampToNANOTIME",conn);
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanoTimeStampToNANOTIME",conn);
         appender.append(insert);
         BasicTable Tappender=(BasicTable) conn.run("select * from pt");
         for (int ind=0;ind<Tappender.rows();++ind) {
