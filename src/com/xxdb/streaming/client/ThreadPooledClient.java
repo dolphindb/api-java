@@ -1,5 +1,9 @@
 package com.xxdb.streaming.client;
 
+import com.xxdb.DBConnection;
+import com.xxdb.data.BasicInt;
+import com.xxdb.data.BasicString;
+import com.xxdb.data.Entity;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.data.Vector;
 
@@ -65,7 +69,8 @@ public class ThreadPooledClient extends AbstractClient {
                     } else if (count > 0) {
                         Thread.yield();
                     } else {
-                        LockSupport.park();
+                        Thread.yield();
+                        //LockSupport.park();
                     }
                     count = count - 1;
                 }
@@ -106,7 +111,7 @@ public class ThreadPooledClient extends AbstractClient {
         try {
             Thread.sleep(1000);
             subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.allowExistTopic);
-            System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
+            System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + site.actionName);
             return true;
         } catch (Exception ex) {
             System.out.println("Unable to subscribe table. Will try again after 1 seconds.");
@@ -118,7 +123,7 @@ public class ThreadPooledClient extends AbstractClient {
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic) throws IOException {
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, allowExistTopic);
         synchronized (queueHandlers) {
-            queueHandlers.put(tableNameToTrueTopic.get(host + ":" + port + ":" + tableName), new QueueHandlerBinder(queue, handler));
+            queueHandlers.put(tableNameToTrueTopic.get(host + ":" + port + "/" + tableName + "/" + actionName), new QueueHandlerBinder(queue, handler));
         }
     }
 
@@ -164,5 +169,57 @@ public class ThreadPooledClient extends AbstractClient {
 
     public void unsubscribe(String host, int port, String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName);
+    }
+
+    @Override
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
+        DBConnection dbConn = new DBConnection();
+        dbConn.connect(host, port);
+        try {
+            String localIP = this.listeningHost;
+            if(localIP.equals(""))
+                localIP = dbConn.getLocalAddress().getHostAddress();
+            List<Entity> params = new ArrayList<Entity>();
+            params.add(new BasicString(localIP));
+            params.add(new BasicInt(this.listeningPort));
+            params.add(new BasicString(tableName));
+            params.add(new BasicString(actionName));
+
+            dbConn.run("stopPublishTable", params);
+            String topic = null;
+            String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+            synchronized (tableNameToTrueTopic) {
+                topic = tableNameToTrueTopic.get(fullTableName);
+            }
+            synchronized (trueTopicToSites) {
+                Site[] sites = trueTopicToSites.get(topic);
+                if (sites == null || sites.length == 0)
+                    ;
+                for (int i = 0; i < sites.length; i++)
+                    sites[i].closed = true;
+            }
+            synchronized (queueManager) {
+                queueManager.removeQueue(topic);
+            }
+            System.out.println("Successfully unsubscribed table " + fullTableName);
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            dbConn.close();
+            String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+            QueueHandlerBinder queueHandler =null;
+            synchronized (queueHandlers){
+                queueHandler = queueHandlers.get(topicStr);
+                queueHandlers.remove(topicStr);
+            }
+        }
+    }
+
+    public  void close(){
+        synchronized (queueHandlers) {
+            queueHandlers = null;
+        }
+        threadPool.shutdownNow();
+        pThread.interrupt();
     }
 }

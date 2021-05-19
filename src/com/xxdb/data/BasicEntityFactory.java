@@ -1,6 +1,8 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+
+import com.xxdb.data.Entity.DURATION;
 import com.xxdb.io.ExtendedDataInput;
 
 public class BasicEntityFactory implements EntityFactory{
@@ -39,6 +41,9 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[Entity.DATA_TYPE.DT_UUID.ordinal()] = new UuidFactory();
 		factories[Entity.DATA_TYPE.DT_INT128.ordinal()] = new Int128Factory();
 		factories[Entity.DATA_TYPE.DT_IPADDR.ordinal()] = new IPAddrFactory();
+		factories[Entity.DATA_TYPE.DT_COMPLEX.ordinal()] = new ComplexFactory();
+		factories[Entity.DATA_TYPE.DT_POINT.ordinal()] = new PointFactory();
+		factories[Entity.DATA_TYPE.DT_DURATION.ordinal()] = new DurationFactory();
 		factoriesExt[Entity.DATA_TYPE.DT_SYMBOL.ordinal()] = new ExtendedSymbolFactory();
 	}
 	
@@ -345,6 +350,39 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPairWithDefaultValue(){ return new BasicIPAddrVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for IPADDR not supported yet.");}
 	}
+	
+	private class ComplexFactory implements TypeFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicComplex(in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicComplexVector(Entity.DATA_FORM.DF_VECTOR, in);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicComplexVector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicComplexMatrix(in);}
+		public Scalar createScalarWithDefaultValue() { return new BasicComplex(0, 0);}
+		public Vector createVectorWithDefaultValue(int size){ return new BasicComplexVector(size);}
+		public Vector createPairWithDefaultValue(){ return new BasicComplexVector(Entity.DATA_FORM.DF_PAIR, 2);}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicComplexMatrix(rows, columns);}
+	}
+	
+	private class PointFactory implements TypeFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicPoint(in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicPointVector(Entity.DATA_FORM.DF_VECTOR, in);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicPointVector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for Point not supported yet.");}
+		public Scalar createScalarWithDefaultValue() { return new BasicPoint(0, 0);}
+		public Vector createVectorWithDefaultValue(int size){ return new BasicPointVector(size);}
+		public Vector createPairWithDefaultValue(){ return new BasicPointVector(Entity.DATA_FORM.DF_PAIR, 2);}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for Point not supported yet.");}
+	}
+	
+	private class DurationFactory implements TypeFactory{
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicDuration(in);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { throw new RuntimeException("Vector for Duration not supported yet.");}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicDurationVector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for Duration not supported yet.");}
+		public Scalar createScalarWithDefaultValue() { return new BasicDuration(DURATION.NS, 0);}
+		public Vector createVectorWithDefaultValue(int size){ throw new RuntimeException("Vector for Duration not supported yet.");}
+		public Vector createPairWithDefaultValue(){ return new BasicDurationVector(Entity.DATA_FORM.DF_PAIR, 2);}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for Duration not supported yet.");}
+	}
 
 	private class StringFactory implements TypeFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicString(in);}
@@ -370,11 +408,11 @@ public class BasicEntityFactory implements EntityFactory{
 	
 	private class ExtendedSymbolFactory implements TypeFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicString(in);}
-		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, in, true, false);}
-		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in, false, false);}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicSymbolVector(Entity.DATA_FORM.DF_VECTOR, in);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicSymbolVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicString("");}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, size, true);}
+		public Vector createVectorWithDefaultValue(int size){ return new BasicSymbolVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, 2, true);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicStringMatrix(rows, columns);}
 	}

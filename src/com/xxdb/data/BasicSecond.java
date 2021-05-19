@@ -24,8 +24,9 @@ public class BasicSecond extends BasicInt{
 	public BasicSecond(ExtendedDataInput in) throws IOException {
 		super(in);
 	}
-	
-	protected BasicSecond(int value){
+
+	//TODO: change to public
+	public BasicSecond(int value){
 		super(value);
 	}
 	

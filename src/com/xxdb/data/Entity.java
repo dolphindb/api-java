@@ -8,10 +8,11 @@ import com.xxdb.io.ExtendedDataOutput;
 public interface Entity {
 	enum DATA_TYPE {DT_VOID,DT_BOOL,DT_BYTE,DT_SHORT,DT_INT,DT_LONG,DT_DATE,DT_MONTH,DT_TIME,DT_MINUTE,DT_SECOND,DT_DATETIME,DT_TIMESTAMP,DT_NANOTIME,DT_NANOTIMESTAMP,
 		DT_FLOAT,DT_DOUBLE,DT_SYMBOL,DT_STRING,DT_UUID,DT_FUNCTIONDEF,DT_HANDLE,DT_CODE,DT_DATASOURCE,DT_RESOURCE,DT_ANY,DT_COMPRESS,DT_DICTIONARY,DT_DATEHOUR,DT_DATEMINUTE,
-		DT_IPADDR,DT_INT128,DT_BLOB,DT_OBJECT};
+		DT_IPADDR,DT_INT128,DT_BLOB,DT_DECIMAL,DT_COMPLEX,DT_POINT,DT_DURATION,DT_OBJECT};
 	enum DATA_CATEGORY {NOTHING,LOGICAL,INTEGRAL,FLOATING,TEMPORAL,LITERAL,SYSTEM,MIXED,BINARY};
 	enum DATA_FORM {DF_SCALAR,DF_VECTOR,DF_PAIR,DF_MATRIX,DF_SET,DF_DICTIONARY,DF_TABLE,DF_CHART,DF_CHUNK};
 	enum PARTITION_TYPE {SEQ, VALUE, RANGE, LIST, COMPO, HASH}
+	enum DURATION {NS, US, MS, SECOND, MINUTE, HOUR, DAY, WEEK, MONTH, YEAR};
 	DATA_FORM getDataForm();
 	DATA_CATEGORY getDataCategory();
 	DATA_TYPE getDataType();
@@ -19,6 +20,9 @@ public interface Entity {
 	int columns();
 	String getString();
 	void write(ExtendedDataOutput output) throws IOException;
+	default void writeCompressed(ExtendedDataOutput output) throws IOException {
+		throw new IOException("Only BasicTable and BasicVector support compression");
+	}; //FIXME: "writeCompressed" modify name
 
 	boolean isScalar();
 	boolean isVector();
