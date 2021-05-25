@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
- * BasicTable -> BasicTable / vector -> vector
  * input: datainputstream, output: long[]
  */
 public class DeltaOfDeltaEncoder implements Encoder {
