@@ -1,5 +1,7 @@
 package com.xxdb.data;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -256,14 +258,26 @@ public class BasicTable extends AbstractEntity implements Table{
 		short flag = (short) (Entity.DATA_FORM.DF_TABLE.ordinal() << 8 | 8 & 0xff); //8: table type TODO: add table type
 		output.writeShort(flag);
 
-		int rows = this.rows();
-		int cols = this.columns();
+		int rows = 10000;
+		int cols = 1;
 		output.writeInt(rows);
 		output.writeInt(cols);
 		output.writeString(""); //table name
 		for (int i = 0; i < cols; i++) {
 			output.writeString(this.getColumnName(i));
 		}
+
+
+		short flags = (short) (Entity.DATA_FORM.DF_VECTOR.ordinal() << 8 | Entity.DATA_TYPE.DT_COMPRESS.ordinal() & 0xff);
+		output.writeShort(flags);
+		output.writeInt(10000);
+		output.writeInt(1);
+		FileInputStream reads = new FileInputStream(new File("src/com/xxdb/compression/10000vector"));
+		byte[] buf = new byte[40150];
+		reads.read(buf, 0, 40150);
+		reads.close();
+		output.write(buf);
+		if(1>0)return;
 
 		for (int i = 0; i < cols; i++) {
 			AbstractVector v = (AbstractVector) this.getColumn(i);

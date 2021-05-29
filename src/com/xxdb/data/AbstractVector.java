@@ -1,6 +1,6 @@
 package com.xxdb.data;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -76,6 +76,24 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 
 	@Override
 	public void writeCompressed(ExtendedDataOutput output) throws IOException {
+		FileInputStream reads = new FileInputStream(new File("/home/zmx/test1"));
+		byte[] buf = new byte[40150];
+		reads.read(buf);
+		short r= buf[40146];
+		short flag = (short) (Entity.DATA_FORM.DF_VECTOR.ordinal() << 8 | Entity.DATA_TYPE.DT_COMPRESS.ordinal() & 0xff);
+		ByteBuffer out = output instanceof LittleEndianDataOutputStream ?
+				ByteBuffer.allocate(100000).order(ByteOrder.LITTLE_ENDIAN) :
+				ByteBuffer.allocate(100000).order(ByteOrder.BIG_ENDIAN);
+		out.putShort(flag);
+		int s = out.position();
+		out.putInt(40130);
+		s = out.position();
+		out.put(buf, 0, 40150);
+		s = out.position();
+		output.write(out.array(), 0, 40150);
+		if(3>1)
+			return;
+
 		int dataType = this.getDataType().ordinal();
 		int unitLength;
 		if (dataType >= 6 && dataType <= 11 || dataType == 4 || dataType == 15) {
@@ -90,14 +108,11 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		int elementCount = this.rows();
 		int maxCompressedLength = this.rows() * Long.BYTES * 2;
 
-		ByteBuffer out = output instanceof LittleEndianDataOutputStream ?
-				ByteBuffer.allocate(maxCompressedLength).order(ByteOrder.LITTLE_ENDIAN) :
-				ByteBuffer.allocate(maxCompressedLength).order(ByteOrder.BIG_ENDIAN);
-		short flag = (short) (Entity.DATA_FORM.DF_VECTOR.ordinal() << 8 | Entity.DATA_TYPE.DT_COMPRESS.ordinal() & 0xff);
+
+
 
 		out.putShort(flag);
 		out.putInt(0);// compressedBytes
-		out.putInt(1);// cols
 		out.put((byte) 0); // version
 		out.put((byte) 1); // flag bit0:littleEndian bit1:containChecksum
 		out.put((byte) -1); // charcode
