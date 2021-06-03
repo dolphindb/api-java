@@ -8,10 +8,7 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import com.alibaba.fastjson.JSONObject;
-import com.xxdb.io.LittleEndianDataInputStream;
-import com.xxdb.io.LittleEndianDataOutputStream;
-import com.xxdb.io.Long2;
-import com.xxdb.io.ProgressListener;
+import com.xxdb.io.*;
 import org.junit.*;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
@@ -58,133 +55,524 @@ public class DBConnectionTest {
 //    public ExpectedException thrown= ExpectedException.none();
 
     @Test
-    public void testCharScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("'a'");
+    public void testCharScalar() throws Exception {
+        BasicByte scalar = (BasicByte) conn.run("'a'");
         assertEquals('a', ((BasicByte) scalar).getByte());
+        assertEquals(0,((BasicByte) scalar).compareTo(scalar));
+        assertEquals("'a'",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(97,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_BYTE,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-128,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testShortScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("11h");
+    public void testShortScalar() throws Exception {
+        BasicShort scalar = (BasicShort) conn.run("11h");
         assertEquals(11, ((BasicShort) scalar).getShort());
+        assertEquals(0,((BasicShort) scalar).compareTo(scalar));
+        assertEquals("11",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(11,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_SHORT,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-32768,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testIntScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("6");
-        assertEquals(6, ((BasicInt) scalar).getInt());
+    public void testIntScalar() throws Exception {
+        BasicInt scalar = (BasicInt) conn.run("6");
+        assertEquals(6,  scalar.getInt());
+        assertEquals(0, scalar.compareTo(scalar));
+        assertEquals("6",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(6,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_INT,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-2147483648,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testLongScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("22l");
-        assertEquals(22, ((BasicLong) scalar).getLong());
+    public void testLongScalar() throws Exception {
+        BasicLong scalar = (BasicLong) conn.run("22l");
+        assertEquals(22,  scalar.getLong());
+        assertEquals(0, scalar.compareTo(scalar));
+        assertEquals("22",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(22,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_LONG,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-2147483648,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testDateScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("2013.06.13");
+    public void testDateScalar() throws Exception {
+        BasicDate scalar = (BasicDate) conn.run("2013.06.13");
         assertEquals(15869, ((BasicDate) scalar).getInt());
+        assertEquals(0, scalar.compareTo(scalar));
+        assertEquals("2013.06.13",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(15869,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_DATE,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(2));
+        assertEquals(-2147483648,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testMonthScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("2012.06M");
+    public void testMonthScalar() throws Exception {
+        BasicMonth scalar = (BasicMonth) conn.run("2012.06M");
         assertEquals(24149, ((BasicMonth) scalar).getInt());
+        assertEquals(0, scalar.compareTo(scalar));
+        assertEquals("2012.06M",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(24149,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_MONTH,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-2147483648,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testTimeScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("13:30:10.008");
+    public void testTimeScalar() throws Exception {
+        BasicTime scalar = (BasicTime) conn.run("13:30:10.008");
         assertEquals(48610008, ((BasicTime) scalar).getInt());
+        assertEquals(0, scalar.compareTo(scalar));
+        assertEquals("13:30:10.008",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(48610008,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_TIME,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-2147483648,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testMinuteScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("13:30m");
+    public void testMinuteScalar() throws Exception {
+        BasicMinute scalar = (BasicMinute) conn.run("13:30m");
         assertEquals(810, ((BasicMinute) scalar).getInt());
+        assertEquals(0, scalar.compareTo(scalar));
+        assertEquals("13:30m",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(810,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_MINUTE,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-2147483648,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testSecondScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("13:30:10");
+    public void testSecondScalar() throws Exception {
+        BasicSecond scalar = (BasicSecond) conn.run("13:30:10");
         assertEquals(48610, ((BasicSecond) scalar).getInt());
+        assertEquals(0, scalar.compareTo(scalar));
+        assertEquals("13:30:10",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(48610,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_SECOND,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-2147483648,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testTimeStampScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("2012.06.13 13:30:10");
+    public void testDateTimeScalar() throws Exception {
+        BasicDateTime scalar = (BasicDateTime) conn.run("2012.06.13 13:30:10");
         assertEquals(1339594210, ((BasicDateTime) scalar).getInt());
+        assertEquals(0, scalar.compareTo(scalar));
+        assertEquals("2012.06.13T13:30:10",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(1339594210,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_DATETIME,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-2147483648,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testDateTimeScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("2012.06.13 13:30:10.008");
+    public void testTimestampScalar() throws Exception {
+        BasicTimestamp scalar = (BasicTimestamp) conn.run("2012.06.13 13:30:10.008");
         assertEquals(1339594210008l, ((BasicTimestamp) scalar).getLong());
+        assertEquals(0, scalar.compareTo(scalar));
+        assertEquals("2012.06.13T13:30:10.008",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(1339594210008l,scalar.getNumber().longValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_TIMESTAMP,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-2147483648,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testNanoTimeScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("13:30:10.008007006");
+    public void testNanoTimeScalar() throws Exception {
+        BasicNanoTime scalar = (BasicNanoTime) conn.run("13:30:10.008007006");
         assertEquals(48610008007006l, ((BasicNanoTime) scalar).getLong());
+        assertEquals(0, scalar.compareTo(scalar));
+        assertEquals("13:30:10.008007006",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(-431849122,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_NANOTIME,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-2147483648,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testNanoTimeStampScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("2012.06.13 13:30:10.008007006");
+    public void testNanoTimeStampScalar() throws Exception {
+        BasicNanoTimestamp scalar = (BasicNanoTimestamp) conn.run("2012.06.13 13:30:10.008007006");
         assertEquals(1339594210008007006l, ((BasicNanoTimestamp) scalar).getLong());
+        assertEquals(0, scalar.compareTo(scalar));
+        assertEquals("2012.06.13T13:30:10.008007006",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(1339594210008007006l,scalar.getNumber().longValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_NANOTIMESTAMP,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-2147483648,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testStringScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("`IBM");
+    public void testStringScalar() throws Exception {
+        BasicString scalar = (BasicString) conn.run("`IBM");
         assertEquals("IBM", ((BasicString) scalar).getString());
+        assertEquals(0, scalar.compareTo(scalar));
+        assertEquals("IBM",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        try {
+            scalar.getNumber().intValue();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.LITERAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_STRING,scalar.getDataType());
+        assertEquals(0,scalar.hashBucket(1));
+        assertEquals(0,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
     }
 
     @Test
-    public void testBooleanScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("true");
-        assertEquals(true, ((BasicBoolean) scalar).getBoolean());
+    public void testBooleanScalar() throws Exception {
+        BasicBoolean scalar = (BasicBoolean) conn.run("true");
+        assertEquals(true, scalar.getBoolean());
+        assertEquals(0,scalar.compareTo(scalar));
+        assertEquals("true",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(1,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.LOGICAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_BOOL,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-128,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testFloatScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("1.2f");
+    public void testFloatScalar() throws Exception {
+        BasicFloat scalar = (BasicFloat) conn.run("1.2f");
         assertEquals(1.2, ((BasicFloat) scalar).getFloat(), 2);
+        assertEquals(0,scalar.compareTo(scalar));
+        assertEquals("1.2",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(1.2f,scalar.getNumber().floatValue(),2);
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.FLOATING,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_FLOAT,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-8388609,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testDoubleScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("1.22");
+    public void testDoubleScalar() throws Exception {
+        BasicDouble scalar = (BasicDouble) conn.run("1.22");
         assertEquals(1.22, ((BasicDouble) scalar).getDouble(), 2);
+        assertEquals(0,scalar.compareTo(scalar));
+        assertEquals("1.22",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(1.22,scalar.getNumber().doubleValue(),2);
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.FLOATING,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_DOUBLE,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(1048576,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testUuidScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("uuid('5d212a78-cc48-e3b1-4235-b4d91473ee87')");
+    public void testUuidScalar() throws Exception {
+        BasicUuid scalar = (BasicUuid) conn.run("uuid('5d212a78-cc48-e3b1-4235-b4d91473ee87')");
         assertEquals("5d212a78-cc48-e3b1-4235-b4d91473ee87", ((BasicUuid) scalar).getString());
+        assertEquals("5d212a78-cc48-e3b1-4235-b4d91473ee87",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.BINARY,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_UUID,scalar.getDataType());
+        assertEquals(0,scalar.hashBucket(1));
+        assertEquals(0,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
+        try {
+            scalar.getNumber();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testDateHourScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("datehour(2012.06.13 13:30:10)");
+    public void testDateHourScalar() throws Exception {
+        BasicDateHour scalar = (BasicDateHour) conn.run("datehour(2012.06.13 13:30:10)");
         assertEquals(372109, ((BasicDateHour) scalar).getInt());
+        assertEquals(0,scalar.compareTo(scalar));
+        assertEquals("2012.06.13T13",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertEquals(372109,scalar.getNumber().intValue());
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_DATEHOUR,scalar.getDataType());
+        assertEquals(-1,scalar.hashBucket(1));
+        assertEquals(-2147483648,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testIpAddrScalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("ipaddr('192.168.1.13')");
+    public void testIpAddrScalar() throws Exception {
+        BasicIPAddr scalar = (BasicIPAddr) conn.run("ipaddr('192.168.1.13')");
         assertEquals("192.168.1.13", ((BasicIPAddr) scalar).getString());
+        assertEquals("192.168.1.13",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.BINARY,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_IPADDR,scalar.getDataType());
+        assertEquals(0,scalar.hashBucket(1));
+        assertEquals(0,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
+        try {
+            scalar.getNumber();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testInt128Scalar() throws IOException {
-        Scalar scalar = (Scalar) conn.run("int128('e1671797c52e15f763380b45e841ec32')");
+    public void testInt128Scalar() throws Exception {
+        BasicInt128 scalar = (BasicInt128) conn.run("int128('e1671797c52e15f763380b45e841ec32')");
         assertEquals("e1671797c52e15f763380b45e841ec32", ((BasicInt128) scalar).getString());
+        assertEquals("e1671797c52e15f763380b45e841ec32",scalar.getString());
+        assertTrue(scalar.equals(scalar));
+        try {
+            scalar.getNumber();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
+        assertFalse(scalar.isMatrix());
+        assertFalse(scalar.isNull());
+        scalar.setNull();
+        assertTrue(scalar.isNull());
+        assertEquals(Entity.DATA_CATEGORY.BINARY,scalar.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_INT128,scalar.getDataType());
+        assertEquals(0,scalar.hashBucket(1));
+        assertEquals(0,scalar.hashCode());
+        assertEquals("null",scalar.getJsonString());
+        try {
+            scalar.getTemporal();
+        } catch (Exception e) {
+            assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
     }
 
     @Test
-    public void testStringVector() throws IOException {
+    public void testStringVector() throws Exception {
         BasicStringVector vector = (BasicStringVector) conn.run("`IBM`GOOG`YHOO");
         int size = vector.rows();
         assertEquals(3, size);
@@ -234,10 +622,12 @@ public class DBConnectionTest {
         assertEquals("3", loop.getEntity(0).getString());
     }
 
-    @Test(expected = IOException.class)
+
+ /*   @Test(expected = AssertionError.class)
+
     public void testScriptOutOfRange() throws IOException {
         conn.run("rand(1..10,10000000000000);");
-    }
+    }*/
 
     @Test
     public void testBoolVector() throws IOException {
@@ -1474,18 +1864,18 @@ public class DBConnectionTest {
         }
     }
 
-    @Test(expected = ConnectException.class)
+    @Test(expected = UnknownHostException.class)
     public void TestConnectErrorHostFormat() throws IOException {
          DBConnection conn1 = new DBConnection();
          //thrown.expectMessage("fee");
          conn1.connect("fee", PORT, "admin", "123456");
      }
 
-  /*  @Test(expected = ConnectException.class)
+    @Test(expected = ConnectException.class)
     public void TestConnectErrorHostValue() throws IOException {
         DBConnection conn1 = new DBConnection();
         conn1.connect("192.168.1.103", PORT, "admin", "123456");
-    }*/
+    }
 
     @Test(expected = ConnectException.class)
     public  void TestConnectErrorPort() throws IOException {
@@ -2165,3 +2555,4 @@ public class DBConnectionTest {
         conn.close();
     }
 }
+
