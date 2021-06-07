@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -80,5 +81,13 @@ public class BasicDateTimeVector extends BasicIntVector{
 		System.arraycopy(this.values,0, newValue,0,this.rows());
 		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
 		return new BasicDateTimeVector(newValue);
+	}
+
+	@Override
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (int val: values) {
+			buffer.putInt(val);
+		}
+		return buffer;
 	}
 }

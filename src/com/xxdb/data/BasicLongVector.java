@@ -159,10 +159,11 @@ public class BasicLongVector extends AbstractVector{
 	}
 
 	@Override
-	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (long val: values) {
 			buffer.putLong(val);
 		}
+		return buffer;
 	}
 	
 	@Override

@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -84,7 +85,7 @@ public class BasicBooleanVector extends AbstractVector{
 
 
 	}
-	
+ 
 	public void setBoolean(int index, boolean value){
 		values[index] = value ? (byte)1 : (byte)0;
 	}
@@ -136,5 +137,13 @@ public class BasicBooleanVector extends AbstractVector{
 	@Override
 	public int asof(Scalar value) {
 		throw new RuntimeException("BasicBooleanVector.asof not supported.");
+	}
+
+	@Override
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (byte val: values) {
+			buffer.put(val);
+		}
+		return buffer;
 	}
 }

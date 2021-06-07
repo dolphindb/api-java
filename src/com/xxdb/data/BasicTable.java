@@ -267,7 +267,10 @@ public class BasicTable extends AbstractEntity implements Table{
 
 		for (int i = 0; i < cols; i++) {
 			AbstractVector v = (AbstractVector) this.getColumn(i);
-			v.writeCompressed(output);
+			if(v.getDataType() == DATA_TYPE.DT_SYMBOL)
+				v.write(output);
+			else
+				v.writeCompressed(output);
 		}
 
 	}

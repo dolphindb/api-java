@@ -22,7 +22,7 @@ public class VectorDecompressor {
 		//read checkSum
 		in.readInt();
 		
-		ExtendedDataInput decompressedIn = DecoderFactory.get(compression).decompress(in, compressedBytes - 20, unitLength, elementCount, isLittleEndian);
+		ExtendedDataInput decompressedIn = DecoderFactory.get(compression).	decompress(in, compressedBytes - 20, unitLength, elementCount, isLittleEndian);
 		DATA_TYPE dt = DATA_TYPE.values()[dataType];
 		return (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, dt, decompressedIn, extended);
 	}

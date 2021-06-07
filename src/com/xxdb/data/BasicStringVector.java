@@ -1,6 +1,9 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -217,5 +220,18 @@ public class BasicStringVector extends AbstractVector{
 				end = mid - 1;
 		}
 		return end;
+	}
+
+	@Override
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for(String val : values){
+			byte[] tmp = val.getBytes(StandardCharsets.UTF_8);
+			while(tmp.length + 1 + buffer.position() > buffer.limit()) {
+				buffer = Utils.reAllocByteBuffer(buffer, Math.max(buffer.capacity() * 2,1024));
+			}
+			buffer.put(tmp, 0, tmp.length);
+			buffer.put((byte)0);
+		}
+		return buffer;
 	}
 }

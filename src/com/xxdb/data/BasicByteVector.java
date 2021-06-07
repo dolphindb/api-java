@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -107,7 +108,7 @@ public class BasicByteVector extends AbstractVector{
 			return (int)((4294967296l + value) % buckets);
 		}
 	}
-	
+ 
 	@Override
 	public boolean isNull(int index) {
 		return values[index] == Byte.MIN_VALUE;
@@ -163,5 +164,13 @@ public class BasicByteVector extends AbstractVector{
 				end = mid - 1;
 		}
 		return end;
+	}
+
+	@Override
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (byte val: values) {
+			buffer.put(val);
+		}
+		return buffer;
 	}
 }

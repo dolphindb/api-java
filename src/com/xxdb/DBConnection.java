@@ -777,19 +777,19 @@ public class DBConnection {
                     out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                     out.writeBytes("API " + sessionID + " ");
                     out.writeBytes(String.valueOf(body.length()));
-                    if (priority != DEFAULT_PRIORITY || parallelism != DEFAULT_PARALLELISM) {
-                        if(asynTask) {
-                            out.writeBytes(" / 4_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                        }else{
-                            out.writeBytes(" / 0_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                        }
-                    }else if(asynTask){
-                        out.writeBytes(" / 4_1_" + String.valueOf(DEFAULT_PRIORITY) + "_" + String.valueOf(DEFAULT_PARALLELISM));
+                    int flag = generateRequestFlag(false);
+                    out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                    if(fetchSize>0){
+                        out.writeBytes("__" + String.valueOf(fetchSize));
                     }
                     out.writeByte('\n');
                     out.writeBytes(body);
-                    for (int i = 0; i < arguments.size(); ++i)
-                        arguments.get(i).write(out);
+                    for (int i = 0; i < arguments.size(); ++i) {
+                        if (compress && arguments.get(i).isTable()) {
+                            arguments.get(i).writeCompressed(out); //TODO: which compress method to use
+                        } else
+                            arguments.get(i).write(out);
+                    }
                     out.flush();
 
                     if (asynTask) return null;
