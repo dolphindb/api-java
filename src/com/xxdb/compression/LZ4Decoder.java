@@ -11,6 +11,7 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 
 public class LZ4Decoder extends AbstractDecoder {
     private LZ4SafeDecompressor decompressor = null;
@@ -22,7 +23,7 @@ public class LZ4Decoder extends AbstractDecoder {
 	        decompressor = factory.safeDecompressor();
     	}
         int offset = 8;
-      	ByteBuffer dest = createColumnVector(elementCount, unitLength, isLittleEndian, (1 << 16) + 8);
+        byte[] out = createColumnVector(elementCount, unitLength, isLittleEndian, 65536).array();
         
         while (length > 0) {
             int blockSize = in.readInt();
@@ -35,15 +36,15 @@ public class LZ4Decoder extends AbstractDecoder {
             
             byte[] src = new byte[blockSize];
             in.readFully(src);
-            ByteBuffer tmp = ByteBuffer.wrap(src);
-            //count += decompressor.decompress(src, 0, blockSize, out, count + offset);
-            decompressor.decompress(tmp, dest);
+            byte[] ret = decompressor.decompress(src, 1<<16);
+            if(offset + ret.length > out.length)
+                out = Arrays.copyOf(out, out.length * 2);
+            System.arraycopy(ret, 0, out, offset, ret.length);
+            offset += ret.length;
             length -= blockSize;
         }
-        byte[] out = dest.array();
-        int count = dest.position();
         return isLittleEndian ?
-                new LittleEndianDataInputStream(new ByteArrayInputStream(out, 0, offset + count)) :
-                new BigEndianDataInputStream(new ByteArrayInputStream(out, 0, offset + count));
+                new LittleEndianDataInputStream(new ByteArrayInputStream(out, 0, offset)) :
+                new BigEndianDataInputStream(new ByteArrayInputStream(out, 0, offset));
     }
 }
