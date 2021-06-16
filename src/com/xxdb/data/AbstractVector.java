@@ -96,6 +96,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 			case DT_FLOAT:
 			case DT_DOUBLE:
 			case DT_COMPLEX:
+			case DT_DURATION:
 				if(method == Vector.COMPRESS_LZ4)
 					break;
 			default:
@@ -139,6 +140,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 			case DT_NANOTIME:
 			case DT_TIMESTAMP:
 			case DT_NANOTIMESTAMP:
+			case DT_DURATION:
 				unitLength = 8;
 				break;
 			case DT_INT128:
