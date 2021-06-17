@@ -1208,6 +1208,100 @@ public class ServerCompressionTest {
         compareBasicTable(table, newT);
     }
 
+    @Test
+    public void testCompressComplex()throws Exception {
+        int n=1000000;
+        Random rand = new Random();
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[n];
+        int baseTime = Utils.countDays(1555,1,1);
+        for (int i = 0; i < n; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        BasicComplexVector val = (BasicComplexVector) conn.run("complex(rand(1..10 join int(),"+n+"),rand(1..10 join int(),"+n+"))");
+        List<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,COMPLEX])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(n, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testCompressComplexdelta()throws Exception {
+        int n=1000000;
+        Random rand = new Random();
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[n];
+        int baseTime = Utils.countDays(1555,1,1);
+        for (int i = 0; i < n; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        BasicComplexVector val = (BasicComplexVector) conn.run("complex(rand(1..10 join int(),"+n+"),rand(1..10 join int(),"+n+"))");
+        List<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        val.setCompressedMethod(2);
+        colVectors.add(val);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,COMPLEX])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(n, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+    }
+/*
+    @Test
+    public void testCompressDuration()throws Exception {
+        int n=1000000;
+        Random rand = new Random();
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[2*n];
+        int baseTime = Utils.countDays(1599,1,1);
+        for (int i = 0; i < 2*n; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        //include null
+        BasicDurationVector val1 = (BasicDurationVector) conn.run("\n" +
+                "duration(rand([\"20H\",\"20y\"],10))");
+        ArrayList<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val1);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,DURATION])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(2*n, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+        //include null delta
+        val1.setCompressedMethod(Vector.COMPRESS_DELTA);
+        colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val1);
+        table = new BasicTable(colNames, colVectors);
+        args = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,DURATION])" +
+                "share t as st");
+        count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(2*n, count.getInt());
+        newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+    }
+*/
     @After
     public void tearDown() throws Exception {
         conn.close();
