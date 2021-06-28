@@ -1,5 +1,6 @@
 package com.xxdb.compression;
 
+import com.xxdb.data.Utils;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -21,6 +22,9 @@ public class DeltaOfDeltaEncoder implements Encoder {
             //write blockSize+data
             out.putInt(compressed.length * Long.BYTES);
             for (long l : compressed) {
+                while(Long.BYTES + out.position() > out.limit()) {
+                    out = Utils.reAllocByteBuffer(out, Math.max(out.capacity() * 2,1024));
+                }
                 out.putLong(l);
             }
             count += Integer.BYTES + compressed.length * Long.BYTES;
@@ -84,6 +88,10 @@ class DeltaOfDeltaBlockEncoder {
                 break;
             out.writeBits(0, 1);
         }
+        if(count * unitLength >= blockSize){
+            writeEnd();
+            return this.out.getLongArray();
+        }
         count--;
         in.position(in.position() - unitLength);
         writeHeader();
@@ -92,6 +100,10 @@ class DeltaOfDeltaBlockEncoder {
             if(!(unitLength == 2 && value == -32768 || unitLength == 4 && value == -2147483648 || unitLength == 8 && value == -9223372036854775808L))
                 break;
             out.writeBits(0, 1);
+        }
+        if(count * unitLength >= blockSize){
+            writeEnd();
+            return this.out.getLongArray();
         }
         count--;
         in.position(in.position() - unitLength);
