@@ -92,10 +92,11 @@ public class BasicDurationVector extends AbstractVector{
 	}
 
 	@Override
-	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (int val: values) {
 			buffer.putInt(val);
 		}
+		return buffer;
 	}
 
 	@Override

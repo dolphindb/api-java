@@ -153,10 +153,11 @@ public class BasicShortVector extends AbstractVector{
 	}
 
 	@Override
-	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (short val: values) {
 			buffer.putShort(val);
 		}
+		return buffer;
 	}
 	
 	@Override

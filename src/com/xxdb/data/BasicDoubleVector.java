@@ -140,10 +140,11 @@ public class BasicDoubleVector extends AbstractVector{
 	}
 
 	@Override
-	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (double val: values) {
 			buffer.putDouble(val);
 		}
+		return buffer;
 	}
 
 	@Override

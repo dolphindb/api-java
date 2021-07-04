@@ -140,10 +140,11 @@ public class BasicFloatVector extends AbstractVector{
 	}
 
 	@Override
-	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (float val: values) {
 			buffer.putFloat(val);
 		}
+		return buffer;
 	}
 	
 	@Override

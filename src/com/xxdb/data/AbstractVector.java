@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.List;
 
 import com.xxdb.compression.EncoderFactory;
 import com.xxdb.io.ExtendedDataOutput;
@@ -67,32 +68,105 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	}
 
 	public void setCompressedMethod(int method) {
+		DATA_TYPE type = this.getDataType();
+		switch (type){
+			case DT_STRING:
+			case DT_BOOL:
+			case DT_BYTE:
+			case DT_SHORT:
+			case DT_INT:
+			case DT_DATE:
+			case DT_MONTH:
+			case DT_TIME:
+			case DT_MINUTE:
+			case DT_SECOND:
+			case DT_DATETIME:
+			case DT_DATEHOUR:
+			case DT_DATEMINUTE:
+			case DT_SYMBOL:
+			case DT_LONG:
+			case DT_NANOTIME:
+			case DT_TIMESTAMP:
+			case DT_NANOTIMESTAMP:
+			case DT_INT128:
+			case DT_UUID:
+			case DT_IPADDR:
+			case DT_POINT:
+				break;
+			case DT_FLOAT:
+			case DT_DOUBLE:
+			case DT_COMPLEX:
+			case DT_DURATION:
+				if(method == Vector.COMPRESS_LZ4)
+					break;
+			default:
+				throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + getDataType().name());
+		}
 		this.compressedMethod = method;
 	}
 
-	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		throw new RuntimeException("Invalid datatype to write to buffer");
 	};
+
+	public static int getUnitLength(Entity.DATA_TYPE type) {
+		int unitLength = 0;
+		switch (type) {
+			case DT_STRING:
+				unitLength = 0;
+				break;
+			case DT_BOOL:
+			case DT_BYTE:
+				unitLength = 1;
+				break;
+			case DT_SHORT:
+				unitLength = 2;
+				break;
+			case DT_INT:
+			case DT_DATE:
+			case DT_MONTH:
+			case DT_TIME:
+			case DT_MINUTE:
+			case DT_SECOND:
+			case DT_DATETIME:
+			case DT_FLOAT:
+			case DT_DATEHOUR:
+			case DT_DATEMINUTE:
+			case DT_SYMBOL:
+				unitLength = 4;
+				break;
+			case DT_LONG:
+			case DT_DOUBLE:
+			case DT_NANOTIME:
+			case DT_TIMESTAMP:
+			case DT_NANOTIMESTAMP:
+			case DT_DURATION:
+				unitLength = 8;
+				break;
+			case DT_INT128:
+			case DT_UUID:
+			case DT_IPADDR:
+			case DT_COMPLEX:
+			case DT_POINT:
+				unitLength = 16;
+				break;
+			default:
+				throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + type.name());
+		}
+		return unitLength;
+	}
 
 	@Override
 	public void writeCompressed(ExtendedDataOutput output) throws IOException {
 		int dataType = this.getDataType().ordinal();
-		int unitLength;
-		if (dataType >= 6 && dataType <= 11 || dataType == 4 || dataType == 15) {
-			unitLength = 4;
-		} else if (dataType >= 12 && dataType <= 14 || dataType == 5 || dataType == 16) {
-			unitLength = 8;
-		} else if (dataType == 3) {
-			unitLength = 2;
-		} else {
-			throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + getDataType().name());
-		}
+		int unitLength = getUnitLength(this.getDataType());
+
 		int elementCount = this.rows();
-		int maxCompressedLength = this.rows() * Long.BYTES * 2;
+		int maxCompressedLength = this.rows() * Long.BYTES * 2 + 64 * 3;
 
 		ByteBuffer out = output instanceof LittleEndianDataOutputStream ?
-				ByteBuffer.allocate(maxCompressedLength).order(ByteOrder.LITTLE_ENDIAN) :
-				ByteBuffer.allocate(maxCompressedLength).order(ByteOrder.BIG_ENDIAN);
+				ByteBuffer.allocate(Math.max(elementCount * unitLength, 655360)).order(ByteOrder.LITTLE_ENDIAN) :
+				ByteBuffer.allocate(Math.max(elementCount * unitLength, 655360)).order(ByteOrder.BIG_ENDIAN);
 		short flag = (short) (Entity.DATA_FORM.DF_VECTOR.ordinal() << 8 | Entity.DATA_TYPE.DT_COMPRESS.ordinal() & 0xff);
 
 		out.putShort(flag);
@@ -109,11 +183,15 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		out.putInt(elementCount);
 		out.putInt(-1); //TODO: checkSum
 
-		ByteBuffer in = ByteBuffer.allocate(elementCount * unitLength);
-		writeVectorToBuffer(in);
+		ByteBuffer in = output instanceof LittleEndianDataOutputStream ?
+				ByteBuffer.allocate(Math.max(elementCount * unitLength, 655360)).order(ByteOrder.LITTLE_ENDIAN) :
+				ByteBuffer.allocate(Math.max(elementCount * unitLength, 655360)).order(ByteOrder.BIG_ENDIAN);
+		in = writeVectorToBuffer(in);
 		in.flip();
-		int compressedLength = 20 + EncoderFactory.get(compressedMethod).compress(in, elementCount, unitLength, maxCompressedLength, out);
+		List<Object> ret = EncoderFactory.get(compressedMethod).compress(in, elementCount, unitLength, maxCompressedLength, out);
+		int compressedLength = 20 + (int)ret.get(0);
+		out = (ByteBuffer)ret.get(1);
 		out.putInt(2, compressedLength);
-		output.write(out.array(), 0, compressedLength);
+		output.write(out.array(), 0, compressedLength + 10);
 	}
 }

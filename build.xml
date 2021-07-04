@@ -24,11 +24,11 @@
 </target>
 
 <target name="compilesrc" depends="init">
-   <javac srcdir="${src}" classpath="${junit_jar}" destdir="${classes_src}" includeantruntime="false" />
+   <javac srcdir="${src}" classpath="${junit_jar};${fastjson_jar};${lz4_jar}" destdir="${classes_src}" includeantruntime="false" />
 </target>
 
 <target name="buildsrc" depends="compilesrc">
-   <jar jarfile="${src_jar}" basedir="${classes_src}" />
+   <jar jarfile="${src_jar}" basedir="${classes_src}"/>
 </target>
 
 <target name="JUNIT">

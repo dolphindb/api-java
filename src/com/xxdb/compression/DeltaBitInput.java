@@ -39,6 +39,17 @@ public class DeltaBitInput {
         return bit;
     }
 
+    public long readBits(int bits) {
+        long value = 0L;
+        for(int i =0; i< bits; ++i){
+            value <<= 1;
+            value |= ((lB & BIT_SET_MASK[bitsLeft - 1]) == 0) ? 0 : 1;
+            bitsLeft--;
+            checkAndFlipByte();
+        }
+        return value;
+    }
+
     private void flipByte() {
         lB = longArray[position++];
         bitsLeft = Long.SIZE;

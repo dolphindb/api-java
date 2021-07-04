@@ -159,5 +159,21 @@ public class BasicInt128Vector extends AbstractVector{
 	public int asof(Scalar value) {
 		throw new RuntimeException("BasicInt128Vector.asof not supported.");
 	}
+
+	@Override
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		boolean isLittleEndian = buffer.order() == ByteOrder.LITTLE_ENDIAN;
+		for (Long2 val: values) {
+			if(isLittleEndian){
+				buffer.putLong(val.low);
+				buffer.putLong(val.high);
+			}
+			else{
+				buffer.putLong(val.high);
+				buffer.putLong(val.low);
+			}
+		}
+		return buffer;
+	}
 }
 

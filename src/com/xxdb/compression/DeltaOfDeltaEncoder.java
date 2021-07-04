@@ -1,17 +1,19 @@
 package com.xxdb.compression;
 
+import com.xxdb.data.Utils;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * BasicTable -> BasicTable / vector -> vector
  * input: datainputstream, output: long[]
  */
 public class DeltaOfDeltaEncoder implements Encoder {
     private static final int DEFAULT_BLOCK_SIZE = 65536;
 
     @Override
-    public int compress(ByteBuffer in, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException {
+    public List<Object> compress(ByteBuffer in, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException {
         DeltaOfDeltaBlockEncoder blockEncoder = new DeltaOfDeltaBlockEncoder(unitLength);
         int count = 0;
         while (elementCount > 0) {
@@ -20,12 +22,18 @@ public class DeltaOfDeltaEncoder implements Encoder {
             //write blockSize+data
             out.putInt(compressed.length * Long.BYTES);
             for (long l : compressed) {
+                while(Long.BYTES + out.position() > out.limit()) {
+                    out = Utils.reAllocByteBuffer(out, Math.max(out.capacity() * 2,1024));
+                }
                 out.putLong(l);
             }
             count += Integer.BYTES + compressed.length * Long.BYTES;
             elementCount -= blockSize / unitLength;
         }
-        return count;
+        List<Object> ret = new ArrayList<>();
+        ret.add(count);
+        ret.add(out);
+        return ret;
     }
 
     public ByteBuffer compress(ByteBuffer in, int elementCount, int unitLength, int maxCompressedLength) throws IOException {
@@ -73,7 +81,32 @@ class DeltaOfDeltaBlockEncoder {
         this.out = new DeltaBitOutput();
         this.in = src;
         this.count = 0;
+        long value = 0;
+        while(count * unitLength < blockSize){
+            value = readBuffer(in);
+            if(!(unitLength == 2 && value == Short.MIN_VALUE || unitLength == 4 && value == Integer.MIN_VALUE || unitLength == 8 && value == Long.MIN_VALUE))
+                break;
+            out.writeBits(0, 1);
+        }
+        if(count * unitLength >= blockSize){
+            writeEnd();
+            return this.out.getLongArray();
+        }
+        count--;
+        in.position(in.position() - unitLength);
         writeHeader();
+        while(count * unitLength < blockSize){
+            value = readBuffer(in);
+            if(!(unitLength == 2 && value == -32768 || unitLength == 4 && value == -2147483648 || unitLength == 8 && value == -9223372036854775808L))
+                break;
+            out.writeBits(0, 1);
+        }
+        if(count * unitLength >= blockSize){
+            writeEnd();
+            return this.out.getLongArray();
+        }
+        count--;
+        in.position(in.position() - unitLength);
         writeFirstDelta();
         while (count * unitLength < blockSize) {
             try {
@@ -104,6 +137,10 @@ class DeltaOfDeltaBlockEncoder {
         //TODO: NULL VALUE
         // if(null) -> writeNull;
         long value = readBuffer(in);
+        if(unitLength == 2 && value == Short.MIN_VALUE || unitLength == 4 && value == Integer.MIN_VALUE || unitLength == 8 && value == Long.MIN_VALUE){
+            compressDataNull();
+            return;
+        }
         long newDelta = Math.subtractExact(value, storedValue);
         long deltaD = Math.subtractExact(newDelta, storedDelta);
         //FIXME: implement based on the c++ code
@@ -131,6 +168,10 @@ class DeltaOfDeltaBlockEncoder {
         }
         storedDelta = newDelta;
         storedValue = value;
+    }
+
+    public void compressDataNull() {
+        out.writeBits(63, 6);
     }
 
     public void writeEnd() {

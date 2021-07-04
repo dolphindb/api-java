@@ -140,7 +140,6 @@ public class PartitionedTableAppender {
     		args.add(subTable);
     		tasks.add(new BasicDBTask(appendScript, args));
     	}
-    	System.out.println("data prepare finished : " + System.currentTimeMillis());
     	pool.execute(tasks);
     	int affected = 0;
     	for(int i=0; i<tasks.size(); ++i){
