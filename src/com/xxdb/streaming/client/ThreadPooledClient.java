@@ -4,7 +4,7 @@ import com.xxdb.DBConnection;
 import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicString;
 import com.xxdb.data.Entity;
-import com.xxdb.streaming.client.IMessage;
+
 import com.xxdb.data.Vector;
 
 import java.io.IOException;
@@ -13,7 +13,6 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.LockSupport;
 
 
 public class ThreadPooledClient extends AbstractClient {
