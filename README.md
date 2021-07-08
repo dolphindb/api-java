@@ -66,7 +66,7 @@ To run DolphinDB script in Java:
 ```
 conn.run("script");
 ```
-Please refer to the following section for an example. The maximum length of the script is 65,535 bytes.
+Please refer to the following section for an example.
 
 ### 4. Execute DolphinDB functions
 
