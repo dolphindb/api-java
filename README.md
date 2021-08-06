@@ -94,7 +94,7 @@ Parameter "x" was generated on DolphinDB server by the Java program, and paramet
 ```
 conn.run("x = [1,3,5]")
 ```
-In this case, we need to use "partial application" to embed parameter "x" in function `add`. For details, please refer to [Partial Application Documentation](https://www.dolphindb.com/help/Functionalprogramming/PartialApplication.html)。
+In this case, we need to use "partial application" to embed parameter "x" in function `add`. For details, please refer to [Partial Application Documentation](https://www.dolphindb.com/help/Functionalprogramming/PartialApplication.html).
 
 ```
 public void testFunction() throws IOException{
