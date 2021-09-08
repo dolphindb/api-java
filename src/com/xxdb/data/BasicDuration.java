@@ -31,11 +31,12 @@ public class BasicDuration extends AbstractScalar {
 	
 	@Override
 	public boolean isNull() {
-		return false;
+		return value == Integer.MIN_VALUE;
 	}
 
 	@Override
 	public void setNull() {	
+		value = Integer.MIN_VALUE;
 	}
 
 	@Override
@@ -70,7 +71,10 @@ public class BasicDuration extends AbstractScalar {
 
 	@Override
 	public String getString() {
-		return String.valueOf(value) + unitSyms[unit.ordinal()];
+		if(value == Integer.MIN_VALUE)
+			return "";
+		else
+			return String.valueOf(value) + unitSyms[unit.ordinal()];
 	}
 
 	@Override
