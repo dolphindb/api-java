@@ -7,7 +7,7 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 public class BasicDuration extends AbstractScalar implements Comparable<BasicDuration>{
-	private static final String[] unitSyms = {"ns", "us", "ms", "s", "m", "H", "d", "w", "M", "y"};
+	private static final String[] unitSyms = {"ns", "us", "ms", "s", "m", "H", "d", "w", "M", "y", "B"};
 	private int value;
 	private DURATION unit;
 
