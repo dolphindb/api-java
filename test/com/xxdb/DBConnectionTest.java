@@ -2,7 +2,10 @@ package com.xxdb;
 
 import java.io.*;
 import java.net.ConnectException;
+import java.net.NoRouteToHostException;
 import java.net.UnknownHostException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -75,6 +78,36 @@ public class DBConnectionTest {
             scalar.getTemporal();
         } catch (Exception e) {
             assertTrue(e.getMessage().equals("Imcompatible data type"));
+        }
+    }
+
+    @Test
+    public void testDurationScalar() throws Exception {
+        String[] unitSyms = {"ns", "us", "ms", "s", "m", "H", "d", "w", "M", "y"};
+        String[] DURATION =  {"NS", "US", "MS", "SECOND","MINUTE", "HOUR", "DAY", "WEEK","MONTH","YEAR"};
+        for (int i=0;i<unitSyms.length;i++) {
+            BasicDuration scalar =new BasicDuration(Entity.DURATION.valueOf(DURATION[i]),-5);
+            BasicDuration scalar1 = (BasicDuration) conn.run("-5"+unitSyms[i]);
+            assertEquals(scalar1, scalar);
+            assertEquals(-5, ((BasicDuration) scalar).getDuration());
+            assertEquals(Entity.DURATION.valueOf(DURATION[i]), ((BasicDuration) scalar).getUnit());
+            assertEquals("-5"+unitSyms[i], scalar.getString());
+            assertEquals(-5, scalar.getNumber().intValue());
+            assertFalse(scalar.isMatrix());
+            assertFalse(scalar.isNull());
+            scalar.setNull();
+            assertTrue(scalar.isNull());
+            assertEquals(Entity.DATA_CATEGORY.SYSTEM, scalar.getDataCategory());
+            assertEquals(Entity.DATA_TYPE.DT_DURATION, scalar.getDataType());
+            assertEquals(0, scalar.hashBucket(1));
+            BasicDuration scalar2 = (BasicDuration) conn.run("-4"+unitSyms[i]);
+            assertFalse(scalar.equals(scalar2));
+            //   ssertEquals(425918570, scalar.hashCode());
+            try {
+                scalar.getTemporal();
+            } catch (Exception e) {
+                assertTrue(e.getMessage().equals("Imcompatible data type"));
+            }
         }
     }
 
@@ -645,6 +678,44 @@ public class DBConnectionTest {
         assertEquals(10, size);
         byte[] l = {};
         BasicByteVector v=new BasicByteVector(l);
+    }
+
+
+    @Test
+    public void testDurationVector() throws Exception {
+        BasicDurationVector Vector1 = (BasicDurationVector) conn.run("-5s:0s");
+        BasicDurationVector Vector2 = (BasicDurationVector) conn.run("pair(-5s,0s)");
+        BasicDurationVector Vector = new BasicDurationVector(2);
+        Vector.set(0,new BasicDuration(Entity.DURATION.SECOND,-5));
+        Vector.set(1,new BasicDuration(Entity.DURATION.SECOND,1));
+        assertEquals(Vector1.get(1),Vector2.get(1) );
+        assertEquals(Vector1.get(0), Vector.get(0));
+        assertNotEquals(Vector1.get(1), Vector.get(1));
+        assertFalse(Vector.isNull(1));
+        Vector.setNull(1);
+        assertEquals(Entity.DATA_CATEGORY.SYSTEM,Vector.getDataCategory());
+        assertEquals(Entity.DATA_TYPE.DT_DURATION,Vector.getDataType());
+        assertEquals(BasicDuration.class,Vector.getElementClass());
+        assertEquals(2,Vector.rows());
+        try {
+            Vector1.getSubVector(new int[]{0, 1});
+        } catch (RuntimeException e) {}
+
+        try {
+            Vector1.asof(new BasicDuration(Entity.DURATION.SECOND,1));
+        } catch (RuntimeException e) {}
+
+        try {
+            Vector1.combine(Vector);
+        } catch (RuntimeException e) {}
+        File f = new File("testDurationVector.txt");
+        FileOutputStream fos = new FileOutputStream(f);
+        BufferedOutputStream bos = new BufferedOutputStream(fos);
+        LittleEndianDataOutputStream dataStream = new LittleEndianDataOutputStream(bos);
+        Vector.write(dataStream);
+        bos.flush();
+        dataStream.close();
+        fos.close();
     }
 
     @Test
@@ -1871,7 +1942,7 @@ public class DBConnectionTest {
          conn1.connect("fee", PORT, "admin", "123456");
      }
 
-    @Test(expected = ConnectException.class)
+    @Test(expected = NoRouteToHostException.class)
     public void TestConnectErrorHostValue() throws IOException {
         DBConnection conn1 = new DBConnection();
         conn1.connect("192.168.1.103", PORT, "admin", "123456");
@@ -2243,9 +2314,9 @@ public class DBConnectionTest {
     }
     @Test
     public void LongString() throws IOException {
-      conn.run("t = table(1..10000000 as id, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,10000000) as name, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,10000000) as name1)\n");
-      BasicString s= (BasicString) conn.run("t.toStdJson()");
-    }
+      BasicString s= (BasicString) conn.run("t = table(1..10000000 as id, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,10000000) as name, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,10000000) as name1);"+
+              "t.toStdJson()");
+                }
 
     @Test
     public void TestRunClearSessionMemory() throws IOException{
