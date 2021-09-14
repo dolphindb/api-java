@@ -24,12 +24,7 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 	
 	protected AbstractMatrix(ExtendedDataInput in) throws IOException{
 		byte hasLabels = in.readByte();
-		
-		BasicEntityFactory factory = null;
-		DATA_TYPE[] types = DATA_TYPE.values();
-		if(hasLabels > 0)
-			factory = new BasicEntityFactory();
-		
+			
 		if((hasLabels & 1) == 1){
 			//contain row labels
 			short flag = in.readShort();
@@ -40,9 +35,7 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
             	type -= 128;
 			if(form != DATA_FORM.DF_VECTOR.ordinal())
 				throw new IOException("The form of matrix row labels must be vector");
-			if(type <0 || type >= types.length)
-				throw new IOException("Invalid data type for matrix row labels: " + type);
-			rowLabels = (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, types[type], in, extended);
+			rowLabels = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, DATA_TYPE.valueOf(type), in, extended);
 		}
 		
 		if((hasLabels & 2) == 2){
@@ -55,9 +48,9 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
             	type -= 128;
 			if(form != DATA_FORM.DF_VECTOR.ordinal())
 				throw new IOException("The form of matrix columns labels must be vector");
-			if(type <0 || type >= types.length)
+			if(type <0 || type >= DATA_TYPE.DT_OBJECT.getValue())
 				throw new IOException("Invalid data type for matrix column labels: " + type);
-			columnLabels = (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, types[type], in, extended);
+			columnLabels = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, DATA_TYPE.valueOf(type), in, extended);
 		}
 		
 		short flag = in.readShort();
@@ -65,7 +58,7 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 		extended = type >= 128;
         if(type >= 128)
           	type -= 128;
-		if(type <0 || type >= types.length)
+		if(type <0 || type >= DATA_TYPE.DT_OBJECT.getValue())
 			throw new IOException("Invalid data type for matrix: " + type);
 		rows = in.readInt();
 		columns = in.readInt(); 

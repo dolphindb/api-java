@@ -33,7 +33,6 @@ public class BasicTable extends AbstractEntity implements Table{
 			names_.add(name);
 		}
 		
-		BasicEntityFactory factory = new BasicEntityFactory();
 		VectorDecompressor decompressor = null;
 		SymbolBaseCollection collection = null;
 		//read columns
@@ -46,7 +45,7 @@ public class BasicTable extends AbstractEntity implements Table{
             	type -= 128;
 
 			DATA_FORM df = DATA_FORM.values()[form];
-			DATA_TYPE dt = DATA_TYPE.values()[type];
+			DATA_TYPE dt = DATA_TYPE.valueOf(type);
 			if(df != DATA_FORM.DF_VECTOR)
 				throw new IOException("Invalid form for column [" + names_.get(i) + "] for table " + tableName);
 			Vector vector;
@@ -57,10 +56,10 @@ public class BasicTable extends AbstractEntity implements Table{
 			} else if (dt == DATA_TYPE.DT_COMPRESS) {
 				if(decompressor == null)
 					decompressor = new VectorDecompressor();
-				vector = decompressor.decompress(factory, in, extended, true);
+				vector = decompressor.decompress(BasicEntityFactory.instance(), in, extended, true);
 			}
 			else{
-				vector = (Vector)factory.createEntity(df, dt, in, extended);
+				vector = (Vector)BasicEntityFactory.instance().createEntity(df, dt, in, extended);
 			}
 			if(vector.rows() != rows && vector.rows()!= 1)
 				throw new IOException("The number of rows for column " +names_.get(i) + " is not consistent with other columns");
@@ -232,7 +231,7 @@ public class BasicTable extends AbstractEntity implements Table{
 	}
 
 	public void write(ExtendedDataOutput out) throws IOException{
-		int flag = (DATA_FORM.DF_TABLE.ordinal() << 8) + getDataType().ordinal();
+		int flag = (DATA_FORM.DF_TABLE.ordinal() << 8) + getDataType().getValue();
 		out.writeShort(flag);
 		out.writeInt(rows());
 		out.writeInt(columns());

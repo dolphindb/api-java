@@ -23,7 +23,7 @@ public class VectorDecompressor {
 		in.readInt();
 		
 		ExtendedDataInput decompressedIn = DecoderFactory.get(compression).	decompress(in, compressedBytes - 20, unitLength, elementCount, isLittleEndian);
-		DATA_TYPE dt = DATA_TYPE.values()[dataType];
+		DATA_TYPE dt = DATA_TYPE.valueOf(dataType);
 		return (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, dt, decompressedIn, extended);
 	}
 

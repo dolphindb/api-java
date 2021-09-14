@@ -160,7 +160,7 @@ public class BasicSymbolVector extends AbstractVector {
 	}
 	
 	public void write(ExtendedDataOutput out, SymbolBaseCollection collection) throws IOException{
-		int dataType = getDataType().ordinal() + 128;
+		int dataType = getDataType().getValue() + 128;
 			int flag = (DATA_FORM.DF_VECTOR.ordinal() << 8) + dataType;
 		out.writeShort(flag);
 		out.writeInt(rows());

@@ -66,6 +66,25 @@ public class BasicPointVector extends AbstractVector{
 		}
 	}
 	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		int totalBytes = count * 16, off = 0;
+		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		while (off < totalBytes) {
+			int len = Math.min(BUF_SIZE, totalBytes - off);
+			in.readFully(buf, 0, len);
+			int end = len / 16;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+			for (int i = 0; i < end; i++){
+				double x = byteBuffer.getDouble(i * 16);
+				double y = byteBuffer.getDouble(i * 16 + 8);
+				values[i + start] = new Double2(x, y);
+			}
+			off += len;
+			start += end;
+		}
+	}
+	
 	public Scalar get(int index){
 		return new BasicPoint(values[index].x, values[index].y);
 	}

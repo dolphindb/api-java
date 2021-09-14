@@ -6,6 +6,7 @@ import java.nio.ByteOrder;
 import java.util.List;
 
 import com.xxdb.compression.EncoderFactory;
+import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 import com.xxdb.io.LittleEndianDataOutputStream;
 
@@ -19,6 +20,11 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	
 	public AbstractVector(DATA_FORM df){
 		df_ = df;
+	}
+	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		throw new RuntimeException("Vector.deserialize not implemented yet.");
 	}
 	
 	@Override
@@ -45,10 +51,10 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		StringBuilder sb = new StringBuilder("[");
 		int size = Math.min(DISPLAY_ROWS, rows());
 		if(size > 0)
-			sb.append(get(0).getString());
+			sb.append(getString(0));
 		for(int i=1; i<size; ++i){
 			sb.append(',');
-			sb.append(get(i).getString());
+			sb.append(getString(i));
 		}
 		if(size < rows())
 			sb.append(",...");
@@ -57,7 +63,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	}
 	
 	public void write(ExtendedDataOutput out) throws IOException{
-		int dataType = getDataType().ordinal();
+		int dataType = getDataType().getValue();
 		if(this instanceof BasicSymbolVector)
 			dataType += 128;
 		int flag = (df_.ordinal() << 8) + dataType;
@@ -158,7 +164,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 
 	@Override
 	public void writeCompressed(ExtendedDataOutput output) throws IOException {
-		int dataType = this.getDataType().ordinal();
+		int dataType = this.getDataType().getValue();
 		int unitLength = getUnitLength(this.getDataType());
 
 		int elementCount = this.rows();
@@ -167,7 +173,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		ByteBuffer out = output instanceof LittleEndianDataOutputStream ?
 				ByteBuffer.allocate(Math.max(elementCount * unitLength, 655360)).order(ByteOrder.LITTLE_ENDIAN) :
 				ByteBuffer.allocate(Math.max(elementCount * unitLength, 655360)).order(ByteOrder.BIG_ENDIAN);
-		short flag = (short) (Entity.DATA_FORM.DF_VECTOR.ordinal() << 8 | Entity.DATA_TYPE.DT_COMPRESS.ordinal() & 0xff);
+		short flag = (short) (Entity.DATA_FORM.DF_VECTOR.ordinal() << 8 | Entity.DATA_TYPE.DT_COMPRESS.getValue() & 0xff);
 
 		out.putShort(flag);
 		out.putInt(0);// compressedBytes

@@ -66,6 +66,22 @@ public class BasicShortVector extends AbstractVector{
 		}
 	}
 	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		int totalBytes = count * 2, off = 0;
+		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		while (off < totalBytes) {
+			int len = Math.min(BUF_SIZE, totalBytes - off);
+			in.readFully(buf, 0, len);
+			int end = len / 2;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+			for (int i = 0; i < end; i++)
+				values[i + start] = byteBuffer.getShort(i * 2);
+			off += len;
+			start += end;
+		}
+	}
+	
 	public short getShort(int index){
 		return values[index];
 	}

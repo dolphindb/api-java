@@ -33,7 +33,6 @@ public class BasicAnyVector extends AbstractVector{
 		int size = rows * cols;
 		values = new Entity[size];
 		assert(rows <= 1024);
-		BasicEntityFactory factory = new BasicEntityFactory();
 		for(int i=0; i<size; ++i){
 			short flag = in.readShort();
 			int form = flag>>8;
@@ -41,7 +40,7 @@ public class BasicAnyVector extends AbstractVector{
             boolean extended = type >= 128;
             if(type >= 128)
             	type -= 128;
-			Entity obj = factory.createEntity(DATA_FORM.values()[form], DATA_TYPE.values()[type], in, extended);
+			Entity obj = BasicEntityFactory.instance().createEntity(DATA_FORM.values()[form], DATA_TYPE.valueOf(type), in, extended);
 			values[i] = obj;
 		}
 	}

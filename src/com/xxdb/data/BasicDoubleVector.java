@@ -66,6 +66,22 @@ public class BasicDoubleVector extends AbstractVector{
 		}
 	}
 	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		int totalBytes = count * 8, off = 0;
+		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		while (off < totalBytes) {
+			int len = Math.min(BUF_SIZE, totalBytes - off);
+			in.readFully(buf, 0, len);
+			int end = len / 8;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+			for (int i = 0; i < end; i++)
+				values[i + start] = byteBuffer.getDouble(i * 8);
+			off += len;
+			start += end;
+		}
+	}
+	
 	public Scalar get(int index){
 		return new BasicDouble(values[index]);
 	}

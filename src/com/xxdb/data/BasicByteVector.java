@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -58,6 +59,11 @@ public class BasicByteVector extends AbstractVector{
 			in.readFully(values, off, len);
 			off += len;
 		}
+	}
+	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		in.readFully(values, start, count);
 	}
 
 	public Vector combine(Vector vector){

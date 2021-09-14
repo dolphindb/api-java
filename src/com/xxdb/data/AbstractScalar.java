@@ -23,7 +23,7 @@ public abstract class AbstractScalar extends AbstractEntity implements Scalar{
 	}
 	
 	public void write(ExtendedDataOutput out) throws IOException{
-		int flag = (DATA_FORM.DF_SCALAR.ordinal() << 8) + getDataType().ordinal();
+		int flag = (DATA_FORM.DF_SCALAR.ordinal() << 8) + getDataType().getValue();
 		out.writeShort(flag);
 		writeScalarToOutputStream(out);
 	}

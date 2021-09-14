@@ -48,7 +48,7 @@ public class DBConnection {
     }
 
     private static final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length - 1;
-    private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.values().length - 1;
+    private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.DT_OBJECT.getValue();
     private static final int DEFAULT_PRIORITY = 4;
     private static final int DEFAULT_PARALLELISM = 2;
     private static final int localAPIVersion = 100;
@@ -92,7 +92,7 @@ public class DBConnection {
     }
     
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress) {
-    	 factory = new BasicEntityFactory();
+    	 factory = BasicEntityFactory.instance();
          mutex = new ReentrantLock();
          sessionID = "";
          asynTask = asynchronousTask;
@@ -628,11 +628,9 @@ public class DBConnection {
 
                 if (form < 0 || form > MAX_FORM_VALUE)
                     throw new IOException("Invalid form value: " + form);
-                if (type < 0 || type > MAX_TYPE_VALUE)
-                    throw new IOException("Invalid type value: " + type);
 
                 Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
-                Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
+                Entity.DATA_TYPE dt = Entity.DATA_TYPE.valueOf(type);
                 if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
                     return new EntityBlockReader(in);
                 }
@@ -835,7 +833,7 @@ public class DBConnection {
                     throw new IOException("Invalid type value: " + type);
 
                 Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
-                Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
+                Entity.DATA_TYPE dt = Entity.DATA_TYPE.valueOf(type);
                 if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
                     return new EntityBlockReader(in);
                 }
@@ -982,7 +980,7 @@ public class DBConnection {
                         throw new IOException("Invalid type value: " + type);
 
                     Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
-                    Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
+                    Entity.DATA_TYPE dt = Entity.DATA_TYPE.valueOf(type);
                     Entity re =  factory.createEntity(df, dt, in, extended);
                 } catch (IOException ex) {
                     socket = null;
