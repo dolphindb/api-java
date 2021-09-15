@@ -136,8 +136,7 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public Class<?> getElementClass() {
-		// TODO Auto-generated method stub
-		return null;
+		return Entity.class;
 	}
 
 	@Override
