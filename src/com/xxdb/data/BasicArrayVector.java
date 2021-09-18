@@ -31,17 +31,20 @@ public class BasicArrayVector extends AbstractVector {
 			int blockRows = in.readUnsignedShort();
 			int countBytes = in.readUnsignedByte();
 			in.skipBytes(1);
-			
+			System.out.println("rowsRead : " + rowsRead);
 			//read array of counts
 			totalBytes = blockRows * countBytes;
+			System.out.println("totalBytes : " + totalBytes);
 			rowsReadInBlock = 0;
 			while(offset < totalBytes){
 				int len = Math.min(BUF_SIZE, totalBytes - offset);
+				//hang when read data  : LINL
 				in.readFully(buf, 0, len);
 				int curRows = len / countBytes;
-				
+				System.out.println("offset : " + offset);
 				if(countBytes == 1){
 					for (int i = 0; i < curRows; i++){
+						System.out.println("1 : ");
 						int curRowCells = Byte.toUnsignedInt(buf[i]);
 						rowIndices[rowsRead + rowsReadInBlock + i] = prevIndex + curRowCells;
 						prevIndex += curRowCells;
@@ -50,6 +53,7 @@ public class BasicArrayVector extends AbstractVector {
 				else if(countBytes == 2){
 					ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
 					for (int i = 0; i < curRows; i++){
+						System.out.println("2 : ");
 						int curRowCells = Short.toUnsignedInt(byteBuffer.getShort(i * 2));
 						rowIndices[rowsRead + rowsReadInBlock + i] = prevIndex + curRowCells;
 						prevIndex += curRowCells;
@@ -58,6 +62,7 @@ public class BasicArrayVector extends AbstractVector {
 				else {
 					ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
 					for (int i = 0; i < curRows; i++){
+						System.out.println("3 : ");
 						int curRowCells = byteBuffer.getInt(i * 4);
 						rowIndices[rowsRead + rowsReadInBlock + i] = prevIndex + curRowCells;
 						prevIndex += curRowCells;
