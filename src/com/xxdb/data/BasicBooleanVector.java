@@ -60,6 +60,11 @@ public class BasicBooleanVector extends AbstractVector{
 		}
 	}
 	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		in.readFully(values, start, count);
+	}
+	
 	public Scalar get(int index){
 		return new BasicBoolean(values[index]);
 	}
