@@ -70,6 +70,14 @@ public class BasicTable extends AbstractEntity implements Table{
 	}
 	
     public BasicTable(final List<String> colNames, final List<Vector> cols) {
+		if(colNames.size() != cols.size()){
+			throw new Error("The length of column name and column data is unequal.");
+		}
+		int rowsCount = cols.get(0).rows();
+		for (Vector v : cols) {
+			if(v.rows() != rowsCount)
+				throw new Error("The column data length must be exactly the same.");
+		}
         this.setColName(colNames);
         this.setColumns(cols);
     }
