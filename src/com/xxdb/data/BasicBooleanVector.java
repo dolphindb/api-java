@@ -96,11 +96,6 @@ public class BasicBooleanVector extends AbstractVector{
 	}
 
 	@Override
-	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
-		in.readFully(values, start, count);
-	}
-
-	@Override
 	public Vector combine(Vector vector) {
 		BasicBooleanVector v = (BasicBooleanVector)vector;
 		int newSize = this.rows() + v.rows();
