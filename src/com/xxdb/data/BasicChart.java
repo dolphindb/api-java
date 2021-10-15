@@ -14,7 +14,7 @@ public class BasicChart extends BasicDictionary implements Chart{
 	private static BasicString KEY_CHARTTYPE = new BasicString("chartType");
 	private static BasicString KEY_DATA = new BasicString("data");
 	private static BasicString KEY_TITLE = new BasicString("title");
-	
+	private static BasicString KEY_PARAMETER = new BasicString("extras");
 	public BasicChart(ExtendedDataInput in) throws IOException{
 		super(DATA_TYPE.DT_ANY, in);
 	}
@@ -76,6 +76,20 @@ public class BasicChart extends BasicDictionary implements Chart{
 		else
 			return ((Vector)title).get(2).getString();
 	}
-	
-	
+	@Override
+	public  BasicDictionary getExtraParameters(){
+		Entity param = get(KEY_PARAMETER);
+		if(param != null ){
+			return (BasicDictionary)param;
+		}
+		return null;
+	}
+	@Override
+	public Entity getExtraParameter(CHART_PARAMETER_TYPE key){
+		Entity param = get(KEY_PARAMETER);
+		if(param != null ){
+			return ((BasicDictionary)param).get(new BasicString(key.name()));
+		}
+		return null;
+	}
 }

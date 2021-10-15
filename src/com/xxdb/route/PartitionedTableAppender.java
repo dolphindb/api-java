@@ -72,7 +72,7 @@ public class PartitionedTableAppender {
             	partitionColumnIdx = ((BasicInt)tableInfo.get(new BasicString("partitionColumnIndex"))).getInt();
             	partitionSchema = tableInfo.get(new BasicString("partitionSchema"));
             	partitionType = ((BasicInt) tableInfo.get(new BasicString("partitionType"))).getInt();
-            	partitionColType = Entity.DATA_TYPE.values()[((BasicInt) tableInfo.get(new BasicString("partitionColumnType"))).getInt()];
+            	partitionColType = Entity.DATA_TYPE.valueOf(((BasicInt) tableInfo.get(new BasicString("partitionColumnType"))).getInt());
             }
             else{
             	BasicStringVector vec = (BasicStringVector)partColNames;
@@ -89,7 +89,7 @@ public class PartitionedTableAppender {
             	partitionColumnIdx = ((BasicIntVector)tableInfo.get(new BasicString("partitionColumnIndex"))).getInt(index);
             	partitionSchema = ((BasicAnyVector) tableInfo.get(new BasicString("partitionSchema"))).getEntity(index);
             	partitionType = ((BasicIntVector) tableInfo.get(new BasicString("partitionType"))).getInt(index);
-            	partitionColType = Entity.DATA_TYPE.values()[((BasicIntVector) tableInfo.get(new BasicString("partitionColumnType"))).getInt(index)];
+            	partitionColType = Entity.DATA_TYPE.valueOf(((BasicIntVector) tableInfo.get(new BasicString("partitionColumnType"))).getInt(index));
             }
 
             colDefs = ((BasicTable) tableInfo.get(new BasicString("colDefs")));
@@ -98,7 +98,7 @@ public class PartitionedTableAppender {
             this.columnCategories = new Entity.DATA_CATEGORY[this.cols];
             this.columnTypes = new Entity.DATA_TYPE[this.cols];
             for (int i = 0; i < cols; ++i) {
-                this.columnTypes[i] = Entity.DATA_TYPE.values()[typeInts.getInt(i)];
+                this.columnTypes[i] = Entity.DATA_TYPE.valueOf(typeInts.getInt(i));
                 this.columnCategories[i] = Entity.typeToCategory(this.columnTypes[i]);
             }
             

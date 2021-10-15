@@ -24,9 +24,6 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 	public BasicDictionary(DATA_TYPE valueType, ExtendedDataInput in) throws IOException{
 		this.valueType = valueType;
 		
-		BasicEntityFactory factory = new BasicEntityFactory();
-		DATA_TYPE[] types = DATA_TYPE.values();
-		
 		//read key vector
 		short flag = in.readShort();
 		int form = flag>>8;
@@ -36,10 +33,8 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
         	type -= 128;
 		if(form != DATA_FORM.DF_VECTOR.ordinal())
 			throw new IOException("The form of dictionary keys must be vector");
-		if(type <0 || type >= types.length)
-			throw new IOException("Invalid key type: " + type);
-		keyType = types[type];
-		Vector keys = (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, types[type], in, extended);
+		keyType = DATA_TYPE.valueOf(type);
+		Vector keys = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, keyType, in, extended);
 		
 		//read value vector
 		flag = in.readShort();
@@ -50,10 +45,8 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
         	type -= 128;
 		if(form != DATA_FORM.DF_VECTOR.ordinal())
 			throw new IOException("The form of dictionary values must be vector");
-		if(type <0 || type >= types.length)
-			throw new IOException("Invalid value type: " + type);
-		
-		Vector values = (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, types[type], in, extended);
+		valueType = DATA_TYPE.valueOf(type);
+		Vector values = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, valueType, in, extended);
 		
 		if(keys.rows() != values.rows()){
 			throw new IOException("The key size doesn't equate to value size.");
@@ -215,7 +208,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 			throw new IOException(ex.getMessage());
 		}
 		
-		int flag = (DATA_FORM.DF_DICTIONARY.ordinal() << 8) + getDataType().ordinal();
+		int flag = (DATA_FORM.DF_DICTIONARY.ordinal() << 8) + getDataType().getValue();
 		out.writeShort(flag);
 		
 		keys.write(out);

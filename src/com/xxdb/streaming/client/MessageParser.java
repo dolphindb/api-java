@@ -15,7 +15,7 @@ import com.xxdb.io.LittleEndianDataInputStream;
 
 class MessageParser implements Runnable {
     private final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length - 1;
-    private final int MAX_TYPE_VALUE = Entity.DATA_TYPE.values().length - 1;
+    private final int MAX_TYPE_VALUE = Entity.DATA_TYPE.DT_OBJECT.getValue();
 
     BufferedInputStream bis = null;
     Socket socket = null;
@@ -66,7 +66,6 @@ class MessageParser implements Runnable {
                 topic = in.readString();
 
                 short flag = in.readShort();
-                EntityFactory factory = new BasicEntityFactory();
                 int form = flag >> 8;
                 int type = flag & 0xff;
                 boolean extended = type >= 128;
@@ -79,10 +78,10 @@ class MessageParser implements Runnable {
                     throw new IOException("Invalid type value: " + type);
 
                 Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
-                Entity.DATA_TYPE dt = Entity.DATA_TYPE.values()[type];
+                Entity.DATA_TYPE dt = Entity.DATA_TYPE.valueOf(type);
                 Entity body;
 
-                body = factory.createEntity(df, dt, in, extended);
+                body = BasicEntityFactory.instance().createEntity(df, dt, in, extended);
                 if (body.isTable() && body.rows() == 0) {
                     for (String t : topic.split(",")) {
                         dispatcher.setNeedReconnect(t, 0);

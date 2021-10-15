@@ -39,7 +39,11 @@ public class BasicDurationVector extends AbstractVector{
 	}
 	
 	public Scalar get(int index){
-		return new BasicDuration(DURATION.values()[values[2*index + 1]], values[2*index]);
+		int unitIndex = values[2*index + 1];
+		if(unitIndex == Integer.MIN_VALUE)
+			return new BasicDuration(DURATION.NS, Integer.MIN_VALUE);
+		else
+			return new BasicDuration(DURATION.values()[values[2*index + 1]], values[2*index]);
 	}
 		
 	public void set(int index, Scalar value) throws Exception {
@@ -60,11 +64,13 @@ public class BasicDurationVector extends AbstractVector{
 
 	@Override
 	public boolean isNull(int index) {
-		return false;
+		return values[2*index+1] == Integer.MIN_VALUE || values[2*index] == Integer.MIN_VALUE;
 	}
 
 	@Override
 	public void setNull(int index) {
+		values[2*index] = 0;
+		values[2*index + 1] = Integer.MIN_VALUE;
 	}
 
 	@Override
@@ -92,10 +98,11 @@ public class BasicDurationVector extends AbstractVector{
 	}
 
 	@Override
-	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (int val: values) {
 			buffer.putInt(val);
 		}
+		return buffer;
 	}
 
 	@Override

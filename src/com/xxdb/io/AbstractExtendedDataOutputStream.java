@@ -147,15 +147,17 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 			pos = 0;
 		}while (i < len);
 	}
+	
 	@Override
 	public void writeBlob(String value) throws IOException {
 		int len = value.length();
 		writeInt(len);
 		writeString(value);
 	}
+	
 	public static int getUTFlength(String value, int start, int sum) throws IOException {
 		int len = value.length();
-		for (int i = start; i < len && sum <= 65535; ++i){
+		for (int i = start; i < len; ++i){
 			char c = value.charAt(i);
 			if (c >= '\u0001' && c <= '\u007f')
 				sum += 1;
@@ -164,23 +166,24 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 			else
 				sum += 3;
 		}
-
-		if (sum > UTF8_STRING_LIMIT)
-			throw new UTFDataFormatException ();
 		return sum;
 	}
+	
 	@Override
 	public void writeShortArray(short[] A) throws IOException {
 		writeShortArray(A, 0, A.length);
 	}
+	
 	@Override
 	public void writeIntArray(int[] A) throws IOException {
 		writeIntArray(A, 0, A.length);
 	}
+	
 	@Override
 	public void writeLongArray(long[] A) throws IOException {
 		writeLongArray(A, 0, A.length);
 	}
+	
 	@Override
 	public void writeDoubleArray(double[] A) throws IOException {
 		writeDoubleArray(A, 0, A.length);

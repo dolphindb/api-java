@@ -274,6 +274,35 @@ public class ServerCompressionTest {
         BasicTable newT = (BasicTable) conn.run("select * from st");
         compareBasicTable(table, newT);
     }
+    @Test(expected = RuntimeException.class)
+    public void testCompressDoubledelta() throws Exception {
+        int n=5000000;
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[n*2];
+        double[] val = new double[n*2];
+
+        int baseTime = Utils.countDays(2000,1,1);
+        for (int i = 0; i < n*2; i++) {
+            time[i] = baseTime + (i % 15);
+            val[i] = rand.nextDouble();
+        }
+        List<Vector> colVectors = new ArrayList<>();
+        BasicDateVector dateVector = new BasicDateVector(time);
+        colVectors.add(dateVector);
+        dateVector.setCompressedMethod(1);
+        BasicDoubleVector valVector = new BasicDoubleVector(val);
+        valVector.setCompressedMethod(2);
+        colVectors.add(valVector);
+
+        BasicTable table = new BasicTable(colNames, colVectors);
+
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(100000:0,`date`val,[DATE,DOUBLE])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+    }
 
     @Test
     public void testCompressDouble() throws Exception {
@@ -295,7 +324,7 @@ public class ServerCompressionTest {
         colVectors.add(dateVector);
         dateVector.setCompressedMethod(1);
         BasicDoubleVector valVector = new BasicDoubleVector(val);
-        valVector.setCompressedMethod(2);
+        valVector.setCompressedMethod(1);
         colVectors.add(valVector);
 
         BasicTable table = new BasicTable(colNames, colVectors);
@@ -310,19 +339,6 @@ public class ServerCompressionTest {
         //include null
         BasicDoubleVector val1 = (BasicDoubleVector) conn.run("rand(10.0,"+n+")  join take(double(),"+n+")");
         val1.setCompressedMethod(Vector.COMPRESS_LZ4);
-        colVectors = new ArrayList<>();
-        colVectors.add(new BasicDateVector(time));
-        colVectors.add(val1);
-        table = new BasicTable(colNames, colVectors);
-        args = Arrays.asList(table);
-        conn.run("t = table(1000:0,`date`val,[DATE,DOUBLE])" +
-                "share t as st");
-        count = (BasicInt) conn.run("tableInsert{st}", args);
-        assertEquals(2*n, count.getInt());
-        newT = (BasicTable) conn.run("select * from st");
-        compareBasicTable(table, newT);
-        //include null delta
-        val1.setCompressedMethod(Vector.COMPRESS_DELTA);
         colVectors = new ArrayList<>();
         colVectors.add(new BasicDateVector(time));
         colVectors.add(val1);
@@ -356,7 +372,7 @@ public class ServerCompressionTest {
         colVectors.add(dateVector);
         dateVector.setCompressedMethod(1);
         BasicFloatVector valVector = new BasicFloatVector(val);
-        valVector.setCompressedMethod(2);
+        valVector.setCompressedMethod(1);
         colVectors.add(valVector);
 
         BasicTable table = new BasicTable(colNames, colVectors);
@@ -382,18 +398,35 @@ public class ServerCompressionTest {
         assertEquals(2*n, count.getInt());
         newT = (BasicTable) conn.run("select * from st");
         compareBasicTable(table, newT);
-        //include null delta
-        val1.setCompressedMethod(Vector.COMPRESS_DELTA);
-        colVectors = new ArrayList<>();
-        colVectors.add(new BasicDateVector(time));
-        colVectors.add(val1);
-        table = new BasicTable(colNames, colVectors);
-        args = Arrays.asList(table);
-        conn.run("t = table(1000:0,`date`val,[DATE,FLOAT])" +
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testCompressFloatDelta() throws Exception {
+        int n=50000;
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[100000];
+        float[] val = new float[100000];
+        int baseTime = Utils.countDays(2000,1,1);
+        for (int i = 0; i < 100000; i++) {
+            time[i] = baseTime + (i % 15);
+            val[i] = rand.nextFloat();
+        }
+        List<Vector> colVectors = new ArrayList<>();
+        BasicDateVector dateVector = new BasicDateVector(time);
+        colVectors.add(dateVector);
+        dateVector.setCompressedMethod(1);
+        BasicFloatVector valVector = new BasicFloatVector(val);
+        valVector.setCompressedMethod(2);
+        colVectors.add(valVector);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(100000:0,`date`val,[DATE,FLOAT])" +
                 "share t as st");
-        count = (BasicInt) conn.run("tableInsert{st}", args);
-        assertEquals(2*n, count.getInt());
-        newT = (BasicTable) conn.run("select * from st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(100000, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
         compareBasicTable(table, newT);
     }
 
@@ -754,33 +787,57 @@ public class ServerCompressionTest {
         assertEquals("Total unmatched values found", 0, count);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testCompressChar() throws Exception {
+    @Test
+    public void testCompressCharlz4() throws Exception {
         List<String> colNames = new ArrayList<>();
         colNames.add("date");
         colNames.add("val");
+        int n = 100000;
         int[] time = new int[100000];
-        byte[] val = new byte[100000];
+        int baseTime = Utils.countDays(2000, 1, 1);
+        for (int i = 0; i < 100000; i++) {
+            time[i] = baseTime + (i % 15);
 
+        }
+        List<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        BasicByteVector val = (BasicByteVector) conn.run("rand(['f','3',NULL]," + n + ")");
+        val.setCompressedMethod(1);
+        colVectors.add(val);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> arg = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,CHAR])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", arg);
+        assertEquals(n, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testCompressCharDelta() throws Exception {
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int n=100000;
+        int[] time = new int[100000];
         int baseTime = Utils.countDays(2000,1,1);
         for (int i = 0; i < 100000; i++) {
             time[i] = baseTime + (i % 15);
-            val[i] = (byte) i;
         }
-
         List<Vector> colVectors = new ArrayList<>();
         colVectors.add(new BasicDateVector(time));
-        colVectors.add(new BasicByteVector(val));
-
+        BasicByteVector val = (BasicByteVector) conn.run("rand(['f','3',NULL]," + n + ")");
+        val.setCompressedMethod(2);
+        colVectors.add(val);
         BasicTable table = new BasicTable(colNames, colVectors);
-
         List<Entity> arg = Arrays.asList(table);
-        conn.run("t = table(1000:0,`date`val,[DATE,CHAR]);" +
+        conn.run("t = table(1000:0,`date`val,[DATE,CHAR])" +
                 "share t as st");
         BasicInt count = (BasicInt) conn.run("tableInsert{st}", arg);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testCompressBool()throws Exception {
         int n=1000000;
         Random rand = new Random();
@@ -788,7 +845,6 @@ public class ServerCompressionTest {
         colNames.add("date");
         colNames.add("val");
         int[] time = new int[n];
-
         int baseTime = Utils.countDays(1555,1,1);
         for (int i = 0; i < n; i++) {
             time[i] = baseTime + (i % 15);
@@ -802,18 +858,62 @@ public class ServerCompressionTest {
         conn.run("t = table(1000:0,`date`val,[DATE,BOOL])" +
                 "share t as st");
         BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(n, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+        //include null
+        val = (BasicBooleanVector) conn.run("rand([true,false,NULL],"+n+")");
+        val.setCompressedMethod(1);
+        colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val);
+        table = new BasicTable(colNames, colVectors);
+        args = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,BOOL])" +
+                "share t as st");
+        count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(n, count.getInt());
+        newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+
     }
 
     @Test(expected = RuntimeException.class)
-    public void testCompressString() throws Exception {
+    public void testCompressBoolDelta()throws Exception {
+        int n=1000000;
+        Random rand = new Random();
         List<String> colNames = new ArrayList<>();
         colNames.add("date");
         colNames.add("val");
-        int[] time = new int[100000];
-        String[] val = new String[100000];
+        int[] time = new int[n];
+        int baseTime = Utils.countDays(1555,1,1);
+        for (int i = 0; i < n; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        BasicBooleanVector val = (BasicBooleanVector) conn.run("rand([true,false],"+n+")");
+        val.setCompressedMethod(2);
+        List<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,BOOL])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+    }
+
+    @Test
+    public void testCompressString() throws Exception {
+        BasicTable newT;
+        int n=10000;
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[n];
+        String[] val = new String[n];
 
         int baseTime = Utils.countDays(2000,1,1);
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < n; i++) {
             time[i] = baseTime + (i % 15);
             val[i] = "i"+i;
         }
@@ -826,10 +926,52 @@ public class ServerCompressionTest {
         conn.run("t = table(1000:0,`date`val,[DATE,STRING]);" +
                 "share t as st");
         BasicInt count = (BasicInt) conn.run("tableInsert{st}", arg);
+        assertEquals(n, count.getInt());
+        newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+        //include null
+        BasicStringVector val1 = (BasicStringVector) conn.run("take(`d`d`y`t``,"+n+")");
+        val1.setCompressedMethod(1);
+        colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val1);
+        table = new BasicTable(colNames, colVectors);
+        arg = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,STRING])" +
+                "share t as st");
+        count = (BasicInt) conn.run("tableInsert{st}", arg);
+        assertEquals(n, count.getInt());
+        newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
     }
 
     @Test(expected = RuntimeException.class)
-    public void testCompressSymbol() throws Exception {
+    public void testCompressStringDelta() throws Exception {
+        BasicTable newT;
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[100000];
+        int baseTime = Utils.countDays(2000,1,1);
+        for (int i = 0; i < 100000; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        List<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        BasicStringVector val1 = (BasicStringVector) conn.run("take(`d`d`y`t``,100000)");
+        val1.setCompressedMethod(2);
+        colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val1);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> arg = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,STRING])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", arg);
+    }
+
+    @Test
+    public void testCompressSymbolDelta() throws Exception {
         List<String> colNames = new ArrayList<>();
         colNames.add("date");
         colNames.add("val");
@@ -842,26 +984,88 @@ public class ServerCompressionTest {
         }
         List<Vector> colVectors = new ArrayList<>();
         colVectors.add(new BasicDateVector(time));
-        colVectors.add(new BasicSymbolVector(Arrays.asList(val)));
+        BasicSymbolVector val1 = new BasicSymbolVector(Arrays.asList(val));
+        val1.setCompressedMethod(1);
+        colVectors.add(val1);
         BasicTable table = new BasicTable(colNames, colVectors);
         List<Entity> arg = Arrays.asList(table);
         conn.run("t = table(1000:0,`date`val,[DATE,SYMBOL]);" +
                 "share t as st");
         BasicInt count = (BasicInt) conn.run("tableInsert{st}", arg);
+        assertEquals(100000, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+        //include null
+        colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        val1= (BasicSymbolVector) conn.run("rand(`d`bv`f``,100000)");
+        val1.setCompressedMethod(1);
+        colVectors.add(val1);
+        table = new BasicTable(colNames, colVectors);
+        arg = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,SYMBOL]);" +
+                "share t as st");
+        count = (BasicInt) conn.run("tableInsert{st}", arg);
+        assertEquals(100000, count.getInt());
+        newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+        //include null deta
+        colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        val1= (BasicSymbolVector) conn.run("rand(`d`bv`f``,100000)");
+        val1.setCompressedMethod(2);
+        colVectors.add(val1);
+        table = new BasicTable(colNames, colVectors);
+        arg = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,SYMBOL]);" +
+                "share t as st");
+        count = (BasicInt) conn.run("tableInsert{st}", arg);
+        assertEquals(100000, count.getInt());
+        newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testCompressUUID() throws Exception {
         List<String> colNames = new ArrayList<>();
         colNames.add("date");
         colNames.add("val");
-        int[] time = new int[100000];
+        int n=1000000;
+        int[] time = new int[n];
         int baseTime = Utils.countDays(2000,1,1);
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < n; i++) {
             time[i] = baseTime + (i % 15);
         }
-        BasicUuidVector val = (BasicUuidVector) conn.run("rand([uuid('5d212a78-cc48-e3b1-4235-b4d91473ee87'),uuid('5d212a78-cc48-e3b1-4235-b4d91473ee89'),uuid()],10)");
+        BasicUuidVector val = (BasicUuidVector) conn.run("rand([uuid('5d212a78-cc48-e3b1-4235-b4d91473ee87'),uuid('5d212a78-cc48-e3b1-4235-b4d91473ee89'),uuid()],"+n+")");
         List<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> arg = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,UUID]);" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", arg);
+        assertEquals(n, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testCompressUUIDdelta() throws Exception {
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int n=1000000;
+        int[] time = new int[n];
+        int baseTime = Utils.countDays(2000,1,1);
+        for (int i = 0; i < n; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        BasicUuidVector val = (BasicUuidVector) conn.run("rand([uuid('5d212a78-cc48-e3b1-4235-b4d91473ee87'),uuid('5d212a78-cc48-e3b1-4235-b4d91473ee89'),uuid()],"+n+")");
+        List<Vector> colVectors = new ArrayList<>();
+        //delta
+        val.setCompressedMethod(2);
+        colVectors = new ArrayList<>();
         colVectors.add(new BasicDateVector(time));
         colVectors.add(val);
         BasicTable table = new BasicTable(colNames, colVectors);
@@ -872,6 +1076,28 @@ public class ServerCompressionTest {
     }
 
     @Test(expected = RuntimeException.class)
+    public void testCompressIPADDRdelta() throws Exception {
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[100000];
+        int baseTime = Utils.countDays(2000,1,1);
+        for (int i = 0; i < 100000; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        BasicIPAddrVector val = (BasicIPAddrVector) conn.run("rand([ipaddr('192.168.0.1'),ipaddr('192.168.0.10'),ipaddr()],100000)");
+        List<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        val.setCompressedMethod(2);
+        colVectors.add(val);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> arg = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,IPADDR]);" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", arg);
+    }
+
+    @Test
     public void testCompressIPADDR() throws Exception {
         List<String> colNames = new ArrayList<>();
         colNames.add("date");
@@ -881,18 +1107,45 @@ public class ServerCompressionTest {
         for (int i = 0; i < 100000; i++) {
             time[i] = baseTime + (i % 15);
         }
-        BasicIPAddrVector val = (BasicIPAddrVector) conn.run("rand([ipaddr('192.168.0.1'),ipaddr('192.168.0.10'),ipaddr()],10)");
+        BasicIPAddrVector val = (BasicIPAddrVector) conn.run("rand([ipaddr('192.168.0.1'),ipaddr('192.168.0.10'),ipaddr()],100000)");
         List<Vector> colVectors = new ArrayList<>();
         colVectors.add(new BasicDateVector(time));
+        val.setCompressedMethod(1);
         colVectors.add(val);
         BasicTable table = new BasicTable(colNames, colVectors);
         List<Entity> arg = Arrays.asList(table);
         conn.run("t = table(1000:0,`date`val,[DATE,IPADDR]);" +
                 "share t as st");
         BasicInt count = (BasicInt) conn.run("tableInsert{st}", arg);
+        assertEquals(100000, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
     }
 
     @Test(expected = RuntimeException.class)
+    public void testCompressINT128Delta() throws Exception {
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[100000];
+        int baseTime = Utils.countDays(2000,1,1);
+        for (int i = 0; i < 100000; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        BasicInt128Vector val = (BasicInt128Vector) conn.run("rand([int128('e1671797c52e15f763380b45e841ec32'),int128('e1671797c52e15f763380b45e841ec82'),int128()],100000)");
+        List<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        val.setCompressedMethod(2);
+        colVectors.add(val);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> arg = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,INT128]);" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", arg);
+    }
+
+
+    @Test
     public void testCompressINT128() throws Exception {
         List<String> colNames = new ArrayList<>();
         colNames.add("date");
@@ -902,18 +1155,22 @@ public class ServerCompressionTest {
         for (int i = 0; i < 100000; i++) {
             time[i] = baseTime + (i % 15);
         }
-        BasicInt128Vector val = (BasicInt128Vector) conn.run("rand([int128('e1671797c52e15f763380b45e841ec32'),int128('e1671797c52e15f763380b45e841ec82'),int128()],10)");
+        BasicInt128Vector val = (BasicInt128Vector) conn.run("rand([int128('e1671797c52e15f763380b45e841ec32'),int128('e1671797c52e15f763380b45e841ec82'),int128()],100000)");
         List<Vector> colVectors = new ArrayList<>();
         colVectors.add(new BasicDateVector(time));
+        val.setCompressedMethod(1);
         colVectors.add(val);
         BasicTable table = new BasicTable(colNames, colVectors);
         List<Entity> arg = Arrays.asList(table);
         conn.run("t = table(1000:0,`date`val,[DATE,INT128]);" +
                 "share t as st");
         BasicInt count = (BasicInt) conn.run("tableInsert{st}", arg);
+        assertEquals(100000, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testCompressDATAHOUR() throws Exception {
         List<String> colNames = new ArrayList<>();
         colNames.add("date");
@@ -923,85 +1180,128 @@ public class ServerCompressionTest {
         for (int i = 0; i < 100000; i++) {
             time[i] = baseTime + (i % 15);
         }
-        BasicDateHourVector val = (BasicDateHourVector) conn.run("rand(datehour('2012.06.13T13')+1..10 join datehour(),10)");
+        BasicDateHourVector val = (BasicDateHourVector) conn.run("rand(datehour('2012.06.13T13')+1..10 join datehour(),100000)");
+        List<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        val.setCompressedMethod(1);
+        colVectors.add(val);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> arg = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,DATEHOUR]);" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", arg);
+        assertEquals(100000, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+        //DELTA
+        colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        val.setCompressedMethod(2);
+        colVectors.add(val);
+        table = new BasicTable(colNames, colVectors);
+        arg = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,DATEHOUR]);" +
+                "share t as st");
+        count = (BasicInt) conn.run("tableInsert{st}", arg);
+        assertEquals(100000, count.getInt());
+        newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+    }
+
+    @Test
+    public void testCompressComplex()throws Exception {
+        int n=1000000;
+        Random rand = new Random();
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[n];
+        int baseTime = Utils.countDays(1555,1,1);
+        for (int i = 0; i < n; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        BasicComplexVector val = (BasicComplexVector) conn.run("complex(rand(1..10 join int(),"+n+"),rand(1..10 join int(),"+n+"))");
         List<Vector> colVectors = new ArrayList<>();
         colVectors.add(new BasicDateVector(time));
         colVectors.add(val);
         BasicTable table = new BasicTable(colNames, colVectors);
-        List<Entity> arg = Arrays.asList(table);
-        conn.run("t = table(1000:0,`date`val,[DATE,INT128]);" +
-                "share t as st");
-        BasicInt count = (BasicInt) conn.run("tableInsert{st}", arg);
-    }
-/*
-    @Test
-    public void testCompressDataTypes_lz4() throws Exception {
-        List<String> colNames = new ArrayList<>();
-        colNames.add("bool");
-        colNames.add("char");
-        colNames.add("short");
-        colNames.add("int");
-        colNames.add("long");
-        colNames.add("date");
-        colNames.add("month");
-        colNames.add("time");
-        colNames.add("minute");
-        colNames.add("second");
-        colNames.add("datetime");
-        colNames.add("timestamp");
-        colNames.add("nanotime");
-        colNames.add("nanotimestamp");
-        colNames.add("float");
-        colNames.add("double");
-        colNames.add("datahour");
-        int n=10;
-        BasicIntVector boolv = (BasicIntVector) conn.run("rand(1 0 NULL,"+2*n+")");
-        BasicIntVector bytev = (BasicIntVector) conn.run("rand(1 2 2 4 NULL,"+2*n+")");
-        BasicIntVector intv = (BasicIntVector) conn.run("rand(1..100000 join NULL,10000)");
-        BasicDoubleVector doublev = (BasicDoubleVector) conn.run("rand(10.0,"+n+") join take(double(),"+n+")");
-        BasicFloatVector floatV = (BasicFloatVector) conn.run("rand(10.0f,"+n+")join take(float(),"+n+")");
-        BasicLongVector longv = (BasicLongVector) conn.run("rand(1l..101l join long(),"+2*n+")");
-        BasicShortVector shortv = (BasicShortVector) conn.run("rand(220h join short(),"+2*n+")");
-        BasicDateVector datev = (BasicDateVector) conn.run("2012.10.01 +1.."+n+" join take(date(),"+n+")");
-        BasicMonthVector monthv = (BasicMonthVector) conn.run("2012.06M +1.."+n+" join take(month(),"+n+")");
-        BasicTimeVector timev = (BasicTimeVector) conn.run("13:30:10.008 +1.."+n+" join take(time(),"+n+")");
-        BasicMinuteVector minutev = (BasicMinuteVector) conn.run("13:30m +1.."+n+" join take(minute(),"+n+")");
-        BasicSecondVector secondv = (BasicSecondVector) conn.run("13:30:10 +1.."+n+" join take(second(),"+n+")");
-        BasicTimestampVector timestampv = (BasicTimestampVector) conn.run("2012.06.13 13:30:10.008 +1.."+n+" join take(timestamp(),"+n+")");
-        BasicNanoTimeVector nanotimev = (BasicNanoTimeVector) conn.run("13:30:10.008007006 +1.."+n+" join take(nanotime(),"+n+")");
-        BasicNanoTimestampVector nanotimestampv = (BasicNanoTimestampVector) conn.run("2012.06.13 13:30:10.008007006 +rand(1.."+n+" ,"+n+") join take(nanotimestamp(),"+n+")");
-        BasicDateTimeVector datetimev = (BasicDateTimeVector) conn.run("2012.10.01 15:00:04 + rand(1.."+n+" ,"+n+") join take(datetime(),"+n+")");
-        List<Vector> colVectors = new ArrayList<>();
-        colVectors.add(boolv);
-        colVectors.add(bytev);
-        colVectors.add(shortv);
-        colVectors.add(intv);
-        colVectors.add(longv);
-        colVectors.add(datev);
-        colVectors.add(monthv);
-        colVectors.add(timev);
-        colVectors.add(minutev);
-        colVectors.add(secondv);
-        colVectors.add(datetimev);
-        colVectors.add(timestampv);
-        colVectors.add(nanotimev);
-        colVectors.add(nanotimestampv);
-        colVectors.add(floatV);
-        colVectors.add(doublev);
-        BasicTable table = new BasicTable(colNames, colVectors);
         List<Entity> args = Arrays.asList(table);
-        conn.run("t = table(1000:0,`bool`short`int`long`date`month`time`minute`second`datetime`timestamp`nanotime`nanotimestamp" +
-                "`float`double,[BOOL,SHORT,INT,LONG,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP," +
-                "FLOAT,DOUBLE])" +
+        conn.run("t = table(1000:0,`date`val,[DATE,COMPLEX])" +
                 "share t as st");
         BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
-        assertEquals(10, count.getInt());
+        assertEquals(n, count.getInt());
         BasicTable newT = (BasicTable) conn.run("select * from st");
         compareBasicTable(table, newT);
     }
+
+    @Test(expected = RuntimeException.class)
+    public void testCompressComplexdelta()throws Exception {
+        int n=1000000;
+        Random rand = new Random();
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[n];
+        int baseTime = Utils.countDays(1555,1,1);
+        for (int i = 0; i < n; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        BasicComplexVector val = (BasicComplexVector) conn.run("complex(rand(1..10 join int(),"+n+"),rand(1..10 join int(),"+n+"))");
+        List<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        val.setCompressedMethod(2);
+        colVectors.add(val);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,COMPLEX])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(n, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+    }
+/*
+    @Test
+    public void testCompressDuration()throws Exception {
+        int n=1000000;
+        Random rand = new Random();
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[2*n];
+        int baseTime = Utils.countDays(1599,1,1);
+        for (int i = 0; i < 2*n; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        //include null
+        BasicDurationVector val1 = (BasicDurationVector) conn.run("\n" +
+                "duration(rand([\"20H\",\"20y\"],10))");
+        ArrayList<Vector> colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val1);
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,DURATION])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(2*n, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+        //include null delta
+        val1.setCompressedMethod(Vector.COMPRESS_DELTA);
+        colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val1);
+        table = new BasicTable(colNames, colVectors);
+        args = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,DURATION])" +
+                "share t as st");
+        count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(2*n, count.getInt());
+        newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable(table, newT);
+    }
 */
-
-
     @After
     public void tearDown() throws Exception {
         conn.close();

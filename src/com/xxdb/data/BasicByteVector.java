@@ -1,6 +1,8 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -58,6 +60,11 @@ public class BasicByteVector extends AbstractVector{
 			off += len;
 		}
 	}
+	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		in.readFully(values, start, count);
+	}
 
 	public Vector combine(Vector vector){
 		BasicByteVector v = (BasicByteVector)vector;
@@ -107,7 +114,7 @@ public class BasicByteVector extends AbstractVector{
 			return (int)((4294967296l + value) % buckets);
 		}
 	}
-	
+ 
 	@Override
 	public boolean isNull(int index) {
 		return values[index] == Byte.MIN_VALUE;
@@ -163,5 +170,13 @@ public class BasicByteVector extends AbstractVector{
 				end = mid - 1;
 		}
 		return end;
+	}
+
+	@Override
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (byte val: values) {
+			buffer.put(val);
+		}
+		return buffer;
 	}
 }

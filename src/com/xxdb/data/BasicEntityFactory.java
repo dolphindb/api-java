@@ -2,49 +2,56 @@ package com.xxdb.data;
 
 import java.io.IOException;
 
+import com.xxdb.data.Entity.DATA_TYPE;
 import com.xxdb.data.Entity.DURATION;
 import com.xxdb.io.ExtendedDataInput;
 
 public class BasicEntityFactory implements EntityFactory{
 	private TypeFactory[] factories;
 	private TypeFactory[] factoriesExt;
+	private static EntityFactory factory = new BasicEntityFactory();
+	
+	public static EntityFactory instance(){
+		return factory;
+	}
 
 	public BasicEntityFactory(){
-		factories = new TypeFactory[Entity.DATA_TYPE.values().length];
-		factoriesExt = new TypeFactory[Entity.DATA_TYPE.values().length];
-		factories[Entity.DATA_TYPE.DT_BOOL.ordinal()] = new BooleanFactory();
-		factories[Entity.DATA_TYPE.DT_BYTE.ordinal()] = new ByteFactory();
-		factories[Entity.DATA_TYPE.DT_SHORT.ordinal()] = new ShortFactory();
-		factories[Entity.DATA_TYPE.DT_INT.ordinal()] = new IntFactory();
-		factories[Entity.DATA_TYPE.DT_LONG.ordinal()] = new LongFactory();
-		factories[Entity.DATA_TYPE.DT_FLOAT.ordinal()] = new FloatFactory();
-		factories[Entity.DATA_TYPE.DT_DOUBLE.ordinal()] = new DoubleFactory();
-		factories[Entity.DATA_TYPE.DT_MINUTE.ordinal()] = new MinuteFactory();
-		factories[Entity.DATA_TYPE.DT_SECOND.ordinal()] = new SecondFactory();
-		factories[Entity.DATA_TYPE.DT_TIME.ordinal()] = new TimeFactory();
-		factories[Entity.DATA_TYPE.DT_NANOTIME.ordinal()] = new NanoTimeFactory();
-		factories[Entity.DATA_TYPE.DT_DATE.ordinal()] = new DateFactory();
-		factories[Entity.DATA_TYPE.DT_DATEHOUR.ordinal()] = new DateHourFactory();
-		factories[Entity.DATA_TYPE.DT_MONTH.ordinal()] = new MonthFactory();
-		factories[Entity.DATA_TYPE.DT_DATETIME.ordinal()] = new DateTimeFactory();
-		factories[Entity.DATA_TYPE.DT_TIMESTAMP.ordinal()] = new TimestampFactory();
-		factories[Entity.DATA_TYPE.DT_NANOTIMESTAMP.ordinal()] = new NanoTimestampFactory();
-		factories[Entity.DATA_TYPE.DT_SYMBOL.ordinal()] = new SymbolFactory();
-		factories[Entity.DATA_TYPE.DT_STRING.ordinal()] = new StringFactory();
-		factories[Entity.DATA_TYPE.DT_BLOB.ordinal()] = new BlobFactory();
-		factories[Entity.DATA_TYPE.DT_FUNCTIONDEF.ordinal()] = new FunctionDefFactory();
-		factories[Entity.DATA_TYPE.DT_HANDLE.ordinal()] = new SystemHandleFactory();
-		factories[Entity.DATA_TYPE.DT_CODE.ordinal()] = new MetaCodeFactory();
-		factories[Entity.DATA_TYPE.DT_DATASOURCE.ordinal()] = new DataSourceFactory();
-		factories[Entity.DATA_TYPE.DT_RESOURCE.ordinal()] = new ResourceFactory();
-		factories[Entity.DATA_TYPE.DT_COMPRESS.ordinal()] = new CompressFactory();
-		factories[Entity.DATA_TYPE.DT_UUID.ordinal()] = new UuidFactory();
-		factories[Entity.DATA_TYPE.DT_INT128.ordinal()] = new Int128Factory();
-		factories[Entity.DATA_TYPE.DT_IPADDR.ordinal()] = new IPAddrFactory();
-		factories[Entity.DATA_TYPE.DT_COMPLEX.ordinal()] = new ComplexFactory();
-		factories[Entity.DATA_TYPE.DT_POINT.ordinal()] = new PointFactory();
-		factories[Entity.DATA_TYPE.DT_DURATION.ordinal()] = new DurationFactory();
-		factoriesExt[Entity.DATA_TYPE.DT_SYMBOL.ordinal()] = new ExtendedSymbolFactory();
+		int typeCount = DATA_TYPE.DT_OBJECT.getValue() + 1;
+		factories = new TypeFactory[typeCount];
+		factoriesExt = new TypeFactory[typeCount];
+		factories[Entity.DATA_TYPE.DT_BOOL.getValue()] = new BooleanFactory();
+		factories[Entity.DATA_TYPE.DT_BYTE.getValue()] = new ByteFactory();
+		factories[Entity.DATA_TYPE.DT_SHORT.getValue()] = new ShortFactory();
+		factories[Entity.DATA_TYPE.DT_INT.getValue()] = new IntFactory();
+		factories[Entity.DATA_TYPE.DT_LONG.getValue()] = new LongFactory();
+		factories[Entity.DATA_TYPE.DT_FLOAT.getValue()] = new FloatFactory();
+		factories[Entity.DATA_TYPE.DT_DOUBLE.getValue()] = new DoubleFactory();
+		factories[Entity.DATA_TYPE.DT_MINUTE.getValue()] = new MinuteFactory();
+		factories[Entity.DATA_TYPE.DT_SECOND.getValue()] = new SecondFactory();
+		factories[Entity.DATA_TYPE.DT_TIME.getValue()] = new TimeFactory();
+		factories[Entity.DATA_TYPE.DT_NANOTIME.getValue()] = new NanoTimeFactory();
+		factories[Entity.DATA_TYPE.DT_DATE.getValue()] = new DateFactory();
+		factories[Entity.DATA_TYPE.DT_DATEHOUR.getValue()] = new DateHourFactory();
+		factories[Entity.DATA_TYPE.DT_MONTH.getValue()] = new MonthFactory();
+		factories[Entity.DATA_TYPE.DT_DATETIME.getValue()] = new DateTimeFactory();
+		factories[Entity.DATA_TYPE.DT_TIMESTAMP.getValue()] = new TimestampFactory();
+		factories[Entity.DATA_TYPE.DT_NANOTIMESTAMP.getValue()] = new NanoTimestampFactory();
+		factories[Entity.DATA_TYPE.DT_SYMBOL.getValue()] = new SymbolFactory();
+		factories[Entity.DATA_TYPE.DT_STRING.getValue()] = new StringFactory();
+		factories[Entity.DATA_TYPE.DT_BLOB.getValue()] = new BlobFactory();
+		factories[Entity.DATA_TYPE.DT_FUNCTIONDEF.getValue()] = new FunctionDefFactory();
+		factories[Entity.DATA_TYPE.DT_HANDLE.getValue()] = new SystemHandleFactory();
+		factories[Entity.DATA_TYPE.DT_CODE.getValue()] = new MetaCodeFactory();
+		factories[Entity.DATA_TYPE.DT_DATASOURCE.getValue()] = new DataSourceFactory();
+		factories[Entity.DATA_TYPE.DT_RESOURCE.getValue()] = new ResourceFactory();
+		factories[Entity.DATA_TYPE.DT_COMPRESS.getValue()] = new CompressFactory();
+		factories[Entity.DATA_TYPE.DT_UUID.getValue()] = new UuidFactory();
+		factories[Entity.DATA_TYPE.DT_INT128.getValue()] = new Int128Factory();
+		factories[Entity.DATA_TYPE.DT_IPADDR.getValue()] = new IPAddrFactory();
+		factories[Entity.DATA_TYPE.DT_COMPLEX.getValue()] = new ComplexFactory();
+		factories[Entity.DATA_TYPE.DT_POINT.getValue()] = new PointFactory();
+		factories[Entity.DATA_TYPE.DT_DURATION.getValue()] = new DurationFactory();
+		factoriesExt[Entity.DATA_TYPE.DT_SYMBOL.getValue()] = new ExtendedSymbolFactory();
 	}
 	
 	@Override
@@ -59,14 +66,16 @@ public class BasicEntityFactory implements EntityFactory{
 			return new BasicSet(type, in);
 		else if(form == Entity.DATA_FORM.DF_CHUNK)
 			return new BasicChunkMeta(in);
-		else if(type == Entity.DATA_TYPE.DT_ANY && form == Entity.DATA_FORM.DF_VECTOR)
+		else if(type == Entity.DATA_TYPE.DT_ANY && (form == Entity.DATA_FORM.DF_VECTOR || form == Entity.DATA_FORM.DF_PAIR))
 			return new BasicAnyVector(in);
+		else if(type.getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && type.getValue() <= Entity.DATA_TYPE.DT_POINT_ARRAY.getValue())
+			return new BasicArrayVector(type, in);
 		else if(type == Entity.DATA_TYPE.DT_VOID && form == Entity.DATA_FORM.DF_SCALAR){
 			in.readBoolean();
 			return new Void();
 		}
 		else{
-			int index = type.ordinal();
+			int index = type.getValue();
 			if(factories[index] == null)
 				throw new IOException("Data type " + type.name() +" is not supported yet.");
 			else if(form == Entity.DATA_FORM.DF_VECTOR){
@@ -88,7 +97,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 	@Override
 	public Matrix createMatrixWithDefaultValue(Entity.DATA_TYPE type, int rows, int columns) {
-		int index = type.ordinal();
+		int index = type.getValue();
 		if(factories[index] == null)
 			return null;
 		else
@@ -97,7 +106,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 	@Override
 	public Vector createVectorWithDefaultValue(Entity.DATA_TYPE type, int size) {
-		int index = type.ordinal();
+		int index = type.getValue();
 		if(factories[index] == null)
 			return null;
 		else
@@ -106,7 +115,7 @@ public class BasicEntityFactory implements EntityFactory{
 	
 	@Override
 	public Vector createPairWithDefaultValue(Entity.DATA_TYPE type) {
-		int index = type.ordinal();
+		int index = type.getValue();
 		if(factories[index] == null)
 			return null;
 		else
@@ -115,7 +124,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 	@Override
 	public Scalar createScalarWithDefaultValue(Entity.DATA_TYPE type) {
-		int index = type.ordinal();
+		int index = type.getValue();
 		if(factories[index] == null)
 			return null;
 		else

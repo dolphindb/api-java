@@ -20,7 +20,6 @@ public class EntityBlockReader implements Entity {
     }
 
     public Entity read() throws IOException{
-        BasicEntityFactory factory = new BasicEntityFactory();
         if(currentIndex>=size) return null;
 
         short flag = instream.readShort();
@@ -29,13 +28,12 @@ public class EntityBlockReader implements Entity {
         boolean extended = type >= 128;
         if(type >= 128)
         	type -= 128;
-        currentValue = factory.createEntity(Entity.DATA_FORM.values()[form], Entity.DATA_TYPE.values()[type], instream, extended);
+        currentValue = BasicEntityFactory.instance().createEntity(Entity.DATA_FORM.values()[form], Entity.DATA_TYPE.valueOf(type), instream, extended);
         currentIndex++;
         return currentValue;
     }
 
     public void skipAll() throws IOException{
-        BasicEntityFactory factory = new BasicEntityFactory();
         for(int i=currentIndex;i<size;i++){
             short flag = instream.readShort();
             int form = flag >> 8;
@@ -43,7 +41,7 @@ public class EntityBlockReader implements Entity {
             boolean extended = type >= 128;
             if(type >= 128)
             	type -= 128;
-            currentValue = factory.createEntity(Entity.DATA_FORM.values()[form], Entity.DATA_TYPE.values()[type], instream, extended);
+            currentValue = BasicEntityFactory.instance().createEntity(Entity.DATA_FORM.values()[form], Entity.DATA_TYPE.valueOf(type), instream, extended);
             currentIndex++;
         }
     }
