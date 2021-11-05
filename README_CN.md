@@ -421,7 +421,7 @@ pt = db.createPartitionedTable(t,`pt,`sym`date)
 
 > 请注意：DolphinDB不允许多个writer同时将数据写入到同一个分区，因此在客户端多线程并行写入数据时，需要确保每个线程分别写入不同的分区。
 
-//todo: 使用最新的1.30版本以上的server，可以使用java api中的 PartitionedTableAppender类来写入分布式表，其基本原理是设计一个连接池用于多线程写入，然后利用server的schema函数获取分布式表的分区信息，按指定的分区列将用户写入的数据进行分类分别交给不同的连接来并行写入。
+使用1.30版本以上的server，可以使用java api中的 PartitionedTableAppender类来写入分布式表，其基本原理是设计一个连接池用于多线程写入，然后利用server的schema函数获取分布式表的分区信息，按指定的分区列将用户写入的数据进行分类分别交给不同的连接来并行写入。
 使用示例脚本如下：
 ```java 
 DBConnectionPool conn = new ExclusiveDBConnectionPool(host, Integer.parseInt(port), "admin", "123456", Integer.parseInt(threadCount), false, false);
