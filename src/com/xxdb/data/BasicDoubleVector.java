@@ -25,8 +25,12 @@ public class BasicDoubleVector extends AbstractVector{
 		super(DATA_FORM.DF_VECTOR);
 		if (list != null) {
 			values = new double[list.size()];
-			for (int i=0; i<list.size(); ++i)
-				values[i] = list.get(i);
+			for (int i=0; i<list.size(); ++i) {
+				if(list.get(i) != null)
+					values[i] = list.get(i);
+				else
+					values[i]= -Double.MAX_VALUE;
+			}
 		}
 	}
 	
