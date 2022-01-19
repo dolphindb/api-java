@@ -43,6 +43,7 @@ public class MultithreadTableWriter {
                         Thread.sleep (100);
                         conn_ = tableWriter_.newConn();
                     } catch (Exception e){
+                        e.printStackTrace();
                         tableWriter_.logger_.warning("threadid="+writeThread_.getId()+ " init connection error: "+ e);
                         setError(ErrorCodeInfo.Code.EC_Server, "Init connection error: " + e);
                         conn_ = null;
@@ -84,6 +85,7 @@ public class MultithreadTableWriter {
                             Thread.sleep(100);
                         }
                     }catch (Exception e){
+                        e.printStackTrace();
                         break;
                     }
                     int size = items.size();
@@ -114,6 +116,7 @@ public class MultithreadTableWriter {
                                     colindex++;
                                 }
                             }catch (Exception e){
+                                e.printStackTrace();
                                 isWriteDone = false;
                                 tableWriter_.logger_.warning("threadid="+ writeThread_.getId()+ " sendindex="+ sentRows_+ " Append row failed: "+ e);
                                 setError(ErrorCodeInfo.Code.EC_InvalidObject, "Append row failed: " + e);
@@ -121,6 +124,7 @@ public class MultithreadTableWriter {
                             }
                         }
                     } catch (Exception e){
+                        e.printStackTrace();
                         tableWriter_.logger_.warning("threadid="+ writeThread_.getId()+ " Create table error: "+ e);
                         setError(ErrorCodeInfo.Code.EC_Server, "Create table error: " + e);
                         isWriteDone = false;
@@ -135,12 +139,13 @@ public class MultithreadTableWriter {
                             args.add(writeTable);
                             runscript = scriptTableInsert_;
                             conn_.run(runscript, args);
-                            if (scriptSaveTable_.isEmpty() == false) {
+                            if (scriptSaveTable_!=null&&scriptSaveTable_.isEmpty() == false) {
                                 runscript = scriptSaveTable_;
                                 conn_.run(runscript);
                             }
                             sentRows_ += items.size();
                         } catch (Exception e){
+                            e.printStackTrace();
                             tableWriter_.logger_.warning("threadid="+writeThread_.getId()+" sendindex="+sentRows_+" Save table error: "+e+" script:"+runscript);
                             setError(ErrorCodeInfo.Code.EC_Server,"Save table error: "+ e + " script: " + runscript);
                             conn_ = null;
@@ -177,6 +182,7 @@ public class MultithreadTableWriter {
                     try {
                         conn_.run(scriptCreateTmpTable);
                     }catch (Exception e) {
+                        e.printStackTrace();
                         tableWriter_.logger_.warning("threadid=" + writeThread_.getId()+ " Init table error: "+e+ " script:"+scriptCreateTmpTable);
                         setError(ErrorCodeInfo.Code.EC_Server, "Init table error: " + e + " script: " + scriptCreateTmpTable);
                         conn_ = null;
@@ -289,7 +295,7 @@ public class MultithreadTableWriter {
             schema = (BasicDictionary)pConn.run("schema(loadTable(\"" + dbName + "\",\"" + tableName + "\"))");
         }
         Entity partColNames = schema.get(new BasicString("partitionColumnName"));
-        if(partColNames==null){//partitioned table
+        if(partColNames!=null){//partitioned table
             isPartionedTable_ = true;
         }else{//没有分区
             if(tableName.isEmpty() == false){//文件表
@@ -422,6 +428,7 @@ public class MultithreadTableWriter {
                         rowindex++;
                     }
                 }catch (Exception e){
+                    e.printStackTrace();
                     pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Row in vectorOfVector " + rowindex +
                             " mismatch type " + colTypes_.get(partitionColumnIdx_));
                     return false;
@@ -450,6 +457,7 @@ public class MultithreadTableWriter {
                         rowindex++;
                     }
                 }catch (Exception e){
+                    e.printStackTrace();
                     pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Row in vectorOfVector " + rowindex +
                             " mismatch type " + colTypes_.get(partitionColumnIdx_));
                     return false;
@@ -553,6 +561,7 @@ public class MultithreadTableWriter {
             }
             return insertThreadWrite(threadindex, prow, pErrorInfo);
         }catch (Exception e){
+            e.printStackTrace();
             pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Invalid object error " + e);
             return false;
         }

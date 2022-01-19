@@ -12,6 +12,9 @@ public class ErrorCodeInfo {
         EC_Server,
         EC_UserBreak,
     };
+    public ErrorCodeInfo(){
+        set(0,"");
+    }
     public ErrorCodeInfo(int code, String info){
         set(code,info);
     }
@@ -27,6 +30,12 @@ public class ErrorCodeInfo {
     public void set(int code, String info){
         this.errorCode=code;
         this.errorInfo=info;
+    }
+    @Override
+    public String toString(){
+        StringBuilder sb=new StringBuilder();
+        sb.append("code=").append(errorCode).append(" info=").append(errorInfo);
+        return sb.toString();
     }
     public void set(Code code, String info){
         set(code.ordinal(),info);
