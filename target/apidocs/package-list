@@ -1,0 +1,8 @@
+com.xxdb
+com.xxdb.compression
+com.xxdb.data
+com.xxdb.examples
+com.xxdb.io
+com.xxdb.multithreadtablewriter
+com.xxdb.route
+com.xxdb.streaming.client
