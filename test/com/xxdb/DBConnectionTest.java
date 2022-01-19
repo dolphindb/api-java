@@ -6,6 +6,7 @@ import java.net.NoRouteToHostException;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Date;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.DoubleStream;
@@ -31,7 +32,34 @@ public class DBConnectionTest {
     public int getConnCount() throws IOException {
         return ((BasicInt) conn.run("getClusterPerf().connectionNum[0]")).getInt();
     }
+    static void compareBasicTable(BasicTable table, BasicTable newTable)
+    {
+        Assert.assertEquals(table.rows(), newTable.rows());
+        Assert.assertEquals(table.columns(), newTable.columns());
+        int cols = table.columns();
+        for (int i = 0; i < cols; i++)
+        {
+            AbstractVector v1 = (AbstractVector)table.getColumn(i);
+            AbstractVector v2 = (AbstractVector)newTable.getColumn(i);
+            if (!v1.equals(v2))
+            {
+                for (int j = 0; j < table.rows(); j++)
+                {
+                    int failCase = 0;
+                    AbstractScalar e1 = (AbstractScalar)table.getColumn(i).get(j);
+                    AbstractScalar e2 = (AbstractScalar)newTable.getColumn(i).get(j);
+                    if (e1.equals(e2) == false)
+                    {
+                        System.out.println("Column " + i + ", row " + j + " expected: " + e1.getString() + " actual: " + e2.getString());
+                        failCase++;
+                    }
+                    Assert.assertEquals(0, failCase);
+                }
 
+            }
+        }
+
+    }
     @Before
     public void setUp() throws IOException {
        /* Properties props = new Properties();
@@ -1946,7 +1974,7 @@ public class DBConnectionTest {
     @Test(expected = NoRouteToHostException.class)
     public void TestConnectErrorHostValue() throws IOException {
         DBConnection conn1 = new DBConnection();
-        conn1.connect("192.168.1.103", PORT, "admin", "123456");
+        conn1.connect("192.168.1.0", PORT, "admin", "123456");
     }
 
     @Test(expected = ConnectException.class)
@@ -2711,5 +2739,46 @@ public class DBConnectionTest {
         }
         BasicTable t=  new BasicTable(colNames, cols);
     }
+
+    @Test
+    public void test_null_Vector_String() throws IOException {
+        conn=new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        String script="\n" +
+                "login('admin','123456');\n" +
+                "dbName = \"dfs://test_null_Vector\";\n" +
+                "if(existsDatabase(dbName)){dropDB(dbName)};\n" +
+                "db = database(dbName,VALUE,date(1..2));\n" +
+                "t=table(100:0,`date`sym,[DATE,SYMBOL]);\n" +
+                "createPartitionedTable(db,t,`pt1,`date);" +
+                "";
+        conn.run(script);
+        List<String> colNames = new ArrayList<String>(2);
+        colNames.add("date");
+        colNames.add("sym");
+        List<Vector> cols = new ArrayList<Vector>(2);
+        BasicDateVector date = new BasicDateVector(2);
+        BasicStringVector sym = new BasicStringVector(2);
+        date.setDate(0,LocalDate.now());
+        date.setDate(1,LocalDate.now());
+        sym.setString(0,null);
+        sym.setString(1,null);
+        cols.add(date);
+        cols.add(sym);
+        BasicTable t=  new BasicTable(colNames, cols);
+        List<Entity> args = new ArrayList<Entity>(1);
+        args.add(t);
+        conn.run(String.format("tableInsert{loadTable('%s','pt1')}","dfs://test_null_Vector"), args);
+        BasicTable re= (BasicTable) conn.run("select * from loadTable('dfs://test_null_Vector',`pt1)");
+        List<Vector> excols = new ArrayList<Vector>(2);
+        sym.setNull(0);
+        sym.setNull(1);
+        excols.add(date);
+        excols.add(sym);
+        BasicTable ext=  new BasicTable(colNames, cols);
+        compareBasicTable(re,ext);
+    }
+
+
 }
 

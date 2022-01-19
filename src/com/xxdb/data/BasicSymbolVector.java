@@ -30,8 +30,12 @@ public class BasicSymbolVector extends AbstractVector {
 		super(DATA_FORM.DF_VECTOR);
 		base = new SymbolBase(0);
 		values = new int[list.size()];
-		for (int i=0; i<list.size(); ++i)
-			values[i] = base.find(list.get(i), true);
+		for (int i=0; i<list.size(); ++i) {
+			if(list.get(i) != null)
+				values[i] = base.find(list.get(i), true);
+			else
+				values[i] = 0;
+		}
 	}
 	
 	public BasicSymbolVector(SymbolBase base, int[] values, boolean copy){

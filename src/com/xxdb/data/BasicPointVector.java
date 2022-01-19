@@ -19,8 +19,13 @@ public class BasicPointVector extends AbstractVector{
 		super(DATA_FORM.DF_VECTOR);
 		if (list != null) {
 			values = new Double2[list.size()];
-			for (int i=0; i<list.size(); ++i)
-				values[i] = list.get(i);
+			for (int i=0; i<list.size(); ++i) {
+				if(list.get(i) != null) {
+					values[i] = list.get(i);
+				}else{
+					values[i]=new Double2(-Double.MAX_VALUE, -Double.MAX_VALUE);
+				}
+			}
 		}
 	}
 	
@@ -34,6 +39,11 @@ public class BasicPointVector extends AbstractVector{
 			values = array.clone();
 		else
 			values = array;
+		for(int i = 0; i < values.length; i++){
+			if(values[i] == null){
+				values[i]=new Double2(-Double.MAX_VALUE, -Double.MAX_VALUE);
+			}
+		}
 	}
 	
 	protected BasicPointVector(DATA_FORM df, int size){
