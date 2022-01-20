@@ -20,8 +20,12 @@ public class BasicInt128Vector extends AbstractVector{
 		super(DATA_FORM.DF_VECTOR);
 		if (list != null) {
 			values = new Long2[list.size()];
-			for (int i=0; i<list.size(); ++i)
-				values[i] = list.get(i);
+			for (int i=0; i<list.size(); ++i) {
+				if(list.get(i) != null)
+					values[i] = list.get(i);
+				else
+					values[i] = new Long2(0, 0);
+			}
 		}
 	}
 	
@@ -35,6 +39,11 @@ public class BasicInt128Vector extends AbstractVector{
 			values = array.clone();
 		else
 			values = array;
+		for(int i = 0; i < values.length; i++){
+			if(values[i] == null){
+				values[i] = new Long2(0, 0);
+			}
+		}
 	}
 	
 	protected BasicInt128Vector(DATA_FORM df, int size){
@@ -73,6 +82,35 @@ public class BasicInt128Vector extends AbstractVector{
 				}
 			}
 			off += len;
+		}
+	}
+	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		int totalBytes = count * 16, off = 0;
+		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		boolean littleEndian = in.isLittleEndian();
+		while (off < totalBytes) {
+			int len = Math.min(BUF_SIZE, totalBytes - off);
+			in.readFully(buf, 0, len);
+			int end = len / 16;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+			if(littleEndian){
+				for (int i = 0; i < end; i++){
+					long low = byteBuffer.getLong(i * 16);
+					long high = byteBuffer.getLong(i * 16 + 8);
+					values[i + start] = new Long2(high, low);
+				}
+			}
+			else{
+				for (int i = 0; i < end; i++){
+					long high = byteBuffer.getLong(i * 16);
+					long low = byteBuffer.getLong(i * 16 + 8);
+					values[i + start] = new Long2(high, low);
+				}
+			}
+			off += len;
+			start += end;
 		}
 	}
 	
@@ -158,6 +196,22 @@ public class BasicInt128Vector extends AbstractVector{
 	@Override
 	public int asof(Scalar value) {
 		throw new RuntimeException("BasicInt128Vector.asof not supported.");
+	}
+
+	@Override
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		boolean isLittleEndian = buffer.order() == ByteOrder.LITTLE_ENDIAN;
+		for (Long2 val: values) {
+			if(isLittleEndian){
+				buffer.putLong(val.low);
+				buffer.putLong(val.high);
+			}
+			else{
+				buffer.putLong(val.high);
+				buffer.putLong(val.low);
+			}
+		}
+		return buffer;
 	}
 }
 

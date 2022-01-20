@@ -25,8 +25,12 @@ public class BasicLongVector extends AbstractVector{
 		super(DATA_FORM.DF_VECTOR);
 		if (list != null) {
 			values = new long[list.size()];
-			for (int i=0; i<list.size(); ++i)
-				values[i] = list.get(i);
+			for (int i=0; i<list.size(); ++i) {
+				if(list.get(i) != null)
+					values[i] = list.get(i);
+				else
+					values[i] = Long.MIN_VALUE;
+			}
 		}
 	}
 	
@@ -63,6 +67,22 @@ public class BasicLongVector extends AbstractVector{
 			for (int i = 0; i < end; i++)
 				values[i + start] = byteBuffer.getLong(i * 8);
 			off += len;
+		}
+	}
+	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		int totalBytes = count * 8, off = 0;
+		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		while (off < totalBytes) {
+			int len = Math.min(BUF_SIZE, totalBytes - off);
+			in.readFully(buf, 0, len);
+			int end = len / 8;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+			for (int i = 0; i < end; i++)
+				values[i + start] = byteBuffer.getLong(i * 8);
+			off += len;
+			start += end;
 		}
 	}
 	
@@ -159,10 +179,11 @@ public class BasicLongVector extends AbstractVector{
 	}
 
 	@Override
-	protected void writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (long val: values) {
 			buffer.putLong(val);
 		}
+		return buffer;
 	}
 	
 	@Override

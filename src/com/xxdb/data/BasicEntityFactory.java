@@ -1,50 +1,63 @@
 package com.xxdb.data;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
+import com.xxdb.data.Entity.DATA_TYPE;
 import com.xxdb.data.Entity.DURATION;
 import com.xxdb.io.ExtendedDataInput;
+
+import static com.xxdb.data.Entity.DATA_TYPE.DT_LONG;
+import static com.xxdb.data.Entity.DATA_TYPE.DT_STRING;
 
 public class BasicEntityFactory implements EntityFactory{
 	private TypeFactory[] factories;
 	private TypeFactory[] factoriesExt;
+	private static EntityFactory factory = new BasicEntityFactory();
+	
+	public static EntityFactory instance(){
+		return factory;
+	}
 
 	public BasicEntityFactory(){
-		factories = new TypeFactory[Entity.DATA_TYPE.values().length];
-		factoriesExt = new TypeFactory[Entity.DATA_TYPE.values().length];
-		factories[Entity.DATA_TYPE.DT_BOOL.ordinal()] = new BooleanFactory();
-		factories[Entity.DATA_TYPE.DT_BYTE.ordinal()] = new ByteFactory();
-		factories[Entity.DATA_TYPE.DT_SHORT.ordinal()] = new ShortFactory();
-		factories[Entity.DATA_TYPE.DT_INT.ordinal()] = new IntFactory();
-		factories[Entity.DATA_TYPE.DT_LONG.ordinal()] = new LongFactory();
-		factories[Entity.DATA_TYPE.DT_FLOAT.ordinal()] = new FloatFactory();
-		factories[Entity.DATA_TYPE.DT_DOUBLE.ordinal()] = new DoubleFactory();
-		factories[Entity.DATA_TYPE.DT_MINUTE.ordinal()] = new MinuteFactory();
-		factories[Entity.DATA_TYPE.DT_SECOND.ordinal()] = new SecondFactory();
-		factories[Entity.DATA_TYPE.DT_TIME.ordinal()] = new TimeFactory();
-		factories[Entity.DATA_TYPE.DT_NANOTIME.ordinal()] = new NanoTimeFactory();
-		factories[Entity.DATA_TYPE.DT_DATE.ordinal()] = new DateFactory();
-		factories[Entity.DATA_TYPE.DT_DATEHOUR.ordinal()] = new DateHourFactory();
-		factories[Entity.DATA_TYPE.DT_MONTH.ordinal()] = new MonthFactory();
-		factories[Entity.DATA_TYPE.DT_DATETIME.ordinal()] = new DateTimeFactory();
-		factories[Entity.DATA_TYPE.DT_TIMESTAMP.ordinal()] = new TimestampFactory();
-		factories[Entity.DATA_TYPE.DT_NANOTIMESTAMP.ordinal()] = new NanoTimestampFactory();
-		factories[Entity.DATA_TYPE.DT_SYMBOL.ordinal()] = new SymbolFactory();
-		factories[Entity.DATA_TYPE.DT_STRING.ordinal()] = new StringFactory();
-		factories[Entity.DATA_TYPE.DT_BLOB.ordinal()] = new BlobFactory();
-		factories[Entity.DATA_TYPE.DT_FUNCTIONDEF.ordinal()] = new FunctionDefFactory();
-		factories[Entity.DATA_TYPE.DT_HANDLE.ordinal()] = new SystemHandleFactory();
-		factories[Entity.DATA_TYPE.DT_CODE.ordinal()] = new MetaCodeFactory();
-		factories[Entity.DATA_TYPE.DT_DATASOURCE.ordinal()] = new DataSourceFactory();
-		factories[Entity.DATA_TYPE.DT_RESOURCE.ordinal()] = new ResourceFactory();
-		factories[Entity.DATA_TYPE.DT_COMPRESS.ordinal()] = new CompressFactory();
-		factories[Entity.DATA_TYPE.DT_UUID.ordinal()] = new UuidFactory();
-		factories[Entity.DATA_TYPE.DT_INT128.ordinal()] = new Int128Factory();
-		factories[Entity.DATA_TYPE.DT_IPADDR.ordinal()] = new IPAddrFactory();
-		factories[Entity.DATA_TYPE.DT_COMPLEX.ordinal()] = new ComplexFactory();
-		factories[Entity.DATA_TYPE.DT_POINT.ordinal()] = new PointFactory();
-		factories[Entity.DATA_TYPE.DT_DURATION.ordinal()] = new DurationFactory();
-		factoriesExt[Entity.DATA_TYPE.DT_SYMBOL.ordinal()] = new ExtendedSymbolFactory();
+		int typeCount = DATA_TYPE.DT_OBJECT.getValue() + 1;
+		factories = new TypeFactory[typeCount];
+		factoriesExt = new TypeFactory[typeCount];
+		factories[Entity.DATA_TYPE.DT_BOOL.getValue()] = new BooleanFactory();
+		factories[Entity.DATA_TYPE.DT_BYTE.getValue()] = new ByteFactory();
+		factories[Entity.DATA_TYPE.DT_SHORT.getValue()] = new ShortFactory();
+		factories[Entity.DATA_TYPE.DT_INT.getValue()] = new IntFactory();
+		factories[DT_LONG.getValue()] = new LongFactory();
+		factories[Entity.DATA_TYPE.DT_FLOAT.getValue()] = new FloatFactory();
+		factories[Entity.DATA_TYPE.DT_DOUBLE.getValue()] = new DoubleFactory();
+		factories[Entity.DATA_TYPE.DT_MINUTE.getValue()] = new MinuteFactory();
+		factories[Entity.DATA_TYPE.DT_SECOND.getValue()] = new SecondFactory();
+		factories[Entity.DATA_TYPE.DT_TIME.getValue()] = new TimeFactory();
+		factories[Entity.DATA_TYPE.DT_NANOTIME.getValue()] = new NanoTimeFactory();
+		factories[Entity.DATA_TYPE.DT_DATE.getValue()] = new DateFactory();
+		factories[Entity.DATA_TYPE.DT_DATEHOUR.getValue()] = new DateHourFactory();
+		factories[Entity.DATA_TYPE.DT_MONTH.getValue()] = new MonthFactory();
+		factories[Entity.DATA_TYPE.DT_DATETIME.getValue()] = new DateTimeFactory();
+		factories[Entity.DATA_TYPE.DT_TIMESTAMP.getValue()] = new TimestampFactory();
+		factories[Entity.DATA_TYPE.DT_NANOTIMESTAMP.getValue()] = new NanoTimestampFactory();
+		factories[Entity.DATA_TYPE.DT_SYMBOL.getValue()] = new SymbolFactory();
+		factories[Entity.DATA_TYPE.DT_STRING.getValue()] = new StringFactory();
+		factories[Entity.DATA_TYPE.DT_BLOB.getValue()] = new BlobFactory();
+		factories[Entity.DATA_TYPE.DT_FUNCTIONDEF.getValue()] = new FunctionDefFactory();
+		factories[Entity.DATA_TYPE.DT_HANDLE.getValue()] = new SystemHandleFactory();
+		factories[Entity.DATA_TYPE.DT_CODE.getValue()] = new MetaCodeFactory();
+		factories[Entity.DATA_TYPE.DT_DATASOURCE.getValue()] = new DataSourceFactory();
+		factories[Entity.DATA_TYPE.DT_RESOURCE.getValue()] = new ResourceFactory();
+		factories[Entity.DATA_TYPE.DT_COMPRESS.getValue()] = new CompressFactory();
+		factories[Entity.DATA_TYPE.DT_UUID.getValue()] = new UuidFactory();
+		factories[Entity.DATA_TYPE.DT_INT128.getValue()] = new Int128Factory();
+		factories[Entity.DATA_TYPE.DT_IPADDR.getValue()] = new IPAddrFactory();
+		factories[Entity.DATA_TYPE.DT_COMPLEX.getValue()] = new ComplexFactory();
+		factories[Entity.DATA_TYPE.DT_POINT.getValue()] = new PointFactory();
+		factories[Entity.DATA_TYPE.DT_DURATION.getValue()] = new DurationFactory();
+		factoriesExt[Entity.DATA_TYPE.DT_SYMBOL.getValue()] = new ExtendedSymbolFactory();
 	}
 	
 	@Override
@@ -59,14 +72,16 @@ public class BasicEntityFactory implements EntityFactory{
 			return new BasicSet(type, in);
 		else if(form == Entity.DATA_FORM.DF_CHUNK)
 			return new BasicChunkMeta(in);
-		else if(type == Entity.DATA_TYPE.DT_ANY && form == Entity.DATA_FORM.DF_VECTOR)
+		else if(type == Entity.DATA_TYPE.DT_ANY && (form == Entity.DATA_FORM.DF_VECTOR || form == Entity.DATA_FORM.DF_PAIR))
 			return new BasicAnyVector(in);
+		else if(type.getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && type.getValue() <= Entity.DATA_TYPE.DT_POINT_ARRAY.getValue())
+			return new BasicArrayVector(type, in);
 		else if(type == Entity.DATA_TYPE.DT_VOID && form == Entity.DATA_FORM.DF_SCALAR){
 			in.readBoolean();
 			return new Void();
 		}
 		else{
-			int index = type.ordinal();
+			int index = type.getValue();
 			if(factories[index] == null)
 				throw new IOException("Data type " + type.name() +" is not supported yet.");
 			else if(form == Entity.DATA_FORM.DF_VECTOR){
@@ -88,7 +103,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 	@Override
 	public Matrix createMatrixWithDefaultValue(Entity.DATA_TYPE type, int rows, int columns) {
-		int index = type.ordinal();
+		int index = type.getValue();
 		if(factories[index] == null)
 			return null;
 		else
@@ -97,7 +112,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 	@Override
 	public Vector createVectorWithDefaultValue(Entity.DATA_TYPE type, int size) {
-		int index = type.ordinal();
+		int index = type.getValue();
 		if(factories[index] == null)
 			return null;
 		else
@@ -106,7 +121,7 @@ public class BasicEntityFactory implements EntityFactory{
 	
 	@Override
 	public Vector createPairWithDefaultValue(Entity.DATA_TYPE type) {
-		int index = type.ordinal();
+		int index = type.getValue();
 		if(factories[index] == null)
 			return null;
 		else
@@ -115,7 +130,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 	@Override
 	public Scalar createScalarWithDefaultValue(Entity.DATA_TYPE type) {
-		int index = type.ordinal();
+		int index = type.getValue();
 		if(factories[index] == null)
 			return null;
 		else
@@ -451,5 +466,173 @@ public class BasicEntityFactory implements EntityFactory{
 	private class CompressFactory extends StringFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, Entity.DATA_TYPE.DT_COMPRESS);}
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicByteVector(Entity.DATA_FORM.DF_VECTOR, in);}
+	}
+	public static Scalar createScalar(DATA_TYPE dataType, Object object){
+		if(object==null) {
+			Scalar scalar = BasicEntityFactory.instance().createScalarWithDefaultValue(dataType);
+			scalar.setNull();
+			return scalar;
+		}
+		if(object instanceof Boolean) {
+			return createScalar(dataType,((Boolean)object).booleanValue());
+		}
+		if(object instanceof Byte) {
+			return createScalar(dataType,((Byte)object).byteValue());
+		}
+		if(object instanceof Character){
+			return createScalar(dataType,((Character)object).charValue());
+		}
+		if(object instanceof Short){
+			return createScalar(dataType,((Short)object).shortValue());
+		}
+		if(object instanceof Integer) {
+			return createScalar(dataType,((Integer)object).intValue());
+		}
+		if(object instanceof Long) {
+			return createScalar(dataType,((Long)object).longValue());
+		}
+		if(object instanceof Double) {
+			return createScalar(dataType,((Double)object).doubleValue());
+		}
+		if(object instanceof Float) {
+			return createScalar(dataType,((Float)object).floatValue());
+		}
+		if(object instanceof String) {
+			return createScalar(dataType,(String)object);
+		}
+		if(object instanceof Entity){
+			return createScalar(dataType,(Entity)object);
+		}
+		if(object instanceof Scalar){
+			return createScalar(dataType,(Scalar)object);
+		}
+		throw new RuntimeException("Failed to insert data, invalid data type for "+dataType);
+	}
+
+	private static Scalar createScalar(DATA_TYPE dataType, Entity val) {
+		if(val.isScalar()&&val.getDataType()==dataType) {
+			return (Scalar) val;
+		}else{
+			throw new RuntimeException("Failed to insert data, invalid data type for "+dataType);
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, Scalar val) {
+		if(val.getDataType()==dataType)
+			return val;
+		else{
+			throw new RuntimeException("Failed to insert data, invalid data type for "+dataType);
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, boolean val) {
+		switch (dataType) {
+			case DT_BOOL:
+				return new BasicBoolean(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, char val) {
+		return createScalar(dataType,(byte)val);
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, byte val) {
+		switch (dataType) {
+			case DT_BYTE:
+				return new BasicByte(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, short val) {
+		switch (dataType) {
+			case DT_SHORT:
+				return new BasicShort(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, char[] val) {
+		return createScalar(dataType, new String(val));
+	}
+	private static boolean isScalarValid(DATA_TYPE scalarType,DATA_TYPE expectedType){
+		if(scalarType==expectedType)
+			return true;
+		if(scalarType==DT_STRING){
+			if(expectedType==DATA_TYPE.DT_SYMBOL||expectedType==DATA_TYPE.DT_SYMBOL)
+				return true;
+		}
+		return false;
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, String val) {
+		switch (dataType) {
+			case DT_INT128: {
+				return BasicInt128.fromString(val);
+			}
+			case DT_UUID: {
+				return BasicUuid.fromString(val);
+			}
+			case DT_IPADDR: {
+				return BasicIPAddr.fromString(val);
+			}
+			case DT_SYMBOL:
+			case DT_BLOB: {
+				return new BasicString(val);
+			}
+			case DT_STRING:
+				return new BasicString(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type " + dataType);
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, float val) {
+		switch (dataType) {
+			case DT_FLOAT:
+				return new BasicFloat(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, double val) {
+		switch (dataType) {
+			case DT_DOUBLE:
+				return new BasicDouble(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, int val) {
+		switch (dataType) {
+			case DT_INT:
+				return new BasicInt(val);
+			case DT_DATE:
+				return new BasicDate(val);
+			case DT_MONTH:
+				return new BasicMonth(val);
+			case DT_TIME:
+				return new BasicTime(val);
+			case DT_SECOND:
+				return new BasicSecond(val);
+			case DT_MINUTE:
+				return new BasicMinute(val);
+			case DT_DATETIME:
+				return new BasicDateTime(val);
+			case DT_DATEHOUR:
+				return new BasicDateHour(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, long val){
+		switch (dataType) {
+			case DT_LONG:
+				return new BasicLong(val);
+			case DT_NANOTIME:
+				return new BasicNanoTime(val);
+			case DT_NANOTIMESTAMP:
+				return new BasicNanoTimestamp(val);
+			case DT_TIMESTAMP:
+				return new BasicTimestamp(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
 	}
 }

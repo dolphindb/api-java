@@ -71,7 +71,6 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 ```
 conn.run("script");
 ```
-具体例子可参照下一节。脚本的最大长度为65,535字节。
 
 ### 4. 运行DolphinDB函数
 
@@ -99,7 +98,7 @@ public void testFunction() throws IOException{
 ```
 conn.run("x = [1,3,5]")
 ```
-而参数y要在Java客户端生成，这时就需要使用“部分应用”方式，把参数x固化在`add`函数内。具体请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+而参数y要在Java客户端生成，这时就需要使用“部分应用”方式，把参数x固化在`add`函数内。具体请参考[部分应用文档](https://www.dolphindb.cn/cn/help/Functionalprogramming/PartialApplication.html)。
 
 ```java
 public void testFunction() throws IOException{
@@ -318,7 +317,7 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,L
     conn.run("tableInsert{sharedTable}", args);
 }
 ```
-在本例中，使用了DolphinDB 中的“部分应用”这一特性，将服务端表名以tableInsert{sharedTable}的方式固化到`tableInsert`中，作为一个独立函数来使用。具体文档请参考[部分应用文档](https://www.dolphindb.com/cn/help/PartialApplication.html)。
+在本例中，使用了DolphinDB 中的“部分应用”这一特性，将服务端表名以tableInsert{sharedTable}的方式固化到`tableInsert`中，作为一个独立函数来使用。具体文档请参考[部分应用文档](https://www.dolphindb.cn/cn/help/Functionalprogramming/PartialApplication.html)。
 
 ##### 7.1.3 使用`tableInsert`函数保存BasicTable对象
 
@@ -422,7 +421,7 @@ pt = db.createPartitionedTable(t,`pt,`sym`date)
 
 > 请注意：DolphinDB不允许多个writer同时将数据写入到同一个分区，因此在客户端多线程并行写入数据时，需要确保每个线程分别写入不同的分区。
 
-//todo: 使用最新的1.30版本以上的server，可以使用java api中的 PartitionedTableAppender类来写入分布式表，其基本原理是设计一个连接池用于多线程写入，然后利用server的schema函数获取分布式表的分区信息，按指定的分区列将用户写入的数据进行分类分别交给不同的连接来并行写入。
+使用1.30版本以上的server，可以使用java api中的 PartitionedTableAppender类来写入分布式表，其基本原理是设计一个连接池用于多线程写入，然后利用server的schema函数获取分布式表的分区信息，按指定的分区列将用户写入的数据进行分类分别交给不同的连接来并行写入。
 使用示例脚本如下：
 ```java 
 DBConnectionPool conn = new ExclusiveDBConnectionPool(host, Integer.parseInt(port), "admin", "123456", Integer.parseInt(threadCount), false, false);
@@ -431,78 +430,6 @@ PartitionedTableAppender appender = new PartitionedTableAppender(dbPath, tableNa
 BasicTable table1 = createTable();
 appender.append(table1);            
 ```
-
-
-对于按哈希值进行分区的分布式表， DolphinDB Java API提供了`HashBucket`函数来计算客户端数据的hash值。在客户端设计多线程并发写入分布式表时，根据哈希分区字段数据的哈希值分组，每组指定一个写线程。这样就能保证每个线程同时将数据写到不同的哈希分区。
-
-```java
-int key = areaUUID.hashBucket(10);
-```
-
-为了确保每个线程分别写入不同的分区，根据计划要分配的线程数，将预期的哈希值分成n组，保证各组中不包含相同哈希值。代码根据数据分区列的哈希值将之分到不同的组中。在生成数据时根据分区列的值将数据分流到不同组的队列中，这一步分流是并发写入的关键。
-
-```java
-Random rand = new Random();
-BasicUuid areaUUID = areas.get(rand.nextInt(areas.size()));
-BasicUuid deviceUUID = devices.get(rand.nextInt(devices.size()));
-int key = areaUUID.hashBucket(10);
-String groupId = getGroupId(key);
-
-if (tbs.containsKey(groupId)) {
-    if (tbs.get(groupId).currentTable == null) {
-        tbs.get(groupId).currentTable = new BasicTableEx(createBasicTable(n));
-    }
-} else {
-    throw new Exception("groupId is not exists");
-}
-```
-
-当每组写入的数据容器中行数超出BATCHSIZE时，数据会打包成数据集加入到待写队列中，原数据容器清空等待重新写入。每组有各自的写数据线程，该线程会轮询各自的待写队列，将已入队的数据集提取出来并写入DolphinDB。
-
-```java
-if (tbs.get(groupId).currentTable.add(LocalDateTime.of(2020, 1, 1, 1, 1, 1, 1), areaUUID, deviceUUID, (double) (50 * rand.nextDouble()))) {
-    if (tbs.get(groupId).currentTable.isFull()) {
-        tbs.get(groupId).pushToQueue();
-    }
-}
-```
-
-开启DolphinDB消费线程。
-
-```java
-public class TaskConsumer implements Runnable {
-    public void run() {
-        for (String key : groups.keySet()) {
-            new Thread(new DDBProxy(key)).start();
-        }
-    }
-}
-```
-
-每个线程轮询各自的待写队列，将已入队的数据集提取出来并写入DolphinDB。
-
-```java
-public class DDBProxy implements Runnable {
-    String _key = null;
-    public DDBProxy(String key) {
-        _key = key;
-    }
-
-    public void run() {
-        do {
-            if (tables.get(_key).TaskQueue.size() > 0) {
-                BasicTable data = tables.get(_key).TaskQueue.poll();
-                saveDataToDDB(data);
-                insertRowCount += data.rows();
-                if (insertRowCount < 2000 || insertRowCount > 90000)
-                    System.out.println(String.format("insertRowCount = %s ; now is %s ", insertRowCount, LocalDateTime.now()));
-            }
-        } while (true);
-    }
-}
-```
-
-完整的并发写入案例可以参考[DFSWritingWithMultiThread.java](./example/DFSWritingWithMultiThread.java)。
 
 #### 7.4 读取和使用数据表
 
@@ -567,7 +494,7 @@ Java API提供了一组以Basic+\<DataType\>方式命名的类，分别对应Dol
 
 - CHAR类型：DolphinDB中的CHAR类型保存为一个byte，所以在Java API中用BasicByte类型来构造CHAR，例如new BasicByte((byte)'c')。
 - SYMBOL类型：DolphinDB中的SYMBOL类型将字符串存储为整形，可以提高对字符串数据存储和查询的效率，但是Java中并没有这种类型，所以Java API不提供BasicSymbol这种对象，直接用BasicString来处理即可。
-- 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供date, month, time, minute, second, datetime, timestamp, nanotime和nanotimestamp九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.com/cn/help/TemporalTypeandConversion.html)。由于Java也提供了LocalDate, LocalTime, LocalDateTime, YearMonth等数据类型，所以Java API在Utils类里提供了所有Java时间类型与int或long之间的转换函数。
+- 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供date, month, time, minute, second, datetime, timestamp, nanotime和nanotimestamp九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.cn/cn/help/DataManipulation/TemporalObjects/TemporalTypeandConversion.html)。由于Java也提供了LocalDate, LocalTime, LocalDateTime, YearMonth等数据类型，所以Java API在Utils类里提供了所有Java时间类型与int或long之间的转换函数。
 
 以下脚本展示Java API中DolphinDB时间类型与Java原生时间类型之间的对应关系：
 ```java

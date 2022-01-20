@@ -1,5 +1,8 @@
 package com.xxdb.data;
 
+import java.io.IOException;
+import com.xxdb.io.ExtendedDataInput;
+
 /**
  * 
  * Interface for DolphinDB data form: ARRAY, BIGARRAY
@@ -21,4 +24,5 @@ public interface Vector extends Entity{
 	String getString(int index);
 	void set(int index, Scalar value) throws Exception;
 	Class<?> getElementClass();
+	void deserialize(int start, int count, ExtendedDataInput in) throws IOException;
 }

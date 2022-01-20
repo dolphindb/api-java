@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -23,8 +24,12 @@ public class BasicBooleanVector extends AbstractVector{
 		super(DATA_FORM.DF_VECTOR);
 		if (list != null) {
 			values = new byte[list.size()];
-			for (int i=0; i<list.size(); ++i)
-				values[i] = list.get(i);
+			for (int i=0; i<list.size(); ++i) {
+				if(list.get(i) != null)
+					values[i] = list.get(i);
+				else
+					values[i] = Byte.MIN_VALUE;
+			}
 		}
 	}
 	
@@ -59,6 +64,11 @@ public class BasicBooleanVector extends AbstractVector{
 		}
 	}
 	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		in.readFully(values, start, count);
+	}
+	
 	public Scalar get(int index){
 		return new BasicBoolean(values[index]);
 	}
@@ -84,7 +94,7 @@ public class BasicBooleanVector extends AbstractVector{
 
 
 	}
-	
+ 
 	public void setBoolean(int index, boolean value){
 		values[index] = value ? (byte)1 : (byte)0;
 	}
@@ -136,5 +146,13 @@ public class BasicBooleanVector extends AbstractVector{
 	@Override
 	public int asof(Scalar value) {
 		throw new RuntimeException("BasicBooleanVector.asof not supported.");
+	}
+
+	@Override
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (byte val: values) {
+			buffer.put(val);
+		}
+		return buffer;
 	}
 }

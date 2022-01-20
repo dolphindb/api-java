@@ -14,5 +14,8 @@ public interface Chart extends Dictionary{
 	String getTitle();
 	String getXAxisName();
 	String getYAxisName();
-	
+	BasicDictionary getExtraParameters();
+	Entity getExtraParameter(CHART_PARAMETER_TYPE key);
 }
+
+

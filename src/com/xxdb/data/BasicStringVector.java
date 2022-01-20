@@ -1,6 +1,9 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -16,7 +19,7 @@ public class BasicStringVector extends AbstractVector{
 	private String[] values;
 	private boolean isSymbol;
 	private boolean isBlob = false;
-	
+
 	public BasicStringVector(int size){
 		this(DATA_FORM.DF_VECTOR, size, false);
 	}
@@ -25,8 +28,13 @@ public class BasicStringVector extends AbstractVector{
 		super(DATA_FORM.DF_VECTOR);
 		if (list != null) {
 			values = new String[list.size()];
-			for (int i=0; i<list.size(); ++i)
-				values[i] = list.get(i);
+			for (int i=0; i<list.size(); ++i) {
+				if(list.get(i) != null) {
+					values[i] = list.get(i);
+				}else{
+					values[i] = "";
+				}
+			}
 		}
 		this.isSymbol = false;
 	}
@@ -35,8 +43,13 @@ public class BasicStringVector extends AbstractVector{
 		super(DATA_FORM.DF_VECTOR);
 		if (list != null) {
 			values = new String[list.size()];
-			for (int i=0; i<list.size(); ++i)
-				values[i] = list.get(i);
+			for (int i=0; i<list.size(); ++i) {
+				if(list.get(i) != null) {
+					values[i] = list.get(i);
+				}else{
+					values[i] = "";
+				}
+			}
 		}
 		this.isSymbol = false;
 		this.isBlob = blob;
@@ -56,6 +69,10 @@ public class BasicStringVector extends AbstractVector{
 			values = array.clone();
 		else
 			values = array;
+		for(int i = 0; i < values.length; i++){
+			if(values[i] == null)
+				values[i] = "";
+		}
 		this.isSymbol = false;
 		this.isBlob = blob;
 	}
@@ -195,11 +212,20 @@ public class BasicStringVector extends AbstractVector{
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		if(!isBlob) {
-			for (String str : values)
-				out.writeString(str);
+			for (String str : values) {
+				if (str != null)
+					out.writeString(str);
+				else
+					out.writeString("");
+			}
 		} else {
-			for (String str : values)
-				out.writeBlob(str);
+			for (String str : values) {
+				if(str != null) {
+					out.writeBlob(str);
+				}else{
+					out.writeBlob("");
+				}
+			}
 		}
 	}
 	
@@ -211,11 +237,29 @@ public class BasicStringVector extends AbstractVector{
 		int mid;
 		while(start <= end){
 			mid = (start + end)/2;
-			if(values[mid].compareTo(target) <= 0)
+			if(values[mid] != null) {
+				if (values[mid].compareTo(target) <= 0)
+					start = mid + 1;
+				else
+					end = mid - 1;
+			}else{
 				start = mid + 1;
-			else
-				end = mid - 1;
+			}
 		}
 		return end;
+	}
+
+	@Override
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for(String val : values){
+			byte[] tmp;
+			tmp = val.getBytes(StandardCharsets.UTF_8);
+			while(tmp.length + 1 + buffer.position() > buffer.limit()) {
+				buffer = Utils.reAllocByteBuffer(buffer, Math.max(buffer.capacity() * 2,1024));
+			}
+			buffer.put(tmp, 0, tmp.length);
+			buffer.put((byte)0);
+		}
+		return buffer;
 	}
 }

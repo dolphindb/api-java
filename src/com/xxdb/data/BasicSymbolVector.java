@@ -30,8 +30,12 @@ public class BasicSymbolVector extends AbstractVector {
 		super(DATA_FORM.DF_VECTOR);
 		base = new SymbolBase(0);
 		values = new int[list.size()];
-		for (int i=0; i<list.size(); ++i)
-			values[i] = base.find(list.get(i), true);
+		for (int i=0; i<list.size(); ++i) {
+			if(list.get(i) != null)
+				values[i] = base.find(list.get(i), true);
+			else
+				values[i] = 0;
+		}
 	}
 	
 	public BasicSymbolVector(SymbolBase base, int[] values, boolean copy){
@@ -160,7 +164,7 @@ public class BasicSymbolVector extends AbstractVector {
 	}
 	
 	public void write(ExtendedDataOutput out, SymbolBaseCollection collection) throws IOException{
-		int dataType = getDataType().ordinal() + 128;
+		int dataType = getDataType().getValue() + 128;
 			int flag = (DATA_FORM.DF_VECTOR.ordinal() << 8) + dataType;
 		out.writeShort(flag);
 		out.writeInt(rows());

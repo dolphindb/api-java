@@ -15,7 +15,7 @@ public class DeltaOfDeltaDecoder extends AbstractDecoder {
     public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian) throws IOException{
     	//TODO: handle the case of unitLength == 0 (String)
       	int offset = 8;
-      	ByteBuffer dest = createColumnVector(elementCount, unitLength, isLittleEndian);
+      	ByteBuffer dest = createColumnVector(elementCount, unitLength, isLittleEndian, 0);
     	byte[] out = dest.array();
         int outLength = out.length - offset;
         int count = 0;
@@ -72,7 +72,7 @@ class DeltaOfDeltaBlockDecoder {
         while (!flag) {
             writeNull(dest);
             flag = in.readBit();
-//            if (in.getPosition() == src.length - 2) return count;
+            //if (in.getPosition() == src.length - 2) return count;
         }
         if (!readHeader())
             return count;
@@ -87,6 +87,20 @@ class DeltaOfDeltaBlockDecoder {
 
     private boolean readHeader() {
         try {
+            long flag =0;
+            flag = in.readBits(5);
+            if(flag == 30){
+                if(in.readBits(64) == 0xFFFFFFFFFFFFFFFFL){
+                    return false;
+                }
+                else{
+                    in.rollBack(5);
+                    in.rollBack(64);
+                }
+            }
+            else{
+                in.rollBack(5);
+            }
             storedValue = decodeZigZag64(in.getLong(unitLength * 8));
             writeBuffer(dest, storedValue);
         } catch (Exception e) {

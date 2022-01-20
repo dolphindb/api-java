@@ -35,7 +35,6 @@ public class BasicTable extends AbstractEntity implements Table{
 			names_.add(name);
 		}
 		
-		BasicEntityFactory factory = new BasicEntityFactory();
 		VectorDecompressor decompressor = null;
 		SymbolBaseCollection collection = null;
 		//read columns
@@ -48,7 +47,7 @@ public class BasicTable extends AbstractEntity implements Table{
             	type -= 128;
 
 			DATA_FORM df = DATA_FORM.values()[form];
-			DATA_TYPE dt = DATA_TYPE.values()[type];
+			DATA_TYPE dt = DATA_TYPE.valueOf(type);
 			if(df != DATA_FORM.DF_VECTOR)
 				throw new IOException("Invalid form for column [" + names_.get(i) + "] for table " + tableName);
 			Vector vector;
@@ -59,10 +58,10 @@ public class BasicTable extends AbstractEntity implements Table{
 			} else if (dt == DATA_TYPE.DT_COMPRESS) {
 				if(decompressor == null)
 					decompressor = new VectorDecompressor();
-				vector = decompressor.decompress(factory, in, extended, true);
+				vector = decompressor.decompress(BasicEntityFactory.instance(), in, extended, true);
 			}
 			else{
-				vector = (Vector)factory.createEntity(df, dt, in, extended);
+				vector = (Vector)BasicEntityFactory.instance().createEntity(df, dt, in, extended);
 			}
 			if(vector.rows() != rows && vector.rows()!= 1)
 				throw new IOException("The number of rows for column " +names_.get(i) + " is not consistent with other columns");
@@ -73,6 +72,15 @@ public class BasicTable extends AbstractEntity implements Table{
 	}
 	
     public BasicTable(final List<String> colNames, final List<Vector> cols) {
+		if(colNames.size() != cols.size()){
+			throw new Error("The length of column name and column data is unequal.");
+		}
+		int rowsCount = cols.get(0).rows();
+		for (int i=0;i<cols.size();i++) {
+			Vector v = cols.get(i);
+			if(v.rows() != rowsCount)
+				throw new Error("The length of column " + colNames.get(i) + "  must be the same as the first column length.");
+		}
         this.setColName(colNames);
         this.setColumns(cols);
     }
@@ -234,7 +242,7 @@ public class BasicTable extends AbstractEntity implements Table{
 	}
 
 	public void write(ExtendedDataOutput out) throws IOException{
-		int flag = (DATA_FORM.DF_TABLE.ordinal() << 8) + getDataType().ordinal();
+		int flag = (DATA_FORM.DF_TABLE.ordinal() << 8) + getDataType().getValue();
 		out.writeShort(flag);
 		out.writeInt(rows());
 		out.writeInt(columns());
@@ -281,7 +289,10 @@ public class BasicTable extends AbstractEntity implements Table{
 
 		for (int i = 0; i < cols; i++) {
 			AbstractVector v = (AbstractVector) this.getColumn(i);
-			v.writeCompressed(output);
+			if(v.getDataType() == DATA_TYPE.DT_SYMBOL)
+				v.write(output);
+			else
+				v.writeCompressed(output);
 		}
 
 	}

@@ -6,36 +6,37 @@ import java.time.temporal.Temporal;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
-public class BasicDuration extends AbstractScalar {
-	private static final String[] unitSyms = {"ns", "us", "ms", "s", "m", "H", "d", "w", "M", "y"};
+public class BasicDuration extends AbstractScalar implements Comparable<BasicDuration>{
+	private static final String[] unitSyms = {"ns", "us", "ms", "s", "m", "H", "d", "w", "M", "y", "B"};
 	private int value;
 	private DURATION unit;
-	
+
 	public BasicDuration(DURATION unit, int value){
 		this.value = value;
 		this.unit = unit;
 	}
-	
+
 	public BasicDuration(ExtendedDataInput in) throws IOException{
 		value = in.readInt();
 		unit = DURATION.values()[in.readInt()];
 	}
-	
+
 	public int getDuration() {
 		return value;
 	}
-	
+
 	public DURATION getUnit() {
 		return unit;
 	}
-	
+
 	@Override
 	public boolean isNull() {
-		return false;
+		return value == Integer.MIN_VALUE;
 	}
 
 	@Override
-	public void setNull() {	
+	public void setNull() {
+		value = Integer.MIN_VALUE;
 	}
 
 	@Override
@@ -70,12 +71,31 @@ public class BasicDuration extends AbstractScalar {
 
 	@Override
 	public String getString() {
-		return String.valueOf(value) + unitSyms[unit.ordinal()];
+		if(value == Integer.MIN_VALUE)
+			return "";
+		else
+			return String.valueOf(value) + unitSyms[unit.ordinal()];
 	}
 
 	@Override
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
 		out.writeInt(value);
 		out.writeInt(unit.ordinal());
+	}
+
+	@Override
+	public int compareTo(BasicDuration o) {
+		if(unit==o.unit)
+			return Integer.compare(((BasicDuration)o).value,value);
+		else
+			return -1;
+	}
+
+	@Override
+	public boolean equals(Object o){
+		if(! (o instanceof BasicDuration) || o == null)
+			return false;
+		else
+			return value == ((BasicDuration)o).value && unit == ((BasicDuration)o).unit;
 	}
 }

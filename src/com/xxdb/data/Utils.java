@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -455,5 +456,11 @@ public class Utils {
 		default:
 			throw new RuntimeException("The target date/time type supports MONTH/DATE only for time being.");
 		}
+	}
+
+	public static ByteBuffer reAllocByteBuffer(ByteBuffer src, int size){
+		ByteBuffer ret = ByteBuffer.allocate(size).order(src.order());
+		ret.put(src.array(), 0, src.position());
+		return ret;
 	}
 }

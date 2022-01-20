@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+import com.xxdb.io.Long2;
 import com.xxdb.io.Double2;
 
 public class BasicComplexVector extends AbstractVector{
@@ -20,8 +21,12 @@ public class BasicComplexVector extends AbstractVector{
 		super(DATA_FORM.DF_VECTOR);
 		if (list != null) {
 			values = new Double2[list.size()];
-			for (int i=0; i<list.size(); ++i)
+			for (int i=0; i<list.size(); ++i) {
 				values[i] = list.get(i);
+				if(values[i] == null){
+					values[i] = new Double2(-Double.MAX_VALUE, -Double.MAX_VALUE);
+				}
+			}
 		}
 	}
 	
@@ -35,6 +40,11 @@ public class BasicComplexVector extends AbstractVector{
 			values = array.clone();
 		else
 			values = array;
+		for(int i = 0; i < values.length; i++){
+			if(values[i] == null){
+				values[i] = new Double2(-Double.MAX_VALUE, -Double.MAX_VALUE);
+			}
+		}
 	}
 	
 	protected BasicComplexVector(DATA_FORM df, int size){
@@ -64,6 +74,25 @@ public class BasicComplexVector extends AbstractVector{
 				values[i + start] = new Double2(x, y);
 			}
 			off += len;
+		}
+	}
+	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		int totalBytes = count * 16, off = 0;
+		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		while (off < totalBytes) {
+			int len = Math.min(BUF_SIZE, totalBytes - off);
+			in.readFully(buf, 0, len);
+			int end = len / 16;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+			for (int i = 0; i < end; i++){
+				double x = byteBuffer.getDouble(i * 16);
+				double y = byteBuffer.getDouble(i * 16 + 8);
+				values[i + start] = new Double2(x, y);
+			}
+			off += len;
+			start += end;
 		}
 	}
 	
@@ -149,5 +178,14 @@ public class BasicComplexVector extends AbstractVector{
 	@Override
 	public int asof(Scalar value) {
 		throw new RuntimeException("BasicComplexVector.asof not supported.");
+	}
+
+	@Override
+	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (Double2 val: values) {
+				buffer.putDouble(val.x);
+				buffer.putDouble(val.y);
+		}
+		return buffer;
 	}
 }
