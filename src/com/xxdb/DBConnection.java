@@ -51,7 +51,7 @@ public class DBConnection {
     private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.DT_OBJECT.getValue();
     private static final int DEFAULT_PRIORITY = 4;
     private static final int DEFAULT_PARALLELISM = 2;
-    private static final int localAPIVersion = 100;
+    private static final int localAPIVersion = 210;
 
     private String ServerVersion = "";
     private ReentrantLock mutex;
