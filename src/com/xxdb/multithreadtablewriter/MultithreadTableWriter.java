@@ -166,11 +166,12 @@ public class MultithreadTableWriter {
             if (tableWriter_.tableName_.isEmpty()) {
                 scriptTableInsert_ = "tableInsert{\"" + tableWriter_.dbName_ + "\"}";
             }
-            else if (tableWriter_.isPartionedTable_) {
+            else if (tableWriter_.isPartionedTable_) {//partitioned table
                 scriptTableInsert_ = "tableInsert{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")}";
             }
-            else {
-                {
+            else {// single partitioned table
+                scriptTableInsert_ = "tableInsert{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")}";
+                /*{
                     String tempTableName = "tmp" + tableWriter_.tableName_;
                     String colNames="";
                     String colTypes="";
@@ -192,6 +193,7 @@ public class MultithreadTableWriter {
                 }
                 scriptTableInsert_ = "tableInsert{tempTable}";
                 scriptSaveTable_ = "saveTable(database(\"" + tableWriter_.dbName_ + "\")" + ",tempTable,\"" + tableWriter_.tableName_ + "\", 1);tempTable.clear!();";
+                */
             }
             return true;
         }
@@ -298,14 +300,14 @@ public class MultithreadTableWriter {
         if(partColNames!=null){//partitioned table
             isPartionedTable_ = true;
         }else{//没有分区
-            if(tableName.isEmpty() == false){//文件表
+            if(tableName.isEmpty() == false){//Single partitioned table
                 if(threadCount > 1){
                     throw new RuntimeException("Non-partioned table support single thread only.");
                 }
             }
             isPartionedTable_ = false;
             if(threadByColName.isEmpty()){
-                if(threadCount > 1){//只有多线程的时候需要
+                if(threadCount > 1){//Single partitioned table only support one thread
                     throw new RuntimeException("threadByColNameForNonPartioned must be specified for non-partioned table.");
                 }
             }
