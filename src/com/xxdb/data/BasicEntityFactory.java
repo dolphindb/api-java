@@ -6,6 +6,8 @@ import com.xxdb.data.Entity.DATA_TYPE;
 import com.xxdb.data.Entity.DURATION;
 import com.xxdb.io.ExtendedDataInput;
 
+import static com.xxdb.data.Entity.DATA_TYPE.DT_STRING;
+
 public class BasicEntityFactory implements EntityFactory{
 	private TypeFactory[] factories;
 	private TypeFactory[] factoriesExt;
@@ -37,7 +39,7 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[Entity.DATA_TYPE.DT_TIMESTAMP.getValue()] = new TimestampFactory();
 		factories[Entity.DATA_TYPE.DT_NANOTIMESTAMP.getValue()] = new NanoTimestampFactory();
 		factories[Entity.DATA_TYPE.DT_SYMBOL.getValue()] = new SymbolFactory();
-		factories[Entity.DATA_TYPE.DT_STRING.getValue()] = new StringFactory();
+		factories[DT_STRING.getValue()] = new StringFactory();
 		factories[Entity.DATA_TYPE.DT_BLOB.getValue()] = new BlobFactory();
 		factories[Entity.DATA_TYPE.DT_FUNCTIONDEF.getValue()] = new FunctionDefFactory();
 		factories[Entity.DATA_TYPE.DT_HANDLE.getValue()] = new SystemHandleFactory();
@@ -460,5 +462,173 @@ public class BasicEntityFactory implements EntityFactory{
 	private class CompressFactory extends StringFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, Entity.DATA_TYPE.DT_COMPRESS);}
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicByteVector(Entity.DATA_FORM.DF_VECTOR, in);}
+	}
+	public static Scalar createScalar(DATA_TYPE dataType, Object object){
+		if(object==null) {
+			Scalar scalar = BasicEntityFactory.instance().createScalarWithDefaultValue(dataType);
+			scalar.setNull();
+			return scalar;
+		}
+		if(object instanceof Boolean) {
+			return createScalar(dataType,((Boolean)object).booleanValue());
+		}
+		if(object instanceof Byte) {
+			return createScalar(dataType,((Byte)object).byteValue());
+		}
+		if(object instanceof Character){
+			return createScalar(dataType,((Character)object).charValue());
+		}
+		if(object instanceof Short){
+			return createScalar(dataType,((Short)object).shortValue());
+		}
+		if(object instanceof Integer) {
+			return createScalar(dataType,((Integer)object).intValue());
+		}
+		if(object instanceof Long) {
+			return createScalar(dataType,((Long)object).longValue());
+		}
+		if(object instanceof Double) {
+			return createScalar(dataType,((Double)object).doubleValue());
+		}
+		if(object instanceof Float) {
+			return createScalar(dataType,((Float)object).floatValue());
+		}
+		if(object instanceof String) {
+			return createScalar(dataType,(String)object);
+		}
+		if(object instanceof Entity){
+			return createScalar(dataType,(Entity)object);
+		}
+		if(object instanceof Scalar){
+			return createScalar(dataType,(Scalar)object);
+		}
+		throw new RuntimeException("Failed to insert data, invalid data type for "+dataType);
+	}
+
+	private static Scalar createScalar(DATA_TYPE dataType, Entity val) {
+		if(val.isScalar()&&val.getDataType()==dataType) {
+			return (Scalar) val;
+		}else{
+			throw new RuntimeException("Failed to insert data, invalid data type for "+dataType);
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, Scalar val) {
+		if(val.getDataType()==dataType)
+			return val;
+		else{
+			throw new RuntimeException("Failed to insert data, invalid data type for "+dataType);
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, boolean val) {
+		switch (dataType) {
+			case DT_BOOL:
+				return new BasicBoolean(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, char val) {
+		return createScalar(dataType,(byte)val);
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, byte val) {
+		switch (dataType) {
+			case DT_BYTE:
+				return new BasicByte(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, short val) {
+		switch (dataType) {
+			case DT_SHORT:
+				return new BasicShort(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, char[] val) {
+		return createScalar(dataType, new String(val));
+	}
+	private static boolean isScalarValid(DATA_TYPE scalarType,DATA_TYPE expectedType){
+		if(scalarType==expectedType)
+			return true;
+		if(scalarType==DT_STRING){
+			if(expectedType==DATA_TYPE.DT_SYMBOL||expectedType==DATA_TYPE.DT_SYMBOL)
+				return true;
+		}
+		return false;
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, String val) {
+		switch (dataType) {
+			case DT_INT128: {
+				return BasicInt128.fromString(val);
+			}
+			case DT_UUID: {
+				return BasicUuid.fromString(val);
+			}
+			case DT_IPADDR: {
+				return BasicIPAddr.fromString(val);
+			}
+			case DT_SYMBOL:
+			case DT_BLOB: {
+				return new BasicString(val);
+			}
+			case DT_STRING:
+				return new BasicString(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type " + dataType);
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, float val) {
+		switch (dataType) {
+			case DT_FLOAT:
+				return new BasicFloat(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, double val) {
+		switch (dataType) {
+			case DT_DOUBLE:
+				return new BasicDouble(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, int val) {
+		switch (dataType) {
+			case DT_INT:
+				return new BasicInt(val);
+			case DT_DATE:
+				return new BasicDate(val);
+			case DT_MONTH:
+				return new BasicMonth(val);
+			case DT_TIME:
+				return new BasicTime(val);
+			case DT_SECOND:
+				return new BasicSecond(val);
+			case DT_MINUTE:
+				return new BasicMinute(val);
+			case DT_DATETIME:
+				return new BasicDateTime(val);
+			case DT_DATEHOUR:
+				return new BasicDateHour(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, long val){
+		switch (dataType) {
+			case DT_LONG:
+				return new BasicLong(val);
+			case DT_NANOTIME:
+				return new BasicNanoTime(val);
+			case DT_NANOTIMESTAMP:
+				return new BasicNanoTimestamp(val);
+			case DT_TIMESTAMP:
+				return new BasicTimestamp(val);
+			default:
+				throw new RuntimeException("Failed to insert data, unsupported data type.");
+		}
 	}
 }
