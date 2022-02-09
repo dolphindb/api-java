@@ -23,7 +23,7 @@ public class MultithreadTableWriter {
     static class WriterThread implements Runnable{
         WriterThread(MultithreadTableWriter tableWriter,DBConnection conn) {
             tableWriter_=tableWriter;
-            sentRows_=0;
+            sentRows_ = 0;
             conn_ = conn;
             exit_ = false;
             writeThread_ = new Thread(this);
