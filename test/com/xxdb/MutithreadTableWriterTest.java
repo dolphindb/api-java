@@ -57,8 +57,8 @@ public class MutithreadTableWriterTest implements Runnable{
             sb.append("t = table(1000:0, `date`id`values,[TIMESTAMP,SYMBOL,INT]);share t as t1;");
             conn.run(sb.toString());
             mutithreadTableWriter_ = new MultithreadTableWriter(HOST, PORT, "admin", "123456",
-                    "t1", "", false, 10000, 1, 5, "date",
-                    "",true,false);
+                    "t1", "", false, false,null,10000, 1,
+                    5, "date");
             for (int i = 0; i < 100; i++) {
                 new Thread(new MutithreadTableWriterTest(i)).start();
             }
