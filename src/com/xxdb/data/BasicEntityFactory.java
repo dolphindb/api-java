@@ -39,7 +39,7 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[Entity.DATA_TYPE.DT_TIMESTAMP.getValue()] = new TimestampFactory();
 		factories[Entity.DATA_TYPE.DT_NANOTIMESTAMP.getValue()] = new NanoTimestampFactory();
 		factories[Entity.DATA_TYPE.DT_SYMBOL.getValue()] = new SymbolFactory();
-		factories[DT_STRING.getValue()] = new StringFactory();
+		factories[Entity.DATA_TYPE.DT_STRING.getValue()] = new StringFactory();
 		factories[Entity.DATA_TYPE.DT_BLOB.getValue()] = new BlobFactory();
 		factories[Entity.DATA_TYPE.DT_FUNCTIONDEF.getValue()] = new FunctionDefFactory();
 		factories[Entity.DATA_TYPE.DT_HANDLE.getValue()] = new SystemHandleFactory();
