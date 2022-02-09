@@ -1,12 +1,10 @@
 D:\project\api-java\src\com\xxdb\data\BasicIPAddr.java
-D:\project\api-java\src\com\xxdb\BatchTable.java
 D:\project\api-java\src\com\xxdb\io\LittleEndianDataInputStream.java
 D:\project\api-java\src\com\xxdb\io\ProgressListener.java
 D:\project\api-java\src\com\xxdb\route\DomainFactory.java
 D:\project\api-java\src\com\xxdb\data\BasicBooleanVector.java
 D:\project\api-java\src\com\xxdb\streaming\client\Daemon.java
 D:\project\api-java\src\com\xxdb\data\BasicShortMatrix.java
-D:\project\api-java\src\com\xxdb\route\MultithreadTableWriter.java
 D:\project\api-java\src\com\xxdb\streaming\client\QueueManager.java
 D:\project\api-java\src\com\xxdb\compression\LZ4Decoder.java
 D:\project\api-java\src\com\xxdb\data\BasicTimestampMatrix.java
@@ -35,6 +33,7 @@ D:\project\api-java\src\com\xxdb\DBConnectionPool.java
 D:\project\api-java\src\com\xxdb\data\BasicIntVector.java
 D:\project\api-java\src\com\xxdb\route\HashDomain.java
 D:\project\api-java\src\com\xxdb\data\BasicInt.java
+D:\project\api-java\src\com\xxdb\multithreadtablewriter\MultithreadTableWriter.java
 D:\project\api-java\src\com\xxdb\data\BasicBoolean.java
 D:\project\api-java\src\com\xxdb\data\BasicIPAddrVector.java
 D:\project\api-java\src\com\xxdb\data\BasicNanoTimestampVector.java
@@ -115,7 +114,6 @@ D:\project\api-java\src\com\xxdb\io\ExtendedDataOutput.java
 D:\project\api-java\src\com\xxdb\io\ExtendedDataInput.java
 D:\project\api-java\src\com\xxdb\data\BasicDateVector.java
 D:\project\api-java\src\com\xxdb\data\BasicEntityFactory.java
-D:\project\api-java\src\com\xxdb\route\ErrorCodeInfo.java
 D:\project\api-java\src\com\xxdb\compression\EncoderFactory.java
 D:\project\api-java\src\com\xxdb\data\Void.java
 D:\project\api-java\src\com\xxdb\data\BasicByteVector.java

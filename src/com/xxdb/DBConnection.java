@@ -735,11 +735,24 @@ public class DBConnection {
                 }
                 out.writeByte('\n');
                 out.writeBytes(body);
+                if(function == "append!{t}") {
+                    short flags = (short) (Entity.DATA_FORM.DF_VECTOR.ordinal() << 8 | Entity.DATA_TYPE.DT_COMPRESS.ordinal() & 0xff);
+                    out.writeShort(flags);
+                    out.writeInt(10000);
+                    out.writeInt(1);
+                    FileInputStream reads = new FileInputStream(new File("src/com/xxdb/compression/10000vector"));
+                    byte[] buf = new byte[40150];
+                    reads.read(buf);
+                    reads.close();
+                    out.write(buf);
+                }
+                else {
                 for (int i = 0; i < arguments.size(); ++i) {
                     if (compress && arguments.get(i).isTable()) {
                         arguments.get(i).writeCompressed(out); //TODO: which compress method to use
                     } else
                         arguments.get(i).write(out);
+                }
                 }
                 out.flush();
 
