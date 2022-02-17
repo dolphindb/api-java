@@ -41,7 +41,7 @@ public class MultithreadTableWriter {
                 try {
                     synchronized (writeQueue_) {
                         writeQueue_.wait();
-                        if (tableWriter_.batchSize_ > 1 && tableWriter_.throttleMilsecond_ > 0) {
+                        if (isExit() ==false && tableWriter_.batchSize_ > 1 && tableWriter_.throttleMilsecond_ > 0) {
                             batchWaitTimeout = System.currentTimeMillis() + tableWriter_.throttleMilsecond_;
                             while (writeQueue_.size() < tableWriter_.batchSize_) {//check batchsize
                                 diff = batchWaitTimeout - System.currentTimeMillis();
@@ -60,6 +60,7 @@ public class MultithreadTableWriter {
                     break;
                 }
             }
+            while(tableWriter_.isExit()==false && writeAllData());
         }
         boolean writeAllData(){
             List<List<Entity>> items=new ArrayList<>();
@@ -83,21 +84,15 @@ public class MultithreadTableWriter {
                     columns.add(BasicEntityFactory.instance().createVectorWithDefaultValue(one, size));
                 }
                 writeTable = new BasicTable(tableWriter_.colNames_, columns);
-                int rowindex = 0, colindex;
                 for (List<Entity> row : items) {
-                    if(row == null){
-                        exit_ = true;
-                        break;
-                    }
-                    colindex = 0;
                     try {
-                        for (Vector col : columns) {
-                            Scalar scalar = (Scalar) row.get(rowindex);
+                        for(int colindex = 0; colindex < columns.size(); colindex++){
+                            Vector col = columns.get(colindex);
+                            Scalar scalar = (Scalar) row.get(colindex);
                             if (scalar != null)
-                                col.set(colindex, scalar);
+                                col.set(addRowCount, scalar);
                             else
-                                col.setNull(colindex);
-                            colindex++;
+                                col.setNull(addRowCount);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -191,8 +186,8 @@ public class MultithreadTableWriter {
             return exit_ || tableWriter_.hasError_;
         }
         void exit(){
+            exit_ = true;
             synchronized (writeQueue_) {
-                writeQueue_.add(null);
                 writeQueue_.notify();
             }
         }
@@ -205,7 +200,7 @@ public class MultithreadTableWriter {
         List<List<Entity>> failedQueue_=new ArrayList<>();
         Thread writeThread_;
         long sentRows_;
-        boolean exit_;//Only set when process null value
+        boolean exit_;//Only set when exit
     };
     private String dbName_;
     private String tableName_;
