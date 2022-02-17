@@ -40,10 +40,13 @@ public class MultithreadTableWriter {
             while (isExit() == false) {
                 try {
                     synchronized (writeQueue_) {
+                        //tableWriter_.logger_.info(writeThread_.getId()+" run wait0 start");
                         writeQueue_.wait();
+                        //tableWriter_.logger_.info(writeThread_.getId()+" run wait0 end");
                         if (isExit() ==false && tableWriter_.batchSize_ > 1 && tableWriter_.throttleMilsecond_ > 0) {
                             batchWaitTimeout = System.currentTimeMillis() + tableWriter_.throttleMilsecond_;
-                            while (writeQueue_.size() < tableWriter_.batchSize_) {//check batchsize
+                            //tableWriter_.logger_.info(writeThread_.getId()+" run wait1 start");
+                            while (isExit() ==false && writeQueue_.size() < tableWriter_.batchSize_) {//check batchsize
                                 diff = batchWaitTimeout - System.currentTimeMillis();
                                 if (diff > 0) {
                                     writeQueue_.wait(diff);
@@ -52,15 +55,23 @@ public class MultithreadTableWriter {
                                     break;
                                 }
                             }
+                            //tableWriter_.logger_.info(writeThread_.getId()+" run wait1 end");
                         }
                     }
+                    //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData start");
                     while(isExit() == false && writeAllData());
+                    //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData end");
                 } catch (Exception e) {
                     e.printStackTrace();
                     break;
                 }
             }
+            //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData2 start");
             while(tableWriter_.isExit()==false && writeAllData());
+            //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData2 end");
+            synchronized (writeThread_){
+                writeThread_.notify();
+            }
         }
         boolean writeAllData(){
             List<List<Entity>> items=new ArrayList<>();
@@ -72,13 +83,13 @@ public class MultithreadTableWriter {
             if (size < 1)
                 return false;
             //std::cout << "writeTableAllData size:" << size << std::endl;
-            tableWriter_.logger_.info(" writeAllData=" + size);
+            //tableWriter_.logger_.info(" writeAllData=" + size);
             boolean isWriteDone = true;
             BasicTable writeTable = null;
             int addRowCount = 0;
             try {//create table
                 //RECORDTIME("MTTW:createTable");
-                tableWriter_.logger_.info(" createTable=" + size);
+                //tableWriter_.logger_.info(" createTable=" + size);
                 List<Vector> columns = new ArrayList<>();
                 for (Entity.DATA_TYPE one : tableWriter_.colTypes_) {
                     columns.add(BasicEntityFactory.instance().createVectorWithDefaultValue(one, size));
@@ -114,7 +125,7 @@ public class MultithreadTableWriter {
                 String runscript = "";
                 try {//save table
                     //RECORDTIME("MTTW:saveTable");
-                    tableWriter_.logger_.info(" saveTable=" + size);
+                    //tableWriter_.logger_.info(" saveTable=" + size);
                     List<Entity> args = new ArrayList<>();
                     args.add(writeTable);
                     runscript = scriptTableInsert_;
@@ -133,7 +144,7 @@ public class MultithreadTableWriter {
                     //std::cerr << Util::createTimestamp(Util::getEpochTime())->getString() << " Backgroud thread of table (" << tableWriter_.dbName_ << " " << tableWriter_.tableName_ << "). Failed to send data to server, with exception: " << e.what() << std::endl;
                 }
             }
-            tableWriter_.logger_.info(" done=" + isWriteDone);
+            //tableWriter_.logger_.info(" done=" + isWriteDone);
             if (isWriteDone == false) {
                 synchronized (failedQueue_) {
                     failedQueue_.addAll(items);
@@ -358,8 +369,12 @@ public class MultithreadTableWriter {
         for(WriterThread one:threads_){
             one.exit();
         }
-        for(WriterThread one:threads_){
-            one.writeThread_.wait();
+        for (WriterThread one : threads_) {
+            if (one.writeThread_.isAlive()) {
+                synchronized (one.writeThread_){
+                    one.writeThread_.wait(100);
+                }
+            }
             one.conn_=null;
         }
         threads_.clear();

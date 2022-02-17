@@ -40,14 +40,17 @@ public class MutithreadTableWriterTest implements Runnable{
                 "[BOOL,CHAR,SHORT,LONG]);" +
                 "share t as t1;");
         conn.run(sb.toString());
+        long starttime=System.currentTimeMillis();
         mutithreadTableWriter_ = new MultithreadTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false,null,10, 1,
+                "t1", "", false, false,null,10000, 10000,
                 2, "bool");
         short s = 0;
         long l = 0;
         boolean b = mutithreadTableWriter_.insert(pErrorInfo, false, 'c', s,l);
         assertEquals(true, b);
         System.out.println(pErrorInfo);
+        mutithreadTableWriter_.waitExit();
+        System.out.println("time used "+(System.currentTimeMillis()-starttime));
         Thread.sleep(2000);
         BasicTable bt= (BasicTable) conn.run("select * from t1;");
         System.out.println(bt.rows());
@@ -69,6 +72,19 @@ public class MutithreadTableWriterTest implements Runnable{
         }finally {
         }
     }
+    public void test2() throws Exception{
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `date`id`values,[TIMESTAMP,SYMBOL,INT]);share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadTableWriter(HOST, PORT, "admin", "123456",
+                "t1", "", false, false,null,10000, 1,
+                5, "date");
+        for (int i = 0; i < 100; i++) {
+            new Thread(new MutithreadTableWriterTest(i)).start();
+        }
+        Thread.sleep(5000);
+        conn.close();
+    }
 
     public static void main(String[] args) throws InterruptedException, IOException {
         conn = new DBConnection();
@@ -85,18 +101,6 @@ public class MutithreadTableWriterTest implements Runnable{
             ex.printStackTrace();
         }
         try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("t = table(1000:0, `date`id`values,[TIMESTAMP,SYMBOL,INT]);share t as t1;");
-            conn.run(sb.toString());
-            mutithreadTableWriter_ = new MultithreadTableWriter(HOST, PORT, "admin", "123456",
-                    "t1", "", false, false,null,10000, 1,
-                    5, "date");
-            for (int i = 0; i < 100; i++) {
-                new Thread(new MutithreadTableWriterTest(i)).start();
-            }
-            Thread.sleep(5000);
-            conn.close();
-
             test();
         }catch (Exception e){
             e.printStackTrace();
