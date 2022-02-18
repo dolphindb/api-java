@@ -571,7 +571,7 @@ public class BasicEntityFactory implements EntityFactory{
 			}
 			case DT_SYMBOL:
 			case DT_BLOB: {
-				return new BasicString(val);
+				return new BasicString(val, dataType==DATA_TYPE.DT_BLOB);
 			}
 			case DT_STRING:
 				return new BasicString(val);

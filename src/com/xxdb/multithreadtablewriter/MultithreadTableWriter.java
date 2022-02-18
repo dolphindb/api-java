@@ -29,6 +29,7 @@ public class MultithreadTableWriter {
             sentRows_=0;
             conn_ = conn;
             exit_ = false;
+            isFinished_ = false;
             writeThread_ = new Thread(this);
             writeThread_.start();
         }
@@ -58,9 +59,9 @@ public class MultithreadTableWriter {
                             //tableWriter_.logger_.info(writeThread_.getId()+" run wait1 end");
                         }
                     }
-                    //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData start");
+                    //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData start size "+writeQueue_.size());
                     while(isExit() == false && writeAllData());
-                    //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData end");
+                    //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData end size "+writeQueue_.size());
                 } catch (Exception e) {
                     e.printStackTrace();
                     break;
@@ -70,6 +71,7 @@ public class MultithreadTableWriter {
             while(tableWriter_.isExit()==false && writeAllData());
             //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData2 end");
             synchronized (writeThread_){
+                isFinished_ = true;
                 writeThread_.notify();
             }
         }
@@ -212,6 +214,7 @@ public class MultithreadTableWriter {
         Thread writeThread_;
         long sentRows_;
         boolean exit_;//Only set when exit
+        boolean isFinished_;
     };
     private String dbName_;
     private String tableName_;
@@ -370,12 +373,12 @@ public class MultithreadTableWriter {
             one.exit();
         }
         for (WriterThread one : threads_) {
-            if (one.writeThread_.isAlive()) {
-                synchronized (one.writeThread_){
-                    one.writeThread_.wait(100);
+            synchronized (one.writeThread_) {
+                if(one.isFinished_ == false) {
+                    one.writeThread_.wait();
                 }
             }
-            one.conn_=null;
+            one.conn_ = null;
         }
         threads_.clear();
     }
@@ -469,6 +472,7 @@ public class MultithreadTableWriter {
         WriterThread writerThread=threads_.get(threadIndex);
         synchronized (writerThread.writeQueue_) {
             writerThread.writeQueue_.add(row);
+            //logger_.info(writerThread.writeThread_.getId()+" size "+writerThread.writeQueue_.size());
             writerThread.writeQueue_.notify();
         }
         return true;

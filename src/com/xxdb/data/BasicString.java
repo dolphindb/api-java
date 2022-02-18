@@ -13,16 +13,25 @@ import com.xxdb.io.ExtendedDataOutput;
 
 public class BasicString extends AbstractScalar implements Comparable<BasicString>{
 	private String value;
+	private boolean isBlob;
 
 	public BasicString(String value){
 		this.value = value;
+		isBlob = false;
+	}
+
+	public BasicString(String value,boolean blob){
+		this.value = value;
+		this.isBlob = blob;
 	}
 
 	public BasicString(ExtendedDataInput in) throws IOException{
+		this.isBlob = false;
 		value = in.readString();
 	}
 
 	public BasicString(ExtendedDataInput in, boolean blob) throws IOException{
+		this.isBlob = blob;
 		if(!blob)
 			value = in.readString();
 		else
@@ -54,7 +63,10 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 
 	@Override
 	public DATA_TYPE getDataType() {
-		return Entity.DATA_TYPE.DT_STRING;
+		if(this.isBlob == false)
+			return Entity.DATA_TYPE.DT_STRING;
+		else
+			return Entity.DATA_TYPE.DT_BLOB;
 	}
 	
 	public Number getNumber() throws Exception{
