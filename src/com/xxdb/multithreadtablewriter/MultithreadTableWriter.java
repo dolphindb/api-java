@@ -131,7 +131,10 @@ public class MultithreadTableWriter {
                     List<Entity> args = new ArrayList<>();
                     args.add(writeTable);
                     runscript = scriptTableInsert_;
-                    conn_.run(runscript, args);
+                    BasicInt result = (BasicInt)conn_.run(runscript, args);
+                    if(result.getInt() != addRowCount){
+                        throw new RuntimeException("Insert data failed "+result.getInt()+" expect size "+addRowCount+".");
+                    }
                     if (scriptSaveTable_ != null && scriptSaveTable_.isEmpty() == false) {
                         runscript = scriptSaveTable_;
                         conn_.run(runscript);
@@ -311,7 +314,7 @@ public class MultithreadTableWriter {
                 if(index < 0)
                     throw new RuntimeException("Can't find specified partition column name.");
                 partitionColumnIdx_ = ((BasicIntVector)schema.get(new BasicString("partitionColumnIndex"))).getInt(index);
-                partitionSchema = ((BasicAnyVector)schema.get(new BasicString("partitionSchema"))).get(index);
+                partitionSchema = ((BasicAnyVector)schema.get(new BasicString("partitionSchema"))).getEntity(index);
                 partitionType =  ((BasicIntVector)schema.get(new BasicString("partitionType"))).getInt(index);
             }
             Entity.DATA_TYPE dataColType = colTypes_.get(partitionColumnIdx_);
