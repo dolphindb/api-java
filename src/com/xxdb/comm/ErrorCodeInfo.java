@@ -11,6 +11,7 @@ public class ErrorCodeInfo {
         EC_InvalidColumnType,
         EC_Server,
         EC_UserBreak,
+        EC_NullValue,
     };
     public ErrorCodeInfo(){
         set(0,"");

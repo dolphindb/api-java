@@ -494,6 +494,7 @@ public class MultithreadTableWriter {
             List<Entity> prow=new ArrayList<>();
             int colindex = 0;
             Entity.DATA_TYPE dataType;
+            boolean isAllNull = true;
             for (Object one : args) {
                 dataType = colTypes_.get(colindex);
                 Scalar scalar;
@@ -501,6 +502,7 @@ public class MultithreadTableWriter {
                     scalar = BasicEntityFactory.instance().createScalarWithDefaultValue(dataType);
                     scalar.setNull();
                 } else {
+                    isAllNull = false;
                     scalar = BasicEntityFactory.createScalar(dataType, one);
                     if (scalar == null) {
                         pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Invalid object " + one + " for type " + dataType);
@@ -509,6 +511,10 @@ public class MultithreadTableWriter {
                 }
                 prow.add(scalar);
                 colindex++;
+            }
+            if(isAllNull){
+                pErrorInfo.set(ErrorCodeInfo.Code.EC_NullValue, "Can't insert a Null row.");
+                return false;
             }
             int threadindex;
             if(threads_.size() > 1){

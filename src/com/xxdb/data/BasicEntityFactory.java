@@ -597,6 +597,11 @@ public class BasicEntityFactory implements EntityFactory{
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, int val) {
 		switch (dataType) {
+			case DT_SHORT:
+				if(val<Short.MAX_VALUE)
+					return new BasicShort((short)val);
+				else
+					throw new RuntimeException("Failed to insert data, unsupported data type.");
 			case DT_INT:
 				return new BasicInt(val);
 			case DT_DATE:
