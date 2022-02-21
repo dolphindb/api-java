@@ -1,6 +1,9 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.time.*;
+import java.util.Calendar;
+import java.util.Date;
 
 import com.xxdb.data.Entity.DATA_TYPE;
 import com.xxdb.data.Entity.DURATION;
@@ -496,27 +499,93 @@ public class BasicEntityFactory implements EntityFactory{
 		if(object instanceof String) {
 			return createScalar(dataType,(String)object);
 		}
+		if(object instanceof LocalTime){
+			return createScalar(dataType, (LocalTime)object);
+		}
+		if(object instanceof LocalDate){
+			return createScalar(dataType, (LocalDate)object);
+		}
+		if(object instanceof LocalDateTime){
+			return createScalar(dataType, (LocalDateTime)object);
+		}
+		if(object instanceof Date){
+			return createScalar(dataType, (Date)object);
+		}
+		if(object instanceof Calendar){
+			return createScalar(dataType, (Calendar)object);
+		}
 		if(object instanceof Entity){
 			return createScalar(dataType,(Entity)object);
-		}
-		if(object instanceof Scalar){
-			return createScalar(dataType,(Scalar)object);
 		}
 		throw new RuntimeException("Failed to insert data, invalid data type for "+dataType);
 	}
 
+	private static Scalar createScalar(DATA_TYPE dataType, LocalDate val) {
+		switch (dataType) {
+			case DT_DATE:
+				return new BasicDate(val);
+			case DT_MONTH:
+				return new BasicMonth(val.getYear(),val.getMonth());
+			default:
+				throw new RuntimeException("Failed to insert " + val + " to " + dataType + ", unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, LocalDateTime val) {
+		switch (dataType) {
+			case DT_DATETIME:
+				return new BasicDateTime(val);
+			case DT_DATEHOUR:
+				return new BasicDateHour(val);
+			case DT_TIMESTAMP:
+				return new BasicTimestamp(val);
+			default:
+				throw new RuntimeException("Failed to insert " + val + " to " + dataType + ", unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, LocalTime val) {
+		switch (dataType) {
+			case DT_TIME:
+				return new BasicTime(val);
+			case DT_SECOND:
+				return new BasicSecond(val);
+			case DT_MINUTE:
+				return new BasicMinute(val);
+			default:
+				throw new RuntimeException("Failed to insert " + val + " to " + dataType + ", unsupported data type.");
+		}
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, Date val) {
+		Calendar calendar=Calendar.getInstance();
+		calendar.setTime(val);
+		return createScalar(dataType, val);
+	}
+	private static Scalar createScalar(DATA_TYPE dataType, Calendar val) {
+		switch (dataType) {
+			case DT_DATE:
+				return new BasicDate(val);
+			case DT_MONTH:
+				return new BasicMonth(val);
+			case DT_TIME:
+				return new BasicTime(val);
+			case DT_SECOND:
+				return new BasicSecond(val);
+			case DT_MINUTE:
+				return new BasicMinute(val);
+			case DT_DATETIME:
+				return new BasicDateTime(val);
+			case DT_DATEHOUR:
+				return new BasicDateHour(val);
+			case DT_TIMESTAMP:
+				return new BasicTimestamp(val);
+			default:
+				throw new RuntimeException("Failed to insert " + val + " to " + dataType + ", unsupported data type.");
+		}
+	}
 	private static Scalar createScalar(DATA_TYPE dataType, Entity val) {
 		if(val.isScalar()&&val.getDataType()==dataType) {
 			return (Scalar) val;
 		}else{
-			throw new RuntimeException("Failed to insert data, invalid data type for "+dataType);
-		}
-	}
-	private static Scalar createScalar(DATA_TYPE dataType, Scalar val) {
-		if(val.getDataType()==dataType)
-			return val;
-		else{
-			throw new RuntimeException("Failed to insert data, invalid data type for "+dataType);
+			throw new RuntimeException("Failed to insert " + val + " to "+dataType+", unsupported data type.");
 		}
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, boolean val) {
@@ -524,7 +593,7 @@ public class BasicEntityFactory implements EntityFactory{
 			case DT_BOOL:
 				return new BasicBoolean(val);
 			default:
-				throw new RuntimeException("Failed to insert data, unsupported data type.");
+				throw new RuntimeException("Failed to insert " + val + " to "+dataType+", unsupported data type.");
 		}
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, char val) {
@@ -540,10 +609,19 @@ public class BasicEntityFactory implements EntityFactory{
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, short val) {
 		switch (dataType) {
+			case DT_BYTE:
+				if(val >= Byte.MIN_VALUE && val <= Byte.MAX_VALUE)
+					return new BasicByte((byte)val);
+				else
+					throw new RuntimeException("Failed to insert data, data exceed byte limit "+val);
 			case DT_SHORT:
 				return new BasicShort(val);
+			case DT_INT:
+				return new BasicInt(val);
+			case DT_LONG:
+				return new BasicLong(val);
 			default:
-				throw new RuntimeException("Failed to insert data, unsupported data type.");
+				throw new RuntimeException("Failed to insert " + val + " to "+dataType+", unsupported data type.");
 		}
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, char[] val) {
@@ -576,34 +654,49 @@ public class BasicEntityFactory implements EntityFactory{
 			case DT_STRING:
 				return new BasicString(val);
 			default:
-				throw new RuntimeException("Failed to insert data, unsupported data type " + dataType);
+				throw new RuntimeException("Failed to insert " + val + " to "+dataType+", unsupported data type.");
 		}
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, float val) {
 		switch (dataType) {
 			case DT_FLOAT:
 				return new BasicFloat(val);
+			case DT_DOUBLE:
+				return new BasicDouble(val);
 			default:
-				throw new RuntimeException("Failed to insert data, unsupported data type.");
+				throw new RuntimeException("Failed to insert " + val + " to "+dataType+", unsupported data type.");
 		}
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, double val) {
 		switch (dataType) {
+			case DT_FLOAT:
+				if(val >= Float.MIN_VALUE && val <= Float.MAX_VALUE)
+					return new BasicFloat((float)val);
+				else{
+					throw new RuntimeException("Failed to insert data, data exceed float range "+val);
+				}
 			case DT_DOUBLE:
 				return new BasicDouble(val);
 			default:
-				throw new RuntimeException("Failed to insert data, unsupported data type.");
+				throw new RuntimeException("Failed to insert " + val + " to "+dataType+", unsupported data type.");
 		}
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, int val) {
 		switch (dataType) {
+			case DT_BYTE:
+				if(val >= Byte.MIN_VALUE && val <= Byte.MAX_VALUE)
+					return new BasicByte((byte)val);
+				else
+					throw new RuntimeException("Failed to insert data, data exceed byte limit "+val);
 			case DT_SHORT:
-				if(val<Short.MAX_VALUE)
+				if(val >= Short.MIN_VALUE && val <= Short.MAX_VALUE)
 					return new BasicShort((short)val);
 				else
-					throw new RuntimeException("Failed to insert data, unsupported data type.");
+					throw new RuntimeException("Failed to insert data, data exceed short limit "+val);
 			case DT_INT:
 				return new BasicInt(val);
+			case DT_LONG:
+				return new BasicLong(val);
 			case DT_DATE:
 				return new BasicDate(val);
 			case DT_MONTH:
@@ -619,11 +712,26 @@ public class BasicEntityFactory implements EntityFactory{
 			case DT_DATEHOUR:
 				return new BasicDateHour(val);
 			default:
-				throw new RuntimeException("Failed to insert data, unsupported data type.");
+				throw new RuntimeException("Failed to insert " + val + " to "+dataType+", unsupported data type.");
 		}
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, long val){
 		switch (dataType) {
+			case DT_BYTE:
+				if(val >= Byte.MIN_VALUE && val <= Byte.MAX_VALUE)
+					return new BasicByte((byte)val);
+				else
+					throw new RuntimeException("Failed to insert data, data exceed byte limit "+val);
+			case DT_SHORT:
+				if(val >= Short.MIN_VALUE && val <= Short.MAX_VALUE)
+					return new BasicShort((short)val);
+				else
+					throw new RuntimeException("Failed to insert data, data exceed short limit "+val);
+			case DT_INT:
+				if(val >= Integer.MIN_VALUE && val <= Integer.MAX_VALUE)
+					return new BasicInt((int)val);
+				else
+					throw new RuntimeException("Failed to insert data, data exceed int limit "+val);
 			case DT_LONG:
 				return new BasicLong(val);
 			case DT_NANOTIME:
@@ -633,7 +741,7 @@ public class BasicEntityFactory implements EntityFactory{
 			case DT_TIMESTAMP:
 				return new BasicTimestamp(val);
 			default:
-				throw new RuntimeException("Failed to insert data, unsupported data type.");
+				throw new RuntimeException("Failed to insert " + val + " to "+dataType+", unsupported data type.");
 		}
 	}
 }

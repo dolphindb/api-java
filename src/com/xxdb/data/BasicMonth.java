@@ -5,6 +5,7 @@ import java.time.Month;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
+import java.util.Calendar;
 
 import com.xxdb.io.ExtendedDataInput;
 
@@ -19,6 +20,9 @@ public class BasicMonth extends BasicInt{
 
 	public BasicMonth(int year, Month month){
 		super(year * 12 + month.getValue());
+	}
+	public BasicMonth(Calendar calendar){
+		super(calendar.get(Calendar.YEAR) * 12 + calendar.get(Calendar.MONTH));
 	}
 	public BasicMonth(YearMonth value){
 		super(value.getYear() * 12 + value.getMonthValue() - 1);

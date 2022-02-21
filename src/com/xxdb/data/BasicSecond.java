@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
+import java.util.Calendar;
 
 import com.xxdb.io.ExtendedDataInput;
 
@@ -20,7 +21,11 @@ public class BasicSecond extends BasicInt{
 	public BasicSecond(LocalTime value){
 		super(Utils.countSeconds(value));
 	}
-	
+
+	public BasicSecond(Calendar value){
+		super(Utils.countSeconds(value));
+	}
+
 	public BasicSecond(ExtendedDataInput in) throws IOException {
 		super(in);
 	}

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
+import java.util.Calendar;
 
 import com.xxdb.io.ExtendedDataInput;
 
@@ -17,6 +18,9 @@ public class BasicTime extends BasicInt{
 	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 	
 	public BasicTime(LocalTime value){
+		super(Utils.countMilliseconds(value));
+	}
+	public BasicTime(Calendar value){
 		super(Utils.countMilliseconds(value));
 	}
 	

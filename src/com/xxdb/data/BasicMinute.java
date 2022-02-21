@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
+import java.util.Calendar;
 
 import com.xxdb.io.ExtendedDataInput;
 
@@ -18,6 +19,10 @@ public class BasicMinute extends BasicInt{
 
 	public BasicMinute(LocalTime value){
 		super(Utils.countMinutes(value));
+	}
+
+	public BasicMinute(Calendar value){
+		super(Utils.countMinutes(value.get(Calendar.HOUR_OF_DAY),value.get(Calendar.MINUTE)));
 	}
 	
 	public BasicMinute(ExtendedDataInput in) throws IOException {

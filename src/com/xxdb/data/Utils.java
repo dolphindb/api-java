@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.util.Calendar;
 
 import com.xxdb.data.Entity.DATA_CATEGORY;
 import com.xxdb.data.Entity.DATA_FORM;
@@ -65,7 +66,11 @@ public class Utils {
 	public static int countDays(LocalDate date){
 		return countDays(date.getYear(), date.getMonthValue(),date.getDayOfMonth());
 	}
-	
+
+	public static int countDays(Calendar calendar) {
+		return countDays(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+	}
+
 	public static int countDays(int year, int month, int day){
 		if(month<1 || month>12 || day<0)
 			return Integer.MIN_VALUE;
@@ -118,7 +123,10 @@ public class Utils {
 	public static int countSeconds(LocalDateTime dt){
 		return countSeconds(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour(), dt.getMinute(), dt.getSecond());
 	}
-	
+	public static int countSeconds(Calendar value) {
+		return countSeconds(value.get(Calendar.HOUR_OF_DAY), value.get(Calendar.MINUTE), value.get(Calendar.SECOND));
+	}
+
 	public static int countSeconds(int year, int month, int day, int hour, int minute, int second){
 		int days = countDays(year, month, day);
 		return days * 86400 + (hour *60 + minute) * 60 + second;
@@ -158,6 +166,10 @@ public class Utils {
 	
 	public static int countHours(LocalDateTime dt) {
 		return countHours(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour());
+	}
+
+	public static int countHours(Calendar calendar) {
+		return countHours(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.HOUR_OF_DAY));
 	}
 	
 	public static int countHours(int year, int month, int day, int hour) {
@@ -234,6 +246,12 @@ public class Utils {
 	public static int countMilliseconds(LocalTime time){
 		return countMilliseconds(time.getHour(), time.getMinute(), time.getSecond(), time.getNano() / 1000000);
 	}
+	public static int countMilliseconds(Calendar value) {
+		return countMilliseconds(value.get(Calendar.HOUR_OF_DAY),
+				value.get(Calendar.MINUTE),
+				value.get(Calendar.SECOND),
+				value.get(Calendar.MILLISECOND));
+	}
 	
 	public static int countMilliseconds(int hour, int minute, int second, int millisecond){
 		return ((hour * 60 + minute) * 60 + second) * 1000+millisecond;
@@ -266,7 +284,11 @@ public class Utils {
 	public static int countMinutes(LocalTime time){
 		return countMinutes(time.getHour(), time.getMinute());
 	}
-	
+
+	public static int countMinutes(Calendar value){
+		return countMinutes(value.get(Calendar.HOUR_OF_DAY),value.get(Calendar.MINUTE));
+	}
+
 	public static int countMinutes(int hour, int minute){
 		return hour * 60 + minute;
 	}

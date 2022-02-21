@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
+import java.util.Calendar;
+import java.util.Date;
 
 import com.xxdb.io.ExtendedDataInput;
 
@@ -18,6 +20,9 @@ public class BasicDate extends BasicInt{
 
 	public BasicDate(LocalDate value){
 		super(Utils.countDays(value));
+	}
+	public BasicDate(Calendar calendar){
+		super(Utils.countDays(calendar));
 	}
 	
 	public BasicDate(ExtendedDataInput in) throws IOException {
