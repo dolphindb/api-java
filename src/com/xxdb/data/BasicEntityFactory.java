@@ -557,7 +557,7 @@ public class BasicEntityFactory implements EntityFactory{
 	private static Scalar createScalar(DATA_TYPE dataType, Date val) {
 		Calendar calendar=Calendar.getInstance();
 		calendar.setTime(val);
-		return createScalar(dataType, val);
+		return createScalar(dataType, calendar);
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, Calendar val) {
 		switch (dataType) {
