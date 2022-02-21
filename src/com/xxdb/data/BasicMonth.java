@@ -22,7 +22,7 @@ public class BasicMonth extends BasicInt{
 		super(year * 12 + month.getValue());
 	}
 	public BasicMonth(Calendar calendar){
-		super(calendar.get(Calendar.YEAR) * 12 + calendar.get(Calendar.MONTH));
+		super((calendar.get(Calendar.YEAR)-1900) * 12 + calendar.get(Calendar.MONTH));
 	}
 	public BasicMonth(YearMonth value){
 		super(value.getYear() * 12 + value.getMonthValue() - 1);

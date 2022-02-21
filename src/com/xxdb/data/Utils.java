@@ -68,7 +68,7 @@ public class Utils {
 	}
 
 	public static int countDays(Calendar calendar) {
-		return countDays(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+		return countDays(calendar.get(Calendar.YEAR)-1900, calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
 	}
 
 	public static int countDays(int year, int month, int day){
@@ -169,7 +169,7 @@ public class Utils {
 	}
 
 	public static int countHours(Calendar calendar) {
-		return countHours(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.HOUR_OF_DAY));
+		return countHours(calendar.get(Calendar.YEAR)-1900, calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.HOUR_OF_DAY));
 	}
 	
 	public static int countHours(int year, int month, int day, int hour) {
