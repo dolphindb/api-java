@@ -133,7 +133,8 @@ public class MultithreadTableWriter {
                     runscript = scriptTableInsert_;
                     BasicInt result = (BasicInt)conn_.run(runscript, args);
                     if(result.getInt() != addRowCount){
-                        throw new RuntimeException("Insert data failed "+result.getInt()+" expect size "+addRowCount+".");
+                        //throw new RuntimeException("Insert data failed "+result.getInt()+" expect size "+addRowCount+".");
+                        tableWriter_.logger_.warning("Write complete size "+result.getInt()+" is less than expect "+addRowCount);
                     }
                     if (scriptSaveTable_ != null && scriptSaveTable_.isEmpty() == false) {
                         runscript = scriptSaveTable_;
