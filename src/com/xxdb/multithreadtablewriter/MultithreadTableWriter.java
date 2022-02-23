@@ -14,14 +14,14 @@ import java.util.logging.Logger;
 public class MultithreadTableWriter {
     private Logger logger_=Logger.getLogger(getClass().getName());
     public static class ThreadStatus{
-        long threadId;
-        long sentRows,unwriteRows,failedRows;
+        public long threadId;
+        public long sentRows,unwriteRows,failedRows;
     };
     public static class Status{
-        boolean isExit;
-        ErrorCodeInfo errorInfo;
-        long sentRows, unwriteRows, failedRows;
-        List<ThreadStatus> threadStatusList=new ArrayList<>();
+        public boolean isExit;
+        public ErrorCodeInfo errorInfo;
+        public long sentRows, unwriteRows, failedRows;
+        public List<ThreadStatus> threadStatusList=new ArrayList<>();
     };
     static class WriterThread implements Runnable{
         WriterThread(MultithreadTableWriter tableWriter,DBConnection conn) {
