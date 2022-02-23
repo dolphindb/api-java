@@ -384,6 +384,7 @@ public class MultithreadTableWriter {
             }
             one.conn_ = null;
         }
+        setError(ErrorCodeInfo.Code.EC_UserBreak,"User break.");
     }
     public boolean insert(List<List<Entity>> vectorOfVector,ErrorCodeInfo pErrorInfo){
         if(threads_.size() > 1){
