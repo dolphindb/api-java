@@ -384,7 +384,6 @@ public class MultithreadTableWriter {
             }
             one.conn_ = null;
         }
-        threads_.clear();
     }
     public boolean insert(List<List<Entity>> vectorOfVector,ErrorCodeInfo pErrorInfo){
         if(threads_.size() > 1){
