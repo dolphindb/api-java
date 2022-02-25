@@ -149,7 +149,7 @@ public class MultithreadTableWriter {
                     BasicInt result = (BasicInt)conn_.run(runscript, args);
                     if(result.getInt() != addRowCount){
                         //throw new RuntimeException("Insert data failed "+result.getInt()+" expect size "+addRowCount+".");
-                        tableWriter_.logger_.warning("Write complete size "+result.getInt()+" is less than expect "+addRowCount);
+                        //tableWriter_.logger_.info("Write complete size "+result.getInt()+" is less than expect "+addRowCount);
                     }
                     if (scriptSaveTable_ != null && scriptSaveTable_.isEmpty() == false) {
                         runscript = scriptSaveTable_;
@@ -478,7 +478,7 @@ public class MultithreadTableWriter {
     }
     private boolean insertThreadWrite(int threadhashkey, List<Entity> row, ErrorCodeInfo pErrorInfo){
         if(threadhashkey < 0){
-            logger_.warning("add invalid hash="+threadhashkey);
+            //logger_.info("add invalid hash="+threadhashkey);
             threadhashkey = 0;
             //pErrorInfo->set(ErrorCodeInfo::EC_InvalidColumnType, "Failed to get thread by coluname.");
             //return false;

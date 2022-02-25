@@ -612,7 +612,7 @@ public class DBConnection {
                     if (userId.length() > 0 && password.length() > 0)
                         login();
                 } else {
-                    throw new IOException(msg);
+                    throw new IOException("Server response: '"+msg+"' script: '"+script+"'");
                 }
             }
 
@@ -814,7 +814,7 @@ public class DBConnection {
 
             String msg = in.readLine();
             if (!msg.equals("OK"))
-                throw new IOException(msg);
+                throw new IOException("Server response: '"+msg+"' function: '"+function+"'");
 
             if (numObject == 0)
                 return new Void();
@@ -963,7 +963,7 @@ public class DBConnection {
 
             String msg = in.readLine();
             if (!msg.equals("OK"))
-                throw new IOException(msg);
+                throw new IOException("Server response: '"+msg+"' uploadsize: "+variableObjectMap.size());
 
             if (numObject > 0) {
                 try {
