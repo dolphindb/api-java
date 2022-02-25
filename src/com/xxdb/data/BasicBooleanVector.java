@@ -36,6 +36,18 @@ public class BasicBooleanVector extends AbstractVector{
 	public BasicBooleanVector(byte[] array){
 		this(array, true);
 	}
+
+	static byte[] convert(boolean[] b){
+		byte[] ret = new byte[]{};
+		for (int i = 0;i < b.length;i++) {
+			ret[i] = (byte)(b[i] ? 0x01 : 0x00);
+		}
+		return ret;
+	}
+
+	public BasicBooleanVector(boolean[] b){
+		this(convert(b), true);
+	}
 	
 	protected BasicBooleanVector(byte[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);

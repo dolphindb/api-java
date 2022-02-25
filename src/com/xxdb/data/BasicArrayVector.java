@@ -74,6 +74,8 @@ public class BasicArrayVector extends AbstractVector {
 			rowsRead += rowsReadInBlock;
 		}
 	}
+
+
 	
 	@Override
 	public String getString(int index){
@@ -156,7 +158,7 @@ public class BasicArrayVector extends AbstractVector {
 	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
 		// TODO Auto-generated method stub
-
+		
 	}
 
 }

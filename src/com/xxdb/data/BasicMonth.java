@@ -19,10 +19,10 @@ public class BasicMonth extends BasicInt{
 	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM'M'");
 
 	public BasicMonth(int year, Month month){
-		super(year * 12 + month.getValue());
+		super(year * 12 + month.getValue()-1);
 	}
 	public BasicMonth(Calendar calendar){
-		super((calendar.get(Calendar.YEAR)-1900) * 12 + calendar.get(Calendar.MONTH));
+		super((calendar.get(Calendar.YEAR)) * 12 + calendar.get(Calendar.MONTH));
 	}
 	public BasicMonth(YearMonth value){
 		super(value.getYear() * 12 + value.getMonthValue() - 1);

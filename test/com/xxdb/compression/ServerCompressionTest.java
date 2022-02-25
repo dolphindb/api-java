@@ -574,8 +574,8 @@ public class ServerCompressionTest {
         int basicMonth = Utils.countMonths(2013,1);
         int basicTime = Utils.countMilliseconds(10,0,0,1);
         long basicNanoTime = Utils.countNanoseconds(LocalTime.now());
-        long basicNanoTimestamp = Utils.countNanoseconds(LocalDateTime.now());
-        int basicDateTime = Utils.countSeconds(2013,1,25,10,0,0);
+        long basicNanoTimestamp = Utils.countDTNanoseconds(LocalDateTime.now());
+        int basicDateTime = Utils.countDTSeconds(2013,1,25,10,0,0);
         for (int i = 0; i < 100000; i++) {
             if (i % 2 == 0) {
                 date[i] = baseDate + (i % 15);
@@ -697,8 +697,8 @@ public class ServerCompressionTest {
         int baseDate = Utils.countDays(1970,1,1);
         long basicTimestamp = Utils.countMilliseconds(1970,1,1,0,0,0,0);
         int basicMonth = Utils.countMonths(1970,1);
-        long basicNanoTimestamp = Utils.countNanoseconds(LocalDateTime.of(1970,1,1,0,0));
-        int basicDateTime = Utils.countSeconds(1970,1,1,0,0,0);
+        long basicNanoTimestamp = Utils.countDTNanoseconds(LocalDateTime.of(1970,1,1,0,0));
+        int basicDateTime = Utils.countDTSeconds(1970,1,1,0,0,0);
         for (int i = 0; i < 100000; i++) {
             date[i] = baseDate - i;
             timestamp[i] = basicTimestamp -i;

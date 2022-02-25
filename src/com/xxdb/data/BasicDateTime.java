@@ -22,7 +22,7 @@ public class BasicDateTime extends BasicInt{
 	}
 
 	public BasicDateTime(Calendar value){
-		super(Utils.countSeconds(value));
+		super(Utils.countDTSeconds(value));
 	}
 	
 	public BasicDateTime(ExtendedDataInput in) throws IOException {

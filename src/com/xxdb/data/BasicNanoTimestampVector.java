@@ -64,7 +64,7 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 	}
 	
 	public void setNanoTimestamp(int index, LocalDateTime dt){
-		setLong(index, Utils.countNanoseconds(dt));
+		setLong(index, Utils.countDTNanoseconds(dt));
 	}
 	
 	@Override

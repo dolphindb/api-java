@@ -5,11 +5,13 @@ import java.time.*;
 import java.util.Calendar;
 import java.util.Date;
 
+import com.sun.org.apache.xalan.internal.xsltc.compiler.Template;
 import com.xxdb.data.Entity.DATA_TYPE;
 import com.xxdb.data.Entity.DURATION;
 import com.xxdb.io.ExtendedDataInput;
+import org.omg.CORBA.PRIVATE_MEMBER;
 
-import static com.xxdb.data.Entity.DATA_TYPE.DT_STRING;
+import static com.xxdb.data.Entity.DATA_TYPE.*;
 
 public class BasicEntityFactory implements EntityFactory{
 	private TypeFactory[] factories;
@@ -466,7 +468,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, Entity.DATA_TYPE.DT_COMPRESS);}
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicByteVector(Entity.DATA_FORM.DF_VECTOR, in);}
 	}
-	public static Scalar createScalar(DATA_TYPE dataType, Object object){
+	public static Entity createScalar(DATA_TYPE dataType, Object object){
 		if(object==null) {
 			Scalar scalar = BasicEntityFactory.instance().createScalarWithDefaultValue(dataType);
 			scalar.setNull();
@@ -475,49 +477,115 @@ public class BasicEntityFactory implements EntityFactory{
 		if(object instanceof Boolean) {
 			return createScalar(dataType,((Boolean)object).booleanValue());
 		}
+		if(object instanceof Boolean[]){
+			return createAnyVector(dataType, (Boolean[])object);
+		}
 		if(object instanceof Byte) {
 			return createScalar(dataType,((Byte)object).byteValue());
+		}
+		if(object instanceof Byte[]) {
+			return createAnyVector(dataType, (Byte[])object);
 		}
 		if(object instanceof Character){
 			return createScalar(dataType,((Character)object).charValue());
 		}
+		if(object instanceof Character[]){
+			return createAnyVector(dataType, (Character[])object);
+		}
 		if(object instanceof Short){
 			return createScalar(dataType,((Short)object).shortValue());
+		}
+		if(object instanceof Short[]) {
+			return createAnyVector(dataType, (Short[]) object);
 		}
 		if(object instanceof Integer) {
 			return createScalar(dataType,((Integer)object).intValue());
 		}
+		if(object instanceof Integer[]){
+			return createAnyVector(dataType, (Integer[])object);
+		}
 		if(object instanceof Long) {
 			return createScalar(dataType,((Long)object).longValue());
+		}
+		if(object instanceof Long[]) {
+			return createAnyVector(dataType,(Long[])object);
 		}
 		if(object instanceof Double) {
 			return createScalar(dataType,((Double)object).doubleValue());
 		}
+		if(object instanceof Double[]) {
+			return createAnyVector(dataType,(Double[])object);
+		}
 		if(object instanceof Float) {
 			return createScalar(dataType,((Float)object).floatValue());
+		}
+		if(object instanceof Float[]) {
+			return createAnyVector(dataType,(Float[])object);
 		}
 		if(object instanceof String) {
 			return createScalar(dataType,(String)object);
 		}
+		if(object instanceof String[]) {
+			return createAnyVector(dataType, (String[])object);
+		}
 		if(object instanceof LocalTime){
 			return createScalar(dataType, (LocalTime)object);
+		}
+		if(object instanceof LocalTime[]) {
+			return createAnyVector(dataType,(LocalTime[])object);
 		}
 		if(object instanceof LocalDate){
 			return createScalar(dataType, (LocalDate)object);
 		}
+		if(object instanceof LocalDate[]) {
+			return createAnyVector(dataType,(LocalDate[])object);
+		}
 		if(object instanceof LocalDateTime){
 			return createScalar(dataType, (LocalDateTime)object);
+		}
+		if(object instanceof LocalDateTime[]) {
+			return createAnyVector(dataType,(LocalDateTime[])object);
 		}
 		if(object instanceof Date){
 			return createScalar(dataType, (Date)object);
 		}
+		if(object instanceof Date[]) {
+			return createAnyVector(dataType,(Date[])object);
+		}
 		if(object instanceof Calendar){
 			return createScalar(dataType, (Calendar)object);
+		}
+		if(object instanceof Calendar[]) {
+			return createAnyVector(dataType,(Calendar[])object);
 		}
 		if(object instanceof Entity){
 			return createScalar(dataType,(Entity)object);
 		}
+		if(object instanceof Entity[]) {
+			return createAnyVector(dataType,(Entity[])object);
+		}
 		throw new RuntimeException("Failed to insert data, invalid data type for "+dataType);
+	}
+
+	private static <T> BasicAnyVector createAnyVector(DATA_TYPE dataType, T[] val){
+		if(dataType.getValue()<64){
+			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType);
+		}
+		dataType = DATA_TYPE.values()[dataType.getValue()-64];
+		Vector dataVector=BasicEntityFactory.instance().createVectorWithDefaultValue(dataType,val.length);
+		int index = 0;
+		for (T one : val){
+			Entity entity = createScalar(dataType, one);
+			try {
+				dataVector.set(index, (Scalar) entity);
+			}catch (Exception e){
+				throw new RuntimeException("Failed to insert data, invalid array for "+dataType+" error "+ e.toString());
+			}
+			index++;
+		}
+		BasicAnyVector anyVector = new BasicAnyVector(1);
+		anyVector.setEntity(0,dataVector);
+		return anyVector;
 	}
 
 	private static Scalar createScalar(DATA_TYPE dataType, LocalDate val) {
@@ -538,6 +606,10 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicDateHour(val);
 			case DT_TIMESTAMP:
 				return new BasicTimestamp(val);
+			case DT_NANOTIME:
+				return new BasicNanoTime(val);
+			case DT_NANOTIMESTAMP:
+				return new BasicNanoTimestamp(val);
 			default:
 				throw new RuntimeException("Failed to insert " + val + " to " + dataType + ", unsupported data type.");
 		}
@@ -550,6 +622,8 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicSecond(val);
 			case DT_MINUTE:
 				return new BasicMinute(val);
+			case DT_NANOTIME:
+				return new BasicNanoTime(val);
 			default:
 				throw new RuntimeException("Failed to insert " + val + " to " + dataType + ", unsupported data type.");
 		}
@@ -597,7 +671,10 @@ public class BasicEntityFactory implements EntityFactory{
 		}
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, char val) {
-		return createScalar(dataType,(byte)val);
+		if (val >= Byte.MIN_VALUE && val <= Byte.MAX_VALUE)
+			return createScalar(dataType,(byte)val);
+		else
+			throw new RuntimeException("Failed to insert data, data exceed byte limit "+val);
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, byte val) {
 		switch (dataType) {

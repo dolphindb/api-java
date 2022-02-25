@@ -118,7 +118,7 @@ public class BasicTableTest {
         BasicNanoTimeVector bnanotimev = new BasicNanoTimeVector(vnanotime);
         cols.add(bnanotimev);
         //cnanotimestamp
-        long[] vnanotimestamp = new long[]{Utils.countNanoseconds(LocalDateTime.of(2018,11,12,9,30,05,123456789)),Utils.countNanoseconds(LocalDateTime.of(2018,11,13,16,30,05,987654321))};
+        long[] vnanotimestamp = new long[]{Utils.countDTNanoseconds(LocalDateTime.of(2018,11,12,9,30,05,123456789)),Utils.countNanoseconds(LocalDateTime.of(2018,11,13,16,30,05,987654321))};
         BasicNanoTimestampVector bnanotimestampv = new BasicNanoTimestampVector(vnanotimestamp);
         cols.add(bnanotimestampv);
         //cfloat

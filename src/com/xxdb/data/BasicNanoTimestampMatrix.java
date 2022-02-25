@@ -26,7 +26,7 @@ public class BasicNanoTimestampMatrix extends BasicLongMatrix{
 	}
 
 	public void setNanoTimestamp(int row, int column, LocalDateTime value){
-		setLong(row, column, Utils.countNanoseconds(value));
+		setLong(row, column, Utils.countDTNanoseconds(value));
 	}
 	
 	public LocalDateTime getNanoTimestamp(int row, int column){

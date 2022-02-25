@@ -21,7 +21,7 @@ public class BasicTimestamp extends BasicLong{
 		super(Utils.countMilliseconds(value));
 	}
 	public BasicTimestamp(Calendar value){
-		super(Utils.countMilliseconds(value));
+		super(Utils.countDateMilliseconds(value));
 	}
 	
 	public BasicTimestamp(ExtendedDataInput in) throws IOException {

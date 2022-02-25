@@ -3,6 +3,7 @@ package com.xxdb.data;
 import com.xxdb.io.ExtendedDataInput;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
@@ -14,6 +15,10 @@ import java.time.temporal.Temporal;
 
 public class BasicNanoTime extends BasicLong{
 	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSSSSS");
+
+	public BasicNanoTime(LocalDateTime value){
+		super(Utils.countNanoseconds(value));
+	}
 
 	public BasicNanoTime(LocalTime value){
 		super(Utils.countNanoseconds(value));

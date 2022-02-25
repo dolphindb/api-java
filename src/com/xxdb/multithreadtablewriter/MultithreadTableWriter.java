@@ -94,18 +94,33 @@ public class MultithreadTableWriter {
                 //tableWriter_.logger_.info(" createTable=" + size);
                 List<Vector> columns = new ArrayList<>();
                 for (Entity.DATA_TYPE one : tableWriter_.colTypes_) {
-                    columns.add(BasicEntityFactory.instance().createVectorWithDefaultValue(one, size));
+                    Vector vector;
+                    if (one.getValue() >= 65){
+                        vector = new BasicAnyVector(size);
+                    }else{
+                        vector=BasicEntityFactory.instance().createVectorWithDefaultValue(one, size);
+                    }
+                    columns.add(vector);
                 }
                 writeTable = new BasicTable(tableWriter_.colNames_, columns);
                 for (List<Entity> row : items) {
                     try {
                         for(int colindex = 0; colindex < columns.size(); colindex++){
                             Vector col = columns.get(colindex);
-                            Scalar scalar = (Scalar) row.get(colindex);
-                            if (scalar != null)
-                                col.set(addRowCount, scalar);
-                            else
-                                col.setNull(addRowCount);
+                            if(col instanceof BasicAnyVector){
+                                BasicAnyVector anyVector=(BasicAnyVector)col;
+                                Entity scalar = row.get(colindex);
+                                if (scalar != null)
+                                    ((BasicAnyVector) col).setEntity(addRowCount, scalar);
+                                else
+                                    col.setNull(addRowCount);
+                            }else {
+                                Scalar scalar = (Scalar) row.get(colindex);
+                                if (scalar != null)
+                                    col.set(addRowCount,scalar);
+                                else
+                                    col.setNull(addRowCount);
+                            }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -498,19 +513,19 @@ public class MultithreadTableWriter {
             boolean isAllNull = true;
             for (Object one : args) {
                 dataType = colTypes_.get(colindex);
-                Scalar scalar;
+                Entity entity;
                 if (one == null) {
-                    scalar = BasicEntityFactory.instance().createScalarWithDefaultValue(dataType);
-                    scalar.setNull();
+                    entity = BasicEntityFactory.instance().createScalarWithDefaultValue(dataType);
+                    ((Scalar)entity).setNull();
                 } else {
                     isAllNull = false;
-                    scalar = BasicEntityFactory.createScalar(dataType, one);
-                    if (scalar == null) {
+                    entity = BasicEntityFactory.createScalar(dataType, one);
+                    if (entity == null) {
                         pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Invalid object " + one + " for type " + dataType);
                         return false;
                     }
                 }
-                prow.add(scalar);
+                prow.add(entity);
                 colindex++;
             }
             if(isAllNull){
