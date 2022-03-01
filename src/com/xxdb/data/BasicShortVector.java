@@ -86,7 +86,14 @@ public class BasicShortVector extends AbstractVector{
 			start += end;
 		}
 	}
-	
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeShort(values[start + i]);//todo:Have question
+		}
+	}
+
 	public short getShort(int index){
 		return values[index];
 	}
@@ -126,6 +133,11 @@ public class BasicShortVector extends AbstractVector{
 		else{
 			return (int)((4294967296l + value) % buckets);
 		}
+	}
+
+	@Override
+	public int getUnitLength() {
+		return 2;
 	}
 
 	@Override

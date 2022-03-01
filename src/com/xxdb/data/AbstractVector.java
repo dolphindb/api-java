@@ -34,7 +34,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 
 	@Override
 	public int columns() {
-		return 1;
+		return rows();
 	}
 
 	@Override
@@ -64,14 +64,16 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 
 	public void write(ExtendedDataOutput out) throws IOException{
 		int dataType = getDataType().getValue();
-		if(this instanceof BasicSymbolVector)
-			dataType += 128;
 		int flag = (df_.ordinal() << 8) + dataType;
+		if(this instanceof BasicSymbolVector)
+			flag += 128;
 		out.writeShort(flag);
 		out.writeInt(rows());
 		out.writeInt(columns());
 		writeVectorToOutputStream(out);
 	}
+
+	public abstract int getUnitLength();
 
 	public void setCompressedMethod(int method) {
 		DATA_TYPE type = this.getDataType();

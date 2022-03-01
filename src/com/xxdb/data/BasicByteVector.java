@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * 
@@ -69,6 +70,13 @@ public class BasicByteVector extends AbstractVector{
 	@Override
 	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
 		in.readFully(values, start, count);
+	}
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeByte(values[start + i]);//todo:Have question
+		}
 	}
 
 	public Vector combine(Vector vector){
@@ -152,6 +160,11 @@ public class BasicByteVector extends AbstractVector{
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.write(values);
+	}
+
+	@Override
+	public int getUnitLength(){
+		return 1;
 	}
 	
 	@Override

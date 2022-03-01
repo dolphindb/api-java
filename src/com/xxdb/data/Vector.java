@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import com.xxdb.io.ExtendedDataInput;
+import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
@@ -25,4 +26,6 @@ public interface Vector extends Entity{
 	void set(int index, Scalar value) throws Exception;
 	Class<?> getElementClass();
 	void deserialize(int start, int count, ExtendedDataInput in) throws IOException;
+	void serialize(int start, int count, ExtendedDataOutput out) throws IOException;
+	int getUnitLength();
 }

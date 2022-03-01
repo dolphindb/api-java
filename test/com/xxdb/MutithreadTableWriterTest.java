@@ -3,10 +3,7 @@ package com.xxdb;
 
 import com.sun.org.apache.bcel.internal.generic.NEW;
 import com.xxdb.comm.ErrorCodeInfo;
-import com.xxdb.data.BasicEntityFactory;
-import com.xxdb.data.BasicLong;
-import com.xxdb.data.BasicTable;
-import com.xxdb.data.Entity;
+import com.xxdb.data.*;
 import com.xxdb.multithreadtablewriter.MultithreadTableWriter;
 
 import java.io.FileInputStream;
@@ -14,9 +11,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
@@ -176,6 +171,50 @@ public class MutithreadTableWriterTest implements Runnable{
             // assertEquals(sdf.format(DT),bt.getColumn(0).get(i).getString());
             System.out.println(bt.getColumn(4).get(i).getString());
         }
+    }
+
+    public static void newtest() throws Exception{
+        ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = streamTable(1000:0, `int`double," +
+                "[INT,DOUBLE]);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadTableWriter(HOST, PORT, "admin", "123456",
+                "t1", "", false, false,null,1, 1,
+                1, "int");
+        List<List<Entity>> tb = new ArrayList<>();
+        for (int i=0;i<20;i++){
+            List<Entity> row = new ArrayList<>();
+            row.add(new BasicInt(1));
+            row.add(new BasicInt(2));
+            tb.add(row);
+        }
+        for (int i=0;i<2;i++){
+            List<Entity> row = new ArrayList<>();
+            row.add(new BasicInt(1));
+            row.add(new BasicString("1"));
+            tb.add(row);
+        }
+        boolean b=mutithreadTableWriter_.insert(tb,pErrorInfo);
+        assertEquals(true, b);
+    }
+
+    public static void arrayVectortest() throws Exception{
+
+        BasicArrayVector t = (BasicArrayVector) conn.run("a = array(INT[])\n" +
+                "for(i in 1..100000){\n" +
+                "\ta.append!([1..100])\n" +
+                "};a");
+
+        List<Entity> args = new ArrayList<Entity>();
+        args.add(t);
+        conn.run("c = array(INT[], 0, 20)");
+        BasicArrayVector t2 = (BasicArrayVector)conn.run("append!{c}", args);
+        for (int i=0;i<t2.rows();i++){
+            System.out.println(t.getString(i));
+        }
+        conn.close();
     }
 
     public static void main(String[] args) throws InterruptedException, IOException {

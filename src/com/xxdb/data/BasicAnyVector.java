@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * 
@@ -101,6 +102,11 @@ public class BasicAnyVector extends AbstractVector{
 	public int rows() {
 		return values.length;
 	}
+
+	@Override
+	public int getUnitLength(){
+		throw new NotImplementedException();
+	}
 	
 	public String getString(){
 		StringBuilder sb = new StringBuilder("(");
@@ -119,6 +125,11 @@ public class BasicAnyVector extends AbstractVector{
 	
 	public Class<?> getElementClass(){
 		return Entity.class;
+	}
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		throw new NotImplementedException();
 	}
 
 	@Override

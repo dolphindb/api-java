@@ -113,7 +113,14 @@ public class BasicInt128Vector extends AbstractVector{
 			start += end;
 		}
 	}
-	
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeLong2(values[start + i]);//todo:Have question
+		}
+	}
+
 	public Scalar get(int index){
 		return new BasicInt128(values[index].high, values[index].low);
 	}
@@ -147,6 +154,11 @@ public class BasicInt128Vector extends AbstractVector{
 	@Override
 	public int hashBucket(int index, int buckets){
 		return values[index].hashBucket(buckets);
+	}
+
+	@Override
+	public int getUnitLength() {
+		return 16;
 	}
 
 	@Override

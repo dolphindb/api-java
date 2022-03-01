@@ -85,7 +85,14 @@ public class BasicDoubleVector extends AbstractVector{
 			start += end;
 		}
 	}
-	
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeDouble(values[start + i]);//todo:Have question
+		}
+	}
+
 	public Scalar get(int index){
 		return new BasicDouble(values[index]);
 	}
@@ -157,6 +164,11 @@ public class BasicDoubleVector extends AbstractVector{
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeDoubleArray(values);
+	}
+
+	@Override
+	public int getUnitLength(){
+		return 8;
 	}
 
 	@Override

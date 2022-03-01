@@ -85,7 +85,14 @@ public class BasicLongVector extends AbstractVector{
 			start += end;
 		}
 	}
-	
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeLong(values[start + i]);//todo:Have question
+		}
+	}
+
 	public Scalar get(int index){
 		return new BasicLong(values[index]);
 	}
@@ -132,6 +139,11 @@ public class BasicLongVector extends AbstractVector{
 		else{
 			return (int)(((Long.MAX_VALUE % buckets) +2 + ((Long.MAX_VALUE + value) % buckets)) % buckets);
 		}
+	}
+
+	@Override
+	public int getUnitLength() {
+		return 16;
 	}
 
 	@Override

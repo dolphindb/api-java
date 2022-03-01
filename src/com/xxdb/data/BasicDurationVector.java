@@ -58,6 +58,11 @@ public class BasicDurationVector extends AbstractVector{
 	}
 
 	@Override
+	public int getUnitLength() {
+		return 4;
+	}
+
+	@Override
 	public Vector combine(Vector vector) {
 		throw new RuntimeException("BasicDurationVector.combine not implemented yet.");
 	}
@@ -86,6 +91,13 @@ public class BasicDurationVector extends AbstractVector{
 	@Override
 	public Class<?> getElementClass(){
 		return BasicDuration.class;
+	}
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeInt(values[start + i]);//todo:Have question
+		}
 	}
 
 	@Override

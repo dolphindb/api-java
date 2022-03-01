@@ -6,6 +6,8 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+import sun.awt.SunHints;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * 
@@ -80,7 +82,14 @@ public class BasicBooleanVector extends AbstractVector{
 	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
 		in.readFully(values, start, count);
 	}
-	
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeByte(values[start + i]);//todo:Have question
+		}
+	}
+
 	public Scalar get(int index){
 		return new BasicBoolean(values[index]);
 	}
@@ -103,8 +112,6 @@ public class BasicBooleanVector extends AbstractVector{
 		}else{
 			values[index] = value.getNumber().byteValue();
 		}
-
-
 	}
  
 	public void setBoolean(int index, boolean value){
@@ -158,6 +165,11 @@ public class BasicBooleanVector extends AbstractVector{
 	@Override
 	public int asof(Scalar value) {
 		throw new RuntimeException("BasicBooleanVector.asof not supported.");
+	}
+
+	@Override
+	public int getUnitLength(){
+		return 1;
 	}
 
 	@Override

@@ -95,7 +95,19 @@ public class BasicComplexVector extends AbstractVector{
 			start += end;
 		}
 	}
-	
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeDouble2(values[start + i]);//todo:Maybe have question
+		}
+	}
+
+	@Override
+	public int getUnitLength(){
+		return 16;
+	}
+
 	public Scalar get(int index){
 		return new BasicComplex(values[index].x, values[index].y);
 	}

@@ -4,22 +4,27 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import com.sun.corba.se.impl.ior.WireObjectKeyTemplate;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class BasicArrayVector extends AbstractVector {
 	private DATA_TYPE type;
 	private int[] rowIndices;
 	private Vector valueVec;
+	private int baseUnitLength_;
 
 	public BasicArrayVector(DATA_TYPE type, ExtendedDataInput in) throws IOException {
 		super(DATA_FORM.DF_VECTOR);
+		this.type = type;
 		int rows = in.readInt();
 		int cols = in.readInt(); 
 		rowIndices = new int[rows];
 		DATA_TYPE valueType = DATA_TYPE.valueOf(type.getValue() - 64);
 		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, cols);
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		this.baseUnitLength_ = valueVec.getUnitLength();
 		
 		int rowsRead = 0;
 		int rowsReadInBlock = 0;
@@ -74,8 +79,6 @@ public class BasicArrayVector extends AbstractVector {
 			rowsRead += rowsReadInBlock;
 		}
 	}
-
-
 	
 	@Override
 	public String getString(int index){
@@ -105,6 +108,7 @@ public class BasicArrayVector extends AbstractVector {
 	@Override
 	public Vector getSubVector(int[] indices) {
 		// TODO Auto-generated method stub
+
 		return null;
 	}
 
@@ -141,6 +145,11 @@ public class BasicArrayVector extends AbstractVector {
 	}
 
 	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		throw new NotImplementedException();
+	}
+
+	@Override
 	public DATA_CATEGORY getDataCategory() {
 		return Entity.DATA_CATEGORY.ARRAY;
 	}
@@ -156,9 +165,58 @@ public class BasicArrayVector extends AbstractVector {
 	}
 
 	@Override
+	public int getUnitLength(){
+		throw new NotImplementedException();
+	}
+
+	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
 		// TODO Auto-generated method stub
-		
+
+		int indexCount = rowIndices.length;
+
+
+		int maxCount = 255;
+		int countBytes = 1;
+		int indicesPos = 0;
+		int valuesOffect = 0;
+
+		while (indicesPos < indexCount){
+			int byteRequest = 4;
+			int curRows = 0;
+			int indiceCount = 1;
+			while (byteRequest < BUF_SIZE && indicesPos + indiceCount - 1 < indexCount){
+				int curIndiceOffect = indicesPos + indiceCount - 1;
+				int index = curIndiceOffect == 0 ? rowIndices[curIndiceOffect] : rowIndices[curIndiceOffect] - rowIndices[curIndiceOffect - 1];
+				while(indiceCount > maxCount)
+				{
+					byteRequest += (indiceCount - 1) * countBytes;
+					countBytes *= 2;
+					maxCount = Math.min(65535, maxCount);
+				}
+				if (byteRequest + countBytes + baseUnitLength_ * index > BUF_SIZE)
+					break;
+				curRows += index;
+				indiceCount++;
+				byteRequest += countBytes + baseUnitLength_ * index;
+			}
+			indiceCount --;
+			out.writeShort(indiceCount);
+			out.writeByte(countBytes);
+			out.writeByte(0);
+			for (int i = 0; i < indiceCount; i++){
+				int index = indicesPos + i == 0 ? rowIndices[indicesPos + i] : rowIndices[indicesPos + i] - rowIndices[indicesPos + i - 1];
+				if (countBytes == 1)
+					out.writeByte(100);
+				else if (countBytes == 2)
+					out.writeShort(index);
+				else
+					out.writeInt(index);
+			}
+			valueVec.serialize(valuesOffect, curRows, out);
+			indicesPos += indiceCount;
+			valuesOffect += curRows;
+		}
 	}
 
 }

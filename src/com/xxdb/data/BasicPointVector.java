@@ -94,7 +94,14 @@ public class BasicPointVector extends AbstractVector{
 			start += end;
 		}
 	}
-	
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeDouble2(values[start + i]);//todo:Have question
+		}
+	}
+
 	public Scalar get(int index){
 		return new BasicPoint(values[index].x, values[index].y);
 	}
@@ -128,6 +135,11 @@ public class BasicPointVector extends AbstractVector{
 	@Override
 	public int hashBucket(int index, int buckets){
 		return values[index].hashBucket(buckets);
+	}
+
+	@Override
+	public int getUnitLength() {
+		return 16;
 	}
 
 	@Override

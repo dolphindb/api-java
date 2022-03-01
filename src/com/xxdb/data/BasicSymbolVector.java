@@ -90,7 +90,12 @@ public class BasicSymbolVector extends AbstractVector {
 	public String getString(int index){
 		return base.getSymbol(values[index]);
 	}
-	
+
+	@Override
+	public int getUnitLength() {
+		return 4;
+	}
+
 	public void set(int index, Scalar value) throws Exception {
 		values[index] = base.find(value.getString(), true);
 	}
@@ -151,6 +156,13 @@ public class BasicSymbolVector extends AbstractVector {
 	@Override
 	public Class<?> getElementClass(){
 		return BasicString.class;
+	}
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeInt(values[start + i]);//todo:Have question
+		}
 	}
 
 	@Override

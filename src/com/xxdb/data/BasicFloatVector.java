@@ -86,7 +86,19 @@ public class BasicFloatVector extends AbstractVector{
 			start += end;
 		}
 	}
-	
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeFloat(values[start + i]);//todo:Have question
+		}
+	}
+
+	@Override
+	public int getUnitLength(){
+		return 4;
+	}
+
 	public Scalar get(int index){
 		return new BasicFloat(values[index]);
 	}
