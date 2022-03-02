@@ -103,6 +103,7 @@ public class MultithreadTableWriter {
                     columns.add(vector);
                 }
                 writeTable = new BasicTable(tableWriter_.colNames_, columns);
+                writeTable.setColumnCompressTypes(tableWriter_.compressTypes_);
                 for (List<Entity> row : items) {
                     try {
                         for(int colindex = 0; colindex < columns.size(); colindex++){
@@ -170,6 +171,18 @@ public class MultithreadTableWriter {
                 synchronized (failedQueue_) {
                     failedQueue_.addAll(items);
                 }
+            }
+            if(addRowCount > 0) {//check GC
+                boolean startgc = false;
+                synchronized (tableWriter_) {
+                    tableWriter_.sentRowsAfterGc_ += addRowCount;
+                    if (tableWriter_.sentRowsAfterGc_ > 10000) {//every sent 10000 rows, manual start gc to avoid out of memory
+                        tableWriter_.sentRowsAfterGc_ = 0;
+                        startgc = true;
+                    }
+                }
+                if(startgc)
+                    System.gc();
             }
             return true;
         }
@@ -243,16 +256,36 @@ public class MultithreadTableWriter {
     private String partitionedColName_;
     private List<String> colNames_=new ArrayList<>(),colTypeString_=new ArrayList<>();
     private List<Entity.DATA_TYPE> colTypes_=new ArrayList<>();
+    private int[] compressTypes_=null;
     private Domain partitionDomain_;
     private int partitionColumnIdx_;
     private int threadByColIndexForNonPartion_;
+    private int sentRowsAfterGc_;//manual start gc after sent some rows
     private List<WriterThread> threads_=new ArrayList<>();
     private ErrorCodeInfo errorCodeInfo_;
     public MultithreadTableWriter(String hostName, int port, String userId, String password,
                                   String dbName, String tableName, boolean useSSL,
                                   boolean highAvailability, String[] highAvailabilitySites,
                                   int batchSize, float throttle,
+                                  int threadCount, String partitionedColName,
+                                  int[] compressTypes) throws Exception{
+        init(hostName,port,userId, password,dbName, tableName, useSSL,highAvailability,highAvailabilitySites,
+                batchSize, throttle,threadCount,partitionedColName,compressTypes);
+    }
+    public MultithreadTableWriter(String hostName, int port, String userId, String password,
+                                  String dbName, String tableName, boolean useSSL,
+                                  boolean highAvailability, String[] highAvailabilitySites,
+                                  int batchSize, float throttle,
                                   int threadCount, String partitionedColName) throws Exception{
+        init(hostName,port,userId, password,dbName, tableName, useSSL,highAvailability,highAvailabilitySites,
+                batchSize, throttle,threadCount,partitionedColName,null);
+    }
+    private void init(String hostName, int port, String userId, String password,
+                      String dbName, String tableName, boolean useSSL,
+                      boolean highAvailability, String[] highAvailabilitySites,
+                      int batchSize, float throttle,
+                      int threadCount, String partitionedColName,
+                      int[] compressTypes) throws Exception{
         dbName_=dbName;
         tableName_=tableName;
         batchSize_=batchSize;
@@ -270,7 +303,21 @@ public class MultithreadTableWriter {
         if (threadCount > 1 && partitionedColName.length()<1) {
             throw new RuntimeException("PartitionedColName must be specified in muti-thread mode.");
         }
-        DBConnection pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,highAvailability,highAvailabilitySites);
+        boolean isCompress = false;
+        int keepAliveTime = 7200;
+        if (compressTypes != null) {
+            for (int one : compressTypes) {
+                if (one != Vector.COMPRESS_NONE) {
+                    isCompress = true;
+                    break;
+                }
+            }
+            if (isCompress) {
+                compressTypes_=new int[compressTypes.length];
+                System.arraycopy(compressTypes,0,compressTypes_,0,compressTypes.length);
+            }
+        }
+        DBConnection pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,highAvailability,highAvailabilitySites,isCompress);
         if(pConn==null){
             throw new RuntimeException("Failed to connect to server.");
         }
@@ -296,6 +343,9 @@ public class MultithreadTableWriter {
         BasicTable colDefs = (BasicTable)schema.get(new BasicString("colDefs"));
         BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
         int columnSize = colDefs.rows();
+        if (compressTypes_!=null && compressTypes_.length != columnSize) {
+            throw new RuntimeException("Compress type size doesn't match column size "+columnSize);
+        }
 
         BasicStringVector colDefsName = (BasicStringVector)colDefs.getColumn("name");
         BasicStringVector colDefsTypeString = (BasicStringVector)colDefs.getColumn("typeString");
@@ -354,7 +404,7 @@ public class MultithreadTableWriter {
         // init done, start thread now.
         for(int i = 0; i < threadCount; i++){
             if (pConn == null) {
-                pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,highAvailability,highAvailabilitySites);
+                pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,highAvailability,highAvailabilitySites,isCompress);
             }
             WriterThread writerThread = new WriterThread(this,pConn);
             threads_.add(writerThread);
@@ -572,8 +622,8 @@ public class MultithreadTableWriter {
     private boolean isExit() { return hasError_; }
     private DBConnection newConn(String hostName, int port, String userId, String password,
                                  String dbName, String tableName, boolean useSSL,
-                                 boolean highAvailability, String[] highAvailabilitySites) throws IOException {
-        DBConnection pConn = new DBConnection(false,useSSL);
+                                 boolean highAvailability, String[] highAvailabilitySites,boolean compress) throws IOException {
+        DBConnection pConn = new DBConnection(false,useSSL,compress);
         //String hostName, int port, String userId, String password, String initialScript, boolean highAvailability, String[] highAvailabilitySites
         boolean ret = pConn.connect(hostName, port, userId, password, null,highAvailability,highAvailabilitySites);
         if (!ret)

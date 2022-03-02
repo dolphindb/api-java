@@ -20,6 +20,7 @@ public class BasicTable extends AbstractEntity implements Table{
 	private List<Vector> columns_ = new ArrayList<Vector>();
 	private List<String> names_ = new ArrayList<String>();
 	private Map<String, Integer> name2index_ = new HashMap<String, Integer>();
+	private int[] colCompresses_ = null;
 
 	public BasicTable(ExtendedDataInput in) throws IOException{
 		int rows = in.readInt();
@@ -82,6 +83,33 @@ public class BasicTable extends AbstractEntity implements Table{
         this.setColName(colNames);
         this.setColumns(cols);
     }
+
+	public void setColumnCompressTypes(int[] colCompresses) {
+		if (colCompresses!=null && colCompresses.length != columns_.size()) {
+			throw new RuntimeException("Compress type size must match column size "+columns_.size()+".");
+		}
+		if(colCompresses!=null) {
+			for (int i = 0; i < colCompresses.length; i++) {
+				if (colCompresses[i] == Vector.COMPRESS_DELTA) {
+					Vector column=getColumn(i);
+					DATA_TYPE dataType = column.getDataType();
+					if(column.getDataCategory() != DATA_CATEGORY.TEMPORAL) {
+						if (dataType != DATA_TYPE.DT_SHORT && dataType != DATA_TYPE.DT_INT && dataType != DATA_TYPE.DT_LONG) {
+							throw new RuntimeException("Delta compression only supports short/int/long and temporal data.");
+						}
+					}
+					if(dataType.getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && dataType.getValue() <= Entity.DATA_TYPE.DT_POINT_ARRAY.getValue()){
+						throw new RuntimeException("Delta compression doesn't support array vector.");
+					}
+				}
+			}
+		}
+		if(colCompresses!=null){
+			colCompresses_=new int[colCompresses.length];
+			System.arraycopy(colCompresses,0,colCompresses_,0,colCompresses.length);
+		}else
+			colCompresses_ = null;
+	}
     
     public void setColName (final List<String> colNames) {
         names_.clear();
@@ -277,8 +305,12 @@ public class BasicTable extends AbstractEntity implements Table{
 			AbstractVector v = (AbstractVector) this.getColumn(i);
 			if(v.getDataType() == DATA_TYPE.DT_SYMBOL)
 				v.write(output);
-			else
+			else {
+				if(colCompresses_!=null){
+					v.setCompressedMethod(colCompresses_[i]);
+				}
 				v.writeCompressed(output);
+			}
 		}
 
 	}
