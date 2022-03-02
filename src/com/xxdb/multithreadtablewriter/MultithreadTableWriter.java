@@ -304,18 +304,15 @@ public class MultithreadTableWriter {
             throw new RuntimeException("PartitionedColName must be specified in muti-thread mode.");
         }
         boolean isCompress = false;
-        int keepAliveTime = 7200;
-        if (compressTypes != null) {
+        if (compressTypes != null && compressTypes.length > 0) {
             for (int one : compressTypes) {
-                if (one != Vector.COMPRESS_NONE) {
-                    isCompress = true;
-                    break;
+                if (one != Vector.COMPRESS_LZ4 && one != Vector.COMPRESS_DELTA) {
+                    throw new RuntimeException("Unsupported compress method.");
                 }
             }
-            if (isCompress) {
-                compressTypes_=new int[compressTypes.length];
-                System.arraycopy(compressTypes,0,compressTypes_,0,compressTypes.length);
-            }
+            isCompress = true;
+            compressTypes_=new int[compressTypes.length];
+            System.arraycopy(compressTypes,0,compressTypes_,0,compressTypes.length);
         }
         DBConnection pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,highAvailability,highAvailabilitySites,isCompress);
         if(pConn==null){

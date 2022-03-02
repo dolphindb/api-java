@@ -12,7 +12,6 @@ import com.xxdb.io.ExtendedDataOutput;
 
 public interface Vector extends Entity{
 	int DISPLAY_ROWS = 10;
-	int COMPRESS_NONE = 0;
 	int COMPRESS_LZ4 = 1;
 	int COMPRESS_DELTA = 2;
 
