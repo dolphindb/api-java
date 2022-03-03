@@ -1,4 +1,4 @@
-package com.xxdb.multithreadtablewriter;
+package com.xxdb.multithreadedtablewriter;
 
 import com.xxdb.DBConnection;
 import com.xxdb.comm.ErrorCodeInfo;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class MultithreadTableWriter {
+public class MultithreadedTableWriter {
     private Logger logger_=Logger.getLogger(getClass().getName());
     public static class ThreadStatus{
         public long threadId;
@@ -24,7 +24,7 @@ public class MultithreadTableWriter {
         public List<ThreadStatus> threadStatusList=new ArrayList<>();
     };
     static class WriterThread implements Runnable{
-        WriterThread(MultithreadTableWriter tableWriter,DBConnection conn) {
+        WriterThread(MultithreadedTableWriter tableWriter, DBConnection conn) {
             tableWriter_=tableWriter;
             sentRows_=0;
             conn_ = conn;
@@ -236,7 +236,7 @@ public class MultithreadTableWriter {
                 writeQueue_.notify();
             }
         }
-        MultithreadTableWriter tableWriter_;
+        MultithreadedTableWriter tableWriter_;
         DBConnection conn_;
 
         String scriptTableInsert_,scriptSaveTable_;
@@ -263,20 +263,20 @@ public class MultithreadTableWriter {
     private int sentRowsAfterGc_;//manual start gc after sent some rows
     private List<WriterThread> threads_=new ArrayList<>();
     private ErrorCodeInfo errorCodeInfo_;
-    public MultithreadTableWriter(String hostName, int port, String userId, String password,
-                                  String dbName, String tableName, boolean useSSL,
-                                  boolean highAvailability, String[] highAvailabilitySites,
-                                  int batchSize, float throttle,
-                                  int threadCount, String partitionedColName,
-                                  int[] compressTypes) throws Exception{
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean highAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionedColName,
+                                    int[] compressTypes) throws Exception{
         init(hostName,port,userId, password,dbName, tableName, useSSL,highAvailability,highAvailabilitySites,
                 batchSize, throttle,threadCount,partitionedColName,compressTypes);
     }
-    public MultithreadTableWriter(String hostName, int port, String userId, String password,
-                                  String dbName, String tableName, boolean useSSL,
-                                  boolean highAvailability, String[] highAvailabilitySites,
-                                  int batchSize, float throttle,
-                                  int threadCount, String partitionedColName) throws Exception{
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean highAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionedColName) throws Exception{
         init(hostName,port,userId, password,dbName, tableName, useSSL,highAvailability,highAvailabilitySites,
                 batchSize, throttle,threadCount,partitionedColName,null);
     }
