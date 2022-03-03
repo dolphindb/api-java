@@ -71,7 +71,7 @@ public class DBConnection {
     private boolean encrypted;
     private String controllerHost = null;
     private int controllerPort;
-    private boolean highAvailability;
+    private boolean enableHighAvailability;
     private String[] highAvailabilitySites = null;
     private boolean HAReconnect = false;
     private int connTimeout = 0;
@@ -145,12 +145,12 @@ public class DBConnection {
         return connect(hostName, port, "", "", initialScript, false, null);
     }
 
-    public boolean connect(String hostName, int port, String initialScript, boolean highAvailability) throws IOException {
-        return connect(hostName, port, "", "", initialScript, highAvailability, null);
+    public boolean connect(String hostName, int port, String initialScript, boolean enableHighAvailability) throws IOException {
+        return connect(hostName, port, "", "", initialScript, enableHighAvailability, null);
     }
 
-    public boolean connect(String hostName, int port, boolean highAvailability) throws IOException {
-        return connect(hostName, port, "", "", null, highAvailability, null);
+    public boolean connect(String hostName, int port, boolean enableHighAvailability) throws IOException {
+        return connect(hostName, port, "", "", null, enableHighAvailability, null);
     }
 
     public boolean connect(String hostName, int port, String[] highAvailabilitySites) throws IOException {
@@ -165,8 +165,8 @@ public class DBConnection {
         return connect(hostName, port, userId, password, null, false, null);
     }
 
-    public boolean connect(String hostName, int port, String userId, String password, boolean highAvailability) throws IOException {
-        return connect(hostName, port, userId, password, null, highAvailability, null);
+    public boolean connect(String hostName, int port, String userId, String password, boolean enableHighAvailability) throws IOException {
+        return connect(hostName, port, userId, password, null, enableHighAvailability, null);
     }
 
     public boolean connect(String hostName, int port, String userId, String password, String[] highAvailabilitySites) throws IOException {
@@ -177,15 +177,15 @@ public class DBConnection {
         return connect(hostName, port, userId, password, initialScript, false, null);
     }
 
-    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean highAvailability) throws IOException {
-        return connect(hostName, port, userId, password, initialScript, highAvailability, null);
+    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability) throws IOException {
+        return connect(hostName, port, userId, password, initialScript, enableHighAvailability, null);
     }
 
     public boolean connect(String hostName, int port, String userId, String password, String initialScript, String[] highAvailabilitySites) throws IOException {
         return connect(hostName, port, userId, password, initialScript, true, highAvailabilitySites);
     }
 
-    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean highAvailability, String[] highAvailabilitySites) throws IOException {
+    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites) throws IOException {
         mutex.lock();
         try {
             if (!sessionID.isEmpty()) {
@@ -201,7 +201,7 @@ public class DBConnection {
             this.password = password;
             this.encrypted = true;
             this.initialScript = initialScript;
-            this.highAvailability = highAvailability;
+            this.enableHighAvailability = enableHighAvailability;
             this.highAvailabilitySites = highAvailabilitySites;
             if (highAvailabilitySites != null) {
                 for (String site : highAvailabilitySites) {
@@ -210,7 +210,7 @@ public class DBConnection {
                         throw new IllegalArgumentException("The site '" + site + "' is invalid.");
                 }
             }
-            assert (highAvailabilitySites == null || highAvailability);
+            assert (highAvailabilitySites == null || enableHighAvailability);
 
             boolean connectRet = connect();
             if(!connectRet)
@@ -290,7 +290,7 @@ public class DBConnection {
         if (initialScript != null && initialScript.length() > 0)
             run(initialScript);
 
-        if (highAvailability && highAvailabilitySites == null) {
+        if (enableHighAvailability && highAvailabilitySites == null) {
             try {
                 controllerHost = ((BasicString) run("rpc(getControllerAlias(), getNodeHost)")).getString();
                 controllerPort = ((BasicInt) run("rpc(getControllerAlias(), getNodePort)")).getInt();
@@ -338,7 +338,7 @@ public class DBConnection {
     }
 
     private boolean switchToRandomAvailableSite() throws IOException {
-        if (!highAvailability)
+        if (!enableHighAvailability)
             return false;
 
         int tryCount = 0;
@@ -657,7 +657,7 @@ public class DBConnection {
                 }
                 throw ex;
             }
-            if (socket != null || !highAvailability)
+            if (socket != null || !enableHighAvailability)
                 throw ex;
             if (switchToRandomAvailableSite())
                 return run(script, listener, priority, parallelism);
@@ -861,7 +861,7 @@ public class DBConnection {
                 throw ex;
             }
 
-            if (socket != null || !highAvailability)
+            if (socket != null || !enableHighAvailability)
                 throw ex;
             if (switchToRandomAvailableSite())
                 return run(function, arguments, priority, parallelism);
@@ -988,7 +988,7 @@ public class DBConnection {
                 }
             }
         } catch (Exception ex) {
-            if (socket != null || !highAvailability)
+            if (socket != null || !enableHighAvailability)
                 throw ex;
             if (switchToRandomAvailableSite()) {
                 mutex.unlock();

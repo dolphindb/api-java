@@ -15,12 +15,12 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	private List<DBConnection> conns;
 	private ExecutorService executor;
 
-	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean highAvailability) throws IOException{
+	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability) throws IOException{
 		conns = new ArrayList<DBConnection>(count);
 		if(!loadBalance){
 			for(int i=0; i<count; ++i){
 				DBConnection conn = new DBConnection();
-				if(!conn.connect(host, port, uid, pwd, highAvailability))
+				if(!conn.connect(host, port, uid, pwd, enableHighAvailability))
 					throw new RuntimeException("Can't connect to the specified host.");
 				conns.add(conn);
 			}
@@ -43,7 +43,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 			
 			for(int i=0; i<count; ++i){
 				DBConnection conn = new DBConnection();
-				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, highAvailability))
+				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, enableHighAvailability))
 					throw new RuntimeException("Can't connect to the host " + nodes.getString(i));
 				conns.add(conn);
 			}
