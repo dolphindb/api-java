@@ -572,20 +572,14 @@ public class BasicEntityFactory implements EntityFactory{
 			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType);
 		}
 		dataType = DATA_TYPE.values()[dataType.getValue()-64];
-		Vector dataVector=BasicEntityFactory.instance().createVectorWithDefaultValue(dataType,val.length);
-		int index = 0;
-		for (T one : val){
-			Entity entity = createScalar(dataType, one);
-			try {
-				dataVector.set(index, (Scalar) entity);
-			}catch (Exception e){
-				throw new RuntimeException("Failed to insert data, invalid array for "+dataType+" error "+ e.toString());
-			}
-			index++;
+		int count = val.length;
+		BasicAnyVector basicAnyVector = new BasicAnyVector(count);
+		for(int i = 0; i < count; ++i)
+		{
+			Entity t = createScalar(dataType, val[i]);
+			basicAnyVector.setEntity(i, t);
 		}
-		BasicAnyVector anyVector = new BasicAnyVector(1);
-		anyVector.setEntity(0,dataVector);
-		return anyVector;
+		return basicAnyVector;
 	}
 
 	private static Scalar createScalar(DATA_TYPE dataType, LocalDate val) {

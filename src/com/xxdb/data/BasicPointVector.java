@@ -126,7 +126,7 @@ public class BasicPointVector extends AbstractVector{
 		values[index].x = ((BasicPoint)value).getX();
 		values[index].y = ((BasicPoint)value).getY();
 	}
-	
+
 	public void setPoint(int index, double x, double y){
 		values[index].x = x;
 		values[index].y = y;

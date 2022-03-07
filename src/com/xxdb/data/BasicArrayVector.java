@@ -3,17 +3,62 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.List;
 
 import com.sun.corba.se.impl.ior.WireObjectKeyTemplate;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import static org.junit.Assert.assertEquals;
+
 public class BasicArrayVector extends AbstractVector {
 	private DATA_TYPE type;
 	private int[] rowIndices;
 	private Vector valueVec;
 	private int baseUnitLength_;
+
+	public BasicArrayVector(List<BasicAnyVector> value) {
+		super(DATA_FORM.DF_VECTOR);
+		this.type = DATA_TYPE.valueOf(value.get(0).get(0).getDataType().getValue() + 64);
+		DATA_TYPE valueType = DATA_TYPE.valueOf(value.get(0).get(0).getDataType().getValue());
+		int len = 0;
+		for (BasicAnyVector one : value){
+			len += one.rows();
+		}
+		int indexPos = 0;
+		int indexCount = value.size();
+		this.rowIndices = new int[indexCount];
+		this.valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, len);
+		int index = 0;
+		int curRows = 0;
+		for (int valuePos = 0; valuePos < indexCount; valuePos++){
+			BasicAnyVector temp = value.get(valuePos);
+			int size = temp.rows();
+			for (int i = 0; i < size ; i++){
+				try {
+					this.valueVec.set(index, temp.get(i));
+					index++;
+				}catch (Exception e){
+					throw new RuntimeException("Failed to insert data, invalid data for "+((Vector)temp.getEntity(0)).get(i)+" error "+ e.toString());
+				}
+			}
+			curRows += size;
+			this.rowIndices[indexPos++] = curRows;
+		}
+		this.baseUnitLength_ = (this.valueVec).getUnitLength();
+	}
+
+	public BasicArrayVector(int[] index, Vector value) {
+		super(DATA_FORM.DF_VECTOR);
+		DATA_TYPE dataType = value.getDataType();
+		this.type = DATA_TYPE.valueOf(dataType.getValue() + 64);
+		this.valueVec = value;
+		int indexCount = index.length;
+		rowIndices = new int[indexCount];
+		System.arraycopy(index, 0, this.rowIndices, 0, indexCount);
+		this.baseUnitLength_ = value.getUnitLength();
+	}
 
 	public BasicArrayVector(DATA_TYPE type, ExtendedDataInput in) throws IOException {
 		super(DATA_FORM.DF_VECTOR);
@@ -136,7 +181,17 @@ public class BasicArrayVector extends AbstractVector {
 	@Override
 	public void set(int index, Scalar value) throws Exception {
 		// TODO Auto-generated method stub
+		throw new NotImplementedException();
+	}
 
+	public void setVector(BasicAnyVector value, int start) throws Exception {
+		DATA_TYPE vecType = DATA_TYPE.valueOf(value.getEntity(0).getDataType().getValue() + 64);
+		if (vecType!=type)
+			throw new RuntimeException("Failed to insert data, the type is not the same as "+ type);
+		rowIndices[start] = (start == 0 ? rowIndices[start] + value.rows() : rowIndices[start] + rowIndices[start-1] + value.rows());
+		for (int i = 0;i < value.rows();i++){
+			valueVec.set(i+rowIndices[start], ((Vector)value.getEntity(0)).get(i));
+		}
 	}
 
 	@Override
@@ -174,8 +229,7 @@ public class BasicArrayVector extends AbstractVector {
 		// TODO Auto-generated method stub
 
 		int indexCount = rowIndices.length;
-
-
+		int cols = valueVec.rows();
 		int maxCount = 255;
 		int countBytes = 1;
 		int indicesPos = 0;
@@ -192,7 +246,12 @@ public class BasicArrayVector extends AbstractVector {
 				{
 					byteRequest += (indiceCount - 1) * countBytes;
 					countBytes *= 2;
-					maxCount = Math.min(65535, maxCount);
+					if (countBytes == 1)
+						maxCount = Byte.MAX_VALUE;
+					else if (countBytes == 2)
+						maxCount = Short.MAX_VALUE;
+					else if (countBytes == 3)
+						maxCount = Integer.MAX_VALUE;
 				}
 				if (byteRequest + countBytes + baseUnitLength_ * index > BUF_SIZE)
 					break;
@@ -207,7 +266,7 @@ public class BasicArrayVector extends AbstractVector {
 			for (int i = 0; i < indiceCount; i++){
 				int index = indicesPos + i == 0 ? rowIndices[indicesPos + i] : rowIndices[indicesPos + i] - rowIndices[indicesPos + i - 1];
 				if (countBytes == 1)
-					out.writeByte(100);
+					out.writeByte(index);
 				else if (countBytes == 2)
 					out.writeShort(index);
 				else

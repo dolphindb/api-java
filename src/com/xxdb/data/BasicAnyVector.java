@@ -68,7 +68,7 @@ public class BasicAnyVector extends AbstractVector{
 	public void set(int index, Scalar value) throws Exception {
 		values[index] = value;
 	}
-	
+
 	public void setEntity(int index, Entity value){
 		values[index] = value;
 	}

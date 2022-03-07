@@ -117,7 +117,7 @@ public class BasicDoubleVector extends AbstractVector{
 		}
 
 	}
-	
+
 	public void setDouble(int index, double value){
 		values[index] = value;
 	}

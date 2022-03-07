@@ -93,13 +93,19 @@ public class MultithreadedTableWriter {
                 //RECORDTIME("MTTW:createTable");
                 //tableWriter_.logger_.info(" createTable=" + size);
                 List<Vector> columns = new ArrayList<>();
+                int colCount = 0;
                 for (Entity.DATA_TYPE one : tableWriter_.colTypes_) {
+                    List<BasicAnyVector> anyVectorList = new ArrayList<>();
                     Vector vector;
                     if (one.getValue() >= 65){
-                        vector = new BasicAnyVector(size);
+                        for (int i = 0;i<size;i++){
+                            anyVectorList.add((BasicAnyVector) items.get(i).get(colCount));
+                        }
+                        vector = new BasicArrayVector(anyVectorList);
                     }else{
                         vector=BasicEntityFactory.instance().createVectorWithDefaultValue(one, size);
                     }
+                    colCount++;
                     columns.add(vector);
                 }
                 writeTable = new BasicTable(tableWriter_.colNames_, columns);
@@ -108,14 +114,7 @@ public class MultithreadedTableWriter {
                     try {
                         for(int colindex = 0; colindex < columns.size(); colindex++){
                             Vector col = columns.get(colindex);
-                            if(col instanceof BasicAnyVector){
-                                BasicAnyVector anyVector=(BasicAnyVector)col;
-                                Entity scalar = row.get(colindex);
-                                if (scalar != null)
-                                    ((BasicAnyVector) col).setEntity(addRowCount, scalar);
-                                else
-                                    col.setNull(addRowCount);
-                            }else {
+                            if(!(col instanceof BasicArrayVector)){
                                 Scalar scalar = (Scalar) row.get(colindex);
                                 if (scalar != null)
                                     col.set(addRowCount,scalar);

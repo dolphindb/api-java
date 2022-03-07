@@ -118,7 +118,7 @@ public class BasicShortVector extends AbstractVector{
 		}
 
 	}
-	
+
 	public void setShort(int index, short value){
 		values[index] = value;
 	}

@@ -111,7 +111,7 @@ public class BasicByteVector extends AbstractVector{
 			values[index] = value.getNumber().byteValue();
 		}
 	}
-	
+
 	public void setByte(int index, byte value){
 		values[index] = value;
 	}

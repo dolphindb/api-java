@@ -124,7 +124,7 @@ public class BasicLongVector extends AbstractVector{
 			values[index] = value.getNumber().longValue();
 		}
 	}
-	
+
 	public void setLong(int index, long value){
 		values[index] = value;
 	}
