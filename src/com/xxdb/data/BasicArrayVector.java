@@ -5,12 +5,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
 
-import com.sun.corba.se.impl.ior.WireObjectKeyTemplate;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import static org.junit.Assert.assertEquals;
 
 public class BasicArrayVector extends AbstractVector {
 	private DATA_TYPE type;
@@ -175,13 +172,28 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public Scalar get(int index) {
-		return new BasicString(getString(index));
+		throw new RuntimeException("BasicArrayVector.get not supported.");
+	}
+
+	public Vector getValue(int start, int len) throws Exception{
+		if (start + len > valueVec.rows()){
+			throw new RuntimeException("The length is out of bounds.");
+		}
+		else{
+			DATA_TYPE valueType = DATA_TYPE.valueOf(valueVec.get(0).getDataType().getValue());
+			Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, len);
+			int index = 0;
+			for (int i = start ; i < start + len ; i++){
+				value.set(index, valueVec.get(i));
+			}
+			return value;
+		}
 	}
 
 	@Override
 	public void set(int index, Scalar value) throws Exception {
 		// TODO Auto-generated method stub
-		throw new NotImplementedException();
+		throw new RuntimeException("BasicArrayVector.set not supported.");
 	}
 
 	@Override
@@ -191,7 +203,7 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
-		throw new NotImplementedException();
+		throw new RuntimeException("BasicAnyVector.serialize not supported.");
 	}
 
 	@Override
@@ -211,7 +223,7 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public int getUnitLength(){
-		throw new NotImplementedException();
+		throw new RuntimeException("BasicArrayVector.getUnitLength() not supported.");
 	}
 
 	@Override

@@ -3,7 +3,6 @@ package com.xxdb.data;
 import java.io.IOException;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * 
@@ -105,7 +104,7 @@ public class BasicAnyVector extends AbstractVector{
 
 	@Override
 	public int getUnitLength(){
-		throw new NotImplementedException();
+		throw new RuntimeException("BasicAnyVector.getUnitLength not supported.");
 	}
 	
 	public String getString(){
@@ -129,7 +128,7 @@ public class BasicAnyVector extends AbstractVector{
 
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
-		throw new NotImplementedException();
+		throw new RuntimeException("BasicAnyVector.serialize not supported.");
 	}
 
 	@Override
