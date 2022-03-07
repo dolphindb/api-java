@@ -244,7 +244,7 @@ public class BasicArrayVector extends AbstractVector {
 			while (byteRequest < BUF_SIZE && indicesPos + indiceCount - 1 < indexCount){
 				int curIndiceOffect = indicesPos + indiceCount - 1;
 				int index = curIndiceOffect == 0 ? rowIndices[curIndiceOffect] : rowIndices[curIndiceOffect] - rowIndices[curIndiceOffect - 1];
-				while(indiceCount > maxCount)
+				while(index > maxCount)
 				{
 					byteRequest += (indiceCount - 1) * countBytes;
 					countBytes *= 2;
