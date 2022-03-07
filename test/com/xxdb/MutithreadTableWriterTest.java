@@ -155,7 +155,7 @@ public class MutithreadTableWriterTest implements Runnable{
         Boolean[] bs = new Boolean[]{false, true, false, true};
         //Entity entity = BasicEntityFactory.createScalar(Entity.DATA_TYPE.DT_BOOL, boo);
         //System.out.println(entity);
-        int rows = 1000000;
+        int rows = 100000;
         for (int i=0;i<rows;i++){
             //boolean b=mutithreadTableWriter_.insert(pErrorInfo,DT,DT,DT,DT,DT,DT,DT);
             //boolean b=mutithreadTableWriter_.insert(pErrorInfo,calendar,calendar,calendar,calendar,calendar, calendar,calendar);

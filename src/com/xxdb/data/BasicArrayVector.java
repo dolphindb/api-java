@@ -184,16 +184,6 @@ public class BasicArrayVector extends AbstractVector {
 		throw new NotImplementedException();
 	}
 
-	public void setVector(BasicAnyVector value, int start) throws Exception {
-		DATA_TYPE vecType = DATA_TYPE.valueOf(value.getEntity(0).getDataType().getValue() + 64);
-		if (vecType!=type)
-			throw new RuntimeException("Failed to insert data, the type is not the same as "+ type);
-		rowIndices[start] = (start == 0 ? rowIndices[start] + value.rows() : rowIndices[start] + rowIndices[start-1] + value.rows());
-		for (int i = 0;i < value.rows();i++){
-			valueVec.set(i+rowIndices[start], ((Vector)value.getEntity(0)).get(i));
-		}
-	}
-
 	@Override
 	public Class<?> getElementClass() {
 		return Entity.class;
