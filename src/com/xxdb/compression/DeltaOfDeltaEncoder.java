@@ -88,11 +88,11 @@ class DeltaOfDeltaBlockEncoder {
                 break;
             out.writeBits(0, 1);
         }
+        count--;
         if(count * unitLength >= blockSize){
             writeEnd();
             return this.out.getLongArray();
         }
-        count--;
         in.position(in.position() - unitLength);
         writeHeader();
         while(count * unitLength < blockSize){
@@ -101,11 +101,11 @@ class DeltaOfDeltaBlockEncoder {
                 break;
             out.writeBits(0, 1);
         }
+        count--;
         if(count * unitLength >= blockSize){
             writeEnd();
             return this.out.getLongArray();
         }
-        count--;
         in.position(in.position() - unitLength);
         writeFirstDelta();
         while (count * unitLength < blockSize) {
@@ -188,7 +188,6 @@ class DeltaOfDeltaBlockEncoder {
             return in.getInt();
         else if (unitLength == 8)
             return in.getLong();
-        count--;
         throw new RuntimeException("Compression fails: can only support integral or temporal type");
     }
 

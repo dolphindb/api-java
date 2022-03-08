@@ -164,7 +164,7 @@ public class BasicStringVector extends AbstractVector{
 	public void set(int index, Scalar value) throws Exception {
 		values[index] = value.getString();
 	}
-	
+
 	public void setString(int index, String value){
 		values[index] = value;
 	}

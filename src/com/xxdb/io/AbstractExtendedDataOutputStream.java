@@ -120,7 +120,7 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 	}
 
 	@Override
-	public void writeString(String value) throws IOException {
+	public void writeString(String value) throws IOException{
 		int len = value.length();
 		int i = 0;
 		int pos = 0;
@@ -152,7 +152,28 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 	public void writeBlob(String value) throws IOException {
 		int len = value.length();
 		writeInt(len);
-		writeString(value);
+		int i = 0;
+		int pos = 0;
+		if (buf == null)
+			buf = new byte[BUF_SIZE];
+		do {
+			while (i < len && pos < buf.length - 4){
+				char c = value.charAt(i++);
+				if (c >= '\u0001' && c <= '\u007f')
+					buf[pos++] = (byte) c;
+				else if (c == '\u0000' || (c >= '\u0080' && c <= '\u07ff')){
+					buf[pos++] = (byte) (0xc0 | (0x1f & (c >> 6)));
+					buf[pos++] = (byte) (0x80 | (0x3f & c));
+				}
+				else{
+					buf[pos++] = (byte) (0xe0 | (0x0f & (c >> 12)));
+					buf[pos++] = (byte) (0x80 | (0x3f & (c >> 6)));
+					buf[pos++] = (byte) (0x80 | (0x3f & c));
+				}
+			}
+			write(buf, 0, pos);
+			pos = 0;
+		}while (i < len);
 	}
 	
 	public static int getUTFlength(String value, int start, int sum) throws IOException {

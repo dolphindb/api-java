@@ -145,7 +145,7 @@ public class BasicInt128Vector extends AbstractVector{
 		values[index].high = ((BasicInt128)value).getMostSignicantBits();
 		values[index].low = ((BasicInt128)value).getLeastSignicantBits();
 	}
-	
+
 	public void setInt128(int index, long highValue, long lowValue){
 		values[index].high = highValue;
 		values[index].low = lowValue;

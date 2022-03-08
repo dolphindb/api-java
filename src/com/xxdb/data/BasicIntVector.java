@@ -124,7 +124,7 @@ public class BasicIntVector extends AbstractVector{
 			values[index] = value.getNumber().intValue();
 		}
 	}
-	
+
 	public void setInt(int index, int value){
 		values[index] = value;
 	}

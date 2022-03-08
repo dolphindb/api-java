@@ -1,7 +1,5 @@
 package com.xxdb.comm;
 
-import com.xxdb.multithreadtablewriter.MultithreadTableWriter;
-
 public class ErrorCodeInfo {
     public enum Code {
         EC_None,

@@ -111,7 +111,7 @@ public class BasicBooleanVector extends AbstractVector{
 			values[index] = value.getNumber().byteValue();
 		}
 	}
- 
+
 	public void setBoolean(int index, boolean value){
 		values[index] = value ? (byte)1 : (byte)0;
 	}

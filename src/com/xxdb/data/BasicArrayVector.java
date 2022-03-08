@@ -3,15 +3,59 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+
 
 public class BasicArrayVector extends AbstractVector {
 	private DATA_TYPE type;
 	private int[] rowIndices;
 	private Vector valueVec;
 	private int baseUnitLength_;
+
+	public BasicArrayVector(List<BasicAnyVector> value) {
+		super(DATA_FORM.DF_VECTOR);
+		this.type = DATA_TYPE.valueOf(value.get(0).get(0).getDataType().getValue() + 64);
+		DATA_TYPE valueType = DATA_TYPE.valueOf(value.get(0).get(0).getDataType().getValue());
+		int len = 0;
+		for (BasicAnyVector one : value){
+			len += one.rows();
+		}
+		int indexPos = 0;
+		int indexCount = value.size();
+		this.rowIndices = new int[indexCount];
+		this.valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, len);
+		int index = 0;
+		int curRows = 0;
+		for (int valuePos = 0; valuePos < indexCount; valuePos++){
+			BasicAnyVector temp = value.get(valuePos);
+			int size = temp.rows();
+			for (int i = 0; i < size ; i++){
+				try {
+					this.valueVec.set(index, temp.get(i));
+					index++;
+				}catch (Exception e){
+					throw new RuntimeException("Failed to insert data, invalid data for "+((Vector)temp.getEntity(0)).get(i)+" error "+ e.toString());
+				}
+			}
+			curRows += size;
+			this.rowIndices[indexPos++] = curRows;
+		}
+		this.baseUnitLength_ = (this.valueVec).getUnitLength();
+	}
+
+	public BasicArrayVector(int[] index, Vector value) {
+		super(DATA_FORM.DF_VECTOR);
+		DATA_TYPE dataType = value.getDataType();
+		this.type = DATA_TYPE.valueOf(dataType.getValue() + 64);
+		this.valueVec = value;
+		int indexCount = index.length;
+		rowIndices = new int[indexCount];
+		System.arraycopy(index, 0, this.rowIndices, 0, indexCount);
+		this.baseUnitLength_ = value.getUnitLength();
+	}
 
 	public BasicArrayVector(DATA_TYPE type, ExtendedDataInput in) throws IOException {
 		super(DATA_FORM.DF_VECTOR);
@@ -128,13 +172,28 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public Scalar get(int index) {
-		return new BasicString(getString(index));
+		throw new RuntimeException("BasicArrayVector.get not supported.");
+	}
+
+	public Vector getValue(int start, int len) throws Exception{
+		if (start + len > valueVec.rows()){
+			throw new RuntimeException("The length is out of bounds.");
+		}
+		else{
+			DATA_TYPE valueType = DATA_TYPE.valueOf(valueVec.get(0).getDataType().getValue());
+			Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, len);
+			int index = 0;
+			for (int i = start ; i < start + len ; i++){
+				value.set(index, valueVec.get(i));
+			}
+			return value;
+		}
 	}
 
 	@Override
 	public void set(int index, Scalar value) throws Exception {
 		// TODO Auto-generated method stub
-
+		throw new RuntimeException("BasicArrayVector.set not supported.");
 	}
 
 	@Override
@@ -144,7 +203,7 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
-		throw new RuntimeException("serialize is not implemented.");
+		throw new RuntimeException("BasicAnyVector.serialize not supported.");
 	}
 
 	@Override
@@ -164,7 +223,7 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public int getUnitLength(){
-		throw new RuntimeException("getUnitLength is not implemented.");
+		throw new RuntimeException("BasicArrayVector.getUnitLength() not supported.");
 	}
 
 	@Override
@@ -172,8 +231,7 @@ public class BasicArrayVector extends AbstractVector {
 		// TODO Auto-generated method stub
 
 		int indexCount = rowIndices.length;
-
-
+		int cols = valueVec.rows();
 		int maxCount = 255;
 		int countBytes = 1;
 		int indicesPos = 0;
@@ -186,11 +244,16 @@ public class BasicArrayVector extends AbstractVector {
 			while (byteRequest < BUF_SIZE && indicesPos + indiceCount - 1 < indexCount){
 				int curIndiceOffect = indicesPos + indiceCount - 1;
 				int index = curIndiceOffect == 0 ? rowIndices[curIndiceOffect] : rowIndices[curIndiceOffect] - rowIndices[curIndiceOffect - 1];
-				while(indiceCount > maxCount)
+				while(index > maxCount)
 				{
 					byteRequest += (indiceCount - 1) * countBytes;
 					countBytes *= 2;
-					maxCount = Math.min(65535, maxCount);
+					if (countBytes == 1)
+						maxCount = Byte.MAX_VALUE;
+					else if (countBytes == 2)
+						maxCount = Short.MAX_VALUE;
+					else if (countBytes == 3)
+						maxCount = Integer.MAX_VALUE;
 				}
 				if (byteRequest + countBytes + baseUnitLength_ * index > BUF_SIZE)
 					break;
@@ -205,7 +268,7 @@ public class BasicArrayVector extends AbstractVector {
 			for (int i = 0; i < indiceCount; i++){
 				int index = indicesPos + i == 0 ? rowIndices[indicesPos + i] : rowIndices[indicesPos + i] - rowIndices[indicesPos + i - 1];
 				if (countBytes == 1)
-					out.writeByte(100);
+					out.writeByte(index);
 				else if (countBytes == 2)
 					out.writeShort(index);
 				else

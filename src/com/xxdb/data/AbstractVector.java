@@ -34,7 +34,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 
 	@Override
 	public int columns() {
-		return rows();
+		return 1;
 	}
 
 	@Override

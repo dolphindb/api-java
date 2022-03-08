@@ -67,7 +67,7 @@ public class BasicAnyVector extends AbstractVector{
 	public void set(int index, Scalar value) throws Exception {
 		values[index] = value;
 	}
-	
+
 	public void setEntity(int index, Entity value){
 		values[index] = value;
 	}
@@ -104,7 +104,7 @@ public class BasicAnyVector extends AbstractVector{
 
 	@Override
 	public int getUnitLength(){
-		throw new RuntimeException("getUnitLength is not implemented.");
+		throw new RuntimeException("BasicAnyVector.getUnitLength not supported.");
 	}
 	
 	public String getString(){
@@ -128,7 +128,7 @@ public class BasicAnyVector extends AbstractVector{
 
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
-		throw new RuntimeException("serialize is not implemented.");
+		throw new RuntimeException("BasicAnyVector.serialize not supported.");
 	}
 
 	@Override

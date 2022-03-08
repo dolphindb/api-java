@@ -51,7 +51,7 @@ public class BasicDurationVector extends AbstractVector{
 		values[2*index] = duration.getDuration();
 		values[2*index + 1] = duration.getUnit().ordinal();
 	}
-	
+
 	@Override
 	public int hashBucket(int index, int buckets){
 		return 0;

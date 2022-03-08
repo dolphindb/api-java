@@ -123,7 +123,7 @@ public class BasicFloatVector extends AbstractVector{
 		}
 
 	}
-	
+
 	public void setFloat(int index, float value){
 		values[index] = value;
 	}

@@ -99,7 +99,7 @@ public class BasicSymbolVector extends AbstractVector {
 	public void set(int index, Scalar value) throws Exception {
 		values[index] = base.find(value.getString(), true);
 	}
-	
+
 	public void setString(int index, String value){
 		values[index] = base.find(value, true);
 	}

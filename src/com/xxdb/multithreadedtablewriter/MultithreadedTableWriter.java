@@ -1,4 +1,4 @@
-package com.xxdb.multithreadtablewriter;
+package com.xxdb.multithreadedtablewriter;
 
 import com.xxdb.DBConnection;
 import com.xxdb.comm.ErrorCodeInfo;
@@ -11,20 +11,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class MultithreadTableWriter {
+public class MultithreadedTableWriter {
     private Logger logger_=Logger.getLogger(getClass().getName());
     public static class ThreadStatus{
         public long threadId;
-        public long sentRows,unwriteRows,failedRows;
+        public long sentRows,unsentRows,sendFailedRows;
     };
     public static class Status{
-        public boolean isExit;
+        public boolean isExiting;
         public ErrorCodeInfo errorInfo;
-        public long sentRows, unwriteRows, failedRows;
+        public long sentRows, unsentRows, sendFailedRows;
         public List<ThreadStatus> threadStatusList=new ArrayList<>();
     };
     static class WriterThread implements Runnable{
-        WriterThread(MultithreadTableWriter tableWriter,DBConnection conn) {
+        WriterThread(MultithreadedTableWriter tableWriter, DBConnection conn) {
             tableWriter_=tableWriter;
             sentRows_=0;
             conn_ = conn;
@@ -38,16 +38,16 @@ public class MultithreadTableWriter {
             if (init() == false)//init
                 return;
             long batchWaitTimeout, diff;
-            while (isExit() == false) {
+            while (isExiting() == false) {
                 try {
                     synchronized (writeQueue_) {
                         //tableWriter_.logger_.info(writeThread_.getId()+" run wait0 start");
                         writeQueue_.wait();
                         //tableWriter_.logger_.info(writeThread_.getId()+" run wait0 end");
-                        if (isExit() ==false && tableWriter_.batchSize_ > 1 && tableWriter_.throttleMilsecond_ > 0) {
+                        if (isExiting() ==false && tableWriter_.batchSize_ > 1 && tableWriter_.throttleMilsecond_ > 0) {
                             batchWaitTimeout = System.currentTimeMillis() + tableWriter_.throttleMilsecond_;
                             //tableWriter_.logger_.info(writeThread_.getId()+" run wait1 start");
-                            while (isExit() ==false && writeQueue_.size() < tableWriter_.batchSize_) {//check batchsize
+                            while (isExiting() ==false && writeQueue_.size() < tableWriter_.batchSize_) {//check batchsize
                                 diff = batchWaitTimeout - System.currentTimeMillis();
                                 if (diff > 0) {
                                     writeQueue_.wait(diff);
@@ -60,7 +60,7 @@ public class MultithreadTableWriter {
                         }
                     }
                     //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData start size "+writeQueue_.size());
-                    while(isExit() == false && writeAllData());
+                    while(isExiting() == false && writeAllData());
                     //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData end size "+writeQueue_.size());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -68,7 +68,7 @@ public class MultithreadTableWriter {
                 }
             }
             //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData2 start");
-            while(tableWriter_.isExit()==false && writeAllData());
+            while(tableWriter_.isExiting()==false && writeAllData());
             //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData2 end");
             synchronized (writeThread_){
                 isFinished_ = true;
@@ -93,13 +93,19 @@ public class MultithreadTableWriter {
                 //RECORDTIME("MTTW:createTable");
                 //tableWriter_.logger_.info(" createTable=" + size);
                 List<Vector> columns = new ArrayList<>();
+                int colCount = 0;
                 for (Entity.DATA_TYPE one : tableWriter_.colTypes_) {
+                    List<BasicAnyVector> anyVectorList = new ArrayList<>();
                     Vector vector;
                     if (one.getValue() >= 65){
-                        vector = new BasicAnyVector(size);
+                        for (int i = 0;i<size;i++){
+                            anyVectorList.add((BasicAnyVector) items.get(i).get(colCount));
+                        }
+                        vector = new BasicArrayVector(anyVectorList);
                     }else{
                         vector=BasicEntityFactory.instance().createVectorWithDefaultValue(one, size);
                     }
+                    colCount++;
                     columns.add(vector);
                 }
                 writeTable = new BasicTable(tableWriter_.colNames_, columns);
@@ -108,14 +114,7 @@ public class MultithreadTableWriter {
                     try {
                         for(int colindex = 0; colindex < columns.size(); colindex++){
                             Vector col = columns.get(colindex);
-                            if(col instanceof BasicAnyVector){
-                                BasicAnyVector anyVector=(BasicAnyVector)col;
-                                Entity scalar = row.get(colindex);
-                                if (scalar != null)
-                                    ((BasicAnyVector) col).setEntity(addRowCount, scalar);
-                                else
-                                    col.setNull(addRowCount);
-                            }else {
+                            if(!(col instanceof BasicArrayVector)){
                                 Scalar scalar = (Scalar) row.get(colindex);
                                 if (scalar != null)
                                     col.set(addRowCount,scalar);
@@ -224,10 +223,10 @@ public class MultithreadTableWriter {
         void getStatus(ThreadStatus status){
             status.threadId = writeThread_.getId();
             status.sentRows = sentRows_;
-            status.unwriteRows = writeQueue_.size();
-            status.failedRows = failedQueue_.size();
+            status.unsentRows = writeQueue_.size();
+            status.sendFailedRows = failedQueue_.size();
         }
-        boolean isExit(){
+        boolean isExiting(){
             return exit_ || tableWriter_.hasError_;
         }
         void exit(){
@@ -236,7 +235,7 @@ public class MultithreadTableWriter {
                 writeQueue_.notify();
             }
         }
-        MultithreadTableWriter tableWriter_;
+        MultithreadedTableWriter tableWriter_;
         DBConnection conn_;
 
         String scriptTableInsert_,scriptSaveTable_;
@@ -263,28 +262,28 @@ public class MultithreadTableWriter {
     private int sentRowsAfterGc_;//manual start gc after sent some rows
     private List<WriterThread> threads_=new ArrayList<>();
     private ErrorCodeInfo errorCodeInfo_;
-    public MultithreadTableWriter(String hostName, int port, String userId, String password,
-                                  String dbName, String tableName, boolean useSSL,
-                                  boolean highAvailability, String[] highAvailabilitySites,
-                                  int batchSize, float throttle,
-                                  int threadCount, String partitionedColName,
-                                  int[] compressTypes) throws Exception{
-        init(hostName,port,userId, password,dbName, tableName, useSSL,highAvailability,highAvailabilitySites,
-                batchSize, throttle,threadCount,partitionedColName,compressTypes);
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean enableHighAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionCol,
+                                    int[] compressTypes) throws Exception{
+        init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
+                batchSize, throttle,threadCount,partitionCol,compressTypes);
     }
-    public MultithreadTableWriter(String hostName, int port, String userId, String password,
-                                  String dbName, String tableName, boolean useSSL,
-                                  boolean highAvailability, String[] highAvailabilitySites,
-                                  int batchSize, float throttle,
-                                  int threadCount, String partitionedColName) throws Exception{
-        init(hostName,port,userId, password,dbName, tableName, useSSL,highAvailability,highAvailabilitySites,
-                batchSize, throttle,threadCount,partitionedColName,null);
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean enableHighAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionCol) throws Exception{
+        init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
+                batchSize, throttle,threadCount,partitionCol,null);
     }
     private void init(String hostName, int port, String userId, String password,
                       String dbName, String tableName, boolean useSSL,
-                      boolean highAvailability, String[] highAvailabilitySites,
+                      boolean enableHighAvailability, String[] highAvailabilitySites,
                       int batchSize, float throttle,
-                      int threadCount, String partitionedColName,
+                      int threadCount, String partitionCol,
                       int[] compressTypes) throws Exception{
         dbName_=dbName;
         tableName_=tableName;
@@ -300,7 +299,7 @@ public class MultithreadTableWriter {
         if(throttle < 0){
             throw new RuntimeException("Throttle must be greater than 0.");
         }
-        if (threadCount > 1 && partitionedColName.length()<1) {
+        if (threadCount > 1 && partitionCol.length()<1) {
             throw new RuntimeException("PartitionedColName must be specified in muti-thread mode.");
         }
         boolean isCompress = false;
@@ -314,7 +313,7 @@ public class MultithreadTableWriter {
             compressTypes_=new int[compressTypes.length];
             System.arraycopy(compressTypes,0,compressTypes_,0,compressTypes.length);
         }
-        DBConnection pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,highAvailability,highAvailabilitySites,isCompress);
+        DBConnection pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,enableHighAvailability,highAvailabilitySites,isCompress);
         if(pConn==null){
             throw new RuntimeException("Failed to connect to server.");
         }
@@ -355,7 +354,7 @@ public class MultithreadTableWriter {
             Entity partitionSchema;
             int partitionType;
             if(partColNames.isScalar()){
-                if (partColNames.getString().equals(partitionedColName) == false) {
+                if (partColNames.getString().equals(partitionCol) == false) {
                     throw new RuntimeException("PartitionColumnName mismatch specified value, is "+ partColNames.getString()+" ?");
                 }
                 partitionColumnIdx_ = ((BasicInt)schema.get(new BasicString("partitionColumnIndex"))).getInt();
@@ -364,12 +363,12 @@ public class MultithreadTableWriter {
             }else{
                 BasicStringVector partColNamesVec = (BasicStringVector)partColNames;
                 int dims = partColNamesVec.rows();
-                if(dims > 1 && partitionedColName.isEmpty()){
+                if(dims > 1 && partitionCol.isEmpty()){
                     throw new RuntimeException("Please specify threadByColName for this partitioned table.");
                 }
                 int index = -1;
                 for(int i=0; i<dims; ++i){
-                    if(partColNamesVec.getString(i).equals(partitionedColName)){
+                    if(partColNamesVec.getString(i).equals(partitionCol)){
                         index = i;
                         break;
                     }
@@ -384,16 +383,16 @@ public class MultithreadTableWriter {
             Entity.PARTITION_TYPE partitionColtype=Entity.PARTITION_TYPE.values()[partitionType];
             partitionDomain_ = DomainFactory.createDomain(partitionColtype, dataColType, partitionSchema);
         } else {//isPartionedTable_==false
-            if(partitionedColName.isEmpty() == false){
+            if(partitionCol.isEmpty() == false){
                 int threadcolindex = -1;
                 for(int i=0; i<colNames_.size(); i++){
-                    if(colNames_.get(i).equals(partitionedColName)){
+                    if(colNames_.get(i).equals(partitionCol)){
                         threadcolindex=i;
                         break;
                     }
                 }
                 if(threadcolindex < 0){
-                    throw new RuntimeException("Can't find column name for "+partitionedColName);
+                    throw new RuntimeException("Can't find column name for "+partitionCol);
                 }
                 threadByColIndexForNonPartion_=threadcolindex;
             }
@@ -401,37 +400,37 @@ public class MultithreadTableWriter {
         // init done, start thread now.
         for(int i = 0; i < threadCount; i++){
             if (pConn == null) {
-                pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,highAvailability,highAvailabilitySites,isCompress);
+                pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,enableHighAvailability,highAvailabilitySites,isCompress);
             }
             WriterThread writerThread = new WriterThread(this,pConn);
             threads_.add(writerThread);
             pConn = null;
         }
     }
-    public void getUnwrittenData(List<List<Entity>> unwrite){
+    public void getUnwrittenData(List<List<Entity>> unwrittenData){
         for(WriterThread writeThread : threads_){
             synchronized (writeThread.failedQueue_) {
-                unwrite.addAll(writeThread.failedQueue_);
+                unwrittenData.addAll(writeThread.failedQueue_);
                 writeThread.failedQueue_.clear();
             }
             synchronized (writeThread.writeQueue_){
-                unwrite.addAll(writeThread.writeQueue_);
+                unwrittenData.addAll(writeThread.writeQueue_);
                 writeThread.writeQueue_.clear();
             }
         }
     }
     public void getStatus(Status status){
         status.errorInfo=errorCodeInfo_;
-        status.failedRows=status.sentRows=status.unwriteRows=0;
-        status.isExit=isExit();
+        status.sendFailedRows=status.sentRows=status.unsentRows=0;
+        status.isExiting=isExiting();
         for(WriterThread writeThread : threads_){
             ThreadStatus threadStatus=new ThreadStatus();
             writeThread.getStatus(threadStatus);
             status.threadStatusList.add(threadStatus);
 
             status.sentRows += threadStatus.sentRows;
-            status.unwriteRows += threadStatus.unwriteRows;
-            status.failedRows += threadStatus.failedRows;
+            status.unsentRows += threadStatus.unsentRows;
+            status.sendFailedRows += threadStatus.sendFailedRows;
         }
     }
     public void waitExit() throws InterruptedException{
@@ -448,15 +447,15 @@ public class MultithreadTableWriter {
         }
         setError(ErrorCodeInfo.Code.EC_UserBreak,"User break.");
     }
-    public boolean insert(List<List<Entity>> vectorOfVector,ErrorCodeInfo pErrorInfo){
+    public boolean insert(List<List<Entity>> records,ErrorCodeInfo pErrorInfo){
         if(threads_.size() > 1){
             if(isPartionedTable_){
-                Vector pvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(partitionColumnIdx_),vectorOfVector.size());
+                Vector pvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(partitionColumnIdx_),records.size());
                 int rowindex=0;
                 try {
-                    for (List<Entity> row : vectorOfVector) {
+                    for (List<Entity> row : records) {
                         if (row.size() != colTypes_.size()) {
-                            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Vector in vectorOfVector size " + row.size() +
+                            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Vector in records size " + row.size() +
                                     " mismatch " + colTypes_.size());
                             return false;
                         }
@@ -473,23 +472,23 @@ public class MultithreadTableWriter {
                     }
                 }catch (Exception e){
                     e.printStackTrace();
-                    pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Row in vectorOfVector " + rowindex +
+                    pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Row in records " + rowindex +
                             " mismatch type " + colTypes_.get(partitionColumnIdx_));
                     return false;
                 }
                 List<Integer> threadindexes = partitionDomain_.getPartitionKeys(pvector);
                 for(int row = 0; row < threadindexes.size(); row++){
-                    if(insertThreadWrite(threadindexes.get(row), vectorOfVector.get(row), pErrorInfo) == false){
+                    if(insertThreadWrite(threadindexes.get(row), records.get(row), pErrorInfo) == false){
                         return false;
                     }
                 }
             }else{
-                Vector partionvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(threadByColIndexForNonPartion_),vectorOfVector.size());
+                Vector partionvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(threadByColIndexForNonPartion_),records.size());
                 int rowindex=0;
                 try{
-                    for(List<Entity> row : vectorOfVector) {
+                    for(List<Entity> row : records) {
                         if (row.size() != colTypes_.size()) {
-                            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Vector in vectorOfVector size " + row.size() +
+                            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Vector in records size " + row.size() +
                                     " mismatch " + colTypes_.size());
                             return false;
                         }
@@ -502,20 +501,20 @@ public class MultithreadTableWriter {
                     }
                 }catch (Exception e){
                     e.printStackTrace();
-                    pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Row in vectorOfVector " + rowindex +
+                    pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Row in records " + rowindex +
                             " mismatch type " + colTypes_.get(partitionColumnIdx_));
                     return false;
                 }
                 int threadindex;
-                for(rowindex=0;rowindex<vectorOfVector.size();rowindex++){
+                for(rowindex=0;rowindex<records.size();rowindex++){
                     threadindex=partionvector.hashBucket(rowindex,threads_.size());
-                    if(insertThreadWrite(threadindex, vectorOfVector.get(rowindex), pErrorInfo) == false){
+                    if(insertThreadWrite(threadindex, records.get(rowindex), pErrorInfo) == false){
                         return false;
                     }
                 }
             }
         }else{
-            for(List<Entity> row : vectorOfVector){
+            for(List<Entity> row : records){
                 if(insertThreadWrite(0, row, pErrorInfo) == false){
                     return false;
                 }
@@ -530,7 +529,7 @@ public class MultithreadTableWriter {
             //pErrorInfo->set(ErrorCodeInfo::EC_InvalidColumnType, "Failed to get thread by coluname.");
             //return false;
         }
-        if(isExit()){
+        if(isExiting()){
             pErrorInfo.set(this.errorCodeInfo_);
             return false;
         }
@@ -544,7 +543,7 @@ public class MultithreadTableWriter {
         return true;
     }
     public boolean insert(ErrorCodeInfo pErrorInfo, Object... args){
-        if(isExit()){
+        if(isExiting()){
             pErrorInfo.set(errorCodeInfo_);
             return false;
         }
@@ -616,13 +615,13 @@ public class MultithreadTableWriter {
             return false;
         }
     }
-    private boolean isExit() { return hasError_; }
+    private boolean isExiting() { return hasError_; }
     private DBConnection newConn(String hostName, int port, String userId, String password,
                                  String dbName, String tableName, boolean useSSL,
-                                 boolean highAvailability, String[] highAvailabilitySites,boolean compress) throws IOException {
+                                 boolean enableHighAvailability, String[] highAvailabilitySites,boolean compress) throws IOException {
         DBConnection pConn = new DBConnection(false,useSSL,compress);
-        //String hostName, int port, String userId, String password, String initialScript, boolean highAvailability, String[] highAvailabilitySites
-        boolean ret = pConn.connect(hostName, port, userId, password, null,highAvailability,highAvailabilitySites);
+        //String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites
+        boolean ret = pConn.connect(hostName, port, userId, password, null,enableHighAvailability,highAvailabilitySites);
         if (!ret)
             return null;
         return pConn;
