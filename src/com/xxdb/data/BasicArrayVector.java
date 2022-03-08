@@ -4,10 +4,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import com.sun.corba.se.impl.ior.WireObjectKeyTemplate;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class BasicArrayVector extends AbstractVector {
 	private DATA_TYPE type;
@@ -146,7 +144,7 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
-		throw new NotImplementedException();
+		throw new RuntimeException("serialize is not implemented.");
 	}
 
 	@Override
@@ -166,7 +164,7 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public int getUnitLength(){
-		throw new NotImplementedException();
+		throw new RuntimeException("getUnitLength is not implemented.");
 	}
 
 	@Override

@@ -2,12 +2,10 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * 
