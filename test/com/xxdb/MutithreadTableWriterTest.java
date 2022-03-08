@@ -91,6 +91,47 @@ public class MutithreadTableWriterTest implements Runnable{
         conn.close();
     }
 
+
+    public static void arrayVectorSetuptest() throws Exception{
+        Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(Entity.DATA_TYPE.DT_INT, 100000);
+        for (int i = 0; i < 10; i++){
+            value.set(1, new BasicInt(i+1));
+        }
+        int[] a = new int[]{2,5,8,10};
+        BasicArrayVector t = new BasicArrayVector(a, value);
+        //BasicArrayVector t2 = (BasicArrayVector)conn.run("a = take(1..10,10);res = arrayVector([2,5,8,10],a);res");
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("value", t);
+        conn.upload(map);
+    }
+
+    public static void newtest() throws Exception{
+        ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = streamTable(1000:0, `int`double," +
+                "[INT,DOUBLE]);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadedTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "t1", "", false, false,null,1, 1,
+                1, "int");
+        List<List<Entity>> tb = new ArrayList<>();
+        for (int i=0;i<20;i++){
+            List<Entity> row = new ArrayList<>();
+            row.add(new BasicInt(1));
+            row.add(new BasicInt(2));
+            tb.add(row);
+        }
+        for (int i=0;i<2;i++){
+            List<Entity> row = new ArrayList<>();
+            row.add(new BasicInt(1));
+            row.add(new BasicString("1"));
+            tb.add(row);
+        }
+        boolean b= mutithreadedTableWriter_.insert(tb,pErrorInfo);
+        assertEquals(true, b);
+    }
+
     public static void testTransform() throws Exception{
         ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
         StringBuilder sb = new StringBuilder();
@@ -121,8 +162,8 @@ public class MutithreadTableWriterTest implements Runnable{
                 "share t as t1;");
         */
 
-        sb.append("t = streamTable(1000:0, `ints`bools," +
-                "[INT[],BOOL[]]);" +
+        sb.append("t = streamTable(1000:0, `nanotime`dates," +
+                "[NANOTIMESTAMP,DATE[]]);" +
                 "share t as t1;");
 
         conn.run(sb.toString());
@@ -142,27 +183,28 @@ public class MutithreadTableWriterTest implements Runnable{
 
         LocalTime LT = LocalTime.of(10, 39, 21, 6743329);
         Date DT = new Date();
+        Long ll = DT.getTime();
         LocalDate LD = LocalDate.of(2021, 12, 1);
         LocalDateTime LDT = LocalDateTime.of(2021, 12, 23, 11, 35, 44, 79846543);
-        //System.out.println(by);
+        System.out.println(ll);
         //SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd");
-
+        Date[] dates = new Date[]{DT, DT, DT, DT};
 
         mutithreadedTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "t1", "", false, false,null,5, 1,
-                1, "ints");
+                1, "dates");
         Integer[] a = new Integer[]{1,2,3,4,5};
         Boolean[] bs = new Boolean[]{false, true, false, true};
         //Entity entity = BasicEntityFactory.createScalar(Entity.DATA_TYPE.DT_BOOL, boo);
         //System.out.println(entity);
-        int rows = 100000;
+        int rows = 8;
         for (int i=0;i<rows;i++){
             //boolean b=mutithreadTableWriter_.insert(pErrorInfo,DT,DT,DT,DT,DT,DT,DT);
             //boolean b=mutithreadTableWriter_.insert(pErrorInfo,calendar,calendar,calendar,calendar,calendar, calendar,calendar);
             //boolean b=mutithreadTableWriter_.insert(pErrorInfo,LT,LT,LT,LT);
             //boolean b=mutithreadTableWriter_.insert(pErrorInfo,LD,LD);
             //boolean b = mutithreadTableWriter_.insert(pErrorInfo,bools,LDT,LDT,LDT,LDT);
-            boolean b = mutithreadedTableWriter_.insert(pErrorInfo,a,bs);
+            boolean b = mutithreadedTableWriter_.insert(pErrorInfo,ll,dates);
             assertTrue(b);
         }
         mutithreadedTableWriter_.waitExit();
@@ -170,35 +212,8 @@ public class MutithreadTableWriterTest implements Runnable{
         assertEquals(rows,bt.rows());
         for (int i=0;i<bt.rows();i++){
             // assertEquals(sdf.format(DT),bt.getColumn(0).get(i).getString());
-            System.out.println(bt.getColumn(0).get(i).getString());
+            System.out.println(bt.getColumn(0).getString());
         }
-    }
-
-    public static void newtest() throws Exception{
-        ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = streamTable(1000:0, `int`double," +
-                "[INT,DOUBLE]);" +
-                "share t as t1;");
-        conn.run(sb.toString());
-        mutithreadedTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false,null,1, 1,
-                1, "int");
-        List<List<Entity>> tb = new ArrayList<>();
-        for (int i=0;i<20;i++){
-            List<Entity> row = new ArrayList<>();
-            row.add(new BasicInt(1));
-            row.add(new BasicInt(2));
-            tb.add(row);
-        }
-        for (int i=0;i<2;i++){
-            List<Entity> row = new ArrayList<>();
-            row.add(new BasicInt(1));
-            row.add(new BasicString("1"));
-            tb.add(row);
-        }
-        boolean b= mutithreadedTableWriter_.insert(tb,pErrorInfo);
-        assertEquals(true, b);
     }
 
     public static void arrayVectortest() throws Exception{
@@ -218,25 +233,28 @@ public class MutithreadTableWriterTest implements Runnable{
         conn.close();
     }
 
-    public static void arrayVectorSetuptest() throws Exception{
-        Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(Entity.DATA_TYPE.DT_INT, 100000);
-        for (int i = 0; i < 10; i++){
-            value.set(1, new BasicInt(i+1));
-        }
-        int[] a = new int[]{2,5,8,10};
-        BasicArrayVector t = new BasicArrayVector(a, value);
-        //BasicArrayVector t2 = (BasicArrayVector)conn.run("a = take(1..10,10);res = arrayVector([2,5,8,10],a);res");
-        Map<String, Entity> map = new HashMap<String, Entity>();
-        map.put("value", t);
-        conn.upload(map);
-    }
-
     public static void testDelta() throws Exception{
         ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, [`long]," +
                 "[LONG]);" +
                 "share t as t1;");
+        /*
+        BasicLongVector t = (BasicLongVector)conn.run("l = [long(0)]\n" +
+                ";l");
+        //conn.run("share table(1:0, [`id], [LONG]) as t1");
+
+        t.setCompressedMethod(Vector.COMPRESS_DELTA);
+        List<String> colNames = new ArrayList<>();
+        colNames.add("dd");
+        List<Vector> col = new ArrayList<>();
+        col.add(t);
+        BasicTable table = new BasicTable(colNames, col);
+        List<Entity> args = new ArrayList<>();
+        args.add(table);
+        conn.run("append!{t1}", args);
+        */
+
         conn.run(sb.toString());
         long starttime=System.currentTimeMillis();
         mutithreadedTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "t1", "",
@@ -248,13 +266,54 @@ public class MutithreadTableWriterTest implements Runnable{
         System.out.println(pErrorInfo);
         mutithreadedTableWriter_.waitExit();
         System.out.println("time used "+(System.currentTimeMillis()-starttime));
+
         //Thread.sleep(2000);
         // BasicTable bt= (BasicTable) conn.run("select * from t1;");
         // System.out.println(bt.rows());
     }
 
+    public static void testxx() throws Exception{
+        DBConnection conn = new DBConnection();
+        conn.connect("localhost", 8900);
+        BasicArrayVector obj = (BasicArrayVector) conn.run("a = array(INT[], 0, 20)\n" +
+                "for(i in 1..20){\n" +
+                "\ta.append!([1..100])\n" +
+                "};a");
+
+        System.out.println(obj.getValue(0, 2).getDataType());
+    }
+
+    public static void testBlob() throws Exception{
+        ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = streamTable(1000:0, [`blob],[BLOB]);share t as t1;");
+        conn.run(sb.toString());
+        mutithreadedTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "t1", "", false, false,null,1, 1,
+                1, "blob");
+        List<List<Entity>> tb = new ArrayList<>();
+        for (int i=0;i<100;i++){
+            List<Entity> row = new ArrayList<>();
+            row.add(new BasicString("453g",true));
+            tb.add(row);
+        }
+        //conn.run("table"
+        //BasicStringVector t = (BasicStringVector)conn.run("t = take(blob('453g'), 100);t;");
+        //List<Entity> args = new ArrayList<>();
+        //args.add(t);
+        //conn.run("append!{t}", args);
+        boolean b=mutithreadedTableWriter_.insert(tb,pErrorInfo);
+        assertEquals(true, b);
+        mutithreadedTableWriter_.waitExit();
+        MultithreadedTableWriter.Status status=new MultithreadedTableWriter.Status();
+        mutithreadedTableWriter_.getStatus(status);
+        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
+        BasicTable bt= (BasicTable) conn.run("select * from t1;");
+        assertEquals(100,bt.rows());
+    }
+
     public static void main(String[] args) throws InterruptedException, IOException {
-        conn = new DBConnection();
+        conn = new DBConnection(false, false, false);
         try {
             //Properties props = new Properties();
             //FileInputStream in= new FileInputStream( "test/com/xxdb/setup/settings.properties");

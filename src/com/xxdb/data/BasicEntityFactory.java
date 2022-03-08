@@ -674,6 +674,12 @@ public class BasicEntityFactory implements EntityFactory{
 		switch (dataType) {
 			case DT_BYTE:
 				return new BasicByte(val);
+			case DT_SHORT:
+				return new BasicShort(val);
+			case DT_INT:
+				return new BasicInt(val);
+			case DT_LONG:
+				return new BasicLong(val);
 			default:
 				throw new RuntimeException("Failed to insert data, unsupported data type.");
 		}
