@@ -75,9 +75,8 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 
 	public abstract int getUnitLength();
 
-	public void setCompressedMethod(int method) {
-		DATA_TYPE type = this.getDataType();
-		switch (type){
+	public static boolean checkCompressedMethod(DATA_TYPE type, int compressedMethod) {
+		switch (type) {
 			case DT_STRING:
 			case DT_BOOL:
 			case DT_BYTE:
@@ -105,13 +104,24 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 			case DT_DOUBLE:
 			case DT_COMPLEX:
 			case DT_DURATION:
-				if(method == Vector.COMPRESS_LZ4)
+				if (compressedMethod == Vector.COMPRESS_LZ4)
 					break;
 			default:
-				throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + getDataType().name());
+				return false;
 		}
-		this.compressedMethod = method;
+		return true;
 	}
+
+	public void setCompressedMethod(int method) {
+		DATA_TYPE type = this.getDataType();
+		boolean check = checkCompressedMethod(type, method);
+		if (check)
+			this.compressedMethod = method;
+		else
+			throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + getDataType().name());
+	}
+
+
 
 	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		throw new RuntimeException("Invalid datatype to write to buffer");

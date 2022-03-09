@@ -42,6 +42,7 @@ public class MultithreadedTableWriter {
                 try {
                     synchronized (writeQueue_) {
                         //tableWriter_.logger_.info(writeThread_.getId()+" run wait0 start");
+                        //if (!isExiting()&&writeQueue_.size()==0)
                         writeQueue_.wait();
                         //tableWriter_.logger_.info(writeThread_.getId()+" run wait0 end");
                         if (isExiting() ==false && tableWriter_.batchSize_ > 1 && tableWriter_.throttleMilsecond_ > 0) {
@@ -95,13 +96,13 @@ public class MultithreadedTableWriter {
                 List<Vector> columns = new ArrayList<>();
                 int colCount = 0;
                 for (Entity.DATA_TYPE one : tableWriter_.colTypes_) {
-                    List<BasicAnyVector> anyVectorList = new ArrayList<>();
+                    List<Vector> VectorList = new ArrayList<>();
                     Vector vector;
                     if (one.getValue() >= 65){
                         for (int i = 0;i<size;i++){
-                            anyVectorList.add((BasicAnyVector) items.get(i).get(colCount));
+                            VectorList.add((Vector) items.get(i).get(colCount));
                         }
-                        vector = new BasicArrayVector(anyVectorList);
+                        vector = new BasicArrayVector(VectorList);
                     }else{
                         vector=BasicEntityFactory.instance().createVectorWithDefaultValue(one, size);
                     }
@@ -347,7 +348,14 @@ public class MultithreadedTableWriter {
         BasicStringVector colDefsTypeString = (BasicStringVector)colDefs.getColumn("typeString");
         for(int i = 0; i < columnSize; i++){
             colNames_.add(colDefsName.getString(i));
-            colTypes_.add(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
+            if (compressTypes_ != null){
+                boolean check = AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)), compressTypes_[i]);
+                if (check)
+                    colTypes_.add(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
+                else
+                    throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
+            }else
+                colTypes_.add(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
             colTypeString_.add(colDefsTypeString.getString(i));
         }
         if(isPartionedTable_){

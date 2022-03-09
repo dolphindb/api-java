@@ -15,12 +15,12 @@ public class BasicArrayVector extends AbstractVector {
 	private Vector valueVec;
 	private int baseUnitLength_;
 
-	public BasicArrayVector(List<BasicAnyVector> value) {
+	public BasicArrayVector(List<Vector> value) {
 		super(DATA_FORM.DF_VECTOR);
-		this.type = DATA_TYPE.valueOf(value.get(0).get(0).getDataType().getValue() + 64);
-		DATA_TYPE valueType = DATA_TYPE.valueOf(value.get(0).get(0).getDataType().getValue());
+		this.type = DATA_TYPE.valueOf(value.get(0).getDataType().getValue() + 64);
+		DATA_TYPE valueType = DATA_TYPE.valueOf(value.get(0).getDataType().getValue());
 		int len = 0;
-		for (BasicAnyVector one : value){
+		for (Vector one : value){
 			len += one.rows();
 		}
 		int indexPos = 0;
@@ -30,14 +30,14 @@ public class BasicArrayVector extends AbstractVector {
 		int index = 0;
 		int curRows = 0;
 		for (int valuePos = 0; valuePos < indexCount; valuePos++){
-			BasicAnyVector temp = value.get(valuePos);
+			Vector temp = value.get(valuePos);
 			int size = temp.rows();
 			for (int i = 0; i < size ; i++){
 				try {
 					this.valueVec.set(index, temp.get(i));
 					index++;
 				}catch (Exception e){
-					throw new RuntimeException("Failed to insert data, invalid data for "+((Vector)temp.getEntity(0)).get(i)+" error "+ e.toString());
+					throw new RuntimeException("Failed to insert data, invalid data for "+((Vector)temp).get(i)+" error "+ e.toString());
 				}
 			}
 			curRows += size;

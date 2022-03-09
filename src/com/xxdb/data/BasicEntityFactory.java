@@ -468,7 +468,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicSystemEntity(in, Entity.DATA_TYPE.DT_COMPRESS);}
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicByteVector(Entity.DATA_FORM.DF_VECTOR, in);}
 	}
-	public static Entity createScalar(DATA_TYPE dataType, Object object){
+	public static Entity createScalar(DATA_TYPE dataType, Object object) throws Exception{
 		if(object==null) {
 			Scalar scalar = BasicEntityFactory.instance().createScalarWithDefaultValue(dataType);
 			scalar.setNull();
@@ -567,19 +567,19 @@ public class BasicEntityFactory implements EntityFactory{
 		throw new RuntimeException("Failed to insert data, invalid data type for "+dataType);
 	}
 
-	private static <T> BasicAnyVector createAnyVector(DATA_TYPE dataType, T[] val){
+	private static <T> Vector createAnyVector(DATA_TYPE dataType, T[] val) throws Exception{
 		if(dataType.getValue()<64){
 			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType);
 		}
 		dataType = DATA_TYPE.values()[dataType.getValue()-64];
 		int count = val.length;
-		BasicAnyVector basicAnyVector = new BasicAnyVector(count);
+		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count);
 		for(int i = 0; i < count; ++i)
 		{
 			Entity t = createScalar(dataType, val[i]);
-			basicAnyVector.setEntity(i, t);
+			vector.set(i, (Scalar) t);
 		}
-		return basicAnyVector;
+		return vector;
 	}
 
 	private static Scalar createScalar(DATA_TYPE dataType, LocalDate val) {
