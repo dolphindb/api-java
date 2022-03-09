@@ -150,7 +150,6 @@ public class BasicArrayVector extends AbstractVector {
 	@Override
 	public Vector getSubVector(int[] indices) {
 		// TODO Auto-generated method stub
-
 		return null;
 	}
 
@@ -172,22 +171,29 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public Scalar get(int index) {
-		throw new RuntimeException("BasicArrayVector.get not supported.");
+		return valueVec.get(index);
 	}
 
-	public Vector getValue(int start, int len) throws Exception{
-		if (start + len > valueVec.rows()){
-			throw new RuntimeException("The length is out of bounds.");
-		}
-		else{
-			DATA_TYPE valueType = DATA_TYPE.valueOf(valueVec.get(0).getDataType().getValue());
-			Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, len);
-			int index = 0;
-			for (int i = start ; i < start + len ; i++){
-				value.set(index, valueVec.get(i));
+	public Vector getVectorValue(int index) {
+		int startPosValueVec = index == 0 ? 0 : rowIndices[index - 1];
+		int rows = rowIndices[index] - startPosValueVec;
+		DATA_TYPE valueType = DATA_TYPE.valueOf(type.getValue()-64);
+		Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, rows);
+		if (rows > 0){
+			try {
+				value.set(0, valueVec.get(startPosValueVec));
+			}catch (Exception e){
+				throw new RuntimeException("Failed to insert data, invalid data for "+valueVec.get(startPosValueVec)+" error "+ e.toString());
 			}
-			return value;
 		}
+		for (int i = 1;i<rows;i++){
+			try {
+				value.set(i, valueVec.get(startPosValueVec + i));
+			}catch (Exception e){
+				throw new RuntimeException("Failed to insert data, invalid data for "+valueVec.get(startPosValueVec)+" error "+ e.toString());
+			}
+		}
+		return value;
 	}
 
 	@Override
