@@ -228,6 +228,7 @@ public class BasicArrayVectorTest {
         assertEquals("[1970.01.01T00:00:00.000]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_TIMESTAMP_ARRAY,obj.getDataType());
+       // assertEquals("1970.01.01T00:00:00.000",obj.getVectorValue(1).get(0).getTemporal());
     }
     @Test
     public void TestBasic_nanotime_ArrayVector() throws Exception {
@@ -294,9 +295,9 @@ public class BasicArrayVectorTest {
     public void Test_new_BasicArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
         conn.connect(HOST, PORT);
-        List<BasicAnyVector> l = new ArrayList<BasicAnyVector>();
+        List<Vector> l = new ArrayList<Vector>();
 
-        BasicAnyVector v=new BasicAnyVector(2);
+        Vector v=new BasicBooleanVector(2);
         v.set(0,new BasicBoolean(true));
         v.set(1,new BasicBoolean(false));
         l.add(0,v);
@@ -311,9 +312,9 @@ public class BasicArrayVectorTest {
     public void Test_new_BasicArrayVector_INT() throws Exception {
         DBConnection conn = new DBConnection();
         conn.connect(HOST, PORT);
-        List<BasicAnyVector> l = new ArrayList<BasicAnyVector>();
+        List<Vector> l = new ArrayList<Vector>();
 
-        BasicAnyVector v=new BasicAnyVector(2);
+        Vector v=new BasicIntVector(2);
         v.set(0,new BasicInt(1));
         v.set(1,new BasicInt(2));
         l.add(0,v);
