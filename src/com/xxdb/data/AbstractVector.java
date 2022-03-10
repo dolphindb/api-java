@@ -77,7 +77,6 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 
 	public static boolean checkCompressedMethod(DATA_TYPE type, int compressedMethod) {
 		switch (type) {
-			case DT_STRING:
 			case DT_BOOL:
 			case DT_BYTE:
 			case DT_SHORT:
