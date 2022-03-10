@@ -78,7 +78,6 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	public static boolean checkCompressedMethod(DATA_TYPE type, int compressedMethod) {
 		switch (type) {
 			case DT_BOOL:
-			case DT_BYTE:
 			case DT_SHORT:
 			case DT_INT:
 			case DT_DATE:
@@ -89,16 +88,18 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 			case DT_DATETIME:
 			case DT_DATEHOUR:
 			case DT_DATEMINUTE:
-			case DT_SYMBOL:
 			case DT_LONG:
 			case DT_NANOTIME:
 			case DT_TIMESTAMP:
 			case DT_NANOTIMESTAMP:
+			case DT_POINT:
+				break;
+			case DT_STRING:
+			case DT_SYMBOL:
 			case DT_INT128:
 			case DT_UUID:
 			case DT_IPADDR:
-			case DT_POINT:
-				break;
+			case DT_BYTE:
 			case DT_FLOAT:
 			case DT_DOUBLE:
 			case DT_COMPLEX:
