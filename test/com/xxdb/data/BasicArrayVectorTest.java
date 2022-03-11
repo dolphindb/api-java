@@ -4,9 +4,9 @@ import com.xxdb.DBConnection;
 import org.junit.Test;
 
 import javax.print.DocFlavor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -276,7 +276,7 @@ public class BasicArrayVectorTest {
     }
 
     @Test
-    public void TestBasicIntArrayVectorHang() throws Exception {
+    public void TestBasicIntArrayVectorNULL() throws Exception {
         DBConnection conn = new DBConnection();
         conn.connect(HOST, PORT);
         BasicArrayVector obj = (BasicArrayVector) conn.run("a = array(INT[], 0, 10000)\n" +
@@ -291,7 +291,7 @@ public class BasicArrayVectorTest {
         }
     }
 
-    @Test
+      @Test
     public void Test_new_BasicArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
         conn.connect(HOST, PORT);
@@ -313,7 +313,6 @@ public class BasicArrayVectorTest {
         DBConnection conn = new DBConnection();
         conn.connect(HOST, PORT);
         List<Vector> l = new ArrayList<Vector>();
-
         Vector v=new BasicIntVector(2);
         v.set(0,new BasicInt(1));
         v.set(1,new BasicInt(2));
@@ -322,7 +321,347 @@ public class BasicArrayVectorTest {
         BasicArrayVector obj = new BasicArrayVector(l);
         assertEquals("[1,2]",obj.getVectorValue(0).getString());
         assertEquals("[1,2]",obj.getVectorValue(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[1,2]",res.getVectorValue(0).getString());
+        assertEquals("[1,2]",res.getVectorValue(1).getString());
     }
 
+    @Test
+    public void Test_new_BasicArrayVector_LONG() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicLongVector(2);
+        v.set(0,new BasicLong(1));
+        v.set(1,new BasicLong(2));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[1,2]",obj.getVectorValue(0).getString());
+        assertEquals("[1,2]",obj.getVectorValue(1).getString());
 
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[1,2]",res.getVectorValue(0).getString());
+        assertEquals("[1,2]",res.getVectorValue(1).getString());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_SHORT() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicShortVector(2);
+        v.set(0,new BasicShort((short) 1));
+        v.set(1,new BasicShort((short) 2));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[1,2]",obj.getVectorValue(0).getString());
+        assertEquals("[1,2]",obj.getVectorValue(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[1,2]",res.getVectorValue(0).getString());
+        assertEquals("[1,2]",res.getVectorValue(1).getString());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_FLOAT() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicFloatVector(2);
+        v.set(0,new BasicFloat(1.0f));
+        v.set(1,new BasicFloat(2.0f));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[1,2]",obj.getVectorValue(0).getString());
+        assertEquals("[1,2]",obj.getVectorValue(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[1,2]",res.getVectorValue(0).getString());
+        assertEquals("[1,2]",res.getVectorValue(1).getString());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_DOUBLE() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicDoubleVector(2);
+        v.set(0,new BasicDouble(1));
+        v.set(1,new BasicDouble(2));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[1,2]",obj.getVectorValue(0).getString());
+        assertEquals("[1,2]",obj.getVectorValue(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[1,2]",res.getVectorValue(0).getString());
+        assertEquals("[1,2]",res.getVectorValue(1).getString());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_DATE() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicDateVector(2);
+        v.set(0,new BasicDate(LocalDate.of(2022,1,1)));
+        v.set(1,new BasicDate(LocalDate.of(1970,1,1)));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[2022.01.01,1970.01.01]",obj.getVectorValue(0).getString());
+        assertEquals("[2022.01.01,1970.01.01]",obj.getVectorValue(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[2022.01.01,1970.01.01]",res.getVectorValue(0).getString());
+        assertEquals("[2022.01.01,1970.01.01]",res.getVectorValue(1).getString());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_MINUTE() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicMinuteVector(2);
+        v.set(0,new BasicMinute(1));
+        v.set(1,new BasicMinute(2));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[00:01m,00:02m]",obj.getVectorValue(0).getString());
+        assertEquals("[00:01m,00:02m]",obj.getVectorValue(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[00:01m,00:02m]",res.getVectorValue(0).getString());
+        assertEquals("[00:01m,00:02m]",res.getVectorValue(1).getString());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_second() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicSecondVector(2);
+        v.set(0,new BasicSecond(1));
+        v.set(1,new BasicSecond(2));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[00:00:01,00:00:02]",obj.getVectorValue(0).getString());
+        assertEquals("[00:00:01,00:00:02]",obj.getVectorValue(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[00:00:01,00:00:02]",res.getVectorValue(0).getString());
+        assertEquals("[00:00:01,00:00:02]",res.getVectorValue(1).getString());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_datetime() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicDateTimeVector(2);
+        v.set(0,new BasicDateTime(1));
+        v.set(1,new BasicDateTime(2));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[1970.01.01T00:00:01,1970.01.01T00:00:02]",obj.getVectorValue(0).getString());
+        assertEquals("[1970.01.01T00:00:01,1970.01.01T00:00:02]",obj.getVectorValue(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[1970.01.01T00:00:01,1970.01.01T00:00:02]",res.getVectorValue(0).getString());
+        assertEquals("[1970.01.01T00:00:01,1970.01.01T00:00:02]",res.getVectorValue(1).getString());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_datehour() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicDateHourVector(2);
+        v.set(0,new BasicDateHour((short) 1));
+        v.set(1,new BasicDateHour((short) 2));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[1970.01.01T01,1970.01.01T02]",obj.getVectorValue(0).getString());
+        assertEquals("[1970.01.01T01,1970.01.01T02]",obj.getVectorValue(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[1970.01.01T01,1970.01.01T02]",res.getVectorValue(0).getString());
+        assertEquals("[1970.01.01T01,1970.01.01T02]",res.getVectorValue(1).getString());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_timestamp() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicTimestampVector(2);
+        v.set(0,new BasicTimestamp(1));
+        v.set(1,new BasicTimestamp(2));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[1970.01.01T00:00:00.001,1970.01.01T00:00:00.002]",obj.getVectorValue(0).getString());
+        assertEquals("[1970.01.01T00:00:00.001,1970.01.01T00:00:00.002]",obj.getVectorValue(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[1970.01.01T00:00:00.001,1970.01.01T00:00:00.002]",res.getVectorValue(0).getString());
+        assertEquals("[1970.01.01T00:00:00.001,1970.01.01T00:00:00.002]",res.getVectorValue(1).getString());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_nanotimestamp() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        long time = System.currentTimeMillis();
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicNanoTimestampVector(2);
+        v.set(0,new BasicNanoTimestamp(time));
+        v.set(1,new BasicNanoTimestamp(time));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals(time,obj.getVectorValue(0).get(0).getNumber());
+        assertEquals(time,obj.getVectorValue(0).get(1).getNumber());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals(time,res.getVectorValue(0).get(0).getNumber());
+        assertEquals(time,res.getVectorValue(0).get(1).getNumber());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_nanotime() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicNanoTimeVector(2);
+        v.set(0,new BasicNanoTime(LocalTime.of(1,1,1,1323433)));
+        v.set(1,new BasicNanoTime(LocalTime.of(1,1,2,1323433)));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals(LocalTime.of(1,1,1,1323433),obj.getVectorValue(0).get(0).getTemporal());
+        assertEquals(LocalTime.of(1,1,1,1323433),obj.getVectorValue(1).get(0).getTemporal());
+        assertEquals(LocalTime.of(1,1,2,1323433),obj.getVectorValue(0).get(1).getTemporal());
+        assertEquals(LocalTime.of(1,1,2,1323433),obj.getVectorValue(1).get(1).getTemporal());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals(LocalTime.of(1,1,1,1323433),res.getVectorValue(0).get(0).getTemporal());
+        assertEquals(LocalTime.of(1,1,1,1323433),res.getVectorValue(1).get(0).getTemporal());
+        assertEquals(LocalTime.of(1,1,2,1323433),res.getVectorValue(0).get(1).getTemporal());
+        assertEquals(LocalTime.of(1,1,2,1323433),res.getVectorValue(1).get(1).getTemporal());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_bool() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicBooleanVector(2);
+        v.set(0,new BasicBoolean(true));
+        v.set(1,new BasicBoolean(false));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[true,false]",obj.getVectorValue(0).getString());
+        assertEquals("[true,false]",obj.getVectorValue(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[true,false]",res.getVectorValue(0).getString());
+        assertEquals("[true,false]",res.getVectorValue(1).getString());
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_string() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicStringVector(2);
+        v.set(0,new BasicString("true"));
+        v.set(1,new BasicString(""));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[true,]",obj.getVectorValue(0).getString());
+        assertEquals("[true,]",obj.getVectorValue(1).getString());
+
+       /* Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[true,]",res.getVectorValue(0).getString());
+        assertEquals("[true,]",res.getVectorValue(1).getString());*/
+    }
+
+    @Test
+    public void Test_new_BasicArrayVector_symbol() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicSymbolVector(2);
+        v.set(0,new BasicString("true"));
+        v.set(1,new BasicString(""));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[true,]",obj.getVectorValue(0).getString());
+        assertEquals("[true,]",obj.getVectorValue(1).getString());
+
+      /*  Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+        assertEquals("[true,]",res.getVectorValue(0).getString());
+        assertEquals("[true,]",res.getVectorValue(1).getString());*/
+    }
 }
