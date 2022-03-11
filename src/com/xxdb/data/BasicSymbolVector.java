@@ -161,7 +161,7 @@ public class BasicSymbolVector extends AbstractVector {
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
 		for (int i = 0; i < count; i++){
-			out.writeInt(values[start + i]);//todo:Have question
+			out.writeInt(values[start + i]);
 		}
 	}
 

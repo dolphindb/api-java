@@ -441,7 +441,7 @@ public class MultithreadedTableWriter {
             status.sendFailedRows += threadStatus.sendFailedRows;
         }
     }
-    public void waitExit() throws InterruptedException{
+    public void waitForThreadCompletion() throws InterruptedException{
         for(WriterThread one:threads_){
             one.exit();
         }

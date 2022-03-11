@@ -15,13 +15,16 @@ public class BasicArrayVector extends AbstractVector {
 	private Vector valueVec;
 	private int baseUnitLength_;
 
-	public BasicArrayVector(List<Vector> value) {
+	public BasicArrayVector(List<Vector> value) throws Exception{
 		super(DATA_FORM.DF_VECTOR);
 		this.type = DATA_TYPE.valueOf(value.get(0).getDataType().getValue() + 64);
 		DATA_TYPE valueType = DATA_TYPE.valueOf(value.get(0).getDataType().getValue());
 		int len = 0;
 		for (Vector one : value){
-			len += one.rows();
+			if(one.rows()>0)
+				len += one.rows();
+			else
+				len++;
 		}
 		int indexPos = 0;
 		int indexCount = value.size();
@@ -32,15 +35,22 @@ public class BasicArrayVector extends AbstractVector {
 		for (int valuePos = 0; valuePos < indexCount; valuePos++){
 			Vector temp = value.get(valuePos);
 			int size = temp.rows();
-			for (int i = 0; i < size ; i++){
-				try {
-					this.valueVec.set(index, temp.get(i));
-					index++;
-				}catch (Exception e){
-					throw new RuntimeException("Failed to insert data, invalid data for "+((Vector)temp).get(i)+" error "+ e.toString());
+			if (size > 0){
+				for (int i = 0; i < size ; i++){
+					try {
+						this.valueVec.set(index, temp.get(i));
+						index++;
+					}catch (Exception e){
+						throw new RuntimeException("Failed to insert data, invalid data for "+((Vector)temp).get(i)+" error "+ e.toString());
+					}
 				}
+				curRows += size;
 			}
-			curRows += size;
+			else{
+				this.valueVec.set(index, null);
+				index++;
+				curRows ++;
+			}
 			this.rowIndices[indexPos++] = curRows;
 		}
 		this.baseUnitLength_ = (this.valueVec).getUnitLength();
@@ -233,11 +243,61 @@ public class BasicArrayVector extends AbstractVector {
 	}
 
 	@Override
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException{
+		int indexCount = rowIndices.length;
+		int maxCount = 255;
+		int countBytes = 1;
+		int indicesPos = 0;
+
+		while (indicesPos < indexCount){
+			int byteRequest = 4;
+			int curRows = 0;
+			int indiceCount = 1;
+			while (byteRequest < BUF_SIZE && indicesPos + indiceCount - 1 < indexCount){
+				int curIndiceOffect = indicesPos + indiceCount - 1;
+				int index = curIndiceOffect == 0 ? rowIndices[curIndiceOffect] : rowIndices[curIndiceOffect] - rowIndices[curIndiceOffect - 1];
+				while(index > maxCount)
+				{
+					byteRequest += (indiceCount - 1) * countBytes;
+					countBytes *= 2;
+					if (countBytes == 1)
+						maxCount = Byte.MAX_VALUE;
+					else if (countBytes == 2)
+						maxCount = Short.MAX_VALUE;
+					else if (countBytes == 3)
+						maxCount = Integer.MAX_VALUE;
+				}
+				if (byteRequest + countBytes + baseUnitLength_ * index > BUF_SIZE)
+					break;
+				curRows += index;
+				indiceCount++;
+				byteRequest += countBytes + baseUnitLength_ * index;
+			}
+			indiceCount --;
+			buffer.putShort((short) indiceCount);
+			buffer.put((byte) countBytes);
+			buffer.put((byte) 0);
+			for (int i = 0; i < indiceCount; i++){
+				int index = indicesPos + i == 0 ? rowIndices[indicesPos + i] : rowIndices[indicesPos + i] - rowIndices[indicesPos + i - 1];
+				if (countBytes == 1)
+					buffer.put((byte)index);
+				else if (countBytes == 2)
+					buffer.putShort((short) index);
+				else
+					buffer.putInt(index);
+			}
+
+			buffer = writeVectorToBuffer(buffer);
+			indicesPos += indiceCount;
+		}
+		return buffer;
+	}
+
+	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
 		// TODO Auto-generated method stub
 
 		int indexCount = rowIndices.length;
-		int cols = valueVec.rows();
 		int maxCount = 255;
 		int countBytes = 1;
 		int indicesPos = 0;

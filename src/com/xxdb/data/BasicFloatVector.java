@@ -90,7 +90,7 @@ public class BasicFloatVector extends AbstractVector{
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
 		for (int i = 0; i < count; i++){
-			out.writeFloat(values[start + i]);//todo:Have question
+			out.writeFloat(values[start + i]);
 		}
 	}
 

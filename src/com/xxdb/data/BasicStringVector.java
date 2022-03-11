@@ -3,7 +3,6 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -213,7 +212,7 @@ public class BasicStringVector extends AbstractVector{
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
 		for (int i = 0; i < count; i++){
-			out.writeString(values[start + i]);//todo:Have question
+			out.writeString(values[start + i]);
 		}
 	}
 

@@ -118,8 +118,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 
 
 
-	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
-
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		throw new RuntimeException("Invalid datatype to write to buffer");
 	};
 

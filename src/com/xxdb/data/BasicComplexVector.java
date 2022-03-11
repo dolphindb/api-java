@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-import com.xxdb.io.Long2;
 import com.xxdb.io.Double2;
 
 public class BasicComplexVector extends AbstractVector{
@@ -99,7 +98,7 @@ public class BasicComplexVector extends AbstractVector{
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
 		for (int i = 0; i < count; i++){
-			out.writeDouble2(values[start + i]);//todo:Maybe have question
+			out.writeDouble2(values[start + i]);
 		}
 	}
 
