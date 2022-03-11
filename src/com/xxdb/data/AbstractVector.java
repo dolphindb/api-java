@@ -76,40 +76,35 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	public abstract int getUnitLength();
 
 	public static boolean checkCompressedMethod(DATA_TYPE type, int compressedMethod) {
-		switch (type) {
-			case DT_BOOL:
-			case DT_SHORT:
-			case DT_INT:
-			case DT_DATE:
-			case DT_MONTH:
-			case DT_TIME:
-			case DT_MINUTE:
-			case DT_SECOND:
-			case DT_DATETIME:
-			case DT_DATEHOUR:
-			case DT_DATEMINUTE:
-			case DT_LONG:
-			case DT_NANOTIME:
-			case DT_TIMESTAMP:
-			case DT_NANOTIMESTAMP:
-			case DT_POINT:
-				break;
-			case DT_STRING:
-			case DT_SYMBOL:
-			case DT_INT128:
-			case DT_UUID:
-			case DT_IPADDR:
-			case DT_BYTE:
-			case DT_FLOAT:
-			case DT_DOUBLE:
-			case DT_COMPLEX:
-			case DT_DURATION:
-				if (compressedMethod == Vector.COMPRESS_LZ4)
-					break;
-			default:
+		if(compressedMethod==COMPRESS_DELTA) {
+			if(type.getValue()>64){
 				return false;
-		}
-		return true;
+			}
+			switch (type) {
+				case DT_BOOL:
+				case DT_SHORT:
+				case DT_INT:
+				case DT_DATE:
+				case DT_MONTH:
+				case DT_TIME:
+				case DT_MINUTE:
+				case DT_SECOND:
+				case DT_DATETIME:
+				case DT_DATEHOUR:
+				case DT_DATEMINUTE:
+				case DT_LONG:
+				case DT_NANOTIME:
+				case DT_TIMESTAMP:
+				case DT_NANOTIMESTAMP:
+				case DT_POINT:
+					return true;
+				default:
+					return false;
+			}
+		}else if (compressedMethod == Vector.COMPRESS_LZ4)
+			return true;
+		else
+			return false;
 	}
 
 	public void setCompressedMethod(int method) {
@@ -124,10 +119,13 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 
 
 	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+
 		throw new RuntimeException("Invalid datatype to write to buffer");
 	};
 
 	public static int getUnitLength(Entity.DATA_TYPE type) {
+		if (type.getValue()>64)
+			type = Entity.DATA_TYPE.valueOf(type.getValue()-64);
 		int unitLength = 0;
 		switch (type) {
 			case DT_STRING:

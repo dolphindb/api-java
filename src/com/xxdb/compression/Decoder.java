@@ -21,5 +21,5 @@ public interface Decoder {
      * @param unitLength The length of an element in bytes. It is zero if the element is a string object.
      * @return
      */
-    ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian) throws IOException;
+    ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian, int extra) throws IOException;
 }

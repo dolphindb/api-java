@@ -17,13 +17,13 @@ public class LZ4Decoder extends AbstractDecoder {
     private LZ4SafeDecompressor decompressor = null;
 
     @Override
-    public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian) throws IOException{
+    public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian, int extra) throws IOException{
     	if(decompressor == null){
 	        LZ4Factory factory = LZ4Factory.fastestInstance();
 	        decompressor = factory.safeDecompressor();
     	}
         int offset = 8;
-        byte[] out = createColumnVector(elementCount, unitLength, isLittleEndian, 65536).array();
+        byte[] out = createColumnVector(elementCount, unitLength, isLittleEndian, 65536, extra).array();
         
         while (length > 0) {
             int blockSize = in.readInt();
