@@ -118,7 +118,7 @@ public class BasicLongVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		if(value.isNull()){
+		if(value == null){
 			values[index] = Long.MIN_VALUE;
 		}else{
 			values[index] = value.getNumber().longValue();
@@ -191,7 +191,7 @@ public class BasicLongVector extends AbstractVector{
 	}
 
 	@Override
-	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (long val: values) {
 			buffer.putLong(val);
 		}

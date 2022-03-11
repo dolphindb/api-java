@@ -103,7 +103,7 @@ public class BasicByteVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		if(value.isNull()){
+		if(value == null){
 			values[index] = Byte.MIN_VALUE;
 		}else{
 			values[index] = value.getNumber().byteValue();
@@ -189,7 +189,7 @@ public class BasicByteVector extends AbstractVector{
 	}
 
 	@Override
-	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (byte val: values) {
 			buffer.put(val);
 		}

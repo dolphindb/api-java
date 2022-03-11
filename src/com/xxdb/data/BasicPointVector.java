@@ -192,7 +192,7 @@ public class BasicPointVector extends AbstractVector{
 	}
 
 	@Override
-	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (Double2 val: values) {
 			buffer.putDouble(val.x);
 			buffer.putDouble(val.y);

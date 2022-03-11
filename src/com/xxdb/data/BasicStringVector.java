@@ -262,7 +262,7 @@ public class BasicStringVector extends AbstractVector{
 	}
 
 	@Override
-	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for(String val : values){
 			byte[] tmp;
 			tmp = val.getBytes(StandardCharsets.UTF_8);

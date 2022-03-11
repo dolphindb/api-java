@@ -110,7 +110,7 @@ public class BasicDoubleVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		if(value.isNull()){
+		if(value == null){
 			values[index] = -Double.MAX_VALUE;
 		}else{
 			values[index] = value.getNumber().doubleValue();
@@ -172,7 +172,7 @@ public class BasicDoubleVector extends AbstractVector{
 	}
 
 	@Override
-	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (double val: values) {
 			buffer.putDouble(val);
 		}

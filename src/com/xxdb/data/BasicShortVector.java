@@ -111,7 +111,7 @@ public class BasicShortVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		if(value.isNull()){
+		if(value == null){
 			values[index] = Short.MIN_VALUE;
 		}else{
 			values[index] = value.getNumber().shortValue();
@@ -186,7 +186,7 @@ public class BasicShortVector extends AbstractVector{
 	}
 
 	@Override
-	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (short val: values) {
 			buffer.putShort(val);
 		}

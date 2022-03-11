@@ -211,7 +211,7 @@ public class BasicInt128Vector extends AbstractVector{
 	}
 
 	@Override
-	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		boolean isLittleEndian = buffer.order() == ByteOrder.LITTLE_ENDIAN;
 		for (Long2 val: values) {
 			if(isLittleEndian){

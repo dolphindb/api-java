@@ -118,7 +118,7 @@ public class BasicIntVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		if(value.isNull()){
+		if(value == null){
 			values[index] = Integer.MIN_VALUE;
 		}else{
 			values[index] = value.getNumber().intValue();
@@ -191,7 +191,7 @@ public class BasicIntVector extends AbstractVector{
 	}
 
 	@Override
-	protected ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		for (int val: values) {
 			buffer.putInt(val);
 		}
