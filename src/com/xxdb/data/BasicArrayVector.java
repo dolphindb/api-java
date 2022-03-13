@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -244,16 +245,17 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException{
+		// TODO Auto-generated method stub
+
 		int indexCount = rowIndices.length;
 		int maxCount = 255;
 		int countBytes = 1;
 		int indicesPos = 0;
 
-		while (indicesPos < indexCount){
+		{
 			int byteRequest = 4;
-			int curRows = 0;
 			int indiceCount = 1;
-			while (byteRequest < BUF_SIZE && indicesPos + indiceCount - 1 < indexCount){
+			while (indicesPos + indiceCount - 1 < indexCount){
 				int curIndiceOffect = indicesPos + indiceCount - 1;
 				int index = curIndiceOffect == 0 ? rowIndices[curIndiceOffect] : rowIndices[curIndiceOffect] - rowIndices[curIndiceOffect - 1];
 				while(index > maxCount)
@@ -269,26 +271,23 @@ public class BasicArrayVector extends AbstractVector {
 				}
 				if (byteRequest + countBytes + baseUnitLength_ * index > BUF_SIZE)
 					break;
-				curRows += index;
 				indiceCount++;
 				byteRequest += countBytes + baseUnitLength_ * index;
 			}
 			indiceCount --;
-			buffer.putShort((short) indiceCount);
-			buffer.put((byte) countBytes);
-			buffer.put((byte) 0);
+			buffer.putShort((short)indiceCount);
+			buffer.put((byte)countBytes);
+			buffer.put((byte)0);
 			for (int i = 0; i < indiceCount; i++){
 				int index = indicesPos + i == 0 ? rowIndices[indicesPos + i] : rowIndices[indicesPos + i] - rowIndices[indicesPos + i - 1];
 				if (countBytes == 1)
 					buffer.put((byte)index);
 				else if (countBytes == 2)
-					buffer.putShort((short) index);
+					buffer.putShort((short)index);
 				else
 					buffer.putInt(index);
 			}
-
-			buffer = writeVectorToBuffer(buffer);
-			indicesPos += indiceCount;
+			((AbstractVector)valueVec).writeVectorToBuffer(buffer);
 		}
 		return buffer;
 	}
