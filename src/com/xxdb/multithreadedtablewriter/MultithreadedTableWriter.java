@@ -356,10 +356,7 @@ public class MultithreadedTableWriter {
                     throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
             }
             else{
-                if (colDefsTypeInt.getInt(i) == 81 || colDefsTypeInt.getInt(i) == 82)
-                    throw new RuntimeException("ArrayVector do not supports String and Symbol");
-                else
-                    colTypes_.add(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
+                colTypes_.add(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
             }
             colTypeString_.add(colDefsTypeString.getString(i));
         }
