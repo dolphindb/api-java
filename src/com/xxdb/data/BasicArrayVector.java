@@ -253,14 +253,14 @@ public class BasicArrayVector extends AbstractVector {
 		int indicesPos = 0;
 
 		{
-			int byteRequest = 4;
+			//int byteRequest = 4;
 			int indiceCount = 1;
 			while (indicesPos + indiceCount - 1 < indexCount){
 				int curIndiceOffect = indicesPos + indiceCount - 1;
 				int index = curIndiceOffect == 0 ? rowIndices[curIndiceOffect] : rowIndices[curIndiceOffect] - rowIndices[curIndiceOffect - 1];
 				while(index > maxCount)
 				{
-					byteRequest += (indiceCount - 1) * countBytes;
+					//byteRequest += (indiceCount - 1) * countBytes;
 					countBytes *= 2;
 					if (countBytes == 1)
 						maxCount = Byte.MAX_VALUE;
@@ -269,10 +269,11 @@ public class BasicArrayVector extends AbstractVector {
 					else if (countBytes == 3)
 						maxCount = Integer.MAX_VALUE;
 				}
-				if (byteRequest + countBytes + baseUnitLength_ * index > BUF_SIZE)
-					break;
+				//if (byteRequest + countBytes + baseUnitLength_ * index > BUF_SIZE)
+				//	break;
 				indiceCount++;
-				byteRequest += countBytes + baseUnitLength_ * index;
+				//byteRequest += countBytes + baseUnitLength_ * index;
+				//byteRequest += countBytes + baseUnitLength_ * index;
 			}
 			indiceCount --;
 			buffer.putShort((short)indiceCount);
