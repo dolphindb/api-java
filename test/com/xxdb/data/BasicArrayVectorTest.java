@@ -28,6 +28,7 @@ public class BasicArrayVectorTest {
          }
          assertEquals(Entity.DATA_TYPE.DT_INT_ARRAY,obj.getDataType());
          assertEquals(20,obj.rows());
+         conn.close();
     }
 
     @Test
@@ -45,6 +46,7 @@ public class BasicArrayVectorTest {
             }
         }
         assertEquals(Entity.DATA_TYPE.DT_LONG_ARRAY,obj.getDataType());
+        conn.close();
     }
 
     @Test
@@ -63,6 +65,7 @@ public class BasicArrayVectorTest {
         }
         assertEquals(Entity.DATA_TYPE.DT_SHORT_ARRAY,obj.getDataType());
 
+        conn.close();
     }
 
 
@@ -81,6 +84,7 @@ public class BasicArrayVectorTest {
             }
         }
         assertEquals(Entity.DATA_TYPE.DT_FLOAT_ARRAY,obj.getDataType());
+        conn.close();
 
     }
 
@@ -99,6 +103,7 @@ public class BasicArrayVectorTest {
             }
         }
         assertEquals(Entity.DATA_TYPE.DT_DOUBLE_ARRAY,obj.getDataType());
+        conn.close();
 
     }
 
@@ -113,6 +118,7 @@ public class BasicArrayVectorTest {
         assertEquals("[true]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_BOOL_ARRAY,obj.getDataType());
+        conn.close();
     }
 
     @Test
@@ -126,6 +132,7 @@ public class BasicArrayVectorTest {
         assertEquals("[0]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_BYTE_ARRAY,obj.getDataType());
+        conn.close();
     }
 
     @Test
@@ -139,6 +146,7 @@ public class BasicArrayVectorTest {
         assertEquals("[1970.01.01]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_DATE_ARRAY,obj.getDataType());
+        conn.close();
     }
 
     @Test
@@ -154,6 +162,7 @@ public class BasicArrayVectorTest {
         assertEquals("[0001.01M]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_MONTH_ARRAY,obj.getDataType());
+        conn.close();
     }
 
     @Test
@@ -169,6 +178,7 @@ public class BasicArrayVectorTest {
         assertEquals("[00:00:00.000]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_TIME_ARRAY,obj.getDataType());
+        conn.close();
     }
 
     @Test
@@ -184,6 +194,7 @@ public class BasicArrayVectorTest {
         assertEquals("[00:00m]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_MINUTE_ARRAY,obj.getDataType());
+        conn.close();
     }
 
     @Test
@@ -199,6 +210,7 @@ public class BasicArrayVectorTest {
         assertEquals("[00:00:00]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_SECOND_ARRAY,obj.getDataType());
+        conn.close();
     }
     @Test
     public void TestBasic_datetime_ArrayVector() throws Exception {
@@ -213,6 +225,7 @@ public class BasicArrayVectorTest {
         assertEquals("[1970.01.01T00:00:00]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_DATETIME_ARRAY,obj.getDataType());
+        conn.close();
     }
     @Test
     public void TestBasic_timestamp_ArrayVector() throws Exception {
@@ -229,6 +242,7 @@ public class BasicArrayVectorTest {
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_TIMESTAMP_ARRAY,obj.getDataType());
        // assertEquals("1970.01.01T00:00:00.000",obj.getVectorValue(1).get(0).getTemporal());
+        conn.close();
     }
     @Test
     public void TestBasic_nanotime_ArrayVector() throws Exception {
@@ -243,6 +257,7 @@ public class BasicArrayVectorTest {
         assertEquals("[00:00:00.000000000]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_NANOTIME_ARRAY,obj.getDataType());
+        conn.close();
     }
     @Test
     public void TestBasic_nanotimestamp_ArrayVector() throws Exception {
@@ -257,6 +272,7 @@ public class BasicArrayVectorTest {
         assertEquals("[1970.01.01T00:00:00.000000000]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_NANOTIMESTAMP_ARRAY,obj.getDataType());
+        conn.close();
     }
 
 
@@ -273,6 +289,7 @@ public class BasicArrayVectorTest {
         assertEquals("[1970.01.01T00]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         assertEquals(Entity.DATA_TYPE.DT_DATEHOUR_ARRAY,obj.getDataType());
+        conn.close();
     }
 
     @Test
@@ -289,6 +306,7 @@ public class BasicArrayVectorTest {
         for (int i=0;i<20;i++){
             assertEquals(BV.getString(),obj.getVectorValue(i).getString());
         }
+        conn.close();
     }
 
       @Test
@@ -305,6 +323,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector obj = new BasicArrayVector(l);
         assertEquals("[true,false]",obj.getVectorValue(0).getString());
         assertEquals("[true,false]",obj.getVectorValue(1).getString());
+          conn.close();
 
     }
 
@@ -328,6 +347,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals("[1,2]",res.getVectorValue(0).getString());
         assertEquals("[1,2]",res.getVectorValue(1).getString());
+        conn.close();
     }
 
     @Test
@@ -350,6 +370,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals("[1,2]",res.getVectorValue(0).getString());
         assertEquals("[1,2]",res.getVectorValue(1).getString());
+        conn.close();
     }
 
     @Test
@@ -372,6 +393,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals("[1,2]",res.getVectorValue(0).getString());
         assertEquals("[1,2]",res.getVectorValue(1).getString());
+        conn.close();
     }
 
     @Test
@@ -416,6 +438,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals("[1,2]",res.getVectorValue(0).getString());
         assertEquals("[1,2]",res.getVectorValue(1).getString());
+        conn.close();
     }
 
     @Test
@@ -438,6 +461,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals("[2022.01.01,1970.01.01]",res.getVectorValue(0).getString());
         assertEquals("[2022.01.01,1970.01.01]",res.getVectorValue(1).getString());
+        conn.close();
     }
 
     @Test
@@ -460,6 +484,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals("[00:01m,00:02m]",res.getVectorValue(0).getString());
         assertEquals("[00:01m,00:02m]",res.getVectorValue(1).getString());
+        conn.close();
     }
 
     @Test
@@ -482,6 +507,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals("[00:00:01,00:00:02]",res.getVectorValue(0).getString());
         assertEquals("[00:00:01,00:00:02]",res.getVectorValue(1).getString());
+        conn.close();
     }
 
     @Test
@@ -504,6 +530,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals("[1970.01.01T00:00:01,1970.01.01T00:00:02]",res.getVectorValue(0).getString());
         assertEquals("[1970.01.01T00:00:01,1970.01.01T00:00:02]",res.getVectorValue(1).getString());
+        conn.close();
     }
 
     @Test
@@ -526,6 +553,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals("[1970.01.01T01,1970.01.01T02]",res.getVectorValue(0).getString());
         assertEquals("[1970.01.01T01,1970.01.01T02]",res.getVectorValue(1).getString());
+        conn.close();
     }
 
     @Test
@@ -548,6 +576,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals("[1970.01.01T00:00:00.001,1970.01.01T00:00:00.002]",res.getVectorValue(0).getString());
         assertEquals("[1970.01.01T00:00:00.001,1970.01.01T00:00:00.002]",res.getVectorValue(1).getString());
+        conn.close();
     }
 
     @Test
@@ -571,6 +600,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals(time,res.getVectorValue(0).get(0).getNumber());
         assertEquals(time,res.getVectorValue(0).get(1).getNumber());
+        conn.close();
     }
 
     @Test
@@ -597,6 +627,7 @@ public class BasicArrayVectorTest {
         assertEquals(LocalTime.of(1,1,1,1323433),res.getVectorValue(1).get(0).getTemporal());
         assertEquals(LocalTime.of(1,1,2,1323433),res.getVectorValue(0).get(1).getTemporal());
         assertEquals(LocalTime.of(1,1,2,1323433),res.getVectorValue(1).get(1).getTemporal());
+        conn.close();
     }
 
     @Test
@@ -619,6 +650,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals("[true,false]",res.getVectorValue(0).getString());
         assertEquals("[true,false]",res.getVectorValue(1).getString());
+        conn.close();
     }
 
     @Test
@@ -634,7 +666,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector obj = new BasicArrayVector(l);
         assertEquals("[true,]",obj.getVectorValue(0).getString());
         assertEquals("[true,]",obj.getVectorValue(1).getString());
-
+        conn.close();
        /* Map<String, Entity> map = new HashMap<String, Entity>();
         map.put("arrayvector", obj);
         conn.upload(map);
@@ -663,5 +695,32 @@ public class BasicArrayVectorTest {
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
         assertEquals("[true,]",res.getVectorValue(0).getString());
         assertEquals("[true,]",res.getVectorValue(1).getString());*/
+    }
+
+    @Test
+    public void testCompresstable_include_arrayvector()throws Exception {
+        DBConnection conn = new DBConnection(false,false,true);
+        conn.connect(HOST, PORT);
+        BasicDateVector dayList = (BasicDateVector) conn.run("date(1..10)");
+        BasicStringVector idList = (BasicStringVector) conn.run("string(1..10)");
+        BasicArrayVector arrar= (BasicArrayVector) conn.run("\n" +
+                "s=array(INT[],0,10).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]);" +
+                "s");
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("id");
+        colNames.add("arrar");
+        List<Vector> colVectors = new ArrayList<>();
+        colVectors.add(dayList);
+        colVectors.add(idList);
+        colVectors.add(arrar);
+        BasicTable tb=new BasicTable(colNames,colVectors);
+        Map<String, Entity> map =new HashMap<>();
+        map.put("tb",tb);
+        conn.upload(map);
+        BasicTable res= (BasicTable) conn.run("tb");
+        System.out.println(res.getColumn("arrar").get(0));
+        conn.close();
+
     }
 }
