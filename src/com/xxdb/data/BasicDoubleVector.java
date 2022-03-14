@@ -110,7 +110,7 @@ public class BasicDoubleVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		if(value == null){
+		if(value.isNull()){
 			values[index] = -Double.MAX_VALUE;
 		}else{
 			values[index] = value.getNumber().doubleValue();

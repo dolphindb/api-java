@@ -116,7 +116,7 @@ public class BasicFloatVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		if(value == null){
+		if(value.isNull()){
 			values[index] = -Float.MAX_VALUE;
 		}else{
 			values[index] = value.getNumber().floatValue();

@@ -118,7 +118,7 @@ public class BasicIntVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		if(value == null){
+		if(value.isNull()){
 			values[index] = Integer.MIN_VALUE;
 		}else{
 			values[index] = value.getNumber().intValue();

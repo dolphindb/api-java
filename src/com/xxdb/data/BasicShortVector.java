@@ -111,7 +111,7 @@ public class BasicShortVector extends AbstractVector{
 	}
 	
 	public void set(int index, Scalar value) throws Exception {
-		if(value == null){
+		if(value.isNull()){
 			values[index] = Short.MIN_VALUE;
 		}else{
 			values[index] = value.getNumber().shortValue();
