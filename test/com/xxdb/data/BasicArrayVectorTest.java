@@ -702,8 +702,13 @@ public class BasicArrayVectorTest {
         DBConnection conn = new DBConnection(false,false,true);
         conn.connect("localhost", 8848);
         String script="\n" +
-                "s=array(INT[],0,10).append!([1..4]).append!([1..2]).append!([1..1]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10])\n" +
-                "t=table(1..10 as id ,s as arr) ;share t as st;\n" +
+                "\n" +
+                "s=array(INT[],0,10);\n" +
+                "for(i in 0:10000)\n" +
+                "{\n" +
+                "s.append!([1..4])\n" +
+                "}\n" +
+                "t=table(1..10000 as id ,s as arr) ;share t as st;\n" +
                 "dbName='dfs://testarray'\n" +
                 "login(`admin,`123456)\n" +
                 "\tif(existsDatabase(dbName)){\n" +
@@ -712,8 +717,12 @@ public class BasicArrayVectorTest {
                 "\tdb=database(dbName, VALUE, 1..2,,'TSDB')\n" +
                 "\tpt=createPartitionedTable(db,t,`pt,`id,,`id).append!(t)";
         conn.run(script);
-        BasicArrayVector arr= (BasicArrayVector) conn.run("exec arr from loadTable('dfs://testarray',`pt)");
-        System.out.println(arr.getString());
+        BasicIntVector arr= (BasicIntVector) conn.run("1..4");
+        BasicTable bt= (BasicTable) conn.run("select * from loadTable('dfs://testarray',`pt)");
+        for (int i=0;i<10000;i++) {
+            assertEquals(arr.getString(), ((BasicArrayVector) bt.getColumn("arr")).getVectorValue(i).getString());
+        }
         conn.close();
     }
+
 }
