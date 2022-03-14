@@ -53,7 +53,7 @@ public class MutithreadTableWriterTest implements Runnable{
         boolean b = mutithreadedTableWriter_.insert(pErrorInfo, false, 'c', s,l);
         assertEquals(true, b);
         System.out.println(pErrorInfo);
-        mutithreadedTableWriter_.waitExit();
+        mutithreadedTableWriter_.waitForThreadCompletion();
         System.out.println("time used "+(System.currentTimeMillis()-starttime));
         Thread.sleep(2000);
         BasicTable bt= (BasicTable) conn.run("select * from t1;");
@@ -207,7 +207,7 @@ public class MutithreadTableWriterTest implements Runnable{
             boolean b = mutithreadedTableWriter_.insert(pErrorInfo,ll,dates);
             assertTrue(b);
         }
-        mutithreadedTableWriter_.waitExit();
+        mutithreadedTableWriter_.waitForThreadCompletion();
         BasicTable bt= (BasicTable) conn.run("select * from t1;");
         assertEquals(rows,bt.rows());
         for (int i=0;i<bt.rows();i++){
@@ -264,7 +264,7 @@ public class MutithreadTableWriterTest implements Runnable{
         boolean b = mutithreadedTableWriter_.insert(pErrorInfo, l);
         assertEquals(true, b);
         System.out.println(pErrorInfo);
-        mutithreadedTableWriter_.waitExit();
+        mutithreadedTableWriter_.waitForThreadCompletion();
         System.out.println("time used "+(System.currentTimeMillis()-starttime));
 
         //Thread.sleep(2000);
@@ -280,7 +280,7 @@ public class MutithreadTableWriterTest implements Runnable{
                 "\ta.append!([1..100])\n" +
                 "};a");
 
-        System.out.println(obj.getValue(0, 2).getDataType());
+        System.out.println(obj.getVectorValue(0).getDataType());
     }
 
     public static void testBlob() throws Exception{
@@ -304,7 +304,7 @@ public class MutithreadTableWriterTest implements Runnable{
         //conn.run("append!{t}", args);
         boolean b=mutithreadedTableWriter_.insert(tb,pErrorInfo);
         assertEquals(true, b);
-        mutithreadedTableWriter_.waitExit();
+        mutithreadedTableWriter_.waitForThreadCompletion();
         MultithreadedTableWriter.Status status=new MultithreadedTableWriter.Status();
         mutithreadedTableWriter_.getStatus(status);
         // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
