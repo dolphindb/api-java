@@ -17,43 +17,48 @@ public class BasicArrayVector extends AbstractVector {
 
 	public BasicArrayVector(List<Vector> value) throws Exception{
 		super(DATA_FORM.DF_VECTOR);
-		this.type = DATA_TYPE.valueOf(value.get(0).getDataType().getValue() + 64);
-		DATA_TYPE valueType = DATA_TYPE.valueOf(value.get(0).getDataType().getValue());
-		int len = 0;
-		for (Vector one : value){
-			if(one.rows()>0)
-				len += one.rows();
-			else
-				len++;
-		}
-		int indexPos = 0;
-		int indexCount = value.size();
-		this.rowIndices = new int[indexCount];
-		this.valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, len);
-		int index = 0;
-		int curRows = 0;
-		for (int valuePos = 0; valuePos < indexCount; valuePos++){
-			Vector temp = value.get(valuePos);
-			int size = temp.rows();
-			if (size > 0){
-				for (int i = 0; i < size ; i++){
-					try {
-						this.valueVec.set(index, temp.get(i));
-						index++;
-					}catch (Exception e){
-						throw new RuntimeException("Failed to insert data, invalid data for "+((Vector)temp).get(i)+" error "+ e.toString());
+		if (value.get(0).getDataType().getValue() + 64 == 81 || value.get(0).getDataType().getValue() + 64 == 82)
+			throw new RuntimeException("ArrayVector do not support String and Symbol");
+		else{
+			this.type = DATA_TYPE.valueOf(value.get(0).getDataType().getValue() + 64);
+			DATA_TYPE valueType = DATA_TYPE.valueOf(value.get(0).getDataType().getValue());
+			int len = 0;
+			for (Vector one : value){
+				if(one.rows()>0)
+					len += one.rows();
+				else
+					len++;
+			}
+			int indexPos = 0;
+			int indexCount = value.size();
+			this.rowIndices = new int[indexCount];
+			this.valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, len);
+			int index = 0;
+			int curRows = 0;
+			for (int valuePos = 0; valuePos < indexCount; valuePos++){
+				Vector temp = value.get(valuePos);
+				int size = temp.rows();
+				if (size > 0){
+					for (int i = 0; i < size ; i++){
+						try {
+							this.valueVec.set(index, temp.get(i));
+							index++;
+						}catch (Exception e){
+							throw new RuntimeException("Failed to insert data, invalid data for "+((Vector)temp).get(i)+" error "+ e.toString());
+						}
 					}
+					curRows += size;
 				}
-				curRows += size;
+				else{
+					this.valueVec.setNull(index);
+					index++;
+					curRows ++;
+				}
+				this.rowIndices[indexPos++] = curRows;
 			}
-			else{
-				this.valueVec.setNull(index);
-				index++;
-				curRows ++;
-			}
-			this.rowIndices[indexPos++] = curRows;
+			this.baseUnitLength_ = (this.valueVec).getUnitLength();
 		}
-		this.baseUnitLength_ = (this.valueVec).getUnitLength();
+
 	}
 
 	public BasicArrayVector(int[] index, Vector value) {
