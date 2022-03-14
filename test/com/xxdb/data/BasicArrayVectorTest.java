@@ -700,27 +700,20 @@ public class BasicArrayVectorTest {
     @Test
     public void testCompresstable_include_arrayvector()throws Exception {
         DBConnection conn = new DBConnection(false,false,true);
-        conn.connect(HOST, PORT);
-        BasicDateVector dayList = (BasicDateVector) conn.run("date(1..10)");
-        BasicStringVector idList = (BasicStringVector) conn.run("string(1..10)");
-        BasicArrayVector arrar= (BasicArrayVector) conn.run("\n" +
-                "s=array(INT[],0,10).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]);" +
-                "s");
-        List<String> colNames = new ArrayList<>();
-        colNames.add("date");
-        colNames.add("id");
-        colNames.add("arrar");
-        List<Vector> colVectors = new ArrayList<>();
-        colVectors.add(dayList);
-        colVectors.add(idList);
-        colVectors.add(arrar);
-        BasicTable tb=new BasicTable(colNames,colVectors);
-        Map<String, Entity> map =new HashMap<>();
-        map.put("tb",tb);
-        conn.upload(map);
-        BasicTable res= (BasicTable) conn.run("tb");
-        System.out.println(res.getColumn("arrar").get(0));
+        conn.connect("localhost", 8848);
+        String script="\n" +
+                "s=array(INT[],0,10).append!([1..4]).append!([1..2]).append!([1..1]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10]).append!([1..10])\n" +
+                "t=table(1..10 as id ,s as arr) ;share t as st;\n" +
+                "dbName='dfs://testarray'\n" +
+                "login(`admin,`123456)\n" +
+                "\tif(existsDatabase(dbName)){\n" +
+                "\t\tdropDatabase(dbName)\n" +
+                "\t}\n" +
+                "\tdb=database(dbName, VALUE, 1..2,,'TSDB')\n" +
+                "\tpt=createPartitionedTable(db,t,`pt,`id,,`id).append!(t)";
+        conn.run(script);
+        BasicArrayVector arr= (BasicArrayVector) conn.run("exec arr from loadTable('dfs://testarray',`pt)");
+        System.out.println(arr.getString());
         conn.close();
-
     }
 }
