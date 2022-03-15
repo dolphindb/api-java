@@ -81,7 +81,6 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 				return false;
 			}
 			switch (type) {
-				case DT_BOOL:
 				case DT_SHORT:
 				case DT_INT:
 				case DT_DATE:
@@ -97,6 +96,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 				case DT_TIMESTAMP:
 				case DT_NANOTIMESTAMP:
 				case DT_POINT:
+				case DT_SYMBOL:
 					return true;
 				default:
 					return false;
