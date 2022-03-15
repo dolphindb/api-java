@@ -249,20 +249,18 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException{
-		// TODO Auto-generated method stub
-
-		int indicesPos = 0;
 		int indexCount = rowIndices.length;
+		int maxCount = 255;
+		int countBytes = 1;
+		int indicesPos = 0;
 		{
-			//int byteRequest = 4;
+
 			int indiceCount = 1;
-			int countBytes = 1;
-			{
-				int maxCount = 255;
+			while (indicesPos + indiceCount - 1 < indexCount){
+				int curIndiceOffect = indicesPos + indiceCount - 1;
 				int index = rowIndices[indexCount-1];
 				while(index > maxCount)
 				{
-					//byteRequest += (indiceCount - 1) * countBytes;
 					countBytes *= 2;
 					if (countBytes == 1)
 						maxCount = Byte.MAX_VALUE;
@@ -271,6 +269,7 @@ public class BasicArrayVector extends AbstractVector {
 					else if (countBytes == 3)
 						maxCount = Integer.MAX_VALUE;
 				}
+				indiceCount++;
 			}
 			indiceCount --;
 			buffer.putShort((short)indiceCount);
@@ -288,23 +287,24 @@ public class BasicArrayVector extends AbstractVector {
 			((AbstractVector)valueVec).writeVectorToBuffer(buffer);
 		}
 		return buffer;
+
 	}
 
 	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
 		// TODO Auto-generated method stub
 
+
 		int indexCount = rowIndices.length;
 		int maxCount = 255;
 		int countBytes = 1;
 		int indicesPos = 0;
 		int valuesOffect = 0;
-
 		while (indicesPos < indexCount){
 			int byteRequest = 4;
 			int curRows = 0;
 			int indiceCount = 1;
-			while (byteRequest < BUF_SIZE && indicesPos + indiceCount - 1 < indexCount){
+			while (byteRequest < BUF_SIZE && indicesPos + indiceCount - 1 < indexCount && indiceCount < 65536){
 				int curIndiceOffect = indicesPos + indiceCount - 1;
 				int index = curIndiceOffect == 0 ? rowIndices[curIndiceOffect] : rowIndices[curIndiceOffect] - rowIndices[curIndiceOffect - 1];
 				while(index > maxCount)
@@ -318,8 +318,6 @@ public class BasicArrayVector extends AbstractVector {
 					else if (countBytes == 3)
 						maxCount = Integer.MAX_VALUE;
 				}
-				if (byteRequest + countBytes + baseUnitLength_ * index > BUF_SIZE)
-					break;
 				curRows += index;
 				indiceCount++;
 				byteRequest += countBytes + baseUnitLength_ * index;
@@ -341,6 +339,9 @@ public class BasicArrayVector extends AbstractVector {
 			indicesPos += indiceCount;
 			valuesOffect += curRows;
 		}
+
+
+
 	}
 
 }
