@@ -1,11 +1,13 @@
 package com.xxdb.compression;
 
+import com.xxdb.data.AbstractVector;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
 public interface Encoder {
 
-    List<Object> compress(ByteBuffer in, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException;
+    int compress(AbstractVector input, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException;
 
 }

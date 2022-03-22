@@ -201,4 +201,16 @@ public class BasicDoubleVector extends AbstractVector{
 		}
 		return end;
 	}
+
+	@Override
+	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
+		targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
+		for (int i = 0; i < targetNumElement; ++i)
+		{
+			out.putDouble(values[indexStart + i]);
+		}
+		numElementAndPartial.numElement = targetNumElement;
+		numElementAndPartial.partial = 0;
+		return targetNumElement * 8;
+	}
 }

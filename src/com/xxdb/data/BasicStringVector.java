@@ -2,11 +2,13 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+import com.xxdb.route.BitConverter;
 
 /**
  * 
@@ -272,5 +274,77 @@ public class BasicStringVector extends AbstractVector{
 			buffer.put((byte)0);
 		}
 		return buffer;
+	}
+
+	public int serialize(byte[] buf, int bufSize, int start, int elementCount, Offect offect)
+	{
+		int len = 0;
+		int total = values.length;
+		int count = 0;
+		if (isBlob)
+		{
+			while(len < bufSize && count < elementCount && start + count < total)
+			{
+				String str = values[start + count];
+				int strLen = str.length();
+				if (strLen + Integer.BYTES + 1 >= bufSize - len)
+				break;
+				byte[] lenTmp = BitConverter.getBytes(strLen);
+				byte[] strTmp = str.getBytes(Charset.defaultCharset());
+				System.arraycopy(strTmp, 0, buf, len, Integer.BYTES);
+				System.arraycopy(strTmp, 0, buf, len + Integer.BYTES, strLen);
+				len += strLen + Integer.BYTES + 1;
+				buf[len - 1] = 0;
+				count++;
+			}
+		}
+		else
+		{
+			while (len < bufSize && count < elementCount && start + count < total)
+			{
+				String str = values[start + count];
+				int strLen = str.length();
+				if (strLen + 1 >= bufSize - len)
+					break;
+				byte[] strTmp = str.getBytes(Charset.defaultCharset());
+				System.arraycopy(strTmp, 0, buf, len, strLen);
+				len += strLen + 1;
+				buf[len - 1] = 0;
+				count++;
+			}
+		}
+		offect.offect = start + count;
+		return len;
+	}
+
+	@Override
+	public  int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out)throws IOException {
+		int readByte = 0;
+		targetNumElement = Math.min(targetNumElement, values.length - indexStart);
+		numElementAndPartial.numElement = 0;
+		for (int i = 0; i < targetNumElement; ++i, ++numElementAndPartial.numElement)
+		{
+			byte[] data = values[indexStart + i].getBytes(Charset.defaultCharset());
+			if (isBlob)
+			{
+				if (Integer.BYTES + data.length > out.remaining())
+				break;
+				out.putInt(data.length);
+				out.put(data);
+				readByte += Integer.BYTES + data.length;
+			}
+			else
+			{
+				if (Byte.BYTES + data.length > out.remaining())
+				break;
+				out.put(data);
+				out.put((byte)0);
+				readByte += Byte.BYTES + data.length;
+			}
+		}
+		numElementAndPartial.partial = 0;
+		if(numElementAndPartial.numElement == 0)
+			throw new RuntimeException("too large data. ");
+		return readByte;
 	}
 }

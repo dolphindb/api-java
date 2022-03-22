@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
@@ -199,5 +200,17 @@ public class BasicSymbolVector extends AbstractVector {
 				end = mid - 1;
 		}
 		return end;
+	}
+
+	@Override
+	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
+		targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
+		for (int i = 0; i < targetNumElement; ++i)
+		{
+			out.putInt(values[indexStart + i]);
+		}
+		numElementAndPartial.numElement = targetNumElement;
+		numElementAndPartial.partial = 0;
+		return targetNumElement * 4;
 	}
 }

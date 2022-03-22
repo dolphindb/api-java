@@ -248,53 +248,120 @@ public class BasicArrayVector extends AbstractVector {
 	}
 
 	@Override
-	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException{
-		int indexCount = rowIndices.length;
-		int maxCount = 255;
-		int countBytes = 1;
-		int indicesPos = 0;
+	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial,  ByteBuffer out) throws IOException{
+		numElementAndPartial.numElement = 0;
+		numElementAndPartial.partial = 0;
+		int byteSent = 0;
+		NumElementAndPartial tempNumElementAndPartial = new NumElementAndPartial(0, 0);
+
+		if(offect > 0)
 		{
-
-			int indiceCount = 1;
-			while (indicesPos + indiceCount - 1 < indexCount){
-				int curIndiceOffect = indicesPos + indiceCount - 1;
-				int index = rowIndices[indexCount-1];
-				while(index > maxCount)
-				{
-					countBytes *= 2;
-					if (countBytes == 1)
-						maxCount = Byte.MAX_VALUE;
-					else if (countBytes == 2)
-						maxCount = Short.MAX_VALUE;
-					else if (countBytes == 3)
-						maxCount = Integer.MAX_VALUE;
-				}
-				indiceCount++;
+			int rowStart = indexStart > 0 ? rowIndices[indexStart - 1] : 0;
+			int cellCount = rowIndices[indexStart] - rowStart;
+			int cellCountToSerialize = Math.min(out.remaining() / baseUnitLength_, cellCount - offect);
+			byteSent += valueVec.serialize(rowStart + offect, cellCount, numElementAndPartial.numElement, tempNumElementAndPartial, out);
+			if(cellCountToSerialize < cellCount - offect)
+			{
+				numElementAndPartial.partial = offect + cellCountToSerialize;
+				return byteSent;
 			}
-			indiceCount --;
-			buffer.putShort((short)indiceCount);
-			buffer.put((byte)countBytes);
-			buffer.put((byte)0);
-			for (int i = 0; i < indiceCount; i++){
-				int index = indicesPos + i == 0 ? rowIndices[indicesPos + i] : rowIndices[indicesPos + i] - rowIndices[indicesPos + i - 1];
-				if (countBytes == 1)
-					buffer.put((byte)index);
-				else if (countBytes == 2)
-					buffer.putShort((short)index);
-				else
-					buffer.putInt(index);
+			else
+			{
+				--targetNumElement;
+				++numElementAndPartial.numElement;
+				++indexStart;
 			}
-			((AbstractVector)valueVec).writeVectorToBuffer(buffer);
 		}
-		return buffer;
 
+		int remainingBytes = out.remaining() - 4;
+		int curCountBytes = 1;
+		int maxCount = 255;
+		int prestart = indexStart == 0 ? 0 : rowIndices[indexStart - 1];
+
+		//one block can't exeed 65535 rows
+		if (targetNumElement > 65535)
+			targetNumElement = 65535;
+
+
+		int i = 0;
+		for(; i < targetNumElement && remainingBytes > 0; ++i)
+		{
+			int curStart = rowIndices[indexStart + i];
+			int curCount = curStart - prestart;
+			prestart = curStart;
+			int byteRequired = 0;
+
+			while(curCount > maxCount)
+			{
+				byteRequired += i * curCountBytes;
+				curCount *= 2;
+				if (curCountBytes == 1)
+					maxCount = Byte.MAX_VALUE;
+				else if (curCountBytes == 2)
+					maxCount = Short.MAX_VALUE;
+				else if (curCountBytes == 3)
+					maxCount = Integer.MAX_VALUE;
+			}
+			byteRequired += curCountBytes + curCount * baseUnitLength_;
+			if(byteRequired > remainingBytes)
+			{
+				if(numElementAndPartial.numElement == 0)
+				{
+					numElementAndPartial.partial = (remainingBytes - curCountBytes) / baseUnitLength_;
+					if(numElementAndPartial.partial <= 0)
+					{
+						numElementAndPartial.partial = 0;
+					}
+					else
+					{
+						++i;
+						remainingBytes -= (curCountBytes + numElementAndPartial.partial * baseUnitLength_);
+					}
+				}
+				break;
+			}
+			else
+			{
+				remainingBytes -= byteRequired;
+				++numElementAndPartial.numElement;
+			}
+		}
+
+		if(i == 0)
+			return byteSent;
+
+		short rows = (short) i;
+		out.putShort(rows);
+		out.put((byte)curCountBytes);
+		out.put((byte)0);
+		byteSent += 4;
+
+		//output array of counts
+		prestart = indexStart == 0 ? 0 : rowIndices[indexStart - 1];
+		for (int k = 0; k < rows; ++k)
+		{
+			int curStart = rowIndices[indexStart + k];
+			int index = curStart - prestart;
+			prestart = curStart;
+			if (curCountBytes == 1)
+				out.put((byte)index);
+			else if (curCountBytes == 2)
+				out.putShort((short)index);
+			else
+				out.putInt(index);
+		}
+
+		byteSent += curCountBytes * i;
+		prestart = indexStart == 0 ? 0 : rowIndices[indexStart - 1];
+		int count = (indexStart + numElementAndPartial.numElement == 0 ? 0 : rowIndices[indexStart + numElementAndPartial.numElement - 1]) + numElementAndPartial.partial - prestart;
+		int bytes;
+		bytes = valueVec.serialize(prestart, 0, count, tempNumElementAndPartial, out);
+		return byteSent + bytes;
 	}
 
 	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
 		// TODO Auto-generated method stub
-
-
 		int indexCount = rowIndices.length;
 		int maxCount = 255;
 		int countBytes = 1;
@@ -304,7 +371,7 @@ public class BasicArrayVector extends AbstractVector {
 			int byteRequest = 4;
 			int curRows = 0;
 			int indiceCount = 1;
-			while (byteRequest < BUF_SIZE && indicesPos + indiceCount - 1 < indexCount && indiceCount < 65536){
+			while (byteRequest < BUF_SIZE && indicesPos + indiceCount - 1 < indexCount && indiceCount < 65536){// && indiceCount < 65536
 				int curIndiceOffect = indicesPos + indiceCount - 1;
 				int index = curIndiceOffect == 0 ? rowIndices[curIndiceOffect] : rowIndices[curIndiceOffect] - rowIndices[curIndiceOffect - 1];
 				while(index > maxCount)

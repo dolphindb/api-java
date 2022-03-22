@@ -1,6 +1,8 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -128,6 +130,11 @@ public class BasicAnyVector extends AbstractVector{
 
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		throw new RuntimeException("BasicAnyVector.serialize not supported.");
+	}
+
+	@Override
+	public int serialize(int indexStart, int offect, int targetNumElement, AbstractVector.NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
 		throw new RuntimeException("BasicAnyVector.serialize not supported.");
 	}
 

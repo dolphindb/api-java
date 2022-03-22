@@ -1,6 +1,8 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -28,4 +30,5 @@ public interface Vector extends Entity{
 	void deserialize(int start, int count, ExtendedDataInput in) throws IOException;
 	void serialize(int start, int count, ExtendedDataOutput out) throws IOException;
 	int getUnitLength();
+	int serialize(int indexStart, int offect, int targetNumElement, AbstractVector.NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException;
 }

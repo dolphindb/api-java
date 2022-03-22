@@ -3,7 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.List;
+
 
 import com.xxdb.compression.EncoderFactory;
 import com.xxdb.io.ExtendedDataInput;
@@ -16,10 +16,32 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	protected byte[] buf = new byte[BUF_SIZE];
 	protected int compressedMethod = Vector.COMPRESS_LZ4;
 
+	public static class NumElementAndPartial{
+		public 	int numElement;
+		public 	int partial;
+
+		public NumElementAndPartial(int numElement, int partial){
+			this.partial = partial;
+			this.numElement = numElement;
+		}
+	}
+
+	public static class Offect{
+		public int offect;
+		public Offect(int offect){
+			this.offect = offect;
+		}
+	}
+
 	protected abstract void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException;
 
 	public AbstractVector(DATA_FORM df){
 		df_ = df;
+	}
+
+	@Override
+	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial,  ByteBuffer out) throws IOException{
+		throw new RuntimeException("Vector.serialize not implemented yet.");
 	}
 
 	@Override
@@ -95,7 +117,6 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 				case DT_NANOTIME:
 				case DT_TIMESTAMP:
 				case DT_NANOTIMESTAMP:
-				case DT_POINT:
 					return true;
 				default:
 					return false;
@@ -119,7 +140,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		throw new RuntimeException("Invalid datatype to write to buffer");
-	};
+	}
 
 	public static int getUnitLength(Entity.DATA_TYPE type) {
 		if (type.getValue()>64)
@@ -176,11 +197,11 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		int unitLength = getUnitLength(this.getDataType());
 
 		int elementCount = this.rows();
-		int maxCompressedLength = this.rows() * Long.BYTES * 2 + 64 * 3;
+		int maxCompressedLength = this.rows() * Long.BYTES * 8 * 2 + 64 * 3;
 
 		ByteBuffer out = output instanceof LittleEndianDataOutputStream ?
-				ByteBuffer.allocate(Math.max(elementCount * unitLength, 655360)).order(ByteOrder.LITTLE_ENDIAN) :
-				ByteBuffer.allocate(Math.max(elementCount * unitLength, 655360)).order(ByteOrder.BIG_ENDIAN);
+				ByteBuffer.allocate(Math.max(maxCompressedLength, 655360)).order(ByteOrder.LITTLE_ENDIAN) :
+				ByteBuffer.allocate(Math.max(maxCompressedLength, 655360)).order(ByteOrder.BIG_ENDIAN);
 		short flag = (short) (Entity.DATA_FORM.DF_VECTOR.ordinal() << 8 | Entity.DATA_TYPE.DT_COMPRESS.getValue() & 0xff);
 
 		out.putShort(flag);
@@ -197,14 +218,8 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		out.putInt(elementCount);
 		out.putInt(-1); //TODO: checkSum
 
-		ByteBuffer in = output instanceof LittleEndianDataOutputStream ?
-				ByteBuffer.allocate(Math.max(elementCount * unitLength, 655360)).order(ByteOrder.LITTLE_ENDIAN) :
-				ByteBuffer.allocate(Math.max(elementCount * unitLength, 655360)).order(ByteOrder.BIG_ENDIAN);
-		in = writeVectorToBuffer(in);
-		in.flip();
-		List<Object> ret = EncoderFactory.get(compressedMethod).compress(in, elementCount, unitLength, maxCompressedLength, out);
-		int compressedLength = 20 + (int)ret.get(0);
-		out = (ByteBuffer)ret.get(1);
+		EncoderFactory.get(compressedMethod).compress(this, elementCount, unitLength, maxCompressedLength, out);
+		int compressedLength = out.position()-10;
 		out.putInt(2, compressedLength);
 		output.write(out.array(), 0, compressedLength + 10);
 	}

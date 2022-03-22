@@ -225,5 +225,23 @@ public class BasicInt128Vector extends AbstractVector{
 		}
 		return buffer;
 	}
+
+	@Override
+	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
+		boolean isLittleEndian = out.order() == ByteOrder.LITTLE_ENDIAN;
+		targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
+		for (int i = 0; i < targetNumElement; ++i){
+			if (isLittleEndian) {
+				out.putLong(values[indexStart + i].low);
+				out.putLong(values[indexStart + i].high);
+			}else {
+				out.putLong(values[indexStart + i].high);
+				out.putLong(values[indexStart + i].low);
+			}
+		}
+		numElementAndPartial.numElement = targetNumElement;
+		numElementAndPartial.partial = 0;
+		return targetNumElement * 16;
+	}
 }
 

@@ -1,10 +1,13 @@
 package com.xxdb.compression;
 
-import com.xxdb.data.Utils;
+import com.xxdb.data.AbstractVector;
+import com.xxdb.data.BasicStringVector;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.ByteOrder;
+
+import static com.xxdb.data.Utils.reAllocByteBuffer;
 
 /**
  * input: datainputstream, output: long[]
@@ -13,27 +16,40 @@ public class DeltaOfDeltaEncoder implements Encoder {
     private static final int DEFAULT_BLOCK_SIZE = 65536;
 
     @Override
-    public List<Object> compress(ByteBuffer in, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException {
+    public int compress(AbstractVector in, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException {
         DeltaOfDeltaBlockEncoder blockEncoder = new DeltaOfDeltaBlockEncoder(unitLength);
         int count = 0;
-        while (elementCount > 0) {
-            int blockSize = Math.min(elementCount * unitLength, DEFAULT_BLOCK_SIZE);
-            long[] compressed = blockEncoder.compress(in, blockSize);
-            //write blockSize+data
-            out.putInt(compressed.length * Long.BYTES);
-            for (long l : compressed) {
-                while(Long.BYTES + out.position() > out.limit()) {
-                    out = Utils.reAllocByteBuffer(out, Math.max(out.capacity() * 2,1024));
+        int dataCount = in.rows();
+        int dataIndex = 0;
+        ByteBuffer dataBufer = ByteBuffer.allocate(DEFAULT_BLOCK_SIZE);
+        boolean isLittleEndian = out.order() == ByteOrder.LITTLE_ENDIAN;
+        if (isLittleEndian)
+            dataBufer.order(ByteOrder.LITTLE_ENDIAN);
+        else
+            dataBufer.order(ByteOrder.BIG_ENDIAN);
+        AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(0, 0);
+        while (dataCount > dataIndex)
+        {
+            int targetNum = Math.min(dataCount-dataIndex, (DEFAULT_BLOCK_SIZE) / unitLength);
+            int readBytes = in.serialize(dataIndex, numElementAndPartial.partial, targetNum, numElementAndPartial, dataBufer);
+            dataIndex += numElementAndPartial.numElement;
+            while (readBytes > 0)
+            {
+                int blockSize = Math.min(readBytes, DEFAULT_BLOCK_SIZE);
+                long[] compressed = blockEncoder.compress(dataBufer, blockSize);
+                //write blockSize+data
+                out.putInt(compressed.length * Long.BYTES);
+                for (long l : compressed){
+                    if (out.remaining() < Long.BYTES)
+                        out = reAllocByteBuffer(out, out.capacity() * 2);
+                    out.putLong(l);
                 }
-                out.putLong(l);
+                count += Integer.BYTES + compressed.length * Long.BYTES;
+                readBytes -= blockSize;
+                dataBufer.clear();
             }
-            count += Integer.BYTES + compressed.length * Long.BYTES;
-            elementCount -= blockSize / unitLength;
         }
-        List<Object> ret = new ArrayList<>();
-        ret.add(count);
-        ret.add(out);
-        return ret;
+        return count;
     }
 
     public ByteBuffer compress(ByteBuffer in, int elementCount, int unitLength, int maxCompressedLength) throws IOException {
@@ -82,6 +98,7 @@ class DeltaOfDeltaBlockEncoder {
         this.in = src;
         this.count = 0;
         long value = 0;
+        in.flip();
         while(count * unitLength < blockSize){
             value = readBuffer(in);
             if(!(unitLength == 2 && value == Short.MIN_VALUE || unitLength == 4 && value == Integer.MIN_VALUE || unitLength == 8 && value == Long.MIN_VALUE))

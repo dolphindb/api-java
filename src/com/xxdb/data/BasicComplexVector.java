@@ -193,10 +193,34 @@ public class BasicComplexVector extends AbstractVector{
 
 	@Override
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		boolean isLittleEndian = buffer.order() == ByteOrder.LITTLE_ENDIAN;
 		for (Double2 val: values) {
+			if (isLittleEndian) {
 				buffer.putDouble(val.x);
 				buffer.putDouble(val.y);
+			}else {
+				buffer.putDouble(val.y);
+				buffer.putDouble(val.x);
+			}
 		}
 		return buffer;
+	}
+
+	@Override
+	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
+		boolean isLittleEndian = out.order() == ByteOrder.LITTLE_ENDIAN;
+		targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
+		for (int i = 0; i < targetNumElement; ++i){
+			if (isLittleEndian) {
+				out.putDouble(values[indexStart + i].x);
+				out.putDouble(values[indexStart + i].y);
+			}else {
+				out.putDouble(values[indexStart + i].y);
+				out.putDouble(values[indexStart + i].x);
+			}
+		}
+		numElementAndPartial.numElement = targetNumElement;
+		numElementAndPartial.partial = 0;
+		return targetNumElement * 16;
 	}
 }
