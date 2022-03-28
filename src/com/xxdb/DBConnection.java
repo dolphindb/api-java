@@ -43,8 +43,8 @@ import javax.net.ssl.X509TrustManager;
  */
 
 public class DBConnection {
-    private enum NotLeaderStatus {
-        NEW_LEADER, WAIT, CONN_FAIL, OTHER_EXCEPTION
+    private enum ServerExceptionState {
+        NEW_LEADER, WAIT, CONN_FAIL, OTHER_EXCEPTION, DATA_NODE_NOT_AVAILABLE
     }
 
     private static final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length - 1;
@@ -385,8 +385,7 @@ public class DBConnection {
         }
     }
 
-    private NotLeaderStatus handleNotLeaderException(Exception ex, String function) {
-        String errMsg = ex.getMessage();
+    private ServerExceptionState handleServerException(String errMsg, String function) {
         if (ServerExceptionUtils.isNotLeader(errMsg)) {
             String newLeaderString = ServerExceptionUtils.newLeader(errMsg);
             String[] newLeader = newLeaderString.split(":");
@@ -398,21 +397,23 @@ public class DBConnection {
                     Thread.sleep(1000);
                 } catch (Exception e) {
                 }
-                return NotLeaderStatus.WAIT;
+                return ServerExceptionState.WAIT;
             }
             hostName = newHostName;
             port = newPort;
             try {
                 System.out.println("Got NotLeader exception. Switching to " + hostName + ":" + port);
                 if (connect())
-                    return NotLeaderStatus.NEW_LEADER;
+                    return ServerExceptionState.NEW_LEADER;
                 else
-                    return NotLeaderStatus.CONN_FAIL;
+                    return ServerExceptionState.CONN_FAIL;
             } catch (IOException e) {
-                return NotLeaderStatus.CONN_FAIL;
+                return ServerExceptionState.CONN_FAIL;
             }
+        }else if(ServerExceptionUtils.isDataNodeNotAvailable(errMsg)){
+            return ServerExceptionState.DATA_NODE_NOT_AVAILABLE;
         }
-        return NotLeaderStatus.OTHER_EXCEPTION;
+        return ServerExceptionState.OTHER_EXCEPTION;
     }
 
     public Entity tryRun(String script) throws IOException {
@@ -546,10 +547,10 @@ public class DBConnection {
                     throw ex;
                 }
 
-                NotLeaderStatus status = handleNotLeaderException(ex, null);
-                if (status == NotLeaderStatus.NEW_LEADER)
+                ServerExceptionState status = handleServerException(ex.getMessage(), null);
+                if (status == ServerExceptionState.NEW_LEADER)
                     return run(script, listener, priority, parallelism);
-                else if (status == NotLeaderStatus.WAIT) {
+                else if (status == ServerExceptionState.WAIT) {
                     if (!HAReconnect) {
                         HAReconnect = true;
                         while (true) {
@@ -562,6 +563,11 @@ public class DBConnection {
                         }
                     }
                     throw ex;
+                }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                    if (switchToRandomAvailableSite())
+                        return run(script, listener, priority, parallelism);
+                    else
+                        throw ex;
                 }
 
                 try {
@@ -608,6 +614,25 @@ public class DBConnection {
 
             String msg = in.readLine();
             if (!msg.equals("OK")) {
+                ServerExceptionState status = handleServerException(msg, null);
+                if (status == ServerExceptionState.NEW_LEADER)
+                    return run(script, listener, priority, parallelism);
+                else if (status == ServerExceptionState.WAIT) {
+                    if (!HAReconnect) {
+                        HAReconnect = true;
+                        while (true) {
+                            try {
+                                Entity re = run(script, listener, priority, parallelism);
+                                HAReconnect = false;
+                                return re;
+                            } catch (Exception e) {
+                            }
+                        }
+                    }
+                }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                    if (switchToRandomAvailableSite())
+                        return run(script, listener, priority, parallelism);
+                }
                 if (reconnect && ServerExceptionUtils.isNotLogin(msg)) {
                     if (userId.length() > 0 && password.length() > 0)
                         login();
@@ -640,10 +665,10 @@ public class DBConnection {
                 throw ex;
             }
         } catch (Exception ex) {
-            NotLeaderStatus status = handleNotLeaderException(ex, null);
-            if (status == NotLeaderStatus.NEW_LEADER)
+            ServerExceptionState status = handleServerException(ex.getMessage(), null);
+            if (status == ServerExceptionState.NEW_LEADER)
                 return run(script, listener, priority, parallelism);
-            else if (status == NotLeaderStatus.WAIT) {
+            else if (status == ServerExceptionState.WAIT) {
                 if (!HAReconnect) {
                     HAReconnect = true;
                     while (true) {
@@ -656,6 +681,11 @@ public class DBConnection {
                     }
                 }
                 throw ex;
+            }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                if (switchToRandomAvailableSite())
+                    return run(script, listener, priority, parallelism);
+                else
+                    throw ex;
             }
             if (socket != null || !enableHighAvailability)
                 throw ex;
@@ -752,10 +782,10 @@ public class DBConnection {
                     throw ex;
                 }
 
-                NotLeaderStatus status = handleNotLeaderException(ex, null);
-                if (status == NotLeaderStatus.NEW_LEADER)
+                ServerExceptionState status = handleServerException(ex.getMessage(), null);
+                if (status == ServerExceptionState.NEW_LEADER)
                     return run(function, arguments, priority, parallelism);
-                else if (status == NotLeaderStatus.WAIT) {
+                else if (status == ServerExceptionState.WAIT) {
                     if (!HAReconnect) {
                         HAReconnect = true;
                         while (true) {
@@ -768,6 +798,11 @@ public class DBConnection {
                         }
                     }
                     throw ex;
+                }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                    if (switchToRandomAvailableSite())
+                        return run(function, arguments, priority, parallelism);
+                    else
+                        throw ex;
                 }
 
                 try {
@@ -813,8 +848,28 @@ public class DBConnection {
             int numObject = Integer.parseInt(headers[1]);
 
             String msg = in.readLine();
-            if (!msg.equals("OK"))
-                throw new IOException("Server response: '"+msg+"' function: '"+function+"'");
+            if (!msg.equals("OK")) {
+                ServerExceptionState status = handleServerException(msg, null);
+                if (status == ServerExceptionState.NEW_LEADER)
+                    return run(function, arguments, priority, parallelism);
+                else if (status == ServerExceptionState.WAIT) {
+                    if (!HAReconnect) {
+                        HAReconnect = true;
+                        while (true) {
+                            try {
+                                Entity re = run(function, arguments, priority, parallelism);
+                                HAReconnect = false;
+                                return re;
+                            } catch (Exception e) {
+                            }
+                        }
+                    }
+                }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                    if (switchToRandomAvailableSite())
+                        return run(function, arguments, priority, parallelism);
+                }
+                throw new IOException("Server response: '" + msg + "' function: '" + function + "'");
+            }
 
             if (numObject == 0)
                 return new Void();
@@ -843,10 +898,10 @@ public class DBConnection {
                 throw ex;
             }
         } catch (Exception ex) {
-            NotLeaderStatus status = handleNotLeaderException(ex, null);
-            if (status == NotLeaderStatus.NEW_LEADER)
+            ServerExceptionState status = handleServerException(ex.getMessage(), null);
+            if (status == ServerExceptionState.NEW_LEADER)
                 return run(function, arguments, priority, parallelism);
-            else if (status == NotLeaderStatus.WAIT) {
+            else if (status == ServerExceptionState.WAIT) {
                 if (!HAReconnect) {
                     HAReconnect = true;
                     while (true) {
@@ -859,6 +914,11 @@ public class DBConnection {
                     }
                 }
                 throw ex;
+            }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                if (switchToRandomAvailableSite())
+                    return run(function, arguments, priority, parallelism);
+                else
+                    throw ex;
             }
 
             if (socket != null || !enableHighAvailability)
@@ -962,8 +1022,31 @@ public class DBConnection {
             int numObject = Integer.parseInt(headers[1]);
 
             String msg = in.readLine();
-            if (!msg.equals("OK"))
-                throw new IOException("Server response: '"+msg+"' uploadsize: "+variableObjectMap.size());
+            if (!msg.equals("OK")) {
+                ServerExceptionState status = handleServerException(msg, null);
+                if (status == ServerExceptionState.NEW_LEADER) {
+                    upload(variableObjectMap);
+                    return;
+                }else if (status == ServerExceptionState.WAIT) {
+                    if (!HAReconnect) {
+                        HAReconnect = true;
+                        while (true) {
+                            try {
+                                upload(variableObjectMap);
+                                HAReconnect = false;
+                                return;
+                            } catch (Exception e) {
+                            }
+                        }
+                    }
+                }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                    if (switchToRandomAvailableSite()) {
+                        upload(variableObjectMap);
+                        return;
+                    }
+                }
+                throw new IOException("Server response: '" + msg + "' uploadsize: " + variableObjectMap.size());
+            }
 
             if (numObject > 0) {
                 try {
