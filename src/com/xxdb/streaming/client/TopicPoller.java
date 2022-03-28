@@ -27,7 +27,8 @@ public class TopicPoller {
     public ArrayList<IMessage> poll(long timeout, int size) {
         if(size <= 0)
             throw new IllegalArgumentException("Size must be greater than zero");
-        ArrayList<IMessage> list = new ArrayList<>();
+        ArrayList<IMessage> list = new ArrayList<>(cache);
+        cache.clear();
         LocalTime end=LocalTime.now().plusNanos(timeout*1000000);
         while (list.size()<size&&LocalTime.now().isBefore(end)){
             try {
