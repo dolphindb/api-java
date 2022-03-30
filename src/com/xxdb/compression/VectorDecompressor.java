@@ -13,7 +13,9 @@ public class VectorDecompressor {
 	
 	public Vector decompress(EntityFactory factory, ExtendedDataInput in, boolean extended, boolean isLittleEndian) throws IOException{
 		int compressedBytes = in.readInt();
-		in.skipBytes(7);
+		for (int i = 0; i < 7; i++){
+			in.readByte();
+		}
 		int compression = in.readByte();
 		int dataType = in.readByte();
 		int unitLength = in.readByte();
