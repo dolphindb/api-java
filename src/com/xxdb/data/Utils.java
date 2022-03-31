@@ -22,7 +22,7 @@ public class Utils {
 	private static final int[] leapMonthDays={31,29,31,30,31,30,31,31,30,31,30,31};
 	
 	public static int countMonths(YearMonth date){
-		return date.getYear() * 12 + date.getMonthValue() -1;
+		return date.getYear() * 12 + date.getMonthValue();
 	}
 	
 	public static int countMonths(int year, int month){
@@ -64,35 +64,28 @@ public class Utils {
 	}
 	
 	public static int countDays(LocalDate date){
-		return countDays(date.getYear(), date.getMonthValue()-1,date.getDayOfMonth());
+		return countDays(date.getYear(), date.getMonthValue(),date.getDayOfMonth());
 	}
 
 	public static int countDays(Calendar calendar) {
-		return countDays(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+		return countDays(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH)+1, calendar.get(Calendar.DAY_OF_MONTH));
 	}
 
 	public static int countDays(int year, int month, int day){
-		if (month == 0)
-			month = 12;
 		if(month<1 || month>12 || day<0){
 			return Integer.MIN_VALUE;
 		}
 	    int divide400Years = year / 400;
 	    int offset400Years = year % 400;
 		int days;
-		if (month==12){
-			days = divide400Years * 146097 + (offset400Years-1) * 365 - 719529;
-		}
-		else {
-			days = divide400Years * 146097 + offset400Years * 365 - 719529;
-		}
+		days = divide400Years * 146097 + offset400Years * 365 - 719529;
 	    if(offset400Years > 0) days += (offset400Years - 1) / 4 + 1 - (offset400Years - 1) / 100;
 	    if((year%4==0 && year%100!=0) || year%400==0){
 			days+=cumLeapMonthDays[month-1];
 			return day <= leapMonthDays[month - 1] ? days + day : Integer.MIN_VALUE;
 		}
 		else{
-			days+=cumMonthDays[month];
+			days+=cumMonthDays[month-1];
 			return day <= monthDays[month-1] ? days + day : Integer.MIN_VALUE;
 		}
 	}
@@ -130,7 +123,7 @@ public class Utils {
 	}
 	
 	public static int countSeconds(LocalDateTime dt){
-		return countDTSeconds(dt.getYear(), dt.getMonthValue()-1, dt.getDayOfMonth(), dt.getHour(), dt.getMinute(), dt.getSecond());
+		return countDTSeconds(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour(), dt.getMinute(), dt.getSecond());
 	}
 
 	public static int countSeconds(Calendar value){
@@ -139,7 +132,7 @@ public class Utils {
 
 
 	public static int countDTSeconds(Calendar value) {
-		return countDTSeconds(value.get(Calendar.YEAR), value.get(Calendar.MONTH), value.get(Calendar.DAY_OF_MONTH),
+		return countDTSeconds(value.get(Calendar.YEAR), value.get(Calendar.MONTH)+1, value.get(Calendar.DAY_OF_MONTH),
 				value.get(Calendar.HOUR_OF_DAY), value.get(Calendar.MINUTE), value.get(Calendar.SECOND));
 	}
 
@@ -181,11 +174,11 @@ public class Utils {
 	}
 	
 	public static int countHours(LocalDateTime dt) {
-		return countHours(dt.getYear(), dt.getMonthValue()-1, dt.getDayOfMonth(), dt.getHour());
+		return countHours(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour());
 	}
 
 	public static int countHours(Calendar calendar) {
-		return countHours(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.HOUR_OF_DAY));
+		return countHours(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH)+1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.HOUR_OF_DAY));
 	}
 	
 	public static int countHours(int year, int month, int day, int hour) {
@@ -271,7 +264,7 @@ public class Utils {
 
 	public static long countDateMilliseconds(Calendar value) {
 		return countMilliseconds(value.get(Calendar.YEAR),
-				value.get(Calendar.MONTH),
+				value.get(Calendar.MONTH)+1,
 				value.get(Calendar.DAY_OF_MONTH),
 				value.get(Calendar.HOUR_OF_DAY),
 				value.get(Calendar.MINUTE),
