@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -1414,28 +1415,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
     /*
      *array vector type
      */
-//    @Test(expected = Exception.class)
-//    public  void test_insert_arrayVector_string()throws Exception {
-//        ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
-//        StringBuilder sb = new StringBuilder();
-//        sb.append("t = table(1000:0, `int`arrayv," +
-//                "[INT,STRING[]]);" +
-//                "share t as t1;");
-//
-//        conn.run(sb.toString());
-//
-//    }
-//
-//    @Test(expected = RuntimeException.class)
-//    public  void test_insert_arrayVector_symbol()throws Exception {
-//        ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
-//        StringBuilder sb = new StringBuilder();
-//        sb.append("t = table(1000:0, `int`arrayv," +
-//                "[INT,SYMBOL[]]);" +
-//                "share t as t1;");
-//
-//        conn.run(sb.toString());
-//    }
 
     @Test
     public  void test_insert_arrayVector_int()throws Exception {
@@ -1880,6 +1859,38 @@ public  class MultithreadedTableWriterTest implements Runnable {
      * table types
      * @throws Exception
      */
+
+    @Test
+    public void test_insert_BasicType_in_java() throws Exception {
+        ErrorCodeInfo pErrorInfo = new ErrorCodeInfo();
+        String script="t = table(1000:0, `bool`char`short`long`date`month`second`datetime`timestamp`nanotime`nanotimestamp`float`double`symbol`string`uuid`ipaddr`int128`id," +
+                "[BOOL,CHAR,SHORT,LONG,DATE,MONTH,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID, IPADDR, int128,INT]);" +
+                "share t as t1;" +
+                "tt = table(1000:0, `bool`char`short`long`date`month`second`datetime`timestamp`nanotime`nanotimestamp`float`double`symbol`string`uuid`ipaddr`int128`id," +
+                "[BOOL,CHAR,SHORT,LONG,DATE,MONTH,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID, IPADDR, int128,INT]);\" +\n" +
+                "                \"share tt as t2;";
+        conn.run(script);
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "t1", "", false, false, null, 10, 1,
+                1, "short");
+        List<List<Entity>> tb = new ArrayList<>();
+        Month mon=LocalDate.of(2022,2,2).getMonth();
+        for (int i = 0; i < 10000; i++) {
+            mutithreadTableWriter_.insert(pErrorInfo,new BasicBoolean(true),new BasicByte((byte)'w'),new BasicShort((short)2),new BasicLong(4533l),
+            new BasicDate(LocalDate.of(2022,2,2)), new BasicMonth(2002,mon),new BasicSecond(LocalTime.of(2,2,2)),
+                    new BasicDateTime(LocalDateTime.of(2000,2,2,3,2,3,2)),
+                    new BasicTimestamp(LocalDateTime.of(2000,2,2,3,2,3,2)),
+                    new BasicNanoTime(LocalDateTime.of(2000,2,2,3,2,3,2)),
+                    new BasicNanoTimestamp(LocalDateTime.of(2000,2,2,3,2,3,2)),new BasicFloat(2.312f),new BasicDouble(3.2),
+                    new BasicString("sedf"),new BasicString("sedf"),new BasicUuid(23424,4321423),new BasicIPAddr(23424,4321423),new BasicInt128(23424,4321423),new BasicInt(21));
+
+        }
+        Thread.sleep(2000);
+        BasicTable ex = (BasicTable) conn.run("select * from t1 order by symbol,tradeDate,tradePrice,vwap,volume,valueTrade;");
+        assertEquals(2,ex.rows());
+        mutithreadTableWriter_.waitForThreadCompletion();
+    }
+
     @Test
     public void test_insert_keytable() throws Exception {
         ErrorCodeInfo pErrorInfo = new ErrorCodeInfo();
