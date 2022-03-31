@@ -341,20 +341,13 @@ public class DBConnection {
         if (!enableHighAvailability)
             return false;
 
-        int tryCount = 0;
         while (true) {
             HAReconnect = true;
             if (highAvailabilitySites != null) {
-                if (tryCount < 3) {
-                    hostName = mainHostName;
-                    port = mainPort;
-                } else {
-                    int rnd = new Random().nextInt(highAvailabilitySites.length);
-                    String site[] = highAvailabilitySites[rnd].split(":");
-                    hostName = site[0];
-                    port = new Integer(site[1]);
-                }
-                tryCount++;
+                int rnd = new Random().nextInt(highAvailabilitySites.length);
+                String site[] = highAvailabilitySites[rnd].split(":");
+                hostName = site[0];
+                port = new Integer(site[1]);
             } else {
                 if (controllerHost == null)
                     return false;
