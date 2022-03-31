@@ -11,7 +11,7 @@ import java.util.*;
 import static org.junit.Assert.assertEquals;
 
 public class BasicArrayVectorTest {
-    private static final String HOST = "localhost";
+    private static final String HOST = "192.168.1.37";
     private static final Integer PORT = 8848;
 
     @Test(expected = Exception.class)
@@ -23,16 +23,16 @@ public class BasicArrayVectorTest {
                 "\ta.append!([string(1..100 join NULL)])\n" +
                 "};a");
     }
-
-    @Test(expected = Exception.class)
-    public void TestBasicSymbolArrayVector() throws Exception {
-        DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
-        BasicArrayVector obj = (BasicArrayVector)conn.run("a = array(SYMBOL[], 0, 20)\n" +
-                "for(i in 1..20000){\n" +
-                "\ta.append!([symbol(string(1..100 join NULL))])\n" +
-                "};a");
-    }
+//
+//    @Test(expected = Exception.class)
+//    public void TestBasicSymbolArrayVector() throws Exception {
+//        DBConnection conn = new DBConnection();
+//        conn.connect(HOST, PORT);
+//        BasicArrayVector obj = (BasicArrayVector)conn.run("a = array(SYMBOL[], 0, 20)\n" +
+//                "for(i in 1..20000){\n" +
+//                "\ta.append!([symbol(string(1..100 join NULL))])\n" +
+//                "};a");
+//    }
 
     @Test
     public void TestBasicIntArrayVector() throws Exception {
