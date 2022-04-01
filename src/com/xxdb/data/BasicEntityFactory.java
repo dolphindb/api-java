@@ -650,7 +650,7 @@ public class BasicEntityFactory implements EntityFactory{
 		}
 	}
 	private static Scalar createScalar(DATA_TYPE dataType, Entity val) {
-		if(val.isScalar()&&val.getDataType()==dataType) {
+		if(val.isScalar()&&val.getDataType()==dataType || dataType == DT_SYMBOL) {
 			return (Scalar) val;
 		}else{
 			throw new RuntimeException("Failed to insert " + val + " to "+dataType+", unsupported data type.");
