@@ -1,17 +1,19 @@
 package com.xxdb.data;
 
+import com.sun.xml.internal.ws.util.StringUtils;
 import org.junit.Test;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
 public class TimeTest{
-    public static void main(String args[]) {
+
+    @Test
+    public void testTime(){
         {
             LocalDateTime dt = LocalDateTime.of(2017,8,11,10,03,10,2030);
             int days = Utils.countDays(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth());
@@ -300,4 +302,208 @@ public class TimeTest{
             assertEquals(v3.get(i).getString() ,v2.get(i).getString());
         }
     }
+
+    @Test
+    public void test_Special_time_date(){
+        LocalDate dt = LocalDate.of(2022,1,31);
+        BasicDate date = new BasicDate(dt);
+        assertEquals("2022.01.31",date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2022,2,28);
+        date = new BasicDate(dt);
+        assertEquals("2022.02.28",date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2008,2,29);
+        date = new BasicDate(dt);
+        assertEquals("2008.02.29",date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2008,3,31);
+        date = new BasicDate(dt);
+        String[] lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2008,1,1);
+        date = new BasicDate(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2008,12,31);
+        date = new BasicDate(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2008,3,1);
+        date = new BasicDate(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2000,2,29);
+        date = new BasicDate(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDate());
+
+  }
+
+    @Test
+    public void test_Special_time_datetime(){
+        LocalDateTime dt = LocalDateTime.of(2022,1,31,2,2,2);
+        BasicDateTime date = new BasicDateTime(dt);
+        String[] lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDateTime());
+
+        dt = LocalDateTime.of(2022,2,28,2,2,2);
+        date = new BasicDateTime(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDateTime());
+
+        dt = LocalDateTime.of(2008,2,29,2,2,2);
+        date = new BasicDateTime(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDateTime());
+
+        dt = LocalDateTime.of(2008,3,31,2,2,2);
+        date = new BasicDateTime(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDateTime());
+
+        dt = LocalDateTime.of(2008,1,1,2,2,2);
+        date = new BasicDateTime(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDateTime());
+
+        dt = LocalDateTime.of(2008,12,31,2,2,2);
+        date = new BasicDateTime(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDateTime());
+
+        dt = LocalDateTime.of(2008,3,1,2,2,2);
+        date = new BasicDateTime(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDateTime());
+
+        dt = LocalDateTime.of(2000,2,29,2,2,2);
+        date = new BasicDateTime(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDateTime());
+
+    }
+
+    @Test
+    public void test_Special_time_datehour (){
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2022,0,31,2,2,2);
+        BasicDateHour date = new BasicDateHour(calendar);
+        assertEquals("2022.01.31T02",date.getString());
+        LocalDateTime dt = LocalDateTime.of(2022,2,28,2,2,2);
+        date = new BasicDateHour(dt);
+        assertEquals("2022.02.28T02",date.getString());
+        dt = LocalDateTime.of(2008,2,29,2,2,2);
+        date = new BasicDateHour(dt);
+        assertEquals("2008.02.29T02",date.getString());
+        dt = LocalDateTime.of(2022,3,31,2,2,2);
+        date = new BasicDateHour(dt);
+        assertEquals("2022.03.31T02",date.getString());
+        dt = LocalDateTime.of(2022,1,1,2,2,2);
+        date = new BasicDateHour(dt);
+        assertEquals("2022.01.01T02",date.getString());
+        dt = LocalDateTime.of(2022,12,31,2,2,2);
+        date = new BasicDateHour(dt);
+        assertEquals("2022.12.31T02",date.getString());
+        dt = LocalDateTime.of(2022,3,1,2,2,2);
+        date = new BasicDateHour(dt);
+        assertEquals("2022.03.01T02",date.getString());
+        dt = LocalDateTime.of(2000,2,29,2,2,2);
+        date = new BasicDateHour(dt);
+        assertEquals("2000.02.29T02",date.getString());
+    }
+
+
+    @Test
+    public void test_Special_time_timestamp(){
+        LocalDateTime dt = LocalDateTime.of(2022,1,31,2,2,2,4000000);
+        BasicTimestamp date = new BasicTimestamp(dt);
+        String [] lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2022,2,28,2,2,2,4000000);
+        date = new BasicTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2008,2,29,2,2,2,4000000);
+        date = new BasicTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2022,3,31,2,2,2,4000000);
+        date = new BasicTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2022,1,1,2,2,2,4000000);
+        date = new BasicTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2022,12,31,2,2,2,4000000);
+        date = new BasicTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2022,3,1,2,2,2,4000000);
+        date = new BasicTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2000,2,29,2,2,2,4000000);
+        date = new BasicTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+    }
+
+    @Test
+    public void test_Special_time_nanotimestamp(){
+        LocalDateTime dt = LocalDateTime.of(2022,1,31,2,2,2,32154365);
+        BasicNanoTimestamp date = new BasicNanoTimestamp(dt);
+        String [] lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2022,2,28,2,2,2,32154365);
+        date = new BasicNanoTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2008,2,29,2,2,2,32154365);
+        date = new BasicNanoTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2022,3,31,2,2,2,32154365);
+        date = new BasicNanoTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2022,1,1,2,2,2,32154365);
+        date = new BasicNanoTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2022,12,31,2,2,2,32154365);
+        date = new BasicNanoTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2022,3,1,2,2,2,32154365);
+        date = new BasicNanoTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        dt = LocalDateTime.of(2000,2,29,2,2,2,32154365);
+        date = new BasicNanoTimestamp(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+    }
 }
+
