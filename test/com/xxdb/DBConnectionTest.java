@@ -986,15 +986,11 @@ public class DBConnectionTest {
         assertEquals(2, matrix.columns());
     }
 
-    @Test
+    @Test(expected = IOException.class)
     public void testSymbolMatrixWithLabel() throws IOException {
-        try {
             BasicStringMatrix matrix = (BasicStringMatrix) conn.run("cross(add,matrix(`SYMBOL,2,2, ,`T),matrix(`SYMBOL,2,2, ,`T))");
             assertEquals(0, matrix.rows());
             assertEquals(0, matrix.columns());
-        } catch (IOException ex) {
-            assertEquals("The add function does not support symbol data", ex.getMessage());
-        }
     }
 
     @Test
@@ -1771,6 +1767,11 @@ public class DBConnectionTest {
 
     @Test
     public void testTableUpload() throws IOException {
+        conn.run("try{" +
+                "undef(`t1,SHARED);" +
+                "undef(`t2,SHARED)" +
+                "}" +
+                "catch(ex){}");
         List<String> colNames = new ArrayList<String>();
         colNames.add("id");
         colNames.add("value");
@@ -1816,7 +1817,9 @@ public class DBConnectionTest {
         conn.upload(map);
         conn.upload(map);
         BasicTable table = (BasicTable) conn.run("lj(t1, t2, `id)");
+
         assertEquals(5, table.rows());
+
     }
 
     @Test
@@ -1912,9 +1915,9 @@ public class DBConnectionTest {
         sb.append("pt.append!(t);");
         conn.run(sb.toString());
         BasicBoolean res3 = (BasicBoolean) conn.run("existsPartition('dfs://db1/3');");
-        assertEquals(true, res3.getBoolean());
+        assertEquals(false, res3.getBoolean());
         //dropPartition
-        conn.run("dropPartition(db,3);");
+        conn.run("dropPartition(db,3,`pt);");
         res3 = (BasicBoolean) conn.run("existsPartition('dfs://db1/3');");
         assertEquals(false, res3.getBoolean());
         //addColumn
@@ -1971,7 +1974,7 @@ public class DBConnectionTest {
          conn1.connect("fee", PORT, "admin", "123456");
      }
 
-    @Test(expected = NoRouteToHostException.class)
+    @Test(expected = Exception.class)
     public void TestConnectErrorHostValue() throws IOException {
         DBConnection conn1 = new DBConnection();
         conn1.connect("192.168.1.0", PORT, "admin", "123456");
