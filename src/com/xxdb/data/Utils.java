@@ -6,10 +6,13 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.Calendar;
+import java.util.List;
 
 import com.xxdb.data.Entity.DATA_CATEGORY;
 import com.xxdb.data.Entity.DATA_FORM;
 import com.xxdb.data.Entity.DATA_TYPE;
+
+import javax.xml.bind.ValidationEvent;
 
 public class Utils {
 	public static final int DISPLAY_ROWS = 20;
@@ -58,6 +61,7 @@ public class Utils {
 		
 		return year * 12 + month -1;
 	}
+
 	
 	public static YearMonth parseMonth(int value){
 		return YearMonth.of(value/12, value % 12 +1);
@@ -489,6 +493,54 @@ public class Utils {
 			}
 		}
 	}
+
+	public static Entity toDateHour(Entity source){
+		if (source.isScalar()){
+			long scaleFactor = 1;
+			switch (source.getDataType()){
+				case DT_DATETIME:
+					scaleFactor = 3600;
+					return new BasicDateHour(divide(((BasicDateTime)source).getInt(), (int) scaleFactor));
+				case DT_TIMESTAMP:
+					scaleFactor = 3600000;
+					return new BasicDateHour((int)divide(((BasicTimestamp)source).getLong(), scaleFactor));
+				case DT_NANOTIMESTAMP:
+					scaleFactor = 3600000000000l;
+					return new BasicDateHour((int)divide(((BasicNanoTimestamp)source).getLong(), scaleFactor));
+				default:
+					throw new RuntimeException("The data type of the source data must be NANOTIMESTAMP, TIMESTAMP, or DATETIME.");
+			}
+		}else {
+			long scaleFactor = 1;
+			int rows = source.rows();
+			int[] values = new int[rows];
+			switch (source.getDataType()){
+				case DT_DATETIME:
+					scaleFactor = 3600;
+					BasicDateTimeVector dtVec = (BasicDateTimeVector)source;
+					for (int i = 0; i < rows; i++){
+						values[i] = divide(dtVec.getInt(i), (int)scaleFactor);
+					}
+					return new BasicDateHourVector(values);
+				case DT_TIMESTAMP:
+					scaleFactor = 3600000;
+					BasicTimestampVector tsVec = (BasicTimestampVector) source;
+					for (int i = 0; i < rows; i++){
+						values[i] = (int) divide(tsVec.getLong(i), scaleFactor);
+					}
+					return new BasicDateHourVector(values);
+				case DT_NANOTIMESTAMP:
+					scaleFactor = 3600000000000l;
+					BasicNanoTimestampVector ntsVec = (BasicNanoTimestampVector) source;
+					for (int i = 0; i < rows; i++){
+						values[i] = (int)divide(ntsVec.getLong(i), scaleFactor);
+					}
+					return new BasicDateHourVector(values);
+				default:
+					throw new RuntimeException("The data type of the source data must be NANOTIMESTAMP, TIMESTAMP, or DATETIME.");
+			}
+		}
+	}
 	
 	public static Entity castDateTime(Entity source, DATA_TYPE newDateTimeType){
 		if(source.getDataForm() != DATA_FORM.DF_VECTOR && source.getDataForm() != DATA_FORM.DF_SCALAR)
@@ -498,6 +550,8 @@ public class Utils {
 				return toMonth(source);
 		case DT_DATE :
 			return toDate(source);
+		case DT_DATEHOUR:
+			return toDateHour(source);
 		default:
 			throw new RuntimeException("The target date/time type supports MONTH/DATE only for time being.");
 		}
