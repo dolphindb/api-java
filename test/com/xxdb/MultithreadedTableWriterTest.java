@@ -1876,18 +1876,29 @@ public  class MultithreadedTableWriterTest implements Runnable {
         List<List<Entity>> tb = new ArrayList<>();
         Month mon=LocalDate.of(2022,2,2).getMonth();
         for (int i = 0; i < 10000; i++) {
-            mutithreadTableWriter_.insert(pErrorInfo,new BasicBoolean(true),new BasicByte((byte)'w'),new BasicShort((short)2),new BasicLong(4533l),
+            boolean b=mutithreadTableWriter_.insert(pErrorInfo,new BasicBoolean(true),new BasicByte((byte)'w'),new BasicShort((short)2),new BasicLong(4533l),
             new BasicDate(LocalDate.of(2022,2,2)), new BasicMonth(2002,mon),new BasicSecond(LocalTime.of(2,2,2)),
                     new BasicDateTime(LocalDateTime.of(2000,2,2,3,2,3,2)),
                     new BasicTimestamp(LocalDateTime.of(2000,2,2,3,2,3,2)),
                     new BasicNanoTime(LocalDateTime.of(2000,2,2,3,2,3,2)),
                     new BasicNanoTimestamp(LocalDateTime.of(2000,2,2,3,2,3,2)),new BasicFloat(2.312f),new BasicDouble(3.2),
-                    new BasicString("sedf"),new BasicString("sedf"),new BasicUuid(23424,4321423),new BasicIPAddr(23424,4321423),new BasicInt128(23424,4321423),new BasicInt(21));
+                    new BasicString("sedf"+i),new BasicString("sedf"),new BasicUuid(23424,4321423),new BasicIPAddr(23424,4321423),new BasicInt128(23424,4321423),new BasicInt(21));
+            assertTrue(b);
+            List<Entity> args = Arrays.asList(new BasicBoolean(true),new BasicByte((byte)'w'),new BasicShort((short)2),new BasicLong(4533l),
+                    new BasicDate(LocalDate.of(2022,2,2)), new BasicMonth(2002,mon),new BasicSecond(LocalTime.of(2,2,2)),
+                    new BasicDateTime(LocalDateTime.of(2000,2,2,3,2,3,2)),
+                    new BasicTimestamp(LocalDateTime.of(2000,2,2,3,2,3,2)),
+                    new BasicNanoTime(LocalDateTime.of(2000,2,2,3,2,3,2)),
+                    new BasicNanoTimestamp(LocalDateTime.of(2000,2,2,3,2,3,2)),new BasicFloat(2.312f),new BasicDouble(3.2),
+                    new BasicString("sedf"+i),new BasicString("sedf"),new BasicUuid(23424,4321423),new BasicIPAddr(23424,4321423),new BasicInt128(23424,4321423),new BasicInt(21));
+            conn.run("tableInsert{t2}", args);
 
         }
         Thread.sleep(2000);
-        BasicTable ex = (BasicTable) conn.run("select * from t1 order by symbol,tradeDate,tradePrice,vwap,volume,valueTrade;");
-        assertEquals(2,ex.rows());
+        BasicTable ex = (BasicTable) conn.run("select * from t1 order by symbol");
+        BasicTable  res= (BasicTable) conn.run("select * from t2 order by symbol");
+        assertEquals(10000,ex.rows());
+        checkData(ex,res);
         mutithreadTableWriter_.waitForThreadCompletion();
     }
 
