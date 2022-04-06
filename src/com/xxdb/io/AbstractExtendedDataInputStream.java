@@ -129,7 +129,13 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 	
 	@Override
 	public int skipBytes(int n) throws IOException {
-		return (int) in.skip(n);
+		int actualSkip = 0;
+		int reamainSkip = n - actualSkip;
+		while (reamainSkip > 0){
+			actualSkip = (int) in.skip(reamainSkip);
+			reamainSkip = reamainSkip - actualSkip;
+		}
+		return actualSkip;
 	}
 	
 	protected byte readAndCheckByte() throws IOException, EOFException {
