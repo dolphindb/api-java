@@ -1010,19 +1010,19 @@ public class ServerCompressionTest {
         newT = (BasicTable) conn.run("select * from st");
         compareBasicTable(table, newT);
         //include null deta
-        colVectors = new ArrayList<>();
-        colVectors.add(new BasicDateVector(time));
-        val1= (BasicSymbolVector) conn.run("rand(`d`bv`f``,100000)");
-        val1.setCompressedMethod(2);
-        colVectors.add(val1);
-        table = new BasicTable(colNames, colVectors);
-        arg = Arrays.asList(table);
-        conn.run("t = table(1000:0,`date`val,[DATE,SYMBOL]);" +
-                "share t as st");
-        count = (BasicInt) conn.run("tableInsert{st}", arg);
-        assertEquals(100000, count.getInt());
-        newT = (BasicTable) conn.run("select * from st");
-        compareBasicTable(table, newT);
+//        colVectors = new ArrayList<>();
+//        colVectors.add(new BasicDateVector(time));
+//        val1= (BasicSymbolVector) conn.run("rand(`d`bv`f``,100000)");
+//        val1.setCompressedMethod(2);
+//        colVectors.add(val1);
+//        table = new BasicTable(colNames, colVectors);
+//        arg = Arrays.asList(table);
+//        conn.run("t = table(1000:0,`date`val,[DATE,SYMBOL]);" +
+//                "share t as st");
+//        count = (BasicInt) conn.run("tableInsert{st}", arg);
+//        assertEquals(100000, count.getInt());
+//        newT = (BasicTable) conn.run("select * from st");
+//        compareBasicTable(table, newT);
     }
 
     @Test
