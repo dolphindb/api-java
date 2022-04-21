@@ -747,7 +747,7 @@ public class BasicEntityFactory implements EntityFactory{
 	private static Scalar createScalar(DATA_TYPE dataType, double val) {
 		switch (dataType) {
 			case DT_FLOAT:
-				if(val >= Float.MIN_VALUE && val <= Float.MAX_VALUE)
+				if(val >= Float.MIN_VALUE && val <= Float.MAX_VALUE || val >= (-Float.MAX_VALUE) && val <= (-Float.MIN_VALUE))
 					return new BasicFloat((float)val);
 				else{
 					throw new RuntimeException("Failed to insert data, data exceed float range "+val);
