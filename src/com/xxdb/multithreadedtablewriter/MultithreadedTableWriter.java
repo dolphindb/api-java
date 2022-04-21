@@ -16,12 +16,35 @@ public class MultithreadedTableWriter {
     public static class ThreadStatus{
         public long threadId;
         public long sentRows,unsentRows,sendFailedRows;
+
+        public String toString(){
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("%16s", threadId) + String.format("%16s", sentRows) + String.format("%16s", unsentRows) + String.format("%16s", unsentRows) + "\n");
+            return sb.toString();
+        }
     };
     public static class Status{
         public boolean isExiting;
         public ErrorCodeInfo errorInfo;
         public long sentRows, unsentRows, sendFailedRows;
         public List<ThreadStatus> threadStatusList=new ArrayList<>();
+
+        public String toString(){
+            StringBuilder sb = new StringBuilder();
+            sb.append("errorCode     : " + errorInfo.errorCode + "\n");
+            sb.append("errorInfo     : " + errorInfo.errorInfo + "\n");
+            sb.append("isExiting     : " + isExiting + "\n");
+            sb.append("sentRows      : " + sentRows + "\n");
+            sb.append("unsentRows    : " + unsentRows + "\n");
+            sb.append("sendFailedRows: " + sendFailedRows + "\n");
+            sb.append("threadStatus  :" + "\n");
+            sb.append(String.format("%16s", "threadId") + String.format("%16s", "sentRows")
+                    + String.format("%16s", "unsentRows") + String.format("%16s", "sendFailedRows") + "\n");
+            for (int i = 0; i < threadStatusList.size(); i++){
+                sb.append(threadStatusList.get(i).toString());
+            }
+            return sb.toString();
+        }
     };
     static class WriterThread implements Runnable{
         WriterThread(MultithreadedTableWriter tableWriter, DBConnection conn) {
@@ -181,7 +204,7 @@ public class MultithreadedTableWriter {
                         startgc = true;
                     }
                 }
-                if(startgc)
+                if(startgc && Runtime.getRuntime().freeMemory() < 104857600)
                     System.gc();
             }
             return true;
@@ -455,7 +478,7 @@ public class MultithreadedTableWriter {
             }
             one.conn_ = null;
         }
-        setError(ErrorCodeInfo.Code.EC_UserBreak,"User break.");
+        setError(ErrorCodeInfo.Code.EC_None,"");
     }
     public boolean insert(List<List<Entity>> records,ErrorCodeInfo pErrorInfo){
         if(threads_.size() > 1){
@@ -570,16 +593,11 @@ public class MultithreadedTableWriter {
             for (Object one : args) {
                 dataType = colTypes_.get(colindex);
                 Entity entity;
-                if (one == null) {
-                    entity = BasicEntityFactory.instance().createScalarWithDefaultValue(dataType);
-                    ((Scalar)entity).setNull();
-                } else {
-                    isAllNull = false;
-                    entity = BasicEntityFactory.createScalar(dataType, one);
-                    if (entity == null) {
-                        pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Invalid object " + one + " for type " + dataType);
-                        return false;
-                    }
+                isAllNull = false;
+                entity = BasicEntityFactory.createScalar(dataType, one);
+                if (entity == null) {
+                    pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Invalid object " + one + " for type " + dataType);
+                    return false;
                 }
                 prow.add(entity);
                 colindex++;
