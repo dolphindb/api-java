@@ -2,14 +2,19 @@ package com.xxdb.comm;
 
 public class ErrorCodeInfo {
     public enum Code {
-        EC_None,
-        EC_InvalidObject,
-        EC_InvalidParameter,
-        EC_InvalidTable,
-        EC_InvalidColumnType,
-        EC_Server,
-        EC_UserBreak,
-        EC_NullValue,
+        EC_None(0),
+        EC_InvalidObject(1),
+        EC_InvalidParameter(2),
+        EC_InvalidTable(3),
+        EC_InvalidColumnType(4),
+        EC_Server(5),
+        EC_UserBreak(6),
+        EC_NullValue(7);
+
+        public int value;
+        Code(int value){
+            this.value = value;
+        }
     };
     public ErrorCodeInfo(){
         set(0,"");
@@ -27,8 +32,7 @@ public class ErrorCodeInfo {
         set(errorCodeInfo.errorCode,errorCodeInfo.errorInfo);
     }
     public void set(int code, String info){
-        this.errorCode=code;
-        this.errorInfo=info;
+        set(formatApiCode(code), info);
     }
     @Override
     public String toString(){
@@ -37,8 +41,24 @@ public class ErrorCodeInfo {
         return sb.toString();
     }
     public void set(Code code, String info){
-        set(code.ordinal(),info);
+        set(formatApiCode(code.value),info);
     }
-    public int errorCode;
+
+    public void set(String code, String info){
+        this.errorCode = code;
+        this.errorInfo = info;
+    }
+
+    public boolean hasError(){
+        return errorCode.isEmpty() == false;
+    }
+
+    public static String formatApiCode(int code){
+        if (code != Code.EC_None.value){
+            return "A" + code;
+        }else
+            return "";
+    }
+    public String errorCode;
     public String errorInfo;
 }
