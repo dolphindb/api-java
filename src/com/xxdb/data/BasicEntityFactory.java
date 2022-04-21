@@ -469,10 +469,14 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicByteVector(Entity.DATA_FORM.DF_VECTOR, in);}
 	}
 	public static Entity createScalar(DATA_TYPE dataType, Object object) throws Exception{
-		if(object==null) {
+		if(object==null && dataType.getValue() < 65) {
 			Scalar scalar = BasicEntityFactory.instance().createScalarWithDefaultValue(dataType);
 			scalar.setNull();
 			return scalar;
+		}else if (object==null && dataType.getValue() >= 65){
+			dataType = DATA_TYPE.values()[dataType.getValue()-64];
+			Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 0);
+			return vector;
 		}
 		if(object instanceof Boolean) {
 			return createScalar(dataType,((Boolean)object).booleanValue());
