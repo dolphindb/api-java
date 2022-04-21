@@ -583,6 +583,7 @@ public class MultithreadedTableWriter {
         if(args.length!=colTypes_.size()){
             pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter,"Parameter length mismatch "+
                     args.length+" expect "+colTypes_.size());
+            this.errorCodeInfo_ = pErrorInfo;
             return false;
         }
         try {
