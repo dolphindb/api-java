@@ -88,6 +88,7 @@ public class MultithreadedTableWriter {
                     //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData end size "+writeQueue_.size());
                 } catch (Exception e) {
                     e.printStackTrace();
+                    tableWriter_.errorCodeInfo_.set(ErrorCodeInfo.Code.EC_None, e.getMessage());
                     break;
                 }
             }
@@ -149,8 +150,8 @@ public class MultithreadedTableWriter {
                     } catch (Exception e) {
                         e.printStackTrace();
                         isWriteDone = false;
-                        tableWriter_.logger_.warning("threadid=" + writeThread_.getId() + " sendindex=" + sentRows_ + " Append row failed: " + e);
-                        tableWriter_.setError(ErrorCodeInfo.Code.EC_InvalidObject, "Append row failed: " + e);
+                        tableWriter_.logger_.warning("threadid = " + writeThread_.getId() + " sendindex = " + sentRows_ + " Failed to append data to the table. " + e);
+                        tableWriter_.setError(ErrorCodeInfo.Code.EC_InvalidObject, "Failed to append data to the table. " + e);
                         break;
                     }
                     addRowCount++;
@@ -183,7 +184,7 @@ public class MultithreadedTableWriter {
                 } catch (Exception e) {
                     e.printStackTrace();
                     tableWriter_.logger_.warning("threadid=" + writeThread_.getId() + " sendindex=" + sentRows_ + " Save table error: " + e + " script:" + runscript);
-                    tableWriter_.setError(ErrorCodeInfo.Code.EC_Server, "Save table error: " + e + " script: " + runscript);
+                    tableWriter_.setError(ErrorCodeInfo.Code.EC_Server, "Failed to save the inserted data: " + e + " script: " + runscript);
                     conn_ = null;
                     isWriteDone = false;
                     //std::cerr << Util::createTimestamp(Util::getEpochTime())->getString() << " Backgroud thread of table (" << tableWriter_.dbName_ << " " << tableWriter_.tableName_ << "). Failed to send data to server, with exception: " << e.what() << std::endl;
@@ -315,22 +316,22 @@ public class MultithreadedTableWriter {
         throttleMilsecond_=(int)throttle*1000;
         hasError_=false;
         if(threadCount < 1){
-            throw new RuntimeException("Thread count must be greater or equal than 1.");
+            throw new RuntimeException("The parameter threadCount must be greater than or equal to 1.");
         }
         if(batchSize < 1){
-            throw new RuntimeException("Batch size must be greater than 1.");
+            throw new RuntimeException("The parameter batchSize must be greater than or equal to 1.");
         }
         if(throttle < 0){
-            throw new RuntimeException("Throttle must be greater than 0.");
+            throw new RuntimeException("The parameter throttle must be greater than or equal to 0.");
         }
         if (threadCount > 1 && partitionCol.length()<1) {
-            throw new RuntimeException("PartitionedColName must be specified in muti-thread mode.");
+            throw new RuntimeException("The parameter partitionCol must be specified when threadCount is greater than 1.");
         }
         boolean isCompress = false;
         if (compressTypes != null && compressTypes.length > 0) {
             for (int one : compressTypes) {
                 if (one != Vector.COMPRESS_LZ4 && one != Vector.COMPRESS_DELTA) {
-                    throw new RuntimeException("Unsupported compress method.");
+                    throw new RuntimeException("Unsupported compress method " + one);
                 }
             }
             isCompress = true;
@@ -339,7 +340,7 @@ public class MultithreadedTableWriter {
         }
         DBConnection pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,enableHighAvailability,highAvailabilitySites,isCompress);
         if(pConn==null){
-            throw new RuntimeException("Failed to connect to server.");
+            throw new RuntimeException("Failed to connect to server " + hostName + ":" + port);
         }
 
         BasicDictionary schema;
@@ -354,7 +355,7 @@ public class MultithreadedTableWriter {
         }else{//没有分区
             if(tableName.isEmpty() == false){//Single partitioned table
                 if(threadCount > 1){
-                    throw new RuntimeException("Single partitioned table support single thread only.");
+                    throw new RuntimeException("The parameter threadCount must be 1 for a dimension table.");
                 }
             }
             isPartionedTable_ = false;
@@ -364,7 +365,7 @@ public class MultithreadedTableWriter {
         BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
         int columnSize = colDefs.rows();
         if (compressTypes_!=null && compressTypes_.length != columnSize) {
-            throw new RuntimeException("Compress type size doesn't match column size "+columnSize);
+            throw new RuntimeException("The number of elements in parameter compressMethods does not match the column size "+columnSize);
         }
 
         BasicStringVector colDefsName = (BasicStringVector)colDefs.getColumn("name");
@@ -388,7 +389,7 @@ public class MultithreadedTableWriter {
             int partitionType;
             if(partColNames.isScalar()){
                 if (partColNames.getString().equals(partitionCol) == false) {
-                    throw new RuntimeException("PartitionColumnName mismatch specified value, is "+ partColNames.getString()+" ?");
+                    throw new RuntimeException("The parameter partionCol must be the partitioning column "+ partColNames.getString()+" in the table.");
                 }
                 partitionColumnIdx_ = ((BasicInt)schema.get(new BasicString("partitionColumnIndex"))).getInt();
                 partitionSchema = schema.get(new BasicString("partitionSchema"));
@@ -397,7 +398,7 @@ public class MultithreadedTableWriter {
                 BasicStringVector partColNamesVec = (BasicStringVector)partColNames;
                 int dims = partColNamesVec.rows();
                 if(dims > 1 && partitionCol.isEmpty()){
-                    throw new RuntimeException("Please specify threadByColName for this partitioned table.");
+                    throw new RuntimeException("The parameter partitionCol must be specified for a partitioned table.");
                 }
                 int index = -1;
                 for(int i=0; i<dims; ++i){
@@ -407,7 +408,7 @@ public class MultithreadedTableWriter {
                     }
                 }
                 if(index < 0)
-                    throw new RuntimeException("Can't find specified partition column name.");
+                    throw new RuntimeException("The parameter partionCol must be the partitioning columns in the partitioned table. ");
                 partitionColumnIdx_ = ((BasicIntVector)schema.get(new BasicString("partitionColumnIndex"))).getInt(index);
                 partitionSchema = ((BasicAnyVector)schema.get(new BasicString("partitionSchema"))).getEntity(index);
                 partitionType =  ((BasicIntVector)schema.get(new BasicString("partitionType"))).getInt(index);
@@ -425,7 +426,7 @@ public class MultithreadedTableWriter {
                     }
                 }
                 if(threadcolindex < 0){
-                    throw new RuntimeException("Can't find column name for "+partitionCol);
+                    throw new RuntimeException("No match found for "+partitionCol);
                 }
                 threadByColIndexForNonPartion_=threadcolindex;
             }
@@ -488,8 +489,7 @@ public class MultithreadedTableWriter {
                 try {
                     for (List<Entity> row : records) {
                         if (row.size() != colTypes_.size()) {
-                            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Vector in records size " + row.size() +
-                                    " mismatch " + colTypes_.size());
+                            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Column counts don't match.");
                             return false;
                         }
                         if (row.get(partitionColumnIdx_) != null) {
@@ -521,8 +521,7 @@ public class MultithreadedTableWriter {
                 try{
                     for(List<Entity> row : records) {
                         if (row.size() != colTypes_.size()) {
-                            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Vector in records size " + row.size() +
-                                    " mismatch " + colTypes_.size());
+                            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Column counts don't match.");
                             return false;
                         }
                         Scalar scalar=(Scalar) row.get(threadByColIndexForNonPartion_);
@@ -581,8 +580,7 @@ public class MultithreadedTableWriter {
             return false;
         }
         if(args.length!=colTypes_.size()){
-            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter,"Parameter length mismatch "+
-                    args.length+" expect "+colTypes_.size());
+            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter,"Column counts don't match.");
             this.errorCodeInfo_ = pErrorInfo;
             return false;
         }
@@ -597,14 +595,14 @@ public class MultithreadedTableWriter {
                 isAllNull = false;
                 entity = BasicEntityFactory.createScalar(dataType, one);
                 if (entity == null) {
-                    pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Invalid object " + one + " for type " + dataType);
+                    pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidObject, "Data conversion error: " + dataType);
                     return false;
                 }
                 prow.add(entity);
                 colindex++;
             }
             if(isAllNull){
-                pErrorInfo.set(ErrorCodeInfo.Code.EC_NullValue, "Can't insert a Null row.");
+                pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidObject, "Can't insert a Null row.");
                 return false;
             }
             int threadindex;
@@ -617,7 +615,7 @@ public class MultithreadedTableWriter {
                         if(indexes.isEmpty()==false){
                             threadindex = indexes.get(0);
                         }else{
-                            pErrorInfo.set(ErrorCodeInfo.Code.EC_Server,"getPartitionKeys failed.");
+                            pErrorInfo.set(ErrorCodeInfo.Code.EC_Server,"Failed to obtain the partition scheme.");
                             return false;
                         }
                     }

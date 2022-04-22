@@ -9,7 +9,8 @@ public class ErrorCodeInfo {
         EC_InvalidColumnType(4),
         EC_Server(5),
         EC_UserBreak(6),
-        EC_NullValue(7);
+        EC_DestroyedObject(7),
+        EC_OTHER(8);
 
         public int value;
         Code(int value){
