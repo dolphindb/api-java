@@ -18,7 +18,7 @@ public class LZ4Encoder implements Encoder {
     private static final int DEFAULT_BLOCK_SIZE = 65536;
 
     @Override
-    public int compress(AbstractVector input, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException {
+    public ByteBuffer compress(AbstractVector input, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException {
         if(compressor == null){
             LZ4Factory factory = LZ4Factory.fastestInstance();
             compressor = factory.fastCompressor();
@@ -55,7 +55,7 @@ public class LZ4Encoder implements Encoder {
             dataIndex += numElementAndPartial.numElement;
             dataBufer.clear();
         }
-        return byteCount;
+        return out;
     }
 
     public ByteBuffer compress(ByteBuffer in, int elementCount, int unitLength, int maxCompressedLength) throws IOException {

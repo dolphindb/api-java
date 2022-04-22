@@ -16,7 +16,7 @@ public class DeltaOfDeltaEncoder implements Encoder {
     private static final int DEFAULT_BLOCK_SIZE = 65536;
 
     @Override
-    public int compress(AbstractVector in, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException {
+    public ByteBuffer compress(AbstractVector in, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException {
         DeltaOfDeltaBlockEncoder blockEncoder = new DeltaOfDeltaBlockEncoder(unitLength);
         int count = 0;
         int dataCount = in.rows();
@@ -49,7 +49,7 @@ public class DeltaOfDeltaEncoder implements Encoder {
                 dataBufer.clear();
             }
         }
-        return count;
+        return out;
     }
 
     public ByteBuffer compress(ByteBuffer in, int elementCount, int unitLength, int maxCompressedLength) throws IOException {

@@ -288,19 +288,15 @@ public class BasicArrayVector extends AbstractVector {
 		{
 			int curStart = rowIndices[indexStart + i];
 			int curCount = curStart - prestart;
+			int oldCountBytes = curCountBytes;
 			prestart = curStart;
 			int byteRequired = 0;
 
 			while(curCount > maxCount)
 			{
 				byteRequired += i * curCountBytes;
-				curCount *= 2;
-				if (curCountBytes == 1)
-					maxCount = Byte.MAX_VALUE;
-				else if (curCountBytes == 2)
-					maxCount = Short.MAX_VALUE;
-				else if (curCountBytes == 3)
-					maxCount = Integer.MAX_VALUE;
+				curCountBytes *= 2;
+				maxCount = Math.min(Integer.MAX_VALUE, (111 << (8 * curCountBytes)) - 1);
 			}
 			byteRequired += curCountBytes + curCount * baseUnitLength_;
 			if(byteRequired > remainingBytes)
@@ -317,6 +313,10 @@ public class BasicArrayVector extends AbstractVector {
 						++i;
 						remainingBytes -= (curCountBytes + numElementAndPartial.partial * baseUnitLength_);
 					}
+				}
+				else {
+					if (oldCountBytes != curCountBytes)
+						curCountBytes = oldCountBytes;
 				}
 				break;
 			}

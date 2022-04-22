@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface Encoder {
 
-    int compress(AbstractVector input, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException;
+    ByteBuffer compress(AbstractVector input, int elementCount, int unitLength, int maxCompressedLength, ByteBuffer out) throws IOException;
 
 }

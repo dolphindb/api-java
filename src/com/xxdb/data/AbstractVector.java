@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-
 import com.xxdb.compression.EncoderFactory;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
@@ -218,7 +217,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		out.putInt(elementCount);
 		out.putInt(-1); //TODO: checkSum
 
-		EncoderFactory.get(compressedMethod).compress(this, elementCount, unitLength, maxCompressedLength, out);
+		out = EncoderFactory.get(compressedMethod).compress(this, elementCount, unitLength, maxCompressedLength, out);
 		int compressedLength = out.position()-10;
 		out.putInt(2, compressedLength);
 		output.write(out.array(), 0, compressedLength + 10);
