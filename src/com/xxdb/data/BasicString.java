@@ -217,7 +217,11 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 	}
 	
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
-		out.writeString(value);
+		if (isBlob){
+			writeScalarToOutputStream(out, true);
+		}else {
+			writeScalarToOutputStream(out, false);
+		}
 	}
 
 	protected void writeScalarToOutputStream(ExtendedDataOutput out, boolean blob) throws IOException{
