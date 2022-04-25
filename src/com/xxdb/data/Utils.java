@@ -6,13 +6,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.Calendar;
-import java.util.List;
 
 import com.xxdb.data.Entity.DATA_CATEGORY;
 import com.xxdb.data.Entity.DATA_FORM;
 import com.xxdb.data.Entity.DATA_TYPE;
 
-import javax.xml.bind.ValidationEvent;
 
 public class Utils {
 	public static final int DISPLAY_ROWS = 20;
