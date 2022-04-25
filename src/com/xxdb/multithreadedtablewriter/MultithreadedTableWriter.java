@@ -23,7 +23,7 @@ public class MultithreadedTableWriter {
             return sb.toString();
         }
     };
-    public static class Status{
+    public static class Status extends ErrorCodeInfo{
         public boolean isExiting;
         public ErrorCodeInfo errorInfo;
         public long sentRows, unsentRows, sendFailedRows;

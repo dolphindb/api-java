@@ -711,7 +711,7 @@ public class BasicEntityFactory implements EntityFactory{
 		if(scalarType==expectedType)
 			return true;
 		if(scalarType==DT_STRING){
-			if(expectedType==DATA_TYPE.DT_SYMBOL||expectedType==DATA_TYPE.DT_SYMBOL)
+			if(expectedType==DATA_TYPE.DT_SYMBOL)
 				return true;
 		}
 		return false;
