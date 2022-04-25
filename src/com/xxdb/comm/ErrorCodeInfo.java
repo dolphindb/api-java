@@ -50,8 +50,17 @@ public class ErrorCodeInfo {
         this.errorInfo = info;
     }
 
+    public void clearError(){
+        errorCode = "";
+        errorInfo = "";
+    }
+
     public boolean hasError(){
         return errorCode.isEmpty() == false;
+    }
+
+    public boolean succeed(){
+        return errorCode.isEmpty() == true;
     }
 
     public static String formatApiCode(int code){
