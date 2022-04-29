@@ -246,7 +246,6 @@ public class Utils {
 	 * ...
 	 */
 	public static LocalDateTime parseNanoTimestamp(long nanoseconds){
-		System.out.println(NANOS_PER_DAY);
 		int days=  (int)(nanoseconds / NANOS_PER_DAY);
 		LocalDate date = Utils.parseDate(days);
 		nanoseconds = nanoseconds % NANOS_PER_DAY;
