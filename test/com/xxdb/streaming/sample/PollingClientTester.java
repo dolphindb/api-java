@@ -20,7 +20,6 @@ package com.xxdb.streaming.sample;
 import com.xxdb.data.BasicByte;
 import com.xxdb.data.BasicDouble;
 import com.xxdb.data.BasicInt;
-import com.xxdb.route.PartitionedByRangeTableAppenderTest;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.PollingClient;
 import com.xxdb.streaming.client.TopicPoller;
@@ -54,14 +53,14 @@ public class PollingClientTester {
                 count += msgs.size();
                 for (int i = 0; i < msgs.size(); ++i) {
                     String symbol = msgs.get(i).getEntity(0).getString();
-                    if (!PartitionedByRangeTableAppenderTest.symbolSet.contains(symbol))
+                    /*if (!PartitionedByRangeTableAppenderTest.symbolSet.contains(symbol))
                         assert PartitionedByRangeTableAppenderTest.symbolSet.contains(symbol);
                     Double price = ((BasicDouble) msgs.get(i).getEntity(3)).getDouble();
                     if (!PartitionedByRangeTableAppenderTest.doubleSet.contains(price))
                         assert PartitionedByRangeTableAppenderTest.doubleSet.contains(price);
                     Integer size = ((BasicInt) msgs.get(i).getEntity(4)).getInt();
                     if (!PartitionedByRangeTableAppenderTest.intSet.contains(size))
-                        assert PartitionedByRangeTableAppenderTest.intSet.contains(size);
+                        assert PartitionedByRangeTableAppenderTest.intSet.contains(size);*/
                     byte ex = ((BasicByte) msgs.get(i).getEntity(8)).getByte();
                     if (ex != 'B')
                         assert (ex == 'B');

@@ -11,6 +11,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -117,7 +118,7 @@ public class BasicTableTest {
         BasicNanoTimeVector bnanotimev = new BasicNanoTimeVector(vnanotime);
         cols.add(bnanotimev);
         //cnanotimestamp
-        long[] vnanotimestamp = new long[]{Utils.countNanoseconds(LocalDateTime.of(2018,11,12,9,30,05,123456789)),Utils.countNanoseconds(LocalDateTime.of(2018,11,13,16,30,05,987654321))};
+        long[] vnanotimestamp = new long[]{Utils.countDTNanoseconds(LocalDateTime.of(2018,11,12,9,30,05,123456789)),Utils.countNanoseconds(LocalDateTime.of(2018,11,13,16,30,05,987654321))};
         BasicNanoTimestampVector bnanotimestampv = new BasicNanoTimestampVector(vnanotimestamp);
         cols.add(bnanotimestampv);
         //cfloat
@@ -139,7 +140,30 @@ public class BasicTableTest {
         BasicTable t1 = new BasicTable(colNames, cols);
         return t1;
     }
+    public final static Integer ARRAY_NUM = 1000000;
+    private	BasicTable createBigArrayTable(){
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("cbool");
+        colNames.add("cchar");
+        List<Vector> cols = new ArrayList<Vector>(){};
 
+        //boolean
+        byte[] vbool = new byte[ARRAY_NUM];
+        byte[] vchar = new byte[ARRAY_NUM];
+
+        for (int i =0;i<ARRAY_NUM;i++){
+            vbool[i]  = (byte) (2*Math.random());
+            vchar[i] = (byte) new Random().nextInt(62);
+        }
+        BasicBooleanVector bbv = new BasicBooleanVector(vbool);
+        cols.add(bbv);
+        //char
+        BasicByteVector bcv = new BasicByteVector(vchar);
+        cols.add(bcv);
+
+        BasicTable t1 = new BasicTable(colNames, cols);
+        return t1;
+    }
 
     @Test
     public void test_table_copy(){
@@ -147,7 +171,54 @@ public class BasicTableTest {
         BasicTable t2 = createBasicTable();
         BasicTable t3 = t1.combine(t2);
         Assert.assertEquals(t3.rows(),t1.rows()+t2.rows());
+        for (int i = 0;i<t3.rows();i++){
+            for (int j=0;j<t3.getColumn(i).columns();j++){
+                for (int k=0;k<t3.getColumn(i).rows();k++){
+                    if (k<t1.rows()) {
+                        assertEquals(t1.getColumn(j).get(k).getString(), t3.getColumn(j).get(k).getString());
+                    }else{
+                        assertEquals(t2.getColumn(j).get(k-(t1.rows())).getString(), t3.getColumn(j).get(k).getString());
+                    }
+                }
+            }
+        }
     }
 
+    @Test
+    public void testCombineBigArrayTable() throws Exception {
+        BasicTable t1 = createBigArrayTable();
+        BasicTable t2 = createBigArrayTable();
+        long startTime = System.currentTimeMillis();
+        t1.combine(t2);
+        long endTime = System.currentTimeMillis();
+        long timeBigTable =endTime - startTime;
+
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("cbool");
+        colNames.add("cchar");
+        List<Vector> cols = new ArrayList<Vector>(){};
+        BasicBooleanVector bbv = new BasicBooleanVector( new byte[ARRAY_NUM*2]);
+        BasicByteVector bcv = new BasicByteVector(new byte[ARRAY_NUM*2]);
+        cols.add(bbv);
+        cols.add(bcv);
+        BasicTable t3 = new BasicTable(colNames,cols);
+        long  startTime1 = System.currentTimeMillis();
+            for (int i = 0;i<2;i++){
+                for (int k=0;k<t3.rows();k++){
+                   for (int j=0;j<t3.columns();j++){
+                        if (k<t1.rows()) {
+                            t3.getColumn(j).set(k,(t1.getColumn(j).get(k)));
+                        }else{
+                            t3.getColumn(j).set(k,(t2.getColumn(j).get(k-(t1.rows()))));
+                        }
+                    }
+                }
+            }
+            
+        long endTime1 = System.currentTimeMillis();
+        long timeSimpleTable = endTime1-startTime1;
+        long time = timeSimpleTable/timeBigTable;
+        System.out.println(time);
+    }
 
 }

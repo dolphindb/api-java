@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
 public class BasicUuidTest {
     private DBConnection conn;
     @Before
@@ -55,5 +57,28 @@ public class BasicUuidTest {
                 Assert.assertEquals(expected, v.get(i).hashBucket(b));
             }
         }
+    }
+    @Test
+    public void TestCombineUuidVector() throws Exception {
+        BasicUuidVector v = new BasicUuidVector(4);
+        v.set(0,BasicUuid.fromString("d4350822-e074-e1f6-4340-95b3148629bd"));
+        v.set(1,BasicUuid.fromString("1825c36f-092c-3ed5-e246-b289d57c89df"));
+        v.set(2,BasicUuid.fromString("776e76f8-40b8-c4ee-b2ae-068d75393362"));
+        v.set(3,BasicUuid.fromString("1783fcf9-3116-1d71-2d7b-6630d6792c94"));
+        BasicUuidVector vector2 = new BasicUuidVector(2 );
+        vector2.set(0,BasicUuid.fromString("1783fcf9-3116-1d71-2d7b-6630d6792c94"));
+        vector2.set(1,BasicUuid.fromString("72b58dc4-9962-f690-2210-cc3a80507573"));
+        BasicUuidVector res= (BasicUuidVector) v.combine(vector2);
+        BasicUuidVector res128 = new BasicUuidVector(6);
+        res128.set(0,BasicUuid.fromString("d4350822-e074-e1f6-4340-95b3148629bd"));
+        res128.set(1,BasicUuid.fromString("1825c36f-092c-3ed5-e246-b289d57c89df"));
+        res128.set(2,BasicUuid.fromString("776e76f8-40b8-c4ee-b2ae-068d75393362"));
+        res128.set(3,BasicUuid.fromString("1783fcf9-3116-1d71-2d7b-6630d6792c94"));
+        res128.set(4,BasicUuid.fromString("1783fcf9-3116-1d71-2d7b-6630d6792c94"));
+        res128.set(5,BasicUuid.fromString("72b58dc4-9962-f690-2210-cc3a80507573"));
+        for (int i=0;i<res.rows();i++){
+            assertEquals(res128.get(i).toString(),res.get(i).toString());
+        }
+        assertEquals(6,res.rows());
     }
 }

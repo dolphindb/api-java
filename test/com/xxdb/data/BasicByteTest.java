@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
 public class BasicByteTest {
     private DBConnection conn;
     @Before
@@ -55,5 +57,20 @@ public class BasicByteTest {
                 Assert.assertEquals(expected, v.get(i).hashBucket(b));
             }
         }
+    }
+
+    @Test
+    public void TestCombineByteVector() throws Exception {
+        Byte[] data = {'4', '5', '3', '6'};
+        BasicByteVector v = new BasicByteVector(Arrays.asList(data));
+        Byte[] data2 = { '2', '5', '1'};
+        BasicByteVector vector2 = new BasicByteVector(Arrays.asList(data2));
+        BasicByteVector res= (BasicByteVector) v.combine(vector2);
+        Byte[] datas = {'4', '5', '3', '6', '2', '5', '1'};
+        for (int i=0;i<res.rows();i++){
+            assertEquals(datas[i],res.get(i).getNumber());
+
+        }
+        assertEquals(7,res.rows());
     }
 }

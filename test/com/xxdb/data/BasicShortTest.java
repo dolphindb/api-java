@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
 public class BasicShortTest {
     private DBConnection conn;
     @Before
@@ -55,5 +57,20 @@ public class BasicShortTest {
                 Assert.assertEquals(expected, v.get(i).hashBucket(b));
             }
         }
+    }
+
+    @Test
+    public void TestCombineShortVector() throws Exception {
+        Short[] data = {1,-1,3};
+        BasicShortVector v = new BasicShortVector(Arrays.asList(data));
+        Short[] data2 = {1,-1,3,9};
+        BasicShortVector vector2 = new BasicShortVector( Arrays.asList(data2));
+        BasicShortVector res= (BasicShortVector) v.combine(vector2);
+        Short[] datas = {1,-1,3,1,-1,3,9};
+        for (int i=0;i<res.rows();i++){
+            assertEquals(datas[i],res.get(i).getNumber());
+
+        }
+        assertEquals(7,res.rows());
     }
 }

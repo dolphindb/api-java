@@ -16,9 +16,8 @@ public class SampleMessageHandler implements MessageHandler {
 			started = true;
 			start = System.currentTimeMillis();
 		}
-
 		count.incrementAndGet();
-
+		System.out.println("get " + String.valueOf(count) + " msgs");
 		if (count.get() % 100000 == 0) {
 			long end = System.currentTimeMillis();
 			System.out.println(count + " messages took " + (end - start) + "ms, throughput: " + count.get() / ((end - start) / 1000.0) + " messages/s");		 
