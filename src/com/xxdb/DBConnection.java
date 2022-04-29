@@ -333,7 +333,7 @@ public class DBConnection {
                     flag += 16;
                 if (compress_)
                     flag += 64;
-//                out_.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                out_.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                 if (fetchSize > 0)
                     out_.writeBytes("__" + String.valueOf(fetchSize));
                 out_.writeByte('\n');

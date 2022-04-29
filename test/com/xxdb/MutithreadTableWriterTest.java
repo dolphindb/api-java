@@ -1,7 +1,6 @@
 package com.xxdb;
 
 
-import com.alibaba.fastjson.support.odps.udf.CodecCheck;
 import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
