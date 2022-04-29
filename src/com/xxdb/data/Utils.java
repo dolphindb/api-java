@@ -1,9 +1,17 @@
 package com.xxdb.data;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.util.Calendar;
+
+import com.xxdb.data.Entity.DATA_CATEGORY;
+import com.xxdb.data.Entity.DATA_FORM;
+import com.xxdb.data.Entity.DATA_TYPE;
+
 
 public class Utils {
 	public static final int DISPLAY_ROWS = 20;
@@ -16,12 +24,43 @@ public class Utils {
 	private static final int[] leapMonthDays={31,29,31,30,31,30,31,31,30,31,30,31};
 	
 	public static int countMonths(YearMonth date){
-		return date.getYear() * 12 + date.getMonthValue() -1;
+		return date.getYear() * 12 + date.getMonthValue();
 	}
 	
 	public static int countMonths(int year, int month){
 		return year * 12 + month -1;
 	}
+	
+	public static int countMonths(int days){
+		int year, month;
+		days += 719529;
+	    int circleIn400Years = days / 146097;
+	    int offsetIn400Years = days % 146097;
+	    int resultYear = circleIn400Years * 400;
+	    int similarYears = offsetIn400Years / 365;
+	    int tmpDays = similarYears * 365;
+	    if(similarYears > 0) tmpDays += (similarYears - 1) / 4 + 1 - (similarYears - 1) / 100;
+	    if(tmpDays >= offsetIn400Years) --similarYears;
+	    year = similarYears + resultYear;
+	    days -= circleIn400Years * 146097 + tmpDays;
+	    boolean leap = ( (year%4==0 && year%100!=0) || year%400==0 );
+	    if(days <= 0) {
+	        days += leap ? 366 : 365;
+	    }
+	    if(leap){
+			month=days/32+1;
+			if(days>cumLeapMonthDays[month])
+				month++;
+		}
+		else{
+			month=days/32+1;
+			if(days>cumMonthDays[month])
+				month++;
+		}
+		
+		return year * 12 + month -1;
+	}
+
 	
 	public static YearMonth parseMonth(int value){
 		return YearMonth.of(value/12, value % 12 +1);
@@ -30,13 +69,19 @@ public class Utils {
 	public static int countDays(LocalDate date){
 		return countDays(date.getYear(), date.getMonthValue(),date.getDayOfMonth());
 	}
-	
+
+	public static int countDays(Calendar calendar) {
+		return countDays(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH)+1, calendar.get(Calendar.DAY_OF_MONTH));
+	}
+
 	public static int countDays(int year, int month, int day){
-		if(month<1 || month>12 || day<0)
+		if(month<1 || month>12 || day<0){
 			return Integer.MIN_VALUE;
+		}
 	    int divide400Years = year / 400;
 	    int offset400Years = year % 400;
-	    int days = divide400Years * 146097 + offset400Years * 365 - 719529;
+		int days;
+		days = divide400Years * 146097 + offset400Years * 365 - 719529;
 	    if(offset400Years > 0) days += (offset400Years - 1) / 4 + 1 - (offset400Years - 1) / 100;
 	    if((year%4==0 && year%100!=0) || year%400==0){
 			days+=cumLeapMonthDays[month-1];
@@ -44,7 +89,7 @@ public class Utils {
 		}
 		else{
 			days+=cumMonthDays[month-1];
-			return day <= monthDays[month - 1] ? days + day : Integer.MIN_VALUE;
+			return day <= monthDays[month-1] ? days + day : Integer.MIN_VALUE;
 		}
 	}
 
@@ -81,16 +126,36 @@ public class Utils {
 	}
 	
 	public static int countSeconds(LocalDateTime dt){
-		return countSeconds(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour(), dt.getMinute(), dt.getSecond());
+		return countDTSeconds(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour(), dt.getMinute(), dt.getSecond());
 	}
-	
-	public static int countSeconds(int year, int month, int day, int hour, int minute, int second){
+
+	public static int countSeconds(Calendar value){
+		return countSeconds(value.get(Calendar.HOUR_OF_DAY), value.get(Calendar.MINUTE),value.get(Calendar.SECOND));
+	}
+
+
+	public static int countDTSeconds(Calendar value) {
+		return countDTSeconds(value.get(Calendar.YEAR), value.get(Calendar.MONTH)+1, value.get(Calendar.DAY_OF_MONTH),
+				value.get(Calendar.HOUR_OF_DAY), value.get(Calendar.MINUTE), value.get(Calendar.SECOND));
+	}
+
+	public static int countDTSeconds(int year, int month, int day, int hour, int minute, int second){
 		int days = countDays(year, month, day);
 		return days * 86400 + (hour *60 + minute) * 60 + second;
 	}
 	
 	public static int divide(int x, int y){
 		int tmp=x / y;
+		if(x>=0)
+			return tmp;
+		else if(x%y<0)
+			return tmp-1;
+		else
+			return tmp;
+	}
+	
+	public static long divide(long x, long y){
+		long tmp=x / y;
 		if(x>=0)
 			return tmp;
 		else if(x%y<0)
@@ -114,6 +179,10 @@ public class Utils {
 	public static int countHours(LocalDateTime dt) {
 		return countHours(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour());
 	}
+
+	public static int countHours(Calendar calendar) {
+		return countHours(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH)+1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.HOUR_OF_DAY));
+	}
 	
 	public static int countHours(int year, int month, int day, int hour) {
 		int days = countDays(year, month, day);
@@ -134,9 +203,9 @@ public class Utils {
 	}
 	
 	public static long countMilliseconds(int year, int month, int day, int hour, int minute, int second, int millisecond){
-		return countSeconds(year, month, day, hour, minute, second) * 1000L + millisecond;
+		return countDTSeconds(year, month, day, hour, minute, second) * 1000L + millisecond;
 	}
-	public static long countNanoseconds(LocalDateTime dt) {
+	public static long countDTNanoseconds(LocalDateTime dt) {
 		long seconds = countSeconds(dt);
 		return seconds * 1000000000l + dt.getNano();
 	}
@@ -189,12 +258,32 @@ public class Utils {
 	public static int countMilliseconds(LocalTime time){
 		return countMilliseconds(time.getHour(), time.getMinute(), time.getSecond(), time.getNano() / 1000000);
 	}
+	public static int countMilliseconds(Calendar value) {
+		return countMilliseconds(value.get(Calendar.HOUR_OF_DAY),
+				value.get(Calendar.MINUTE),
+				value.get(Calendar.SECOND),
+				value.get(Calendar.MILLISECOND));
+	}
+
+	public static long countDateMilliseconds(Calendar value) {
+		return countMilliseconds(value.get(Calendar.YEAR),
+				value.get(Calendar.MONTH)+1,
+				value.get(Calendar.DAY_OF_MONTH),
+				value.get(Calendar.HOUR_OF_DAY),
+				value.get(Calendar.MINUTE),
+				value.get(Calendar.SECOND),
+				value.get(Calendar.MILLISECOND));
+	}
 	
 	public static int countMilliseconds(int hour, int minute, int second, int millisecond){
 		return ((hour * 60 + minute) * 60 + second) * 1000+millisecond;
 	}
 
 	public static long countNanoseconds(LocalTime time) {
+		return (long)countMilliseconds(time.getHour(), time.getMinute(), time.getSecond(), 0) * 1000000 + time.getNano();
+	}
+
+	public static long countNanoseconds(LocalDateTime time) {
 		return (long)countMilliseconds(time.getHour(), time.getMinute(), time.getSecond(), 0) * 1000000 + time.getNano();
 	}
 
@@ -221,7 +310,11 @@ public class Utils {
 	public static int countMinutes(LocalTime time){
 		return countMinutes(time.getHour(), time.getMinute());
 	}
-	
+
+	public static int countMinutes(Calendar value){
+		return countMinutes(value.get(Calendar.HOUR_OF_DAY),value.get(Calendar.MINUTE));
+	}
+
 	public static int countMinutes(int hour, int minute){
 		return hour * 60 + minute;
 	}
@@ -265,5 +358,223 @@ public class Utils {
 	    return h;
 	}
 	
+	public static DATA_CATEGORY getCategory(DATA_TYPE type){
+		if(type== DATA_TYPE.DT_TIME || type==DATA_TYPE.DT_SECOND || type==DATA_TYPE.DT_MINUTE || type==DATA_TYPE.DT_DATE || type==DATA_TYPE.DT_DATEHOUR 
+				|| type==DATA_TYPE.DT_DATEMINUTE || type==DATA_TYPE.DT_DATETIME || type==DATA_TYPE.DT_MONTH || type==DATA_TYPE.DT_NANOTIME 
+				|| type==DATA_TYPE.DT_NANOTIMESTAMP || type==DATA_TYPE.DT_TIMESTAMP)
+			return DATA_CATEGORY.TEMPORAL;
+		else if(type==DATA_TYPE.DT_INT || type==DATA_TYPE.DT_LONG || type==DATA_TYPE.DT_SHORT || type==DATA_TYPE.DT_BYTE)
+			return DATA_CATEGORY.INTEGRAL;
+		else if(type==DATA_TYPE.DT_BOOL)
+			return DATA_CATEGORY.LOGICAL;
+		else if(type==DATA_TYPE.DT_DOUBLE || type==DATA_TYPE.DT_FLOAT)
+			return DATA_CATEGORY.FLOATING;
+		else if(type==DATA_TYPE.DT_STRING || type==DATA_TYPE.DT_SYMBOL)
+			return DATA_CATEGORY.LITERAL;
+		else if(type==DATA_TYPE.DT_INT128 || type==DATA_TYPE.DT_UUID || type==DATA_TYPE.DT_IPADDR)
+			return DATA_CATEGORY.BINARY;
+		else if(type==DATA_TYPE.DT_ANY)
+			return DATA_CATEGORY.MIXED;
+		else if(type==DATA_TYPE.DT_VOID)
+			return DATA_CATEGORY.NOTHING;
+		else
+			return DATA_CATEGORY.SYSTEM;
+	}
 	
+	public static Entity toMonth(Entity source){
+		long scaleFactor = 1;
+		int days;
+		
+		if(source.isScalar()){
+			switch(source.getDataType()){
+			case DT_NANOTIMESTAMP:
+				scaleFactor = 86400000000000l;
+				days = (int)divide(((BasicNanoTimestamp)source).getLong(), scaleFactor);
+				return new BasicMonth(countMonths(days));
+			case DT_TIMESTAMP:
+				scaleFactor = 86400000;
+				days = (int)divide(((BasicTimestamp)source).getLong(), scaleFactor);
+				return new BasicMonth(countMonths(days));
+			case DT_DATETIME:
+				scaleFactor = 86400;
+				days = divide(((BasicDateTime)source).getInt(), (int)scaleFactor);
+				return new BasicMonth(countMonths(days));
+			case DT_DATE:
+				return new BasicMonth(countMonths(((BasicDate)source).getInt()));
+			default:
+				throw new RuntimeException("The data type of the source data must be NANOTIMESTAMP, TIMESTAMP, DATETIME, or DATE.");
+			}
+		}
+		else{
+			int rows = source.rows();
+			int[] values = new int[rows];
+			
+			switch(source.getDataType()){
+			case DT_NANOTIMESTAMP:
+				scaleFactor = 86400000000000l;
+				BasicNanoTimestampVector ntsVec = (BasicNanoTimestampVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = countMonths((int)divide(ntsVec.getLong(i), scaleFactor));
+				}
+				return new BasicMonthVector(values);
+			case DT_TIMESTAMP:
+				scaleFactor = 86400000;
+				BasicTimestampVector tsVec = (BasicTimestampVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = countMonths((int)divide(tsVec.getLong(i), scaleFactor));
+				}
+				return new BasicMonthVector(values);
+			case DT_DATETIME:
+				scaleFactor = 86400;
+				BasicDateTimeVector dtVec = (BasicDateTimeVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = countMonths(divide(dtVec.getInt(i), (int)scaleFactor));
+				}
+				return new BasicMonthVector(values);
+			case DT_DATE:
+				BasicDateVector dVec = (BasicDateVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = countMonths(dVec.getInt(i));
+				}
+				return new BasicMonthVector(values);
+			default:
+				throw new RuntimeException("The data type of the source data must be NANOTIMESTAMP, TIMESTAMP, DATETIME, or DATE.");
+			}
+		}
+	}
+	
+	public static Entity toDate(Entity source){
+		if(source.isScalar()){
+			long scaleFactor = 1;
+			switch(source.getDataType()){
+			case DT_NANOTIMESTAMP:
+				scaleFactor = 86400000000000l;
+				return new BasicDate((int)divide(((BasicNanoTimestamp)source).getLong(), scaleFactor));
+			case DT_TIMESTAMP:
+				scaleFactor = 86400000;
+				return new BasicDate((int)divide(((BasicTimestamp)source).getLong(), scaleFactor));
+			case DT_DATETIME:
+				scaleFactor = 86400;
+				return new BasicDate(divide(((BasicDateTime)source).getInt(), (int)scaleFactor));
+			default:
+				throw new RuntimeException("The data type of the source data must be NANOTIMESTAMP, TIMESTAMP, or DATETIME.");
+			}
+		}
+		else{
+			long scaleFactor = 1;
+			int rows = source.rows();
+			int[] values = new int[rows];
+			
+			switch(source.getDataType()){
+			case DT_NANOTIMESTAMP:
+				scaleFactor = 86400000000000l;
+				BasicNanoTimestampVector ntsVec = (BasicNanoTimestampVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = (int)divide(ntsVec.getLong(i), scaleFactor);
+				}
+				return new BasicDateVector(values);
+			case DT_TIMESTAMP:
+				scaleFactor = 86400000;
+				BasicTimestampVector tsVec = (BasicTimestampVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = (int)divide(tsVec.getLong(i), scaleFactor);
+				}
+				return new BasicDateVector(values);
+			case DT_DATETIME:
+				scaleFactor = 86400;
+				BasicDateTimeVector dtVec = (BasicDateTimeVector)source;
+				for(int i=0; i<rows; ++i){
+					values[i] = divide(dtVec.getInt(i), (int)scaleFactor);
+				}
+				return new BasicDateVector(values);
+			default:
+				throw new RuntimeException("The data type of the source data must be NANOTIMESTAMP, TIMESTAMP, or DATETIME.");
+			}
+		}
+	}
+
+	public static Entity toDateHour(Entity source){
+		if (source.isScalar()){
+			long scaleFactor = 1;
+			switch (source.getDataType()){
+				case DT_DATETIME:
+					scaleFactor = 3600;
+					return new BasicDateHour(divide(((BasicDateTime)source).getInt(), (int) scaleFactor));
+				case DT_TIMESTAMP:
+					scaleFactor = 3600000;
+					return new BasicDateHour((int)divide(((BasicTimestamp)source).getLong(), scaleFactor));
+				case DT_NANOTIMESTAMP:
+					scaleFactor = 3600000000000l;
+					return new BasicDateHour((int)divide(((BasicNanoTimestamp)source).getLong(), scaleFactor));
+				default:
+					throw new RuntimeException("The data type of the source data must be NANOTIMESTAMP, TIMESTAMP, or DATETIME.");
+			}
+		}else {
+			long scaleFactor = 1;
+			int rows = source.rows();
+			int[] values = new int[rows];
+			switch (source.getDataType()){
+				case DT_DATETIME:
+					scaleFactor = 3600;
+					BasicDateTimeVector dtVec = (BasicDateTimeVector)source;
+					for (int i = 0; i < rows; i++){
+						values[i] = divide(dtVec.getInt(i), (int)scaleFactor);
+					}
+					return new BasicDateHourVector(values);
+				case DT_TIMESTAMP:
+					scaleFactor = 3600000;
+					BasicTimestampVector tsVec = (BasicTimestampVector) source;
+					for (int i = 0; i < rows; i++){
+						values[i] = (int) divide(tsVec.getLong(i), scaleFactor);
+					}
+					return new BasicDateHourVector(values);
+				case DT_NANOTIMESTAMP:
+					scaleFactor = 3600000000000l;
+					BasicNanoTimestampVector ntsVec = (BasicNanoTimestampVector) source;
+					for (int i = 0; i < rows; i++){
+						values[i] = (int)divide(ntsVec.getLong(i), scaleFactor);
+					}
+					return new BasicDateHourVector(values);
+				default:
+					throw new RuntimeException("The data type of the source data must be NANOTIMESTAMP, TIMESTAMP, or DATETIME.");
+			}
+		}
+	}
+	
+	public static Entity castDateTime(Entity source, DATA_TYPE newDateTimeType){
+		if(source.getDataForm() != DATA_FORM.DF_VECTOR && source.getDataForm() != DATA_FORM.DF_SCALAR)
+			throw new RuntimeException("The source data must be a temporal scalar/vector.");
+		switch(newDateTimeType){
+		case DT_MONTH :
+				return toMonth(source);
+		case DT_DATE :
+			return toDate(source);
+		case DT_DATEHOUR:
+			return toDateHour(source);
+		default:
+			throw new RuntimeException("The target date/time type supports MONTH/DATE only for time being.");
+		}
+	}
+
+	public static ByteBuffer reAllocByteBuffer(ByteBuffer src, int size){
+		ByteBuffer ret = ByteBuffer.allocate(size).order(src.order());
+		ret.put(src.array(), 0, src.position());
+		return ret;
+	}
+
+	public static boolean isLittleEndian() {
+		return ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
+	}
+
+	public static boolean isVariableCandidate(String word){
+		char cur = word.charAt(0);
+		if((cur<'a' || cur>'z') && (cur<'A' || cur>'Z'))
+			return false;
+		for(int i=1;i<word.length();i++){
+			cur=word.charAt(i);
+			if((cur<'a' || cur>'z') && (cur<'A' || cur>'Z') && (cur<'0' || cur>'9') && cur!='_')
+				return false;
+		}
+		return true;
+	}
 }

@@ -6,6 +6,7 @@ import java.util.List;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
+
 /**
  * 
  * Corresponds to DolphinDB bool matrix

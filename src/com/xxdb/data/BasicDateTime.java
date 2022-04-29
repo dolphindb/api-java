@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
+import java.util.Calendar;
 
 import com.xxdb.io.ExtendedDataInput;
 
@@ -18,6 +19,10 @@ public class BasicDateTime extends BasicInt{
 
 	public BasicDateTime(LocalDateTime value){
 		super(Utils.countSeconds(value));
+	}
+
+	public BasicDateTime(Calendar value){
+		super(Utils.countDTSeconds(value));
 	}
 	
 	public BasicDateTime(ExtendedDataInput in) throws IOException {
@@ -57,7 +62,11 @@ public class BasicDateTime extends BasicInt{
 		else
 			return getDateTime().format(format);
 	}
-	
+	@Override
+	public String getJsonString() {
+		if (isNull()) return "null";
+		return "\"" + getString() + "\"";
+	}
 	@Override
 	public boolean equals(Object o){
 		if(! (o instanceof BasicDateTime) || o == null)

@@ -1,7 +1,8 @@
 package com.xxdb.streaming.client;
 
-import com.xxdb.streaming.client.IMessage;
 
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -9,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 public class TopicPoller {
     BlockingQueue<List<IMessage>> queue;
-    ArrayList<IMessage> cache = null;
+    List<IMessage> cache=new ArrayList<>();
 
     public TopicPoller(BlockingQueue<List<IMessage>> queue) {
         this.queue = queue;
@@ -19,38 +20,46 @@ public class TopicPoller {
         this.queue = queue;
     }
 
-    private void fillCache(long timeout) {
-        assert (cache == null);
-        List<IMessage> list = null;
-        if (cache == null) {
-            try {
-                if (timeout >= 0)
-                    list = queue.poll(timeout, TimeUnit.MILLISECONDS);
-                else
-                    list = queue.take();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        if (list != null) {
-            cache = new ArrayList<>(list.size());
-            cache.addAll(list);
-        }
+    public ArrayList<IMessage> poll(long timeout) {
+        return poll(timeout, 1);
     }
 
-    public ArrayList<IMessage> poll(long timeout) {
-        if (cache == null) {
-            fillCache(timeout);
+    public ArrayList<IMessage> poll(long timeout, int size) {
+        if(size <= 0)
+            throw new IllegalArgumentException("Size must be greater than zero");
+        ArrayList<IMessage> list = new ArrayList<>(cache);
+        cache.clear();
+        LocalTime end=LocalTime.now().plusNanos(timeout*1000000);
+        while (list.size()<size&&LocalTime.now().isBefore(end)){
+            try {
+                long mileSeconds = ChronoUnit.MILLIS.between(LocalTime.now(), end);
+                List<IMessage> tmp = queue.poll(mileSeconds, TimeUnit.MILLISECONDS);
+                if(tmp != null){
+                    list.addAll(tmp);
+                }
+            }catch (InterruptedException e){
+                return list;
+            }
         }
-        ArrayList<IMessage> cachedMessages = cache;
-        cache = null;
-        return cachedMessages;
+        return list;
     }
 
     // take one message from the topic, block if necessary
     public IMessage take() {
-        if (cache == null)
-            fillCache(-1);
-        return cache.remove(0);
+        while(true) {
+            if (cache.isEmpty() == false) {
+                IMessage message = cache.get(0);
+                cache.remove(0);
+                return message;
+            }
+            try {
+                List<IMessage> tmp = queue.take();
+                if (tmp != null) {
+                    cache.addAll(tmp);
+                }
+            } catch (InterruptedException e) {
+                return null;
+            }
+        }
     }
 }

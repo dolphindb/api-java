@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -26,6 +27,10 @@ public class BasicDateVector extends BasicIntVector{
 		super(array);
 	}
 	
+	protected BasicDateVector(int[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicDateVector(DATA_FORM df, int size){
 		super(df,size);
 	}
@@ -48,13 +53,17 @@ public class BasicDateVector extends BasicIntVector{
 		return new BasicDate(getInt(index));
 	}
 	
+	public Vector getSubVector(int[] indices){
+		return new BasicDateVector(getSubArray(indices), false);
+	}
+	
 	public LocalDate getDate(int index){
 		if(isNull(index))
 			return null;
 		else
 			return Utils.parseDate(getInt(index));
 	}
-	
+ 
 	public void setDate(int index, LocalDate date){
 		setInt(index,Utils.countDays(date));
 	}
@@ -62,5 +71,23 @@ public class BasicDateVector extends BasicIntVector{
 	@Override
 	public Class<?> getElementClass(){
 		return BasicDate.class;
+	}
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicDateVector v = (BasicDateVector)vector;
+		int newSize = this.rows() + v.rows();
+		int[] newValue = new int[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicDateVector(newValue);
+	}
+
+	@Override
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (int val: values) {
+			buffer.putInt(val);
+		}
+		return buffer;
 	}
 }

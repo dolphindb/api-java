@@ -25,6 +25,10 @@ public class BasicTimeVector extends BasicIntVector{
 		super(array);
 	}
 	
+	protected BasicTimeVector(int[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicTimeVector(DATA_FORM df, int size){
 		super(df, size);
 	}
@@ -47,6 +51,10 @@ public class BasicTimeVector extends BasicIntVector{
 		return new BasicTime(getInt(index));
 	}
 	
+	public Vector getSubVector(int[] indices){
+		return new BasicTimeVector(getSubArray(indices), false);
+	}
+	
 	public LocalTime getTime(int index){
 		if(isNull(index))
 			return null;
@@ -61,5 +69,15 @@ public class BasicTimeVector extends BasicIntVector{
 	@Override
 	public Class<?> getElementClass(){
 		return BasicTime.class;
+	}
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicTimeVector v = (BasicTimeVector)vector;
+		int newSize = this.rows() + v.rows();
+		int[] newValue = new int[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicTimeVector(newValue);
 	}
 }

@@ -17,7 +17,7 @@ public class BasicNanoTimestamp extends BasicLong{
 	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSSSSSSSS");
 
 	public BasicNanoTimestamp(LocalDateTime value){
-		super(Utils.countNanoseconds(value));
+		super(Utils.countDTNanoseconds(value));
 	}
 
 	public BasicNanoTimestamp(ExtendedDataInput in) throws IOException {
@@ -57,7 +57,11 @@ public class BasicNanoTimestamp extends BasicLong{
 		else
 			return getNanoTimestamp().format(format);
 	}
-	
+	@Override
+	public String getJsonString() {
+		if (isNull()) return "null";
+		return "\"" + getString() + "\"";
+	}
 	@Override
 	public boolean equals(Object o){
 		if(! (o instanceof BasicNanoTimestamp) || o == null)

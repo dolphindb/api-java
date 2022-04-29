@@ -15,7 +15,7 @@ import com.xxdb.io.ExtendedDataOutput;
  */
 
 public class BasicIntVector extends AbstractVector{
-	private int[] values;
+	protected int[] values;
 	
 	public BasicIntVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -25,14 +25,25 @@ public class BasicIntVector extends AbstractVector{
 		super(DATA_FORM.DF_VECTOR);
 		if (list != null) {
 			values = new int[list.size()];
-			for (int i=0; i<list.size(); ++i)
-				values[i] = list.get(i);
+			for (int i=0; i<list.size(); ++i) {
+				if(list.get(i)!=null)
+					values[i] = list.get(i);
+				else
+					values[i] = Integer.MIN_VALUE;
+			}
 		}
 	}
 	
 	public BasicIntVector(int[] array){
+		this(array, true);
+	}
+	
+	public BasicIntVector(int[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicIntVector(DATA_FORM df, int size){
@@ -59,8 +70,47 @@ public class BasicIntVector extends AbstractVector{
 		}
 	}
 	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		int totalBytes = count * 4, off = 0;
+		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		while (off < totalBytes) {
+			int len = Math.min(BUF_SIZE, totalBytes - off);
+			in.readFully(buf, 0, len);
+			int end = len / 4;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+			for (int i = 0; i < end; i++)
+				values[i + start] = byteBuffer.getInt(i * 4);
+			off += len;
+			start += end;
+		}
+	}
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeInt(values[start + i]);
+		}
+	}
+
 	public Scalar get(int index){
 		return new BasicInt(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		int[] sub = new int[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicIntVector(sub, false);
+	}
+	
+	protected int[] getSubArray(int[] indices){
+		int length = indices.length;
+		int[] sub = new int[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return sub;
 	}
 	
 	public int getInt(int index){
@@ -74,7 +124,7 @@ public class BasicIntVector extends AbstractVector{
 			values[index] = value.getNumber().intValue();
 		}
 	}
-	
+
 	public void setInt(int index, int value){
 		values[index] = value;
 	}
@@ -89,6 +139,11 @@ public class BasicIntVector extends AbstractVector{
 		else{
 			return (int)((4294967296l + value) % buckets);
 		}
+	}
+
+	@Override
+	public int getUnitLength() {
+		return 4;
 	}
 
 	@Override
@@ -133,5 +188,48 @@ public class BasicIntVector extends AbstractVector{
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeIntArray(values);
+	}
+
+	@Override
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (int val: values) {
+			buffer.putInt(val);
+		}
+		return buffer;
+	}
+
+	@Override
+	public int asof(Scalar value) {
+		int target;
+		try{
+			target = value.getNumber().intValue();
+		}
+		catch(Exception ex){
+			throw new RuntimeException(ex);
+		}
+		
+		int start = 0;
+		int end = values.length - 1;
+		int mid;
+		while(start <= end){
+			mid = (start + end)/2;
+			if(values[mid] <= target)
+				start = mid + 1;
+			else
+				end = mid - 1;
+		}
+		return end;
+	}
+
+	@Override
+	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
+		targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
+		for (int i = 0; i < targetNumElement; ++i)
+		{
+			out.putInt(values[indexStart + i]);
+		}
+		numElementAndPartial.numElement = targetNumElement;
+		numElementAndPartial.partial = 0;
+		return targetNumElement * 4;
 	}
 }

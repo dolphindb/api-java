@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -23,14 +24,26 @@ public class BasicByteVector extends AbstractVector{
 		super(DATA_FORM.DF_VECTOR);
 		if (list != null) {
 			values = new byte[list.size()];
-			for (int i=0; i<list.size(); ++i)
-				values[i] = list.get(i);
+			for (int i=0; i<list.size(); ++i) {
+				if(list.get(i) != null) {
+					values[i] = list.get(i);
+				}else{
+					values[i] = Byte.MIN_VALUE;
+				}
+			}
 		}
 	}
 
 	public BasicByteVector(byte[] array){
+		this(array, true);
+	}
+	
+	protected BasicByteVector(byte[] array, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
-		values = array.clone();
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicByteVector(DATA_FORM df, int size){
@@ -51,6 +64,18 @@ public class BasicByteVector extends AbstractVector{
 			off += len;
 		}
 	}
+	
+	@Override
+	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
+		in.readFully(values, start, count);
+	}
+
+	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		for (int i = 0; i < count; i++){
+			out.writeByte(values[start + i]);
+		}
+	}
 
 	public Vector combine(Vector vector){
 		BasicByteVector v = (BasicByteVector)vector;
@@ -60,8 +85,17 @@ public class BasicByteVector extends AbstractVector{
 		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
 		return new BasicByteVector(newValue);
 	}
+	
 	public Scalar get(int index){
 		return new BasicByte(values[index]);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		byte[] sub = new byte[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicByteVector(sub, false);
 	}
 	
 	public byte getByte(int index){
@@ -75,7 +109,7 @@ public class BasicByteVector extends AbstractVector{
 			values[index] = value.getNumber().byteValue();
 		}
 	}
-	
+
 	public void setByte(int index, byte value){
 		values[index] = value;
 	}
@@ -91,7 +125,7 @@ public class BasicByteVector extends AbstractVector{
 			return (int)((4294967296l + value) % buckets);
 		}
 	}
-	
+ 
 	@Override
 	public boolean isNull(int index) {
 		return values[index] == Byte.MIN_VALUE;
@@ -124,5 +158,53 @@ public class BasicByteVector extends AbstractVector{
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.write(values);
+	}
+
+	@Override
+	public int getUnitLength(){
+		return 1;
+	}
+	
+	@Override
+	public int asof(Scalar value) {
+		byte target;
+		try{
+			target = value.getNumber().byteValue();
+		}
+		catch(Exception ex){
+			throw new RuntimeException(ex);
+		}
+		
+		int start = 0;
+		int end = values.length - 1;
+		int mid;
+		while(start <= end){
+			mid = (start + end)/2;
+			if(values[mid] <= target)
+				start = mid + 1;
+			else
+				end = mid - 1;
+		}
+		return end;
+	}
+
+	@Override
+	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
+		for (byte val: values) {
+			buffer.put(val);
+		}
+		return buffer;
+	}
+
+	@Override
+	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
+		targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
+		for (int i = 0; i < targetNumElement; ++i)
+		{
+			out.put(values[indexStart + i]);
+		}
+		numElementAndPartial.numElement = targetNumElement;
+		numElementAndPartial.partial = 0;
+		return targetNumElement;
 	}
 }

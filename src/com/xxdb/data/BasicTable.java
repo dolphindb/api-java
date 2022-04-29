@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.xxdb.compression.VectorDecompressor;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -19,6 +20,7 @@ public class BasicTable extends AbstractEntity implements Table{
 	private List<Vector> columns_ = new ArrayList<Vector>();
 	private List<String> names_ = new ArrayList<String>();
 	private Map<String, Integer> name2index_ = new HashMap<String, Integer>();
+	private int[] colCompresses_ = null;
 
 	public BasicTable(ExtendedDataInput in) throws IOException{
 		int rows = in.readInt();
@@ -32,28 +34,82 @@ public class BasicTable extends AbstractEntity implements Table{
 			names_.add(name);
 		}
 		
-		BasicEntityFactory factory = new BasicEntityFactory();
+		VectorDecompressor decompressor = null;
+		SymbolBaseCollection collection = null;
 		//read columns
 		for(int i=0; i<cols; ++i){
 			short flag = in.readShort();
 			int form = flag>>8;
 			int type = flag & 0xff;
-			
+            boolean extended = type >= 128;
+            if(type >= 128)
+            	type -= 128;
+
 			DATA_FORM df = DATA_FORM.values()[form];
-			DATA_TYPE dt = DATA_TYPE.values()[type];
+			DATA_TYPE dt = DATA_TYPE.valueOf(type);
 			if(df != DATA_FORM.DF_VECTOR)
 				throw new IOException("Invalid form for column [" + names_.get(i) + "] for table " + tableName);
-			Vector vector = (Vector)factory.createEntity(df, dt, in);
+			Vector vector;
+			if(dt == DATA_TYPE.DT_SYMBOL && extended){
+				if(collection == null)
+					collection = new SymbolBaseCollection();
+				vector = new BasicSymbolVector(df, in, collection);
+			} else if (dt == DATA_TYPE.DT_COMPRESS) {
+				if(decompressor == null)
+					decompressor = new VectorDecompressor();
+				vector = decompressor.decompress(BasicEntityFactory.instance(), in, extended, true);
+			}
+			else{
+				vector = (Vector)BasicEntityFactory.instance().createEntity(df, dt, in, extended);
+			}
 			if(vector.rows() != rows && vector.rows()!= 1)
 				throw new IOException("The number of rows for column " +names_.get(i) + " is not consistent with other columns");
 			columns_.add(vector);
 		}
+		if(collection != null)
+			collection.clear();
 	}
 	
     public BasicTable(final List<String> colNames, final List<Vector> cols) {
+		if(colNames.size() != cols.size()){
+			throw new Error("The length of column name and column data is unequal.");
+		}
+		int rowsCount = cols.get(0).rows();
+		for (int i=0;i<cols.size();i++) {
+			Vector v = cols.get(i);
+			if(v.rows() != rowsCount)
+				throw new Error("The length of column " + colNames.get(i) + "  must be the same as the first column length.");
+		}
         this.setColName(colNames);
         this.setColumns(cols);
     }
+
+	public void setColumnCompressTypes(int[] colCompresses) {
+		if (colCompresses!=null && colCompresses.length != columns_.size()) {
+			throw new RuntimeException("Compress type size must match column size "+columns_.size()+".");
+		}
+		if(colCompresses!=null) {
+			for (int i = 0; i < colCompresses.length; i++) {
+				if (colCompresses[i] == Vector.COMPRESS_DELTA) {
+					Vector column=getColumn(i);
+					DATA_TYPE dataType = column.getDataType();
+					if(column.getDataCategory() != DATA_CATEGORY.TEMPORAL) {
+						if (dataType != DATA_TYPE.DT_SHORT && dataType != DATA_TYPE.DT_INT && dataType != DATA_TYPE.DT_LONG) {
+							throw new RuntimeException("Delta compression only supports short/int/long and temporal data.");
+						}
+					}
+					if(dataType.getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && dataType.getValue() <= Entity.DATA_TYPE.DT_POINT_ARRAY.getValue()){
+						throw new RuntimeException("Delta compression doesn't support array vector.");
+					}
+				}
+			}
+		}
+		if(colCompresses!=null){
+			colCompresses_=new int[colCompresses.length];
+			System.arraycopy(colCompresses,0,colCompresses_,0,colCompresses.length);
+		}else
+			colCompresses_ = null;
+	}
     
     public void setColName (final List<String> colNames) {
         names_.clear();
@@ -193,17 +249,70 @@ public class BasicTable extends AbstractEntity implements Table{
 	    	resultStr.append("...\n");
 	    return resultStr.toString();
 	}
-	
+
+	public String getRowJson(int rowIndex){
+		StringBuilder jsonStr = new StringBuilder();
+		if(rowIndex<rows()){
+			jsonStr.append("{");
+			for(int i=0;i<names_.size();i++){
+				jsonStr.append(names_.get(i));
+				jsonStr.append(":");
+				jsonStr.append(columns_.get(i).get(rowIndex).getJsonString());
+				if(i<names_.size()-1)
+					jsonStr.append(",");
+			}
+			jsonStr.delete(jsonStr.length()-1,jsonStr.length()-1);
+			jsonStr.append("}");
+		}
+		return jsonStr.toString();
+	}
+
 	public void write(ExtendedDataOutput out) throws IOException{
-		int flag = (DATA_FORM.DF_TABLE.ordinal() << 8) + getDataType().ordinal();
+		int flag = (DATA_FORM.DF_TABLE.ordinal() << 8) + getDataType().getValue();
 		out.writeShort(flag);
 		out.writeInt(rows());
 		out.writeInt(columns());
 		out.writeString(""); //table name
 		for(String colName : names_)
 			out.writeString(colName);
-		for(Vector vector : columns_)
-			vector.write(out);
+		SymbolBaseCollection collection = null;
+		for(Vector vector : columns_){
+			if(vector instanceof BasicSymbolVector){
+				if(collection == null)
+					collection = new SymbolBaseCollection();
+				((BasicSymbolVector)vector).write(out, collection);
+			}
+			else
+				vector.write(out);
+		}
+	}
+
+	@Override
+	public void writeCompressed(ExtendedDataOutput output) throws IOException {
+		short flag = (short) (Entity.DATA_FORM.DF_TABLE.ordinal() << 8 | 8 & 0xff); //8: table type TODO: add table type
+		output.writeShort(flag);
+
+		int rows = this.rows();
+		int cols = this.columns();
+		output.writeInt(rows);
+		output.writeInt(cols);
+		output.writeString(""); //table name
+		for (int i = 0; i < cols; i++) {
+			output.writeString(this.getColumnName(i));
+		}
+
+		for (int i = 0; i < cols; i++) {
+			AbstractVector v = (AbstractVector) this.getColumn(i);
+			if(v.getDataType() == DATA_TYPE.DT_SYMBOL)
+				v.write(output);
+			else {
+				if(colCompresses_!=null){
+					v.setCompressedMethod(colCompresses_[i]);
+				}
+				v.writeCompressed(output);
+			}
+		}
+
 	}
 
 	public BasicTable combine(BasicTable table){
@@ -212,5 +321,20 @@ public class BasicTable extends AbstractEntity implements Table{
 			newCol.add(this.getColumn(i).combine(table.getColumn(i)));
 		}
 		return new BasicTable(this.names_,newCol);
+	}
+	
+	public Table getSubTable(int[] indices){
+		int colCount = columns_.size();
+		List<Vector> cols = new ArrayList<Vector>(colCount);
+		for(int i=0; i<colCount; ++i)
+			cols.add(columns_.get(i).getSubVector(indices));
+		return new BasicTable(names_, cols);
+	}
+
+	@Override
+	public void addColumn(String colName, Vector col) {
+		names_.add(colName);
+		name2index_.put(colName, name2index_.size());
+		columns_.add(col);
 	}
 }

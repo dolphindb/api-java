@@ -20,19 +20,19 @@ public class BasicSet extends AbstractEntity implements Set {
 	public BasicSet(DATA_TYPE keyType, ExtendedDataInput in) throws IOException{
 		this.keyType = keyType;
 		
-		BasicEntityFactory factory = new BasicEntityFactory();
-		DATA_TYPE[] types = DATA_TYPE.values();
-		
 		//read key vector
 		short flag = in.readShort();
 		int form = flag>>8;
 		int type = flag & 0xff;
+        boolean extended = type >= 128;
+        if(type >= 128)
+        	type -= 128;
 		if(form != DATA_FORM.DF_VECTOR.ordinal())
 			throw new IOException("The form of set keys must be vector");
-		if(type <0 || type >= types.length)
+		if(type <0 || type >= DATA_TYPE.DT_OBJECT.getValue())
 			throw new IOException("Invalid key type: " + type);
 		
-		Vector keys = (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, types[type], in);
+		Vector keys = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, DATA_TYPE.valueOf(type), in, extended);
 			
 		int size = keys.rows();
 		int capacity = (int)(size/0.75);
@@ -42,7 +42,7 @@ public class BasicSet extends AbstractEntity implements Set {
 	}
 	
 	public BasicSet(DATA_TYPE keyType, int capacity){
-		if(keyType == DATA_TYPE.DT_VOID || keyType == DATA_TYPE.DT_SYMBOL || keyType.ordinal() >= DATA_TYPE.DT_FUNCTIONDEF.ordinal())
+		if(keyType == DATA_TYPE.DT_VOID || keyType == DATA_TYPE.DT_SYMBOL || keyType.getValue() >= DATA_TYPE.DT_FUNCTIONDEF.getValue())
 			throw new IllegalArgumentException("Invalid keyType: " + keyType.name());
 		this.keyType = keyType;
 		set = new HashSet<Scalar>();
@@ -82,9 +82,8 @@ public class BasicSet extends AbstractEntity implements Set {
 	}
 	
 	private Vector keys(int top){
-		BasicEntityFactory factory = new BasicEntityFactory();
 		int size = Math.min(top, set.size());
-		Vector keys = (Vector)factory.createVectorWithDefaultValue(keyType, size);
+		Vector keys = (Vector)BasicEntityFactory.instance().createVectorWithDefaultValue(keyType, size);
 		Iterator<Scalar> it = set.iterator();
 		int count = 0;
 		try{
@@ -115,7 +114,7 @@ public class BasicSet extends AbstractEntity implements Set {
 	
 	public void write(ExtendedDataOutput out) throws IOException{
 		Vector keys = keys();	
-		int flag = (DATA_FORM.DF_SET.ordinal() << 8) + getDataType().ordinal();
+		int flag = (DATA_FORM.DF_SET.ordinal() << 8) + getDataType().getValue();
 		out.writeShort(flag);
 		keys.write(out);
 	}

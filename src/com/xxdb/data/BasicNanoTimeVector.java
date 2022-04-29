@@ -25,6 +25,10 @@ public class BasicNanoTimeVector extends BasicLongVector{
 	public BasicNanoTimeVector(long[] array){
 		super(array);
 	}
+	
+	protected BasicNanoTimeVector(long[] array, boolean copy){
+		super(array, copy);
+	}
 
 	protected BasicNanoTimeVector(DATA_FORM df, int size){
 		super(df, size);
@@ -48,6 +52,10 @@ public class BasicNanoTimeVector extends BasicLongVector{
 		return new BasicNanoTime(getLong(index));
 	}
 	
+	public Vector getSubVector(int[] indices){
+		return new BasicNanoTimeVector(getSubArray(indices), false);
+	}
+	
 	public LocalTime getNanoTime(int index){
 		if(isNull(index))
 			return null;
@@ -62,5 +70,15 @@ public class BasicNanoTimeVector extends BasicLongVector{
 	@Override
 	public Class<?> getElementClass(){
 		return BasicNanoTime.class;
+	}
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicNanoTimeVector v = (BasicNanoTimeVector)vector;
+		int newSize = this.rows() + v.rows();
+		long[] newValue = new long[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicNanoTimeVector(newValue);
 	}
 }

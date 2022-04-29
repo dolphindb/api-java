@@ -26,6 +26,10 @@ public class BasicTimestampVector extends BasicLongVector{
 		super(array);
 	}
 	
+	public BasicTimestampVector(long[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicTimestampVector(DATA_FORM df, int size){
 		super(df, size);
 	}
@@ -48,6 +52,10 @@ public class BasicTimestampVector extends BasicLongVector{
 		return new BasicTimestamp(getLong(index));
 	}
 	
+	public Vector getSubVector(int[] indices){
+		return new BasicTimestampVector(getSubArray(indices), false);
+	}
+	
 	public LocalDateTime getTimestamp(int index){
 		if(isNull(index))
 			return null;
@@ -62,5 +70,15 @@ public class BasicTimestampVector extends BasicLongVector{
 	@Override
 	public Class<?> getElementClass(){
 		return BasicTimestamp.class;
+	}
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicTimestampVector v = (BasicTimestampVector)vector;
+		int newSize = this.rows() + v.rows();
+		long[] newValue = new long[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicTimestampVector(newValue);
 	}
 }

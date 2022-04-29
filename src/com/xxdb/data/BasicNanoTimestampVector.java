@@ -25,6 +25,10 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 	public BasicNanoTimestampVector(long[] array){
 		super(array);
 	}
+	
+	protected BasicNanoTimestampVector(long[] array, boolean copy){
+		super(array, copy);
+	}
 
 	protected BasicNanoTimestampVector(DATA_FORM df, int size){
 		super(df, size);
@@ -48,6 +52,10 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 		return new BasicNanoTimestamp(getLong(index));
 	}
 	
+	public Vector getSubVector(int[] indices){
+		return new BasicNanoTimestampVector(getSubArray(indices), false);
+	}
+	
 	public LocalDateTime getNanoTimestamp(int index){
 		if(isNull(index))
 			return null;
@@ -56,11 +64,21 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 	}
 	
 	public void setNanoTimestamp(int index, LocalDateTime dt){
-		setLong(index, Utils.countNanoseconds(dt));
+		setLong(index, Utils.countDTNanoseconds(dt));
 	}
 	
 	@Override
 	public Class<?> getElementClass(){
 		return BasicNanoTimestamp.class;
+	}
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicNanoTimestampVector v = (BasicNanoTimestampVector)vector;
+		int newSize = this.rows() + v.rows();
+		long[] newValue = new long[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicNanoTimestampVector(newValue);
 	}
 }

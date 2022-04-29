@@ -20,6 +20,10 @@ public class BasicUuidVector extends BasicInt128Vector {
 		super(array);
 	}
 	
+	protected BasicUuidVector(Long2[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicUuidVector(DATA_FORM df, int size){
 		super(df, size);
 	}
@@ -27,9 +31,23 @@ public class BasicUuidVector extends BasicInt128Vector {
 	protected BasicUuidVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
 		super(df, in);
 	}
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicUuidVector v = (BasicUuidVector)vector;
+		int newSize = this.rows() + v.rows();
+		Long2[] newValue = new Long2[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicUuidVector(newValue);
+	}
 	
 	public Scalar get(int index){
 		return new BasicUuid(values[index].high, values[index].low);
+	}
+	
+	public Vector getSubVector(int[] indices){
+		return new BasicUuidVector(getSubArray(indices), false);
 	}
 	
 	@Override

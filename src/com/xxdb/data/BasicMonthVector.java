@@ -27,6 +27,10 @@ public class BasicMonthVector extends BasicIntVector{
 		super(array);
 	}
 	
+	protected BasicMonthVector(int[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicMonthVector(DATA_FORM df, int size){
 		super(df, size);
 	}
@@ -49,6 +53,10 @@ public class BasicMonthVector extends BasicIntVector{
 		return new BasicMonth(getInt(index));
 	}
 	
+	public Vector getSubVector(int[] indices){
+		return new BasicMonthVector(getSubArray(indices), false);
+	}
+	
 	public YearMonth getMonth(int index){
 		return Utils.parseMonth(getInt(index));
 	}
@@ -62,4 +70,14 @@ public class BasicMonthVector extends BasicIntVector{
 		return YearMonth.class;
 	}
 
+
+	@Override
+	public Vector combine(Vector vector) {
+		BasicMonthVector v = (BasicMonthVector)vector;
+		int newSize = this.rows() + v.rows();
+		int[] newValue = new int[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicMonthVector(newValue);
+	}
 }

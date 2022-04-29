@@ -65,7 +65,7 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 	public String readString() throws IOException {
 		return readUTF8((byte)0);
 	}
-	
+
 	private String readUTF8(byte terminator) throws IOException{
 		if(buf_ == null)
 			buf_ = new byte[2048];
@@ -85,6 +85,19 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 		return new String(buf_, 0, count, UTF8);
 	}
 	
+	@Override
+	public byte[] readBlob() throws IOException{
+		int len = readInt();
+		int offset = 0;
+		int actualSize = 0;
+		byte[] buff = new byte[len];
+		while (offset < len){
+			actualSize = read(buff, offset, len-offset);
+			offset += actualSize;
+		}
+		return buff;
+	}
+
 	@Override
 	public short readShort() throws IOException {
 		return (short)readUnsignedShort();
@@ -107,7 +120,13 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 	
 	@Override
 	public int skipBytes(int n) throws IOException {
-		return (int) in.skip(n);
+		int actualSkip = 0;
+		int reamainSkip = n - actualSkip;
+		while (reamainSkip > 0){
+			actualSkip = (int) in.skip(reamainSkip);
+			reamainSkip = reamainSkip - actualSkip;
+		}
+		return actualSkip;
 	}
 	
 	protected byte readAndCheckByte() throws IOException, EOFException {

@@ -90,7 +90,13 @@ public class BasicInt extends AbstractScalar implements Comparable<BasicInt>{
 			return (int)((4294967296l + value) % buckets);
 		}
 	}
-	
+
+	@Override
+	public String getJsonString() {
+		if(isNull()) return "null";
+		return getString();
+	}
+
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeInt(value);
 	}

@@ -1,9 +1,10 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * 
@@ -14,10 +15,17 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 public class BasicAnyVector extends AbstractVector{
 	private Entity[] values;
 	
-
 	public BasicAnyVector(int size){
 		super(DATA_FORM.DF_VECTOR);
 		values = new Entity[size];
+	}
+	
+	protected BasicAnyVector(Entity[] array, boolean copy){
+		super(DATA_FORM.DF_VECTOR);
+		if(copy)
+			values = array.clone();
+		else
+			values = array;
 	}
 	
 	protected BasicAnyVector(ExtendedDataInput in) throws IOException{
@@ -27,19 +35,16 @@ public class BasicAnyVector extends AbstractVector{
 		int size = rows * cols;
 		values = new Entity[size];
 		assert(rows <= 1024);
-		BasicEntityFactory factory = new BasicEntityFactory();
 		for(int i=0; i<size; ++i){
 			short flag = in.readShort();
 			int form = flag>>8;
 			int type = flag & 0xff;
-			//if (form != 1)
-				//assert (form == 1);
-			//if (type != 4)
-				//assert(type == 4);
-			Entity obj = factory.createEntity(DATA_FORM.values()[form], DATA_TYPE.values()[type], in);
+            boolean extended = type >= 128;
+            if(type >= 128)
+            	type -= 128;
+			Entity obj = BasicEntityFactory.instance().createEntity(DATA_FORM.values()[form], DATA_TYPE.valueOf(type), in, extended);
 			values[i] = obj;
 		}
-
 	}
 
 	public Entity getEntity(int index){
@@ -53,17 +58,25 @@ public class BasicAnyVector extends AbstractVector{
 			throw new RuntimeException("The element of the vector is not a scalar object.");
 	}
 	
+	public Vector getSubVector(int[] indices){
+		int length = indices.length;
+		Entity[] sub = new Entity[length];
+		for(int i=0; i<length; ++i)
+			sub[i] = values[indices[i]];
+		return new BasicAnyVector(sub, false);
+	}
+	
 	public void set(int index, Scalar value) throws Exception {
 		values[index] = value;
 	}
-	
+
 	public void setEntity(int index, Entity value){
 		values[index] = value;
 	}
 
 	@Override
 	public Vector combine(Vector vector) {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -90,6 +103,11 @@ public class BasicAnyVector extends AbstractVector{
 	public int rows() {
 		return values.length;
 	}
+
+	@Override
+	public int getUnitLength(){
+		throw new RuntimeException("BasicAnyVector.getUnitLength not supported.");
+	}
 	
 	public String getString(){
 		StringBuilder sb = new StringBuilder("(");
@@ -111,8 +129,23 @@ public class BasicAnyVector extends AbstractVector{
 	}
 
 	@Override
+	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+		throw new RuntimeException("BasicAnyVector.serialize not supported.");
+	}
+
+	@Override
+	public int serialize(int indexStart, int offect, int targetNumElement, AbstractVector.NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
+		throw new RuntimeException("BasicAnyVector.serialize not supported.");
+	}
+
+	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
 		for(Entity value : values)
 			value.write(out);
+	}
+	
+	@Override
+	public int asof(Scalar value) {
+		throw new RuntimeException("BasicAnyVector.asof not supported.");
 	}
 }

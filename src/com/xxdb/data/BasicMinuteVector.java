@@ -26,6 +26,10 @@ public class BasicMinuteVector extends BasicIntVector{
 		super(array);
 	}
 	
+	public BasicMinuteVector(int[] array, boolean copy){
+		super(array, copy);
+	}
+	
 	protected BasicMinuteVector(DATA_FORM df, int size){
 		super(df, size);
 	}
@@ -48,6 +52,10 @@ public class BasicMinuteVector extends BasicIntVector{
 		return new BasicMinute(getInt(index));
 	}
 	
+	public Vector getSubVector(int[] indices){
+		return new BasicMinuteVector(getSubArray(indices), false);
+	}
+	
 	public LocalTime getMinute(int index){
 		if(isNull(index))
 			return null;
@@ -64,4 +72,13 @@ public class BasicMinuteVector extends BasicIntVector{
 		return BasicMinute.class;
 	}
 
+	@Override
+	public Vector combine(Vector vector) {
+		BasicMinuteVector v = (BasicMinuteVector)vector;
+		int newSize = this.rows() + v.rows();
+		int[] newValue = new int[newSize];
+		System.arraycopy(this.values,0, newValue,0,this.rows());
+		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
+		return new BasicMinuteVector(newValue);
+	}
 }

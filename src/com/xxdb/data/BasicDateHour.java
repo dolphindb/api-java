@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
+import java.util.Calendar;
 
 import com.xxdb.io.ExtendedDataInput;
 
@@ -17,6 +18,10 @@ public class BasicDateHour extends BasicInt {
 	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH");
 
 	public BasicDateHour(LocalDateTime value){
+		super(Utils.countHours(value));
+	}
+
+	public BasicDateHour(Calendar value){
 		super(Utils.countHours(value));
 	}
 	
@@ -57,7 +62,12 @@ public class BasicDateHour extends BasicInt {
 		else
 			return getDateHour().format(format);
 	}
-	
+
+	@Override
+	public String getJsonString() {
+		if (isNull()) return "null";
+		return "\"" + getString() + "\"";
+	}
 	@Override
 	public boolean equals(Object o){
 		if(! (o instanceof BasicDateHour) || o == null)
