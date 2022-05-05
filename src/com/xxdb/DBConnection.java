@@ -630,7 +630,7 @@ public class DBConnection {
                         if (isConnected()){
                             ExceptionType type = parseException(e.getMessage(), node1);
                             if (type == ExceptionType.ET_IGNORE){
-                                break;
+                                continue;
                             }else if (type == ExceptionType.ET_NEWLEADER || type == ExceptionType.ET_NODENOTAVAIL){
                                 switchDataNode(node1);
                             }
@@ -648,7 +648,7 @@ public class DBConnection {
                 BasicIntVector colworkerNum = (BasicIntVector) bt.getColumn("workerNum");
                 BasicIntVector colexecutorNum = (BasicIntVector) bt.getColumn("executorNum");
                 double load;
-                for (int cnt = 0, i = 0; i < colMode.rows(); i++){
+                for (int i = 0; i < colMode.rows(); i++){
                     if (colMode.getInt(i) == 0){
                         Node nodex = new Node(colHost.getString(i), colPort.getInt(i));
                         Node pexistNode = null;
@@ -1022,7 +1022,7 @@ public class DBConnection {
                         if (connected()){
                             ExceptionType type = parseException(e.getMessage(), node);
                             if (type == ExceptionType.ET_IGNORE)
-                                return;
+                                continue;
                             else if (type == ExceptionType.ET_UNKNOW)
                                 throw e;
                         }
