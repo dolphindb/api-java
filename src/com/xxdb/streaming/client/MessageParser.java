@@ -106,7 +106,7 @@ class MessageParser implements Runnable {
                         if (rowSize == 1) {
                             BasicMessage rec = new BasicMessage(msgid, topic, dTable, topicNameToIndex.get(topic.split(",")[0]));
                             if (subinfos.get(topic) != null)
-                                rec = subinfos.get(topic).parse(rec);//todo: may have bugs
+                                rec = subinfos.get(topic).parse(rec);
                             dispatcher.dispatch(rec);
                         } else {
                             List<IMessage> messages = new ArrayList<>(rowSize);
@@ -120,7 +120,7 @@ class MessageParser implements Runnable {
                                 }
                                 BasicMessage rec = new BasicMessage(startMsgId + i, topic, row, topicNameToIndex.get(topic.split(",")[0]));
                                 if (subinfos.get(topic) != null)
-                                    rec = subinfos.get(topic).parse(rec);//todo: may have bugs
+                                    rec = subinfos.get(topic).parse(rec);
                                 messages.add(rec);
                             }
                             dispatcher.batchDispatch(messages);
