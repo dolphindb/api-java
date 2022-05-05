@@ -16,17 +16,20 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	private ExecutorService executor;
 
 	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability) throws IOException{
+		this(host, port, uid, pwd, count, loadBalance, enableHighAvailability, false);
+	}
+	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability, boolean compress) throws IOException{
 		conns = new ArrayList<DBConnection>(count);
 		if(!loadBalance){
 			for(int i=0; i<count; ++i){
-				DBConnection conn = new DBConnection();
+				DBConnection conn = new DBConnection(false, false, compress);
 				if(!conn.connect(host, port, uid, pwd, enableHighAvailability))
 					throw new RuntimeException("Can't connect to the specified host.");
 				conns.add(conn);
 			}
 		}
 		else{
-			DBConnection entryPoint = new DBConnection();
+			DBConnection entryPoint = new DBConnection(false, false, compress);
 			if(!entryPoint.connect(host, port, uid, pwd))
 				throw new RuntimeException("Can't connect to the specified host.");
 			BasicStringVector nodes = (BasicStringVector)entryPoint.run("rpc(getControllerAlias(), getClusterLiveDataNodes{false})");
@@ -42,7 +45,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 			}
 			
 			for(int i=0; i<count; ++i){
-				DBConnection conn = new DBConnection();
+				DBConnection conn = new DBConnection(false, false, compress);
 				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, enableHighAvailability))
 					throw new RuntimeException("Can't connect to the host " + nodes.getString(i));
 				conns.add(conn);

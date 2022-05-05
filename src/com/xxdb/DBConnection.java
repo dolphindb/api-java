@@ -75,10 +75,10 @@ public class DBConnection {
         }
     }
 
-    private class Node {
-        public String hostName;
-        public int port;
-        public double load = -1.0;
+    private static class Node {
+        private String hostName;
+        private int port;
+        private double load = -1.0;
 
         public Node(){
             this.load = -1.0;
@@ -586,7 +586,6 @@ public class DBConnection {
         return connect(hostName, port, userId, password, initialScript, true, highAvailabilitySites);
     }
 
-    //todo:ReWrite connect
     public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites) throws IOException {
         mutex_.lock();
         try {
@@ -820,8 +819,6 @@ public class DBConnection {
         uid_ = userID;
         pwd_ = password;
     }
-
-    //todo:Rewrite end
 
     public boolean getRemoteLittleEndian() {
         return this.conn_.getRemoteLittleEndian();
