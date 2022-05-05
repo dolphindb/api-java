@@ -12,4 +12,6 @@ public interface IMessage {
     <T> T getValue(int colIndex);
 
     <T> T getValue(String colName);
+
+    int size();
 }

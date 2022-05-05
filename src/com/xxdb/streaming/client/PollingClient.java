@@ -6,7 +6,6 @@ import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicString;
 import com.xxdb.data.Entity;
 import com.xxdb.data.Vector;
-import com.xxdb.streaming.client.IMessage;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -29,7 +28,7 @@ public class PollingClient extends AbstractClient {
     protected boolean doReconnect(Site site) {
         try {
             Thread.sleep(1000);
-            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter, site.allowExistTopic);
+            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic);
             System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
             topicPoller.setQueue(queue);
             return true;
@@ -40,10 +39,14 @@ public class PollingClient extends AbstractClient {
         }
     }
 
-    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, filter, false);
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, filter, deserializer, false);
         topicPoller = new TopicPoller(queue);
         return topicPoller;
+    }
+
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter)throws IOException{
+        return subscribe(host, port, tableName, actionName, offset, reconnect, filter, null);
     }
 
     public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect) throws IOException {

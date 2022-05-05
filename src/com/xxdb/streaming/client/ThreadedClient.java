@@ -104,7 +104,7 @@ public class ThreadedClient extends AbstractClient {
         }
         handlerLopper.interrupt();
         try {
-            subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.allowExistTopic);
+            subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic);
             Date d = new Date();
             DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             System.out.println(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
@@ -118,8 +118,8 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, allowExistTopic);
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
@@ -128,12 +128,12 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, int throttle) throws IOException {
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle) throws IOException {
         if(batchSize<=0)
             throw new IllegalArgumentException("BatchSize must be greater than zero");
         if(throttle<0)
             throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, allowExistTopic);
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
@@ -142,12 +142,20 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer)throws Exception{
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter,  deserializer, true);
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, int throttle)throws IOException{
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, null, allowExistTopic, batchSize, throttle);
+    }
+
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect) throws IOException {
-        subscribe(host, port, tableName, actionName, handler, offset, reconnect, null, false);
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, null, null, false);
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, Vector filter) throws IOException {
-        subscribe(host, port, tableName, actionName, handler, offset, false, filter, false);
+        subscribe(host, port, tableName, actionName, handler, offset, false, filter, null, false);
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset) throws IOException {

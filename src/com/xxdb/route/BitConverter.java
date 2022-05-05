@@ -321,7 +321,7 @@ public class BitConverter {
     /**
      * 以字符串表示形式返回字节数组的内容
      * @param bytes 字节数组
-     * @return 字符串形式的 <tt>bytes</tt>
+     * @return 字符串形式的 String
      */
     public static String toHexString(byte[] bytes) {
         if (bytes == null)

@@ -29,6 +29,7 @@ abstract class AbstractClient implements MessageDispatcher {
     protected Thread pThread;
     protected ConcurrentHashMap<String, Site[]> trueTopicToSites = new ConcurrentHashMap<>();
     protected CopyOnWriteArraySet<String> waitReconnectTopic = new CopyOnWriteArraySet<>();
+    protected Map<String, StreamDeserializer> subInfos_ = new HashMap<>();
 
     class ReconnectItem {
         /**
@@ -152,6 +153,10 @@ abstract class AbstractClient implements MessageDispatcher {
         return null;
     }
 
+    public Map<String, StreamDeserializer> getSubInfos(){
+        return subInfos_;
+    }
+
     public class Site {
         String host;
         int port;
@@ -163,9 +168,10 @@ abstract class AbstractClient implements MessageDispatcher {
         Vector filter = null;
         boolean closed = false;
         boolean allowExistTopic = false;
+        StreamDeserializer deserializer;
 
         Site(String host, int port, String tableName, String actionName,
-             MessageHandler handler, long msgId, boolean reconnect, Vector filter, boolean allowExistTopic) {
+             MessageHandler handler, long msgId, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic) {
             this.host = host;
             this.port = port;
             this.tableName = tableName;
@@ -175,6 +181,7 @@ abstract class AbstractClient implements MessageDispatcher {
             this.reconnect = reconnect;
             this.filter = filter;
             this.allowExistTopic = allowExistTopic;
+            this.deserializer = deserializer;
         }
     }
 
@@ -393,7 +400,7 @@ abstract class AbstractClient implements MessageDispatcher {
 
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
                                                               String tableName, String actionName, MessageHandler handler,
-                                                              long offset, boolean reconnect, Vector filter, boolean allowExistTopic)
+                                                              long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer, boolean allowExistTopic)
             throws IOException, RuntimeException {
         Entity re;
         String topic = "";
@@ -442,7 +449,7 @@ abstract class AbstractClient implements MessageDispatcher {
                     String HASiteHost = HASiteHostAndPort[0];
                     int HASitePort = new Integer(HASiteHostAndPort[1]);
                     String HASiteAlias = HASiteHostAndPort[2];
-                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, allowExistTopic);
+                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic);
                     synchronized (tableNameToTrueTopic) {
                         tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + "/" + tableName + "/" + actionName, topic);
                     }
@@ -450,12 +457,20 @@ abstract class AbstractClient implements MessageDispatcher {
                     synchronized (HATopicToTrueTopic) {
                         HATopicToTrueTopic.put(HATopic, topic);
                     }
+                    if (subInfos_.containsKey(topic)){
+                        throw new RuntimeException("Subscription with topic " + topic + " exist. ");
+                    }else {
+                        subInfos_.put(topic, deserializer);
+                    }
                 }
                 synchronized (trueTopicToSites) {
                     trueTopicToSites.put(topic, sites);
                 }
             } else {
-                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, allowExistTopic)};
+                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, deserializer, allowExistTopic)};
+                synchronized (subInfos_){
+                    subInfos_.put(topic, deserializer);
+                }
                 synchronized (tableNameToTrueTopic) {
                     tableNameToTrueTopic.put(host + ":" + port + "/" + tableName + "/" + actionName, topic);
                 }
@@ -478,7 +493,7 @@ abstract class AbstractClient implements MessageDispatcher {
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
                                                               String tableName, String actionName, long offset, boolean reconnect)
             throws IOException, RuntimeException {
-        return subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, null, false);
+        return subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, null, null, false);
     }
 
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName, long offset) throws IOException, RuntimeException {

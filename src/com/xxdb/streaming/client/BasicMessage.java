@@ -10,12 +10,21 @@ public class BasicMessage implements IMessage {
     private String topic = "";
     private BasicAnyVector msg = null;
     private HashMap<String, Integer> nameToIndex = null;
+    private String sym_ = "";
 
     public BasicMessage(long offset, String topic, BasicAnyVector msg, HashMap<String, Integer> nameToIndex) {
         this.offset = offset;
         this.topic = topic;
         this.msg = msg;
         this.nameToIndex = nameToIndex;
+    }
+
+    public BasicMessage(long offset, String topic, BasicAnyVector msg, String sym)
+    {
+        this.offset = offset;
+        this.topic = topic;
+        this.msg = msg;
+        this.sym_ = sym;
     }
 
     @SuppressWarnings("unchecked")
@@ -46,4 +55,11 @@ public class BasicMessage implements IMessage {
         return this.msg.getEntity(colIndex);
     }
 
+    public int size(){
+        return msg.rows();
+    }
+
+    public String getSym(){
+        return sym_;
+    }
 }

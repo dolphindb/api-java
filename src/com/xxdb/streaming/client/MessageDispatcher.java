@@ -1,8 +1,7 @@
 package com.xxdb.streaming.client;
 
-import com.xxdb.streaming.client.IMessage;
-
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 interface MessageDispatcher {
@@ -35,4 +34,8 @@ interface MessageDispatcher {
     List<String> getAllTopicsBySite(String site);
 
     Set<String> getAllReconnectTopic();
+
+    Map<String, StreamDeserializer> getSubInfos();
 }
+
+
