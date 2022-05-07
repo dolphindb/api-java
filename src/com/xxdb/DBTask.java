@@ -8,4 +8,5 @@ public interface DBTask extends Callable<Entity>{
 	Entity getResult();
 	String getErrorMsg();
 	boolean isSuccessful();
+	String getScript();
 }

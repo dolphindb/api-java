@@ -59,4 +59,9 @@ public class BasicDBTask implements DBTask{
 	public boolean isSuccessful() {
 		return successful;
 	}
+
+	@Override
+	public String getScript() {
+		return script;
+	}
 }

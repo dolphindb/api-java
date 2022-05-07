@@ -738,6 +738,7 @@ public class DBConnection {
     }
 
     public boolean connectNode(Node node) throws IOException{
+        System.out.println("Connect to " + node.hostName + ":" + node.port + ".");
         while (true){
             try {
                 return conn_.connect(node.hostName, node.port, uid_, pwd_, enableSSL_, asynTask_, compress_);
@@ -766,8 +767,6 @@ public class DBConnection {
     }
 
     public ExceptionType parseException(String msg, Node node){
-        //System.out.println("Server error is: " + msg +"----------------------");
-
         int index = msg.indexOf("<NotLeader>");
         if (index != -1){
             index = msg.indexOf(">");
@@ -903,13 +902,13 @@ public class DBConnection {
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory) throws IOException{
         mutex_.lock();
         try {
-            if (enableHighAvailability_){
-                while (true){
+            if (enableHighAvailability_) {
+                while (true) {
                     try {
                         return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory);
-                    }catch (IOException e){
+                    } catch (IOException e) {
                         Node node = new Node();
-                        if (connected()){
+                        if (connected()) {
                             ExceptionType type = parseException(e.getMessage(), node);
                             if (type == ExceptionType.ET_IGNORE)
                                 return new Void();
@@ -919,10 +918,10 @@ public class DBConnection {
                         switchDataNode(node);
                     }
                 }
-            }else{
+            } else {
                 return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory);
             }
-        }finally {
+        } finally {
             mutex_.unlock();
         }
     }
