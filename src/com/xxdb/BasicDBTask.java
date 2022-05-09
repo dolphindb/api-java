@@ -9,7 +9,7 @@ public class BasicDBTask implements DBTask{
 	private DBConnection conn;
 	private Entity result = null;
 	private String errMsg = null;
-	private boolean successful = true;
+	private boolean successful = false;
 
 	public BasicDBTask(String script, List<Entity> args){
 		this.script = script;
@@ -63,5 +63,14 @@ public class BasicDBTask implements DBTask{
 	@Override
 	public String getScript() {
 		return script;
+	}
+
+	@Override
+	public boolean isFinished(){
+		if (successful || errMsg.length() > 0){
+			return true;
+		}else {
+			return false;
+		}
 	}
 }
