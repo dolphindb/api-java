@@ -1,8 +1,6 @@
 package com.xxdb;
 
-//import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import com.xxdb.data.*;
-import com.xxdb.data.Set;
 import com.xxdb.data.Vector;
 
 import java.io.IOException;

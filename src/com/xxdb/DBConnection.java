@@ -78,6 +78,7 @@ public class DBConnection {
     private boolean asynTask = false;
     private boolean isUseSSL = false;
     private boolean compress = false;
+    private boolean python = false;
     
     public DBConnection() {
     	this(false, false, false);
@@ -92,14 +93,20 @@ public class DBConnection {
     }
     
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress) {
-    	 factory = BasicEntityFactory.instance();
-         mutex = new ReentrantLock();
-         sessionID = "";
-         asynTask = asynchronousTask;
-         isUseSSL = useSSL;
-         this.compress = compress;
+        this(asynchronousTask, useSSL, compress, false);
     }
-    
+
+    public DBConnection (boolean asynchronousTask, boolean useSSL, boolean compress, boolean python) {
+        factory = BasicEntityFactory.instance();
+        mutex = new ReentrantLock();
+        sessionID = "";
+        asynTask = asynchronousTask;
+        isUseSSL = useSSL;
+        this.compress = compress;
+        this.python = python;
+    }
+
+
     public boolean isBusy() {
         if (!mutex.tryLock())
             return true;
@@ -129,6 +136,8 @@ public class DBConnection {
     		flag += 16;
     	if(compress)
     		flag += 64;
+        if (this.python)
+            flag += 2048;
     	return flag;
     }
 
@@ -495,7 +504,6 @@ public class DBConnection {
         boolean isUrgentCancelJob = false;
         if (script.startsWith("cancelJob(") || script.startsWith("cancelConsoleJob("))
             isUrgentCancelJob = true;
-
         try {
             boolean reconnect = false;
             InputStream is = null;
@@ -516,7 +524,6 @@ public class DBConnection {
             String body = "script\n" + script;
             String header = null;
             try {
-
                 out.writeBytes((listener != null ? "API2 " : "API ") + sessionID + " ");
                 out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
                 if(isUrgentCancelJob){
@@ -1151,7 +1158,7 @@ public class DBConnection {
      }
      private void compareRequiredAPIVersion() throws IOException {
         try {
-            Entity ret = run("getRequiredAPIVersion(`java)");
+            Entity ret = run("getRequiredAPIVersion('java')");
             if (localAPIVersion < ((BasicInt)((BasicAnyVector) ret).get(0)).getInt()) {
                 throw new IOException("API version is too low and needs to be upgraded");
             }

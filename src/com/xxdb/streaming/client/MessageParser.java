@@ -71,7 +71,7 @@ class MessageParser implements Runnable {
                 boolean extended = type >= 128;
                 if(type >= 128)
                 	type -= 128;
-                
+
                 if (form < 0 || form > MAX_FORM_VALUE)
                     throw new IOException("Invalid form value: " + form);
                 if (type < 0 || type > MAX_TYPE_VALUE)
@@ -97,7 +97,6 @@ class MessageParser implements Runnable {
                     topicNameToIndex.put(topic, nameToIndex);
                 } else if (body.isVector()) {
                     BasicAnyVector dTable = (BasicAnyVector) body;
-
                     int colSize = dTable.rows();
                     int rowSize = dTable.getEntity(0).rows();
                     if (rowSize >= 1) {
