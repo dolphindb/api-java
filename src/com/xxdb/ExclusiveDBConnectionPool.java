@@ -12,6 +12,9 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	private List<DBConnection> conns;
 	private List<AsynWorker> workers_ = new ArrayList<>();
 	private final LinkedList<DBTask> taskList_ = new LinkedList<>();
+	private final LinkedList<DBTask> finishedQueue_ = new LinkedList<>();
+	private boolean isShutdown = false;
+	private int taskcount = 0;
 
 	private class AsynWorker implements Runnable{
 		private DBConnection conn_;
@@ -23,20 +26,15 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 			workThread_.start();
 		}
 
-		public void close(){
-			try {
-				workThread_.join();
-			}catch (Exception e){
-				throw new RuntimeException(e);
-			}
-		}
-
 		@Override
 		public void run() {
 			while (true){
+				if (isShutdown){
+					break;
+				}
 				DBTask task = null;
-				if (taskList_.size() == 0) {
-					synchronized (taskList_) {
+				synchronized (taskList_) {
+					if (taskList_.size() == 0) {
 						try {
 							taskList_.wait();
 						} catch (Exception e) {
@@ -44,20 +42,27 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 						}
 					}
 				}
+
 				while (true){
 					synchronized (taskList_){
 						task = taskList_.poll();
 					}
-					if (task == null)
-						continue;
+					if (task == null){
+						break;
+					}
 					try {
 						task.setDBConnection(conn_);
 						task.call();
-						System.out.println("Job finish");
-						break;
 					}catch (Exception e){
 						throw new RuntimeException(e);
 					}
+					synchronized (finishedQueue_){
+						finishedQueue_.add(task);
+					}
+				}
+
+				synchronized (finishedQueue_){
+					finishedQueue_.notify();
 				}
 			}
 		}
@@ -104,16 +109,35 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	}
 	
 	public void execute(List<DBTask> tasks){
+		taskcount += tasks.size();
 		synchronized (taskList_){
 			taskList_.addAll(tasks);
 			taskList_.notifyAll();
+			System.out.println("Total task is " + taskList_.size());
 		}
 	}
 	
 	public void execute(DBTask task){
+		taskcount ++;
 		synchronized (taskList_){
 			taskList_.add(task);
 			taskList_.notify();
+		}
+	}
+
+	public void waitForThreadCompletion(){
+		try {
+			synchronized (finishedQueue_){
+				while (finishedQueue_.size() >= 0){
+					if (finishedQueue_.size() < taskcount){
+						finishedQueue_.wait();
+					}else if (finishedQueue_.size() == taskcount){
+						break;
+					}
+				}
+			}
+		}catch (Exception e){
+			throw new RuntimeException(e);
 		}
 	}
 	
@@ -122,9 +146,12 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	}
 	
 	public void shutdown(){
+		isShutdown = true;
 		try{
 			for (AsynWorker one : workers_){
-				one.close();
+				synchronized (taskList_){
+					taskList_.notify();
+				}
 			}
 			for(int i=0; i<conns.size(); ++i){
 				conns.get(i).close();

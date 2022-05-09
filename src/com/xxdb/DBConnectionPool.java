@@ -7,4 +7,5 @@ public interface DBConnectionPool {
 	void execute(DBTask task);
 	int getConnectionCount();
 	void shutdown();
+	void waitForThreadCompletion();
 }

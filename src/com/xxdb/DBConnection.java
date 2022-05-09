@@ -1054,7 +1054,6 @@ public class DBConnection {
         }
     }
 
-
     public String getHostName() {
         return this.conn_.hostName_;
     }
