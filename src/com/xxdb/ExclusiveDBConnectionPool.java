@@ -2,7 +2,6 @@ package com.xxdb;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,12 +9,11 @@ import com.xxdb.data.BasicStringVector;
 
 
 public class ExclusiveDBConnectionPool implements DBConnectionPool{
-	private List<DBConnection> conns;
 	private List<AsynWorker> workers_ = new ArrayList<>();
 	private final LinkedList<DBTask> taskList_ = new LinkedList<>();
-	private int taskcount = 0;
-	private Object lock = new Object();
-	private int FinishedTaskCount = 0;
+	private int taskcount_ = 0;
+	private Object FinishedTasklock_ = new Object();
+	private int FinishedTaskCount_ = 0;
 
 	private class AsynWorker implements Runnable{
 		private DBConnection conn_;
@@ -54,13 +52,13 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 					}catch (Exception e){
 						e.printStackTrace();
 					}
-					synchronized (lock){
-						FinishedTaskCount++;
+					synchronized (FinishedTasklock_){
+						FinishedTaskCount_++;
 					}
 				}
 
-				synchronized (lock){
-					lock.notify();
+				synchronized (FinishedTasklock_){
+					FinishedTasklock_.notify();
 				}
 			}
 			conn_.close();
@@ -71,13 +69,11 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 		this(host, port, uid, pwd, count, loadBalance, enableHighAvailability, false);
 	}
 	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability, boolean compress) throws IOException{
-		conns = new ArrayList<DBConnection>(count);
 		if(!loadBalance){
 			for(int i=0; i<count; ++i){
 				DBConnection conn = new DBConnection(false, false, compress);
 				if(!conn.connect(host, port, uid, pwd, enableHighAvailability))
 					throw new RuntimeException("Can't connect to the specified host.");
-				conns.add(conn);
 				workers_.add(new AsynWorker(conn));
 			}
 		}
@@ -101,14 +97,13 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 				DBConnection conn = new DBConnection(false, false, compress);
 				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, enableHighAvailability))
 					throw new RuntimeException("Can't connect to the host " + nodes.getString(i));
-				conns.add(conn);
 				workers_.add(new AsynWorker(conn));
 			}
 		}
 	}
 	
 	public void execute(List<DBTask> tasks){
-		taskcount += tasks.size();
+		taskcount_ += tasks.size();
 		synchronized (taskList_){
 			taskList_.addAll(tasks);
 			taskList_.notifyAll();
@@ -116,7 +111,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	}
 	
 	public void execute(DBTask task){
-		taskcount ++;
+		taskcount_++;
 		synchronized (taskList_){
 			taskList_.add(task);
 			taskList_.notify();
@@ -125,11 +120,11 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 
 	public void waitForThreadCompletion(){
 		try {
-			synchronized (lock){
-				while (FinishedTaskCount >= 0){
-					if (FinishedTaskCount < taskcount){
-						lock.wait();
-					}else if (FinishedTaskCount == taskcount){
+			synchronized (FinishedTasklock_){
+				while (FinishedTaskCount_ >= 0){
+					if (FinishedTaskCount_ < taskcount_){
+						FinishedTasklock_.wait();
+					}else if (FinishedTaskCount_ == taskcount_){
 						break;
 					}
 				}
@@ -140,7 +135,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	}
 	
 	public int getConnectionCount(){
-		return conns.size();
+		return workers_.size();
 	}
 	
 	public void shutdown(){
@@ -150,7 +145,6 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 					one.workThread_.interrupt();
 				}
 			}
-			conns.clear();
 		}
 		catch(Throwable t){
 			throw new RuntimeException(t);
