@@ -10,10 +10,10 @@ import com.xxdb.data.BasicStringVector;
 
 public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	private List<AsynWorker> workers_ = new ArrayList<>();
-	private final LinkedList<DBTask> taskList_ = new LinkedList<>();
-	private int taskcount_ = 0;
-	private Object FinishedTasklock_ = new Object();
-	private int FinishedTaskCount_ = 0;
+	private final LinkedList<DBTask> taskLists_ = new LinkedList<>();
+	private int tasksCount_ = 0;
+	private Object finishedTasklock_ = new Object();
+	private int finishedTaskCount_ = 0;
 
 	private class AsynWorker implements Runnable{
 		private DBConnection conn_;
@@ -29,10 +29,10 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 		public void run() {
 			while (true){
 				DBTask task = null;
-				synchronized (taskList_) {
-					if (taskList_.size() == 0) {
+				synchronized (taskLists_) {
+					if (taskLists_.size() == 0) {
 						try {
-							taskList_.wait();
+							taskLists_.wait();
 						} catch (Exception e) {
 							break;
 						}
@@ -40,8 +40,8 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 				}
 
 				while (true){
-					synchronized (taskList_){
-						task = taskList_.poll();
+					synchronized (taskLists_){
+						task = taskLists_.poll();
 					}
 					if (task == null){
 						break;
@@ -52,13 +52,13 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 					}catch (Exception e){
 						e.printStackTrace();
 					}
-					synchronized (FinishedTasklock_){
-						FinishedTaskCount_++;
+					synchronized (finishedTasklock_){
+						finishedTaskCount_++;
 					}
 				}
 
-				synchronized (FinishedTasklock_){
-					FinishedTasklock_.notify();
+				synchronized (finishedTasklock_){
+					finishedTasklock_.notify();
 				}
 			}
 			conn_.close();
@@ -103,28 +103,28 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	}
 	
 	public void execute(List<DBTask> tasks){
-		taskcount_ += tasks.size();
-		synchronized (taskList_){
-			taskList_.addAll(tasks);
-			taskList_.notifyAll();
+		tasksCount_ += tasks.size();
+		synchronized (taskLists_){
+			taskLists_.addAll(tasks);
+			taskLists_.notifyAll();
 		}
 	}
 	
 	public void execute(DBTask task){
-		taskcount_++;
-		synchronized (taskList_){
-			taskList_.add(task);
-			taskList_.notify();
+		tasksCount_++;
+		synchronized (taskLists_){
+			taskLists_.add(task);
+			taskLists_.notify();
 		}
 	}
 
 	public void waitForThreadCompletion(){
 		try {
-			synchronized (FinishedTasklock_){
-				while (FinishedTaskCount_ >= 0){
-					if (FinishedTaskCount_ < taskcount_){
-						FinishedTasklock_.wait();
-					}else if (FinishedTaskCount_ == taskcount_){
+			synchronized (finishedTasklock_){
+				while (finishedTaskCount_ >= 0){
+					if (finishedTaskCount_ < tasksCount_){
+						finishedTasklock_.wait();
+					}else if (finishedTaskCount_ == tasksCount_){
 						break;
 					}
 				}
@@ -139,15 +139,10 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	}
 	
 	public void shutdown(){
-		try{
-			for (AsynWorker one : workers_){
-				synchronized (one.workThread_){
-					one.workThread_.interrupt();
-				}
+		for (AsynWorker one : workers_){
+			synchronized (one.workThread_){
+				one.workThread_.interrupt();
 			}
-		}
-		catch(Throwable t){
-			throw new RuntimeException(t);
 		}
 	}
 }
