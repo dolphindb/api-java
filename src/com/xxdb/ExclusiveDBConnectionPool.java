@@ -36,8 +36,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 						try {
 							taskList_.wait();
 						} catch (Exception e) {
-							conn_.close();
-							return;
+							break;
 						}
 					}
 				}
@@ -52,9 +51,8 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 					try {
 						task.setDBConnection(conn_);
 						task.call();
-						System.out.println("Job Finished");
 					}catch (Exception e){
-						throw new RuntimeException(e);
+						e.printStackTrace();
 					}
 					synchronized (lock){
 						FinishedTaskCount++;
@@ -65,6 +63,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 					lock.notify();
 				}
 			}
+			conn_.close();
 		}
 	}
 
@@ -136,7 +135,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 				}
 			}
 		}catch (Exception e){
-			throw new RuntimeException(e);
+			e.printStackTrace();
 		}
 	}
 	
