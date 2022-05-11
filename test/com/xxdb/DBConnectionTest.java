@@ -2781,7 +2781,12 @@ public class DBConnectionTest {
         BasicTable ext=  new BasicTable(colNames, cols);
         compareBasicTable(re,ext);
     }
-
-
+    @Test
+    public void  temporalAdd() throws IOException {
+        BasicNanoTimestamp t= (BasicNanoTimestamp) conn.run("temporalAdd(2021.05.01T23:59:59.999999872,1,\"d\")");
+        assertEquals("2021.05.02T23:59:59.999999872",t.getString());
+        t= (BasicNanoTimestamp) conn.run("temporalAdd(2021.05.01T23:59:59.999999871,1,\"d\")");
+        assertEquals("2021.05.02T23:59:59.999999871",t.getString());
+    }
 }
 
