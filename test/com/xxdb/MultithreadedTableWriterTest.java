@@ -358,7 +358,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             row.add(new BasicLong(i + 2));
             tb.add(row);
         }
-        mutithreadTableWriter_.insert(tb, pErrorInfo);
+        mutithreadTableWriter_.insertUnwrittenData(tb, pErrorInfo);
         Thread.sleep(5000);
         bt = (BasicTable) conn.run("select * from t1;");
         assertEquals("[0,1,2,3,4]", bt.getColumn(2).getString());
@@ -544,7 +544,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             row.add(new BasicLong(i + 1));
             tb.add(row);
         }
-        mutithreadTableWriter_.insert(tb, pErrorInfo);
+        mutithreadTableWriter_.insertUnwrittenData(tb, pErrorInfo);
         Thread.sleep(1000);
         bt = (BasicTable) conn.run("select * from t1;");
         System.out.println(bt.getColumn("id").getString());
@@ -558,7 +558,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             row.add(new BasicLong(i + 1));
             tb.add(row);
         }
-        mutithreadTableWriter_.insert(tb, pErrorInfo);
+        mutithreadTableWriter_.insertUnwrittenData(tb, pErrorInfo);
         Thread.sleep(1000);
         bt = (BasicTable) conn.run("select * from t1;");
         System.out.println(bt.getColumn("id").getString());
@@ -637,8 +637,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("Column counts don't match.",pErrorInfo.errorInfo);
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
         assertEquals(0, bt.rows());
-        List<List<Entity>> unwrite = new ArrayList<>();
-        mutithreadTableWriter_.getUnwrittenData(unwrite);
+        List<List<Entity>> unwrite = mutithreadTableWriter_.getUnwrittenData();
         assertEquals(0,unwrite.size());
         mutithreadTableWriter_.waitForThreadCompletion();
         conn.run("undef(`t1,SHARED)");
@@ -657,8 +656,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
         boolean b = mutithreadTableWriter_.insert(pErrorInfo, 1, "2012.01.02");
         assertEquals(false, b);
         assertEquals("Invalid object error java.lang.RuntimeException: Failed to insert data. Cannot convert String to DT_DATE.",pErrorInfo.errorInfo);
-        MultithreadedTableWriter.Status status = new MultithreadedTableWriter.Status();
-        mutithreadTableWriter_.getStatus(status);
+        MultithreadedTableWriter.Status status =  mutithreadTableWriter_.getStatus();
+        
      //   assertEquals(1,status.errorCode);
         assertEquals("",status.errorInfo.toString());
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
@@ -690,8 +689,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         for (int i = 0; i < 15; i++) {
             mutithreadTableWriter_.insert(pErrorInfo, i, new Date());
         }
-        List<List<Entity>> unwrite = new ArrayList<>();
-        mutithreadTableWriter_.getUnwrittenData(unwrite);
+        List<List<Entity>> unwrite = mutithreadTableWriter_.getUnwrittenData();
         assertEquals(15, unwrite.size());
         for (int i = 0; i < 15; i++) {
             assertEquals(String.valueOf(i), unwrite.get(i).get(0).getString());
@@ -723,16 +721,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
         List<List<Entity>> tb2 = new ArrayList<>();
         writeData(0,tb1);
         writeData(1,tb2);
-        mutithreadTableWriter1.insert(tb1, pErrorInfo);
-        mutithreadTableWriter2.insert(tb2, pErrorInfo);
+        mutithreadTableWriter1.insertUnwrittenData(tb1, pErrorInfo);
+        mutithreadTableWriter2.insertUnwrittenData(tb2, pErrorInfo);
         mutithreadTableWriter2.waitForThreadCompletion();
         mutithreadTableWriter1.waitForThreadCompletion();
 
-        List<List<Entity>> unwrite1 = new ArrayList<>();
-        List<List<Entity>> unwrite2 = new ArrayList<>();
-        mutithreadTableWriter1.getUnwrittenData(unwrite1);
-        mutithreadTableWriter2.getUnwrittenData(unwrite2);
-
+        List<List<Entity>> unwrite1 = mutithreadTableWriter1.getUnwrittenData();
+        List<List<Entity>> unwrite2 =  mutithreadTableWriter2.getUnwrittenData();
 
         assertTrue(unwrite1.size() == 0);
         assertTrue(unwrite2.size() >0);
@@ -753,13 +748,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
         for (int i = 0; i < 15; i++) {
             mutithreadTableWriter_.insert(pErrorInfo, i, new Date());
         }
-        MultithreadedTableWriter.Status status = new MultithreadedTableWriter.Status();
-        mutithreadTableWriter_.getStatus(status);
+        MultithreadedTableWriter.Status status =  mutithreadTableWriter_.getStatus();
+        
         assertFalse(status.isExiting);
         assertEquals(0, status.sendFailedRows);
         assertEquals(null, status.errorInfo.toString());
         mutithreadTableWriter_.waitForThreadCompletion();
-        mutithreadTableWriter_.getStatus(status);
+        
         assertEquals(0, status.unsentRows);
         assertEquals(15, status.sentRows);
         assertTrue(status.isExiting);
@@ -780,14 +775,14 @@ public  class MultithreadedTableWriterTest implements Runnable {
         for (int i = 0; i < 15; i++) {
             mutithreadTableWriter_.insert(pErrorInfo, i, new Date());
         }
-        MultithreadedTableWriter.Status status = new MultithreadedTableWriter.Status();
-        mutithreadTableWriter_.getStatus(status);
+        MultithreadedTableWriter.Status status =  mutithreadTableWriter_.getStatus();
+        
         assertFalse(status.isExiting);
         assertEquals(0, status.sendFailedRows);
         assertEquals(15, status.unsentRows);
         assertEquals(0, status.sentRows);
         mutithreadTableWriter_.waitForThreadCompletion();
-        mutithreadTableWriter_.getStatus(status);
+        
         assertEquals(0, status.unsentRows);
         assertEquals(15, status.sentRows);
         assertTrue(status.isExiting);
@@ -806,8 +801,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 1, "date");
         boolean b=mutithreadTableWriter_.insert(pErrorInfo, 1);
         assertFalse(b);
-        MultithreadedTableWriter.Status status = new MultithreadedTableWriter.Status();
-        mutithreadTableWriter_.getStatus(status);
+        MultithreadedTableWriter.Status status =  mutithreadTableWriter_.getStatus();
         assertEquals(0, status.sendFailedRows);
         assertEquals(0, status.unsentRows);
         assertEquals(0, status.sentRows);
@@ -846,8 +840,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 tb.add(row);
             }
             for (int i = 0; i < 1; i++) {
-                mutithreadTableWriter1.insert(tb, pErrorInfo);
-                mutithreadTableWriter2.insert(tb, pErrorInfo);
+                mutithreadTableWriter1.insertUnwrittenData(tb, pErrorInfo);
+                mutithreadTableWriter2.insertUnwrittenData(tb, pErrorInfo);
             }
         } catch (Exception ex) {
         }
@@ -855,15 +849,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
         mutithreadTableWriter2.waitForThreadCompletion();
 
 
-        MultithreadedTableWriter.Status status = new MultithreadedTableWriter.Status();
-        mutithreadTableWriter1.getStatus(status);
+        MultithreadedTableWriter.Status status =mutithreadTableWriter1.getStatus();
         assertEquals(0, status.sendFailedRows);
         assertEquals(0, status.unsentRows);
         BasicTable bt = (BasicTable) conn.run("select * from loadTable('dfs://test_MultithreadedTableWriter',`pt)");
         assertEquals(bt.rows(), status.sentRows);
 
-        MultithreadedTableWriter.Status status1 = new MultithreadedTableWriter.Status();
-        mutithreadTableWriter2.getStatus(status1);
+        MultithreadedTableWriter.Status status1 =  mutithreadTableWriter2.getStatus();
         assertTrue(status1.sendFailedRows>0);
         assertEquals(10000-status1.sendFailedRows, status1.unsentRows);
         assertEquals(0, status1.sentRows);
@@ -2099,7 +2091,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             row.add(new BasicInt(2));
             tb.add(row);
         }
-        boolean b=mutithreadTableWriter_.insert(tb,pErrorInfo);
+        boolean b=mutithreadTableWriter_.insertUnwrittenData(tb, pErrorInfo);
         assertEquals(true, b);
         for (int i=0;i<2;i++){
             List<Entity> row = new ArrayList<>();
@@ -2107,14 +2099,12 @@ public  class MultithreadedTableWriterTest implements Runnable {
             row.add(new BasicString("1"));
             tb.add(row);
         }
-        b=mutithreadTableWriter_.insert(tb,pErrorInfo);
+        b=mutithreadTableWriter_.insertUnwrittenData(tb, pErrorInfo);
         assertEquals(true, b);
         mutithreadTableWriter_.waitForThreadCompletion();
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
-        List<List<Entity>> le=new ArrayList<>();
-        mutithreadTableWriter_.getUnwrittenData(le);
-        MultithreadedTableWriter.Status status=new MultithreadedTableWriter.Status();
-        mutithreadTableWriter_.getStatus(status);
+        List<List<Entity>> le=mutithreadTableWriter_.getUnwrittenData();
+        MultithreadedTableWriter.Status status= mutithreadTableWriter_.getStatus();
         assertEquals(bt.rows(),status.unsentRows+status.sendFailedRows+status.sentRows);
     }
 
@@ -3558,8 +3548,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
         writeData(1, tb1);
         writeData(2, tb2);
         for (int i = 0; i < 10; i++) {
-            mutithreadTableWriter1.insert(tb1, pErrorInfo);
-            mutithreadTableWriter2.insert(tb2, pErrorInfo);
+            mutithreadTableWriter1.insertUnwrittenData(tb1, pErrorInfo);
+            mutithreadTableWriter2.insertUnwrittenData(tb2, pErrorInfo);
         }
         for (int n = 0; n < 10; n++) {
             for (int i = 0; i < 10000; i++) {
@@ -3619,11 +3609,11 @@ public  class MultithreadedTableWriterTest implements Runnable {
         writeData(1, tb);
         writeData(2, tb);
         for (int i = 0; i < 10; i++) {
-            mutithreadTableWriter1.insert(tb, pErrorInfo);
-            mutithreadTableWriter2.insert(tb, pErrorInfo);
-            mutithreadTableWriter3.insert(tb, pErrorInfo);
-            mutithreadTableWriter4.insert(tb, pErrorInfo);
-            mutithreadTableWriter5.insert(tb, pErrorInfo);
+            mutithreadTableWriter1.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter2.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter3.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter4.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter5.insertUnwrittenData(tb, pErrorInfo);
         }
         for (int n = 0; n < 10; n++) {
             for (int i = 0; i < 10000; i++) {
@@ -3700,9 +3690,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
         writeData(1, tb);
         writeData(2, tb);
         for (int i = 0; i < 8; i++) {
-            mutithreadTableWriter1.insert(tb, pErrorInfo);
-            mutithreadTableWriter2.insert(tb, pErrorInfo);
-            mutithreadTableWriter3.insert(tb, pErrorInfo);
+            mutithreadTableWriter1.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter2.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter3.insertUnwrittenData(tb, pErrorInfo);
         }
         for (int n = 0; n < 8; n++) {
             for (int i = 0; i < 10000; i++) {
@@ -3760,11 +3750,11 @@ public  class MultithreadedTableWriterTest implements Runnable {
         writeData(1, tb);
         writeData(2, tb);
         for (int i = 0; i < 10; i++) {
-            mutithreadTableWriter1.insert(tb, pErrorInfo);
-            mutithreadTableWriter2.insert(tb, pErrorInfo);
-            mutithreadTableWriter3.insert(tb, pErrorInfo);
-            mutithreadTableWriter4.insert(tb, pErrorInfo);
-            mutithreadTableWriter5.insert(tb, pErrorInfo);
+            mutithreadTableWriter1.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter2.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter3.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter4.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter5.insertUnwrittenData(tb, pErrorInfo);
         }
         for (int j = 0; j < 10; j++) {
             for (int i = 0; i < insertTime; i++) {
@@ -3794,31 +3784,30 @@ public  class MultithreadedTableWriterTest implements Runnable {
         checkData(ex, bt3);
         checkData(ex, bt4);
         checkData(ex, bt5);
-        MultithreadedTableWriter.Status status = new MultithreadedTableWriter.Status();
-        mutithreadTableWriter1.getStatus(status);
+        MultithreadedTableWriter.Status status =  mutithreadTableWriter1.getStatus();
         assertFalse(status.isExiting);
         mutithreadTableWriter1.waitForThreadCompletion();
-        mutithreadTableWriter1.getStatus(status);
+        status =  mutithreadTableWriter1.getStatus();
         assertTrue(status.isExiting);
-        mutithreadTableWriter2.getStatus(status);
+        status =  mutithreadTableWriter2.getStatus();
         assertFalse(status.isExiting);
         mutithreadTableWriter2.waitForThreadCompletion();
-        mutithreadTableWriter2.getStatus(status);
+        status =  mutithreadTableWriter2.getStatus();
         assertTrue(status.isExiting);
-        mutithreadTableWriter3.getStatus(status);
+        status =  mutithreadTableWriter3.getStatus();
         assertFalse(status.isExiting);
         mutithreadTableWriter3.waitForThreadCompletion();
-        mutithreadTableWriter3.getStatus(status);
+        status =  mutithreadTableWriter3.getStatus();
         assertTrue(status.isExiting);
-        mutithreadTableWriter4.getStatus(status);
+        status =  mutithreadTableWriter4.getStatus();
         assertFalse(status.isExiting);
         mutithreadTableWriter4.waitForThreadCompletion();
-        mutithreadTableWriter4.getStatus(status);
+        status =  mutithreadTableWriter4.getStatus();
         assertTrue(status.isExiting);
-        mutithreadTableWriter5.getStatus(status);
+        status =  mutithreadTableWriter5.getStatus();
         assertFalse(status.isExiting);
         mutithreadTableWriter5.waitForThreadCompletion();
-        mutithreadTableWriter5.getStatus(status);
+        status =  mutithreadTableWriter5.getStatus();
         assertTrue(status.isExiting);
     }
 
@@ -3858,11 +3847,11 @@ public  class MultithreadedTableWriterTest implements Runnable {
         writeData(1, tb);
         writeData(2, tb);
         for (int i = 0; i < 10; i++) {
-            mutithreadTableWriter1.insert(tb, pErrorInfo);
-            mutithreadTableWriter2.insert(tb, pErrorInfo);
-            mutithreadTableWriter3.insert(tb, pErrorInfo);
-            mutithreadTableWriter4.insert(tb, pErrorInfo);
-            mutithreadTableWriter5.insert(tb, pErrorInfo);
+            mutithreadTableWriter1.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter2.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter3.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter4.insertUnwrittenData(tb, pErrorInfo);
+            mutithreadTableWriter5.insertUnwrittenData(tb, pErrorInfo);
         }
         for (int n = 0; n < 10; n++) {
             for (int i = 0; i < 10000; i++) {
@@ -3939,11 +3928,11 @@ public  class MultithreadedTableWriterTest implements Runnable {
             conn.run("tableInsert{t1}", row);
             tb.add(row);
         }
-        mutithreadTableWriter1.insert(tb,pErrorInfo);
-        mutithreadTableWriter2.insert(tb,pErrorInfo);
-        mutithreadTableWriter3.insert(tb,pErrorInfo);
-        mutithreadTableWriter4.insert(tb,pErrorInfo);
-        mutithreadTableWriter5.insert(tb,pErrorInfo);
+        mutithreadTableWriter1.insertUnwrittenData(tb, pErrorInfo);
+        mutithreadTableWriter2.insertUnwrittenData(tb, pErrorInfo);
+        mutithreadTableWriter3.insertUnwrittenData(tb, pErrorInfo);
+        mutithreadTableWriter4.insertUnwrittenData(tb, pErrorInfo);
+        mutithreadTableWriter5.insertUnwrittenData(tb, pErrorInfo);
         //Thread.sleep(2000);
         mutithreadTableWriter1.waitForThreadCompletion();
         mutithreadTableWriter2.waitForThreadCompletion();
