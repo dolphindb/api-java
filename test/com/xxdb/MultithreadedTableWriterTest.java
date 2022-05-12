@@ -5,6 +5,7 @@ import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
+import jdk.net.SocketFlow;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -94,100 +95,121 @@ public  class MultithreadedTableWriterTest implements Runnable {
      * @throws Exception
      */
 
-    @Test(expected = Exception.class)
+    @Test
     public void test_MultithreadedTableWriter_host_wrong() throws Exception {
 
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter("192.178.1.321", PORT, "admin", "123456",
+        try{
+              mutithreadTableWriter_ = new MultithreadedTableWriter("192.178.1.321", PORT, "admin", "123456",
                 "t1", "", false, false, null, 10000, 1,
                 5, "date");
+        }catch (Exception e) {
+            assertEquals("192.178.1.321",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
-
     }
 
-    @Test(expected = ConnectException.class)
+    @Test//(expected = ConnectException.class)
     public void test_MultithreadedTableWriter_port_wrong() throws Exception {
 
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, 0, "admin", "123456",
+        try {
+             mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, 0, "admin", "123456",
                 "t1", "", false, false, null, 10000, 1,
                 5, "date");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        }catch (Exception e) {
+            assertEquals("拒绝连接 (Connection refused)",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void test_MultithreadedTableWriter_userid_wrong() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
                 "share t as t1;");
         conn.run(sb.toString());
+        try{
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "s", "123456",
                 "t1", "", false, false, null, 10000, 1,
                 5, "date");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        }catch (Exception e) {
+            assertEquals("Server response: 'The user name or password is incorrect.' function: 'login'",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void test_MultithreadedTableWriter_pwd_wrong() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
                 "share t as t1;");
         conn.run(sb.toString());
+        try{
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "12356",
                 "t1", "", false, false, null, 10000, 1,
                 5, "date");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        }catch (Exception e) {
+            assertEquals("Server response: 'The user name or password is incorrect.' function: 'login'",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void test_MultithreadedTableWriter_memory_dbname_wrong() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
                 "share t as t1;");
         conn.run(sb.toString());
+        try {
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "tt", "", false, false, null, 10000, 1,
                 5, "date");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        }catch (Exception e) {
+            assertEquals("Server response: 'Syntax Error: [line #1] Cannot recognize the token tt' script: 'schema(tt)'",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void test_MultithreadedTableWriter_memory_tbname_wrong() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
                 "share t as t1;");
         conn.run(sb.toString());
+        try {
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "t1", "t1", false, false, null, 10000, 1,
                 5, "date");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        }catch (Exception e) {
+            assertEquals("Server response: 'table file does not exist: t1/t1.tbl' script: 'schema(loadTable(\"t1\",\"t1\"))'",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void test_MultithreadedTableWriter_memory_dnname_null() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false, null, 10000, 1,
-                5, "date");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    "", "t1", false, false, null, 10000, 1,
+                    5, "date");
+        }catch (Exception e) {
+            assertEquals("Server response: 'table file does not exist: /t1.tbl' script: 'schema(loadTable(\"\",\"t1\"))'",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void test_MultithreadedTableWriter_dfs_tbname_wrong() throws Exception {
         StringBuilder sb = new StringBuilder();
         String dbName = "dfs://test_MultithreadedTableWriter_pt";
@@ -199,13 +221,16 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t=table(1:0, `sym`tradeDate`tradeTime`tradePrice`vwap`volume`valueTrade, [SYMBOL, DATE, TIME, DOUBLE, DOUBLE, INT, DOUBLE])\n" +
                 "\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"tradeDate\"])");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+        try {
+                mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 dbName, "t1", false, false, null, 10000, 1,
                 5, "date");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        }catch (Exception e) {
+            assertEquals("Server response: 'getFileBlocksMeta on path '/test_MultithreadedTableWriter_pt/t1.tbl' failed, reason: path does not exist' script: 'schema(loadTable(\"dfs://test_MultithreadedTableWriter_pt\",\"t1\"))'",e.getMessage());
+        }
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void test_MultithreadedTableWriter_dfs_dbname_wrong() throws Exception {
         StringBuilder sb = new StringBuilder();
         String dbName = "dfs://test_MultithreadedTableWriter_pt";
@@ -217,10 +242,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t=table(1:0, `sym`tradeDate`tradeTime`tradePrice`vwap`volume`valueTrade, [SYMBOL, DATE, TIME, DOUBLE, DOUBLE, INT, DOUBLE])\n" +
                 "\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"tradeDate\"])");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+        try {
+                mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "s", "pt", false, false, null, 10000, 1,
                 5, "tradeDate");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        }catch (Exception e) {
+            assertEquals("Server response: 'table file does not exist: s/pt.tbl' script: 'schema(loadTable(\"s\",\"pt\"))'",e.getMessage());
+        }
     }
 
     @Test
@@ -248,7 +276,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
         mutithreadTableWriter_.waitForThreadCompletion();
     }
-
 
 
 
@@ -341,7 +368,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void test_MultithreadedTableWriter_batchsize_Negtive() throws Exception {
         StringBuilder sb = new StringBuilder();
         String dbName = "dfs://test_MultithreadedTableWriter_pt";
@@ -353,13 +380,16 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t=table(1:0, `sym`tradeDate`tradeTime`tradePrice`vwap`volume`valueTrade, [SYMBOL, DATE, TIME, DOUBLE, DOUBLE, INT, DOUBLE])\n" +
                 "\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"tradeDate\"])");
         conn.run(sb.toString());
+        try{
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 dbName, "pt", false, false, null, -10000, 1,
                 5, "tradeDate");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        }catch (Exception e){
+            assertEquals("The parameter batchSize must be greater than or equal to 1.",e.getMessage());
+        }
     }
 
-    @Test(expected = Exception.class)
+    @Test//(expected = Exception.class)
     public void test_MultithreadedTableWriter_batchsize_0() throws Exception {
         StringBuilder sb = new StringBuilder();
         String dbName = "dfs://test_MultithreadedTableWriter_pt";
@@ -371,13 +401,16 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t=table(1:0, `sym`tradeDate`tradeTime`tradePrice`vwap`volume`valueTrade, [SYMBOL, DATE, TIME, DOUBLE, DOUBLE, INT, DOUBLE])\n" +
                 "\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"tradeDate\"])");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                dbName, "pt", false, false, null, 0, 1,
-                5, "tradeDate");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    dbName, "pt", false, false, null, 0, 1,
+                    5, "tradeDate");
+        }catch (Exception e){
+            assertEquals("The parameter batchSize must be greater than or equal to 1.",e.getMessage());
+        }
     }
 
-    @Test(expected = Exception.class)
+    @Test//(expected = Exception.class)
     public void test_MultithreadedTableWriter_throttle_Negtive() throws Exception {
         StringBuilder sb = new StringBuilder();
         String dbName = "dfs://test_MultithreadedTableWriter_pt";
@@ -389,56 +422,65 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t=table(1:0, `sym`tradeDate`tradeTime`tradePrice`vwap`volume`valueTrade, [SYMBOL, DATE, TIME, DOUBLE, DOUBLE, INT, DOUBLE])\n" +
                 "\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"tradeDate\"])");
         conn.run(sb.toString());
+        try {
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 dbName, "pt", false, false, null, 10, -10,
                 5, "tradeDate");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        }catch (Exception e){
+            assertEquals("The parameter throttle must be greater than or equal to 0.",e.getMessage());
+        }
     }
 
 
-    @Test(expected = Exception.class)
+    @Test//(expected = Exception.class)
     public void test_MultithreadedTableWriter_threadcount_0() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false, null, 10000, 1,
-                0, "date");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    "t1", "", false, false, null, 10000, 1,
+                    0, "date");
+        }catch (Exception e){
+            assertEquals("The parameter threadCount must be greater than or equal to 1.",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
-
     }
 
-    @Test(expected = Exception.class)
+    @Test//(expected = Exception.class)
     public void test_MultithreadedTableWriter_threadcount_Negtive() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false, null, 10000, 1,
-                -10, "date");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    "t1", "", false, false, null, 10000, 1,
+                    -10, "date");
+        }catch (Exception e){
+            assertEquals("The parameter threadCount must be greater than or equal to 1.",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
-
     }
 
-    @Test(expected = Exception.class)
+    @Test//(expected = Exception.class)
     public void test_MultithreadedTableWriter_partitioncol_null() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false, null, 10000, 1,
-                10, "");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    "t1", "", false, false, null, 10000, 1,
+                    10, "");
+        }catch (Exception e){
+            assertEquals("The parameter partitionCol must be specified when threadCount is greater than 1.",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
-
     }
 
-    @Test(expected = Exception.class)
+    @Test//(expected = Exception.class)
     public void test_MultithreadedTableWriter_partcolname_wrong() throws Exception {
         StringBuilder sb = new StringBuilder();
         String dbName = "dfs://test_MultithreadedTableWriter_pt";
@@ -450,13 +492,16 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t=table(1:0, `sym`tradeDate`tradeTime`tradePrice`vwap`volume`valueTrade, [SYMBOL, DATE, TIME, DOUBLE, DOUBLE, INT, DOUBLE])\n" +
                 "\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"tradeDate\"])");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                dbName, "pt", false, false, null, 10, 1,
-                5, "Date");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    dbName, "pt", false, false, null, 10, 1,
+                    5, "Date");
+        }catch (Exception e){
+            assertEquals("The parameter partionCol must be the partitioning column tradeDate in the table.",e.getMessage());
+        }
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void test_MultithreadedTableWriter_partcolname_not_pertitioncol() throws Exception {
         StringBuilder sb = new StringBuilder();
         String dbName = "dfs://test_MultithreadedTableWriter_pt";
@@ -468,10 +513,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t=table(1:0, `sym`tradeDate`tradeTime`tradePrice`vwap`volume`valueTrade, [SYMBOL, DATE, TIME, DOUBLE, DOUBLE, INT, DOUBLE])\n" +
                 "\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"tradeDate\"])");
         conn.run(sb.toString());
+        try{
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 dbName, "pt", false, false, null, 10, 1,
                 5, "vwap");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        }catch (Exception e){
+            assertEquals("The parameter partionCol must be the partitioning column tradeDate in the table.",e.getMessage());
+        }
     }
 
     @Test
@@ -521,33 +569,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     }
 
-    /**
-     * failed operations
-     */
-    @Test
-    public void test_insert_cols_diffwith_table() throws Exception {
-        ErrorCodeInfo pErrorInfo = new ErrorCodeInfo();
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
-                "share t as t1;");
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false, null, 1, 1,
-                1, "date");
-        Boolean b = mutithreadTableWriter_.insert(pErrorInfo, 1);
-        assertEquals(false, b);
-        assertEquals("Column counts don't match.",pErrorInfo.errorInfo);
-        b = mutithreadTableWriter_.insert(pErrorInfo, 1, 1, 1);
-        assertEquals(false, b);
-        assertEquals("Column counts don't match.",pErrorInfo.errorInfo);
-        BasicTable bt = (BasicTable) conn.run("select * from t1;");
-        assertEquals(0, bt.rows());
-        List<List<Entity>> unwrite = new ArrayList<>();
-        mutithreadTableWriter_.getUnwrittenData(unwrite);
-        assertEquals(0,unwrite.size());
-        mutithreadTableWriter_.waitForThreadCompletion();
-        conn.run("undef(`t1,SHARED)");
-    }
 
     @Test
     public void test_insert_allnull() throws Exception {
@@ -594,6 +615,34 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("undef(`t1,SHARED)");
     }
 
+    /**
+     * failed operations
+     */
+    @Test
+    public void test_insert_cols_diffwith_table() throws Exception {
+        ErrorCodeInfo pErrorInfo = new ErrorCodeInfo();
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "t1", "", false, false, null, 1, 1,
+                1, "date");
+        Boolean b = mutithreadTableWriter_.insert(pErrorInfo, 1);
+        assertEquals(false, b);
+        assertEquals("Column counts don't match.",pErrorInfo.errorInfo);
+       // assertEquals(1,pErrorInfo.errorCode);
+        b = mutithreadTableWriter_.insert(pErrorInfo, 1, 1, 1);
+        assertEquals(false, b);
+        assertEquals("Column counts don't match.",pErrorInfo.errorInfo);
+        BasicTable bt = (BasicTable) conn.run("select * from t1;");
+        assertEquals(0, bt.rows());
+        List<List<Entity>> unwrite = new ArrayList<>();
+        mutithreadTableWriter_.getUnwrittenData(unwrite);
+        assertEquals(0,unwrite.size());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        conn.run("undef(`t1,SHARED)");
+    }
 
     @Test
     public void test_insert_type_diffwith_table() throws Exception {
@@ -608,10 +657,15 @@ public  class MultithreadedTableWriterTest implements Runnable {
         boolean b = mutithreadTableWriter_.insert(pErrorInfo, 1, "2012.01.02");
         assertEquals(false, b);
         assertEquals("Invalid object error java.lang.RuntimeException: Failed to insert data. Cannot convert String to DT_DATE.",pErrorInfo.errorInfo);
+        MultithreadedTableWriter.Status status = new MultithreadedTableWriter.Status();
+        mutithreadTableWriter_.getStatus(status);
+     //   assertEquals(1,status.errorCode);
+        assertEquals("",status.errorInfo.toString());
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
         assertEquals(0, bt.rows());
         mutithreadTableWriter_.waitForThreadCompletion();
         conn.run("undef(`t1,SHARED)");
+
     }
 
     public void writeData(int num, List<List<Entity>> tb) {
@@ -703,11 +757,11 @@ public  class MultithreadedTableWriterTest implements Runnable {
         mutithreadTableWriter_.getStatus(status);
         assertFalse(status.isExiting);
         assertEquals(0, status.sendFailedRows);
+        assertEquals(null, status.errorInfo.toString());
         mutithreadTableWriter_.waitForThreadCompletion();
         mutithreadTableWriter_.getStatus(status);
         assertEquals(0, status.unsentRows);
         assertEquals(15, status.sentRows);
-        ;
         assertTrue(status.isExiting);
         System.out.println(status.threadStatusList.get(0).toString());
         conn.run("undef(`t1,SHARED)");
@@ -813,6 +867,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertTrue(status1.sendFailedRows>0);
         assertEquals(10000-status1.sendFailedRows, status1.unsentRows);
         assertEquals(0, status1.sentRows);
+        assertEquals("", status.errorInfo.toString());
+
         conn.run("undef(`t1,SHARED)");
 
     }
@@ -927,7 +983,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public  void test_insert_blob_delta()throws Exception {
         ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
         StringBuilder sb = new StringBuilder();
@@ -935,14 +991,17 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "[INT,BLOB]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false,null,1, 1,
-                1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    "t1", "", false, false, null, 1, 1,
+                    1, "int", new int[]{Vector.COMPRESS_DELTA, Vector.COMPRESS_DELTA});
+        }catch (Exception e){
+            assertEquals("Compression Failed: only support integral and temporal data, not support DT_BLOB",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public  void test_insert_bool_delta()throws Exception {
         ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
         StringBuilder sb = new StringBuilder();
@@ -950,13 +1009,17 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "[INT,BOOL]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+        try{
+                mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "t1", "", false, false,null,1, 1,
                 1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
+        }catch (Exception e){
+            assertEquals("Compression Failed: only support integral and temporal data, not support DT_BOOL",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public  void test_insert_char_delta()throws Exception {
         ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
         StringBuilder sb = new StringBuilder();
@@ -964,13 +1027,17 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "[INT,CHAR]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+        try{
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "t1", "", false, false,null,1, 1,
                 1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
+        }catch (Exception e){
+            assertEquals("Compression Failed: only support integral and temporal data, not support DT_BYTE",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public  void test_insert_float_delta()throws Exception {
         ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
         StringBuilder sb = new StringBuilder();
@@ -978,14 +1045,17 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "[INT,FLOAT]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false,null,1, 1,
-                1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try{
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    "t1", "", false, false,null,1, 1,
+                    1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
+        }catch (Exception e){
+            assertEquals("Compression Failed: only support integral and temporal data, not support DT_FLOAT",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public  void test_insert_double_delta()throws Exception {
         ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
         StringBuilder sb = new StringBuilder();
@@ -993,14 +1063,17 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "[INT,DOUBLE]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false,null,1, 1,
-                1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try{
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    "t1", "", false, false,null,1, 1,
+                    1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
+        }catch (Exception e){
+            assertEquals("Compression Failed: only support integral and temporal data, not support DT_DOUBLE",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public  void test_insert_symbol_delta()throws Exception {
         ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
         StringBuilder sb = new StringBuilder();
@@ -1008,14 +1081,17 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "[INT,SYMBOL]);" +
                 "share t as t1;");
         conn.run(sb.toString());
+        try{
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "t1", "", false, false,null,1, 1,
                 1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
-        mutithreadTableWriter_.waitForThreadCompletion();
+        }catch (Exception e){
+            assertEquals("Compression Failed: only support integral and temporal data, not support DT_SYMBOL",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public  void test_insert_string_delta()throws Exception {
         ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
         StringBuilder sb = new StringBuilder();
@@ -1023,25 +1099,28 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "[INT,STRING]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false,null,1, 1,
-                1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
-
-        for (int i=0;i<5;i++) {
-            boolean b = mutithreadTableWriter_.insert(pErrorInfo, 1, "fd");
-            assertEquals(true, b);
+        try{
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    "t1", "", false, false,null,1, 1,
+                    1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
+        }catch (Exception e){
+            assertEquals("Compression Failed: only support integral and temporal data, not support DT_STRING",e.getMessage());
         }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(5,bt.rows());
-        for (int i=0;i<5;i++) {
-            assertEquals("fd", bt.getColumn("delta").get(i).getString());
-        }
+//        for (int i=0;i<5;i++) {
+//            boolean b = mutithreadTableWriter_.insert(pErrorInfo, 1, "fd");
+//            assertEquals(true, b);
+//        }
+//        mutithreadTableWriter_.waitForThreadCompletion();
+//        BasicTable bt= (BasicTable) conn.run("select * from t1;");
+//        assertEquals(5,bt.rows());
+//        for (int i=0;i<5;i++) {
+//            assertEquals("fd", bt.getColumn("delta").get(i).getString());
+//        }
         conn.run("undef(`t1,SHARED)");
     }
 
 
-    @Test(expected = Exception.class)
+    @Test
     public  void test_insert_UUID_delta()throws Exception {
         ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
         StringBuilder sb = new StringBuilder();
@@ -1049,14 +1128,17 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "[INT,UUID]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false,null,1, 1,
-                1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try{
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    "t1", "", false, false,null,1, 1,
+                    1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
+        }catch (Exception e){
+            assertEquals("Compression Failed: only support integral and temporal data, not support DT_UUID",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public  void test_insert_IPADDR_delta()throws Exception {
         ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
         StringBuilder sb = new StringBuilder();
@@ -1064,14 +1146,17 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "[INT,IPADDR]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false,null,1, 1,
-                1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try{
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    "t1", "", false, false,null,1, 1,
+                    1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
+        }catch (Exception e){
+            assertEquals("Compression Failed: only support integral and temporal data, not support DT_IPADDR",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public  void test_insert_INT128_delta()throws Exception {
         ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
         StringBuilder sb = new StringBuilder();
@@ -1079,10 +1164,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "[INT,INT128]);" +
                 "share t as t1;");
         conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "t1", "", false, false,null,1, 1,
-                1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try{
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    "t1", "", false, false,null,1, 1,
+                    1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
+        }catch (Exception e){
+            assertEquals("Compression Failed: only support integral and temporal data, not support DT_INT128",e.getMessage());
+        }
         conn.run("undef(`t1,SHARED)");
     }
 
@@ -2177,7 +2265,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         mutithreadTableWriter_.waitForThreadCompletion();
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test//(expected = RuntimeException.class)
     public void test_insert_dt_multipleThreadCount() throws Exception {
         ErrorCodeInfo pErrorInfo = new ErrorCodeInfo();
         String dbName = "dfs://test_MultithreadedTableWriter";
@@ -2189,13 +2277,17 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t=table(1:0, `sym`tradeDate`tradePrice`vwap`volume`valueTrade, [SYMBOL, DATETIME, DOUBLE, DOUBLE, INT, DOUBLE])\n ;share t as t1;" +
                 "\tcreateTable(dbHandle=db, table=t, tableName=`pt)\n";
         conn.run(script);
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                dbName, "pt", false, false, null, 10, 1,
-                10, "tradeDate");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    dbName, "pt", false, false, null, 10, 1,
+                    10, "tradeDate");
+        }catch (Exception ex){
+            assertEquals("The parameter threadCount must be 1 for a dimension table.",ex.getMessage());
+        }
+        //mutithreadTableWriter_.waitForThreadCompletion();
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test//(expected = RuntimeException.class)
     public void test_insert_tsdb_dt_multipleThreadCount() throws Exception {
         ErrorCodeInfo pErrorInfo = new ErrorCodeInfo();
         String dbName = "dfs://test_MultithreadedTableWriter";
@@ -2207,10 +2299,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t=table(1:0, `sym`tradeDate`tradePrice`vwap`volume`valueTrade, [SYMBOL, DATETIME, DOUBLE, DOUBLE, INT, DOUBLE])\n ;share t as t1;" +
                 "\tcreateTable(dbHandle=db, table=t, tableName=`pt,sortColumns=`sym)\n";
         conn.run(script);
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                dbName, "pt", false, false, null, 10, 1,
-                10, "tradeDate");
-        mutithreadTableWriter_.waitForThreadCompletion();
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                    dbName, "pt", false, false, null, 10, 1,
+                    10, "tradeDate");
+        }catch (Exception ex){
+            assertEquals("The parameter threadCount must be 1 for a dimension table.",ex.getMessage());
+        }
     }
 
     @Test
