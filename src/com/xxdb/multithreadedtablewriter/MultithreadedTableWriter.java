@@ -253,6 +253,7 @@ public class MultithreadedTableWriter {
             status.unsentRows = writeQueue_.size();
             status.sendFailedRows = failedQueue_.size();
         }
+
         boolean isExiting(){
             return exit_ || tableWriter_.hasError_;
         }
@@ -444,7 +445,9 @@ public class MultithreadedTableWriter {
             pConn = null;
         }
     }
-    public void getUnwrittenData(List<List<Entity>> unwrittenData) throws InterruptedException{
+
+    public List<List<Entity>> getUnwrittenData() throws InterruptedException{
+        List<List<Entity>> unwrittenData = new ArrayList<>();
         for(WriterThread writeThread : threads_){
             synchronized (writeThread.busyLock_) {
                 synchronized (writeThread.failedQueue_) {
@@ -457,8 +460,11 @@ public class MultithreadedTableWriter {
                 }
             }
         }
+        return unwrittenData;
     }
-    public void getStatus(Status status){
+
+    public Status getStatus(){
+        Status status = new Status();
         status.errorInfo=errorCodeInfo_;
         status.sendFailedRows=status.sentRows=status.unsentRows=0;
         status.isExiting=isExiting();
@@ -471,7 +477,9 @@ public class MultithreadedTableWriter {
             status.unsentRows += threadStatus.unsentRows;
             status.sendFailedRows += threadStatus.sendFailedRows;
         }
+        return status;
     }
+
     public void waitForThreadCompletion() throws InterruptedException{
         for(WriterThread one:threads_){
             one.exit();
@@ -486,7 +494,7 @@ public class MultithreadedTableWriter {
         }
         setError(ErrorCodeInfo.Code.EC_None,"");
     }
-    public boolean insert(List<List<Entity>> records,ErrorCodeInfo pErrorInfo){
+    public boolean insertUnwrittenData(List<List<Entity>> records,ErrorCodeInfo pErrorInfo){
         if(threads_.size() > 1){
             if(isPartionedTable_){
                 Vector pvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(partitionColumnIdx_),records.size());
