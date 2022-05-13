@@ -280,7 +280,8 @@ public class MultithreadedTableWriter {
     private String tableName_;
     private int batchSize_;
     private int throttleMilsecond_;
-    private boolean isPartionedTable_, hasError_;
+    private boolean isPartionedTable_;
+    private boolean hasError_;
     private String partitionedColName_;
     private List<String> colNames_=new ArrayList<>(),colTypeString_=new ArrayList<>();
     private List<Entity.DATA_TYPE> colTypes_=new ArrayList<>();
@@ -494,7 +495,7 @@ public class MultithreadedTableWriter {
         }
         setError(ErrorCodeInfo.Code.EC_None,"");
     }
-    public boolean insertUnwrittenData(List<List<Entity>> records,ErrorCodeInfo pErrorInfo){
+    public ErrorCodeInfo insertUnwrittenData(List<List<Entity>> records){
         if(threads_.size() > 1){
             if(isPartionedTable_){
                 Vector pvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(partitionColumnIdx_),records.size());
@@ -502,8 +503,7 @@ public class MultithreadedTableWriter {
                 try {
                     for (List<Entity> row : records) {
                         if (row.size() != colTypes_.size()) {
-                            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Column counts don't match.");
-                            return false;
+                            return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter, "Column counts don't match.");
                         }
                         if (row.get(partitionColumnIdx_) != null) {
                             Scalar scalar=(Scalar) row.get(partitionColumnIdx_);
@@ -518,15 +518,12 @@ public class MultithreadedTableWriter {
                     }
                 }catch (Exception e){
                     e.printStackTrace();
-                    pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Row in records " + rowindex +
+                    return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter, "Row in records " + rowindex +
                             " mismatch type " + colTypes_.get(partitionColumnIdx_));
-                    return false;
                 }
                 List<Integer> threadindexes = partitionDomain_.getPartitionKeys(pvector);
                 for(int row = 0; row < threadindexes.size(); row++){
-                    if(insertThreadWrite(threadindexes.get(row), records.get(row), pErrorInfo) == false){
-                        return false;
-                    }
+                    insertThreadWrite(threadindexes.get(row), records.get(row));
                 }
             }else{
                 Vector partionvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(threadByColIndexForNonPartion_),records.size());
@@ -534,8 +531,7 @@ public class MultithreadedTableWriter {
                 try{
                     for(List<Entity> row : records) {
                         if (row.size() != colTypes_.size()) {
-                            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Column counts don't match.");
-                            return false;
+                            return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter, "Column counts don't match.");
                         }
                         Scalar scalar=(Scalar) row.get(threadByColIndexForNonPartion_);
                         if(scalar!=null)
@@ -546,37 +542,28 @@ public class MultithreadedTableWriter {
                     }
                 }catch (Exception e){
                     e.printStackTrace();
-                    pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Row in records " + rowindex +
+                    return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter, "Row in records " + rowindex +
                             " mismatch type " + colTypes_.get(partitionColumnIdx_));
-                    return false;
                 }
                 int threadindex;
                 for(rowindex=0;rowindex<records.size();rowindex++){
                     threadindex=partionvector.hashBucket(rowindex,threads_.size());
-                    if(insertThreadWrite(threadindex, records.get(rowindex), pErrorInfo) == false){
-                        return false;
-                    }
+                    insertThreadWrite(threadindex, records.get(rowindex));
                 }
             }
         }else{
             for(List<Entity> row : records){
-                if(insertThreadWrite(0, row, pErrorInfo) == false){
-                    return false;
-                }
+                insertThreadWrite(0, row);
             }
         }
-        return true;
+        return new ErrorCodeInfo();
     }
-    private boolean insertThreadWrite(int threadhashkey, List<Entity> row, ErrorCodeInfo pErrorInfo){
+    private void insertThreadWrite(int threadhashkey, List<Entity> row){
         if(threadhashkey < 0){
             //logger_.warning("add invalid hash="+threadhashkey);
             threadhashkey = 0;
             //pErrorInfo->set(ErrorCodeInfo::EC_InvalidColumnType, "Failed to get thread by coluname.");
             //return false;
-        }
-        if(isExiting()){
-            pErrorInfo.set(this.errorCodeInfo_);
-            return false;
         }
         int threadIndex = threadhashkey % threads_.size();
         WriterThread writerThread=threads_.get(threadIndex);
@@ -585,17 +572,13 @@ public class MultithreadedTableWriter {
             //logger_.info(writerThread.writeThread_.getId()+" size "+writerThread.writeQueue_.size());
             writerThread.writeQueue_.notify();
         }
-        return true;
     }
-    public boolean insert(ErrorCodeInfo pErrorInfo, Object... args){
+    public ErrorCodeInfo insert(Object... args){
         if(isExiting()){
-            pErrorInfo.set(errorCodeInfo_);
-            return false;
+            return new ErrorCodeInfo(errorCodeInfo_);
         }
         if(args.length!=colTypes_.size()){
-            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter,"Column counts don't match.");
-            this.errorCodeInfo_ = pErrorInfo;
-            return false;
+            return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter,"Column counts don't match.");
         }
         try {
             List<Entity> prow=new ArrayList<>();
@@ -608,15 +591,13 @@ public class MultithreadedTableWriter {
                 isAllNull = false;
                 entity = BasicEntityFactory.createScalar(dataType, one);
                 if (entity == null) {
-                    pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidObject, "Data conversion error: " + dataType);
-                    return false;
+                    return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, "Data conversion error: " + dataType);
                 }
                 prow.add(entity);
                 colindex++;
             }
             if(isAllNull){
-                pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidObject, "Can't insert a Null row.");
-                return false;
+                return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, "Can't insert a Null row.");
             }
             int threadindex;
             if(threads_.size() > 1){
@@ -628,8 +609,7 @@ public class MultithreadedTableWriter {
                         if(indexes.isEmpty()==false){
                             threadindex = indexes.get(0);
                         }else{
-                            pErrorInfo.set(ErrorCodeInfo.Code.EC_Server,"Failed to obtain the partition scheme.");
-                            return false;
+                            return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_Server,"Failed to obtain the partition scheme.");
                         }
                     }
                     else {
@@ -648,11 +628,11 @@ public class MultithreadedTableWriter {
             }else{
                 threadindex = 0;
             }
-            return insertThreadWrite(threadindex, prow, pErrorInfo);
+            insertThreadWrite(threadindex, prow);
+            return new ErrorCodeInfo();
         }catch (Exception e){
             e.printStackTrace();
-            pErrorInfo.set(ErrorCodeInfo.Code.EC_InvalidParameter, "Invalid object error " + e);
-            return false;
+            return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, "Invalid object error " + e);
         }
     }
     private boolean isExiting() { return hasError_; }
