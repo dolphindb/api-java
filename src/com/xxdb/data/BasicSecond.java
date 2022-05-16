@@ -16,7 +16,6 @@ import com.xxdb.io.ExtendedDataInput;
  */
 
 public class BasicSecond extends BasicInt{
-	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm:ss");
 
 	public BasicSecond(LocalTime value){
 		super(Utils.countSeconds(value));
@@ -62,7 +61,7 @@ public class BasicSecond extends BasicInt{
 		if(isNull())
 			return "";
 		else
-			return getSecond().format(format);
+			return getSecond().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
 	}
 	@Override
 	public String getJsonString() {

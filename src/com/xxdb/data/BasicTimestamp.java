@@ -15,7 +15,6 @@ import com.xxdb.io.ExtendedDataInput;
  */
 
 public class BasicTimestamp extends BasicLong{
-	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSS");
 	
 	public BasicTimestamp(LocalDateTime value){
 		super(Utils.countMilliseconds(value));
@@ -59,7 +58,7 @@ public class BasicTimestamp extends BasicLong{
 		if(isNull())
 			return "";
 		else
-			return getTimestamp().format(format);
+			return getTimestamp().format(DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSS"));
 	}
 
 	@Override

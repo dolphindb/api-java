@@ -15,7 +15,6 @@ import com.xxdb.io.ExtendedDataInput;
  */
 
 public class BasicDateTime extends BasicInt{
-	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss");
 
 	public BasicDateTime(LocalDateTime value){
 		super(Utils.countSeconds(value));
@@ -60,7 +59,7 @@ public class BasicDateTime extends BasicInt{
 		if(isNull())
 			return "";
 		else
-			return getDateTime().format(format);
+			return getDateTime().format(DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss"));
 	}
 	@Override
 	public String getJsonString() {

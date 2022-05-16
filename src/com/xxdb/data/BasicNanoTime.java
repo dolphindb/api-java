@@ -14,7 +14,6 @@ import java.time.temporal.Temporal;
  */
 
 public class BasicNanoTime extends BasicLong{
-	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSSSSS");
 
 	public BasicNanoTime(LocalDateTime value){
 		super(Utils.countNanoseconds(value));
@@ -59,7 +58,7 @@ public class BasicNanoTime extends BasicLong{
 		if(isNull())
 			return "";
 		else
-			return getNanoTime().format(format);
+			return getNanoTime().format(DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSSSSS"));
 	}
 	@Override
 	public String getJsonString() {

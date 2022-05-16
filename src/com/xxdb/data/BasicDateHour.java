@@ -15,7 +15,6 @@ import com.xxdb.io.ExtendedDataInput;
  */
 
 public class BasicDateHour extends BasicInt {
-	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH");
 
 	public BasicDateHour(LocalDateTime value){
 		super(Utils.countHours(value));
@@ -60,7 +59,7 @@ public class BasicDateHour extends BasicInt {
 		if(isNull())
 			return "";
 		else
-			return getDateHour().format(format);
+			return getDateHour().format(DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH"));
 	}
 
 	@Override
