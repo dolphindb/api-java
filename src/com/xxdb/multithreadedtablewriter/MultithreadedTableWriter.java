@@ -290,7 +290,7 @@ public class MultithreadedTableWriter {
     private int threadByColIndexForNonPartion_;
     private int sentRowsAfterGc_;//manual start gc after sent some rows
     private List<WriterThread> threads_=new ArrayList<>();
-    private ErrorCodeInfo errorCodeInfo_;
+    private ErrorCodeInfo errorCodeInfo_ = new ErrorCodeInfo();
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
                                     boolean enableHighAvailability, String[] highAvailabilitySites,
