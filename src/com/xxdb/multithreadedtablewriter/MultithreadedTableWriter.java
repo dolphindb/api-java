@@ -25,14 +25,13 @@ public class MultithreadedTableWriter {
     };
     public static class Status extends ErrorCodeInfo{
         public boolean isExiting;
-        public ErrorCodeInfo errorInfo;
         public long sentRows, unsentRows, sendFailedRows;
         public List<ThreadStatus> threadStatusList=new ArrayList<>();
 
         public String toString(){
             StringBuilder sb = new StringBuilder();
-            sb.append("errorCode     : " + errorInfo.errorCode + "\n");
-            sb.append("errorInfo     : " + errorInfo.errorInfo + "\n");
+            sb.append("errorCode     : " + errorCode + "\n");
+            sb.append("errorInfo     : " + errorInfo + "\n");
             sb.append("isExiting     : " + isExiting + "\n");
             sb.append("sentRows      : " + sentRows + "\n");
             sb.append("unsentRows    : " + unsentRows + "\n");
@@ -466,14 +465,14 @@ public class MultithreadedTableWriter {
 
     public Status getStatus(){
         Status status = new Status();
-        status.errorInfo=errorCodeInfo_;
+        status.errorCode = errorCodeInfo_.errorCode;
+        status.errorInfo = errorCodeInfo_.errorInfo;
         status.sendFailedRows=status.sentRows=status.unsentRows=0;
         status.isExiting=isExiting();
         for(WriterThread writeThread : threads_){
             ThreadStatus threadStatus=new ThreadStatus();
             writeThread.getStatus(threadStatus);
             status.threadStatusList.add(threadStatus);
-
             status.sentRows += threadStatus.sentRows;
             status.unsentRows += threadStatus.unsentRows;
             status.sendFailedRows += threadStatus.sendFailedRows;
