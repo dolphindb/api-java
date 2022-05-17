@@ -495,6 +495,9 @@ public class MultithreadedTableWriter {
         setError(ErrorCodeInfo.Code.EC_None,"");
     }
     public ErrorCodeInfo insertUnwrittenData(List<List<Entity>> records){
+        if(isExiting()){
+            throw new RuntimeException("Thread is exiting. ");
+        }
         if(threads_.size() > 1){
             if(isPartionedTable_){
                 Vector pvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(partitionColumnIdx_),records.size());
@@ -574,7 +577,7 @@ public class MultithreadedTableWriter {
     }
     public ErrorCodeInfo insert(Object... args){
         if(isExiting()){
-            return new ErrorCodeInfo(errorCodeInfo_);
+            throw new RuntimeException("Thread is exiting. ");
         }
         if(args.length!=colTypes_.size()){
             return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter,"Column counts don't match.");
