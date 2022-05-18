@@ -63,6 +63,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("try{undef(`st3,SHARED)}catch(ex){}");
         conn.run("try{undef(`st4,SHARED)}catch(ex){}");
         conn.run("try{undef(`st5,SHARED)}catch(ex){}");
+        conn.run("try{undef(`ext1,SHARED)}catch(ex){}");
         conn.close();
     }
 
@@ -4442,7 +4443,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert("00000000-0004-e72c-0000-000000007eb1", "0:0:4:e72c::7eb1", "00000000000001c600000000000001c8");
             assertEquals("code= info=", pErrorInfo.toString());
         }
-        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert("00000000-0004-e72c-0000-000000007eb1", "0:0:4:e72c::7eb1");
+        mutithreadTableWriter_.insert("00000000-0004-e72c-0000-000000007eb1", "0:0:4:e72c::7eb1");
 
         for (int i = 0; i < 15; i++) {
             List<Entity> row = new ArrayList<>();
