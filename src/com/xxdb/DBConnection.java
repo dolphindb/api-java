@@ -551,10 +551,12 @@ public class DBConnection {
                 }
 
                 ServerExceptionState status = handleServerException(ex.getMessage(), null);
-                if (status == ServerExceptionState.NEW_LEADER)
+                if (status == ServerExceptionState.NEW_LEADER){
+                    System.out.println(ex.getMessage());
                     return run(script, listener, priority, parallelism);
-                else if (status == ServerExceptionState.WAIT) {
+                } else if (status == ServerExceptionState.WAIT) {
                     if (!HAReconnect) {
+                        System.out.println(ex.getMessage());
                         HAReconnect = true;
                         while (true) {
                             try {
@@ -567,11 +569,13 @@ public class DBConnection {
                     }
                     throw ex;
                 }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                    System.out.println(ex.getMessage());
                     if (switchToRandomAvailableSite())
                         return run(script, listener, priority, parallelism);
                     else
                         throw ex;
                 }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
+                    System.out.println(ex.getMessage());
                     try {
                         Thread.sleep(10000);
                     }catch (Exception e){
@@ -627,9 +631,9 @@ public class DBConnection {
             String msg = in.readLine();
             if (!msg.equals("OK")) {
                 ServerExceptionState status = handleServerException(msg, null);
-                if (status == ServerExceptionState.NEW_LEADER)
+                if (status == ServerExceptionState.NEW_LEADER){
                     return run(script, listener, priority, parallelism);
-                else if (status == ServerExceptionState.WAIT) {
+                } else if (status == ServerExceptionState.WAIT) {
                     if (!HAReconnect) {
                         HAReconnect = true;
                         while (true) {
@@ -685,10 +689,13 @@ public class DBConnection {
             }
         } catch (Exception ex) {
             ServerExceptionState status = handleServerException(ex.getMessage(), null);
-            if (status == ServerExceptionState.NEW_LEADER)
+            if (status == ServerExceptionState.NEW_LEADER){
+                System.out.println(ex.getMessage());
                 return run(script, listener, priority, parallelism);
+            }
             else if (status == ServerExceptionState.WAIT) {
                 if (!HAReconnect) {
+                    System.out.println(ex.getMessage());
                     HAReconnect = true;
                     while (true) {
                         try {
@@ -701,11 +708,13 @@ public class DBConnection {
                 }
                 throw ex;
             }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                System.out.println(ex.getMessage());
                 if (switchToRandomAvailableSite())
                     return run(script, listener, priority, parallelism);
                 else
                     throw ex;
             }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
+                System.out.println(ex.getMessage());
                 try {
                     Thread.sleep(10000);
                 }catch (Exception e){
@@ -810,10 +819,12 @@ public class DBConnection {
                 }
 
                 ServerExceptionState status = handleServerException(ex.getMessage(), null);
-                if (status == ServerExceptionState.NEW_LEADER)
+                if (status == ServerExceptionState.NEW_LEADER){
+                    System.out.println(ex.getMessage());
                     return run(function, arguments, priority, parallelism);
-                else if (status == ServerExceptionState.WAIT) {
+                } else if (status == ServerExceptionState.WAIT) {
                     if (!HAReconnect) {
+                        System.out.println(ex.getMessage());
                         HAReconnect = true;
                         while (true) {
                             try {
@@ -826,11 +837,13 @@ public class DBConnection {
                     }
                     throw ex;
                 }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                    System.out.println(ex.getMessage());
                     if (switchToRandomAvailableSite())
                         return run(function, arguments, priority, parallelism);
                     else
                         throw ex;
                 }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
+                    System.out.println(ex.getMessage());
                     try {
                         Thread.sleep(10000);
                     }catch (Exception e){
@@ -886,9 +899,9 @@ public class DBConnection {
             String msg = in.readLine();
             if (!msg.equals("OK")) {
                 ServerExceptionState status = handleServerException(msg, null);
-                if (status == ServerExceptionState.NEW_LEADER)
+                if (status == ServerExceptionState.NEW_LEADER){
                     return run(function, arguments, priority, parallelism);
-                else if (status == ServerExceptionState.WAIT) {
+                } else if (status == ServerExceptionState.WAIT) {
                     if (!HAReconnect) {
                         HAReconnect = true;
                         while (true) {
@@ -942,10 +955,13 @@ public class DBConnection {
             }
         } catch (Exception ex) {
             ServerExceptionState status = handleServerException(ex.getMessage(), null);
-            if (status == ServerExceptionState.NEW_LEADER)
+            if (status == ServerExceptionState.NEW_LEADER){
+                System.out.println(ex.getMessage());
                 return run(function, arguments, priority, parallelism);
+            }
             else if (status == ServerExceptionState.WAIT) {
                 if (!HAReconnect) {
+                    System.out.println(ex.getMessage());
                     HAReconnect = true;
                     while (true) {
                         try {
@@ -958,11 +974,13 @@ public class DBConnection {
                 }
                 throw ex;
             }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                System.out.println(ex.getMessage());
                 if (switchToRandomAvailableSite())
                     return run(function, arguments, priority, parallelism);
                 else
                     throw ex;
             }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
+                System.out.println(ex.getMessage());
                 try {
                     Thread.sleep(10000);
                 }catch (Exception e){
