@@ -22,8 +22,8 @@ public class tableAppenderTest {
     private static String dburl="dfs://tableAppenderTest";
     private static String tableName="testAppend";
     private static DBConnection conn;
-    private static String HOST="115.239.209.223";
-    private static int PORT = 28848;
+    private static String HOST="localhost";
+    private static int PORT = 8848;
     @Before
     public void setUp() throws IOException {
         conn = new DBConnection();

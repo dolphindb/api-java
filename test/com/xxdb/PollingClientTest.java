@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 
 public class PollingClientTest {
     public static DBConnection conn ;
-    public static String HOST = "192.168.1.132";
+    public static String HOST = "192.168.1.23";
     public static Integer PORT = 8848;
     public static PollingClient client;
     @BeforeClass
@@ -204,7 +204,7 @@ public class PollingClientTest {
                     continue;
                 } else if (msgs1.size() > 0) {
                     BasicTable t = (BasicTable) conn.run("t");
-                    assertEquals(5000, msgs1.size());
+                    assertEquals(10000, msgs1.size());
                   for (int k=0;k<msgs1.size();k++){
                       assertEquals(t.getColumn(0).get(k),msgs1.get(k).getEntity(0));
                       assertEquals(t.getColumn(1).get(k),msgs1.get(k).getEntity(1));

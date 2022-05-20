@@ -11,7 +11,7 @@ import java.util.*;
 import static org.junit.Assert.assertEquals;
 
 public class BasicArrayVectorTest {
-    private static final String HOST = "192.168.1.37";
+    private static final String HOST = "192.168.1.23";
     private static final Integer PORT = 8848;
 
     @Test(expected = Exception.class)
@@ -912,9 +912,8 @@ public class BasicArrayVectorTest {
     @Test
     public void testCompresstable_include_arrayvector()throws Exception {
         DBConnection conn = new DBConnection(false,false,true);
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
-                "\n" +
                 "s=array(INT[],0,10);\n" +
                 "for(i in 0:10000)\n" +
                 "{\n" +
