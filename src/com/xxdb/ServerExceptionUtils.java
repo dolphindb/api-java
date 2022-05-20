@@ -29,6 +29,12 @@ public class ServerExceptionUtils {
         return exMsg.indexOf("DFS is not enabled") >= 0;
     }
 
+    public static boolean isChunkInTransaction(String exMsg) {
+        if (exMsg == null)
+            return false;
+        return exMsg.indexOf("<ChunkInTransaction>") >= 0;
+    }
+
     public static String newLeader(String exMsg) {
         return exMsg.substring(11);
     }

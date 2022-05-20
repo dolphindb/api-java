@@ -44,7 +44,7 @@ import javax.net.ssl.X509TrustManager;
 
 public class DBConnection {
     private enum ServerExceptionState {
-        NEW_LEADER, WAIT, CONN_FAIL, OTHER_EXCEPTION, DATA_NODE_NOT_AVAILABLE
+        NEW_LEADER, WAIT, CONN_FAIL, OTHER_EXCEPTION, DATA_NODE_NOT_AVAILABLE, CHUNKINTRANSACTION
     }
 
     private static final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length - 1;
@@ -414,6 +414,8 @@ public class DBConnection {
             }
         }else if(ServerExceptionUtils.isDataNodeNotAvailable(errMsg) || ServerExceptionUtils.isDataNodeNotReady(errMsg) || ServerExceptionUtils.isDFSNotEnable(errMsg)){
             return ServerExceptionState.DATA_NODE_NOT_AVAILABLE;
+        }else if (ServerExceptionUtils.isChunkInTransaction(errMsg)){
+            return ServerExceptionState.CHUNKINTRANSACTION;
         }
         return ServerExceptionState.OTHER_EXCEPTION;
     }
@@ -568,6 +570,15 @@ public class DBConnection {
                         return run(script, listener, priority, parallelism);
                     else
                         throw ex;
+                }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
+                    try {
+                        Thread.sleep(60000);
+                    }catch (Exception e){
+                    }
+                    if (switchToRandomAvailableSite())
+                        return run(script, listener, priority, parallelism);
+                    else
+                        throw ex;
                 }
 
                 try {
@@ -632,6 +643,13 @@ public class DBConnection {
                 }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
                     if (switchToRandomAvailableSite())
                         return run(script, listener, priority, parallelism);
+                }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
+                    try {
+                        Thread.sleep(60000);
+                    }catch (Exception e){
+                    }
+                    if (switchToRandomAvailableSite())
+                        return run(script, listener, priority, parallelism);
                 }
                 if (reconnect && ServerExceptionUtils.isNotLogin(msg)) {
                     if (userId.length() > 0 && password.length() > 0)
@@ -682,6 +700,15 @@ public class DBConnection {
                 }
                 throw ex;
             }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                if (switchToRandomAvailableSite())
+                    return run(script, listener, priority, parallelism);
+                else
+                    throw ex;
+            }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
+                try {
+                    Thread.sleep(60000);
+                }catch (Exception e){
+                }
                 if (switchToRandomAvailableSite())
                     return run(script, listener, priority, parallelism);
                 else
@@ -802,6 +829,15 @@ public class DBConnection {
                         return run(function, arguments, priority, parallelism);
                     else
                         throw ex;
+                }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
+                    try {
+                        Thread.sleep(60000);
+                    }catch (Exception e){
+                    }
+                    if (switchToRandomAvailableSite())
+                        return run(function, arguments, priority, parallelism);
+                    else
+                        throw ex;
                 }
 
                 try {
@@ -866,6 +902,13 @@ public class DBConnection {
                 }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
                     if (switchToRandomAvailableSite())
                         return run(function, arguments, priority, parallelism);
+                }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
+                    try {
+                        Thread.sleep(60000);
+                    }catch (Exception e){
+                    }
+                    if (switchToRandomAvailableSite())
+                        return run(function, arguments, priority, parallelism);
                 }
                 throw new IOException("Server response: '" + msg + "' function: '" + function + "'");
             }
@@ -914,6 +957,15 @@ public class DBConnection {
                 }
                 throw ex;
             }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
+                if (switchToRandomAvailableSite())
+                    return run(function, arguments, priority, parallelism);
+                else
+                    throw ex;
+            }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
+                try {
+                    Thread.sleep(60000);
+                }catch (Exception e){
+                }
                 if (switchToRandomAvailableSite())
                     return run(function, arguments, priority, parallelism);
                 else
@@ -1040,6 +1092,15 @@ public class DBConnection {
                     }
                 }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
                     if (switchToRandomAvailableSite()) {
+                        upload(variableObjectMap);
+                        return;
+                    }
+                }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
+                    try {
+                        Thread.sleep(60000);
+                    }catch (Exception e){
+                    }
+                    if (switchToRandomAvailableSite()){
                         upload(variableObjectMap);
                         return;
                     }
