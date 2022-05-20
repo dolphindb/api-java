@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 public  class MultithreadedTableWriterTest implements Runnable {
     private Logger logger_ = Logger.getLogger(getClass().getName());
     private static DBConnection conn;
-    public static String HOST = "192.168.1.23";
+    public static String HOST = "localhost";
     public static Integer PORT = 8848;
     public static Integer insertTime = 5000;
     public static ErrorCodeInfo pErrorInfo =new ErrorCodeInfo();;
@@ -40,7 +40,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Before
     public void prepare() throws IOException {
-        conn = new DBConnection(false,true,true);
+        conn = new DBConnection(false,false,true);
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
                 throw new IOException("Failed to connect to 2xdb server");
@@ -783,7 +783,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                     "dfs://test_MultithreadedTableWriter", "pt", false, false, null, 10, 1,
                     1, "volume");
             List<List<Entity>> tb = new ArrayList<>();
-            for (int i = 0; i < 2000; i++) {
+            for (int i = 0; i < 1000; i++) {
                 List<Entity> row = new ArrayList<>();
                 row.add(new BasicInt(1));
                 row.add(new BasicDouble(5));
@@ -795,7 +795,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
             }
         } catch (Exception ex) {
         }
-        Thread.sleep(1000);
+        mutithreadTableWriter1.waitForThreadCompletion();
+        mutithreadTableWriter2.waitForThreadCompletion();
         MultithreadedTableWriter.Status status =mutithreadTableWriter1.getStatus();
         MultithreadedTableWriter.Status status1 =  mutithreadTableWriter2.getStatus();
         if (status.errorInfo.toString().contains("Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter")){
@@ -807,7 +808,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(false,status.succeed());
             assertEquals(true,status1.succeed());
             assertEquals(true,status.isExiting);
-            assertEquals(false,status1.isExiting);
+            assertEquals(true,status1.isExiting);
             assertEquals(1000,status.unsentRows+status.sendFailedRows+status.sentRows);
             assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
 
@@ -820,13 +821,11 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(true,status.succeed());
             assertEquals(false,status1.succeed());
             assertEquals(true,status1.isExiting);
-            assertEquals(false,status.isExiting);
-            assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
+            assertEquals(true,status.isExiting);
+            assertEquals(1000,status1.unsentRows+status1.sendFailedRows+status1.sentRows);
             assertEquals(1000,status.unsentRows+status.sendFailedRows+status.sentRows);
 
         }
-        mutithreadTableWriter1.waitForThreadCompletion();
-        mutithreadTableWriter2.waitForThreadCompletion();
 
         conn.run("undef(`t1,SHARED)");
 
@@ -854,7 +853,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
             mutithreadTableWriter1.insert( 1, 1.3);
             mutithreadTableWriter2.insert( 1, 1.3);
         }
-        Thread.sleep(1000);
+        mutithreadTableWriter2.waitForThreadCompletion();
+        mutithreadTableWriter1.waitForThreadCompletion();
         MultithreadedTableWriter.Status status1=mutithreadTableWriter1.getStatus();
         MultithreadedTableWriter.Status status=mutithreadTableWriter2.getStatus();
         if (status.errorInfo.toString().contains("Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter")){
@@ -866,7 +866,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(false,status.succeed());
             assertEquals(true,status1.succeed());
             assertEquals(true,status.isExiting);
-            assertEquals(false,status1.isExiting);
+            assertEquals(true,status1.isExiting);
             assertEquals(1000,status.unsentRows+status.sendFailedRows+status.sentRows);
             assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
 
@@ -879,14 +879,11 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(true,status.succeed());
             assertEquals(false,status1.succeed());
             assertEquals(true,status1.isExiting);
-            assertEquals(false,status.isExiting);
+            assertEquals(true,status.isExiting);
             assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
             assertEquals(1000,status.unsentRows+status.sendFailedRows+status.sentRows);
 
         }
-
-        mutithreadTableWriter2.waitForThreadCompletion();
-        mutithreadTableWriter1.waitForThreadCompletion();
 
         BasicTable ex = (BasicTable) conn.run("select * from loadTable(\"dfs://test_MultithreadedTableWriter\",`pt)");
         assertTrue(ex.rows()<2000);
@@ -1023,7 +1020,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test(expected = RuntimeException.class)
     public  void test_insert_arrayVector_delta()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`array," +
                 "[INT,INT[]]);" +
@@ -1834,7 +1831,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_empty_arrayVector()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
                 "[INT,INT[]]);" +
@@ -1864,7 +1861,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_arrayVector_different_length()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv`arrayv1`arrayv2," +
                 "[INT,INT[],BOOL[],BOOL[]]);" +
@@ -1896,7 +1893,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_arrayVector_int()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
                 "[INT,INT[]]);" +
@@ -1923,7 +1920,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_arrayVector_char()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
                 "[INT,CHAR[]]);" +
@@ -1949,7 +1946,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_arrayVector_bool()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
                 "[INT,BOOL[]]);" +
@@ -1975,7 +1972,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_arrayVector_long()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
                 "[INT,LONG[]]);" +
@@ -2001,7 +1998,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_arrayVector_short()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
                 "[INT,SHORT[]]);" +
@@ -2026,7 +2023,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_arrayVector_float()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
                 "[INT,FLOAT[]]);" +
@@ -2051,7 +2048,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_arrayVector_double()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
                 "[INT,DOUBLE[]]);" +
@@ -2076,7 +2073,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_arrayVector_date_month()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv1`arrayv2," +
                 "[INT,DATE[],MONTH[]]); share t as t1;");
@@ -2101,7 +2098,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_arrayVector_time_minute_second()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `time`minute`second," +
                 "[TIME[],MINUTE[],SECOND[]]);" +
@@ -2130,7 +2127,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_arrayVector_datetime_timestamp_nanotime_nanotimstamp()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `datetime`timestamp`nanotime`nanotimstamp," +
                 "[DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[]]);" +
@@ -2166,7 +2163,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test
     public  void test_insert_arrayVector_otherType()throws Exception {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `uuid`int128`ipaddr," +
                 "[UUID[],INT128[],IPADDR[]]);" +
