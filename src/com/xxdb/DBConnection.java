@@ -412,7 +412,7 @@ public class DBConnection {
             } catch (IOException e) {
                 return ServerExceptionState.CONN_FAIL;
             }
-        }else if(ServerExceptionUtils.isDataNodeNotAvailable(errMsg) || ServerExceptionUtils.isDataNodeNotReady(errMsg)){
+        }else if(ServerExceptionUtils.isDataNodeNotAvailable(errMsg) || ServerExceptionUtils.isDataNodeNotReady(errMsg) || ServerExceptionUtils.isDFSNotEnable(errMsg)){
             return ServerExceptionState.DATA_NODE_NOT_AVAILABLE;
         }
         return ServerExceptionState.OTHER_EXCEPTION;
@@ -749,7 +749,6 @@ public class DBConnection {
                             new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
                 }
             }
-            System.out.println("run Socket : " + socket.toString());
             String body = "function\n" + function;
             body += ("\n" + arguments.size() + "\n");
             body += remoteLittleEndian ? "1" : "0";
