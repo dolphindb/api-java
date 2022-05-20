@@ -412,9 +412,10 @@ public class DBConnection {
             } catch (IOException e) {
                 return ServerExceptionState.CONN_FAIL;
             }
-        }else if(ServerExceptionUtils.isDataNodeNotAvailable(errMsg) || ServerExceptionUtils.isDataNodeNotReady(errMsg) || ServerExceptionUtils.isDFSNotEnable(errMsg)){
+        }else if(ServerExceptionUtils.isDataNodeNotAvailable(errMsg) || ServerExceptionUtils.isDataNodeNotReady(errMsg)
+                || ServerExceptionUtils.isDFSNotEnable(errMsg) || ServerExceptionUtils.isDFSCLIENTIsNull(errMsg)){
             return ServerExceptionState.DATA_NODE_NOT_AVAILABLE;
-        }else if (ServerExceptionUtils.isChunkInTransaction(errMsg)){
+        }else if (ServerExceptionUtils.isChunkInTransaction(errMsg) || ServerExceptionUtils.isChunkInRecovery(errMsg)){
             return ServerExceptionState.CHUNKINTRANSACTION;
         }
         return ServerExceptionState.OTHER_EXCEPTION;
@@ -572,7 +573,7 @@ public class DBConnection {
                         throw ex;
                 }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
                     try {
-                        Thread.sleep(60000);
+                        Thread.sleep(10000);
                     }catch (Exception e){
                     }
                     if (switchToRandomAvailableSite())
@@ -645,7 +646,7 @@ public class DBConnection {
                         return run(script, listener, priority, parallelism);
                 }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
                     try {
-                        Thread.sleep(60000);
+                        Thread.sleep(10000);
                     }catch (Exception e){
                     }
                     if (switchToRandomAvailableSite())
@@ -706,7 +707,7 @@ public class DBConnection {
                     throw ex;
             }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
                 try {
-                    Thread.sleep(60000);
+                    Thread.sleep(10000);
                 }catch (Exception e){
                 }
                 if (switchToRandomAvailableSite())
@@ -831,7 +832,7 @@ public class DBConnection {
                         throw ex;
                 }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
                     try {
-                        Thread.sleep(60000);
+                        Thread.sleep(10000);
                     }catch (Exception e){
                     }
                     if (switchToRandomAvailableSite())
@@ -904,7 +905,7 @@ public class DBConnection {
                         return run(function, arguments, priority, parallelism);
                 }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
                     try {
-                        Thread.sleep(60000);
+                        Thread.sleep(10000);
                     }catch (Exception e){
                     }
                     if (switchToRandomAvailableSite())
@@ -963,7 +964,7 @@ public class DBConnection {
                     throw ex;
             }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
                 try {
-                    Thread.sleep(60000);
+                    Thread.sleep(10000);
                 }catch (Exception e){
                 }
                 if (switchToRandomAvailableSite())
@@ -1097,7 +1098,7 @@ public class DBConnection {
                     }
                 }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
                     try {
-                        Thread.sleep(60000);
+                        Thread.sleep(10000);
                     }catch (Exception e){
                     }
                     if (switchToRandomAvailableSite()){
