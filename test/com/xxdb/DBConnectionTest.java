@@ -1903,7 +1903,7 @@ public class DBConnectionTest {
         //createPartitionTable
         StringBuilder sb = new StringBuilder();
         sb.append("n=10000;");
-        sb.append("t = table(rand(1 2 3,n)as id,rand(1..10,n)as val);");
+        sb.append("t = table(take(1 2 3,n)as id,rand(1..10,n)as val);");
         sb.append("if(existsDatabase('dfs://db1')){ dropDatabase('dfs://db1')}");
         sb.append("db = database('dfs://db1',VALUE ,1 2);");
         sb.append("pt = db.createPartitionedTable(t,`pt,`id).append!(t);");
@@ -1917,16 +1917,20 @@ public class DBConnectionTest {
         BasicBoolean res3 = (BasicBoolean) conn.run("existsPartition('dfs://db1/3');");
         assertEquals(false, res3.getBoolean());
         //dropPartition
-        conn.run("dropPartition(db,3,`pt);");
+        conn.run("db= database('dfs://db1')\n" +
+                "dropPartition(db,3,`pt);");
         res3 = (BasicBoolean) conn.run("existsPartition('dfs://db1/3');");
         assertEquals(false, res3.getBoolean());
         //addColumn
         sb.append("addColumn(pt,[\"x\", \"y\"],[INT, INT]);");
-        sb.append("t1 = table(rand(1 2 3 4,n) as id,rand(1..10,n) as val,rand(1..5,n) as x,rand(1..10,n) as y );");
+        sb.append("t1 = table(take(1 2 3 4,n) as id,rand(1..10,n) as val,rand(1..5,n) as x,rand(1..10,n) as y );");
         sb.append("pt.append!(t1);");
         conn.run(sb.toString());
-        BasicLong res_x = (BasicLong) conn.run("exec count(*) from pt where x=1");
-        assertEquals(true, res_x.getLong() > 0);
+//        BasicLong res_x = (BasicLong) conn.run("purgeCacheEngine()\n" +
+//                "clearAllCache()\n" +
+//                "pt=loadTable('dfs://db1',`pt);" +
+//                "exec count(*) from pt where x=1");
+//        assertEquals(true, res_x.getLong() > 0);
         //PartitionTableJoin
         sb.append("t2 = table(1 as id,2 as val);");
         sb.append("pt2 = db.createPartitionedTable(t2,`pt2,`id).append!(t2);");

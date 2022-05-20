@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ThreadedClientsubscribeTest {
     public static DBConnection conn;
-    public static String HOST = "192.168.1.132";
+    public static String HOST = "192.168.1.23";
     public static Integer PORT = 8848;
     private static ThreadedClient client;
 

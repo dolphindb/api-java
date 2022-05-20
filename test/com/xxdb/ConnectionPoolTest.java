@@ -686,7 +686,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db2,db1])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`sym`date)";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "sym", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("date");
@@ -722,7 +722,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db2,db1])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`sym`date)";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "sym", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("date");
@@ -760,7 +760,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db1,db2])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`date`sym)\n";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "sym", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("date");
@@ -798,7 +798,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db2,db1])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`sym`date)\n";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "date", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("date");
@@ -839,7 +839,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db1,db2])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`sym`date)\n";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "date", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("date");
@@ -884,7 +884,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db1,db2])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`date`sym)";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "sym", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("date");
@@ -923,7 +923,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db1,db2])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`date`sym)";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "sym", pool);
         List<String> colNames = new ArrayList<String>(4);
         colNames.add("date");
@@ -974,7 +974,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db2,db1])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`sym`date)";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "date", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("date");
@@ -1022,7 +1022,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db2,db1])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`sym`date)\n";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "date", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("sym");
@@ -1070,7 +1070,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db2,db1])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`sym`date)\n";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "date", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("date");
@@ -1115,7 +1115,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db1,db2])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`date`sym)";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "sym", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("date");
@@ -1153,7 +1153,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db1,db2])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`date`sym)\n";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "sym", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("date");
@@ -1191,7 +1191,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db2,db1])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`sym`date)\n";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "date", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("date");
@@ -1235,7 +1235,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db2,db1])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`sym`date)\n";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "date", pool);
         List<String> colNames = new ArrayList<String>(2);
         colNames.add("date");
@@ -1279,7 +1279,7 @@ public class ConnectionPoolTest {
                 "db =database(\"dfs://demohash\",COMPO,[db1,db2])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`date`sym)\n";
         conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true, true);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true,false, true);
         appender = new PartitionedTableAppender(dburl, tableName, "sym", pool);
         List<String> colNames = new ArrayList<String>(3);
         colNames.add("date");
