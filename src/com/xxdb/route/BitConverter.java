@@ -9,11 +9,7 @@ public class BitConverter {
         return bytes;
     }
 
-    /**
-     * 以字节数组的形式返回指定的 16 位有符号整数值
-     * @param data 要转换的数字
-     * @return 长度为 2 的字节数组
-     */
+
     public static byte[] getBytes(short data) {
         byte[] bytes = new byte[2];
         if (isLittleEndian()) {
@@ -26,11 +22,7 @@ public class BitConverter {
         return bytes;
     }
 
-    /**
-     * 以字节数组的形式返回指定的 Unicode 字符值
-     * @param data 要转换的字符
-     * @return 长度为 2 的字节数组
-     */
+
     public static byte[] getBytes(char data) {
         byte[] bytes = new byte[2];
         if (isLittleEndian()) {
@@ -43,11 +35,7 @@ public class BitConverter {
         return bytes;
     }
 
-    /**
-     * 以字节数组的形式返回指定的 32 位有符号整数值
-     * @param data 要转换的数字
-     * @return 长度为 4 的字节数组
-     */
+
     public static byte[] getBytes(int data) {
         byte[] bytes = new byte[4];
         if (isLittleEndian()) {
@@ -64,11 +52,7 @@ public class BitConverter {
         return bytes;
     }
 
-    /**
-     * 以字节数组的形式返回指定的 64 位有符号整数值
-     * @param data 要转换的数字
-     * @return 长度为 8 的字节数组
-     */
+
     public static byte[] getBytes(long data) {
         byte[] bytes = new byte[8];
         if (isLittleEndian()) {
@@ -93,67 +77,37 @@ public class BitConverter {
         return bytes;
     }
 
-    /**
-     * 以字节数组的形式返回指定的单精度浮点值
-     * @param data 要转换的数字
-     * @return 长度为 4 的字节数组
-     */
+
     public static byte[] getBytes(float data) {
         return getBytes(Float.floatToIntBits(data));
     }
 
-    /**
-     * 以字节数组的形式返回指定的双精度浮点值
-     * @param data 要转换的数字
-     * @return 长度为 8 的字节数组
-     */
+
     public static byte[] getBytes(double data) {
         return getBytes(Double.doubleToLongBits(data));
     }
 
-    /**
-     * 将指定字符串中的所有字符编码为一个字节序列
-     * @param data 包含要编码的字符的字符串
-     * @return 一个字节数组，包含对指定的字符集进行编码的结果
-     */
+
     public static byte[] getBytes(String data) {
         return data.getBytes(Charset.forName("UTF-8"));
     }
 
-    /**
-     * 将指定字符串中的所有字符编码为一个字节序列
-     * @param data 包含要编码的字符的字符串
-     * @param charsetName 字符集编码
-     * @return 一个字节数组，包含对指定的字符集进行编码的结果
-     */
+
     public static byte[] getBytes(String data, String charsetName) {
         return data.getBytes(Charset.forName(charsetName));
     }
 
-    /**
-     * 返回由字节数组转换来的布尔值
-     * @param bytes 字节数组
-     * @return 布尔值
-     */
+
     public static boolean toBoolean(byte[] bytes) {
         return bytes[0] == 0 ? false : true;
     }
 
-    /**
-     * 返回由字节数组中的指定的一个字节转换来的布尔值
-     * @param bytes 字节数组
-     * @param startIndex 起始下标
-     * @return 布尔值
-     */
+
     public static boolean toBoolean(byte[] bytes, int startIndex) {
         return toBoolean(copyFrom(bytes, startIndex, 1));
     }
 
-    /**
-     * 返回由字节数组转换来的 16 位有符号整数
-     * @param bytes 字节数组
-     * @return 由两个字节构成的 16 位有符号整数
-     */
+
     public static short toShort(byte[] bytes) {
         if (isLittleEndian()) {
             return (short) ((0xff & bytes[0]) | (0xff00 & (bytes[1] << 8)));
@@ -162,21 +116,11 @@ public class BitConverter {
         }
     }
 
-    /**
-     * 返回由字节数组中的指定的两个字节转换来的 16 位有符号整数
-     * @param bytes 字节数组
-     * @param startIndex 起始下标
-     * @return 由两个字节构成的 16 位有符号整数
-     */
+
     public static short toShort(byte[] bytes, int startIndex) {
         return toShort(copyFrom(bytes, startIndex, 2));
     }
 
-    /**
-     * 返回由字节数组转换来的 Unicode 字符
-     * @param bytes 字节数组
-     * @return 由两个字节构成的字符
-     */
     public static char toChar(byte[] bytes) {
         if (isLittleEndian()) {
             return (char) ((0xff & bytes[0]) | (0xff00 & (bytes[1] << 8)));
@@ -185,21 +129,12 @@ public class BitConverter {
         }
     }
 
-    /**
-     * 返回由字节数组中的指定的两个字节转换来的 Unicode 字符
-     * @param bytes 字节数组
-     * @param startIndex 起始下标
-     * @return 由两个字节构成的字符
-     */
+
     public static char toChar(byte[] bytes, int startIndex) {
         return toChar(copyFrom(bytes, startIndex, 2));
     }
 
-    /**
-     * 返回由字节数组转换来的 32 位有符号整数
-     * @param bytes 字节数组
-     * @return 由四个字节构成的 32 位有符号整数
-     */
+
     public static int toInt(byte[] bytes) {
         if (isLittleEndian()) {
             return (0xff & bytes[0])
@@ -214,21 +149,10 @@ public class BitConverter {
         }
     }
 
-    /**
-     * 返回由字节数组中的指定的四个字节转换来的 32 位有符号整数
-     * @param bytes 字节数组
-     * @param startIndex 起始下标
-     * @return 由四个字节构成的 32 位有符号整数
-     */
     public static int toInt(byte[] bytes, int startIndex) {
         return toInt(copyFrom(bytes, startIndex, 4));
     }
 
-    /**
-     * 返回由字节数组转换来的 64 位有符号整数
-     * @param bytes 字节数组
-     * @return 由八个字节构成的 64 位有符号整数
-     */
     public static long toLong(byte[] bytes) {
         if (isLittleEndian()) {
             return (0xffL & (long) bytes[0])
@@ -251,78 +175,35 @@ public class BitConverter {
         }
     }
 
-    /**
-     * 返回由字节数组中的指定的八个字节转换来的 64 位有符号整数
-     * @param bytes 字节数组
-     * @param startIndex 起始下标
-     * @return 由八个字节构成的 64 位有符号整数
-     */
     public static long toLong(byte[] bytes, int startIndex) {
         return toLong(copyFrom(bytes, startIndex, 8));
     }
 
-    /**
-     * 返回由字节数组转换来的单精度浮点数
-     * @param bytes 字节数组
-     * @return 由四个字节构成的单精度浮点数
-     */
     public static float toFloat(byte[] bytes) {
         return Float.intBitsToFloat(toInt(bytes));
     }
 
-    /**
-     * 返回由字节数组中的指定的四个字节转换来的单精度浮点数
-     * @param bytes 字节数组
-     * @param startIndex 起始下标
-     * @return 由四个字节构成的单精度浮点数
-     */
     public static float toFloat(byte[] bytes, int startIndex) {
         return Float.intBitsToFloat(toInt(copyFrom(bytes, startIndex, 4)));
     }
 
-    /**
-     * 返回由字节数组转换来的双精度浮点数
-     * @param bytes 字节数组
-     * @return 由八个字节构成的双精度浮点数
-     */
+
     public static double toDouble(byte[] bytes) {
         return Double.longBitsToDouble(toLong(bytes));
     }
 
-    /**
-     * 返回由字节数组中的指定的八个字节转换来的双精度浮点数
-     * @param bytes 字节数组
-     * @param startIndex 起始下标
-     * @return 由八个字节构成的双精度浮点数
-     */
     public static double toDouble(byte[] bytes, int startIndex) {
         return Double.longBitsToDouble(toLong(copyFrom(bytes, startIndex, 8)));
     }
 
-    /**
-     * 返回由字节数组转换来的字符串
-     * @param bytes 字节数组
-     * @return 字符串
-     */
     public static String toString(byte[] bytes) {
         return new String(bytes, Charset.forName("UTF-8"));
     }
 
-    /**
-     * 返回由字节数组转换来的字符串
-     * @param bytes 字节数组
-     * @param charsetName 字符集编码
-     * @return 字符串
-     */
     public static String toString(byte[] bytes, String charsetName) {
         return new String(bytes, Charset.forName(charsetName));
     }
 
-    /**
-     * 以字符串表示形式返回字节数组的内容
-     * @param bytes 字节数组
-     * @return 字符串形式的 <tt>bytes</tt>
-     */
     public static String toHexString(byte[] bytes) {
         if (bytes == null)
             return "null";
@@ -343,13 +224,6 @@ public class BitConverter {
     // --------------------------------------------------------------------------------------------
 
 
-    /**
-     * 数组拷贝。
-     * @param src 字节数组。
-     * @param off 起始下标。
-     * @param len 拷贝长度。
-     * @return 指定长度的字节数组。
-     */
     private static byte[] copyFrom(byte[] src, int off, int len) {
         // return Arrays.copyOfRange(src, off, off + len);
         byte[] bits = new byte[len];
@@ -359,10 +233,6 @@ public class BitConverter {
         return bits;
     }
 
-    /**
-     * 判断 CPU Endian 是否为 Little
-     * @return 判断结果
-     */
     private static boolean isLittleEndian() {
         return ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
     }

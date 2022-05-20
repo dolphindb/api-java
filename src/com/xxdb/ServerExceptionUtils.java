@@ -17,6 +17,12 @@ public class ServerExceptionUtils {
         return exMsg.indexOf("<DataNodeNotAvail>") >= 0;
     }
 
+    public static boolean isDataNodeNotReady(String exMsg) {
+        if (exMsg == null)
+            return false;
+        return exMsg.indexOf("<DataNodeNotReady>") >= 0;
+    }
+
     public static String newLeader(String exMsg) {
         return exMsg.substring(11);
     }
