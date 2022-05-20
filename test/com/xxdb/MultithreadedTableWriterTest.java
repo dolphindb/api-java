@@ -778,12 +778,12 @@ public  class MultithreadedTableWriterTest implements Runnable {
         try {
             mutithreadTableWriter1 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                     "dfs://test_MultithreadedTableWriter", "pt", false, false, null, 10, 1,
-                    2, "volume");
+                    1, "volume");
             mutithreadTableWriter2 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                     "dfs://test_MultithreadedTableWriter", "pt", false, false, null, 10, 1,
-                    2, "volume");
+                    1, "volume");
             List<List<Entity>> tb = new ArrayList<>();
-            for (int i = 0; i < 1000; i++) {
+            for (int i = 0; i < 2000; i++) {
                 List<Entity> row = new ArrayList<>();
                 row.add(new BasicInt(1));
                 row.add(new BasicDouble(5));
@@ -796,26 +796,38 @@ public  class MultithreadedTableWriterTest implements Runnable {
         } catch (Exception ex) {
         }
         Thread.sleep(1000);
-
         MultithreadedTableWriter.Status status =mutithreadTableWriter1.getStatus();
-        assertEquals(0, status.sendFailedRows);
-        assertEquals(0, status.unsentRows);
-        assertEquals(true, status.succeed());
-        assertEquals(false, status.hasError());
-        assertEquals(false, status.isExiting);
-        BasicTable bt = (BasicTable) conn.run("select * from loadTable('dfs://test_MultithreadedTableWriter',`pt)");
-        assertTrue(bt.rows()>= status.sentRows);
-
         MultithreadedTableWriter.Status status1 =  mutithreadTableWriter2.getStatus();
-        assertTrue(status1.sendFailedRows>0);
-        assertEquals(1000-status1.sendFailedRows, status1.unsentRows);
-        assertEquals(false, status1.succeed());
-        assertEquals(true, status1.hasError());
-        assertEquals(true, status1.isExiting);
-        assertTrue(status1.errorInfo.toString().contains("has been owned by transaction "));
+        if (status.errorInfo.toString().contains("Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter")){
+            assertEquals("",status1.errorInfo.toString());
+            assertEquals("A5",status.errorCode);
+            assertTrue(status.sendFailedRows >0);
+            assertEquals(true,status.hasError());
+            assertEquals(false,status1.hasError());
+            assertEquals(false,status.succeed());
+            assertEquals(true,status1.succeed());
+            assertEquals(true,status.isExiting);
+            assertEquals(false,status1.isExiting);
+            assertEquals(1000,status.unsentRows+status.sendFailedRows+status.sentRows);
+            assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
 
+        }else {
+            assertTrue(status1.errorInfo.toString().contains("Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter"));
+            assertEquals("A5",status1.errorCode);
+            assertTrue(status1.sendFailedRows >0);
+            assertEquals(true,status1.hasError());
+            assertEquals(false,status.hasError());
+            assertEquals(true,status.succeed());
+            assertEquals(false,status1.succeed());
+            assertEquals(true,status1.isExiting);
+            assertEquals(false,status.isExiting);
+            assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
+            assertEquals(1000,status.unsentRows+status.sendFailedRows+status.sentRows);
+
+        }
         mutithreadTableWriter1.waitForThreadCompletion();
         mutithreadTableWriter2.waitForThreadCompletion();
+
         conn.run("undef(`t1,SHARED)");
 
     }
@@ -4426,7 +4438,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "share t as t1;");
         sb.append("ext = streamTable(1000:0, `uuid`ipaddr`int128," +
                 "[UUID, IPADDR, INT128]);" +
-                "share ext as ext1;");
+                "share ext as ext1;go");
         conn.run(sb.toString());
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "t1", "", false, false, null, 1, 1,
@@ -4455,9 +4467,10 @@ public  class MultithreadedTableWriterTest implements Runnable {
             pErrorInfo = mutithreadTableWriter_.insert("00000000-0004-e72c-0000-000000007eb1", "0:0:4:e72c::7eb1", "00000000000001c600000000000001c8");
             assertEquals("code= info=", pErrorInfo.toString());
         }
+        mutithreadTableWriter_.waitForThreadCompletion();
         BasicTable bt = (BasicTable) conn.run("select * from t1 order by uuid;");
-        BasicTable ex = (BasicTable) conn.run("select * from ext1 order by  uuid;");
-        checkData(bt,ex);
+        BasicTable ex = (BasicTable) conn.run("select * from ext order by  uuid;");
+        checkData(ex,bt);
     }
 }
 
