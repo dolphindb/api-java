@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.dolphindb</groupId>
     <artifactId>dolphindb-javaapi</artifactId>
-    <version>1.30.17.1-SNAPSHOT</version>
+    <version>1.30.17.1</version>
     <packaging>jar</packaging>
  
     <properties>
