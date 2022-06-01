@@ -19,6 +19,7 @@
     - [7.4.2 使用BasicTable对象](#742-使用basictable对象)
   - [7.5 批量异步追加数据](#75-批量异步追加数据)
     - [7.5.1 MultithreadedTableWriter](#751-multithreadedtablewriter)
+    - [7.5.2 MultithreadedTableWriter返回异常的几种形式](#752-multithreadedtablewriter返回异常的几种形式)
 - [8. Java原生类型转换为DolphinDB数据类型](#8-java原生类型转换为dolphindb数据类型)
 - [9. Java流数据API](#9-java流数据api)
   - [断线重连](#断线重连)
@@ -457,7 +458,6 @@ public PartitionedTableAppender(String dbUrl, String tableName, String partition
 ```java
 DBConnectionPool pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, true, true);
 PartitionedTableAppender appender = new PartitionedTableAppender(dbUrl, tableName , "sym", pool);
-//
 ```
 
 首先，在DolphinDB服务端执行以下脚本，创建分布式数据库"dfs://DolphinDBUUID"和分布式表"device_status"。其中，数据库按照VALUE-HASH-HASH的组合进行三级分区。
@@ -601,6 +601,12 @@ hasError() 和 succeed() 方法用于获取数据插入的结果。hasError() �
 
 * args: 是变长参数，代表插入一行数据
 
+示例：
+
+```java
+ErrorCodeInfo pErrorInfo = multithreadedTableWriter_.insert(new Date(2022, 3, 23), "AAAAAAAB", random.nextInt() % 10000);
+```
+
 ```java
 List<List<Entity>> getUnwrittenData()
 ```
@@ -610,6 +616,12 @@ List<List<Entity>> getUnwrittenData()
 返回一个嵌套列表，表示未写入服务器的数据。
 
 注意：该方法获取到数据资源后， MultithreadedTableWriter将释放这些数据资源。
+
+示例：
+
+```java
+List<List<Entity>> unwrittenData = multithreadedTableWriter_.getUnwrittenData();
+```
 
 ```java
 ErrorCodeInfo insertUnwrittenData(List<List<Entity>> records)
@@ -623,6 +635,12 @@ ErrorCodeInfo insertUnwrittenData(List<List<Entity>> records)
 
 * **records**：需要再次写入的数据。可以通过方法 getUnwrittenData 获取该对象。
 
+示例：
+
+```java
+ErrorCodeInfo ret = multithreadedTableWriter_.insertUnwrittenData(unwrittenData);
+```
+
 ```java
 Status getStatus()
 ```
@@ -634,6 +652,14 @@ Status getStatus()
 参数说明：
 
 * **status**：是MultithreadedTableWriter.Status 类，具有以下属性和方法
+
+示例：
+
+```java
+MultithreadedTableWriter.Status writeStatus = new MultithreadedTableWriter.Status();
+writeStatus = multithreadedTableWriter_.getStatus();
+```
+
 
 属性：
 
@@ -662,268 +688,216 @@ waitForThreadCompletion()
 
 调用此方法后，MTW 会进入等待状态，待后台工作线程全部完成后退出等待状态。
 
-MultithreadedTableWriter 常规处理流程如下：
+示例：
 
 ```java
-package com.xxdb;
+multithreadedTableWriter_.waitForThreadCompletion();
+```
 
-import com.xxdb.comm.ErrorCodeInfo;
-import com.xxdb.data.BasicLong;
-import com.xxdb.data.Entity;
-import com.xxdb.data.Vector;
-import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
+MultithreadedTableWriter 的正常使用示例如下：
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
-
-public class BehaviorTest {
-    private static DBConnection conn= new DBConnection();
-    public static String HOST = "192.168.1.116";
-    public static Integer PORT = 8999;
-    private static MultithreadedTableWriter multithreadedTableWriter_ = null;
-    private static MultithreadedTableWriter.Status status_ = new MultithreadedTableWriter.Status();
-
-
-    public static void testMul() throws Exception{
-        ErrorCodeInfo pErrorInfo = new ErrorCodeInfo();
-        conn.connect(HOST, PORT, "admin", "123456");
-        Random random = new Random();
-        String script =
-                "dbName = 'dfs://valuedb3'" +
-                        "if (exists(dbName))" +
-                        "{" +
-                        "dropDatabase(dbName);" +
-                        "}" +
-                        "datetest = table(1000:0,`date`symbol`id,[DATE, SYMBOL, LONG]);" +
-                        "db = database(directory= dbName, partitionType= HASH, partitionScheme=[INT, 10]);" +
-                        "pt = db.createPartitionedTable(datetest,'pdatetest','id');";
-        conn.run(script);
-        System.out.println("-------------------------------------------------------------------------------------");
-        System.out.println("正常写入");
-        multithreadedTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://valuedb3", "pdatetest",
-                false, false, null, 10000, 1,
-                5, "id", new int[]{Vector.COMPRESS_LZ4, Vector.COMPRESS_LZ4, Vector.COMPRESS_DELTA});
-        ErrorCodeInfo ret;
-        try
-        {
-            //插入100行正确数据
-            for (int i = 0; i < 100; ++i)
-            {
-                ret = multithreadedTableWriter_.insert(new Date(2022, 3, 23), "AAAAAAAB", random.nextInt() % 10000);
-                //此处不会执行到
-                if (pErrorInfo.hasError())
-                    System.out.println(String.format("insert wrong format data: {0}\n", pErrorInfo.toString()));
-            }
-        } 
-        catch (Exception e)
-        {   //MTW 抛出异常
-            System.out.println("MTW exit with exception {0}" + e.getMessage());
-        }
-
-        //等待 MTW 插入完成
-        multithreadedTableWriter_.waitForThreadCompletion();
-        MultithreadedTableWriter.Status writeStatus = new MultithreadedTableWriter.Status();
-        writeStatus = multithreadedTableWriter_.getStatus();
-        if (!writeStatus.errorInfo.equals(""))
-        {
-            //写入时发生错误
-            System.out.println("error in writing !");
-        }
-        System.out.println("writeStatus: {0}\n" + writeStatus.toString());
-        System.out.println(((BasicLong)conn.run("exec count(*) from pt")).getLong());
-
-        """
-                          正常写入
-                          writeStatus: {0}
-                          errorCode     : 
-                          errorInfo     : 
-                          isExiting     : true
-                          sentRows      : 100
-                          unsentRows    : 0
-                          sendFailedRows: 0
-                          threadStatus  :
-                                  threadId        sentRows      unsentRows  sendFailedRows
-                                        13              30               0               0
-                                        14              18               0               0
-                                        15              15               0               0
-                                        16              20               0               0
-                                        17              17               0               0
-
-                          100
-        """
-        
-        System.out.println("-------------------------------------------------------------------------------------");
-        System.out.println("数据类型和列数不一样");
-
-        multithreadedTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://valuedb3", "pdatetest",
-                false, false, null, 10000, 1,
-                5, "id", new int[]{Vector.COMPRESS_LZ4, Vector.COMPRESS_LZ4, Vector.COMPRESS_DELTA});
-        try
-        {
-            //插入100行正确数据 （类型和列数都正确），MTW正常运行
-            for (int i = 0; i < 100; ++i)
-            {
-                ret = multithreadedTableWriter_.insert(new Date(2022, 3, 23), "AAAAAAAB", random.nextInt() % 10000);
-                //此处不会执行到
-                if (pErrorInfo.hasError())
-                    System.out.println(String.format("insert wrong format data: {1}\n", pErrorInfo.toString()));
-            }
-            Thread.sleep(2000);
-
-            //插入1行类型错误数据，MTW立刻发现
-            //MTW立刻返回错误信息
-            ret = multithreadedTableWriter_.insert(new Date(2022, 3, 23), 222, random.nextInt() % 10000);
-            if (!ret.errorInfo.equals(""))
-                System.out.println("insert wrong format data: {2}\n" + ret.toString());
-
-            """
-                  数据类型和列数不一样
-                  java.lang.RuntimeException: Failed to insert data. Cannot convert int to DT_SYMBOL.
-                  	at com.xxdb.data.BasicEntityFactory.createScalar(BasicEntityFactory.java:795)
-                  	at com.xxdb.data.BasicEntityFactory.createScalar(BasicEntityFactory.java:505)
-                  	at com.xxdb.multithreadedtablewriter.MultithreadedTableWriter.insert(MultithreadedTableWriter.java:594)
-                  	at com.xxdb.BehaviorTest.testMul(BehaviorTest.java:89)
-                  	at com.xxdb.BehaviorTest.main(BehaviorTest.java:168)
-                    code=A1 info=Invalid object error java.lang.RuntimeException: Failed to insert data. Cannot convert int to DT_SYMBOL.
-            """
-
-            //插入1行数据，列数不匹配，MTW立刻发现
-            //MTW立刻返回错误信息
-            ret = multithreadedTableWriter_.insert(new Date(2022, 3, 23), random.nextInt() % 10000);
-            if (!ret.errorInfo.equals(""))
-                System.out.println("insert wrong format data: {3}\n" + ret.toString());
-
-            """
-                insert wrong format data: {3}
-                  code=A2 info=Column counts don't match.  
-            """
-            
-            //如果发生了连接断开的情况，mtw将会在下一次向服务器写数据的时候发生失败。
-            //先写一行数据，触发error
-            ret = multithreadedTableWriter_.insert(new Date(2022, 3, 23), "AAAAAAAB", random.nextInt() % 10000);
-            System.out.println("先写一行数据，触发error " + ret.toString());
-            Thread.sleep(1000);
-
-            //再插入10行正确数据，MTW会因为工作线程终止而抛出异常，且该行数据不会被写入MTW
-            for (int i = 0; i < 9; ++i)
-            {
-                ret = multithreadedTableWriter_.insert(new Date(2022, 3, 23), "AAAAAAAB", random.nextInt() % 10000);
-            }
-            System.out.println("再插入9行正确数据，MTW会因为工作线程终止而抛出异常，且该行数据不会被写入MTW" + ret.toString());
-            System.out.println("never run here");
-        }
-        catch (Exception e)
-        {
-            System.out.println(e.getMessage());
-            System.out.println("MTW抛出异常");
-        }
-        multithreadedTableWriter_.waitForThreadCompletion();
-        MultithreadedTableWriter.Status status1 = new MultithreadedTableWriter.Status();
-        status1 = multithreadedTableWriter_.getStatus();
-        if (writeStatus.errorCode != "A0")
-            //写入发生错误
-            System.out.println("writeStatus: {4}\n" + status1.toString());
-        System.out.println(((BasicLong)conn.run("exec count(*) from pt")).getLong());
-
-        """
-              先写一行数据，触发error code= info=
-              再插入9行正确数据，MTW会因为工作线程终止而抛出异常，且该行数据不会被写入MTWcode= info=
-              never run here
-              writeStatus: {4}
-              errorCode     : 
-              errorInfo     : 
-              isExiting     : true
-              sentRows      : 110
-              unsentRows    : 0
-              sendFailedRows: 0
-              threadStatus  :
-                      threadId        sentRows      unsentRows  sendFailedRows
-                            18              33               0               0
-                            19              22               0               0
-                            20              20               0               0
-                            21              18               0               0
-                            22              17               0               0
-
-              210
-        """
-        
-        System.out.println("-------------------------------------------------------------------------------------");
-        System.out.println();
-
-        List<List<Entity>> unwriterdata = new ArrayList<>();
-        if (writeStatus.sentRows != 210)
-        {
-            System.out.println("error after write complete:");
-            unwriterdata = multithreadedTableWriter_.getUnwrittenData();
-            System.out.println("{5} unwriterdata: " + unwriterdata.size());
-
-            //重新获取新的MTW对象
-            MultithreadedTableWriter newmultithreadedTableWriter = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://valuedb3", "pdatetest",
-                    false, false, null, 10000, 1,
-                    5, "id", new int[]{Vector.COMPRESS_LZ4, Vector.COMPRESS_LZ4, Vector.COMPRESS_DELTA});
-            try
-            {
-                boolean writesuccess = true;
-                //将没有写入的数据写到新的MTW中
-                ret = newmultithreadedTableWriter.insertUnwrittenData(unwriterdata);
-
-                for (int i = 0; i < 10 - unwriterdata.size(); ++i)
-                {
-                    ret = newmultithreadedTableWriter.insert(pErrorInfo, new Date(2022, 3, 23), "AAAAAAAB", random.nextInt() % 10000);
-                }
-
-            }
-            finally
-            {
-                newmultithreadedTableWriter.waitForThreadCompletion();
-                writeStatus = newmultithreadedTableWriter.getStatus();
-                System.out.println("writeStatus: {6}\n" + writeStatus.toString());
-            }
-        }
-        else
-            System.out.println("write complete : \n{7}" + writeStatus.toString());
-
-        System.out.println(((BasicLong)conn.run("exec count(*) from pt")).getLong());
-
-        """
-              error after write complete:
-              {5} unwriterdata: 0
-              writeStatus: {6}
-              errorCode     : 
-              errorInfo     : 
-              isExiting     : true
-              sentRows      : 0
-              unsentRows    : 0
-              sendFailedRows: 0
-              threadStatus  :
-                      threadId        sentRows      unsentRows  sendFailedRows
-                            23               0               0               0
-                            24               0               0               0
-                            25               0               0               0
-                            26               0               0               0
-                            27               0               0               0
-
-              210
-
-          """
+```java
+DBConnection conn= new DBConnection();
+conn.connect(HOST, PORT, "admin", "123456");
+Random random = new Random();
+String script =
+        "dbName = 'dfs://valuedb3'" +
+                "if (exists(dbName))" +
+                "{" +
+                "dropDatabase(dbName);" +
+                "}" +
+                "datetest = table(1000:0,`date`symbol`id,[DATE, SYMBOL, LONG]);" +
+                "db = database(directory= dbName, partitionType= HASH, partitionScheme=[INT, 10]);" +
+                "pt = db.createPartitionedTable(datetest,'pdatetest','id');";
+conn.run(script);
+MultithreadedTableWriter multithreadedTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://valuedb3", "pdatetest",
+        false, false, null, 10000, 1,
+        5, "id", new int[]{Vector.COMPRESS_LZ4, Vector.COMPRESS_LZ4, Vector.COMPRESS_DELTA});
+ErrorCodeInfo ret;
+try
+{
+    //插入100行正确数据
+    for (int i = 0; i < 100; ++i)
+    {
+        ret = multithreadedTableWriter_.insert(new Date(2022, 3, 23), "AAAAAAAB", random.nextInt() % 10000);
     }
-
-
-
-    public static void main(String[] args)throws Exception{
-        testMul();
-    }
-
+} 
+catch (Exception e)
+{   //MTW 抛出异常
+    System.out.println("MTW exit with exception {0}" + e.getMessage());
 }
 
+//等待 MTW 插入完成
+multithreadedTableWriter_.waitForThreadCompletion();
+MultithreadedTableWriter.Status writeStatus = new MultithreadedTableWriter.Status();
+writeStatus = multithreadedTableWriter_.getStatus();
+if (!writeStatus.errorInfo.equals(""))
+{
+    //如果写入时发生错误
+    System.out.println("error in writing !");
+}
+System.out.println("writeStatus: {0}\n" + writeStatus.toString());
+System.out.println(((BasicLong)conn.run("exec count(*) from pt")).getLong());
+```
+
+以上代码输出结果为：
+```java
+"""
+      writeStatus: {0}
+      errorCode     : 
+      errorInfo     : 
+      isExiting     : true
+      sentRows      : 100
+      unsentRows    : 0
+      sendFailedRows: 0
+      threadStatus  :
+              threadId        sentRows      unsentRows  sendFailedRows
+                    13              30               0               0
+                    14              18               0               0
+                    15              15               0               0
+                    16              20               0               0
+                    17              17               0               0
+    
+      100
+"""
 ```
 
 调用 writer.insert() 方法向 writer 中写入数据，并通过 writer.getStatus() 获取 writer 的状态。
 注意，使用 writer.waitForThreadCompletion() 方法等待 MTW 写入完毕，会终止 MTW 所有工作线程，保留最后一次写入信息。此时如果需要再次将数据写入 MTW，需要重新获取新的 MTW 对象，才能继续写入数据。
 
 由上例可以看出，MTW 内部使用多线程完成数据转换和写入任务。但在 MTW 外部，API 客户端同样支持以多线程方式将数据写入 MTW，且保证了多线程安全。
+
+#### 7.5.2 MultithreadedTableWriter返回异常的几种形式
+
+MultithreadedTableWriter 类调用 insert 方法插入数据时发生异常：
+
+在调用 MultithreadedTableWriter 的 insert 方法时，若插入数据的类型与表对应列的类型不匹配，则 MultithreadedTableWriter 会立刻返回错误信息并打印出堆栈。
+
+示例：
+
+```java
+DBConnection conn= new DBConnection();
+conn.connect(HOST, PORT, "admin", "123456");
+Random random = new Random();
+String script =
+        "dbName = 'dfs://valuedb3'" +
+                "if (exists(dbName))" +
+                "{" +
+                "dropDatabase(dbName);" +
+                "}" +
+                "datetest = table(1000:0,`date`symbol`id,[DATE, SYMBOL, LONG]);" +
+                "db = database(directory= dbName, partitionType= HASH, partitionScheme=[INT, 10]);" +
+                "pt = db.createPartitionedTable(datetest,'pdatetest','id');";
+conn.run(script);
+MultithreadedTableWriter multithreadedTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://valuedb3", "pdatetest",
+        false, false, null, 10000, 1,
+        5, "id", new int[]{Vector.COMPRESS_LZ4, Vector.COMPRESS_LZ4, Vector.COMPRESS_DELTA});
+ErrorCodeInfo ret;
+//插入1行类型错误数据，MTW 立刻返回错误信息
+ret = multithreadedTableWriter_.insert(new Date(2022, 3, 23), 222, random.nextInt() % 10000);
+if (!ret.errorInfo.equals(""))
+    System.out.println("insert wrong format data: {2}\n" + ret.toString());
+```
+
+以上代码输出结果为：
+
+```java
+"""
+      java.lang.RuntimeException: Failed to insert data. Cannot convert int to DT_SYMBOL.
+      	at com.xxdb.data.BasicEntityFactory.createScalar(BasicEntityFactory.java:795)
+      	at com.xxdb.data.BasicEntityFactory.createScalar(BasicEntityFactory.java:505)
+      	at com.xxdb.multithreadedtablewriter.MultithreadedTableWriter.insert(MultithreadedTableWriter.java:594)
+      	at com.xxdb.BehaviorTest.testMul(BehaviorTest.java:89)
+      	at com.xxdb.BehaviorTest.main(BehaviorTest.java:168)
+        code=A1 info=Invalid object error java.lang.RuntimeException: Failed to insert data. Cannot convert int to DT_SYMBOL.
+"""
+```
+
+在调用 MultithreadedTableWriter 的 insert 方法时，若 insert 插入数据的列数和表的列数不匹配，MultithreadedTableWriter 会立刻返回错误信息。
+
+示例：
+
+```java
+DBConnection conn= new DBConnection();
+conn.connect(HOST, PORT, "admin", "123456");
+Random random = new Random();
+String script =
+        "dbName = 'dfs://valuedb3'" +
+                "if (exists(dbName))" +
+                "{" +
+                "dropDatabase(dbName);" +
+                "}" +
+                "datetest = table(1000:0,`date`symbol`id,[DATE, SYMBOL, LONG]);" +
+                "db = database(directory= dbName, partitionType= HASH, partitionScheme=[INT, 10]);" +
+                "pt = db.createPartitionedTable(datetest,'pdatetest','id');";
+conn.run(script);
+MultithreadedTableWriter multithreadedTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://valuedb3", "pdatetest",
+        false, false, null, 10000, 1,
+        5, "id", new int[]{Vector.COMPRESS_LZ4, Vector.COMPRESS_LZ4, Vector.COMPRESS_DELTA});
+ErrorCodeInfo ret;
+//插入1行数据，插入数据的列数和表的列数不匹配，MTW 立刻返回错误信息
+ret = multithreadedTableWriter_.insert(new Date(2022, 3, 23), random.nextInt() % 10000);
+if (!ret.errorInfo.equals(""))
+    System.out.println("insert wrong format data: {3}\n" + ret.toString());
+```
+
+以上代码输出结果为：
+
+```java
+"""
+    insert wrong format data: {3}
+      code=A2 info=Column counts don't match.  
+"""
+```
+
+如果 MultithreadedTableWriter 在运行时连接断开，则所有工作线程被终止。继续通过 MultithreadedTableWriter 向服务器写数据时，会因为工作线程终止而抛出异常，且数据不会被写入。此时，
+可通过调用 MultithreadedTableWriter 的 getUnwrittenData 获取未插入的数据，并重新插入。
+
+示例：
+
+```java
+List<List<Entity>> unwriterdata = new ArrayList<>();
+unwriterdata = multithreadedTableWriter_.getUnwrittenData();
+System.out.println("{5} unwriterdata: " + unwriterdata.size());
+//重新获取新的 MTW 对象
+MultithreadedTableWriter newmultithreadedTableWriter = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://valuedb3", "pdatetest",
+        false, false, null, 10000, 1,
+        5, "id", new int[]{Vector.COMPRESS_LZ4, Vector.COMPRESS_LZ4, Vector.COMPRESS_DELTA});
+try
+{
+    boolean writesuccess = true;
+    //将没有写入的数据写到新的 MTW 中
+    ret = newmultithreadedTableWriter.insertUnwrittenData(unwriterdata);
+}
+finally
+{
+    newmultithreadedTableWriter.waitForThreadCompletion();
+    writeStatus = newmultithreadedTableWriter.getStatus();
+    System.out.println("writeStatus: {6}\n" + writeStatus.toString());
+}
+```
+
+以上代码输出结果为：
+
+```java
+"""
+  {5} unwriterdata: 10
+  writeStatus: {6}
+  errorCode     : 
+  errorInfo     : 
+  isExiting     : true
+  sentRows      : 10
+  unsentRows    : 0
+  sendFailedRows: 0
+  threadStatus  :
+          threadId        sentRows      unsentRows  sendFailedRows
+                23               3               0               0
+                24               2               0               0
+                25               1               0               0
+                26               3               0               0
+                27               1               0               0
+"""
+```
 
 ## 8. Java原生类型转换为DolphinDB数据类型
 
