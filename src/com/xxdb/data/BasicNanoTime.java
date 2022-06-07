@@ -19,10 +19,6 @@ public class BasicNanoTime extends BasicLong{
 		super(Utils.countNanoseconds(value));
 	}
 
-	public BasicNanoTime(LocalDateTime value){
-		super(Utils.countNanoseconds(value));
-	}
-
 	public BasicNanoTime(LocalTime value){
 		super(Utils.countNanoseconds(value));
 	}
