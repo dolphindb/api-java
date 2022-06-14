@@ -45,7 +45,7 @@ public class LeaderChangeTest {
                         Integer[] a = new Integer[]{};
                         intList.toArray(a);
                         ErrorCodeInfo pErrorCodeInfo = new ErrorCodeInfo();
-                        if (!writer.insert(pErrorCodeInfo, curIndex++, "Symbol" + String.valueOf(random.nextInt() % 100), "String" + String.valueOf(random.nextInt() % 100), a)){
+                        if (writer.insert(curIndex++, "Symbol" + String.valueOf(random.nextInt() % 100), "String" + String.valueOf(random.nextInt() % 100), a).errorInfo != ""){
                             System.out.println(pErrorCodeInfo.errorInfo);
                         }
                         System.out.print(".");

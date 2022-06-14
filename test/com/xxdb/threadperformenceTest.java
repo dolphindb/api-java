@@ -52,7 +52,7 @@ public class threadperformenceTest {
 
 
         do{
-            mutithreadTableWriter.getStatus(status);
+            status = mutithreadTableWriter.getStatus();
             if (status.sentRows==bt.rows()){
                 finish = System.currentTimeMillis();
                 long timeElapsed = finish - start;
