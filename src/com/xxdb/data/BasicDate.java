@@ -1,13 +1,12 @@
 package com.xxdb.data;
 
+import com.xxdb.io.ExtendedDataInput;
+
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.util.Calendar;
-import java.util.Date;
-
-import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
@@ -16,7 +15,6 @@ import com.xxdb.io.ExtendedDataInput;
  */
 
 public class BasicDate extends BasicInt{
-	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
 	public BasicDate(LocalDate value){
 		super(Utils.countDays(value));
@@ -35,12 +33,12 @@ public class BasicDate extends BasicInt{
 	
 	@Override
 	public DATA_CATEGORY getDataCategory() {
-		return Entity.DATA_CATEGORY.TEMPORAL;
+		return DATA_CATEGORY.TEMPORAL;
 	}
 
 	@Override
 	public DATA_TYPE getDataType() {
-		return Entity.DATA_TYPE.DT_DATE;
+		return DATA_TYPE.DT_DATE;
 	}
 	
 	public LocalDate getDate(){
@@ -60,7 +58,7 @@ public class BasicDate extends BasicInt{
 		if(isNull())
 			return "";
 		else
-			return getDate().format(format);
+			return getDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
 	}
 	@Override
 	public String getJsonString() {

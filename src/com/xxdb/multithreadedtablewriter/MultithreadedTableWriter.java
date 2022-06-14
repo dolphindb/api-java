@@ -16,7 +16,6 @@ public class MultithreadedTableWriter {
     public static class ThreadStatus{
         public long threadId;
         public long sentRows,unsentRows,sendFailedRows;
-
         public String toString(){
             StringBuilder sb = new StringBuilder();
             sb.append(String.format("%16s", threadId) + String.format("%16s", sentRows) + String.format("%16s", unsentRows) + String.format("%16s", unsentRows) + "\n");

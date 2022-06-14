@@ -1,11 +1,11 @@
 package com.xxdb.data;
 
+import com.xxdb.io.ExtendedDataInput;
+import com.xxdb.io.ExtendedDataOutput;
+
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.temporal.Temporal;
-
-import com.xxdb.io.ExtendedDataInput;
-import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
@@ -14,8 +14,6 @@ import com.xxdb.io.ExtendedDataOutput;
  */
 
 public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>{
-	private static final DecimalFormat df1 = new DecimalFormat("0.######");
-	private static final DecimalFormat df2 = new DecimalFormat("0.######E0");
 	private float value;
 
 	public BasicFloat(float value){
@@ -42,12 +40,12 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 
 	@Override
 	public DATA_CATEGORY getDataCategory() {
-		return Entity.DATA_CATEGORY.FLOATING;
+		return DATA_CATEGORY.FLOATING;
 	}
 
 	@Override
 	public DATA_TYPE getDataType() {
-		return Entity.DATA_TYPE.DT_FLOAT;
+		return DATA_TYPE.DT_FLOAT;
 	}
 	
 	public Number getNumber() throws Exception{
@@ -71,9 +69,9 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 		else{
 			float absVal = Math.abs(value);
 			if((absVal>0 && absVal<=0.000001) || absVal>=1000000.0)
-				return df2.format(value);
+				return new DecimalFormat("0.######E0").format(value);
 			else
-				return df1.format(value);
+				return new DecimalFormat("0.######").format(value);
 		}
 	}
 	

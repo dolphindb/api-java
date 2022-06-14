@@ -1,12 +1,12 @@
 package com.xxdb.data;
 
+import com.xxdb.io.ExtendedDataInput;
+
 import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.util.Calendar;
-
-import com.xxdb.io.ExtendedDataInput;
 
 
 /**
@@ -16,7 +16,6 @@ import com.xxdb.io.ExtendedDataInput;
  */
 
 public class BasicSecond extends BasicInt{
-	private static DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm:ss");
 
 	public BasicSecond(LocalTime value){
 		super(Utils.countSeconds(value));
@@ -37,12 +36,12 @@ public class BasicSecond extends BasicInt{
 	
 	@Override
 	public DATA_CATEGORY getDataCategory() {
-		return Entity.DATA_CATEGORY.TEMPORAL;
+		return DATA_CATEGORY.TEMPORAL;
 	}
 
 	@Override
 	public DATA_TYPE getDataType() {
-		return Entity.DATA_TYPE.DT_SECOND;
+		return DATA_TYPE.DT_SECOND;
 	}
 	
 	public LocalTime getSecond(){
@@ -62,7 +61,7 @@ public class BasicSecond extends BasicInt{
 		if(isNull())
 			return "";
 		else
-			return getSecond().format(format);
+			return getSecond().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
 	}
 	@Override
 	public String getJsonString() {
