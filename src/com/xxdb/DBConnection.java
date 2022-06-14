@@ -57,6 +57,7 @@ public class DBConnection {
     private boolean compress_ = false;
     private int connTimeout_ = 0;
     private String[] highAvailabilitySites_ = null;
+    private boolean python_ = false;
 
 
     private enum ServerExceptionState {
@@ -137,12 +138,18 @@ public class DBConnection {
         private ExtendedDataInput in_;
         private boolean remoteLittleEndian_;
         private ReentrantLock lock_;
+        private boolean usePython_ = false;
 
         public DBConnectionImpl(boolean sslEnable, boolean asynTask, boolean compress){
+            this(sslEnable, asynTask, compress, false);
+        }
+
+        public DBConnectionImpl(boolean sslEnable, boolean asynTask, boolean compress, boolean usePython){
             sessionID_ = "";
             this.sslEnable_ = sslEnable;
             this.asynTask_ = asynTask;
             this.compress_ = compress;
+            this.usePython_ = usePython;
             this.lock_ = new ReentrantLock();
         }
 
@@ -494,11 +501,16 @@ public class DBConnection {
     }
     
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress) {
-         this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress);
-         this.asynTask_ = asynchronousTask;
-         this.enableSSL_ = useSSL;
-         this.compress_ = compress;
-         this.mutex_ = new ReentrantLock();
+         this(asynchronousTask, useSSL, compress, false);
+    }
+
+    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean python){
+        this.asynTask_ = asynchronousTask;
+        this.enableSSL_ = useSSL;
+        this.compress_ = compress;
+        this.python_ = python;
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, python);
+        this.mutex_ = new ReentrantLock();
     }
     
     public boolean isBusy() {
@@ -530,6 +542,8 @@ public class DBConnection {
     		flag += 16;
     	if(compress_)
     		flag += 64;
+        if (this.python_)
+            flag += 2048;
     	return flag;
     }
 

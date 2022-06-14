@@ -30,6 +30,7 @@ abstract class AbstractClient implements MessageDispatcher {
     protected ConcurrentHashMap<String, Site[]> trueTopicToSites = new ConcurrentHashMap<>();
     protected CopyOnWriteArraySet<String> waitReconnectTopic = new CopyOnWriteArraySet<>();
     protected Map<String, StreamDeserializer> subInfos_ = new HashMap<>();
+    Daemon deamon_;
 
     class ReconnectItem {
         /**
@@ -311,18 +312,18 @@ abstract class AbstractClient implements MessageDispatcher {
 
     public AbstractClient(int subscribePort) throws SocketException {
         this.listeningPort = subscribePort;
-        Daemon daemon = new Daemon(subscribePort, this);
-        pThread = new Thread(daemon);
-        daemon.setRunningThread(pThread);
+        deamon_ = new Daemon(subscribePort, this);
+        pThread = new Thread(deamon_);
+        deamon_.setRunningThread(pThread);
         pThread.start();
     }
 
     public AbstractClient(String subsribeHost, int subscribePort) throws SocketException {
         this.listeningHost = subsribeHost;
         this.listeningPort = subscribePort;
-        Daemon daemon = new Daemon(subscribePort, this);
-        pThread = new Thread(daemon);
-        daemon.setRunningThread(pThread);
+        deamon_ = new Daemon(subscribePort, this);
+        pThread = new Thread(deamon_);
+        deamon_.setRunningThread(pThread);
         pThread.start();
     }
 
