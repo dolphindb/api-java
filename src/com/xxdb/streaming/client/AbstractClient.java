@@ -1,5 +1,6 @@
 package com.xxdb.streaming.client;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.*;
@@ -30,7 +31,6 @@ abstract class AbstractClient implements MessageDispatcher {
     protected ConcurrentHashMap<String, Site[]> trueTopicToSites = new ConcurrentHashMap<>();
     protected CopyOnWriteArraySet<String> waitReconnectTopic = new CopyOnWriteArraySet<>();
     protected Map<String, StreamDeserializer> subInfos_ = new HashMap<>();
-    Daemon deamon_;
 
     class ReconnectItem {
         /**
@@ -312,18 +312,18 @@ abstract class AbstractClient implements MessageDispatcher {
 
     public AbstractClient(int subscribePort) throws SocketException {
         this.listeningPort = subscribePort;
-        deamon_ = new Daemon(subscribePort, this);
-        pThread = new Thread(deamon_);
-        deamon_.setRunningThread(pThread);
+        Daemon daemon = new Daemon(subscribePort, this);
+        pThread = new Thread(daemon);
+        daemon.setRunningThread(pThread);
         pThread.start();
     }
 
     public AbstractClient(String subsribeHost, int subscribePort) throws SocketException {
         this.listeningHost = subsribeHost;
         this.listeningPort = subscribePort;
-        deamon_ = new Daemon(subscribePort, this);
-        pThread = new Thread(deamon_);
-        deamon_.setRunningThread(pThread);
+        Daemon daemon = new Daemon(subscribePort, this);
+        pThread = new Thread(daemon);
+        daemon.setRunningThread(pThread);
         pThread.start();
     }
 
@@ -403,11 +403,21 @@ abstract class AbstractClient implements MessageDispatcher {
                                                               String tableName, String actionName, MessageHandler handler,
                                                               long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer, boolean allowExistTopic)
             throws IOException, RuntimeException {
+        return subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, "", "");
+    }
+
+    protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
+                                                              String tableName, String actionName, MessageHandler handler,
+                                                              long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord)
+            throws IOException, RuntimeException {
         Entity re;
         String topic = "";
 
         DBConnection dbConn = new DBConnection();
-        dbConn.connect(host, port);
+        if (!userName.equals(""))
+            dbConn.connect(host, port, userName, passWord);
+        else
+            dbConn.connect(host, port);
         try {
             String localIP = this.listeningHost;
             if (localIP.equals(""))
