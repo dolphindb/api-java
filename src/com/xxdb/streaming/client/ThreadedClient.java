@@ -5,10 +5,8 @@ import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicString;
 import com.xxdb.data.Entity;
 import com.xxdb.data.Vector;
-import com.xxdb.streaming.client.IMessage;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.net.SocketException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

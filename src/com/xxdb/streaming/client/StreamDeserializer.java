@@ -1,10 +1,11 @@
 package com.xxdb.streaming.client;
 
+import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import com.xxdb.io.BigEndianDataOutputStream;
 import com.xxdb.io.ExtendedDataOutput;
 import com.xxdb.io.LittleEndianDataInputStream;
-
+import org.javatuples.Pair;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 public class StreamDeserializer {
-    Map<String, MsgDeserializer> msgDeserializers;
-
+    Map<String, MsgDeserializer> msgDeserializers_;
+    Map<String, Pair<String, String>> tableNames_;
     public BasicMessage parse(IMessage message) throws Exception {
         if (message.size() < 3)
             throw new Exception("The data must contain 3 columns. ");
@@ -27,28 +28,64 @@ public class StreamDeserializer {
         String sym = message.getEntity(1).getString();
         byte[] blob = ((BasicString)message.getEntity(2)).getBytes();
         MsgDeserializer deserializer = null;
-        if (!msgDeserializers.containsKey(sym))
+        if (!msgDeserializers_.containsKey(sym))
         {
             throw new Exception("The filter " + sym + " does not exist. ");
         }else {
-            deserializer = msgDeserializers.get(sym);
+            deserializer = msgDeserializers_.get(sym);
         }
         BasicMessage mixedMessage = new BasicMessage(message.getOffset(), message.getTopic(), deserializer.parse(blob), sym);
         return mixedMessage;
     }
 
     public StreamDeserializer(HashMap<String, List<Entity.DATA_TYPE>> filters) {
-        msgDeserializers = new HashMap<>();
+        msgDeserializers_ = new HashMap<>();
         for(Map.Entry<String, List<Entity.DATA_TYPE>> keyValue : filters.entrySet())
         {
             List<Entity.DATA_TYPE> colTypes = keyValue.getValue();
-            msgDeserializers.put(keyValue.getKey(), new MsgDeserializer(colTypes));
+            msgDeserializers_.put(keyValue.getKey(), new MsgDeserializer(colTypes));
         }
     }
 
     public StreamDeserializer(Map<String, BasicDictionary> filters)
     {
-        msgDeserializers = new HashMap<>();
+        init(filters);
+    }
+
+    public StreamDeserializer(Map<String, Pair<String, String>> tableNames, DBConnection conn){
+        this.tableNames_ = tableNames;
+        if (conn != null){
+            init(conn);
+        }
+    }
+
+    public void init(DBConnection conn){
+        if (msgDeserializers_ != null)
+            throw new RuntimeException("The StreamDeserializer is inited. ");
+        if (tableNames_ == null)
+            throw new RuntimeException("The tableNames_ is null. ");
+        msgDeserializers_ = new HashMap<>();
+        Map<String, BasicDictionary> filters = new HashMap<>();
+        for (Map.Entry<String, Pair<String, String>> keyValue : tableNames_.entrySet()){
+            String dbName = keyValue.getValue().getValue0();
+            String tableName = keyValue.getValue().getValue1();
+            BasicDictionary schema;
+            try {
+                if (tableName == ""){
+                    schema = (BasicDictionary) conn.run("schema(" + dbName + ")");
+                }else {
+                    schema = (BasicDictionary) conn.run("schema(loadTable(\"" + dbName + "\",\"" + tableName + "\"))");
+                }
+                filters.put(keyValue.getKey(), schema);
+            }catch (Exception e){
+                throw new RuntimeException(e.getMessage());
+            }
+        }
+        init(filters);
+    }
+
+    public void init(Map<String, BasicDictionary> filters){
+        msgDeserializers_ = new HashMap<>();
         for(Map.Entry<String, BasicDictionary> keyValue : filters.entrySet())
         {
             List<Entity.DATA_TYPE> colTypes = new ArrayList<>();
@@ -56,13 +93,16 @@ public class StreamDeserializer {
 
             BasicTable colDefs = (BasicTable)(keyValue.getValue()).get("colDefs");
             BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
-            BasicDictionary data = keyValue.getValue();
             for (int i = 0; i < colDefsTypeInt.rows(); ++i)
             {
                 colTypes.add(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
             }
-            msgDeserializers.put(keyValue.getKey(), new MsgDeserializer(colTypes));
+            msgDeserializers_.put(keyValue.getKey(), new MsgDeserializer(colTypes));
         }
+    }
+
+    public boolean isInited(){
+        return msgDeserializers_ != null;
     }
 
     class MsgDeserializer

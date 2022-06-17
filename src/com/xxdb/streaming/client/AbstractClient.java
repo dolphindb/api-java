@@ -1,6 +1,6 @@
 package com.xxdb.streaming.client;
 
-import java.io.File;
+
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.*;
@@ -418,6 +418,8 @@ abstract class AbstractClient implements MessageDispatcher {
             dbConn.connect(host, port, userName, passWord);
         else
             dbConn.connect(host, port);
+        if (deserializer!=null&&!deserializer.isInited())
+            deserializer.init(dbConn);
         try {
             String localIP = this.listeningHost;
             if (localIP.equals(""))
