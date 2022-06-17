@@ -15,6 +15,8 @@ import java.util.concurrent.BlockingQueue;
 
 public class PollingClient extends AbstractClient {
     TopicPoller topicPoller = null;
+    String userName = "";
+    String passWord = "";
 
     public PollingClient(int subscribePort) throws SocketException {
         super(subscribePort);
@@ -28,7 +30,7 @@ public class PollingClient extends AbstractClient {
     protected boolean doReconnect(Site site) {
         try {
             Thread.sleep(1000);
-            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic);
+            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, this.userName, this.passWord);
             System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
             topicPoller.setQueue(queue);
             return true;
@@ -39,10 +41,16 @@ public class PollingClient extends AbstractClient {
         }
     }
 
-    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, filter, deserializer, false);
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord) throws IOException {
+        this.userName = userName;
+        this.passWord = passWord;
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, filter, deserializer, false, userName, passWord);
         topicPoller = new TopicPoller(queue);
         return topicPoller;
+    }
+
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer)throws IOException{
+        return subscribe(host, port, tableName, actionName, offset, reconnect, filter, deserializer, "", "");
     }
 
     public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter)throws IOException{
