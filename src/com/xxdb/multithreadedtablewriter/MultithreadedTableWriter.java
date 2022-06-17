@@ -211,8 +211,8 @@ public class MultithreadedTableWriter {
             return true;
         }
         boolean init(){
-            if (tableWriter_.tableName_.isEmpty()) {
-                scriptTableInsert_ = "tableInsert{\"" + tableWriter_.dbName_ + "\"}";
+            if (tableWriter_.dbName_.isEmpty()) {
+                scriptTableInsert_ = "tableInsert{\"" + tableWriter_.tableName_ + "\"}";
             }
             else if (tableWriter_.isPartionedTable_) {//partitioned table
                 scriptTableInsert_ = "tableInsert{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")}";
@@ -347,8 +347,8 @@ public class MultithreadedTableWriter {
         }
 
         BasicDictionary schema;
-        if(tableName.isEmpty()){
-            schema = (BasicDictionary)pConn.run("schema(" + dbName + ")");
+        if(dbName.isEmpty()){
+            schema = (BasicDictionary)pConn.run("schema(" + tableName + ")");
         }else{
             schema = (BasicDictionary)pConn.run("schema(loadTable(\"" + dbName + "\",\"" + tableName + "\"))");
         }
@@ -356,7 +356,7 @@ public class MultithreadedTableWriter {
         if(partColNames!=null){//partitioned table
             isPartionedTable_ = true;
         }else{//没有分区
-            if(tableName.isEmpty() == false){//Single partitioned table
+            if(dbName.isEmpty() == false){//Single partitioned table
                 if(threadCount > 1){
                     throw new RuntimeException("The parameter threadCount must be 1 for a dimension table.");
                 }
