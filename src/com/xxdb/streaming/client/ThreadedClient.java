@@ -95,7 +95,7 @@ public class ThreadedClient extends AbstractClient {
                 }
                 if(msgs == null)
                     continue;
-                if (batchSize != -1)
+                if (batchHandler!=null)
                     batchHandler.batchHandler(msgs);
                 else {
                     for (IMessage msg : msgs) {
