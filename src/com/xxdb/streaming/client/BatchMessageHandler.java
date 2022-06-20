@@ -1,6 +1,5 @@
 package com.xxdb.streaming.client;
 
-import java.util.EventListener;
 import java.util.List;
 
 public interface BatchMessageHandler extends MessageHandler {
