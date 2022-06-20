@@ -1,31 +1,34 @@
 package com.xxdb;
 
-import java.io.*;
+import com.alibaba.fastjson.JSONObject;
+import com.xxdb.data.Vector;
+import com.xxdb.data.*;
+import com.xxdb.io.LittleEndianDataOutputStream;
+import com.xxdb.io.Long2;
+import com.xxdb.io.ProgressListener;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.ConnectException;
-import java.net.NoRouteToHostException;
 import java.net.UnknownHostException;
-import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Date;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
-
-import com.alibaba.fastjson.JSONObject;
-import com.xxdb.io.*;
-import org.junit.*;
-import com.xxdb.data.*;
-import com.xxdb.data.Vector;
-import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.*;
 
 public class DBConnectionTest {
 
     private DBConnection conn;
-    public static String HOST = "192.168.1.116";
-     public static Integer PORT = 8999;
+    public static String HOST = "127.0.0.1";
+     public static Integer PORT = 18848;
     // public static String HOST;
     // public static Integer PORT;
 
@@ -2782,7 +2785,24 @@ public class DBConnectionTest {
         BasicTable ext=  new BasicTable(colNames, cols);
         compareBasicTable(re,ext);
     }
-
+    static long count = 0;
+    @Test
+    public void test_null_task_return(){
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                conn=new DBConnection();
+                try {
+                    conn.connect(HOST,PORT,"admin","123456");
+                    conn.run("version()");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+        Thread thread = new Thread(runnable);
+        thread.start();
+    }
 
 }
 
