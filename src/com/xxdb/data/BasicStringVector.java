@@ -22,7 +22,6 @@ public class BasicStringVector extends AbstractVector{
 	private boolean isSymbol;
 	private boolean isBlob = false;
 	private List<byte[]> blobValues;
-	private int blobSize = 0;
 
 	public BasicStringVector(int size){
 		this(DATA_FORM.DF_VECTOR, size, false);
@@ -51,7 +50,6 @@ public class BasicStringVector extends AbstractVector{
 			for (int i = 0; i < rows; ++i){
 				this.blobValues.add(list.get(i).getBytes(StandardCharsets.UTF_8));
 			}
-			this.blobSize = rows;
 		}
 		if (list != null) {
 			values = new String[list.size()];
@@ -75,7 +73,6 @@ public class BasicStringVector extends AbstractVector{
 			arraycopy.add(array[i]);
 		}
 		blobValues.addAll(arraycopy);
-		this.blobSize = blobValues.size();
 		isBlob = true;
 	}
 
@@ -100,7 +97,6 @@ public class BasicStringVector extends AbstractVector{
 					blobValues.add(array[i].getBytes(StandardCharsets.UTF_8));
 				}
 			}
-			this.blobSize = blobValues.size();
 		}else {
 			if(copy)
 				values = array.clone();
@@ -126,7 +122,9 @@ public class BasicStringVector extends AbstractVector{
 		super(df);
 		if (isBlob) {
 			blobValues = new ArrayList<>(size);
-			this.blobSize = size;
+			for (int i = 0; i < size; i++){
+				blobValues.add(null);
+			}
 		}
 		else {
 			values = new String[size];
@@ -149,7 +147,6 @@ public class BasicStringVector extends AbstractVector{
 			{
 				blobValues.add(in.readBlob());
 			}
-			this.blobSize = rows;
 		}
 		else
 		{
@@ -183,7 +180,6 @@ public class BasicStringVector extends AbstractVector{
 			blobValues = new ArrayList<>(size);
 			for (int i = 0; i < size; ++i)
 				blobValues.add(in.readBlob());
-			this.blobSize = blobValues.size();
 		}
 	}
 	
@@ -230,10 +226,7 @@ public class BasicStringVector extends AbstractVector{
 		{
 			if (value.getDataType() == DATA_TYPE.DT_BLOB)
 			{
-				if (blobValues.size()<=blobSize)
-					blobValues.add(((BasicString)value).getBytes());
-				else
-					blobValues.set(index, ((BasicString)value).getBytes());
+				blobValues.set(index, ((BasicString)value).getBytes());
 			}
 			else
 				throw new Exception("The value must be a blob scalar. ");
@@ -327,12 +320,8 @@ public class BasicStringVector extends AbstractVector{
 
 	@Override
 	public int rows() {
-		if (isBlob){
-			if (blobValues.size() >= blobSize)
-				return blobValues.size();
-			else
-				return blobSize;
-		}
+		if (isBlob)
+			return blobValues.size();
 		else
 			return values.length;
 	}	
