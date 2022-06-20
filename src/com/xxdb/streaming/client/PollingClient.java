@@ -30,7 +30,7 @@ public class PollingClient extends AbstractClient {
     protected boolean doReconnect(Site site) {
         try {
             Thread.sleep(1000);
-            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, this.userName, this.passWord);
+            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, (MessageHandler) null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, this.userName, this.passWord);
             System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
             topicPoller.setQueue(queue);
             return true;
@@ -44,7 +44,7 @@ public class PollingClient extends AbstractClient {
     public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord) throws IOException {
         this.userName = userName;
         this.passWord = passWord;
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, filter, deserializer, false, userName, passWord);
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, (MessageHandler) null, offset, reconnect, filter, deserializer, false, userName, passWord);
         topicPoller = new TopicPoller(queue);
         return topicPoller;
     }

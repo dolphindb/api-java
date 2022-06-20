@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.time.LocalTime;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Handler;
 
 
 public class ThreadedClient extends AbstractClient {
@@ -35,8 +36,16 @@ public class ThreadedClient extends AbstractClient {
     class HandlerLopper extends Thread {
         BlockingQueue<List<IMessage>> queue;
         MessageHandler handler;
+        BatchMessageHandler batchHandler;
         private int batchSize = -1;
         private int throttle = -1;
+
+        HandlerLopper(BlockingQueue<List<IMessage>> queue, BatchMessageHandler batchHandler, int batchSize, int throttle) {
+            this.queue = queue;
+            this.batchHandler = batchHandler;
+            this.batchSize = batchSize;
+            this.throttle = throttle;
+        }
 
         HandlerLopper(BlockingQueue<List<IMessage>> queue, MessageHandler handler) {
             this.queue = queue;
@@ -87,7 +96,7 @@ public class ThreadedClient extends AbstractClient {
                 if(msgs == null)
                     continue;
                 if (batchSize != -1)
-                    handler.batchHandler(msgs);
+                    batchHandler.batchHandler(msgs);
                 else {
                     for (IMessage msg : msgs) {
                         handler.doEvent(msg);
@@ -148,6 +157,34 @@ public class ThreadedClient extends AbstractClient {
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
         }
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password) throws IOException {
+        if(batchSize<=0)
+            throw new IllegalArgumentException("BatchSize must be greater than zero");
+        if(throttle<0)
+            throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
+        this.userName = userName;
+        this.passWord = password;
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password);
+        HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
+        handlerLopper.start();
+        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        synchronized (handlerLoppers) {
+            handlerLoppers.put(topicStr, handlerLopper);
+        }
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler batchMessageHandler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle) throws IOException{
+        subscribe(host, port, tableName, actionName, batchMessageHandler, offset, reconnect, filter, deserializer, allowExistTopic, batchSize, throttle, "", "");
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler batchMessageHandler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, int throttle)throws IOException{
+        subscribe(host, port, tableName, actionName, batchMessageHandler, offset, reconnect, filter, null, allowExistTopic, batchSize, throttle);
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler batchMessageHandler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, int throttle, String userName, String passWord)throws IOException{
+        subscribe(host, port, tableName, actionName, batchMessageHandler, offset, reconnect, filter, null, allowExistTopic, batchSize, throttle, userName, passWord);
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle) throws IOException{
