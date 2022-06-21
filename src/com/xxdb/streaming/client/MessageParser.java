@@ -133,6 +133,7 @@ class MessageParser implements Runnable {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.println(e.getMessage());
             if (dispatcher.isClosed(topic)) {
                 System.out.println("check " + topic + " is unsubscribed");
                 return;

@@ -58,6 +58,7 @@ public class DBConnection {
     private int connTimeout_ = 0;
     private String[] highAvailabilitySites_ = null;
     private boolean python_ = false;
+    private boolean closed_ = false;
 
 
     private enum ServerExceptionState {
@@ -601,6 +602,10 @@ public class DBConnection {
     }
 
     public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites) throws IOException {
+        return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, false);
+    }
+
+    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect) throws IOException {
         mutex_.lock();
         try {
             this.uid_ = userId;
@@ -619,8 +624,8 @@ public class DBConnection {
                 }
                 Node connectedNode = new Node();
                 BasicTable bt = null;
-                while (true){
-                    while (!conn_.isConnected()){
+                while (!closed_){
+                    while (!conn_.isConnected() && !closed_){
                         for (Node one : nodes_){
                             if (connectNode(one)){
                                 connectedNode = one;
@@ -705,8 +710,13 @@ public class DBConnection {
                     return true;
                 }
             }else {
-                if (!connectNode(new Node(hostName, port)))
-                    return false;
+                if (reconnect){
+                    nodes_.add(new Node(hostName, port));
+                    switchDataNode(new Node(hostName, port));
+                }else {
+                    if (!connectNode(new Node(hostName, port)))
+                        return false;
+                }
             }
 
             if (initialScript_!=null && initialScript_.length() > 0){
@@ -745,7 +755,7 @@ public class DBConnection {
                 e.printStackTrace();
                 return;
             }
-        }while (!connected);
+        }while (!connected && !closed_);
         if (initialScript_ != null && initialScript_.length() > 0){
             run(initialScript_);
         }
@@ -753,7 +763,7 @@ public class DBConnection {
 
     public boolean connectNode(Node node) throws IOException{
         System.out.println("Connect to " + node.hostName + ":" + node.port + ".");
-        while (true){
+        while (!closed_){
             try {
                 return conn_.connect(node.hostName, node.port, uid_, pwd_, enableSSL_, asynTask_, compress_);
             }catch (Exception e){
@@ -778,6 +788,7 @@ public class DBConnection {
                 return false;
             }
         }
+        return false;
     }
 
     public ExceptionType parseException(String msg, Node node){
@@ -916,8 +927,8 @@ public class DBConnection {
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory) throws IOException{
         mutex_.lock();
         try {
-            if (enableHighAvailability_) {
-                while (true) {
+            if (!nodes_.isEmpty()) {
+                while (!closed_) {
                     try {
                         return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory);
                     } catch (IOException e) {
@@ -932,6 +943,7 @@ public class DBConnection {
                         switchDataNode(node);
                     }
                 }
+                return null;
             } else {
                 return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory);
             }
@@ -972,8 +984,8 @@ public class DBConnection {
     public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize) throws IOException {
         mutex_.lock();
         try {
-            if (enableHighAvailability_){
-                while (true){
+            if (!nodes_.isEmpty()){
+                while (!closed_){
                     try {
                         return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false);
                     }catch (IOException e){
@@ -988,6 +1000,7 @@ public class DBConnection {
                         switchDataNode(node);
                     }
                 }
+                return null;
             }else {
                 return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false);
             }
@@ -1013,8 +1026,8 @@ public class DBConnection {
         try {
             List<String> keys = new ArrayList<>();
             List<Entity> objs = new ArrayList<>();
-            if (enableHighAvailability_){
-                while (true){
+            if (!nodes_.isEmpty()){
+                while (!closed_){
                     try {
                         for (String key : variableObjectMap.keySet()){
                             if (variableObjectMap.size() == 1){
@@ -1060,6 +1073,7 @@ public class DBConnection {
     public void close() {
         mutex_.lock();
         try {
+            closed_ = true;
             conn_.close();
         } catch (Exception ex) {
             ex.printStackTrace();
