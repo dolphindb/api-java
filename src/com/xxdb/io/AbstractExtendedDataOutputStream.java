@@ -1,9 +1,10 @@
 package com.xxdb.io;
 
+
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UTFDataFormatException;
+import java.nio.charset.StandardCharsets;
 
 public abstract class AbstractExtendedDataOutputStream extends FilterOutputStream implements ExtendedDataOutput{
 	private static final int UTF8_STRING_LIMIT = 65535;
@@ -51,30 +52,8 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 
 	@Override
 	public void writeBytes(String s) throws IOException {
-		int len = s.length();
-		int i = 0;
-		int pos = 0;
-		
-		if (buf == null)
-			buf = new byte[BUF_SIZE];
-		do {
-			while (i < len && pos < buf.length - 4){
-				char c = s.charAt(i++);
-				if (c >= '\u0001' && c <= '\u007f')
-					buf[pos++] = (byte) c;
-				else if (c == '\u0000' || (c >= '\u0080' && c <= '\u07ff')){
-					buf[pos++] = (byte) (0xc0 | (0x1f & (c >> 6)));
-					buf[pos++] = (byte) (0x80 | (0x3f & c));
-				}
-				else{
-					buf[pos++] = (byte) (0xe0 | (0x0f & (c >> 12)));
-					buf[pos++] = (byte) (0x80 | (0x3f & (c >> 6)));
-					buf[pos++] = (byte) (0x80 | (0x3f & c));
-				}
-			}
-			write(buf, 0, pos);
-			pos = 0;
-		}while (i < len);
+		byte[] b = s.getBytes(StandardCharsets.UTF_8);
+		write(b);
 	}
 
 	@Override

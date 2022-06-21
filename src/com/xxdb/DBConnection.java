@@ -12,13 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.xxdb.data.*;
 import com.xxdb.data.Void;
-import com.xxdb.io.BigEndianDataInputStream;
-import com.xxdb.io.BigEndianDataOutputStream;
-import com.xxdb.io.ExtendedDataInput;
-import com.xxdb.io.ExtendedDataOutput;
-import com.xxdb.io.LittleEndianDataInputStream;
-import com.xxdb.io.LittleEndianDataOutputStream;
-import com.xxdb.io.ProgressListener;
+import com.xxdb.io.*;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -333,7 +327,7 @@ public class DBConnection {
 
             try {
                 out_.writeBytes((listener != null ? "API2 " : "API ") + sessionID_ + " ");
-                out_.writeBytes(String.valueOf(body.length()));
+                out_.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body.toString(), 0, 0)));
                 short flag = 0;
                 if (asynTask_)
                     flag += 4;
