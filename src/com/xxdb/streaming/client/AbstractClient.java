@@ -552,6 +552,10 @@ abstract class AbstractClient implements MessageDispatcher {
         return;
     }
 
+    public void close(){
+        pThread.interrupt();
+    }
+
     protected void unsubscribeInternal(String host, int port, String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName, DEFAULT_ACTION_NAME);
     }
