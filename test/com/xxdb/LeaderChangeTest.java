@@ -4,13 +4,13 @@ import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.*;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 
-import java.lang.reflect.MalformedParameterizedTypeException;
 import java.util.*;
 
 public class LeaderChangeTest {
     private static DBConnection conn= new DBConnection();
-    public static String HOST = "192.168.1.182";
-    public static Integer PORT = 8921;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     public static Random random = new Random();
 
     public static class MTWInsertThreads implements Runnable{

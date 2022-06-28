@@ -1,28 +1,26 @@
 package com.xxdb.compression;
 
 import com.xxdb.DBConnection;
+import com.xxdb.data.Vector;
 import com.xxdb.data.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+
+import static org.junit.Assert.assertEquals;
 
 public class ServerCompressionTest {
 
     Random rand = new Random();
     private DBConnection conn;
-    public static String HOST = "127.0.0.1";
-    public static Integer PORT = 8848;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     int testPoints = 600000;
 
     BasicShortVector shortVector;

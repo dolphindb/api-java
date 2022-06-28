@@ -14,8 +14,9 @@ import static org.junit.Assert.assertEquals;
 public class MutithreadTableWriterTest implements Runnable{
     private Logger logger_=Logger.getLogger(getClass().getName());
     private static DBConnection conn;
-    public static String HOST="192.168.1.116" ;
-    public static Integer PORT=18999;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     private final int id;
     private static MultithreadedTableWriter mutithreadedTableWriter_ =null;
 
