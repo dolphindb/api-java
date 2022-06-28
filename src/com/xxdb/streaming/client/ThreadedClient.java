@@ -175,6 +175,10 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, String userName, String password) throws IOException {
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, null, allowExistTopic, userName, password);
+    }
+
     public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler batchMessageHandler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle) throws IOException{
         subscribe(host, port, tableName, actionName, batchMessageHandler, offset, reconnect, filter, deserializer, allowExistTopic, batchSize, throttle, "", "");
     }

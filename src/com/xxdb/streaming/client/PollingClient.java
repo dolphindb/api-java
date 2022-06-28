@@ -49,6 +49,10 @@ public class PollingClient extends AbstractClient {
         return topicPoller;
     }
 
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, String userName, String passWord) throws IOException {
+        return subscribe(host, port, tableName, actionName, offset, reconnect, filter, null, userName, passWord);
+    }
+
     public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer)throws IOException{
         return subscribe(host, port, tableName, actionName, offset, reconnect, filter, deserializer, "", "");
     }
