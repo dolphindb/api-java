@@ -60,7 +60,6 @@ public class ThreadedClientsubscribeTest {
                     "dropStreamTable('Receive')"+
                     "deleteUser(`test1)");
            // client.close();
-            System.out.print("1+111");
         } catch (Exception e) {
 
         }
@@ -70,6 +69,26 @@ public class ThreadedClientsubscribeTest {
     public static void after() throws IOException {
         client.close();
         conn.close();
+    }
+
+    @Test
+    public void test_ThreadedClient_HOST_subport() throws IOException {
+        conn = new DBConnection();
+        conn.connect(HOST, PORT, "admin", "123456");
+        ThreadedClient client2 = new ThreadedClient(HOST,10022);
+    }
+    @Test
+    public void test_ThreadedClient_null() throws IOException {
+        conn = new DBConnection();
+        conn.connect(HOST, PORT, "admin", "123456");
+        ThreadedClient client2 = new ThreadedClient();
+    }
+
+    @Test
+    public void test_ThreadedClient_only_subscribePort() throws IOException {
+        conn = new DBConnection();
+        conn.connect(HOST, PORT, "admin", "123456");
+        ThreadedClient client3 = new ThreadedClient(10012);
     }
 
     @Test
@@ -110,7 +129,6 @@ public class ThreadedClientsubscribeTest {
 
     @Test
     public void test_subscribe_ex2() throws IOException {
-
         MessageHandler handler = new MessageHandler() {
             @Override
             public void doEvent(IMessage msg) {
@@ -627,7 +645,7 @@ public class ThreadedClientsubscribeTest {
                 }
             }
         };
-        Vector filter1 = (Vector) conn.run("1..100000");
+        client.subscribe(HOST,PORT,"tmp_st1","subTread1",handler,-1,true,null,true,100,5,"test1","123456");
         client.subscribe(HOST,PORT,"tmp_st2","subTread1",handler,-1,true,null,true,100,5,"test1","123456");
         try {
             client.subscribe(HOST, PORT, "tmp_st3", "subTread1", handler, -1, true, null, true, 100, 5, "test1", "123456_error");
@@ -638,7 +656,7 @@ public class ThreadedClientsubscribeTest {
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st2.append!(t)");
         Thread.sleep(5000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
-        assertEquals(10000,row_num.getInt());
+        assertEquals(20000,row_num.getInt());
     }
 
 
