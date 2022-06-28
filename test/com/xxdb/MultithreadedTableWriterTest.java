@@ -2,6 +2,7 @@ package com.xxdb;
 
 import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.*;
+import com.xxdb.data.Vector;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 import org.junit.After;
 import org.junit.Before;
@@ -13,10 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.*;
@@ -24,8 +22,9 @@ import static org.junit.Assert.*;
 public  class MultithreadedTableWriterTest implements Runnable {
     private Logger logger_ = Logger.getLogger(getClass().getName());
     private static DBConnection conn;
-    public static String HOST = "127.0.0.1";
-    public static Integer PORT = 18848;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     public static Integer insertTime = 5000;
     public static ErrorCodeInfo pErrorInfo =new ErrorCodeInfo();;
 

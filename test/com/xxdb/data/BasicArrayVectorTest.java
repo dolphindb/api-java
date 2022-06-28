@@ -3,7 +3,6 @@ package com.xxdb.data;
 import com.xxdb.DBConnection;
 import org.junit.Test;
 
-import javax.print.DocFlavor;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
@@ -11,8 +10,9 @@ import java.util.*;
 import static org.junit.Assert.assertEquals;
 
 public class BasicArrayVectorTest {
-    private static final String HOST = "192.168.1.37";
-    private static final Integer PORT = 8848;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
 
     @Test(expected = Exception.class)
     public void TestBasicSringArrayVector() throws Exception {

@@ -4,13 +4,15 @@ import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.*;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 import java.util.Random;
+import java.util.ResourceBundle;
 
 public class threadperformenceTest {
     private static DBConnection conn= new DBConnection();;
     private static String[] haSites;
     private static Random r = new Random();
-    public static String HOST = "192.168.1.116";
-    public static Integer PORT = 8999;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     private  String tbName=null;
 
 

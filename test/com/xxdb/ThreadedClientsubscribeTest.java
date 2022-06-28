@@ -1,22 +1,23 @@
 package com.xxdb;
 
-import com.xxdb.data.*;
-import com.xxdb.streaming.client.*;
+import com.xxdb.data.BasicInt;
+import com.xxdb.data.BasicTable;
+import com.xxdb.data.Vector;
+import com.xxdb.streaming.client.IMessage;
+import com.xxdb.streaming.client.MessageHandler;
+import com.xxdb.streaming.client.ThreadedClient;
 import org.junit.*;
 
 import java.io.IOException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
 
 public class ThreadedClientsubscribeTest {
     public static DBConnection conn;
-    public static String HOST = "192.168.1.132";
-    public static Integer PORT = 8848;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     private static ThreadedClient client;
 
     @BeforeClass
@@ -35,6 +36,10 @@ public class ThreadedClientsubscribeTest {
     @Before
     public void setUp() throws IOException {
         try {
+            String script0 = "login(`admin,`123456);" +
+                    "try{dropStreamTable('Trades')}catch(ex){};"+
+                    "try{dropStreamTable('Receive')}catch(ex){};";
+            conn.run(script0);
             String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                     "enableTableShareAndPersistence(table=st1, tableName=`Trades, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n"
                     + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
@@ -50,9 +55,12 @@ public class ThreadedClientsubscribeTest {
     @After
     public void drop() throws IOException {
         try {
-            conn.run("dropStreamTable('Trades');" +
-                    "dropStreamTable('Receive')");
+            conn.run("login(`admin,`123456);" +
+                    "dropStreamTable('Trades')"+
+                    "dropStreamTable('Receive')"+
+                    "deleteUser(`test1)");
            // client.close();
+            System.out.print("1+111");
         } catch (Exception e) {
 
         }
@@ -64,10 +72,8 @@ public class ThreadedClientsubscribeTest {
         conn.close();
     }
 
-
     @Test
     public void test_subscribe_ex1() throws IOException {
-
         MessageHandler handler = new MessageHandler() {
             @Override
             public void doEvent(IMessage msg) {
@@ -442,4 +448,198 @@ public class ThreadedClientsubscribeTest {
         Thread.sleep(5200);
         }
     }
+
+    @Test
+    public void test_subscribe_user_error() throws IOException {
+        MessageHandler handler = new MessageHandler() {
+            @Override
+            public void doEvent(IMessage msg) {
+                try {
+                    String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
+                    conn.run(script);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        Vector filter1 = (Vector) conn.run("1..1000");
+        try{
+        client.subscribe(HOST,PORT,"Trades","subTread1",handler,-1,true,filter1,true,100,5,"admin_error","123456");
+        }catch (Exception e){
+            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' script: 'login'",e.getMessage());
+        }
+    }
+
+    @Test
+    public void test_subscribe_password_error() throws IOException {
+        MessageHandler handler = new MessageHandler() {
+            @Override
+            public void doEvent(IMessage msg) {
+                try {
+                    String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
+                    conn.run(script);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        Vector filter1 = (Vector) conn.run("1..1000");
+        try{
+            client.subscribe(HOST,PORT,"Trades","subTread1",handler,-1,true,filter1,true,100,5,"admin","error_password");
+        }catch (Exception e){
+            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' script: 'login'",e.getMessage());
+        }
+    }
+
+    @Test
+    public void test_subscribe_admin() throws IOException, InterruptedException {
+        MessageHandler handler = new MessageHandler() {
+            @Override
+            public void doEvent(IMessage msg) {
+                try {
+                    String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
+                    conn.run(script);
+                    //  System.out.println(msg.getEntity(0).getString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        Vector filter1 = (Vector) conn.run("1..100000");
+        client.subscribe(HOST,PORT,"Trades","subTread1",handler,-1,true,filter1,true,100,5,"admin","123456");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
+        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        assertEquals(10000,row_num.getInt());
+    }
+    @Test
+    public void test_subscribe_other_user() throws IOException, InterruptedException {
+        conn.run("try{deleteUser(`test1)}catch(ex){};"+
+                "createUser(`test1, '123456');");
+        MessageHandler handler = new MessageHandler() {
+            @Override
+            public void doEvent(IMessage msg) {
+                try {
+                    String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
+                    conn.run(script);
+                    //  System.out.println(msg.getEntity(0).getString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        Vector filter1 = (Vector) conn.run("1..100000");
+        client.subscribe(HOST,PORT,"Trades","subTread1",handler,-1,true,filter1,true,100,5,"test1","123456");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
+        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        assertEquals(10000,row_num.getInt());
+    }
+
+    @Test
+    public void test_subscribe_other_user_unallow() throws IOException, InterruptedException {
+        conn.run("try{deleteUser(`test1)}catch(ex){};"+
+                "createUser(`test1, '123456');" +
+                "colNames =`id`timestamp`sym`qty`price;" +
+                "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
+                "t2=streamTable(1:0,colNames,colTypes);"+
+                "deny(`test1,TABLE_READ,`Trades)");
+        MessageHandler handler = new MessageHandler() {
+            @Override
+            public void doEvent(IMessage msg) {
+                try {
+                    String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
+                    conn.run(script);
+                    //  System.out.println(msg.getEntity(0).getString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        Vector filter1 = (Vector) conn.run("1..100000");
+        try {
+            client.subscribe(HOST, PORT, "Trades", "subTread1", handler, -1, true, filter1, true, 100, 5, "test1", "123456");
+        }catch (Exception e){
+            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' script: 'publishTable'",e.getMessage());
+        }
+    }
+
+    @Test
+    public void test_subscribe_other_some_user() throws IOException, InterruptedException {
+        conn.run("try{deleteUser(`test1)}catch(ex){};"+
+                "createUser(`test1, '123456');" +
+                "createUser(`test2, '123456');" +
+                "createUser(`test3, '123456');" +
+                "colNames =`id`timestamp`sym`qty`price;" +
+                "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
+                "t2=streamTable(1:0,colNames,colTypes);"+
+                "deny(`test1,TABLE_READ,`Trades);" +
+                "grant(`test2,TABLE_READ,`Trades);");
+
+        MessageHandler handler = new MessageHandler() {
+            @Override
+            public void doEvent(IMessage msg) {
+                try {
+                    String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
+                    conn.run(script);
+                    //  System.out.println(msg.getEntity(0).getString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        Vector filter1 = (Vector) conn.run("1..100000");
+        try {
+            client.subscribe(HOST, PORT, "Trades", "subTread1", handler, -1, true, filter1, true, 100, 5, "test1", "123456");
+        }catch (Exception e){
+            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' script: 'publishTable'",e.getMessage());
+        }
+
+        client.subscribe(HOST, PORT, "Trades", "subTread1", handler, -1, true, filter1, true, 100, 5, "test2", "123456");
+
+        try {
+            client.subscribe(HOST, PORT, "Trades", "subTread1", handler, -1, true, filter1, true, 100, 5, "test3", "123456");
+        }catch (Exception e){
+            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' script: 'publishTable'",e.getMessage());
+        }
+        conn.run("try{deleteUser(`test1)}catch(ex){};"+
+                "try{deleteUser(`test2)}catch(ex){};"+
+                "try{deleteUser(`test3)}catch(ex){};");
+
+    }
+
+    @Test
+    public void test_subscribe_one_user_some_table() throws IOException, InterruptedException {
+        conn.run("try{deleteUser(`test1)}catch(ex){};"+
+                "createUser(`test1, '123456');" +
+                "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
+                "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st2;"+
+                "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st3;");
+        MessageHandler handler = new MessageHandler() {
+            @Override
+            public void doEvent(IMessage msg) {
+                try {
+                    String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
+                    conn.run(script);
+                    //  System.out.println(msg.getEntity(0).getString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        Vector filter1 = (Vector) conn.run("1..100000");
+        client.subscribe(HOST,PORT,"tmp_st2","subTread1",handler,-1,true,null,true,100,5,"test1","123456");
+        try {
+            client.subscribe(HOST, PORT, "tmp_st3", "subTread1", handler, -1, true, null, true, 100, 5, "test1", "123456_error");
+        }catch (Exception e){
+            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' script: 'login'",e.getMessage());
+        }
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st1.append!(t)");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st2.append!(t)");
+        Thread.sleep(5000);
+        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        assertEquals(10000,row_num.getInt());
+    }
+
+
 }

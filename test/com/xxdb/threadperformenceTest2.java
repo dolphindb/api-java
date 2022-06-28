@@ -15,8 +15,9 @@ public class threadperformenceTest2 {
     public static String addr;
     private static long max=0;
     Random rd=new Random();
-    public static String HOST1 = "localhost";
-    public static Integer PORT1 = 8900;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     public static String HOST2 = "192.168.1.116";
     public static Integer PORT2 = 8999;
     private MultithreadedTableWriter mutithreadTableWriter=null;
