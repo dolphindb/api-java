@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
 
@@ -21,8 +22,10 @@ public class ConnectionPoolTest {
     private static DBConnectionPool pool = null;
     private static PartitionedTableAppender appender;
     private static DBConnection conn;
-    private static String HOST="localhost";
-    private static int PORT = 8848;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
+
     @Before
     public void setUp() throws IOException {
        conn = new DBConnection();

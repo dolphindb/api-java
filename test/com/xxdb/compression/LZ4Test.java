@@ -17,12 +17,14 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ResourceBundle;
 
 public class LZ4Test {
 
     private DBConnection conn;
-    public static String HOST = "127.0.0.1";
-    public static Integer PORT = 8848;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
 
     @Before
     public void setUp() {

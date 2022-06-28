@@ -17,25 +17,28 @@
  */
 package com.xxdb;
 
-import com.xxdb.data.BasicByte;
 import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicTable;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.PollingClient;
 import com.xxdb.streaming.client.TopicPoller;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class PollingClientTest {
     public static DBConnection conn ;
-    public static String HOST = "192.168.1.132";
-    public static Integer PORT = 8848;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     public static PollingClient client;
     @BeforeClass
     public static void set() throws IOException {

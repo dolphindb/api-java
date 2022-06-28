@@ -27,10 +27,9 @@ import static org.junit.Assert.*;
 public class DBConnectionTest {
 
     private DBConnection conn;
-    public static String HOST = "127.0.0.1";
-     public static Integer PORT = 18848;
-    // public static String HOST;
-    // public static Integer PORT;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
 
     public int getConnCount() throws IOException {
         return ((BasicInt) conn.run("getClusterPerf().connectionNum[0]")).getInt();

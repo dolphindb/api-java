@@ -6,15 +6,13 @@ import com.xxdb.data.Entity;
 import com.xxdb.data.Vector;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class BehaviorTest {
     private static DBConnection conn= new DBConnection();
-    public static String HOST = "192.168.1.116";
-    public static Integer PORT = 8999;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     private static MultithreadedTableWriter multithreadedTableWriter_ = null;
     private static MultithreadedTableWriter.Status status_ = new MultithreadedTableWriter.Status();
 
