@@ -111,7 +111,7 @@ public class ThreadPooledClient extends AbstractClient {
         threadPool.shutdownNow();
         try {
             Thread.sleep(1000);
-            subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, this.userName, this.passWord);
+            subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
             System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + site.actionName);
             return true;
         } catch (Exception ex) {
@@ -186,14 +186,25 @@ public class ThreadPooledClient extends AbstractClient {
         unsubscribeInternal(host, port, tableName, actionName);
     }
 
+    public void unsubscribe(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
+        unsubscribeInternal(host, port, tableName, actionName, userName, passWord);
+    }
+
     public void unsubscribe(String host, int port, String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName);
     }
 
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException{
+        unsubscribeInternal(host, port, tableName, actionName, "", "");
+    }
+
     @Override
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
         DBConnection dbConn = new DBConnection();
-        dbConn.connect(host, port);
+        if (!userName.equals(""))
+            dbConn.connect(host, port, userName, passWord);
+        else
+            dbConn.connect(host, port);
         try {
             String localIP = this.listeningHost;
             if(localIP.equals(""))

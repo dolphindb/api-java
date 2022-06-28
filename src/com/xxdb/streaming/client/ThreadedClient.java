@@ -18,8 +18,6 @@ import java.util.logging.Handler;
 
 public class ThreadedClient extends AbstractClient {
     private HashMap<String, HandlerLopper> handlerLoppers = new HashMap<>();
-    private String userName = "";
-    private String passWord = "";
 
     public ThreadedClient() throws SocketException {
         this(DEFAULT_PORT);
@@ -117,7 +115,7 @@ public class ThreadedClient extends AbstractClient {
         }
         handlerLopper.interrupt();
         try {
-            subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, userName, passWord);
+            subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
             Date d = new Date();
             DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             System.out.println(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
@@ -132,8 +130,6 @@ public class ThreadedClient extends AbstractClient {
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String password) throws IOException {
-        this.userName = userName;
-        this.passWord = password;
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler);
         handlerLopper.start();
@@ -148,8 +144,6 @@ public class ThreadedClient extends AbstractClient {
             throw new IllegalArgumentException("BatchSize must be greater than zero");
         if(throttle<0)
             throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
-        this.userName = userName;
-        this.passWord = password;
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
@@ -164,8 +158,6 @@ public class ThreadedClient extends AbstractClient {
             throw new IllegalArgumentException("BatchSize must be greater than zero");
         if(throttle<0)
             throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
-        this.userName = userName;
-        this.passWord = password;
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
@@ -264,14 +256,25 @@ public class ThreadedClient extends AbstractClient {
         unsubscribeInternal(host, port, tableName, actionName);
     }
 
+    public void unsubscribe(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
+        unsubscribeInternal(host, port, tableName, actionName, userName, passWord);
+    }
+
     public void unsubscribe(String host, int port, String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName);
     }
 
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException{
+        unsubscribeInternal(host, port, tableName, actionName, "", "");
+    }
+
     @Override
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
         DBConnection dbConn = new DBConnection();
-        dbConn.connect(host, port);
+        if (!userName.equals(""))
+            dbConn.connect(host, port, userName, passWord);
+        else
+            dbConn.connect(host, port);
         try {
             String localIP = this.listeningHost;
             if(localIP.equals(""))

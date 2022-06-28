@@ -30,7 +30,7 @@ public class PollingClient extends AbstractClient {
     protected boolean doReconnect(Site site) {
         try {
             Thread.sleep(1000);
-            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, (MessageHandler) null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, this.userName, this.passWord);
+            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, (MessageHandler) null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
             System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
             topicPoller.setQueue(queue);
             return true;
@@ -101,14 +101,25 @@ public class PollingClient extends AbstractClient {
         unsubscribeInternal(host, port, tableName, actionName);
     }
 
+    public void unsubscribe(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
+        unsubscribeInternal(host, port, tableName, actionName, userName, passWord);
+    }
+
     public void unsubscribe(String host, int port, String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName, DEFAULT_ACTION_NAME);
     }
 
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException{
+        unsubscribeInternal(host, port, tableName, actionName, "", "");
+    }
+
     @Override
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
         DBConnection dbConn = new DBConnection();
-        dbConn.connect(host, port);
+        if (!userName.equals(""))
+            dbConn.connect(host, port, userName, passWord);
+        else
+            dbConn.connect(host, port);
         try {
             String localIP = this.listeningHost;
             if(localIP.equals(""))

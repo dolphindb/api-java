@@ -170,9 +170,11 @@ abstract class AbstractClient implements MessageDispatcher {
         boolean closed = false;
         boolean allowExistTopic = false;
         StreamDeserializer deserializer;
+        String userName = "";
+        String passWord = "";
 
         Site(String host, int port, String tableName, String actionName,
-             MessageHandler handler, long msgId, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic) {
+             MessageHandler handler, long msgId, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord) {
             this.host = host;
             this.port = port;
             this.tableName = tableName;
@@ -183,6 +185,8 @@ abstract class AbstractClient implements MessageDispatcher {
             this.filter = filter;
             this.allowExistTopic = allowExistTopic;
             this.deserializer = deserializer;
+            this.userName = userName;
+            this.passWord = passWord;
         }
     }
 
@@ -462,7 +466,7 @@ abstract class AbstractClient implements MessageDispatcher {
                     String HASiteHost = HASiteHostAndPort[0];
                     int HASitePort = new Integer(HASiteHostAndPort[1]);
                     String HASiteAlias = HASiteHostAndPort[2];
-                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic);
+                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord);
                     synchronized (tableNameToTrueTopic) {
                         tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + "/" + tableName + "/" + actionName, topic);
                     }
@@ -480,7 +484,7 @@ abstract class AbstractClient implements MessageDispatcher {
                     trueTopicToSites.put(topic, sites);
                 }
             } else {
-                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, deserializer, allowExistTopic)};
+                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, deserializer, allowExistTopic, userName, passWord)};
                 synchronized (subInfos_){
                     subInfos_.put(topic, deserializer);
                 }
@@ -517,9 +521,16 @@ abstract class AbstractClient implements MessageDispatcher {
         return subscribeInternal(host, port, tableName, actionName, offset, false);
     }
 
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException{
+        unsubscribeInternal(host, port, tableName, actionName,"", "");
+    }
+
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
         DBConnection dbConn = new DBConnection();
-        dbConn.connect(host, port);
+        if (!userName.equals(""))
+            dbConn.connect(host, port, userName, passWord);
+        else
+            dbConn.connect(host, port);
         try {
             String localIP = this.listeningHost;
             if(localIP.equals(""))
