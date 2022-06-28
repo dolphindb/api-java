@@ -15,8 +15,6 @@ import java.util.concurrent.BlockingQueue;
 
 public class PollingClient extends AbstractClient {
     TopicPoller topicPoller = null;
-    String userName = "";
-    String passWord = "";
 
     public PollingClient(int subscribePort) throws SocketException {
         super(subscribePort);
@@ -42,8 +40,6 @@ public class PollingClient extends AbstractClient {
     }
 
     public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord) throws IOException {
-        this.userName = userName;
-        this.passWord = passWord;
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, (MessageHandler) null, offset, reconnect, filter, deserializer, false, userName, passWord);
         topicPoller = new TopicPoller(queue);
         return topicPoller;
