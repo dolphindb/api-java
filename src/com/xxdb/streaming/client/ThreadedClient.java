@@ -73,7 +73,7 @@ public class ThreadedClient extends AbstractClient {
                         List<IMessage> tmp = queue.poll();
                         if(tmp != null){
                             if(msgs == null)
-                                msgs = tmp;
+                                msgs = new ArrayList<>(tmp);
                             else
                                 msgs.addAll(tmp);
                         }
