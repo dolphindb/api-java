@@ -18,8 +18,6 @@ import java.util.concurrent.Executors;
 public class ThreadPooledClient extends AbstractClient {
     private static int CORES = Runtime.getRuntime().availableProcessors();
     private ExecutorService threadPool;
-    private String userName = "";
-    private String passWord = "";
 
     private class QueueHandlerBinder {
         public QueueHandlerBinder(BlockingQueue<List<IMessage>> queue, MessageHandler handler) {
@@ -122,8 +120,6 @@ public class ThreadPooledClient extends AbstractClient {
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord) throws IOException {
-        this.userName = userName;
-        this.passWord = passWord;
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord);
         synchronized (queueHandlers) {
             queueHandlers.put(tableNameToTrueTopic.get(host + ":" + port + "/" + tableName + "/" + actionName), new QueueHandlerBinder(queue, handler));
