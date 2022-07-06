@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 public class ThreadPooledClient extends AbstractClient {
     private static int CORES = Runtime.getRuntime().availableProcessors();
     private ExecutorService threadPool;
+    private HashMap<String, List<String>> users = new HashMap<>();
 
     private class QueueHandlerBinder {
         public QueueHandlerBinder(BlockingQueue<List<IMessage>> queue, MessageHandler handler) {
@@ -121,8 +122,11 @@ public class ThreadPooledClient extends AbstractClient {
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord) throws IOException {
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord);
+        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = Arrays.asList(userName, passWord);
         synchronized (queueHandlers) {
-            queueHandlers.put(tableNameToTrueTopic.get(host + ":" + port + "/" + tableName + "/" + actionName), new QueueHandlerBinder(queue, handler));
+            queueHandlers.put(tableNameToTrueTopic.get(topicStr), new QueueHandlerBinder(queue, handler));
+            users.put(topicStr, usr);
         }
     }
 
@@ -182,23 +186,19 @@ public class ThreadPooledClient extends AbstractClient {
         unsubscribeInternal(host, port, tableName, actionName);
     }
 
-    public void unsubscribe(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
-        unsubscribeInternal(host, port, tableName, actionName, userName, passWord);
-    }
-
     public void unsubscribe(String host, int port, String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName);
     }
 
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException{
-        unsubscribeInternal(host, port, tableName, actionName, "", "");
-    }
-
     @Override
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
         DBConnection dbConn = new DBConnection();
-        if (!userName.equals(""))
-            dbConn.connect(host, port, userName, passWord);
+        String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = users.get(fullTableName);
+        String user = usr.get(0);
+        String pwd = usr.get(1);
+        if (!user.equals(""))
+            dbConn.connect(host, port, user, pwd);
         else
             dbConn.connect(host, port);
         try {
@@ -213,7 +213,6 @@ public class ThreadPooledClient extends AbstractClient {
 
             dbConn.run("stopPublishTable", params);
             String topic = null;
-            String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
             synchronized (tableNameToTrueTopic) {
                 topic = tableNameToTrueTopic.get(fullTableName);
             }

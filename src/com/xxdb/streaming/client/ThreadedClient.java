@@ -18,6 +18,7 @@ import java.util.logging.Handler;
 
 public class ThreadedClient extends AbstractClient {
     private HashMap<String, HandlerLopper> handlerLoppers = new HashMap<>();
+    private HashMap<String, List<String>> users = new HashMap<>();
 
     public ThreadedClient() throws SocketException {
         this(DEFAULT_PORT);
@@ -159,8 +160,10 @@ public class ThreadedClient extends AbstractClient {
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
+            users.put(topicStr, usr);
         }
     }
 
@@ -173,8 +176,10 @@ public class ThreadedClient extends AbstractClient {
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
+            users.put(topicStr, usr);
         }
     }
 
@@ -187,8 +192,10 @@ public class ThreadedClient extends AbstractClient {
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0.0f ? -1.0f : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
+            users.put(topicStr, usr);
         }
     }
 
@@ -201,8 +208,10 @@ public class ThreadedClient extends AbstractClient {
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0.0f ? -1.0f : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
+            users.put(topicStr, usr);
         }
     }
 
@@ -215,8 +224,10 @@ public class ThreadedClient extends AbstractClient {
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
+            users.put(topicStr, usr);
         }
     }
 
@@ -332,23 +343,19 @@ public class ThreadedClient extends AbstractClient {
         unsubscribeInternal(host, port, tableName, actionName);
     }
 
-    public void unsubscribe(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
-        unsubscribeInternal(host, port, tableName, actionName, userName, passWord);
-    }
-
     public void unsubscribe(String host, int port, String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName);
     }
 
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException{
-        unsubscribeInternal(host, port, tableName, actionName, "", "");
-    }
-
     @Override
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
         DBConnection dbConn = new DBConnection();
-        if (!userName.equals(""))
-            dbConn.connect(host, port, userName, passWord);
+        String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = users.get(fullTableName);
+        String user = usr.get(0);
+        String pwd = usr.get(1);
+        if (!user.equals(""))
+            dbConn.connect(host, port, user, pwd);
         else
             dbConn.connect(host, port);
         try {
@@ -363,7 +370,6 @@ public class ThreadedClient extends AbstractClient {
 
             dbConn.run("stopPublishTable", params);
             String topic = null;
-            String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
             synchronized (tableNameToTrueTopic) {
                 topic = tableNameToTrueTopic.get(fullTableName);
             }

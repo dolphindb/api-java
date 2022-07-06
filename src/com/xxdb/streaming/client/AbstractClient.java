@@ -31,6 +31,7 @@ abstract class AbstractClient implements MessageDispatcher {
     protected ConcurrentHashMap<String, Site[]> trueTopicToSites = new ConcurrentHashMap<>();
     protected CopyOnWriteArraySet<String> waitReconnectTopic = new CopyOnWriteArraySet<>();
     protected Map<String, StreamDeserializer> subInfos_ = new HashMap<>();
+    protected HashMap<List<String>, List<String>> users = new HashMap<>();
 
     class ReconnectItem {
         /**
@@ -416,7 +417,9 @@ abstract class AbstractClient implements MessageDispatcher {
             throws IOException, RuntimeException {
         Entity re;
         String topic = "";
-
+        List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+        List<String> usr = Arrays.asList(userName, passWord);
+        users.put(tp, usr);
         DBConnection dbConn = new DBConnection();
         if (!userName.equals(""))
             dbConn.connect(host, port, userName, passWord);
@@ -521,14 +524,14 @@ abstract class AbstractClient implements MessageDispatcher {
         return subscribeInternal(host, port, tableName, actionName, offset, false);
     }
 
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException{
-        unsubscribeInternal(host, port, tableName, actionName,"", "");
-    }
-
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
         DBConnection dbConn = new DBConnection();
-        if (!userName.equals(""))
-            dbConn.connect(host, port, userName, passWord);
+        List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+        List<String> usr = users.get(tp);
+        String user = usr.get(0);
+        String pwd = usr.get(1);
+        if (!user.equals(""))
+            dbConn.connect(host, port, user, pwd);
         else
             dbConn.connect(host, port);
         try {

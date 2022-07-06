@@ -10,11 +10,14 @@ import com.xxdb.data.Vector;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 public class PollingClient extends AbstractClient {
     TopicPoller topicPoller = null;
+    private HashMap<List<String>, List<String>> users = new HashMap<>();
 
     public PollingClient(int subscribePort) throws SocketException {
         super(subscribePort);
@@ -41,6 +44,9 @@ public class PollingClient extends AbstractClient {
 
     public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord) throws IOException {
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, (MessageHandler) null, offset, reconnect, filter, deserializer, false, userName, passWord);
+        List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+        List<String> usr = Arrays.asList(userName, passWord);
+        users.put(tp, usr);
         topicPoller = new TopicPoller(queue);
         return topicPoller;
     }
@@ -97,23 +103,19 @@ public class PollingClient extends AbstractClient {
         unsubscribeInternal(host, port, tableName, actionName);
     }
 
-    public void unsubscribe(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
-        unsubscribeInternal(host, port, tableName, actionName, userName, passWord);
-    }
-
     public void unsubscribe(String host, int port, String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName, DEFAULT_ACTION_NAME);
     }
 
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException{
-        unsubscribeInternal(host, port, tableName, actionName, "", "");
-    }
-
     @Override
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName, String userName, String passWord) throws IOException {
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
         DBConnection dbConn = new DBConnection();
-        if (!userName.equals(""))
-            dbConn.connect(host, port, userName, passWord);
+        List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+        List<String> usr = users.get(tp);
+        String user = usr.get(0);
+        String pwd = usr.get(1);
+        if (!user.equals(""))
+            dbConn.connect(host, port, user, pwd);
         else
             dbConn.connect(host, port);
         try {
