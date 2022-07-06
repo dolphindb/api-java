@@ -542,7 +542,7 @@ public class ThreadedClientsubscribeTest {
         Vector filter1 = (Vector) conn.run("1..100000");
         client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,true,filter1,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
         assertEquals(true,save_batch_size.isEmpty());
@@ -600,17 +600,15 @@ public class ThreadedClientsubscribeTest {
     }
 
     @Test
-    public void test_func_BatchMessageHandler_batchSize_time_interval_over_throttle() throws IOException, InterruptedException {
+    public void test_func_BatchMessageHandler_batchSize_over_meg_size_big_throttle() throws IOException, InterruptedException {
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,true,filter1,true,1024,2);
-        for(int x = 0;x<10;x++) {
-            conn.run("n=10;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(3000);
-        }
+        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,true,filter1,true,100000,10);
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
-        System.out.println(save_batch_size.toString());
         assertEquals(10000,row_num.getInt());
-        assertEquals(10,save_batch_size.toArray()[0]);
+        boolean t = (int)(save_batch_size.toArray()[0])>1024;
+        assertEquals(true,t);
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
