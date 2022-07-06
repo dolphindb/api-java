@@ -75,8 +75,8 @@ public class ThreadPooledClientTest {
 
     @AfterClass
     public static void after() throws IOException {
-//        client.close();
-//        conn.close();
+        client.close();
+        conn.close();
     }
 
     public static MessageHandler MessageHandler_handler = new MessageHandler() {
