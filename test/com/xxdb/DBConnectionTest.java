@@ -15,7 +15,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.time.LocalDate;
 import java.util.*;
@@ -73,7 +72,7 @@ public class DBConnectionTest {
      //   conn = new DBConnection(false,true);
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
-                throw new IOException("Failed to connect to 2xdb server");
+                throw new IOException("Failed to connect to dolphindb server");
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -1982,10 +1981,11 @@ public class DBConnectionTest {
         conn1.connect("192.168.1.0", PORT, "admin", "123456");
     }
 
-    @Test(expected = ConnectException.class)
+    @Test(expected = IOException.class)
     public  void TestConnectErrorPort() throws IOException {
         DBConnection conn1 = new DBConnection();
        conn1.connect(HOST, 44, "admin", "123456");
+       conn1.run("1+1");
     }
 
     @Test(expected = NullPointerException.class)
@@ -2801,6 +2801,15 @@ public class DBConnectionTest {
         };
         Thread thread = new Thread(runnable);
         thread.start();
+    }
+
+    @Test
+    public void test_connect_support_python_parser() throws IOException {
+        DBConnection conn_python_parser=new DBConnection(false,false,false,true);
+        conn_python_parser.connect(HOST,PORT,"admin","123456");
+        System.out.println(conn_python_parser.run("version()").getString());
+        conn_python_parser.run("a = 1 1 2 1 1 2");
+        conn_python_parser.run("import pandas");
     }
 
 }
