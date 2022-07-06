@@ -37,6 +37,21 @@ public class ThreadedClient extends AbstractClient {
         BatchMessageHandler batchHandler;
         private int batchSize = -1;
         private int throttle = -1;
+        private float secondThrottle = -1.0f;
+
+        HandlerLopper(BlockingQueue<List<IMessage>> queue, BatchMessageHandler batchMessageHandler, int batchSize, float secondThrottle){
+            this.queue = queue;
+            this.batchHandler = batchMessageHandler;
+            this.batchSize = batchSize;
+            this.secondThrottle = secondThrottle;
+        }
+
+        HandlerLopper(BlockingQueue<List<IMessage>> queue, MessageHandler handler, int batchSize, float secondThrottle) {
+            this.queue = queue;
+            this.handler = handler;
+            this.batchSize = batchSize;
+            this.secondThrottle = secondThrottle;
+        }
 
         HandlerLopper(BlockingQueue<List<IMessage>> queue, BatchMessageHandler batchHandler, int batchSize, int throttle) {
             this.queue = queue;
@@ -60,15 +75,20 @@ public class ThreadedClient extends AbstractClient {
         public void run() {
             while (!isInterrupted()) {
                 List<IMessage> msgs = null;
-                if(batchSize == -1 && throttle == -1) {
+                if(batchSize == -1 && throttle == -1 || batchSize == -1 && secondThrottle == -1.0f) {
                     try {
                         msgs = queue.take();
                     } catch (InterruptedException e) {
                         return;
                     }
                 }
-                else if(batchSize != -1 && throttle != -1){
-                    LocalTime end = LocalTime.now().plusNanos(throttle*1000000);
+                else if(batchSize != -1 && throttle != -1 || batchSize != -1 && secondThrottle != -1.0f){
+                    LocalTime end;
+                    if (throttle != -1){
+                        end = LocalTime.now().plusNanos(throttle*1000000);
+                    }else {
+                        end = LocalTime.now().plusNanos((long) secondThrottle*1000000000);
+                    }
                     while (msgs == null || ((msgs == null||msgs.size()<batchSize) && LocalTime.now().isBefore(end))){
                         List<IMessage> tmp = queue.poll();
                         if(tmp != null){
@@ -80,7 +100,12 @@ public class ThreadedClient extends AbstractClient {
                     }
                 }
                 else {
-                    LocalTime end = LocalTime.now().plusNanos(throttle*1000000);
+                    LocalTime end;
+                    if (throttle != -1){
+                        end = LocalTime.now().plusNanos(throttle*1000000);
+                    }else {
+                        end = LocalTime.now().plusNanos((long) secondThrottle*1000000000);
+                    }
                     while (msgs == null || LocalTime.now().isBefore(end)){
                         List<IMessage> tmp = queue.poll();
                         if(tmp != null){
@@ -153,6 +178,34 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, float throttle, String userName, String password) throws IOException {
+        if(batchSize<=0)
+            throw new IllegalArgumentException("BatchSize must be greater than zero");
+        if(throttle<0)
+            throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password);
+        HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0.0f ? -1.0f : throttle);
+        handlerLopper.start();
+        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        synchronized (handlerLoppers) {
+            handlerLoppers.put(topicStr, handlerLopper);
+        }
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, float throttle, String userName, String password) throws IOException {
+        if(batchSize<=0)
+            throw new IllegalArgumentException("BatchSize must be greater than zero");
+        if(throttle<0)
+            throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password);
+        HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0.0f ? -1.0f : throttle);
+        handlerLopper.start();
+        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        synchronized (handlerLoppers) {
+            handlerLoppers.put(topicStr, handlerLopper);
+        }
+    }
+
     public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password) throws IOException {
         if(batchSize<=0)
             throw new IllegalArgumentException("BatchSize must be greater than zero");
@@ -171,12 +224,24 @@ public class ThreadedClient extends AbstractClient {
         subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, null, allowExistTopic, userName, password);
     }
 
+    public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler batchMessageHandler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, float throttle) throws IOException{
+        subscribe(host, port, tableName, actionName, batchMessageHandler, offset, reconnect, filter, deserializer, allowExistTopic, batchSize, throttle, "", "");
+    }
+
     public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler batchMessageHandler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle) throws IOException{
         subscribe(host, port, tableName, actionName, batchMessageHandler, offset, reconnect, filter, deserializer, allowExistTopic, batchSize, throttle, "", "");
     }
 
+    public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler batchMessageHandler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, float throttle)throws IOException{
+        subscribe(host, port, tableName, actionName, batchMessageHandler, offset, reconnect, filter, null, allowExistTopic, batchSize, throttle);
+    }
+
     public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler batchMessageHandler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, int throttle)throws IOException{
         subscribe(host, port, tableName, actionName, batchMessageHandler, offset, reconnect, filter, null, allowExistTopic, batchSize, throttle);
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler batchMessageHandler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, float throttle, String userName, String passWord)throws IOException{
+        subscribe(host, port, tableName, actionName, batchMessageHandler, offset, reconnect, filter, null, allowExistTopic, batchSize, throttle, userName, passWord);
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler batchMessageHandler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, int throttle, String userName, String passWord)throws IOException{
@@ -187,6 +252,9 @@ public class ThreadedClient extends AbstractClient {
         subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, batchSize, throttle, "", "");
     }
 
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, float throttle) throws IOException{
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, batchSize, throttle, "", "");
+    }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic)throws IOException{
         subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter,  deserializer, allowExistTopic, "", "");
@@ -204,7 +272,15 @@ public class ThreadedClient extends AbstractClient {
         subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, null, allowExistTopic, batchSize, throttle);
     }
 
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, float throttle)throws IOException{
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, null, allowExistTopic, batchSize, throttle);
+    }
+
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, int throttle, String userName, String passWord)throws IOException{
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, null, allowExistTopic, batchSize, throttle, userName, passWord);
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, int batchSize, float throttle, String userName, String passWord)throws IOException{
         subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, null, allowExistTopic, batchSize, throttle, userName, passWord);
     }
 
