@@ -385,7 +385,10 @@ public class DBConnection {
             }
 
             if (!header.equals("OK")){
-                throw new IOException(hostName_+":"+port_+" Server response: '" + header + "' script: '" + script + "'");
+                if (scriptType == "script")
+                    throw new IOException(hostName_+":"+port_+" Server response: '" + header + "' script: '" + script + "'");
+                else
+                    throw new IOException(hostName_+":"+port_+" Server response: '" + header + "' " + scriptType + ": '" + script + "'");
             }
 
             if (numObject == 0){
