@@ -4488,7 +4488,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
     }
     @Test
-    public void test_mtw_concurrentWrite_hash_partition_table() throws Exception {
+    public void test_mtw_concurrentWrite_hash_string_partition_table() throws Exception {
         conn.run("login(`admin,`123456)\n" +
                 "dbName = \"dfs://test_mtw_concurrentWrite_hash_partition_table\"\n" +
                 "if(existsDatabase(dbName)){\n" +
@@ -4516,5 +4516,61 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(1000000,result.getLong());
     }
 
+    @Test
+    public void test_mtw_concurrentWrite_hash_Symbol_partition_table() throws Exception {
+        conn.run("login(`admin,`123456)\n" +
+                "dbName = \"dfs://test_mtw_concurrentWrite_hash_partition_table\"\n" +
+                "if(existsDatabase(dbName)){\n" +
+                "\tdropDB(dbName)\n" +
+                "}\n" +
+                "db = database(dbName,HASH,[SYMBOL,10])\n" +
+                "t = table(10:0,`sym`price`val,[SYMBOL,DOUBLE,INT])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`sym)");
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_mtw_concurrentWrite_hash_partition_table", "pt",
+                false, false, null, 1000, 0.001f, 10, "sym");
+
+        ArrayList<Object> write_data =new ArrayList<Object>();
+        int n = 100000;
+        for(int i = 0;i<n;i++){
+            ArrayList<Object> one_row_list = new ArrayList<Object>();
+            int tmp =(int)(Math.random()*100);
+            one_row_list.add(tmp+"");
+            one_row_list.add((double)tmp);
+            one_row_list.add(tmp);
+            write_data.add(one_row_list);
+        }
+        write(write_data,mtw);
+        Thread.sleep(20000);
+        BasicLong result = (BasicLong) conn.run("exec count(*) from loadTable(\"dfs://test_mtw_concurrentWrite_hash_partition_table\",`pt)");
+        assertEquals(1000000,result.getLong());
+    }
+    @Test
+    public void test_mtw_concurrentWrite_hash_blob_partition_table() throws Exception {
+        conn.run("login(`admin,`123456)\n" +
+                "dbName = \"dfs://test_mtw_concurrentWrite_hash_partition_table\"\n" +
+                "if(existsDatabase(dbName)){\n" +
+                "\tdropDB(dbName)\n" +
+                "}\n" +
+                "db = database(dbName,HASH,[BLOB,10])\n" +
+                "t = table(10:0,`sym`price`val,[SYMBOL,DOUBLE,INT])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`sym)");
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_mtw_concurrentWrite_hash_partition_table", "pt",
+                false, false, null, 1000, 0.001f, 10, "sym");
+
+        ArrayList<Object> write_data =new ArrayList<Object>();
+        int n = 100000;
+        for(int i = 0;i<n;i++){
+            ArrayList<Object> one_row_list = new ArrayList<Object>();
+            int tmp =(int)(Math.random()*100);
+            one_row_list.add(tmp+"");
+            one_row_list.add((double)tmp);
+            one_row_list.add(tmp);
+            write_data.add(one_row_list);
+        }
+        write(write_data,mtw);
+        Thread.sleep(20000);
+        BasicLong result = (BasicLong) conn.run("exec count(*) from loadTable(\"dfs://test_mtw_concurrentWrite_hash_partition_table\",`pt)");
+        assertEquals(1000000,result.getLong());
+    }
 }
 
