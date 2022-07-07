@@ -2802,15 +2802,5 @@ public class DBConnectionTest {
         Thread thread = new Thread(runnable);
         thread.start();
     }
-
-    @Test
-    public void test_connect_support_python_parser() throws IOException {
-        DBConnection conn_python_parser=new DBConnection(false,false,false,true);
-        conn_python_parser.connect(HOST,PORT,"admin","123456");
-        System.out.println(conn_python_parser.run("version()").getString());
-        conn_python_parser.run("a = 1 1 2 1 1 2");
-        conn_python_parser.run("import pandas");
-    }
-
 }
 
