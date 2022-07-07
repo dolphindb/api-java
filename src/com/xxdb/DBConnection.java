@@ -123,7 +123,7 @@ public class DBConnection {
         private int port_;
         private String userId_;
         private String pwd_;
-        private boolean encrypted_;
+        private boolean encrypted_ = true;
         private boolean isConnected_;
         private boolean sslEnable_ = false;
         private boolean asynTask_ = false;
@@ -300,7 +300,6 @@ public class DBConnection {
 
             if (fetchSize > 0 && fetchSize < 8192)
                 throw new IOException("fetchSize must be greater than 8192");
-
             if (socket_ == null || !socket_.isConnected() || socket_.isClosed()) {
                 if (sessionID_.isEmpty())
                     throw new IOException("Database connection is not established yet.");
@@ -328,7 +327,7 @@ public class DBConnection {
             try {
                 out_.writeBytes((listener != null ? "API2 " : "API ") + sessionID_ + " ");
                 out_.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body.toString(), 0, 0)));
-                int flag = generateRequestFlag(false);
+                int flag = generateRequestFlag(clearMemory);
                 out_.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                 if (fetchSize > 0)
                     out_.writeBytes("__" + String.valueOf(fetchSize));
@@ -374,7 +373,7 @@ public class DBConnection {
                 throw new IOException("Received invalid header");
             }
 
-            sessionID_ = headers[0];
+
             int numObject = Integer.parseInt(headers[1]);
 
             try {
@@ -750,7 +749,7 @@ public class DBConnection {
     }
 
     public boolean connectNode(Node node) throws IOException{
-        System.out.println("Connect to " + node.hostName + ":" + node.port + ".");
+//        System.out.println("Connect to " + node.hostName + ":" + node.port + ".");
         while (!closed_){
             try {
                 return conn_.connect(node.hostName, node.port, uid_, pwd_, enableSSL_, asynTask_, compress_);
