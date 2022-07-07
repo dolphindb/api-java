@@ -104,7 +104,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t1", "", false, false, null, 10000, 1,
                 5, "date");
         }catch (Exception e) {
-            assertEquals("192.178.1.321",e.getMessage());
+            assertEquals("Failed to connect to server 192.178.1.321:"+PORT,e.getMessage());
         }
         conn.run("undef(`t1,SHARED)");
     }
@@ -121,7 +121,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t1", "", false, false, null, 10000, 1,
                 5, "date");
         }catch (Exception e) {
-            assertEquals("拒绝连接 (Connection refused)",e.getMessage());
+            assertEquals("Failed to connect to server "+HOST+":0",e.getMessage());
         }
         conn.run("undef(`t1,SHARED)");
     }
@@ -137,7 +137,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t1", "", false, false, null, 10000, 1,
                 5, "date");
         }catch (Exception e) {
-            assertEquals("Server response: 'The user name or password is incorrect.' function: 'login'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' function: 'login'",e.getMessage());
         }
         conn.run("undef(`t1,SHARED)");
     }
@@ -153,7 +153,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t1", "", false, false, null, 10000, 1,
                 5, "date");
         }catch (Exception e) {
-            assertEquals("Server response: 'The user name or password is incorrect.' function: 'login'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' function: 'login'",e.getMessage());
         }
         conn.run("undef(`t1,SHARED)");
     }
@@ -169,7 +169,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "tt", "", false, false, null, 10000, 1,
                 5, "date");
         }catch (Exception e) {
-            assertEquals("Server response: 'Syntax Error: [line #1] Cannot recognize the token tt' script: 'schema(tt)'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'Syntax Error: [line #1] Cannot recognize the token tt' script: 'schema(tt)'",e.getMessage());
         }
         conn.run("undef(`t1,SHARED)");
     }
@@ -185,7 +185,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t1", "t1", false, false, null, 10000, 1,
                 5, "date");
         }catch (Exception e) {
-            assertEquals("Server response: 'table file does not exist: t1/t1.tbl' script: 'schema(loadTable(\"t1\",\"t1\"))'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'table file does not exist: t1/t1.tbl' script: 'schema(loadTable(\"t1\",\"t1\"))'",e.getMessage());
         }
         conn.run("undef(`t1,SHARED)");
     }
@@ -201,7 +201,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                     "", "t1", false, false, null, 10000, 1,
                     5, "date");
         }catch (Exception e) {
-            assertEquals("Server response: 'table file does not exist: /t1.tbl' script: 'schema(loadTable(\"\",\"t1\"))'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'table file does not exist: /t1.tbl' script: 'schema(loadTable(\"\",\"t1\"))'",e.getMessage());
         }
         conn.run("undef(`t1,SHARED)");
     }
@@ -223,7 +223,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 dbName, "t1", false, false, null, 10000, 1,
                 5, "date");
         }catch (Exception e) {
-            assertEquals("Server response: 'getFileBlocksMeta on path '/test_MultithreadedTableWriter_pt/t1.tbl' failed, reason: path does not exist' script: 'schema(loadTable(\"dfs://test_MultithreadedTableWriter_pt\",\"t1\"))'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'getFileBlocksMeta on path '/test_MultithreadedTableWriter_pt/t1.tbl' failed, reason: path does not exist' script: 'schema(loadTable(\"dfs://test_MultithreadedTableWriter_pt\",\"t1\"))'",e.getMessage());
         }
     }
 
@@ -244,7 +244,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "s", "pt", false, false, null, 10000, 1,
                 5, "tradeDate");
         }catch (Exception e) {
-            assertEquals("Server response: 'table file does not exist: s/pt.tbl' script: 'schema(loadTable(\"s\",\"pt\"))'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'table file does not exist: s/pt.tbl' script: 'schema(loadTable(\"s\",\"pt\"))'",e.getMessage());
         }
     }
 
@@ -269,7 +269,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                     5, "tradeDate");
         }catch (Exception ex){
             conn.run("deleteUser(`EliManning)\n");
-            assertEquals("Server response: '<NoPrivilege>Not granted to write table dfs://test_MultithreadedTableWriter_pt/pt' script: 'schema(loadTable(\"dfs://test_MultithreadedTableWriter\",\"pt\"))'",ex.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: '<NoPrivilege>Not granted to write table dfs://test_MultithreadedTableWriter_pt/pt' script: 'schema(loadTable(\"dfs://test_MultithreadedTableWriter\",\"pt\"))'",ex.getMessage());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
     }
@@ -795,7 +795,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         mutithreadTableWriter2.waitForThreadCompletion();
         MultithreadedTableWriter.Status status =mutithreadTableWriter1.getStatus();
         MultithreadedTableWriter.Status status1 =  mutithreadTableWriter2.getStatus();
-        if (status.errorInfo.toString().contains("Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter")){
+        if (status.errorInfo.toString().contains(HOST+":"+PORT+" Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter")){
             assertEquals("",status1.errorInfo.toString());
             assertEquals("A5",status.errorCode);
             assertTrue(status.sendFailedRows >0);
@@ -809,7 +809,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
 
         }else {
-            assertTrue(status1.errorInfo.toString().contains("Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter"));
+            assertTrue(status1.errorInfo.toString().contains(HOST+":"+PORT+" Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter"));
             assertEquals("A5",status1.errorCode);
             assertTrue(status1.sendFailedRows >0);
             assertEquals(true,status1.hasError());
@@ -853,7 +853,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         mutithreadTableWriter1.waitForThreadCompletion();
         MultithreadedTableWriter.Status status1=mutithreadTableWriter1.getStatus();
         MultithreadedTableWriter.Status status=mutithreadTableWriter2.getStatus();
-        if (status.errorInfo.toString().contains("Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter")){
+        if (status.errorInfo.toString().contains(HOST+":"+PORT+" Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter")){
             assertEquals("",status1.errorInfo.toString());
             assertEquals("A5",status.errorCode);
             assertTrue(status.sendFailedRows >0);
@@ -867,7 +867,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
 
         }else {
-            assertTrue(status1.errorInfo.toString().contains("Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter"));
+            assertTrue(status1.errorInfo.toString().contains(HOST+":"+PORT+" Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter"));
             assertEquals("A5",status1.errorCode);
             assertTrue(status1.sendFailedRows >0);
             assertEquals(true,status1.hasError());
@@ -940,7 +940,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         mutithreadTableWriter1.waitForThreadCompletion();
 
         MultithreadedTableWriter.Status status=mutithreadTableWriter2.getStatus();
-        assertTrue(status.errorInfo.toString().contains("Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter"));
+        assertTrue(status.errorInfo.toString().contains(HOST+":"+PORT+" Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter"));
         assertEquals("A5",status.errorCode);
         assertTrue(status.unsentRows >0);
         assertTrue(status.sendFailedRows >0);
