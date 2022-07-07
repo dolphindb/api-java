@@ -328,13 +328,7 @@ public class DBConnection {
             try {
                 out_.writeBytes((listener != null ? "API2 " : "API ") + sessionID_ + " ");
                 out_.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body.toString(), 0, 0)));
-                short flag = 0;
-                if (asynTask_)
-                    flag += 4;
-                if (clearMemory)
-                    flag += 16;
-                if (compress_)
-                    flag += 64;
+                int flag = generateRequestFlag(false);
                 out_.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                 if (fetchSize > 0)
                     out_.writeBytes("__" + String.valueOf(fetchSize));
