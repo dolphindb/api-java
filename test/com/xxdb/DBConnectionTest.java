@@ -2738,7 +2738,7 @@ public class DBConnectionTest {
         cols.add(date);
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456",true)) {
-                throw new IOException("Failed to connect to 2xdb server");
+                throw new IOException("Failed to connect to dolphindb server");
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -2801,6 +2801,41 @@ public class DBConnectionTest {
         };
         Thread thread = new Thread(runnable);
         thread.start();
+    }
+
+    @Test
+    public void test_DBconnection_reconnect_false(){
+        DBConnection conn_re = new DBConnection();
+        try {
+            conn_re.connect(HOST,0, "admin", "123456", null, false, null, false);
+            conn_re.run("1+1");
+            fail("no exception thrown");
+        }catch(Exception ex){
+            assertEquals("Couldn't send script/function to the remote host because the connection has been closed",ex.getMessage());
+        }
+    }
+
+    @Test
+    public void test_DBconnection_reconnect_true() throws InterruptedException {
+        DBConnection conn_re = new DBConnection();
+        class reconnect extends TimerTask {
+            public reconnect() {
+            }
+            @Override
+            public void run() {
+                try {
+                    conn_re.connect(HOST,0, "admin", "123456", null, false, null, true);
+                    conn_re.run("1+1");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        Timer timer = new Timer("Timer");
+        TimerTask rec = new reconnect() ;
+        timer.scheduleAtFixedRate(rec, 0L, 1000L);
+        Thread.sleep(5000L);
+        timer.cancel();
     }
 }
 
