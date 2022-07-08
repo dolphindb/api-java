@@ -752,7 +752,7 @@ public class DBConnection {
     }
 
     public boolean connectNode(Node node) throws IOException{
-//        System.out.println("Connect to " + node.hostName + ":" + node.port + ".");
+        System.out.println("Connect to " + node.hostName + ":" + node.port + ".");
         while (!closed_){
             try {
                 return conn_.connect(node.hostName, node.port, uid_, pwd_, enableSSL_, asynTask_, compress_);
