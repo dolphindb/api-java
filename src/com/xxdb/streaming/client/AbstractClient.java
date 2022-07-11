@@ -427,6 +427,10 @@ abstract class AbstractClient implements MessageDispatcher {
             dbConn.connect(host, port);
         if (deserializer!=null&&!deserializer.isInited())
             deserializer.init(dbConn);
+        if (deserializer != null){
+            BasicDictionary schema = (BasicDictionary) dbConn.run(tableName + ".schema()");
+            deserializer.checkSchema(schema);
+        }
         try {
             String localIP = this.listeningHost;
             if (localIP.equals(""))

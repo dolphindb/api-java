@@ -19,20 +19,24 @@ public class StreamDeserializer {
     Map<String, Pair<String, String>> tableNames_;
     public BasicMessage parse(IMessage message) throws Exception {
         if (message.size() < 3)
-            throw new Exception("The data must contain 3 columns. ");
+            throw new RuntimeException("The data must contain 3 columns. ");
         if (message.getEntity(1).getDataType() != Entity.DATA_TYPE.DT_SYMBOL && message.getEntity(1).getDataType() != Entity.DATA_TYPE.DT_STRING)
-            throw new Exception("The 2rd column must be a vector type with symbol or string. ");
+            throw new RuntimeException("The 2rd column must be a vector type with symbol or string. ");
         if (message.getEntity(2).getDataType() != Entity.DATA_TYPE.DT_BLOB)
-            throw new Exception("The rd column must be a vector type with blob. ");
+            throw new RuntimeException("The rd column must be a vector type with blob. ");
 
         String sym = message.getEntity(1).getString();
         byte[] blob = ((BasicString)message.getEntity(2)).getBytes();
         MsgDeserializer deserializer = null;
-        if (!msgDeserializers_.containsKey(sym))
-        {
-            throw new Exception("The filter " + sym + " does not exist. ");
+        if (msgDeserializers_ != null){
+            if (!msgDeserializers_.containsKey(sym))
+            {
+                throw new Exception("The filter " + sym + " does not exist. ");
+            }else {
+                deserializer = msgDeserializers_.get(sym);
+            }
         }else {
-            deserializer = msgDeserializers_.get(sym);
+            throw new RuntimeException("The StreamDeserialize is not inited");
         }
         BasicMessage mixedMessage = new BasicMessage(message.getOffset(), message.getTopic(), deserializer.parse(blob), sym);
         return mixedMessage;
@@ -69,12 +73,14 @@ public class StreamDeserializer {
         for (Map.Entry<String, Pair<String, String>> keyValue : tableNames_.entrySet()){
             String dbName = keyValue.getValue().getValue0();
             String tableName = keyValue.getValue().getValue1();
-            BasicDictionary schema;
+            BasicDictionary schema = null;
             try {
-                if (tableName == ""){
-                    schema = (BasicDictionary) conn.run("schema(" + dbName + ")");
-                }else {
-                    schema = (BasicDictionary) conn.run("schema(loadTable(\"" + dbName + "\",\"" + tableName + "\"))");
+                if (dbName != null){
+                    if (dbName.equals("")){
+                        schema = (BasicDictionary) conn.run("schema(" + tableName + ")");
+                    }else {
+                        schema = (BasicDictionary) conn.run("schema(loadTable(\"" + dbName + "\",\"" + tableName + "\"))");
+                    }
                 }
                 filters.put(keyValue.getKey(), schema);
             }catch (Exception e){
@@ -89,7 +95,6 @@ public class StreamDeserializer {
         for(Map.Entry<String, BasicDictionary> keyValue : filters.entrySet())
         {
             List<Entity.DATA_TYPE> colTypes = new ArrayList<>();
-            List<String> colNames = new ArrayList<>();
 
             BasicTable colDefs = (BasicTable)(keyValue.getValue()).get("colDefs");
             BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
@@ -103,6 +108,17 @@ public class StreamDeserializer {
 
     public boolean isInited(){
         return msgDeserializers_ != null;
+    }
+
+    public void checkSchema(BasicDictionary schema) throws RuntimeException{
+        BasicTable colDefs = (BasicTable) schema.get("colDefs");
+        BasicStringVector types = (BasicStringVector)colDefs.getColumn(1);
+        if (colDefs.rows() < 3)
+            throw new RuntimeException("The data must contain 3 columns. ");
+        if (types.getString(1) != "SYMBOL" && types.getString(1) != "STRING")
+            throw new RuntimeException("The 2rd column must be a vector type with symbol or string. ");
+        if (types.getString(2) != "BLOB")
+            throw new RuntimeException("The 3rd column must be a vector type with blob. ");
     }
 
     class MsgDeserializer
