@@ -115,9 +115,9 @@ public class StreamDeserializer {
         BasicStringVector types = (BasicStringVector)colDefs.getColumn(1);
         if (colDefs.rows() < 3)
             throw new RuntimeException("The data must contain 3 columns. ");
-        if (types.getString(1) != "SYMBOL" && types.getString(1) != "STRING")
+        if (!types.getString(1).equals("SYMBOL") && !types.getString(1).equals("STRING"))
             throw new RuntimeException("The 2rd column must be a vector type with symbol or string. ");
-        if (types.getString(2) != "BLOB")
+        if (!types.getString(2).equals("BLOB"))
             throw new RuntimeException("The 3rd column must be a vector type with blob. ");
     }
 
