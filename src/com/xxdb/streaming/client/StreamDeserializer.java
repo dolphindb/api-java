@@ -97,7 +97,8 @@ public class StreamDeserializer {
         for(Map.Entry<String, BasicDictionary> keyValue : filters.entrySet())
         {
             List<Entity.DATA_TYPE> colTypes = new ArrayList<>();
-
+            if (keyValue.getValue() == null)
+                throw new RuntimeException("The schema can not be null");
             BasicTable colDefs = (BasicTable)(keyValue.getValue()).get("colDefs");
             BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
             for (int i = 0; i < colDefsTypeInt.rows(); ++i)
