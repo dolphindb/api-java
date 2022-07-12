@@ -1,19 +1,15 @@
 package com.xxdb;
 
-import com.xxdb.data.BasicInt;
-import com.xxdb.data.BasicTable;
+import com.xxdb.data.*;
 import com.xxdb.data.Vector;
-import com.xxdb.streaming.client.BatchMessageHandler;
-import com.xxdb.streaming.client.IMessage;
-import com.xxdb.streaming.client.MessageHandler;
-import com.xxdb.streaming.client.ThreadedClient;
+import com.xxdb.streaming.client.*;
+import org.javatuples.Pair;
 import org.junit.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
+import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -62,6 +58,7 @@ public class ThreadedClientsubscribeTest {
         try{client.unsubscribe(HOST,PORT,"Trades","subTread1");}catch (Exception e){}
         try{client.unsubscribe(HOST,PORT,"Trades","subTread2");}catch (Exception e){}
         try{client.unsubscribe(HOST,PORT,"Trades","subTread3");}catch (Exception e){}
+        try{client.unsubscribe(HOST,PORT,"outTables", "mutiSchema");}catch (Exception e){}
         try {
             conn.run("login(`admin,`123456);" +
                     "try{dropStreamTable('Trades')}catch(ex){};"+
@@ -73,7 +70,6 @@ public class ThreadedClientsubscribeTest {
                     "loop(deleteGroup,grouplist)");
         } catch (Exception e) {
         }
-
     }
 
     @AfterClass
@@ -398,7 +394,7 @@ public class ThreadedClientsubscribeTest {
             client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"admin_error","123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' script: 'login'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' function: 'login'",e.getMessage());
         }
     }
 
@@ -409,7 +405,7 @@ public class ThreadedClientsubscribeTest {
             client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"admin","error_password");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' script: 'login'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' function: 'login'",e.getMessage());
         }
     }
 
@@ -467,7 +463,7 @@ public class ThreadedClientsubscribeTest {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' script: 'publishTable'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' function: 'publishTable'",e.getMessage());
         }
     }
 
@@ -487,7 +483,7 @@ public class ThreadedClientsubscribeTest {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' script: 'publishTable'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' function: 'publishTable'",e.getMessage());
         }
 
         client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test2", "123456");
@@ -496,7 +492,7 @@ public class ThreadedClientsubscribeTest {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test3", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' script: 'publishTable'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' function: 'publishTable'",e.getMessage());
         }
 
     }
@@ -514,7 +510,7 @@ public class ThreadedClientsubscribeTest {
             client.subscribe(HOST, PORT, "tmp_st3", "subTread1", MessageHandler_handler, -1, true, null, true, 100, 5, "test1", "123456_error");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' script: 'login'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' function: 'login'",e.getMessage());
         }
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st1.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st2.append!(t)");
@@ -648,9 +644,9 @@ public class ThreadedClientsubscribeTest {
         MyThread write_data  = new MyThread ();
         write_data.start();
         Thread.sleep(2000);
-        conn.run("stopPublishTable('192.168.1.32',8676,'Trades','subTread1')");
+        conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
         Thread.sleep(2000);
-        conn.run("stopPublishTable('192.168.1.32',8676,'Trades','subTread1')");
+        conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
         Thread.sleep(2000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(20000,row_num.getInt());
@@ -663,11 +659,764 @@ public class ThreadedClientsubscribeTest {
         client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "admin", "123456");
         System.out.println("Successful subscribe");
         Thread.sleep(2000);
-        conn.run("stopPublishTable('192.168.1.32',8676,'Trades','subTread1');" +
+        conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1');" +
                 "try{dropStreamTable('Trades')}catch(ex){};");
         Thread.sleep(5000);
         assertEquals(1,client.getAllReconnectSites().size());
         assertEquals(1,client.getAllReconnectTopic().size());
+    }
+
+    class Handler6 implements MessageHandler {
+        private StreamDeserializer deserializer_;
+        private List<BasicMessage> msg1 = new ArrayList<>();
+        private List<BasicMessage> msg2 = new ArrayList<>();
+
+        public Handler6(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+        public void batchHandler(List<IMessage> msgs) {
+        }
+
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                if (message.getSym().equals("msg1")) {
+                    msg1.add(message);
+                } else if (message.getSym().equals("msg2")) {
+                    msg2.add(message);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        public List<BasicMessage> getMsg1() {
+            return msg1;
+        }
+
+        public List<BasicMessage> getMsg2() {
+            return msg2;
+        }
+    }
+
+    @Test
+    public void test_BasicMessage_parse_outputTable_col_size_2() throws IOException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        conn.run("st11 = streamTable(100:0, `timestampv`sym,[TIMESTAMP,BLOB])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n");
+
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+
+        Handler6 handler = new Handler6(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        conn.run("t = table(2016.10.12T00:00:00.000 2016.10.12T00:00:00.000 as a,blob(`a`b) as b)\n" +
+                    "outTables.append!(t)");
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(0, msg1.size());
+        Assert.assertEquals(0, msg2.size());
+        }
+
+    @Test
+    public void test_BasicMessage_parse_outputTable_second_col_not_string() throws IOException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        conn.run("st11 = streamTable(100:0, `timestampv`id`blob`price1,[TIMESTAMP,INT,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n");
+
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+
+        Handler6 handler = new Handler6(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        conn.run("t = table(timestamp(1 2) as a,1 2 as b,blob(`a`b) as c,1.1 2.1 as d)\n" +
+                "outTables.append!(t)");
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(0, msg1.size());
+        Assert.assertEquals(0, msg2.size());
+    }
+
+    @Test
+    public void test_BasicMessage_parse_outputTable_third_col_not_blob() throws IOException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        conn.run("st11 = streamTable(100:0, `timestampv`sym`string`price1,[TIMESTAMP,STRING,STRING,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n");
+
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+
+        Handler6 handler = new Handler6(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        conn.run("t = table(timestamp(1 2) as a,`x`y as b,`a`b as c,1.1 2.1 as d)\n" +
+                "outTables.append!(t)");
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(0, msg1.size());
+        Assert.assertEquals(0, msg2.size());
+    }
+
+    @Test
+    public void test_BasicMessage_parse_outputTable_filter_col_not_exist() throws IOException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        conn.run("st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,STRING,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n");
+
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+
+        Handler6 handler = new Handler6(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        conn.run("t = table(timestamp(1 2) as a,`x`y as b,blob(`a`b) as c,1.1 2.1 as d)\n" +
+                "outTables.append!(t)");
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(0, msg1.size());
+        Assert.assertEquals(0, msg2.size());
+    }
+
+    @Test
+    public void test_StreamDeserializer_pair_filters_subscribe_isomate_table_StreamDeserializer_tableName_NULL() throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        conn.run("st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,STRING,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n");
+
+        //tablename
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", ""));
+        tables.put("msg2", new Pair<>("", ""));
+        try {
+            StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+            fail("no exception thrown");
+        }catch(Exception ex){
+            assertEquals(HOST+":"+PORT+" Server response: 'The function [schema] expects 1 argument(s), but the actual number of arguments is: 0' script: 'schema()'",ex.getMessage());
+        }
+    }
+
+    @Test
+    public void test_StreamDeserializer_pair_filters_subscribe_isomate_table_StreamDeserializer_tableName_unexists() throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        conn.run("st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,STRING,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n");
+
+        //tablename
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "test1"));
+        tables.put("msg2", new Pair<>("", "test2"));
+        try {
+            StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+            fail("no exception thrown");
+        }catch(Exception ex){
+            assertEquals(HOST+":"+PORT+" Server response: 'Syntax Error: [line #1] Cannot recognize the token test2' script: 'schema(test2)'",ex.getMessage());
+        }
+    }
+
+    @Test
+    public void test_StreamDeserializer_pair_filters_subscribe_isomate_table_StreamDeserializer_tableNames_NULL() throws IOException, InterruptedException {
+        try {
+            StreamDeserializer streamFilter = new StreamDeserializer(null, conn);
+            fail("no exception thrown");
+        }catch(Exception ex){
+            assertEquals("The tableNames_ is null. ",ex.getMessage());
+        }
+    }
+
+    @Test
+    public void test_StreamDeserializer_pair_filters_subscribe_isomate_table_StreamDeserializer_connect_NULL_error() throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 1;table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)";
+        conn.run(replayScript);
+
+        BasicTable table1 = (BasicTable)conn.run("table1");
+        BasicTable table2 = (BasicTable)conn.run("table2");
+
+        //tablename
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "table1"));
+        tables.put("msg2", new Pair<>("", "table2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables,null );
+
+        Handler6 handler = new Handler6(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        Thread.sleep(5000);
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(0, msg1.size());
+        Assert.assertEquals(0, msg2.size());
+    }
+
+    class Handler_conn_null implements MessageHandler {
+        private StreamDeserializer deserializer_;
+        private List<BasicMessage> msg1 = new ArrayList<>();
+        private List<BasicMessage> msg2 = new ArrayList<>();
+
+        public Handler_conn_null(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+        public void batchHandler(List<IMessage> msgs) {
+        }
+
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = (BasicMessage) msg;
+                if (message.getSym().equals("msg1")) {
+                    msg1.add(message);
+                } else if (message.getSym().equals("msg2")) {
+                    msg2.add(message);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        public List<BasicMessage> getMsg1() {
+            return msg1;
+        }
+
+        public List<BasicMessage> getMsg2() {
+            return msg2;
+        }
+    }
+
+    @Test
+    public void test_StreamDeserializer_pair_filters_subscribe_partition_table_StreamDeserializer_connect_NULL() throws Exception {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;" +
+                "dbName = 'dfs://test_StreamDeserializer_pair';"+
+                "if(existsDatabase(dbName)){\n" +
+                "\tdropDB(dbName)}"+
+                "db = database(dbName,RANGE,2012.01.01 2013.01.01 2014.01.01 2015.01.01 2016.01.01 2017.01.01 2018.01.01 2019.01.01);"+
+                "table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "pt1 = db.createPartitionedTable(table1,'pt1',`datetimev).append!(table1);"+
+                "pt2 = db.createPartitionedTable(table2,'pt2',`datetimev).append!(table2);"+
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)";
+        conn.run(replayScript);
+
+        BasicTable table1 = (BasicTable)conn.run("table1");
+        BasicTable table2 = (BasicTable)conn.run("table2");
+
+        //tablename
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("dfs://test_StreamDeserializer_pair", "pt1"));
+        tables.put("msg2", new Pair<>("dfs://test_StreamDeserializer_pair", "pt2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, null);
+
+        Handler_conn_null handler = new Handler_conn_null(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true,null,streamFilter,false,"admin","123456");
+        Thread.sleep(5000);
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(table1.rows(), msg1.size());
+        Assert.assertEquals(table2.rows(), msg2.size());
+        for (int i = 0; i < table1.columns(); ++i)
+        {
+            Vector tableCol = table1.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg1.get(j).getEntity(i));
+            }
+        }
+        for (int i = 0; i < table2.columns(); ++i)
+        {
+            Vector tableCol = table2.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
+            }
+        }
+    }
+
+
+    @Test
+    public void test_StreamDeserializer_pair_memory_table_filters_subscribe_isomate_table_write()throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)";
+        conn.run(replayScript);
+
+        BasicTable table1 = (BasicTable)conn.run("table1");
+        BasicTable table2 = (BasicTable)conn.run("table2");
+
+        //tablename
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "table1"));
+        tables.put("msg2", new Pair<>("", "table2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+
+        Handler6 handler = new Handler6(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        Thread.sleep(5000);
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(table1.rows(), msg1.size());
+        Assert.assertEquals(table2.rows(), msg2.size());
+        for (int i = 0; i < table1.columns(); ++i)
+        {
+            Vector tableCol = table1.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg1.get(j).getEntity(i));
+            }
+        }
+        for (int i = 0; i < table2.columns(); ++i)
+        {
+            Vector tableCol = table2.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
+            }
+        }
+    }
+
+
+    @Test
+    public void test_StreamDeserializer_pair_partition_table_filters_subscribe_isomate_table()throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;" +
+                "dbName = 'dfs://test_StreamDeserializer_pair';"+
+                "if(existsDatabase(dbName)){\n" +
+                "\tdropDB(dbName)}"+
+                "db = database(dbName,RANGE,2012.01.01 2013.01.01 2014.01.01 2015.01.01 2016.01.01 2017.01.01 2018.01.01 2019.01.01);"+
+                "table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "pt1 = db.createPartitionedTable(table1,'pt1',`datetimev).append!(table1);"+
+                "pt2 = db.createPartitionedTable(table2,'pt2',`datetimev).append!(table2);"+
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)";
+        conn.run(replayScript);
+
+        BasicTable table1 = (BasicTable)conn.run("table1");
+        BasicTable table2 = (BasicTable)conn.run("table2");
+
+        //tablename
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("dfs://test_StreamDeserializer_pair", "pt1"));
+        tables.put("msg2", new Pair<>("dfs://test_StreamDeserializer_pair", "pt2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+
+        Handler6 handler = new Handler6(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        Thread.sleep(5000);
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(table1.rows(), msg1.size());
+        Assert.assertEquals(table2.rows(), msg2.size());
+        for (int i = 0; i < table1.columns(); ++i)
+        {
+            Vector tableCol = table1.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg1.get(j).getEntity(i));
+            }
+        }
+        for (int i = 0; i < table2.columns(); ++i)
+        {
+            Vector tableCol = table2.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
+            }
+        }
+    }
+
+    @Test
+    public void test_StreamDeserializer_pair_stream_table_filters_subscribe_isomate_table_write()throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;" +
+                "table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "stable1 = streamTable(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "stable2 = streamTable(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)";
+        conn.run(replayScript);
+
+        BasicTable table1 = (BasicTable)conn.run("table1");
+        BasicTable table2 = (BasicTable)conn.run("table2");
+
+        //tablename
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "stable1"));
+        tables.put("msg2", new Pair<>("", "stable2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+
+        Handler6 handler = new Handler6(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        Thread.sleep(5000);
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(table1.rows(), msg1.size());
+        Assert.assertEquals(table2.rows(), msg2.size());
+        for (int i = 0; i < table1.columns(); ++i)
+        {
+            Vector tableCol = table1.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg1.get(j).getEntity(i));
+            }
+        }
+        for (int i = 0; i < table2.columns(); ++i)
+        {
+            Vector tableCol = table2.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
+            }
+        }
+    }
+
+    class Handler7 implements MessageHandler {
+        private StreamDeserializer deserializer_;
+        private List<BasicMessage> msg1 = new ArrayList<>();
+        private List<BasicMessage> msg2 = new ArrayList<>();
+
+        public Handler7(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+        public void batchHandler(List<IMessage> msgs) {
+        }
+
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                if (message.getSym().equals("msg1")) {
+                    msg1.add(message);
+                } else if (message.getSym().equals("msg2")) {
+                    msg2.add(message);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        public List<BasicMessage> getMsg1() {
+            return msg1;
+        }
+
+        public List<BasicMessage> getMsg2() {
+            return msg2;
+        }
+    }
+    @Test
+    public void test_StreamDeserializer_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)";
+        conn.run(replayScript);
+
+        BasicTable table1 = (BasicTable)conn.run("table1");
+        BasicTable table2 = (BasicTable)conn.run("table2");
+        Entity.DATA_TYPE[] array1 = {DT_DATETIME,DT_TIMESTAMP,DT_SYMBOL,DT_DOUBLE,DT_DOUBLE};
+        Entity.DATA_TYPE[] array2 = {DT_DATETIME,DT_TIMESTAMP,DT_SYMBOL,DT_DOUBLE};
+        List<Entity.DATA_TYPE> filter1 = new ArrayList<>(Arrays.asList(array1));
+        List<Entity.DATA_TYPE> filter2 = new ArrayList<>(Arrays.asList(array2));
+        HashMap<String, List<Entity.DATA_TYPE>> filter = new HashMap<>();
+        filter.put("msg1",filter1);
+        filter.put("msg2",filter2);
+
+        StreamDeserializer streamFilter = new StreamDeserializer(filter);
+
+        Handler7 handler = new Handler7(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        Thread.sleep(5000);
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(table1.rows(), msg1.size());
+        Assert.assertEquals(table2.rows(), msg2.size());
+        for (int i = 0; i < table1.columns(); ++i)
+        {
+            Vector tableCol = table1.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg1.get(j).getEntity(i));
+            }
+        }
+        for (int i = 0; i < table2.columns(); ++i)
+        {
+            Vector tableCol = table2.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
+            }
+        }
+
+    }
+
+    @Test
+    public void test_StreamDeserializer_ERROR_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)";
+        conn.run(replayScript);
+
+        BasicTable table1 = (BasicTable)conn.run("table1");
+        BasicTable table2 = (BasicTable)conn.run("table2");
+        Entity.DATA_TYPE[] array1 = {DT_DOUBLE,DT_DOUBLE};
+        Entity.DATA_TYPE[] array2 = {DT_DATETIME,DT_TIMESTAMP,DT_DOUBLE};
+        List<Entity.DATA_TYPE> filter1 = new ArrayList<>(Arrays.asList(array1));
+        List<Entity.DATA_TYPE> filter2 = new ArrayList<>(Arrays.asList(array2));
+        HashMap<String, List<Entity.DATA_TYPE>> filter = new HashMap<>();
+        filter.put("msg1",filter1);
+        filter.put("msg2",filter2);
+
+        StreamDeserializer streamFilter = new StreamDeserializer(filter);
+
+        Handler7 handler = new Handler7(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        Thread.sleep(5000);
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(table1.rows(), msg1.size());
+        Assert.assertEquals(table2.rows(), msg2.size());
+    }
+
+    @Test
+    public void test_StreamDeserializer_null_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)";
+        conn.run(replayScript);
+
+        BasicTable table1 = (BasicTable)conn.run("table1");
+        BasicTable table2 = (BasicTable)conn.run("table2");
+        HashMap<String, List<Entity.DATA_TYPE>> filter = new HashMap<>();
+        filter.put("msg1",null);
+        filter.put("msg2",null);
+        try {
+            StreamDeserializer streamFilter = new StreamDeserializer(filter);
+            fail("no exception thrown");
+        }catch (Exception ex){
+            assertEquals("The colTypes can not be null",ex.getMessage());
+        }
+    }
+
+    @Test
+    public void test_StreamDeserializer_error_key_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)";
+        conn.run(replayScript);
+
+        Entity.DATA_TYPE[] array1 = {DT_DATETIME,DT_TIMESTAMP,DT_SYMBOL,DT_DOUBLE,DT_DOUBLE};
+        Entity.DATA_TYPE[] array2 = {DT_DATETIME,DT_TIMESTAMP,DT_SYMBOL,DT_DOUBLE};
+        List<Entity.DATA_TYPE> filter1 = new ArrayList<>(Arrays.asList(array1));
+        List<Entity.DATA_TYPE> filter2 = new ArrayList<>(Arrays.asList(array2));
+        HashMap<String, List<Entity.DATA_TYPE>> filter = new HashMap<>();
+        filter.put("msg3",filter1);
+        filter.put(null,filter2);
+
+        StreamDeserializer streamFilter = new StreamDeserializer(filter);
+
+        Handler7 handler = new Handler7(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        Thread.sleep(5000);
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(0, msg1.size());
+        Assert.assertEquals(0, msg2.size());
+    }
+
+    @Test
+    public void test_StreamDeserializer_NULL_dir_filters_subscribe_isomate_table() throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)";
+        conn.run(replayScript);
+
+        Map<String,BasicDictionary > tables = new HashMap<>();
+        tables.put("msg1", null);
+        tables.put("msg2", null);
+        try {
+            StreamDeserializer streamFilter = new StreamDeserializer(tables);
+            fail("no exception thrown");
+        }catch (Exception ex){
+            assertEquals("The schema can not be null",ex.getMessage());
+        }
+    }
+
+    @Test
+    public void test_StreamDeserializer_dir_filters_subscribe_isomate_table() throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)";
+        conn.run(replayScript);
+
+        BasicTable table1 = (BasicTable)conn.run("table1");
+        BasicTable table2 = (BasicTable)conn.run("table2");
+        BasicDictionary table1_schema = (BasicDictionary)conn.run("table1.schema()");
+        BasicDictionary table2_schema = (BasicDictionary)conn.run("table2.schema()");
+        Map<String,BasicDictionary > tables = new HashMap<>();
+        tables.put("msg1", table1_schema);
+        tables.put("msg2", table2_schema);
+        StreamDeserializer streamFilter = new StreamDeserializer(tables);
+
+        Handler6 handler = new Handler6(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        Thread.sleep(5000);
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(table1.rows(), msg1.size());
+        Assert.assertEquals(table2.rows(), msg2.size());
+        for (int i = 0; i < table1.columns(); ++i)
+        {
+            Vector tableCol = table1.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg1.get(j).getEntity(i));
+            }
+        }
+        for (int i = 0; i < table2.columns(); ++i)
+        {
+            Vector tableCol = table2.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
+            }
+        }
+    }
+
+    @Test
+    public void test_StreamDeserializer_pair_stream_table_filters_subscribe_isomate_table_frequently_write()throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;" +
+                "table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "stable1 = streamTable(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "stable2 = streamTable(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)";
+        conn.run(replayScript);
+
+        //tablename
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "stable1"));
+        tables.put("msg2", new Pair<>("", "stable2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+
+        Handler6 handler = new Handler6(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
+        for(int x = 0;x<1000;x++) {
+            conn.run("table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                    "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                    "n= 10;tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                    "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                    "d = dict(['msg1','msg2'], [table1, table2]);" +
+                    "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)");
+        }
+        Thread.sleep(20000);
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Assert.assertEquals(20000, msg1.size());
+        Assert.assertEquals(20000, msg2.size());
     }
 
 }
