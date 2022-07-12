@@ -47,6 +47,8 @@ public class StreamDeserializer {
         for(Map.Entry<String, List<Entity.DATA_TYPE>> keyValue : filters.entrySet())
         {
             List<Entity.DATA_TYPE> colTypes = keyValue.getValue();
+            if (colTypes == null)
+                throw new RuntimeException("The colTypes can not be null");
             msgDeserializers_.put(keyValue.getKey(), new MsgDeserializer(colTypes));
         }
     }
