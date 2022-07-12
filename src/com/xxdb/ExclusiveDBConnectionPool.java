@@ -41,7 +41,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 
 				while (true){
 					synchronized (taskLists_){
-						task = taskLists_.poll();
+						task = taskLists_.pollLast();
 					}
 					if (task == null){
 						break;
