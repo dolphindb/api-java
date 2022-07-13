@@ -19,6 +19,7 @@ public class ThreadPooledClient extends AbstractClient {
     private static int CORES = Runtime.getRuntime().availableProcessors();
     private ExecutorService threadPool;
     private HashMap<String, List<String>> users = new HashMap<>();
+    private Object lock = new Object();
 
     private class QueueHandlerBinder {
         public QueueHandlerBinder(BlockingQueue<List<IMessage>> queue, MessageHandler handler) {
@@ -102,7 +103,9 @@ public class ThreadPooledClient extends AbstractClient {
         }
 
         public void run() {
-            this.handler.doEvent(message);
+            synchronized (lock){
+                this.handler.doEvent(message);
+            }
         }
     }
 

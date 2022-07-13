@@ -69,6 +69,8 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 		this(host, port, uid, pwd, count, loadBalance, enableHighAvailability, false);
 	}
 	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability, boolean compress) throws IOException{
+		if (count <= 0)
+			throw new RuntimeException("The thread count can not be less than 0");
 		if(!loadBalance){
 			for(int i=0; i<count; ++i){
 				DBConnection conn = new DBConnection(false, false, compress);
