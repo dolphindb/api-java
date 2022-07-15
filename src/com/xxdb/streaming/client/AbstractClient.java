@@ -481,11 +481,11 @@ abstract class AbstractClient implements MessageDispatcher {
                     synchronized (HATopicToTrueTopic) {
                         HATopicToTrueTopic.put(HATopic, topic);
                     }
-                    if (subInfos_.containsKey(topic)){
-                        throw new RuntimeException("Subscription with topic " + topic + " exist. ");
-                    }else {
-                        subInfos_.put(topic, deserializer);
-                    }
+                }
+                if (subInfos_.containsKey(topic)){
+                    throw new RuntimeException("Subscription with topic " + topic + " exist. ");
+                }else {
+                    subInfos_.put(topic, deserializer);
                 }
                 synchronized (trueTopicToSites) {
                     trueTopicToSites.put(topic, sites);
