@@ -800,7 +800,7 @@ public class DBConnection {
             parseIpPort(ipport, nanode);
             Node lastnode = new Node();
             conn_.getNode(lastnode);
-            if (lastnode.hostName == nanode.hostName && lastnode.port == nanode.port){
+            if (!lastnode.hostName.equals(nanode.hostName)  && lastnode.port == nanode.port){
                 System.out.println("This node " + nanode.hostName + ":" + nanode.port + " is not avail.");
                 return ExceptionType.ET_NODENOTAVAIL;
             }else {
