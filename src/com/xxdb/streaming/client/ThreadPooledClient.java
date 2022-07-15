@@ -103,9 +103,7 @@ public class ThreadPooledClient extends AbstractClient {
         }
 
         public void run() {
-            synchronized (lock){
-                this.handler.doEvent(message);
-            }
+            this.handler.doEvent(message);
         }
     }
 
