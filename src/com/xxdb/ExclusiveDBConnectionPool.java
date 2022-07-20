@@ -36,27 +36,24 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 						} catch (Exception e) {
 							break;
 						}
+						while (true){
+							task = taskLists_.pollLast();
+							if (task == null){
+								break;
+							}
+							try {
+								task.setDBConnection(conn_);
+								task.call();
+							}catch (Exception e){
+								e.printStackTrace();
+							}
+							((BasicDBTask)task).finish();
+							synchronized (finishedTasklock_){
+								finishedTaskCount_++;
+							}
+						}
 					}
 				}
-
-				while (true){
-					synchronized (taskLists_){
-						task = taskLists_.pollLast();
-					}
-					if (task == null){
-						break;
-					}
-					try {
-						task.setDBConnection(conn_);
-						task.call();
-					}catch (Exception e){
-						e.printStackTrace();
-					}
-					synchronized (finishedTasklock_){
-						finishedTaskCount_++;
-					}
-				}
-
 				synchronized (finishedTasklock_){
 					finishedTasklock_.notify();
 				}
@@ -110,6 +107,9 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 			taskLists_.addAll(tasks);
 			taskLists_.notifyAll();
 		}
+		for (DBTask task : tasks){
+			((BasicDBTask)task).waitFor();
+		}
 	}
 	
 	public void execute(DBTask task){
@@ -118,6 +118,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 			taskLists_.add(task);
 			taskLists_.notify();
 		}
+		((BasicDBTask)task).waitFor();
 	}
 
 	public void waitForThreadCompletion(){

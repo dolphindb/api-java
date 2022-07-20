@@ -59,7 +59,6 @@ public class PartitionedTableAppender {
 			}
             
             pool.execute(task);
-			pool.waitForThreadCompletion();
             if(!task.isSuccessful())
             	throw new RuntimeException(task.getErrorMsg());
             tableInfo = (BasicDictionary) task.getResult();
@@ -142,7 +141,6 @@ public class PartitionedTableAppender {
     		tasks.add(new BasicDBTask(appendScript, args));
     	}
     	pool.execute(tasks);
-		pool.waitForThreadCompletion();
     	int affected = 0;
     	for(int i=0; i<tasks.size(); ++i){
     		DBTask task = tasks.get(i);
