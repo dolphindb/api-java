@@ -109,6 +109,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 		}
 		for (DBTask task : tasks){
 			((BasicDBTask)task).waitFor();
+			((BasicDBTask)task).finish();
 		}
 	}
 	
@@ -118,6 +119,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 			taskLists_.add(task);
 			taskLists_.notify();
 		}
+		((BasicDBTask)task).waitFor();
 		((BasicDBTask)task).waitFor();
 	}
 
