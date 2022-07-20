@@ -124,6 +124,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	}
 
 	public void waitForThreadCompletion(){
+		System.out.println("Waiting for tasks to complete");
 		try {
 			synchronized (finishedTasklock_){
 				while (finishedTaskCount_ >= 0){
@@ -144,6 +145,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	}
 	
 	public void shutdown(){
+		waitForThreadCompletion();
 		for (AsynWorker one : workers_){
 			synchronized (one.workThread_){
 				one.workThread_.interrupt();
