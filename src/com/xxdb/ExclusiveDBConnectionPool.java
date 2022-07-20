@@ -124,9 +124,9 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	}
 
 	public void waitForThreadCompletion(){
-		System.out.println("Waiting for tasks to complete");
 		try {
 			synchronized (finishedTasklock_){
+				System.out.println("Waiting for tasks to complete, remain Task: " + (tasksCount_-finishedTaskCount_));
 				while (finishedTaskCount_ >= 0){
 					if (finishedTaskCount_ < tasksCount_){
 						finishedTasklock_.wait();
