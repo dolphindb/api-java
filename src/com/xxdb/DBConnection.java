@@ -160,10 +160,6 @@ public class DBConnection {
         }
 
         private boolean connect()throws IOException{
-            if (socket_ != null){
-                socket_ = null;
-                socket_.close();
-            }
             this.isConnected_ = false;
 
             try {
@@ -929,6 +925,8 @@ public class DBConnection {
                                 return new Void();
                             else if (type == ExceptionType.ET_UNKNOW)
                                 throw e;
+                        }else {
+                            parseException(e.getMessage(), node);
                         }
                         switchDataNode(node);
                     }
@@ -986,6 +984,8 @@ public class DBConnection {
                                 return new Void();
                             else if (type == ExceptionType.ET_UNKNOW)
                                 throw e;
+                        }else {
+                            parseException(e.getMessage(), node);
                         }
                         switchDataNode(node);
                     }
@@ -1038,6 +1038,8 @@ public class DBConnection {
                                 continue;
                             else if (type == ExceptionType.ET_UNKNOW)
                                 throw e;
+                        }else {
+                            parseException(e.getMessage(), node);
                         }
                         switchDataNode(node);
                     }
