@@ -36,27 +36,24 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 						} catch (Exception e) {
 							break;
 						}
+						while (true){
+							task = taskLists_.pollLast();
+							if (task == null){
+								break;
+							}
+							try {
+								task.setDBConnection(conn_);
+								task.call();
+							}catch (Exception e){
+								e.printStackTrace();
+							}
+							((BasicDBTask)task).finish();
+							synchronized (finishedTasklock_){
+								finishedTaskCount_++;
+							}
+						}
 					}
 				}
-
-				while (true){
-					synchronized (taskLists_){
-						task = taskLists_.poll();
-					}
-					if (task == null){
-						break;
-					}
-					try {
-						task.setDBConnection(conn_);
-						task.call();
-					}catch (Exception e){
-						e.printStackTrace();
-					}
-					synchronized (finishedTasklock_){
-						finishedTaskCount_++;
-					}
-				}
-
 				synchronized (finishedTasklock_){
 					finishedTasklock_.notify();
 				}
@@ -69,6 +66,8 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 		this(host, port, uid, pwd, count, loadBalance, enableHighAvailability, false);
 	}
 	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability, boolean compress) throws IOException{
+		if (count <= 0)
+			throw new RuntimeException("The thread count can not be less than 0");
 		if(!loadBalance){
 			for(int i=0; i<count; ++i){
 				DBConnection conn = new DBConnection(false, false, compress);
@@ -108,6 +107,10 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 			taskLists_.addAll(tasks);
 			taskLists_.notifyAll();
 		}
+		for (DBTask task : tasks){
+			((BasicDBTask)task).waitFor();
+			((BasicDBTask)task).finish();
+		}
 	}
 	
 	public void execute(DBTask task){
@@ -116,11 +119,14 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 			taskLists_.add(task);
 			taskLists_.notify();
 		}
+		((BasicDBTask)task).waitFor();
+		((BasicDBTask)task).waitFor();
 	}
 
 	public void waitForThreadCompletion(){
 		try {
 			synchronized (finishedTasklock_){
+				System.out.println("Waiting for tasks to complete, remain Task: " + (tasksCount_-finishedTaskCount_));
 				while (finishedTaskCount_ >= 0){
 					if (finishedTaskCount_ < tasksCount_){
 						finishedTasklock_.wait();
@@ -139,6 +145,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	}
 	
 	public void shutdown(){
+		waitForThreadCompletion();
 		for (AsynWorker one : workers_){
 			synchronized (one.workThread_){
 				one.workThread_.interrupt();

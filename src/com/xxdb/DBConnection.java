@@ -123,7 +123,7 @@ public class DBConnection {
         private int port_;
         private String userId_;
         private String pwd_;
-        private boolean encrypted_;
+        private boolean encrypted_ = true;
         private boolean isConnected_;
         private boolean sslEnable_ = false;
         private boolean asynTask_ = false;
@@ -160,10 +160,6 @@ public class DBConnection {
         }
 
         private boolean connect()throws IOException{
-            if (socket_ != null){
-                socket_ = null;
-                socket_.close();
-            }
             this.isConnected_ = false;
 
             try {
@@ -300,7 +296,6 @@ public class DBConnection {
 
             if (fetchSize > 0 && fetchSize < 8192)
                 throw new IOException("fetchSize must be greater than 8192");
-
             if (socket_ == null || !socket_.isConnected() || socket_.isClosed()) {
                 if (sessionID_.isEmpty())
                     throw new IOException("Database connection is not established yet.");
@@ -328,13 +323,7 @@ public class DBConnection {
             try {
                 out_.writeBytes((listener != null ? "API2 " : "API ") + sessionID_ + " ");
                 out_.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body.toString(), 0, 0)));
-                short flag = 0;
-                if (asynTask_)
-                    flag += 4;
-                if (clearMemory)
-                    flag += 16;
-                if (compress_)
-                    flag += 64;
+                int flag = generateRequestFlag(clearMemory);
                 out_.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                 if (fetchSize > 0)
                     out_.writeBytes("__" + String.valueOf(fetchSize));
@@ -380,7 +369,7 @@ public class DBConnection {
                 throw new IOException("Received invalid header");
             }
 
-            sessionID_ = headers[0];
+
             int numObject = Integer.parseInt(headers[1]);
 
             try {
@@ -392,7 +381,10 @@ public class DBConnection {
             }
 
             if (!header.equals("OK")){
-                throw new IOException(hostName_+":"+port_+" Server response: '" + header + "' script: '" + script + "'");
+                if (scriptType == "script")
+                    throw new IOException(hostName_+":"+port_+" Server response: '" + header + "' script: '" + script + "'");
+                else
+                    throw new IOException(hostName_+":"+port_+" Server response: '" + header + "' " + scriptType + ": '" + script + "'");
             }
 
             if (numObject == 0){
@@ -772,6 +764,7 @@ public class DBConnection {
                             throw e;
                     }
                 }else {
+                    System.out.println(e.getMessage());
                     return false;
                 }
             }
@@ -804,7 +797,7 @@ public class DBConnection {
             parseIpPort(ipport, nanode);
             Node lastnode = new Node();
             conn_.getNode(lastnode);
-            if (lastnode.hostName == nanode.hostName && lastnode.port == nanode.port){
+            if (!lastnode.hostName.equals(nanode.hostName)  && lastnode.port == nanode.port){
                 System.out.println("This node " + nanode.hostName + ":" + nanode.port + " is not avail.");
                 return ExceptionType.ET_NODENOTAVAIL;
             }else {
@@ -933,6 +926,8 @@ public class DBConnection {
                                 return new Void();
                             else if (type == ExceptionType.ET_UNKNOW)
                                 throw e;
+                        }else {
+                            parseException(e.getMessage(), node);
                         }
                         switchDataNode(node);
                     }
@@ -990,6 +985,8 @@ public class DBConnection {
                                 return new Void();
                             else if (type == ExceptionType.ET_UNKNOW)
                                 throw e;
+                        }else {
+                            parseException(e.getMessage(), node);
                         }
                         switchDataNode(node);
                     }
@@ -1042,6 +1039,8 @@ public class DBConnection {
                                 continue;
                             else if (type == ExceptionType.ET_UNKNOW)
                                 throw e;
+                        }else {
+                            parseException(e.getMessage(), node);
                         }
                         switchDataNode(node);
                     }

@@ -6,7 +6,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.xxdb.data.Entity.DATA_CATEGORY;
 import com.xxdb.data.Entity.DATA_FORM;
@@ -576,5 +579,53 @@ public class Utils {
 				return false;
 		}
 		return true;
+	}
+
+	public static class Timer{
+		Long start = new Long(0);
+		Long end = new Long(0);
+		Map<String, ArrayList<Double>> runtime = new HashMap<>();
+
+		public void reset(){
+			start = new Long(0);
+			end = new Long(0);
+			runtime = new HashMap<>();
+		}
+
+		public void printAll(){
+			for (Map.Entry<String, ArrayList<Double>> entry: runtime.entrySet()){
+				Double sum = 0.0;
+				Double avg = 0.0;
+				String prefix = entry.getKey();
+				ArrayList<Double> times = entry.getValue();
+				Double min = times.get(0);
+				Double max = times.get(0);
+				for (int i = 0; i < times.size(); i++){
+					Double time = times.get(i);
+					sum += time;
+					if (min >= time){
+						min = time;
+					}
+					if (max <= time){
+						max = time;
+					}
+				}
+				avg = sum / times.size();
+				System.out.println(prefix + "avg = " + avg + " min = " + min + " max = " + max);
+			}
+		}
+
+		public void recordTime(String prefix, Long start, Long end){
+			this.start = start;
+			this.end = end;
+			ArrayList<Double> time = null;
+			if (runtime.containsKey(prefix)){
+				time = runtime.get(prefix);
+			}else {
+				time = new ArrayList<>();
+			}
+			time.add((end-start)/1000000.0);
+			runtime.put(prefix, time);
+		}
 	}
 }

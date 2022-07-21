@@ -462,6 +462,19 @@ public class MultithreadedTableWriter {
         return unwrittenData;
     }
 
+    public List<List<Entity>> getFailedData() throws InterruptedException{
+        List<List<Entity>> failedData = new ArrayList<>();
+        for (WriterThread writeThread : threads_){
+            synchronized (writeThread.busyLock_){
+                synchronized (writeThread.failedQueue_){
+                    failedData.addAll(writeThread.failedQueue_);
+                    writeThread.failedQueue_.clear();
+                }
+            }
+        }
+        return  failedData;
+    }
+
     public Status getStatus(){
         Status status = new Status();
         status.errorCode = errorCodeInfo_.errorCode;

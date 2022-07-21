@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class ConnectionPoolTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
+
     @Before
     public void setUp() throws IOException {
        conn = new DBConnection();
@@ -676,50 +678,6 @@ public class ConnectionPoolTest {
                 "exec count(*) from pt");
         assertEquals(10000000,re.getLong());
     }
-
-    @Test
-    public void testPoolSingle() throws Exception {
-        String script = "\n" +
-                "t = table(timestamp(1..10)  as date,string(1..10) as sym)\n" +
-                "if(existsDatabase(\"dfs://demohash\")){\n" +
-                "\tdropDatabase(\"dfs://demohash\")\n" +
-                "}\n" +
-                "db=database(\"dfs://demohash\",VALUE,date(2020.02.02)+0..100)\n" +
-                "pt = db.createPartitionedTable(t,`pt,`date)\n";
-        conn.run(script);
-        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 1, true, true);
-        appender = new PartitionedTableAppender(dburl, tableName, "date", pool);
-        List<String> colNames = new ArrayList<String>(2);
-        colNames.add("date");
-        colNames.add("sym");
-        List<Vector> cols = new ArrayList<Vector>(2);
-        BasicTimestampVector date = new BasicTimestampVector(10000);
-        for (int i =0 ;i<2500;i++) {
-            date.setTimestamp(i, LocalDateTime.of(2020, 02, 02, 00, 00));
-        } for (int i =0 ;i<2500;i++) {
-            date.setTimestamp(i+2500, LocalDateTime.of(2020, 02, 03, 00, 00));
-        } for (int i =0 ;i<2500;i++) {
-            date.setTimestamp(i+5000, LocalDateTime.of(2020, 02, 04, 00, 00));
-        } for (int i =0 ;i<2500;i++) {
-            date.setTimestamp(i+7500, LocalDateTime.of(2020, 02, 05, 00, 00));
-        }
-        cols.add(date);
-        BasicStringVector sym = new BasicStringVector(10000);
-        for (int i =0 ;i<10000;i++)
-            sym.setString(i, "1");
-        cols.add(sym);
-        for (int i =0 ;i<1000;i++) {
-            int m = appender.append(new BasicTable(colNames, cols));
-            assertEquals(10000,m);
-        }
-        BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
-                "exec count(*) from pt");
-        assertEquals(10000000,re.getLong());
-        BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
-        assertEquals(date.getString(),table.getColumn("date").getString());
-        assertEquals(sym.getString(),table.getColumn("sym").getString());
-    }
-
 
 }
 
