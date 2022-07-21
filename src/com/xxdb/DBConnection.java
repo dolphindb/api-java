@@ -764,6 +764,7 @@ public class DBConnection {
                             throw e;
                     }
                 }else {
+                    System.out.println(e.getMessage());
                     return false;
                 }
             }
