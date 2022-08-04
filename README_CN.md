@@ -635,8 +635,8 @@ MultithreadedTableWriter(String hostName, int port, String userId, String passwo
 * hostName 字符串，表示所连接的服务器的地址.
 * port 整数，表示服务器端口。
 * userId / password: 字符串，登录时的用户名和密码。
-* dbName 字符串，可以是一个分布式数据库地址或内存表的表名。
-* tableName 字符串，若为分布式数据库，则填写分布式表名。若为内存表，则填写空字符串""。
+* dbPath 字符串，表示分布式数据库地址。内存表时该参数为空。请注意，1.30.17及以下版本 API，向内存表写入数据时，该参数需填写内存表表名。
+* tableName 字符串，表示分布式表或内存表的表名。请注意，1.30.17及以下版本 API，向内存表写入数据时，该参数需为空。
 * useSSL 布尔值，表示是否启用加密通讯。
 * enableHighAvailability 布尔值，表示是否开启 API 高可用。
 * highAvailabilitySites 数组类型，表示所有可用节点的 ip:port 构成的 String数组。
