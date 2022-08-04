@@ -1,6 +1,8 @@
 本教程主要介绍以下内容：
 - [1. Java API 概述](#1-java-api-概述)
 - [2. 建立DolphinDB连接](#2-建立dolphindb连接)
+  - [2.1 DBConnection](#21-dbconnection)
+  - [2.2 ExclusiveDBConnectionPool](#22-exclusivedbconnectionpool)
 - [3.运行DolphinDB脚本](#3运行dolphindb脚本)
 - [4. 运行DolphinDB函数](#4-运行dolphindb函数)
 - [5. 上传本地对象到DolphinDB服务器](#5-上传本地对象到dolphindb服务器)
@@ -59,6 +61,8 @@ Java API 的实际用例参见[example目录](https://github.com/dolphindb/api-j
 
 ## 2. 建立DolphinDB连接
 
+### 2.1 DBConnection
+
 Java API通过TCP/IP协议连接到DolphinDB服务器。连接正在运行的端口号为8848的本地DolphinDB服务器：
 
 ```java
@@ -88,6 +92,71 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 
 若未使用用户名及密码连接成功，则脚本在Guest权限下运行。后续运行中若需要提升权限，可以使用 conn.login('admin','123456',true) 登录获取权限。
 
+当需要在应用程序里定义和使用自定义函数时，可以使用 initialScript 参数传入函数定义脚本。这样做的好处是：一、无需每次运行`run`函数的时候重复定义这些函数。二、API提供自动重连机制，断线之后重连时会产生新的会话。如果 initialScript 参数不为空，API会在新的会话中自动执行初始化脚本重新注册函数。在一些网络不是很稳定但是应用程序需要持续运行的场景里，这个参数会非常有用。
+```java
+boolean success = conn.connect("localhost", 8848, "admin", "123456", "");
+```
+### 2.2 ExclusiveDBConnectionPool
+ExclusiveDBConnectionPool可以复用多个DBConnection。可以直接使用ExclusiveDBConnectionPool.run执行命令，也可以通过execute方法执行任务，然后使用BasicDBTask的getResults方法获取该任务的执行结果。
+| 方法名        | 详情          |
+|:------------- |:-------------|
+|ExclusiveDBConnectionPoolExclusiveDBConnectionPool(string host, int port, string uid,string pwd, int count, bool loadBalance,bool enableHighAvailability, string[] highAvailabilitySites = null, string initialScript, bool compress = false, bool useSSL = false, bool usePython = false)|构造函数，参数count为连接数，loadBalance为true会连接不同的节点|
+|run(script)|将脚本在DolphinDB服务器运行|
+|run(functionName,args)|调用DolphinDB服务器上的函数|
+|execute(IDBTask task)|执行任务|
+|execute(List<IDBTask> tasks)|执行批量任务|
+|getConnectionCount()|获取连接数|
+|shutdown|关闭连接池|
+
+BasicDBTask包装了需要执行的脚本和参数。
+| 方法名        | 详情          |
+|:------------- |:-------------|
+|BasicDBTask(string script, List<IEntity> args)|script为需要执行的函数，args为参数。|
+|BasicDBTask(string script)|需要执行的脚本|
+|isSuccessful|任务是否执行成功|
+|getResult|获取脚本运行结果|
+|getErrorMsg|获取任务运行时发生的异常信息|
+
+建立一个DBConnection连接数为10的连接池。
+
+```java
+
+
+```
+
+创建一个任务。
+
+```java
+
+```
+
+检查任务是否执行成功。如果执行成功，获取相应结果；如果失败，获取异常信息。
+```java
+
+```
+
+输出
+```
+
+```
+
+创建多个任务，在ExclusiveDBConnectionPool上并行调用。
+
+```java
+
+```
+
+检查任务是否都执行成功。如果执行成功，获取相应结果；如果失败，获取异常信息。
+
+```java
+
+```
+
+输出
+
+```java
+
+```
 
 ## 3.运行DolphinDB脚本
 
