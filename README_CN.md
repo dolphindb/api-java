@@ -8,18 +8,11 @@
 - [7. 读写DolphinDB数据表](#7-读写dolphindb数据表)
   - [7.1 保存数据到DolphinDB内存表](#71-保存数据到dolphindb内存表)
     - [7.1.1 使用 `insert into` 保存单条数据](#711-使用-insert-into-保存单条数据)
-    - [7.1.2 使用`tableInsert`函数批量保存数组对象](#712-使用tableinsert函数批量保存数组对象)
     - [7.1.3 使用`tableInsert`函数保存BasicTable对象](#713-使用tableinsert函数保存basictable对象)
   - [7.2 保存数据到本地磁盘表](#72-保存数据到本地磁盘表)
   - [7.3 保存数据到分布式表](#73-保存数据到分布式表)
-    - [7.3.1 使用`tableInsert`函数保存BasicTable对象](#731-使用tableinsert函数保存basictable对象)
-    - [7.3.2 分布式表的并发写入](#732-分布式表的并发写入)
   - [7.4 读取和使用数据表](#74-读取和使用数据表)
-    - [7.4.1 读取分布式表](#741-读取分布式表)
-    - [7.4.2 使用BasicTable对象](#742-使用basictable对象)
   - [7.5 批量异步追加数据](#75-批量异步追加数据)
-    - [7.5.1 MultithreadedTableWriter](#751-multithreadedtablewriter)
-    - [7.5.2 MultithreadedTableWriter返回异常的几种形式](#752-multithreadedtablewriter返回异常的几种形式)
 - [8. Java原生类型转换为DolphinDB数据类型](#8-java原生类型转换为dolphindb数据类型)
 - [9. Java流数据API](#9-java流数据api)
   - [断线重连](#断线重连)
@@ -54,7 +47,7 @@ DBConnection类提供如下主要方法：
 | 方法名        | 详情          |
 |:------------- |:-------------|
 |DBConnection([asynchronousTask, useSSL, compress])|构造对象|
-|connect(host, port, [username, password, initialScript, enableHighAvailability, highAvailabilitySites])|将会话连接到DolphinDB服务器|
+|connect(host, port, [username, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect])|将会话连接到DolphinDB服务器|
 |login(username,password,enableEncryption)|登陆服务器|
 |run(script)|将脚本在DolphinDB服务器运行|
 |run(functionName,args)|调用DolphinDB服务器上的函数|
@@ -367,7 +360,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 }
 ```
 
-#### 7.1.2 使用`tableInsert`函数批量保存数组对象
+#### 7.1.2 使用`tableInsert`函数批量保存数组对象 <!-- omit in toc -->
 
 `tableInsert`函数比较适合用来批量保存数据，它可将多个数组追加到DolphinDB内存表中。若Java程序获取的数据可以组织成List方式，可使用`tableInsert`函数保存。
 
@@ -417,7 +410,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 
 分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性。分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
 
-#### 7.3.1 使用`tableInsert`函数保存BasicTable对象
+#### 7.3.1 使用`tableInsert`函数保存BasicTable对象 <!-- omit in toc -->
 
 ```java
 dbPath = 'dfs://testDatabase'
@@ -446,7 +439,7 @@ List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicInt
 BasicTable table1 = new BasicTable(colNames,cols);
 ```
 
-#### 7.3.2 分布式表的并发写入
+#### 7.3.2 分布式表的并发写入 <!-- omit in toc -->
 
 DolphinDB的分布式表支持并发读写，下面展示如何在Java客户端中将数据并发写入DolphinDB的分布式表。
 
@@ -493,7 +486,7 @@ appender.append(table1);
 
 ### 7.4 读取和使用数据表
 
-#### 7.4.1 读取分布式表
+#### 7.4.1 读取分布式表 <!-- omit in toc -->
 * 在Java API中读取分布式表使用如下代码一次性读取数据
 ```java
 String dbPath = "dfs://testDatabase";
@@ -525,7 +518,7 @@ while(v.hasNext()){
     BasicTable t1 = (BasicTable)conn.run("table(1..100 as id1)"); //若没有skipAll此段会抛出异常。
 ```
 
-#### 7.4.2 使用BasicTable对象
+#### 7.4.2 使用BasicTable对象 <!-- omit in toc -->
 在Java API中，数据表保存为BasicTable对象。由于BasicTable是列式存储，所以若要在Java API中读取行数据需要先取出需要的列，再取出行。
 
 以下例子中参数BasicTable的有4个列，列名分别为cstring, cint, ctimestamp, cdouble，数据类型分别是STRING, INT, TIMESTAMP, DOUBLE。
@@ -555,7 +548,7 @@ DolphinDB Java API 提供 `MultithreadedTableWriter` 类对象用于批量异步
 * API 客户端提交任务到缓冲队列，缓冲队列接到任务后，客户端即认为任务已完成。
 * 提供 `getStatus` 等接口查看状态。
 
-#### 7.5.1 MultithreadedTableWriter
+#### 7.5.1 MultithreadedTableWriter <!-- omit in toc -->
 MultithreadedTableWriter支持多线程的并发写入。
 
 MultithreadedTableWriter对象的主要方法介绍如下：
@@ -773,7 +766,7 @@ System.out.println(((BasicLong)conn.run("exec count(*) from pt")).getLong());
 
 由上例可以看出，MTW 内部使用多线程完成数据转换和写入任务。但在 MTW 外部，API 客户端同样支持以多线程方式将数据写入 MTW，且保证了多线程安全。
 
-#### 7.5.2 MultithreadedTableWriter返回异常的几种形式
+#### 7.5.2 MultithreadedTableWriter返回异常的几种形式 <!-- omit in toc -->
 
 MultithreadedTableWriter 类调用 insert 方法插入数据时发生异常：
 
