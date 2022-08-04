@@ -46,7 +46,7 @@ DBConnection类提供如下主要方法：
 
 | 方法名        | 详情          |
 |:------------- |:-------------|
-|DBConnection([asynchronousTask, useSSL, compress])|构造对象|
+|DBConnection([asynchronousTask, useSSL, compress, usePython])|构造对象|
 |connect(host, port, [username, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect])|将会话连接到DolphinDB服务器|
 |login(username,password,enableEncryption)|登陆服务器|
 |run(script)|将脚本在DolphinDB服务器运行|
