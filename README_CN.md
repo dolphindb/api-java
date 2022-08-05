@@ -1080,7 +1080,7 @@ subscribe(string host, int port, string tableName, string actionName, MessageHan
 - **batchSize** 是一个整数，表示批处理的消息的数量。如果它是正数，直到消息的数量达到 *batchSize* 时，*handler* 才会处理进来的消息。如果它没有指定或者是非正数，消息到达之后，*handler* 就会马上处理消息。
 - **throttle** 是一个浮点数，表示 *handler* 处理到达的消息之前等待的时间，以秒为单位。默认值为 1。如果没有指定 *batchSize*，*throttle* 将不会起作用。
 - **deserializer** 是订阅的异构流表对应的反序列化器。
-- **userName** 是一个字符串，表示 API 所连接服务器的登录用户名。
+- **user** 是一个字符串，表示 API 所连接服务器的登录用户名。
 - **password** 是一个字符串，表示 API 所连接服务器的登录密码。
 
 2. 通过 ThreadPooledClient 方式订阅的接口：
