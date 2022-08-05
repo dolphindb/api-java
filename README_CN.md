@@ -17,9 +17,12 @@
   - [7.5 批量异步追加数据](#75-批量异步追加数据)
 - [8. Java原生类型转换为DolphinDB数据类型](#8-java原生类型转换为dolphindb数据类型)
 - [9. Java流数据API](#9-java流数据api)
-  - [断线重连](#断线重连)
-  - [启用filter](#启用filter)
-  - [取消订阅](#取消订阅)
+  - [9.1 接口说明](#91-接口说明)
+  - [9.2 示例代码](#92-示例代码)
+  - [9.3 断线重连](#93-断线重连)
+  - [9.4 启用filter](#94-启用filter)
+  - [9.5 订阅异构流表](#95-订阅异构流表)
+  - [9.6 取消订阅](#96-取消订阅)
 
 ## 1. Java API 概述
 
@@ -1026,9 +1029,40 @@ long timestamp = Utils.countMilliseconds(dt);
 
 ## 9. Java流数据API
 
-Java程序可以通过API订阅流数据。Java API有两种获取数据的方式：
+Java程序可以通过API订阅流数据。Java API有三种获取流数据的方式：单线程回调（ThreadedClient），多线程回调（ThreadPooledClient）和通过 PollingClient 返回的对象获取消息队列。
 
-- 客户机上的应用程序定期去流数据表查询是否有新增数据，若有，应用程序会获取新增数据。
+### 9.1 接口说明
+三种方法对应的 subscribe 接口如下：
+1. 通过 ThreadedClient 方式订阅的接口：
+```cs
+subscribe(string host, int port, string tableName, string actionName, MessageHandler handler, long offset, bool reconnect, IVector filter, int batchSize, float throttle = 0.01f, StreamDeserializer deserializer = null, string user = "", string password = "")
+```
+- **host** 是发布端节点的 IP 地址。
+- **port** 是发布端节点的端口号。
+- **tableName** 是发布表的名称。
+- **actionName** 是订阅任务的名称。
+- **handler** 是用户自定义的回调函数，用于处理每次流入的数据。
+- **offset** 是整数，表示订阅任务开始后的第一条消息所在的位置。消息是流数据表中的行。如果没有指定 *offset*，或它为负数或超过了流数据表的记录行数，订阅将会从流数据表的当前行开始。*offset* 与流数据表创建时的第一行对应。如果某些行因为内存限制被删除，在决定订阅开始的位置时，这些行仍然考虑在内。
+- **reconnect** 是布尔值，表示订阅中断后，是否会自动重订阅。
+- **filter** 是一个向量，表示过滤条件。流数据表过滤列在 *filter* 中的数据才会发布到订阅端，不在 *filter* 中的数据不会发布。
+- **batchSize** 是一个整数，表示批处理的消息的数量。如果它是正数，直到消息的数量达到 *batchSize* 时，*handler* 才会处理进来的消息。如果它没有指定或者是非正数，消息到达之后，*handler* 就会马上处理消息。
+- **throttle** 是一个浮点数，表示 *handler* 处理到达的消息之前等待的时间，以秒为单位。默认值为 1。如果没有指定 *batchSize*，*throttle* 将不会起作用。
+- **deserializer** 是订阅的异构流表对应的反序列化器。
+- **userName** 是一个字符串，表示 API 所连接服务器的登录用户名。
+- **password** 是一个字符串，表示 API 所连接服务器的登录密码。
+
+2. 通过 ThreadPooledClient 方式订阅的接口：
+
+```cs
+subscribe(string host, int port, string tableName, string actionName, MessageHandler handler, long offset, bool reconnect, IVector filter, StreamDeserializer deserializer = null, string user = "", string password = "")
+```
+3. 通过 PollingClient 方式订阅的接口：
+```cs
+subscribe(string host, int port, string tableName, string actionName, long offset, bool reconnect, IVector filter, StreamDeserializer deserializer = null, string user = "", string password = "")
+```
+### 9.2 示例代码
+下面分别介绍如何通过3种方法订阅流数据。  
+- 通过客户机上的应用程序定期去流数据表查询是否有新增数据，推荐使用 PollingClient。
 
 ```java
 PollingClient client = new PollingClient(subscribePort);
@@ -1044,7 +1078,7 @@ while (true) {
 
 poller1探测到流数据表有新增数据后，会拉取到新数据。无新数据发布时，Java程序会阻塞在poller1.poll方法这里等待。
 
-- Java API使用MessageHandler获取新数据。
+- 使用 MessageHandler 回调的方式获取新数据。
 
 首先需要调用者定义数据处理器handler。handler需要实现com.xxdb.streaming.client.MessageHandler接口。
 
@@ -1058,7 +1092,8 @@ public class MyHandler implements MessageHandler {
 }
 ```
 
-在启动订阅时，把handler实例作为参数传入订阅函数。
+在启动订阅时，把handler实例作为参数传入订阅函数。包括单线程回调或多线程回调两种方式：
+1. 单线程回调 ThreadedClient
 
 ```java
 ThreadedClient client = new ThreadedClient(subscribePort);
@@ -1066,8 +1101,12 @@ client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
 ```
 
 当流数据表有新增数据时，系统会通知Java API调用MyHandler方法，将新数据通过msg参数传入。
+2. 多线程回调(ThreadPollingClient)：handler 模式客户端(线程池处理任务)
+```java
 
-### 断线重连
+```
+
+### 9.3 断线重连
 
 reconnect参数是一个布尔值，表示订阅意外中断后，是否会自动重新订阅。默认值为false。
 
@@ -1086,7 +1125,7 @@ PollingClient client = new PollingClient(subscribePort);
 TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset, true);
 ```
 
-### 启用filter
+### 9.4 启用filter
 
 filter参数是一个向量。该参数需要发布端配合`setStreamTableFilterColumn`函数一起使用。使用`setStreamTableFilterColumn`指定流数据表的过滤列，流数据表过滤列在filter中的数据才会发布到订阅端，不在filter中的数据不会发布。
 
@@ -1100,8 +1139,121 @@ filter.setInt(1, 2);
 PollingClient client = new PollingClient(subscribePort);
 TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, actionName, offset, filter);
 ```
+### 9.5 订阅异构流表
 
-### 取消订阅
+DolphinDB server 自 1.30.17 及 2.00.5 版本开始，支持通过 [replay](https://www.dolphindb.cn/cn/help/FunctionsandCommands/FunctionReferences/r/replay.html) 函数将多个结构不同的流数据表，回放（序列化）到一个流表里，这个流表被称为异构流表。Python API 自 1.30.19 版本开始，新增 `StreamDeserializer` 类，用于构造异构流表反序列化器，以实现对异构流表的订阅和反序列化操作。
+
+C# API 通过 `StreamDeserializer` 类来构造异构流表反序列化器，语法如下：
+1. 通过指定表的schema进行构造，包含以下两种方式，指定表的schema信息或指定表的各列类型 ：
+
+指定表的schema信息：
+```java
+StreamDeserializer(Map<String, BasicDictionary> filters)
+```
+指定表的各列类型：
+```java
+StreamDeserializer(HashMap<String, List<Entity.DATA_TYPE>> filters)
+```
+2. 通过指定表进行构造：
+```java
+StreamDeserializer(Map<String, Pair<String, String>> tableNames, DBConnection conn)
+```
+订阅示例：
+```java
+//假设异构流表回放时inputTables如下：
+//d = dict(['msg1', 'msg2'], [table1, table2]); \
+//replay(inputTables = d, outputTables = `outTables, dateColumn = `timestampv, timeColumn = `timestampv)";
+//异构流表解析器的创建方法如下：
+
+{//指定schema的方式
+    BasicDictionary table1_schema = (BasicDictionary)conn.run("table1.schema()");
+    BasicDictionary table2_schema = (BasicDictionary)conn.run("table2.schema()");
+    Map<String,BasicDictionary > tables = new HashMap<>();
+    tables.put("msg1", table1_schema);
+    tables.put("msg2", table2_schema);
+    StreamDeserializer streamFilter = new StreamDeserializer(tables);
+}
+{//指定表的各列类型
+    Entity.DATA_TYPE[] array1 = {DT_DATETIME,DT_TIMESTAMP,DT_SYMBOL,DT_DOUBLE,DT_DOUBLE};
+    Entity.DATA_TYPE[] array2 = {DT_DATETIME,DT_TIMESTAMP,DT_SYMBOL,DT_DOUBLE};
+    List<Entity.DATA_TYPE> filter1 = new ArrayList<>(Arrays.asList(array1));
+    List<Entity.DATA_TYPE> filter2 = new ArrayList<>(Arrays.asList(array2));
+    HashMap<String, List<Entity.DATA_TYPE>> filter = new HashMap<>();
+    filter.put("msg1",filter1);
+    filter.put("msg2",filter2);
+    StreamDeserializer streamFilter = new StreamDeserializer(filter);
+}
+{//指定表的方式
+    Map<String, Pair<String, String>> tables = new HashMap<>();
+    tables.put("msg1", new Pair<>("", "table1"));
+    tables.put("msg2", new Pair<>("", "table2"));
+    //conn是可选参数，如果不传入，在订阅的时候会自动使用订阅的conn进行构造
+    StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+}
+```
+下面分别介绍如何通过 ThreadedClient, ThreadPooledClient 和 PollingClient 三种方式订阅异构流表：
+1. 通过 ThreadedClient 订阅异构流表：通过两种方式完成订阅时对异构流表的解析操作。
+* 通过指定 `subscribe` 函数的 *deserialize* 参数，实现在订阅时直接解析异构流表：
+```java
+ThreadedClient client = new ThreadedClient(8676);
+client.subscribe(hostName, port, tableName, actionName, handler, 0, true, null, streamFilter, false);
+```
+* 异构流表（streamFilter）也可以写入客户自定义的 Handler 中，在回调时被解析：
+```java
+class Handler6 implements MessageHandler {
+    private StreamDeserializer deserializer_;
+    private List<BasicMessage> msg1 = new ArrayList<>();
+    private List<BasicMessage> msg2 = new ArrayList<>();
+
+    public Handler6(StreamDeserializer deserializer) {
+        deserializer_ = deserializer;
+    }
+    public void batchHandler(List<IMessage> msgs) {
+    }
+
+    public void doEvent(IMessage msg) {
+        try {
+                BasicMessage message = deserializer_.parse(msg);
+                if (message.getSym().equals("msg1")) {
+                    msg1.add(message);
+                } else if (message.getSym().equals("msg2")) {
+                    msg2.add(message);
+                }
+        } catch (Exception e) {
+                e.printStackTrace();
+        }
+    }
+
+    public List<BasicMessage> getMsg1() {
+        return msg1;
+    }
+    public List<BasicMessage> getMsg2() {
+        return msg2;
+    }
+}
+
+ThreadedClient client = new ThreadedClient(listenport);
+Handler6 handler = new Handler6(streamFilter);
+client.subscribe(hostName, port, tableName, actionName, handler, 0, true);
+```
+2. 通过 ThreadPooledClient 订阅异构流表的方法和 ThreadedClient 一致。
+* 指定 `subscribe` 函数的 *deserialize* 参数：
+```java
+Handler6 handler = new Handler6(streamFilter);
+ThreadPooledClient client1 = new ThreadPooledClient(listenport, threadCount);
+client.subscribe(hostName, port, tableName, actionName, handler, 0, true);
+```
+* 异构流表（streamFilter）也可以写入客户自定义的 Handler 中，在回调时被解析：
+```java
+ThreadPooledClient client = new ThreadPooledClient(listenport, threadCount);
+client.subscribe(hostName, port, tableName, actionName, handler, 0, true, null, streamFilter, false);
+```
+由于 PollingClient 没有回调函数，只能通过为 `subscirbe` 的 *deserialize* 参数传入 streamFilter 的方式进行解析：
+```java
+PollingClient client = new PollingClient(listenport);
+TopicPoller poller = subscribe(hostName, port, tableName, actionName, 0, true, null, streamFilter);
+```
+### 9.6 取消订阅
 每一个订阅都有一个订阅主题topic作为唯一标识。如果订阅时topic已经存在，那么会订阅失败。这时需要通过unsubscribeTable函数取消订阅才能再次订阅。
 ```java
 client.unsubscribe(serverIP, serverPort, tableName,actionName);
