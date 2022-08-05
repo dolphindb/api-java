@@ -101,64 +101,96 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456", "");
 ```
 ### 2.2 ExclusiveDBConnectionPool
 ExclusiveDBConnectionPool可以复用多个DBConnection。可以直接使用ExclusiveDBConnectionPool.run执行命令，也可以通过execute方法执行任务，然后使用BasicDBTask的getResults方法获取该任务的执行结果。
+
 | 方法名        | 详情          |
 |:------------- |:-------------|
 |ExclusiveDBConnectionPoolExclusiveDBConnectionPool(string host, int port, string uid,string pwd, int count, bool loadBalance,bool enableHighAvailability, string[] highAvailabilitySites = null, string initialScript, bool compress = false, bool useSSL = false, bool usePython = false)|构造函数，参数count为连接数，loadBalance为true会连接不同的节点|
-|run(script)|将脚本在DolphinDB服务器运行|
-|run(functionName,args)|调用DolphinDB服务器上的函数|
 |execute(IDBTask task)|执行任务|
 |execute(List<IDBTask> tasks)|执行批量任务|
 |getConnectionCount()|获取连接数|
-|shutdown|关闭连接池|
+|shutdown()|关闭连接池|
 
 BasicDBTask包装了需要执行的脚本和参数。
+
 | 方法名        | 详情          |
 |:------------- |:-------------|
 |BasicDBTask(string script, List<IEntity> args)|script为需要执行的函数，args为参数。|
 |BasicDBTask(string script)|需要执行的脚本|
-|isSuccessful|任务是否执行成功|
-|getResult|获取脚本运行结果|
-|getErrorMsg|获取任务运行时发生的异常信息|
+|isSuccessful()|任务是否执行成功|
+|getResult()|获取脚本运行结果|
+|getErrorMsg()|获取任务运行时发生的异常信息|
 
 建立一个DBConnection连接数为10的连接池。
 
 ```java
-
-
+ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(hostName, port, userName, passWord, 10, false, false);
 ```
 
 创建一个任务。
 
 ```java
-
+BasicDBTask task = new BasicDBTask("1..10");
+pool.execute(task);
 ```
 
 检查任务是否执行成功。如果执行成功，获取相应结果；如果失败，获取异常信息。
 ```java
-
+BasicIntVector data = null;
+if (task.isSuccessful()) {
+    data = (BasicIntVector)task.getResult();
+} else {
+    throw new Exception(task.getErrorMsg());
+}
+System.out.print(data.getString());
 ```
 
 输出
 ```
-
+[1,2,3,4,5,6,7,8,9,10]
 ```
 
 创建多个任务，在ExclusiveDBConnectionPool上并行调用。
 
 ```java
-
+List<DBTask> tasks = new ArrayList<>();
+for (int i = 0; i < 10; ++i){
+    //调用函数log。
+    tasks.add(new BasicDBTask("log", Arrays.asList(data.get(i))));
+}
+pool.execute(tasks);
 ```
 
 检查任务是否都执行成功。如果执行成功，获取相应结果；如果失败，获取异常信息。
 
 ```java
-
+List<Entity> result = new ArrayList<>();
+for (int i = 0; i < 10; ++i)
+{
+    if (tasks.get(i).isSuccessful())
+    {
+        result.add(tasks.get(i).getResult());
+    }
+    else
+    {
+        throw new Exception(tasks.get(i).getErrorMsg());
+    }
+    System.out.println(result.get(i).getString());
+}
 ```
 
 输出
 
 ```java
-
+0
+0.693147
+1.098612
+1.386294
+1.609438
+1.791759
+1.94591
+2.079442
+2.197225
+2.302585
 ```
 
 ## 3.运行DolphinDB脚本
