@@ -154,8 +154,8 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean enableHa, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String password) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, enableHa, deserializer, allowExistTopic, userName, password);
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String password) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
@@ -166,12 +166,12 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean enableHa, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password) throws IOException {
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password) throws IOException {
         if(batchSize<=0)
             throw new IllegalArgumentException("BatchSize must be greater than zero");
         if(throttle<0)
             throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, enableHa, deserializer, allowExistTopic, userName, password);
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
@@ -182,12 +182,12 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean enableHa, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, float throttle, String userName, String password) throws IOException {
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, float throttle, String userName, String password) throws IOException {
         if(batchSize<=0)
             throw new IllegalArgumentException("BatchSize must be greater than zero");
         if(throttle<0)
             throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, enableHa, deserializer, allowExistTopic, userName, password);
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0.0f ? -1.0f : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
@@ -198,29 +198,13 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler handler, long offset, boolean reconnect, Vector filter, boolean enableHa, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, float throttle, String userName, String password) throws IOException {
+    public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, float throttle, String userName, String password) throws IOException {
         if(batchSize<=0)
             throw new IllegalArgumentException("BatchSize must be greater than zero");
         if(throttle<0)
             throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, enableHa, deserializer, allowExistTopic, userName, password);
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0.0f ? -1.0f : throttle);
-        handlerLopper.start();
-        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
-        List<String> usr = Arrays.asList(userName, password);
-        synchronized (handlerLoppers) {
-            handlerLoppers.put(topicStr, handlerLopper);
-            users.put(topicStr, usr);
-        }
-    }
-
-    public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler handler, long offset, boolean reconnect, Vector filter, boolean enableHa, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password) throws IOException {
-        if(batchSize<=0)
-            throw new IllegalArgumentException("BatchSize must be greater than zero");
-        if(throttle<0)
-            throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, enableHa, deserializer, allowExistTopic, userName, password);
-        HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
         List<String> usr = Arrays.asList(userName, password);
@@ -231,23 +215,19 @@ public class ThreadedClient extends AbstractClient {
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password) throws IOException {
-        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, false, deserializer, allowExistTopic, batchSize, throttle, userName, password);
-    }
-
-    public void subscribe(String host, int port, String tableName, String actionName, BatchMessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, float throttle, String userName, String password) throws IOException {
-        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, false, deserializer, allowExistTopic, batchSize, throttle, userName, password);
-    }
-
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, float throttle, String userName, String password) throws IOException {
-        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, false, deserializer, allowExistTopic, batchSize, throttle, userName, password);
-    }
-
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password) throws IOException {
-        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, false, deserializer, allowExistTopic, batchSize, throttle, userName, password);
-    }
-
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String password) throws IOException {
-        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, false, deserializer, allowExistTopic, userName, password);
+        if(batchSize<=0)
+            throw new IllegalArgumentException("BatchSize must be greater than zero");
+        if(throttle<0)
+            throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password);
+        HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
+        handlerLopper.start();
+        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = Arrays.asList(userName, password);
+        synchronized (handlerLoppers) {
+            handlerLoppers.put(topicStr, handlerLopper);
+            users.put(topicStr, usr);
+        }
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, String userName, String password) throws IOException {
@@ -318,10 +298,6 @@ public class ThreadedClient extends AbstractClient {
         subscribe(host, port, tableName, actionName, handler, offset, reconnect, null, null, false, userName, password);
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, boolean enableHa) throws IOException{
-        subscribe(host, port, tableName, actionName, handler, offset, reconnect, null, enableHa, null, false, "", "");
-    }
-
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect) throws IOException {
         subscribe(host, port, tableName, actionName, handler, offset, reconnect, null, null, false, "", "");
     }
@@ -354,10 +330,6 @@ public class ThreadedClient extends AbstractClient {
         subscribe(host, port, tableName, DEFAULT_ACTION_NAME, handler, offset);
     }
 
-    public void subscribe(String host, int port, String tableName, MessageHandler handler, long offset, boolean reconnect, boolean enableHa) throws IOException {
-        subscribe(host, port, tableName, DEFAULT_ACTION_NAME, handler, offset, reconnect, null, enableHa, null, false, "", "");
-    }
-
     public void subscribe(String host, int port, String tableName, MessageHandler handler, long offset, boolean reconnect) throws IOException {
         subscribe(host, port, tableName, DEFAULT_ACTION_NAME, handler, offset, reconnect);
     }
@@ -367,40 +339,24 @@ public class ThreadedClient extends AbstractClient {
     }
 
     public void unsubscribe(String host, int port, String tableName, String actionName) throws IOException {
-        unsubscribeInternal(host, port, tableName, actionName, false);
+        unsubscribeInternal(host, port, tableName, actionName);
     }
 
     public void unsubscribe(String host, int port, String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName);
     }
 
-    public void unsubscribe(String host, int port, String tableName, boolean enableHa) throws IOException {
-        unsubscribeInternal(host, port, tableName, enableHa);
-    }
-
-    public void unsubscribeInternal(String host, int port, String tableName, String actionName)throws IOException{
-        unsubscribeInternal(host, port, tableName, actionName, false);
-    }
-
     @Override
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName, boolean enableHa) throws IOException {
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
         DBConnection dbConn = new DBConnection();
         String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
         List<String> usr = users.get(fullTableName);
         String user = usr.get(0);
         String pwd = usr.get(1);
-        if (enableHa){
-            if (!user.equals(""))
-                dbConn.connect(host, port, user, pwd, true);
-            else
-                dbConn.connect(host, port, true);
-        }else {
-            if (!user.equals(""))
-                dbConn.connect(host, port, user, pwd);
-            else
-                dbConn.connect(host, port);
-        }
-
+        if (!user.equals(""))
+            dbConn.connect(host, port, user, pwd);
+        else
+            dbConn.connect(host, port);
         try {
             String localIP = this.listeningHost;
             if(localIP.equals(""))

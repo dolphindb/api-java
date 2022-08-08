@@ -19,20 +19,47 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import static org.junit.Assert.assertEquals;
+
 public class LZ4Test {
 
     private DBConnection conn;
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    public void clear_env() throws IOException {
+        conn.run("a = getStreamingStat().pubTables\n" +
+                "for(i in a){\n" +
+                "\tstopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)\n" +
+                "}");
+        conn.run("def getAllShare(){\n" +
+                "\treturn select name from objs(true) where shared=1\n" +
+                "\t}\n" +
+                "\n" +
+                "def clearShare(){\n" +
+                "\tlogin(`admin,`123456)\n" +
+                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
+                "\tfor(i in allShare){\n" +
+                "\t\ttry{\n" +
+                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
+                "\t\t\t}catch(ex1){}\n" +
+                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
+                "\t}\n" +
+                "\ttry{\n" +
+                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
+                "\t}catch(ex1){}\n" +
+                "}\n" +
+                "clearShare()");
+    }
 
     @Before
     public void setUp() {
         conn = new DBConnection(false, false, true);
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
-                throw new IOException("Failed to connect to 2xdb server");
+                throw new IOException("Failed to connect to dolphindb server");
             }
+            clear_env();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -47,7 +74,7 @@ public class LZ4Test {
             e.printStackTrace();
         }
         for (int i = 0; i < obj.rows(); i++) {
-            System.out.println(obj.getRowJson(i));
+//            System.out.println(obj.getRowJson(i));
         }
     }
 
@@ -73,7 +100,7 @@ public class LZ4Test {
             e.printStackTrace();
         }
         for (int i = 0; i < obj.rows(); i++) {
-            System.out.println(obj.getRowJson(i));
+//            System.out.println(obj.getRowJson(i));
         }
         conn.run("t = table(100000:0,[`id],[INT])" +
                 "share t as st");
@@ -86,12 +113,34 @@ public class LZ4Test {
 
     @Test
     public void testCompressVector() throws IOException {
+        conn.run("t = table(100000:0,[`id],[INT])" +
+                "share t as st");
         conn.run("t = array(INT, 0)");
         List<Entity> args = new ArrayList<>();
         BasicIntVector obj = (BasicIntVector)conn.run("1..10000");
         args.add(obj);
-        BasicInt count = (BasicInt) conn.run("append!{t}", args);
+        BasicIntVector count = (BasicIntVector) conn.run("append!{t}", args);
         BasicTable newT = (BasicTable) conn.run("select * from st");
+    }
+
+    @Test
+    public void testReadBigData1() throws IOException {
+        conn.run("n = 100000000;" +
+                "t = table(1..n as a,take(`aaaaaaa,n) as b,take(2021.01.01,n) as c)"+
+                "share t as st");
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        assertEquals(100000000,newT.rows());
+        clear_env();
+    }
+
+    @Test
+    public void testReadBigData2() throws IOException {
+        conn.run("n = 140000000;" +
+                "t = table(1..n as a,take(`aaaaaaa,n) as b,take(2021.01.01,n) as c)"+
+                "share t as st");
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        assertEquals(140000000,newT.rows());
+        clear_env();
     }
 
 

@@ -31,7 +31,7 @@ public class PollingClient extends AbstractClient {
     protected boolean doReconnect(Site site) {
         try {
             Thread.sleep(1000);
-            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, (MessageHandler) null, site.msgId + 1, true, site.filter, site.enableHa, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
+            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, (MessageHandler) null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
             System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
             topicPoller.setQueue(queue);
             return true;
@@ -42,8 +42,8 @@ public class PollingClient extends AbstractClient {
         }
     }
 
-    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, boolean enableHa, StreamDeserializer deserializer, String userName, String passWord) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, (MessageHandler) null, offset, reconnect, filter, enableHa, deserializer, false, userName, passWord);
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, (MessageHandler) null, offset, reconnect, filter, deserializer, false, userName, passWord);
         List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
         List<String> usr = Arrays.asList(userName, passWord);
         users.put(tp, usr);
@@ -51,12 +51,8 @@ public class PollingClient extends AbstractClient {
         return topicPoller;
     }
 
-    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord) throws IOException {
-        return subscribe(host, port, tableName, actionName, offset, reconnect, filter, false, deserializer, userName, passWord);
-    }
-
     public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, String userName, String passWord) throws IOException {
-        return subscribe(host, port, tableName, actionName, offset, reconnect, filter, false, null, userName, passWord);
+        return subscribe(host, port, tableName, actionName, offset, reconnect, filter, null, userName, passWord);
     }
 
     public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer)throws IOException{
@@ -71,10 +67,6 @@ public class PollingClient extends AbstractClient {
         return subscribe(host, port, tableName, actionName, offset, reconnect, null);
     }
 
-    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, boolean enableHa) throws IOException {
-        return subscribe(host, port, tableName, actionName, offset, reconnect, null, enableHa, null, "", "");
-    }
-
     public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, Vector filter) throws IOException {
         return subscribe(host, port, tableName, actionName, offset, false, filter);
     }
@@ -85,10 +77,6 @@ public class PollingClient extends AbstractClient {
 
     public TopicPoller subscribe(String host, int port, String tableName, long offset) throws IOException {
         return subscribe(host, port, tableName, DEFAULT_ACTION_NAME, offset);
-    }
-
-    public TopicPoller subscribe(String host, int port, String tableName, long offset, boolean reconnect, boolean enableHa) throws IOException {
-        return subscribe(host, port, tableName, DEFAULT_ACTION_NAME, offset, reconnect, null, enableHa, null, "", "");
     }
 
     public TopicPoller subscribe(String host, int port, String tableName, long offset, boolean reconnect) throws IOException {
@@ -119,32 +107,17 @@ public class PollingClient extends AbstractClient {
         unsubscribeInternal(host, port, tableName, DEFAULT_ACTION_NAME);
     }
 
-    public void unsubscribe(String host, int port, String tableName, boolean enableHa) throws IOException {
-        unsubscribeInternal(host, port, tableName, enableHa);
-    }
-
-    public void unsubscribeInternal(String host, int port, String tableName, String actionName)throws IOException{
-        unsubscribeInternal(host, port, tableName, actionName, false);
-    }
-
     @Override
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName, boolean enableHa) throws IOException {
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
         DBConnection dbConn = new DBConnection();
         List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
         List<String> usr = users.get(tp);
         String user = usr.get(0);
         String pwd = usr.get(1);
-        if (enableHa){
-            if (!user.equals(""))
-                dbConn.connect(host, port, user, pwd, true);
-            else
-                dbConn.connect(host, port, false);
-        }else {
-            if (!user.equals(""))
-                dbConn.connect(host, port, user, pwd);
-            else
-                dbConn.connect(host, port);
-        }
+        if (!user.equals(""))
+            dbConn.connect(host, port, user, pwd);
+        else
+            dbConn.connect(host, port);
         try {
             String localIP = this.listeningHost;
             if(localIP.equals(""))

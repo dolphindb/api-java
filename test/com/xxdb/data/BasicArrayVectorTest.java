@@ -1,13 +1,17 @@
 package com.xxdb.data;
 
 import com.xxdb.DBConnection;
+import com.xxdb.io.*;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class BasicArrayVectorTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
@@ -920,7 +924,7 @@ public class BasicArrayVectorTest {
                 "{\n" +
                 "s.append!([1..4])\n" +
                 "}\n" +
-                "t=table(1..10000 as id ,s as arr) ;share t as st;\n" +
+                "t=table(1..10000 as id ,s as arr) ;share t as st_tmp;\n" +
                 "dbName='dfs://testarray'\n" +
                 "login(`admin,`123456)\n" +
                 "\tif(existsDatabase(dbName)){\n" +
@@ -936,5 +940,123 @@ public class BasicArrayVectorTest {
         }
         conn.close();
     }
+    @Test
+    public void test_BasicArrayVector_complex() throws Exception{
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v = new BasicComplexVector(2);
+        Scalar value = new BasicComplex(1.1,2.5);
+        Scalar value2 = new BasicComplex(2.6,7.9);
+        v.set(0,value);
+        v.set(1,value2);
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+    }
+    @Test
+    public void test_BasicArrayVector_point() throws Exception{
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        List<Vector> l = new ArrayList<>();
+        Vector v = new BasicPointVector(2);
+        Scalar p1 = new BasicPoint(0.8,1.9);
+        Scalar p2 = new BasicPoint(4.7,6.2);
+        v.set(0,p1);
+        v.set(1,p2);
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+    }
+    @Test
+    public void test_Function_get() throws Exception{
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        int[] index = new int[]{0,1,2};
+        Vector v=new BasicBooleanVector(2);
+        v.set(0,new BasicBoolean(true));
+        v.set(1,new BasicBoolean(false));
+        BasicArrayVector obj = new BasicArrayVector(index,v);
+        assertEquals("[true]",obj.getVectorValue(1).getString());
+        assertEquals("[false]",obj.getVectorValue(2).getString());
+        assertTrue(obj.getString(1).contains("true"));
+        assertNull(obj.getSubVector(index));
+        assertFalse(obj.isNull(0));
+        assertEquals("false",obj.get(1).toString());
+        assertEquals("interface com.xxdb.data.Entity",obj.getElementClass().toString());
+        assertEquals("ARRAY",obj.getDataCategory().toString());
+        try{
+            obj.getUnitLength();
+        }catch(RuntimeException re){
+            assertEquals("BasicArrayVector.getUnitLength() not supported.",re.getMessage());
+        }
+    }
 
+    @Test
+    public void test_Function_set() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v = new BasicBooleanVector(2);
+        v.set(0, new BasicBoolean(true));
+        v.set(1, new BasicBoolean(false));
+        l.add(0, v);
+        l.add(1, v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        obj.setNull(1);
+        Scalar value = new BasicBoolean(true);
+        try {
+            obj.set(1, value);
+        } catch (RuntimeException re) {
+            assertEquals("BasicArrayVector.set not supported.", re.getMessage());
+        }
+    }
+    @Test
+    public void test_Function() throws Exception{
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v = new BasicBooleanVector(2);
+        v.set(0, new BasicBoolean(true));
+        v.set(1, new BasicBoolean(false));
+        l.add(0, v);
+        l.add(1, v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertNull(obj.combine(v));
+        Scalar value = new BasicBoolean(true);
+        assertEquals(0,obj.asof(value));
+        AbstractExtendedDataOutputStream out = new LittleEndianDataOutputStream(new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+                System.out.println(b);
+            }
+        });
+        try{
+            obj.serialize(0,1,out);
+        }catch(RuntimeException re){
+            assertEquals("BasicAnyVector.serialize not supported.",re.getMessage());
+        }
+    }
+
+    @Test
+    public void test_serialize() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        int time=1000;
+        l = new ArrayList<Vector>();
+        l.add(0,new BasicDateVector(new int[]{}));
+        for (int i=1;i<time;i++){
+            Vector v=new BasicDateVector(i);
+            v= (Vector) conn.run("date(1.."+i+")");
+
+            l.add(i,v);
+        }
+        BasicArrayVector arryDate = new BasicArrayVector(l);
+        System.out.println(arryDate.getString(17));
+        ByteBuffer bb = ByteBuffer.allocate(time);
+        System.out.println(bb.remaining());
+        AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(25,15);
+        System.out.println(arryDate.serialize(0,1,71532,numElementAndPartial,bb));
+    }
 }

@@ -32,6 +32,31 @@ public class ServerCompressionTest {
     BasicFloatVector floatVector;
     BasicDoubleVector doubleVector;
 
+    public void clear_env() throws IOException {
+        conn.run("a = getStreamingStat().pubTables\n" +
+                "for(i in a){\n" +
+                "\tstopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)\n" +
+                "}");
+        conn.run("def getAllShare(){\n" +
+                "\treturn select name from objs(true) where shared=1\n" +
+                "\t}\n" +
+                "\n" +
+                "def clearShare(){\n" +
+                "\tlogin(`admin,`123456)\n" +
+                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
+                "\tfor(i in allShare){\n" +
+                "\t\ttry{\n" +
+                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
+                "\t\t\t}catch(ex1){}\n" +
+                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
+                "\t}\n" +
+                "\ttry{\n" +
+                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
+                "\t}catch(ex1){}\n" +
+                "}\n" +
+                "clearShare()");
+    }
+
     @Before
     public void setUp() {
         conn = new DBConnection(false, false, true);
@@ -44,8 +69,9 @@ public class ServerCompressionTest {
         }
     }
 
+
     @Before
-    public void prepareData() {
+    public void prepareData() throws IOException {
         short[] shorts = new short[testPoints];
         int[] date = new int[testPoints];
         int[] minute = new int[testPoints];
@@ -90,8 +116,13 @@ public class ServerCompressionTest {
         nanoTimestampVector = new BasicNanoTimestampVector(nanotimestamp);
         floatVector = new BasicFloatVector(floats);
         doubleVector = new BasicDoubleVector(doubles);
+        clear_env();
     }
 
+    @After
+    public void drop() throws IOException {
+
+    }
     @Test
     public void testCompressLZ4() throws Exception {
         List<String> colNames = new ArrayList<>();

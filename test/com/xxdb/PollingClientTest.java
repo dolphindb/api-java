@@ -48,9 +48,33 @@ public class PollingClientTest {
             ex.printStackTrace();
         }
     }
-
+    public void clear_env() throws IOException {
+        conn.run("a = getStreamingStat().pubTables\n" +
+                "for(i in a){\n" +
+                "\tstopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)\n" +
+                "}");
+        conn.run("def getAllShare(){\n" +
+                "\treturn select name from objs(true) where shared=1\n" +
+                "\t}\n" +
+                "\n" +
+                "def clearShare(){\n" +
+                "\tlogin(`admin,`123456)\n" +
+                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
+                "\tfor(i in allShare){\n" +
+                "\t\ttry{\n" +
+                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
+                "\t\t\t}catch(ex1){}\n" +
+                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
+                "\t}\n" +
+                "\ttry{\n" +
+                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
+                "\t}catch(ex1){}\n" +
+                "}\n" +
+                "clearShare()");
+    }
     @Before
     public void setUp() throws IOException {
+        clear_env();
         conn.run("st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "enableTableShareAndPersistence(table=st2, tableName=`Trades, asynWrite=true, compress=true, cacheSize=20000, retentionMinutes=180)\t\n");
     }
@@ -76,6 +100,7 @@ public class PollingClientTest {
         } catch (Exception e) {
         }
         try{conn.run("dropStreamTable(`Trades)");}catch (Exception e){}
+        clear_env();
     }
 
     @AfterClass
@@ -244,25 +269,16 @@ public class PollingClientTest {
         assertEquals(5000, msgs1.size());
         client.unsubscribe(HOST, PORT, "Trades", "subtrades1");
     }
-    /////////////////////////////////////
-    @Test
+
+    @Test(expected = IOException.class)
     public void test_subscribe_user_error() throws IOException {
-        try{
             TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"admin_error","123456");
-            fail("no exception thrown");
-        }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' script: 'login'",e.getMessage());
-        }
     }
 
-    @Test
+    @Test(expected = IOException.class)
     public void test_subscribe_password_error() throws IOException {
-        try{
-            TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"admin","error_password");
-            fail("no exception thrown");
-        }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' script: 'login'",e.getMessage());
-        }
+        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"admin","error_password");
+
     }
 
     @Test
@@ -277,8 +293,8 @@ public class PollingClientTest {
     }
     @Test
     public void test_subscribe_other_user() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');");
+        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
+                "rpc(getControllerAlias(),create_user);");
         TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"test1","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(5000);
@@ -288,177 +304,35 @@ public class PollingClientTest {
     }
 
     @Test
-    public void test_subscribe_other_user_allow_unsubscribe_not_login() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
-                "colNames =`id`timestamp`sym`qty`price;" +
-                "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
-                "t2=streamTable(1:0,colNames,colTypes);"+
-                "grant(`test1,TABLE_READ,`Trades)");
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"test1","123456");
-        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        ArrayList<IMessage> msgs1 = poller1.poll(100, 10000);
-        assertEquals(10000, msgs1.size());
-        try {
-            client.unsubscribe(HOST, PORT, "Trades", "subTread1");
-            fail("no exception thrown");
-        }catch (Exception e) {
-            assertEquals(HOST + ":" + PORT + " Server response: 'No access to shared table [Trades]' script: 'stopPublishTable'", e.getMessage());
-        }
-        client.unsubscribe(HOST, PORT, "Trades", "subTread1");
-    }
-
-    @Test
-    public void test_subscribe_other_user_allow_unsubscribe_login_error() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
-                "colNames =`id`timestamp`sym`qty`price;" +
-                "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
-                "t2=streamTable(1:0,colNames,colTypes);"+
-                "grant(`test1,TABLE_READ,`Trades)");
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"test1","123456");
-        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        ArrayList<IMessage> msgs1 = poller1.poll(100, 10000);
-        assertEquals(10000, msgs1.size());
-        try {
-            client.unsubscribe(HOST, PORT, "Trades", "subTread1");
-            fail("no exception thrown");
-        }catch (Exception e) {
-            assertEquals(HOST + ":" + PORT + " Server response: 'The user name or password is incorrect.' script: 'login'", e.getMessage());
-        }
-        client.unsubscribe(HOST, PORT, "Trades", "subTread1");
-    }
-
-    @Test
-    public void test_subscribe_other_user_allow_unsubscribe_other_login() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
-                "createUser(`test2, '123456');" +
-                "colNames =`id`timestamp`sym`qty`price;" +
-                "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
-                "t2=streamTable(1:0,colNames,colTypes);"+
-                "grant(`test1,TABLE_READ,`Trades)");
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"test1","123456");
-        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        ArrayList<IMessage> msgs1 = poller1.poll(100, 10000);
-        assertEquals(10000, msgs1.size());
-        try {
-            client.unsubscribe(HOST, PORT, "Trades", "subTread1");
-            fail("no exception thrown");
-        }catch (Exception e) {
-            assertEquals(HOST + ":" + PORT + " Server response: 'No access to shared table [Trades]' script: 'stopPublishTable'", e.getMessage());
-        }
-        client.unsubscribe(HOST, PORT, "Trades", "subTread1");
-        conn.run("login(`admin,`123456);" +
-                "deleteUser(`test2)");
-    }
-
-    @Test
-    public void test_subscribe_other_user_allow_unsubscribe_login() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
-                "colNames =`id`timestamp`sym`qty`price;" +
-                "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
-                "t2=streamTable(1:0,colNames,colTypes);"+
-                "grant(`test1,TABLE_READ,`Trades)");
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"test1","123456");
-        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        ArrayList<IMessage> msgs1 = poller1.poll(100, 10000);
-        assertEquals(10000, msgs1.size());
-        client.unsubscribe(HOST, PORT, "Trades", "subTread1");
-    }
-
-    @Test
-    public void test_subscribe_admin_unsubscribe_other() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
-                "createUser(`test2, '123456');" +
-                "colNames =`id`timestamp`sym`qty`price;" +
-                "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
-                "t2=streamTable(1:0,colNames,colTypes);"+
-                "grant(`test1,TABLE_READ,`Trades);"+
-                "grant(`test2,TABLE_READ,`Trades);");
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"admin","123456");
-        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        ArrayList<IMessage> msgs1 = poller1.poll(100, 10000);
-        assertEquals(10000, msgs1.size());
-        try {
-            client.unsubscribe(HOST, PORT, "Trades", "subTread1");
-            fail("no exception thrown");
-        }catch (Exception e) {
-            assertEquals(HOST + ":" + PORT + " Server response: 'No access to shared table [Trades]' script: 'stopPublishTable'", e.getMessage());
-        }
-    }
-
-    @Test
-    public void test_subscribe_allow_user_unsubscribe_allow_other() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
-                "createUser(`test2, '123456');" +
-                "colNames =`id`timestamp`sym`qty`price;" +
-                "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
-                "t2=streamTable(1:0,colNames,colTypes);"+
-                "grant(`test1,TABLE_READ,`Trades);"+
-                "grant(`test2,TABLE_READ,`Trades);");
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"test1","123456");
-        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        ArrayList<IMessage> msgs1 = poller1.poll(100, 10000);
-        assertEquals(10000, msgs1.size());
-        try {
-            client.unsubscribe(HOST, PORT, "Trades", "subTread1");
-            fail("no exception thrown");
-        }catch (Exception e) {
-            assertEquals(HOST + ":" + PORT + " Server response: 'No access to shared table [Trades]' script: 'stopPublishTable'", e.getMessage());
-        }
-    }
-
-    @Test
-    public void test_subscribe_other_user_allow_unsubscribe_admin() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
-                "colNames =`id`timestamp`sym`qty`price;" +
-                "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
-                "t2=streamTable(1:0,colNames,colTypes);"+
-                "grant(`test1,TABLE_READ,`Trades)");
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"test1","123456");
-        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        ArrayList<IMessage> msgs1 = poller1.poll(100, 10000);
-        assertEquals(10000, msgs1.size());
-        client.unsubscribe(HOST, PORT, "Trades", "subTread1");
-    }
-
-    @Test
     public void test_subscribe_other_user_unallow() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
+        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
+                "rpc(getControllerAlias(),create_user);" +
                 "colNames =`id`timestamp`sym`qty`price;" +
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
-                "deny(`test1,TABLE_READ,`Trades)");
+                "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades\"});");
         try {
             TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades", "subTread1", -1, true, null, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' script: 'publishTable'",e.getMessage());
+            System.out.println(e.getMessage());
         }
     }
 
     @Test
     public void test_subscribe_other_some_user() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
-                "createUser(`test2, '123456');" +
-                "createUser(`test3, '123456');" +
+        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};try{deleteUser(`test2)}catch(ex){};try{deleteUser(`test3)}catch(ex){};createUser(`test1, '123456');createUser(`test2, '123456');createUser(`test3, '123456');};"+
+                "rpc(getControllerAlias(),create_user);" +
                 "colNames =`id`timestamp`sym`qty`price;" +
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
-                "deny(`test1,TABLE_READ,`Trades);" +
-                "grant(`test2,TABLE_READ,`Trades);");
+                "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades\"});"+
+                "rpc(getControllerAlias(),grant{`test2,TABLE_READ,getNodeAlias()+\":Trades\"});");
         try {
             TopicPoller poller2 = client.subscribe(HOST, PORT, "Trades", "subTread1",  -1, true, null, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' script: 'publishTable'",e.getMessage());
+            System.out.println(e.getMessage());
         }
 
         TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades", "subTread1",-1, true, null, "test2", "123456");
@@ -467,7 +341,7 @@ public class PollingClientTest {
             TopicPoller poller2 = client.subscribe(HOST, PORT, "Trades", "subTread1", -1, true,null, "test3", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' script: 'publishTable'",e.getMessage());
+            System.out.println(e.getMessage());
         }
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         ArrayList<IMessage> msgs1 = poller1.poll(100, 10000);
@@ -477,8 +351,8 @@ public class PollingClientTest {
 
     @Test
     public void test_subscribe_one_user_some_table() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
+        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
+                "rpc(getControllerAlias(),create_user);" +
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st2;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st3;");
@@ -488,7 +362,7 @@ public class PollingClientTest {
             TopicPoller poller3 = client.subscribe(HOST, PORT, "tmp_st3", "subTread1",-1, true, null, "test1", "123456_error");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' script: 'login'",e.getMessage());
+            System.out.println(e.getMessage());
         }
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st1.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st2.append!(t)");

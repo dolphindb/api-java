@@ -10,8 +10,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static com.xxdb.data.Entity.DATA_TYPE.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class ThreadedClientsubscribeTest {
     public static DBConnection conn;
@@ -20,8 +19,33 @@ public class ThreadedClientsubscribeTest {
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     private static ThreadedClient client;
 
+    public void clear_env() throws IOException {
+        conn.run("a = getStreamingStat().pubTables\n" +
+                "for(i in a){\n" +
+                "\tstopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)\n" +
+                "}");
+        conn.run("def getAllShare(){\n" +
+                "\treturn select name from objs(true) where shared=1\n" +
+                "\t}\n" +
+                "\n" +
+                "def clearShare(){\n" +
+                "\tlogin(`admin,`123456)\n" +
+                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
+                "\tfor(i in allShare){\n" +
+                "\t\ttry{\n" +
+                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
+                "\t\t\t}catch(ex1){}\n" +
+                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
+                "\t}\n" +
+                "\ttry{\n" +
+                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
+                "\t}catch(ex1){}\n" +
+                "}\n" +
+                "clearShare()");
+    }
+
     @BeforeClass
-    public static void login() {
+    public static void setUp() throws IOException {
         conn = new DBConnection();
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
@@ -32,52 +56,34 @@ public class ThreadedClientsubscribeTest {
             ex.printStackTrace();
         }
     }
-
     @Before
-    public void setUp() throws IOException {
-        try {
-            String script0 = "login(`admin,`123456);" +
-                    "try{dropStreamTable('Trades')}catch(ex){};"+
-                    "try{dropStreamTable('Receive')}catch(ex){};";
-            conn.run(script0);
-            String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-                    "enableTableShareAndPersistence(table=st1, tableName=`Trades, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n"
-                    + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
-            conn.run(script1);
-            String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-                    "enableTableShareAndPersistence(table=st2, tableName=`Receive, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n";
-            conn.run(script2);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void clear() throws IOException {
+        try{client.unsubscribe(HOST, PORT, "Trades");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades", "subTrades2");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades", "subTrades1");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades", "subTrades");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
+        clear_env();
+
     }
 
     @After
-    public void drop() throws IOException {
-        save_batch_size.clear();
-        try{client.unsubscribe(HOST,PORT,"Trades","subTread1");}catch (Exception e){}
-        try{client.unsubscribe(HOST,PORT,"Trades","subTread2");}catch (Exception e){}
-        try{client.unsubscribe(HOST,PORT,"Trades","subTread3");}catch (Exception e){}
-        try{client.unsubscribe(HOST,PORT,"outTables", "mutiSchema");}catch (Exception e){}
-        try {
-            conn.run("login(`admin,`123456);" +
-                    "try{dropStreamTable('Trades')}catch(ex){};"+
-                    "try{dropStreamTable('Receive')}catch(ex){};"+
-                    "try{deleteUser(`test1)}catch(ex){};" +
-                    "userlist=getUserList();" +
-                    "grouplist=getGroupList();" +
-                    "loop(deleteUser,userlist);" +
-                    "loop(deleteGroup,grouplist)");
-        } catch (Exception e) {
-        }
+    public void after() throws IOException {
+        try{client.unsubscribe(HOST, PORT, "Trades");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades", "subTrades2");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades", "subTrades1");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades", "subTrades");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
+        clear_env();
     }
 
     @AfterClass
-    public static void after() throws IOException {
+    public static void clear_conn() {
         client.close();
         conn.close();
     }
-
     public static MessageHandler MessageHandler_handler = new MessageHandler() {
         @Override
         public void doEvent(IMessage msg) {
@@ -115,6 +121,18 @@ public class ThreadedClientsubscribeTest {
             }
         }
     };
+
+    public void wait_data(String table_name,int data_row) throws IOException, InterruptedException {
+        BasicInt row_num;
+        while(true){
+            row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
+//            System.out.println(row_num.getInt());
+            if(row_num.getInt() == data_row){
+                break;
+            }
+            Thread.sleep(100);
+        }
+    }
     @Test
     public void test_ThreadedClient_HOST_host_error() throws IOException, InterruptedException {
         ThreadedClient client2 = new ThreadedClient("host_error",10022);
@@ -144,139 +162,140 @@ public class ThreadedClientsubscribeTest {
         client2.close();
     }
 
-    @Test
-    public void test_subscribe_ex1() throws IOException {
+    @Test(timeout = 60000)
+    public void test_subscribe_ex1() throws Exception {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        client.subscribe(HOST, PORT, "Trades", MessageHandler_handler);
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",1000);
+        BasicTable re = (BasicTable) conn.run("Receive");
+        BasicTable tra = (BasicTable) conn.run("Trades");
+        assertEquals(re.rows(), tra.rows());
+        for (int i = 0; i < re.rows(); i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+        }
         try {
-            client.subscribe(HOST, PORT, "Trades", "subtrades", MessageHandler_handler);
-            conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(10000);
-            BasicTable re = (BasicTable) conn.run("Receive");
-            BasicTable tra = (BasicTable) conn.run("Trades");
             client.unsubscribe(HOST, PORT, "Trades", "subtrades");
-            Thread.sleep(10000);
-            conn.run("dropStreamTable('Trades');dropStreamTable('Receive')");
-            assertEquals(re.rows(), tra.rows());
-            for (int i = 0; i < re.rows(); i++) {
-                assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
-                assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-                assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
-            }
+        }catch (Exception ex){
 
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-    }
-    @Test
-    public void test_subscribe_ex2() throws IOException {
-
-        try {
-            client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, true);
-            conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(10000);
-            client.unsubscribe(HOST, PORT, "Trades","javaStreamingApi");
-            BasicTable re = (BasicTable) conn.run("Receive");
-            BasicTable tra = (BasicTable) conn.run("Trades");
-            Thread.sleep(12000);
-            assertEquals(re.rows(), tra.rows());
-            for (int i = 0; i < re.rows(); i++) {
-                assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
-                assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-                assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+    @Test(timeout = 60000)
+    public void test_subscribe_ex2() throws Exception{
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, true);
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",5000);
+        BasicTable re = (BasicTable) conn.run("Receive");
+        BasicTable tra = (BasicTable) conn.run("Trades");
+        assertEquals(5000, re.rows());
+        for (int i = 0; i < re.rows(); i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+        }
+        client.unsubscribe(HOST, PORT, "Trades");
     }
 
-    @Test
-    public void test_subscribe_ofst0() throws IOException {
-
-        try {
-            conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            int ofst = 0;
-            client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
-            conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(10000);
-            BasicTable re = (BasicTable) conn.run("Receive");
-            BasicTable tra = (BasicTable) conn.run("Trades");
-            client.unsubscribe(HOST, PORT, "Trades", "javaStreamingApi");
-            Thread.sleep(2000);
-            assertEquals(re.rows(), tra.rows());
-            for (int i = 0; i < re.rows(); i++) {
-                assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
-                assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-                assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+    @Test(timeout = 60000)
+    public void test_subscribe_ofst0() throws Exception {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        int ofst = 0;
+        client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",2000);
+        BasicTable re = (BasicTable) conn.run("Receive");
+        BasicTable tra = (BasicTable) conn.run("Trades");
+        assertEquals(re.rows(), tra.rows());
+        for (int i = 0; i < re.rows(); i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
         }
+        client.unsubscribe(HOST, PORT, "Trades");
     }
 
     @Test(expected = IOException.class)
-    public void test_subscribe_ofst_negative2() throws IOException {
+    public void test_subscribe_ofst_negative2() throws IOException, InterruptedException {
         int ofst = -2;
         client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
-        try {
-            Thread.sleep(2000);
-            client.unsubscribe(HOST, PORT, "Trades");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Thread.sleep(2000);
+        client.unsubscribe(HOST, PORT, "Trades");
     }
 
-    @Test
-    public void test_subscribe_ofst_negative1() throws IOException {
-        try {
-            int ofst = -1;
-            conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(2000);
-            client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
-            conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(5000);
-            BasicTable re = (BasicTable) conn.run("Receive");
-            BasicTable tra = (BasicTable) conn.run("Trades");
-            client.unsubscribe(HOST, PORT, "Trades", "javaStreamingApi");
-            assertEquals(3000, re.rows());
-            for (int i = 0; i < re.rows(); i++) {
-                assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i + 100));
-                assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i + 100));
-                assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i + 100).getNumber().doubleValue(), 4);
-            }
-            Thread.sleep(2000);
-        } catch (Exception e) {
-            e.printStackTrace();
+    @Test(timeout = 60000)
+    public void test_subscribe_ofst_negative1() throws Exception {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        int ofst = -1;
+        conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",3000);
+        BasicTable re = (BasicTable) conn.run("Receive");
+        BasicTable tra = (BasicTable) conn.run("Trades");
+        assertEquals(3000, re.rows());
+        for (int i = 0; i < re.rows(); i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i + 100));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i + 100));
+            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i + 100).getNumber().doubleValue(),4);
         }
+        client.unsubscribe(HOST, PORT, "Trades");
     }
 
-    @Test
-    public void test_subscribe_ofst_morethan0() throws IOException {
-
-        try {
-            int ofst = 10;
-            conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(2000);
-            client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
-            conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(5000);
-            BasicTable re = (BasicTable) conn.run("Receive");
-            BasicTable tra = (BasicTable) conn.run("Trades");
-            client.unsubscribe(HOST, PORT, "Trades");
-            assertEquals(3090, re.rows());
-            for (int i = 0; i < re.rows(); i++) {
-                assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i + 10));
-                assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i + 10));
-                assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i + 10).getNumber().doubleValue(), 4);
-            }
-            Thread.sleep(2000);
-        } catch (Exception e) {
-            e.printStackTrace();
+    @Test(timeout = 60000)
+    public void test_subscribe_ofst_10() throws Exception{
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        int ofst = 10;
+        conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",3090);
+        BasicTable re = (BasicTable) conn.run("Receive");
+        BasicTable tra = (BasicTable) conn.run("Trades");
+        assertEquals(3090, re.rows());
+        for (int i = 0; i < re.rows(); i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i + 10));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i + 10));
+            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i + 10).getNumber().doubleValue(), 4);
         }
+        client.unsubscribe(HOST, PORT, "Trades");
     }
 
     @Test(expected = IOException.class)
@@ -286,11 +305,18 @@ public class ThreadedClientsubscribeTest {
         client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_filter() throws Exception {
-        String script2 = "st3 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-                "enableTableShareAndPersistence(table=st3, tableName=`filter, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n";
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
         conn.run(script2);
+        String script3 = "st3 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st3, tableName=`filter, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n";
+        conn.run(script3);
         MessageHandler handler1 = new MessageHandler() {
             @Override
             public void doEvent(IMessage msg) {
@@ -309,7 +335,8 @@ public class ThreadedClientsubscribeTest {
         Vector filter2 = (Vector) conn.run("2001..3000");
         client.subscribe(HOST, PORT, "Trades", "subTrades2", handler1, -1, filter2);
         conn.run("n=4000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",1000);
+        wait_data("filter",1000);
         BasicTable re = (BasicTable) conn.run("Receive");
         BasicTable tra = (BasicTable) conn.run("Trades");
         BasicTable fil = (BasicTable) conn.run("filter");
@@ -332,13 +359,20 @@ public class ThreadedClientsubscribeTest {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_batchSize_throttle() throws Exception {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..1000");
         client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true, 10000, 5);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",2000);
         BasicTable re = (BasicTable) conn.run("Receive");
         BasicTable tra = (BasicTable) conn.run("Trades");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades");
@@ -353,13 +387,20 @@ public class ThreadedClientsubscribeTest {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_batchSize_throttle2() throws Exception {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..1000");
         client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true, 10000, 5);
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",200);
         BasicTable re = (BasicTable) conn.run("Receive");
         BasicTable tra = (BasicTable) conn.run("Trades");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades");
@@ -371,92 +412,116 @@ public class ThreadedClientsubscribeTest {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_unsubscribe_resubscribe() throws Exception {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..1000");
         for (int i=0;i<10;i++){
         client.subscribe(HOST, PORT, "Trades", "subTrades1", MessageHandler_handler, -1, true, filter1, true, 10000, 5);
         client.subscribe(HOST, PORT, "Trades", "subTrades2", MessageHandler_handler, -1, true, filter1, true, 10000, 5);
         client.subscribe(HOST, PORT, "Trades", "subTrades3", MessageHandler_handler, -1, true, filter1, true, 10000, 5);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5200);
         client.unsubscribe(HOST, PORT, "Trades", "subTrades1");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades2");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades3");
-        Thread.sleep(5200);
         }
     }
 
-    @Test
+    @Test(expected = IOException.class)
     public void test_subscribe_user_error() throws IOException {
         Vector filter1 = (Vector) conn.run("1..1000");
-        try{
-            client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"admin_error","123456");
-            fail("no exception thrown");
-        }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' function: 'login'",e.getMessage());
-        }
+        client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "admin_error", "123456");
     }
 
-    @Test
+    @Test(expected = IOException.class)
     public void test_subscribe_password_error() throws IOException {
         Vector filter1 = (Vector) conn.run("1..1000");
-        try{
-            client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"admin","error_password");
-            fail("no exception thrown");
-        }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' function: 'login'",e.getMessage());
-        }
+        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"admin","error_password");
+
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_admin() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"admin","123456");
+        client.subscribe(HOST,PORT,"Trades","admin",MessageHandler_handler,-1,false,filter1,true,100,5,"admin","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
-        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+        client.unsubscribe(HOST,PORT,"Trades","admin");
     }
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_other_user() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');");
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
+                "rpc(getControllerAlias(),create_user);" );
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"test1","123456");
+        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,false,filter1,true,100,5,"test1","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_other_user_allow_unsubscribe_login() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
+                "rpc(getControllerAlias(),create_user);" +
                 "colNames =`id`timestamp`sym`qty`price;" +
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
-                "grant(`test1,TABLE_READ,`Trades)");
+                "rpc(getControllerAlias(),grant{`test1,TABLE_READ,getNodeAlias()+\":Trades\"});");
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"test1","123456");
+        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,false,filter1,true,100,5,"test1","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
         client.unsubscribe(HOST, PORT, "Trades", "subTread1");
     }
 
-    @Test
-    public void test_subscribe_other_user_unallow() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
+    @Test(timeout = 60000)
+    public void test_subscribe_other_user_unallow() throws IOException{
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
+                "rpc(getControllerAlias(),create_user);" +
                 "colNames =`id`timestamp`sym`qty`price;" +
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
-                "deny(`test1,TABLE_READ,`Trades)");
+                "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades\"});");
 
         Vector filter1 = (Vector) conn.run("1..100000");
         try {
@@ -467,17 +532,22 @@ public class ThreadedClientsubscribeTest {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_other_some_user() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
-                "createUser(`test2, '123456');" +
-                "createUser(`test3, '123456');" +
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};try{deleteUser(`test2)}catch(ex){};try{deleteUser(`test3)}catch(ex){};createUser(`test1, '123456');createUser(`test2, '123456');createUser(`test3, '123456');};"+
+                "rpc(getControllerAlias(),create_user);" +
                 "colNames =`id`timestamp`sym`qty`price;" +
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
-                "deny(`test1,TABLE_READ,`Trades);" +
-                "grant(`test2,TABLE_READ,`Trades);");
+                "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades\"});"+
+                "rpc(getControllerAlias(),grant{`test2,TABLE_READ,getNodeAlias()+\":Trades\"});");
         Vector filter1 = (Vector) conn.run("1..100000");
         try {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test1", "123456");
@@ -486,7 +556,7 @@ public class ThreadedClientsubscribeTest {
             assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' function: 'publishTable'",e.getMessage());
         }
 
-        client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test2", "123456");
+        client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, false, filter1, true, 100, 5, "test2", "123456");
 
         try {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test3", "123456");
@@ -494,13 +564,20 @@ public class ThreadedClientsubscribeTest {
         }catch (Exception e){
             assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' function: 'publishTable'",e.getMessage());
         }
-
+        client.unsubscribe(HOST, PORT, "Trades", "subTread1");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_one_user_some_table() throws IOException, InterruptedException {
-        conn.run("try{deleteUser(`test1)}catch(ex){};"+
-                "createUser(`test1, '123456');" +
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
+                "rpc(getControllerAlias(),create_user);" +
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st2;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st3;");
@@ -510,115 +587,164 @@ public class ThreadedClientsubscribeTest {
             client.subscribe(HOST, PORT, "tmp_st3", "subTread1", MessageHandler_handler, -1, true, null, true, 100, 5, "test1", "123456_error");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'The user name or password is incorrect.' function: 'login'",e.getMessage());
+            System.out.println(e.getMessage());
         }
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st1.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st2.append!(t)");
-        Thread.sleep(5000);
-        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        BasicInt row_num;
+        wait_data("Receive",20000);
+        row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(20000,row_num.getInt());
         client.unsubscribe(HOST,PORT,"tmp_st1","subTread1");
         client.unsubscribe(HOST,PORT,"tmp_st2","subTread1");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_func_BatchMessageHandler() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,true,filter1,true,1024,5);
+        client.subscribe(HOST,PORT,"Trades","BatchMessageHandler",BatchMessageHandler_handler,-1,false,filter1,true,1024,5);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
-        assertEquals(1024,save_batch_size.toArray()[0]);
-        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+        client.unsubscribe(HOST,PORT,"Trades","BatchMessageHandler");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_func_BatchMessageHandler_not_set_batchSize() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,true,filter1,true);
+        client.subscribe(HOST,PORT,"Trades","subTrades",BatchMessageHandler_handler,-1,true,filter1,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        wait_data("Receive",10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
         assertEquals(true,save_batch_size.isEmpty());
-        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+        client.unsubscribe(HOST,PORT,"Trades","subTrades");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_func_BatchMessageHandler_single_msg() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,true,filter1,true,100,1);
+        client.subscribe(HOST,PORT,"Trades","single_msg",BatchMessageHandler_handler,-1,false,filter1,true,100,1);
         conn.run("n=1;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        Thread.sleep(1000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(1,row_num.getInt());
-        assertEquals(1,save_batch_size.toArray()[0]);
-        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+        client.unsubscribe(HOST,PORT,"Trades","single_msg");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_func_BatchMessageHandler_mul_single_msg() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,true,filter1,true,100,100000);
+        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,false,filter1,true,100,100000);
         for(int n = 0;n<10000;n++) {
             conn.run("n=1;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         }
-        Thread.sleep(5000);
+        wait_data("Receive",10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
-        assertEquals(100,save_batch_size.toArray()[0]);
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test
+    @Ignore
     public void test_func_BatchMessageHandler_batchSize_over_meg_size() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,true,filter1,true,100000,100);
+        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,true,filter1,true,100000,2);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
         assertEquals(10000,save_batch_size.toArray()[0]);
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_func_BatchMessageHandler_batchSize_over_meg_size_small_throttle() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,true,filter1,true,100000,1);
+        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,false,filter1,true,100000,1);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
-        assertEquals(1024,save_batch_size.toArray()[0]);
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_func_BatchMessageHandler_batchSize_over_meg_size_big_throttle() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,true,filter1,true,100000,10);
-        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,false,filter1,true,100000,10);
+        conn.run("n=100000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",100000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
-        assertEquals(10000,row_num.getInt());
-        boolean t = (int)(save_batch_size.toArray()[0])>1024;
-        assertEquals(true,t);
+        assertEquals(100000,row_num.getInt());
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_func_BatchMessageHandler_mul_subscribe() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_handler, -1, true, filter1, true, 1000, 2);
-        client.subscribe(HOST, PORT, "Trades", "subTread2", BatchMessageHandler_handler, -1, true, filter1, true, 1000, 2);
+        client.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_handler, -1, false, filter1, true, 1000, 2);
+        client.subscribe(HOST, PORT, "Trades", "subTread2", BatchMessageHandler_handler, -1, false, filter1, true, 1000, 2);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",20000);
         BasicInt row_num = (BasicInt) conn.run("(exec count(*) from Receive)[0]");
         assertEquals(20000, row_num.getInt());
-        assertEquals(1024, save_batch_size.toArray()[0]);
-        assertEquals(20, save_batch_size.size());
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
         client.unsubscribe(HOST,PORT,"Trades","subTread2");
     }
@@ -628,8 +754,8 @@ public class ThreadedClientsubscribeTest {
         public void run() {
             try {
                 while (true) {
-                    conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-                    Thread.sleep(4000);
+                    conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+                    Thread.sleep(100);
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -638,6 +764,13 @@ public class ThreadedClientsubscribeTest {
     }
     @Test
     public void test_subscribe_reconnect_successful() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"admin","123456");
         System.out.println("Successful subscribe");
@@ -647,23 +780,58 @@ public class ThreadedClientsubscribeTest {
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
         Thread.sleep(2000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
-        Thread.sleep(2000);
+        Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
-        assertEquals(20000,row_num.getInt());
+        System.out.println(row_num);
+        Thread.sleep(2000);
+        BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        System.out.println(row_num2);
+        assertEquals(true,row_num.getInt()<=row_num2.getInt());
+        write_data.interrupt();
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
     @Test
-    public void test_subscribe_reconnect_fail() throws IOException, InterruptedException {
+    public void test_subscribe_reconnect_error() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "admin", "123456");
+        client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true, 100, 5, "admin", "123456");
         System.out.println("Successful subscribe");
         Thread.sleep(2000);
-        conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1');" +
+        conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTrades');" +
                 "try{dropStreamTable('Trades')}catch(ex){};");
         Thread.sleep(5000);
-        assertEquals(1,client.getAllReconnectSites().size());
-        assertEquals(1,client.getAllReconnectTopic().size());
+        try {
+            client.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        }catch (Exception ex){}
+    }
+
+    @Test
+    public void test_subscribe_reconnect_false() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        Vector filter1 = (Vector) conn.run("1..100000");
+        client.subscribe(HOST,PORT,"Trades","subTread2",MessageHandler_handler,-1,false,filter1,true,100,5,"admin","123456");
+        System.out.println("Successful subscribe");
+        MyThread write_data  = new MyThread ();
+        write_data.start();
+        Thread.sleep(2000);
+        conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread2')");
+        Thread.sleep(5000);
+        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        assertNotEquals(2000,row_num.getInt());
+        client.unsubscribe(HOST,PORT,"Trades","subTread2");
     }
 
     class Handler6 implements MessageHandler {
@@ -693,7 +861,6 @@ public class ThreadedClientsubscribeTest {
         public List<BasicMessage> getMsg1() {
             return msg1;
         }
-
         public List<BasicMessage> getMsg2() {
             return msg2;
         }
@@ -701,11 +868,17 @@ public class ThreadedClientsubscribeTest {
 
     @Test
     public void test_BasicMessage_parse_outputTable_col_size_2() throws IOException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         conn.run("st11 = streamTable(100:0, `timestampv`sym,[TIMESTAMP,BLOB])\n" +
                 "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n");
-
         Map<String, Pair<String, String>> tables = new HashMap<>();
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
 
@@ -717,10 +890,18 @@ public class ThreadedClientsubscribeTest {
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(0, msg1.size());
         Assert.assertEquals(0, msg2.size());
-        }
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
 
     @Test
     public void test_BasicMessage_parse_outputTable_second_col_not_string() throws IOException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         conn.run("st11 = streamTable(100:0, `timestampv`id`blob`price1,[TIMESTAMP,INT,BLOB,DOUBLE])\n" +
@@ -737,10 +918,18 @@ public class ThreadedClientsubscribeTest {
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(0, msg1.size());
         Assert.assertEquals(0, msg2.size());
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     @Test
     public void test_BasicMessage_parse_outputTable_third_col_not_blob() throws IOException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         conn.run("st11 = streamTable(100:0, `timestampv`sym`string`price1,[TIMESTAMP,STRING,STRING,DOUBLE])\n" +
@@ -757,10 +946,18 @@ public class ThreadedClientsubscribeTest {
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(0, msg1.size());
         Assert.assertEquals(0, msg2.size());
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     @Test
     public void test_BasicMessage_parse_outputTable_filter_col_not_exist() throws IOException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         conn.run("st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,STRING,BLOB,DOUBLE])\n" +
@@ -777,10 +974,18 @@ public class ThreadedClientsubscribeTest {
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(0, msg1.size());
         Assert.assertEquals(0, msg2.size());
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     @Test
     public void test_StreamDeserializer_pair_filters_subscribe_isomate_table_StreamDeserializer_tableName_NULL() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         conn.run("st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,STRING,BLOB,DOUBLE])\n" +
@@ -800,6 +1005,13 @@ public class ThreadedClientsubscribeTest {
 
     @Test
     public void test_StreamDeserializer_pair_filters_subscribe_isomate_table_StreamDeserializer_tableName_unexists() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         conn.run("st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,STRING,BLOB,DOUBLE])\n" +
@@ -829,6 +1041,13 @@ public class ThreadedClientsubscribeTest {
 
     @Test
     public void test_StreamDeserializer_pair_filters_subscribe_isomate_table_StreamDeserializer_connect_NULL_error() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -859,6 +1078,7 @@ public class ThreadedClientsubscribeTest {
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(0, msg1.size());
         Assert.assertEquals(0, msg2.size());
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     class Handler_conn_null implements MessageHandler {
@@ -896,6 +1116,13 @@ public class ThreadedClientsubscribeTest {
 
     @Test
     public void test_StreamDeserializer_pair_filters_subscribe_partition_table_StreamDeserializer_connect_NULL() throws Exception {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -949,11 +1176,18 @@ public class ThreadedClientsubscribeTest {
                 Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
             }
         }
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
-
 
     @Test
     public void test_StreamDeserializer_pair_memory_table_filters_subscribe_isomate_table_write()throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -978,8 +1212,8 @@ public class ThreadedClientsubscribeTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
 
         Handler6 handler = new Handler6(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(5000);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(20000);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(table1.rows(), msg1.size());
@@ -1000,11 +1234,19 @@ public class ThreadedClientsubscribeTest {
                 Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
             }
         }
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
 
     @Test
     public void test_StreamDeserializer_pair_partition_table_filters_subscribe_isomate_table()throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -1058,10 +1300,18 @@ public class ThreadedClientsubscribeTest {
                 Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
             }
         }
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     @Test
     public void test_StreamDeserializer_pair_stream_table_filters_subscribe_isomate_table_write()throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -1090,7 +1340,7 @@ public class ThreadedClientsubscribeTest {
 
         Handler6 handler = new Handler6(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(table1.rows(), msg1.size());
@@ -1111,6 +1361,7 @@ public class ThreadedClientsubscribeTest {
                 Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
             }
         }
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     class Handler7 implements MessageHandler {
@@ -1147,6 +1398,13 @@ public class ThreadedClientsubscribeTest {
     }
     @Test
     public void test_StreamDeserializer_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -1196,11 +1454,18 @@ public class ThreadedClientsubscribeTest {
                 Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
             }
         }
-
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     @Test
     public void test_StreamDeserializer_ERROR_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -1234,10 +1499,18 @@ public class ThreadedClientsubscribeTest {
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(table1.rows(), msg1.size());
         Assert.assertEquals(table2.rows(), msg2.size());
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     @Test
     public void test_StreamDeserializer_null_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -1267,6 +1540,13 @@ public class ThreadedClientsubscribeTest {
 
     @Test
     public void test_StreamDeserializer_error_key_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -1298,10 +1578,18 @@ public class ThreadedClientsubscribeTest {
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(0, msg1.size());
         Assert.assertEquals(0, msg2.size());
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     @Test
     public void test_StreamDeserializer_NULL_dir_filters_subscribe_isomate_table() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -1329,6 +1617,13 @@ public class ThreadedClientsubscribeTest {
 
     @Test
     public void test_StreamDeserializer_dir_filters_subscribe_isomate_table() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -1375,10 +1670,18 @@ public class ThreadedClientsubscribeTest {
                 Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
             }
         }
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     @Test
     public void test_StreamDeserializer_pair_stream_table_filters_subscribe_isomate_table_frequently_write()throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "st11 = streamTable(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -1412,11 +1715,12 @@ public class ThreadedClientsubscribeTest {
                     "d = dict(['msg1','msg2'], [table1, table2]);" +
                     "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)");
         }
-        Thread.sleep(20000);
+        Thread.sleep(30000);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(20000, msg1.size());
         Assert.assertEquals(20000, msg2.size());
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
 }

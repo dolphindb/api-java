@@ -27,7 +27,7 @@ public class Utils {
 	private static final int[] leapMonthDays={31,29,31,30,31,30,31,31,30,31,30,31};
 	
 	public static int countMonths(YearMonth date){
-		return date.getYear() * 12 + date.getMonthValue();
+		return date.getYear() * 12 + date.getMonthValue()-1;
 	}
 	
 	public static int countMonths(int year, int month){
@@ -251,6 +251,9 @@ public class Utils {
 	 */
 	public static LocalDateTime parseNanoTimestamp(long nanoseconds){
 		int days=  (int)(nanoseconds / NANOS_PER_DAY);
+		if (nanoseconds < 0 && nanoseconds%NANOS_PER_DAY != 0){
+			days -= 1;
+		}
 		LocalDate date = Utils.parseDate(days);
 		nanoseconds = nanoseconds % NANOS_PER_DAY;
 		if (nanoseconds < 0)

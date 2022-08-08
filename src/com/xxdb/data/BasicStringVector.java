@@ -338,7 +338,11 @@ public class BasicStringVector extends AbstractVector{
 		{
 			for (String str : values)
 			{
-				out.writeString(str);
+				if (str == null){
+					out.writeString("");
+				}else {
+					out.writeString(str);
+				}
 			}
 		}
 	}

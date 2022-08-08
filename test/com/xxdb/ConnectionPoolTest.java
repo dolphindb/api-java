@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,17 +24,108 @@ public class ConnectionPoolTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    static String[] ipports = bundle.getString("SITES").split(",");
 
     @Before
     public void setUp() throws IOException {
        conn = new DBConnection();
        conn.connect(HOST,PORT,"admin","123456");
+       conn.run("share_table = exec name from objs(true) where shared=1\n" +
+                "\tfor(t in share_table){\n" +
+                "\t\ttry{clearTablePersistence(objByName(t))}catch(ex){}\n" +
+                "\t\tundef(t, SHARED);\t\n" +
+                "\t}");
     }
     @After
     public void tearDown() throws Exception {
         conn.run("if(existsDatabase(\"dfs://demohash\")){\n" +"\tdropDatabase(\"dfs://demohash\")\n" +                "}");
         conn.close();
     }
+
+    //ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability)
+    //ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability, String[] haSites, String initialScript,boolean compress, boolean useSSL, boolean usePython)
+    @Test(expected = RuntimeException.class)
+    public void test_DBConnectionPool_host_error() throws IOException {
+                DBConnectionPool pool1 = new ExclusiveDBConnectionPool("1",PORT,"admin","123456",5,false,false);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_DBConnectionPool_host_null() throws IOException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(null,PORT,"admin","123456",5,false,false);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_DBConnectionPool_port_error() throws IOException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,1,"admin","123456",5,false,false);
+    }
+
+    @Test(expected = IOException.class)
+    public void test_DBConnectionPool_uid_error() throws IOException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"error","123456",5,false,false);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_DBConnectionPool_uid_null() throws IOException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,null,"123456",5,false,false);
+    }
+
+    @Test(expected = IOException.class)
+    public void test_DBConnectionPool_password_error() throws IOException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","error",5,false,false);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_DBConnectionPool_password_null() throws IOException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin",null,5,false,false);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_DBConnectionPool_count_0() throws IOException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",0,false,false);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_DBConnectionPool_count_minus() throws IOException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",-1,false,false);
+    }
+
+    @Test
+    public void test_DBConnectionPool_count_nomal() throws IOException {
+        conn.run("t = streamTable(10:0,`a`b,[INT,INT]);" +
+                "share t as t1");
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",10,false,false);
+        assertEquals(10,pool1.getConnectionCount());
+        List<DBTask> tasks = new ArrayList<>();
+        for (int i = 0; i < 100; i++){
+            BasicDBTask task = new BasicDBTask("insert into t1 values(1,1);");
+            tasks.add(task);
+        }
+        pool1.execute(tasks);
+        BasicInt a = (BasicInt)conn.run("exec count(*) from t1");
+        assertEquals(100,a.getInt());
+        pool1.shutdown();
+    }
+
+    @Test
+    public void test_DBConnectionPool_count_1() throws IOException {
+        conn.run("t = streamTable(10:0,`a`b,[INT,INT]);" +
+                "share t as t1");
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",1,false,false);
+        assertEquals(1,pool1.getConnectionCount());
+        List<DBTask> tasks = new ArrayList<>();
+        long startTime = System.currentTimeMillis();
+        for (int i = 0; i < 10; i++){
+            BasicDBTask task = new BasicDBTask("sleep(1000);");
+            tasks.add(task);
+        }
+        pool1.execute(tasks);
+        long completeTime1 = System.currentTimeMillis();
+        long tcompleteTime = completeTime1 - startTime;
+        assertEquals(true,tcompleteTime>10000);
+        pool1.shutdown();
+    }
+
+
     @Test
     public void testHashHashstring() throws Exception {
         String script = "t = table(timestamp(1..10)  as date,string(1..10) as sym)\n" +
@@ -71,6 +161,7 @@ public class ConnectionPoolTest {
         BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
         assertEquals(10000000,re.getLong());
+        pool.shutdown();
     }
     @Test
     public void testHashHashInt() throws Exception {
@@ -107,6 +198,7 @@ public class ConnectionPoolTest {
         BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
         assertEquals(10000000,re.getLong());
+        pool.shutdown();
     }
     @Test
     public void testValueHashSymbol() throws Exception {
@@ -145,6 +237,7 @@ public class ConnectionPoolTest {
         BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
         assertEquals(10000000,re.getLong());
+        pool.shutdown();
     }
     @Test
     public void testValueHashDateTime() throws Exception {
@@ -187,6 +280,7 @@ public class ConnectionPoolTest {
         BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
         assertEquals(date.getString(),table.getColumn("date").getString());
         assertEquals(sym.getString(),table.getColumn("sym").getString());
+        pool.shutdown();
     }
     @Test
     public void testRangeHashdate() throws Exception {
@@ -231,6 +325,7 @@ public class ConnectionPoolTest {
         BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
         assertEquals(date.getString(),table.getColumn("date").getString());
         assertEquals(sym.getString(),table.getColumn("sym").getString());
+        pool.shutdown();
     }
     @Test
     public void testRangeRangeInt() throws Exception {
@@ -269,6 +364,7 @@ public class ConnectionPoolTest {
         BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
         assertEquals(10000000,re.getLong());
+        pool.shutdown();
     }
 
     @Test
@@ -320,6 +416,7 @@ public class ConnectionPoolTest {
         BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
         assertEquals(10000000,re.getLong());
+        pool.shutdown();
     }
 
     @Test
@@ -368,6 +465,7 @@ public class ConnectionPoolTest {
         BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
         assertEquals(date.getString(),table.getColumn("date").getString());
         assertEquals(sym.getString(),table.getColumn("sym").getString());
+        pool.shutdown();
     }
 
     @Test
@@ -417,6 +515,7 @@ public class ConnectionPoolTest {
         BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
         assertEquals(date.getString(),table.getColumn("date").getString());
         assertEquals(sym.getString(),table.getColumn("sym").getString());
+        pool.shutdown();
     }
     @Test
     public void testHashRangeDateTime() throws Exception {
@@ -462,6 +561,7 @@ public class ConnectionPoolTest {
         BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
         assertEquals(date.getString(),table.getColumn("date").getString());
         assertEquals(sym.getString(),table.getColumn("sym").getString());
+        pool.shutdown();
     }
     @Test
     public void testValueRangesymbol() throws Exception {
@@ -500,6 +600,7 @@ public class ConnectionPoolTest {
         BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
         assertEquals(10000000,re.getLong());
+        pool.shutdown();
     }
     @Test
     public void testHashValuesymbol() throws Exception {
@@ -538,6 +639,7 @@ public class ConnectionPoolTest {
         BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
         assertEquals(10000000,re.getLong());
+        pool.shutdown();
     }
     @Test
     public void testValueValuedate() throws Exception {
@@ -582,6 +684,7 @@ public class ConnectionPoolTest {
         BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
         assertEquals(date.getString(),table.getColumn("date").getString());
         assertEquals(sym.getString(),table.getColumn("sym").getString());
+        pool.shutdown();
     }
     @Test
     public void testValueValuemonth() throws Exception {
@@ -626,6 +729,7 @@ public class ConnectionPoolTest {
         BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
         assertEquals(date.getString(),table.getColumn("date").getString());
         assertEquals(sym.getString(),table.getColumn("sym").getString());
+        pool.shutdown();
     }
     @Test
     public void testRangeValueInt() throws Exception {
@@ -677,7 +781,249 @@ public class ConnectionPoolTest {
         BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
         assertEquals(10000000,re.getLong());
+        pool.shutdown();
     }
+    @Test
+    public void test_countLessThanZero() throws IOException{
+        try {
+            pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 0, true, true);
+        }catch(RuntimeException re){
+            assertEquals("The thread count can not be less than 0",re.getMessage());
+        }
+    }
+
+    @Test
+    public void test_loadBalanceFalse() throws Exception {
+        String script = "\n" +
+                "t = table(nanotimestamp(1..10)  as date,1..10 as sym)\n" +
+                "db2=database(\"\",RANGE,0 2 4 6 8 10)\n" +
+                "db1=database(\"\",RANGE,month(2020.01M)+0..100*5)\n" +
+                "if(existsDatabase(\"dfs://demohash\")){\n" +
+                "\tdropDatabase(\"dfs://demohash\")\n" +
+                "}\n" +
+                "db =database(\"dfs://demohash\",COMPO,[db2,db1])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`sym`date)";
+        conn.run(script);
+        pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, false, true);
+        appender = new PartitionedTableAppender(dburl, tableName, "date", pool);
+        List<String> colNames = new ArrayList<String>(2);
+        colNames.add("date");
+        colNames.add("sym");
+        List<Vector> cols = new ArrayList<Vector>(2);
+        BasicNanoTimestampVector date = new BasicNanoTimestampVector(10000);
+        for (int i =0 ;i<10000;i+=4) {
+            date.setNanoTimestamp(i, LocalDateTime.of(2020, 01, 01, 02, 05, 00, 000000000));
+            date.setNanoTimestamp(i+1, LocalDateTime.of(2020, 02, 01, 03, 05, 22, 000000000));
+            date.setNanoTimestamp(i+2, LocalDateTime.of(2020, 03, 01, 04, 05, 06, 000000000));
+            date.setNanoTimestamp(i+3, LocalDateTime.of(2020, 04, 01, 05, 05, 50, 000000000));
+        }
+        cols.add(date);
+        BasicIntVector sym = new BasicIntVector(10000);
+        for (int i =0 ;i<10000;i++) {
+            sym.setInt(i, 1);
+        }
+        cols.add(sym);
+/*
+        BasicTable table1 = new BasicTable(colNames,cols);
+        List<Entity> args = new ArrayList<Entity>(1);
+        args.add(table1);*/
+        for (int i =0 ;i<1000;i++) {
+            //conn.run(String.format("tableInsert{loadTable('%s','pt')}",dburl), args);
+            int m = appender.append(new BasicTable(colNames, cols));
+            assertEquals(10000,m);
+        }
+        BasicInt re = (BasicInt) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
+                "exec count(*) from pt");
+        assertEquals(10000000,re.getInt());
+        BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
+        assertEquals(date.getString(),table.getColumn("date").getString());
+        assertEquals(sym.getString(),table.getColumn("sym").getString());
+        pool.shutdown();
+    }
+
+    @Test
+    public void test_DBConnectionPool_haSite() throws Exception {
+        DBConnectionPool tmp_pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456", 10, true, true, ipports,null,true,false,false);
+        conn.run("db_path = \"dfs://test_DBConnectionPool_haSite\";\n" +
+                "if(existsDatabase(db_path)){\n" +
+                "        dropDatabase(db_path)\n" +
+                "}\n" +
+                "db = database(db_path, VALUE, 1..100);\n" +
+                "t = table(10:0,`id`sym`price`nodePort,[INT,SYMBOL,DOUBLE,INT])\n" +
+                "pt1 = db.createPartitionedTable(t,`pt1,`id)");
+        List<DBTask> tasks = new ArrayList<>();
+        for (int i = 0; i < 100; i++){
+            BasicDBTask task = new BasicDBTask("t = table(int(take("+i+",100)) as id,rand(`a`b`c`d,100) as sym,int(rand(100,100)) as price,take(getNodePort(),100) as node);"+
+                    "pt = loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1);"+
+                    "pt.append!(t)");
+            tasks.add(task);
+        }
+        tmp_pool.execute(tasks);
+        tmp_pool.waitForThreadCompletion();
+        BasicInt re = (BasicInt) conn.run("int(exec count(*) from loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1))");
+        assertEquals(10000,re.getInt());
+        BasicIntVector nodes_port_re = (BasicIntVector) conn.run("exec nodePort from loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1) group by nodePort order by nodePort");
+        BasicIntVector nodes_port_ex = (BasicIntVector) conn.run("exec value from pnodeRun(getNodePort) order by value");
+        for(int i = 0;i<nodes_port_re.rows();i++){
+            assertEquals(nodes_port_re.getInt(i),nodes_port_ex.getInt(i));
+        }
+        tmp_pool.shutdown();
+    }
+
+    @Test
+    public void test_DBConnectionPool_haSite_ha_false() throws Exception {
+        DBConnectionPool tmp_pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456", 10, true, false, ipports,null,true,false,false);
+        conn.run("db_path = \"dfs://test_DBConnectionPool_haSite\";\n" +
+                "if(existsDatabase(db_path)){\n" +
+                "        dropDatabase(db_path)\n" +
+                "}\n" +
+                "db = database(db_path, VALUE, 1..100);\n" +
+                "t = table(10:0,`id`sym`price`nodePort,[INT,SYMBOL,DOUBLE,INT])\n" +
+                "pt1 = db.createPartitionedTable(t,`pt1,`id)");
+        List<DBTask> tasks = new ArrayList<>();
+        for (int i = 0; i < 100; i++){
+            BasicDBTask task = new BasicDBTask("t = table(int(take("+i+",100)) as id,rand(`a`b`c`d,100) as sym,int(rand(100,100)) as price,take(getNodePort(),100) as node);"+
+                    "pt = loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1);"+
+                    "pt.append!(t)");
+            tasks.add(task);
+        }
+        tmp_pool.execute(tasks);
+        tmp_pool.waitForThreadCompletion();
+        BasicInt re = (BasicInt) conn.run("int(exec count(*) from loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1))");
+        assertEquals(10000,re.getInt());
+        BasicIntVector nodes_port_re = (BasicIntVector) conn.run("exec nodePort from loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1) group by nodePort order by nodePort");
+        BasicIntVector nodes_port_ex = (BasicIntVector) conn.run("exec value from pnodeRun(getNodePort) order by value");
+        for(int i = 0;i<nodes_port_re.rows();i++){
+            assertEquals(nodes_port_re.getInt(i),nodes_port_ex.getInt(i));
+        }
+        tmp_pool.shutdown();
+    }
+
+
+    @Test
+    public void test_DBConnectionPool_haSite_loadBalance_false() throws Exception {
+        DBConnectionPool tmp_pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456", 10, false, false, ipports,null,true,false,false);
+        conn.run("db_path = \"dfs://test_DBConnectionPool_haSite\";\n" +
+                "if(existsDatabase(db_path)){\n" +
+                "        dropDatabase(db_path)\n" +
+                "}\n" +
+                "db = database(db_path, VALUE, 1..100);\n" +
+                "t = table(10:0,`id`sym`price`nodePort,[INT,SYMBOL,DOUBLE,INT])\n" +
+                "pt1 = db.createPartitionedTable(t,`pt1,`id)");
+        List<DBTask> tasks = new ArrayList<>();
+        for (int i = 0; i < 100; i++){
+            BasicDBTask task = new BasicDBTask("t = table(int(take("+i+",100)) as id,rand(`a`b`c`d,100) as sym,int(rand(100,100)) as price,take(getNodePort(),100) as node);"+
+                    "pt = loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1);"+
+                    "pt.append!(t)");
+            tasks.add(task);
+        }
+        tmp_pool.execute(tasks);
+        tmp_pool.waitForThreadCompletion();
+        BasicInt re = (BasicInt) conn.run("int(exec count(*) from loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1))");
+        assertEquals(10000,re.getInt());
+        BasicIntVector nodes_port_re = (BasicIntVector) conn.run("exec nodePort from loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1) group by nodePort order by nodePort");
+        BasicInt nodes_port_ex = (BasicInt) conn.run("getNodePort()");
+        for(int i = 0;i<nodes_port_re.rows();i++){
+            assertEquals(nodes_port_ex.getInt(),nodes_port_re.getInt(i));
+        }
+        tmp_pool.shutdown();
+    }
+
+    @Test(expected = ArithmeticException.class)
+    public void test_DBConnectionPool_haSite_zero() throws Exception {
+        String[] tmp_null = {};
+        DBConnectionPool tmp_pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456", 10, true, true,tmp_null,null,true,false,false);
+    }
+
+    @Test
+    public void test_DBConnectionPool_haSite_null() throws Exception {
+        DBConnectionPool tmp_pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456", 10, true, true, null,null,true,false,false);
+        conn.run("db_path = \"dfs://test_DBConnectionPool_haSite\";\n" +
+                "if(existsDatabase(db_path)){\n" +
+                "        dropDatabase(db_path)\n" +
+                "}\n" +
+                "db = database(db_path, VALUE, 1..100);\n" +
+                "t = table(10:0,`id`sym`price`nodePort,[INT,SYMBOL,DOUBLE,INT])\n" +
+                "pt1 = db.createPartitionedTable(t,`pt1,`id)");
+        List<DBTask> tasks = new ArrayList<>();
+        for (int i = 0; i < 100; i++){
+            BasicDBTask task = new BasicDBTask("t = table(int(take("+i+",100)) as id,rand(`a`b`c`d,100) as sym,int(rand(100,100)) as price,take(getNodePort(),100) as node);"+
+                    "pt = loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1);"+
+                    "pt.append!(t)");
+            tasks.add(task);
+        }
+        tmp_pool.execute(tasks);
+        tmp_pool.waitForThreadCompletion();
+        BasicInt re = (BasicInt) conn.run("int(exec count(*) from loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1))");
+        assertEquals(10000,re.getInt());
+        BasicIntVector nodes_port_re = (BasicIntVector) conn.run("exec nodePort from loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1) group by nodePort order by nodePort");
+        BasicIntVector nodes_port_ex = (BasicIntVector) conn.run("exec value from pnodeRun(getNodePort) order by value");
+        for(int i = 0;i<nodes_port_re.rows();i++){
+            assertEquals(nodes_port_re.getInt(i),nodes_port_ex.getInt(i));
+        }
+        tmp_pool.shutdown();
+    }
+
+    @Test
+    public void test_DBConnectionPool_execute_sync() throws Exception {
+        DBConnectionPool tmp_pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456", 5,false,false);
+        List<DBTask> tasks = new ArrayList<>();
+        for (int i = 0; i < 20; i++){
+            BasicDBTask task = new BasicDBTask("sleep(1000)");
+            tasks.add(task);
+        }
+        long startTime = System.currentTimeMillis();
+        tmp_pool.execute(tasks);
+        long completeTime1 = System.currentTimeMillis();
+        long tcompleteTime = completeTime1 - startTime;
+        assertEquals(true,tcompleteTime>4000);
+        for (int i = 0; i < 10; i++){
+            assertEquals(true,tasks.get(i).isSuccessful());
+        }
+        tmp_pool.shutdown();
+    }
+
+    public class pool_test implements Runnable {
+        private DBConnectionPool pool;
+        private List<DBTask> tasks;
+        public pool_test(DBConnectionPool pool,List<DBTask> tasks) {
+            this.pool = pool;
+            this.tasks = tasks;
+        }
+        @Override
+        public void run() {
+            pool.execute(tasks);
+        }
+    }
+    @Test
+    public void test_DBConnectionPool_task_async() throws Exception {
+        DBConnectionPool pool_task_async = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456", 4,false,false);
+        List<DBTask> tasks = new ArrayList<>();
+        for (int i = 0; i < 20; i++){
+            BasicDBTask task = new BasicDBTask("sleep(1000)");
+            tasks.add(task);
+        }
+        Thread thread1 = new Thread(new pool_test(pool_task_async,tasks));
+        thread1.start();
+        long startTime = System.currentTimeMillis();
+        for (int i = 0; i < 20; i++){
+            assertEquals(false,tasks.get(i).isSuccessful());
+        }
+        thread1.join();
+        pool_task_async.waitForThreadCompletion();
+        pool_task_async.shutdown();
+        long completeTime1 = System.currentTimeMillis();
+        long tcompleteTime = completeTime1 - startTime;
+        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+        System.out.println(startTime);
+        System.out.println(completeTime1);
+        System.out.println(tcompleteTime);
+        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+        assertEquals(true,tcompleteTime>5000);
+        thread1.interrupt();
+        pool_task_async.shutdown();
+    }
+
 
 }
 

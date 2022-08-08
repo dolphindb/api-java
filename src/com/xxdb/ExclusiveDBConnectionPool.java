@@ -36,22 +36,24 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 						} catch (Exception e) {
 							break;
 						}
-						while (true){
-							task = taskLists_.pollLast();
-							if (task == null){
-								break;
-							}
-							try {
-								task.setDBConnection(conn_);
-								task.call();
-							}catch (Exception e){
-								e.printStackTrace();
-							}
-							((BasicDBTask)task).finish();
-							synchronized (finishedTasklock_){
-								finishedTaskCount_++;
-							}
-						}
+					}
+				}
+				while (true){
+					synchronized (taskLists_){
+						task = taskLists_.pollLast();
+					}
+					if (task == null){
+						break;
+					}
+					try {
+						task.setDBConnection(conn_);
+						task.call();
+					}catch (Exception e){
+						e.printStackTrace();
+					}
+					((BasicDBTask)task).finish();
+					synchronized (finishedTasklock_){
+						finishedTaskCount_++;
 					}
 				}
 				synchronized (finishedTasklock_){
@@ -63,25 +65,33 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 	}
 
 	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability) throws IOException{
-		this(host, port, uid, pwd, count, loadBalance, enableHighAvailability, false);
+		this(host, port, uid, pwd, count, loadBalance, enableHighAvailability, null, "",false, false, false);
 	}
-	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability, boolean compress) throws IOException{
+
+	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability, String[] highAvailabilitySites, String initialScript,boolean compress, boolean useSSL, boolean usePython) throws IOException{
 		if (count <= 0)
 			throw new RuntimeException("The thread count can not be less than 0");
 		if(!loadBalance){
 			for(int i=0; i<count; ++i){
-				DBConnection conn = new DBConnection(false, false, compress);
-				if(!conn.connect(host, port, uid, pwd, enableHighAvailability))
+				DBConnection conn = new DBConnection(false, useSSL, compress, usePython);
+				conn.setLoadBalance(false);
+				if(!conn.connect(host, port, uid, pwd, initialScript, enableHighAvailability))
 					throw new RuntimeException("Can't connect to the specified host.");
 				workers_.add(new AsynWorker(conn));
 			}
 		}
 		else{
-			DBConnection entryPoint = new DBConnection(false, false, compress);
-			if(!entryPoint.connect(host, port, uid, pwd))
-				throw new RuntimeException("Can't connect to the specified host.");
-			BasicStringVector nodes = (BasicStringVector)entryPoint.run("rpc(getControllerAlias(), getClusterLiveDataNodes{false})");
-			int nodeCount = nodes.rows();
+			BasicStringVector nodes = null;
+			if (highAvailabilitySites != null){
+				nodes = new BasicStringVector(highAvailabilitySites);
+			}else {
+				DBConnection entryPoint = new DBConnection(false, useSSL, compress, usePython);
+				if(!entryPoint.connect(host, port, uid, pwd))
+					throw new RuntimeException("Can't connect to the specified host.");
+				nodes = (BasicStringVector)entryPoint.run("rpc(getControllerAlias(), getClusterLiveDataNodes{false})");
+				entryPoint.close();
+			}
+			int nodeCount = nodes.rows();;
 			String[] hosts = new String[nodeCount];
 			int[] ports = new int[nodeCount];
 			for(int i=0; i<nodeCount; ++i){
@@ -91,10 +101,10 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 				hosts[i] = fields[0];
 				ports[i] = Integer.parseInt(fields[1]);
 			}
-			
 			for(int i=0; i<count; ++i){
-				DBConnection conn = new DBConnection(false, false, compress);
-				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, enableHighAvailability))
+				DBConnection conn = new DBConnection(false, useSSL, compress, usePython);
+				conn.setLoadBalance(false);
+				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, initialScript, enableHighAvailability))
 					throw new RuntimeException("Can't connect to the host " + nodes.getString(i));
 				workers_.add(new AsynWorker(conn));
 			}
@@ -120,7 +130,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 			taskLists_.notify();
 		}
 		((BasicDBTask)task).waitFor();
-		((BasicDBTask)task).waitFor();
+		((BasicDBTask)task).finish();
 	}
 
 	public void waitForThreadCompletion(){

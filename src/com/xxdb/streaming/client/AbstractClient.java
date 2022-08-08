@@ -173,10 +173,9 @@ abstract class AbstractClient implements MessageDispatcher {
         StreamDeserializer deserializer;
         String userName = "";
         String passWord = "";
-        boolean enableHa;
 
         Site(String host, int port, String tableName, String actionName,
-             MessageHandler handler, long msgId, boolean reconnect, Vector filter, boolean enableHa, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord) {
+             MessageHandler handler, long msgId, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord) {
             this.host = host;
             this.port = port;
             this.tableName = tableName;
@@ -189,7 +188,6 @@ abstract class AbstractClient implements MessageDispatcher {
             this.deserializer = deserializer;
             this.userName = userName;
             this.passWord = passWord;
-            this.enableHa = enableHa;
         }
     }
 
@@ -410,12 +408,12 @@ abstract class AbstractClient implements MessageDispatcher {
                                                               String tableName, String actionName, MessageHandler handler,
                                                               long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer, boolean allowExistTopic)
             throws IOException, RuntimeException {
-        return subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, false, deserializer, allowExistTopic, "", "");
+        return subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, "", "");
     }
 
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
                                                               String tableName, String actionName, MessageHandler handler,
-                                                              long offset, boolean reconnect, Vector filter, boolean enableHa, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord)
+                                                              long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord)
             throws IOException, RuntimeException {
         Entity re;
         String topic = "";
@@ -423,18 +421,10 @@ abstract class AbstractClient implements MessageDispatcher {
         List<String> usr = Arrays.asList(userName, passWord);
         users.put(tp, usr);
         DBConnection dbConn = new DBConnection();
-        if (enableHa){
-            if (!userName.equals(""))
-                dbConn.connect(host, port, userName, passWord, true);
-            else
-                dbConn.connect(host, port, true);
-        }else {
-            if (!userName.equals(""))
-                dbConn.connect(host, port, userName, passWord);
-            else
-                dbConn.connect(host, port);
-        }
-
+        if (!userName.equals(""))
+            dbConn.connect(host, port, userName, passWord);
+        else
+            dbConn.connect(host, port);
         if (deserializer!=null&&!deserializer.isInited())
             deserializer.init(dbConn);
         if (deserializer != null){
@@ -472,6 +462,7 @@ abstract class AbstractClient implements MessageDispatcher {
             }
 
             re = dbConn.run("publishTable", params);
+
             if (re instanceof BasicAnyVector) {
                 BasicStringVector HASiteStrings = (BasicStringVector) (((BasicAnyVector) re).getEntity(1));
                 int HASiteNum = HASiteStrings.rows();
@@ -482,7 +473,10 @@ abstract class AbstractClient implements MessageDispatcher {
                     String HASiteHost = HASiteHostAndPort[0];
                     int HASitePort = new Integer(HASiteHostAndPort[1]);
                     String HASiteAlias = HASiteHostAndPort[2];
-                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, enableHa, deserializer, allowExistTopic, userName, passWord);
+                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord);
+                    if (!reconnect){
+                        sites[i].closed = true;
+                    }
                     synchronized (tableNameToTrueTopic) {
                         tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + "/" + tableName + "/" + actionName, topic);
                     }
@@ -500,7 +494,10 @@ abstract class AbstractClient implements MessageDispatcher {
                     trueTopicToSites.put(topic, sites);
                 }
             } else {
-                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, enableHa, deserializer, allowExistTopic, userName, passWord)};
+                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, deserializer, allowExistTopic, userName, passWord)};
+                if (!reconnect){
+                    sites[0].closed = true;
+                }
                 synchronized (subInfos_){
                     subInfos_.put(topic, deserializer);
                 }
@@ -537,23 +534,16 @@ abstract class AbstractClient implements MessageDispatcher {
         return subscribeInternal(host, port, tableName, actionName, offset, false);
     }
 
-    protected void unsubscribeInternal(String host, int port, String tableName, String actionName, boolean enableHa) throws IOException {
+    protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
         DBConnection dbConn = new DBConnection();
         List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
         List<String> usr = users.get(tp);
         String user = usr.get(0);
         String pwd = usr.get(1);
-        if (enableHa){
-            if (!user.equals(""))
-                dbConn.connect(host, port, user, pwd, true);
-            else
-                dbConn.connect(host, port, true);
-        }else {
-            if (!user.equals(""))
-                dbConn.connect(host, port, user, pwd);
-            else
-                dbConn.connect(host, port);
-        }
+        if (!user.equals(""))
+            dbConn.connect(host, port, user, pwd);
+        else
+            dbConn.connect(host, port);
         try {
             String localIP = this.listeningHost;
             if(localIP.equals(""))
@@ -591,10 +581,6 @@ abstract class AbstractClient implements MessageDispatcher {
     }
 
     protected void unsubscribeInternal(String host, int port, String tableName) throws IOException {
-        unsubscribeInternal(host, port, tableName, DEFAULT_ACTION_NAME, false);
-    }
-
-    protected  void unsubscribeInternal(String host, int port, String tableName, boolean enableHa) throws IOException {
-        unsubscribeInternal(host, port, tableName, DEFAULT_ACTION_NAME, enableHa);
+        unsubscribeInternal(host, port, tableName, DEFAULT_ACTION_NAME);
     }
 }

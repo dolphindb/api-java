@@ -144,9 +144,10 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	public static int getUnitLength(Entity.DATA_TYPE type) {
 		if (type.getValue()>64)
 			type = Entity.DATA_TYPE.valueOf(type.getValue()-64);
-		int unitLength = 0;
+		int unitLength;
 		switch (type) {
 			case DT_STRING:
+			case DT_BLOB:
 				unitLength = 0;
 				break;
 			case DT_BOOL:

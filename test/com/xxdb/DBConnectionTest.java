@@ -15,6 +15,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDate;
@@ -27,15 +28,18 @@ import static org.junit.Assert.*;
 public class DBConnectionTest {
 
     private DBConnection conn;
-
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    static String[] ipports = bundle.getString("SITES").split(",");
 
-    String[] highAavailabilitySites = {"192.168.0.57:9002","192.168.0.57:9003","192.168.0.57:9004","192.168.0.57:9005"};
+
+    static String[] host_list= bundle.getString("HOSTS").split(",");
+    static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
+    //String[] highAvailabilitySites = {"192.168.0.57:9002","192.168.0.57:9003","192.168.0.57:9004","192.168.0.57:9005"};
 
     public int getConnCount() throws IOException {
-        return ((BasicInt) conn.run("getClusterPerf().connectionNum[0]")).getInt();
+        return ((BasicInt) conn.run("(exec connectionNum from rpc(getControllerAlias(),getClusterPerf) where port = getNodePort())[0]")).getInt();
     }
     static void compareBasicTable(BasicTable table, BasicTable newTable)
     {
@@ -67,13 +71,7 @@ public class DBConnectionTest {
     }
     @Before
     public void setUp() throws IOException {
-       /* Properties props = new Properties();
-        FileInputStream in= new FileInputStream( "test/com/xxdb/setup/settings.properties");
-        props.load(in);
-        PORT  = Integer.parseInt(props.getProperty ("PORT"));
-        HOST  = props.getProperty ("HOST");*/
-        conn = new DBConnection();
-     //   conn = new DBConnection(false,true);
+        conn = new DBConnection(false,false,true);
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
                 throw new IOException("Failed to connect to dolphindb server");
@@ -1904,7 +1902,7 @@ public class DBConnectionTest {
     }
 
     @Test
-    public void TestPartitionTable() throws IOException {
+    public void TestPartitionTable() throws IOException, InterruptedException {
         //createPartitionTable
         StringBuilder sb = new StringBuilder();
         sb.append("n=10000;");
@@ -1919,17 +1917,19 @@ public class DBConnectionTest {
         sb.append("addValuePartitions(db,3);");
         sb.append("pt.append!(t);");
         conn.run(sb.toString());
-        BasicBoolean res3 = (BasicBoolean) conn.run("existsPartition('dfs://db1/3');");
-        assertEquals(false, res3.getBoolean());
+        BasicInt res3 = (BasicInt) conn.run("size(exec count(dfsPath) from pnodeRun(getAllChunks) where dfsPath like \"/db1/3%\" group by chunkId);");
+        assertEquals(1, res3.getInt());
         //dropPartition
-        conn.run("dropPartition(db,3,`pt);");
-        res3 = (BasicBoolean) conn.run("existsPartition('dfs://db1/3');");
-        assertFalse(res3.getBoolean());
+        conn.run("dropPartition(db,"+"\"/"+"3"+"/\""+",`pt);");
+        BasicBoolean res4 = (BasicBoolean) conn.run("existsPartition('dfs://db1/3');");
+        assertFalse(res4.getBoolean());
         //addColumn
         sb.append("addColumn(pt,[\"x\", \"y\"],[INT, INT]);");
         sb.append("t1 = table(rand(1 2 3 4,n) as id,rand(1..10,n) as val,rand(1..5,n) as x,rand(1..10,n) as y );");
         sb.append("pt.append!(t1);");
         conn.run(sb.toString());
+        conn.run("pnodeRun(purgeCacheEngine)");
+        Thread.sleep(5000);
         BasicLong res_x = (BasicLong) conn.run("exec count(*) from pt where x=1");
         assertEquals(true, res_x.getLong() > 0);
         //PartitionTableJoin
@@ -1981,12 +1981,11 @@ public class DBConnectionTest {
              throw new UnknownHostException("can not connect to dolphindb.");
      }
 
-    @Test(expected = Exception.class)
+    @Test(expected = IOException.class)
     public void TestConnectErrorHostValue() throws IOException {
         DBConnection conn1 = new DBConnection();
-        conn1.connect("192.168.1.0", PORT, "admin", "123456");
-
-
+        conn1.connect("1", PORT, "admin", "123456");
+        conn1.run("1+1");
     }
 
     @Test(expected = IOException.class)
@@ -2021,11 +2020,7 @@ public class DBConnectionTest {
     public void TestCloseOnce() throws IOException, InterruptedException {
         DBConnection connClose = new DBConnection();
         //连接一次
-        try {
-            connClose.connect(HOST, PORT, "admin", "123456");
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        connClose.connect(HOST, PORT, "admin", "123456");
         Thread.sleep(5000);
         int connCount = getConnCount();
         connClose.close();
@@ -2048,10 +2043,10 @@ public class DBConnectionTest {
             }
 
         }
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         int connCount = getConnCount();
         connNew.close();
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         int connCount1 = getConnCount();
         assertEquals(connCount - 1, connCount1);
     }
@@ -2375,7 +2370,7 @@ public class DBConnectionTest {
         catch (IOException ex){
             String aa=ex.getMessage();
             System.out.println(ex.getMessage());
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testVar") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testVar"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2385,7 +2380,7 @@ public class DBConnectionTest {
             conn.run("print testVar", 4, 4);
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testVar") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testVar"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2398,7 +2393,7 @@ public class DBConnectionTest {
             conn.run(" testVar", 4, 4);
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testVar") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testVar"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2408,7 +2403,7 @@ public class DBConnectionTest {
             conn.run("print testVar");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testVar") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testVar"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2418,7 +2413,7 @@ public class DBConnectionTest {
             conn.run("print testVar");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testVar") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testVar"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2428,7 +2423,7 @@ public class DBConnectionTest {
             conn.run("print testVar");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testVar") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testVar"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2438,7 +2433,7 @@ public class DBConnectionTest {
             conn.run("print testVar");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testVar") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testVar"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2448,7 +2443,7 @@ public class DBConnectionTest {
             conn.run("print testVar");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testVar") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testVar"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2458,7 +2453,7 @@ public class DBConnectionTest {
             conn.run("print a");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token a") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token a"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2467,7 +2462,7 @@ public class DBConnectionTest {
             conn.run("testsym;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testsym") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testsym"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2475,7 +2470,7 @@ public class DBConnectionTest {
             conn.run("testchar;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testchar") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testchar"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2483,7 +2478,7 @@ public class DBConnectionTest {
             conn.run("t;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token t") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token t"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2491,7 +2486,7 @@ public class DBConnectionTest {
             conn.run("testm;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testm") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testm"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2499,7 +2494,7 @@ public class DBConnectionTest {
             conn.run("testp;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testp") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testp"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2507,7 +2502,7 @@ public class DBConnectionTest {
             conn.run("testdic;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testdic") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testdic"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2515,7 +2510,7 @@ public class DBConnectionTest {
             conn.run("f(2);");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token f") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token f"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2525,7 +2520,7 @@ public class DBConnectionTest {
             conn.run("testsym;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testsym") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testsym"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2533,7 +2528,7 @@ public class DBConnectionTest {
             conn.run("testchar;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testchar") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testchar"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2541,7 +2536,7 @@ public class DBConnectionTest {
             conn.run("t;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token t") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token t"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2549,7 +2544,7 @@ public class DBConnectionTest {
             conn.run("testm;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testm") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testm"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2557,7 +2552,7 @@ public class DBConnectionTest {
             conn.run("testp;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testp") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testp"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2565,7 +2560,7 @@ public class DBConnectionTest {
             conn.run("testdic;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testdic") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testdic"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2573,7 +2568,7 @@ public class DBConnectionTest {
             conn.run("any;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token any") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token any"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2582,7 +2577,7 @@ public class DBConnectionTest {
             conn.run("testsym;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testsym") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testsym"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2590,7 +2585,7 @@ public class DBConnectionTest {
             conn.run("testchar;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testchar") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testchar"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2598,7 +2593,7 @@ public class DBConnectionTest {
             conn.run("t;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token t") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token t"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2606,7 +2601,7 @@ public class DBConnectionTest {
             conn.run("testm;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testm") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testm"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2614,7 +2609,7 @@ public class DBConnectionTest {
             conn.run("testp;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testp") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testp"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2622,7 +2617,7 @@ public class DBConnectionTest {
             conn.run("testdic;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token testdic") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token testdic"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2630,7 +2625,7 @@ public class DBConnectionTest {
             conn.run("any;");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token any") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token any"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2638,7 +2633,7 @@ public class DBConnectionTest {
             conn.run("f(2);");
         }
         catch (IOException ex){
-            if(ex.getMessage().indexOf("Syntax Error: [line #1] Cannot recognize the token f") == -1)
+            if(!ex.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token f"))
                 noErro=false;
         }
         assertTrue(noErro);
@@ -2844,11 +2839,11 @@ public class DBConnectionTest {
                 }
             }
         }
-        Timer timer = new Timer("Timer");
-        TimerTask rec = new reconnect();
-        timer.scheduleAtFixedRate(rec, 0L, 1000L);
-        Thread.sleep(5000L);
-        timer.cancel();
+//        Timer timer = new Timer("Timer");
+//        TimerTask rec = new reconnect();
+//        timer.scheduleAtFixedRate(rec, 0L, 1000L);
+//        Thread.sleep(5000L);
+//        timer.cancel();
     }
 
     @Test
@@ -2858,7 +2853,7 @@ public class DBConnectionTest {
         long beforeDT = System.currentTimeMillis();
         conn.run("sleep(10000)");
         long afterDT = System.currentTimeMillis();
-        assertEquals(false,(afterDT-beforeDT)>10000);
+        assertFalse((afterDT - beforeDT) > 10000);
 
     }
     @Test
@@ -2868,7 +2863,7 @@ public class DBConnectionTest {
         long beforeDT = System.currentTimeMillis();
         conn.run("sleep(10000)");
         long afterDT = System.currentTimeMillis();
-        assertEquals(false,(afterDT-beforeDT)<10000);
+        assertFalse((afterDT - beforeDT) < 10000);
 
     }
     @Test
@@ -2919,7 +2914,7 @@ public class DBConnectionTest {
             conn.run("testVar",1,1);
         }catch(Exception e){
             String ex = e.getMessage();
-            if(ex.indexOf("Syntax Error: [line #1] Cannot recognize the token testVar")==-1)
+            if(!ex.contains("Syntax Error: [line #1] Cannot recognize the token testVar"))
                 noError = false;
             assertTrue(noError);
         }
@@ -2929,20 +2924,27 @@ public class DBConnectionTest {
     }
 
     @Test
-    public void test_TryRun_fetchSize() throws IOException{
+    public void test_TryRun_fetchSize() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
+
         assertTrue(conn.connect(HOST,PORT,"admin","123456","m=matrix(1 2 3 4, 5 6 7 8, 9 10 11 12);",true));
-        String scripts = "n=1000000;\n" +
-                "date=take(2006.01.01..2006.01.31,n);\n" +
-                "x=rand(10.0,n);\n" +
-                "t=table(date,x);\n";
-        long startTime1 = System.currentTimeMillis();
-        conn.tryRun(scripts,1,1,10000,false);
-        long endTime1 = System.currentTimeMillis();
-        long startTime2 = System.currentTimeMillis();
-        conn.tryRun(scripts,1,1,100000,false);
-        long endTime2 = System.currentTimeMillis();
-        assertTrue((endTime2-startTime2)<(endTime1-startTime1));
+        conn.run("x=1..10000000;");
+        try {
+            conn.tryRun("sum(x)", 1, 1, 8191,false);
+        }catch(IOException ie){
+            assertEquals("fetchSize must be greater than 8192",ie.getMessage());
+        }
+        long beforeDT = System.currentTimeMillis();
+        conn.tryRun("x;",1,1,8192,false);
+        long afterDT = System.currentTimeMillis();
+        System.out.println(afterDT-beforeDT);
+        Thread.sleep(3000);
+        conn.run("y=1..10000000");
+        long startDT = System.currentTimeMillis();
+        conn.tryRun("y;",1,1,1000000,false);
+        long endDT = System.currentTimeMillis();
+        System.out.println(endDT-startDT);
+        assertFalse((endDT-startDT)>(afterDT-beforeDT));
     }
     @Test
     public void test_run_priority() throws IOException{
@@ -2965,7 +2967,7 @@ public class DBConnectionTest {
             conn.run("testM",true);
         }catch(Exception e){
             String ex = e.getMessage();
-            if(ex.indexOf("Syntax Error: [line #1] Cannot recognize the token testM")==-1)
+            if(!ex.contains("Syntax Error: [line #1] Cannot recognize the token testM"))
                 noError = false;
             assertTrue(noError);
         }
@@ -3003,92 +3005,182 @@ public class DBConnectionTest {
             upObj.put("Second uploaded",tb);
         }catch(RuntimeException re){
             String rex = re.getMessage();
-            if(rex.indexOf("is not a qualified variable name.") == -1)
+            if(!rex.contains("is not a qualified variable name."))
                 noError = false;
             assertTrue(noError);
         }
     }
-    @Test
-    public void test_connect_HighAvailabilitySites() throws IOException{
-        DBConnection conn = new DBConnection();
-        assertTrue(conn.connect(HOST,9002,highAavailabilitySites));
-        conn.login("admin","123456",false);
-        String scripts = "n=1000000\n" +
-                "date=rand(2018.08.01..2018.08.03,n)\n" +
-                "sym=rand(`AAPL`MS`C`YHOO,n)\n" +
-                "qty=rand(1..1000,n)\n" +
-                "price=rand(100.0,n)\n" +
-                "t=table(date,sym,qty,price)\n" +
-                "if(existsDatabase(\"dfs://db1\")){\n" +
-                "\tdropDatabase(\"dfs://db1\")\n" +
-                "}\n" +
-                "db=database(\"dfs://db1\",VALUE,2018.08.01..2018.08.03)\n" +
-                "trades=db.createPartitionedTable(t,`trades,`date).append!(t)";
-        conn.run(scripts);
-        BasicBoolean res = (BasicBoolean) conn.run("existsDatabase(\"dfs://db1\");");
-        assertTrue(res.getBoolean());
 
+@Test
+public void test_SSL() throws Exception {
+    DBConnection conn = new DBConnection(false,true);
+    assertTrue(conn.connect(HOST,PORT));
+    HashMap<String,Entity> map = new HashMap<>();
+    map.put("x",conn.run("x=[1 3 6 10];"));
+    map.put("y",conn.run("y=[2 1 5 3];"));
+    map.put("z",conn.run("z=[3 11 8 7];"));
+    map.put("table",conn.run("t=table(x,y,z);"));
+    conn.upload(map);
+    BasicTable res = (BasicTable) conn.run("t;");
+    assertEquals(10,res.getColumn(0).get(3).getNumber());
+}
+
+    @Test
+    public void test_TryRun_arguments() throws Exception {
+        DBConnection conn = new DBConnection();
+        assertTrue(conn.connect(HOST,PORT,"admin","123456"));
+        List<Entity> arguments = new ArrayList<>();
+        conn.run("a =[1 2 3];");
+        arguments.add(conn.run("a;"));
+        conn.run("b=[2 1 6];");
+        arguments.add(conn.run("b;"));
+        BasicTable res = (BasicTable) conn.tryRun("table",arguments);
+        assertEquals(6,res.getColumn(1).get(2).getNumber());
+    }
+    @Test
+    public void test_TryRun_priority_parallelism() throws Exception {
+        DBConnection conn = new DBConnection();
+        assertTrue(conn.connect(HOST,PORT,"admin","123456"));
+        List<Entity> arguments = new ArrayList<>();
+        conn.run("a =[1 2 3];");
+        arguments.add(conn.run("a;"));
+        conn.run("b=[2 1 6];");
+        arguments.add(conn.run("b;"));
+        Entity res = conn.run("table",arguments,1);
+        assertEquals(2,res.columns());
+        assertEquals(3,res.rows());
+        List<Entity> args = new ArrayList<>();
+        args.add(res);
+        BasicTable res1 = (BasicTable) conn.tryRun("sum",args,1,1);
+        assertEquals(9L,res1.getColumn(1).get(0).getNumber());
     }
 
     @Test
-    public void test_connect_HighAvail_initscript() throws IOException{
+    public void test_TryRun_args_fetchSize() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
-        assertTrue(conn.connect(HOST,9002,"x=1 2 3",highAavailabilitySites));
-        conn.login("admin","123456",false);
-        String scripts = "n=1000000\n" +
-                "date=rand(2018.08.01..2018.08.03,n)\n" +
-                "sym=rand(`AAPL`MS`C`YHOO,n)\n" +
-                "qty=rand(1..1000,n)\n" +
-                "price=rand(100.0,n)\n" +
-                "t=table(date,sym,qty,price)\n" +
-                "if(existsDatabase(\"dfs://db1\")){\n" +
-                "\tdropDatabase(\"dfs://db1\")\n" +
-                "}\n" +
-                "db=database(\"dfs://db1\",VALUE,2018.08.01..2018.08.03)\n" +
-                "trades=db.createPartitionedTable(t,`trades,`date).append!(t)";
-        conn.run(scripts);
-        BasicBoolean res = (BasicBoolean) conn.run("existsDatabase(\"dfs://db1\");");
-        assertTrue(res.getBoolean());
+        assertTrue(conn.connect(HOST,PORT,"admin","123456"));
+        List<Entity> argus1 = new ArrayList<>();
+        conn.run("x=1..10000000");
+        argus1.add(conn.run("x;"));
+        try {
+            conn.tryRun("sum", argus1, 1, 1, 8191);
+        }catch(IOException ie){
+            assertEquals("fetchSize must be greater than 8192",ie.getMessage());
+        }
+        long beforeDT = System.currentTimeMillis();
+        conn.tryRun("sum",argus1,1,1,8192);
+        long afterDT = System.currentTimeMillis();
+        System.out.println(afterDT-beforeDT);
+        Thread.sleep(10000);
+        List<Entity> argus2 = new ArrayList<>();
+        conn.run("y=1..10000000");
+        argus2.add(conn.run("y;"));
+        long startDT = System.currentTimeMillis();
+        conn.tryRun("sum",argus2,1,1,1000000);
+        long endDT = System.currentTimeMillis();
+        System.out.println(endDT-startDT);
+        assertTrue((endDT-startDT)<(afterDT-beforeDT));
     }
 
     @Test
-    public void test_connect_highavail_user_pass() throws IOException{
+    public void test_getVersionNumber() throws IOException{
         DBConnection conn = new DBConnection();
-        assertTrue(conn.connect(HOST,9002,"admin","123456",highAavailabilitySites));
-        String scripts = "n=1000000\n" +
-                "date=rand(2018.08.01..2018.08.03,n)\n" +
-                "sym=rand(`AAPL`MS`C`YHOO,n)\n" +
-                "qty=rand(1..1000,n)\n" +
-                "price=rand(100.0,n)\n" +
-                "t=table(date,sym,qty,price)\n" +
-                "if(existsDatabase(\"dfs://db1\")){\n" +
-                "\tdropDatabase(\"dfs://db1\")\n" +
-                "}\n" +
-                "db=database(\"dfs://db1\",VALUE,2018.08.01..2018.08.03)\n" +
-                "trades=db.createPartitionedTable(t,`trades,`date).append!(t)";
-        conn.run(scripts);
-        BasicBoolean res = (BasicBoolean) conn.run("existsDatabase(\"dfs://db1\");");
-        assertTrue(res.getBoolean());
+        Class<DBConnection> dbc = DBConnection.class;
+        try{
+            Method method = dbc.getDeclaredMethod("getVersionNumber", String.class);
+            method.setAccessible(true);
+            Object obj = method.invoke(conn,"18.02 java");
+            assertEquals(1802,obj);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    @Test
+    public void test_Node_Constructor() throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        Object object = null;
+        // 获取外部类所有的内部类
+        Class<DBConnection> testDemoClass = DBConnection.class;
+        Class<?>[] declaredClasses = testDemoClass.getDeclaredClasses();
+        for(Class clazz : declaredClasses) {
+            // 获取修饰符的整数编码
+            int mod = clazz.getModifiers();
+            // 返回整数编码对应的修饰符的字符串对象(private static)
+            String modifier = Modifier.toString(mod);
+            if (modifier.contains("private static")) {
+                // 获取内部类的名字(TestClass)，如果有过个内部类，可根据这个值分别判断
+                String simpleName = clazz.getSimpleName();
+                Constructor con = clazz.getConstructor(String.class,int.class,double.class);
+                object = con.newInstance(HOST,PORT,1.0);
+                Constructor con2 = clazz.getConstructor(String.class,int.class);
+                Object obj = con2.newInstance(HOST,PORT);
+                Method method = clazz.getMethod("isEqual",clazz);
+                assertTrue((Boolean) method.invoke(object,obj));
+                break;
+            }
+        }
+    }
+    @Test
+    public void test_Node_Constructor2() throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        Object object = null;
+        // 获取外部类所有的内部类
+        Class<DBConnection> testDemoClass = DBConnection.class;
+        Class<?>[] declaredClasses = testDemoClass.getDeclaredClasses();
+        for(Class clazz : declaredClasses) {
+            // 获取修饰符的整数编码
+            int mod = clazz.getModifiers();
+            // 返回整数编码对应的修饰符的字符串对象(private static)
+            String modifier = Modifier.toString(mod);
+            if (modifier.contains("private static")) {
+                // 获取内部类的名字(TestClass)，如果有过个内部类，可根据这个值分别判断
+                String simpleName = clazz.getSimpleName();
+                Constructor con = clazz.getConstructor(String.class,double.class);
+                object = con.newInstance(HOST+":"+PORT,1.0);
+                Constructor con2 = clazz.getConstructor(String.class,int.class);
+                Object obj = con2.newInstance(HOST,PORT);
+                Method method = clazz.getMethod("isEqual",clazz);
+                assertTrue((Boolean) method.invoke(object,obj));
+                break;
+            }
+        }
     }
 
     @Test
-    public void test_connect_highavail_user_pass_initscript() throws IOException{
-        DBConnection conn = new DBConnection();
-        assertTrue(conn.connect(HOST,9002,"admin","123456","y=[2,5,7]",highAavailabilitySites));
-        String scripts = "n=1000000\n" +
-                "date=rand(2018.08.01..2018.08.03,n)\n" +
-                "sym=rand(`AAPL`MS`C`YHOO,n)\n" +
-                "qty=rand(1..1000,n)\n" +
-                "price=rand(100.0,n)\n" +
-                "t=table(date,sym,qty,price)\n" +
-                "if(existsDatabase(\"dfs://db1\")){\n" +
-                "\tdropDatabase(\"dfs://db1\")\n" +
-                "}\n" +
-                "db=database(\"dfs://db1\",VALUE,2018.08.01..2018.08.03)\n" +
-                "trades=db.createPartitionedTable(t,`trades,`date).append!(t)";
-        conn.run(scripts);
-        BasicBoolean res = (BasicBoolean) conn.run("existsDatabase(\"dfs://db1\");");
-        assertTrue(res.getBoolean());
+    public void test_Node_Constructor3() throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        Object object = null;
+        // 获取外部类所有的内部类
+        Class<DBConnection> testDemoClass = DBConnection.class;
+        Class<?>[] declaredClasses = testDemoClass.getDeclaredClasses();
+        for(Class clazz : declaredClasses) {
+            // 获取修饰符的整数编码
+            int mod = clazz.getModifiers();
+            // 返回整数编码对应的修饰符的字符串对象(private static)
+            String modifier = Modifier.toString(mod);
+            if (modifier.contains("private static")) {
+                // 获取内部类的名字(TestClass)，如果有过个内部类，可根据这个值分别判断
+                String simpleName = clazz.getSimpleName();
+                Constructor con = clazz.getConstructor(String.class);
+                object = con.newInstance(HOST+":"+PORT);
+                System.out.println(clazz.getName());
+                Constructor con2 = clazz.getConstructor(String.class,int.class);
+                Object obj = con2.newInstance(HOST,PORT);
+                Method method = clazz.getMethod("isEqual" +
+                        "" +
+                        "",clazz);
+                assertTrue((Boolean) method.invoke(object,obj));
+                break;
+            }
+        }
     }
+
+    @Test
+    public void test_getRemoteLittleEndian() throws Exception{
+        DBConnection conn = new DBConnection();
+        assertTrue(conn.connect(HOST,PORT));
+        assertTrue(conn.getRemoteLittleEndian());
+        assertEquals(HOST,conn.getHostName());
+        assertEquals(PORT,conn.getPort());
+    }
+
+
 
 }

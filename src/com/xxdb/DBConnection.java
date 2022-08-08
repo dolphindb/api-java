@@ -3,6 +3,7 @@ package com.xxdb;
 import java.io.*;
 import java.net.ConnectException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
@@ -53,6 +54,7 @@ public class DBConnection {
     private String[] highAvailabilitySites_ = null;
     private boolean python_ = false;
     private boolean closed_ = false;
+    private boolean loadBalance_ = true;
 
 
     private enum ServerExceptionState {
@@ -116,7 +118,7 @@ public class DBConnection {
         }
     }
 
-    public class DBConnectionImpl{
+    private class DBConnectionImpl{
         private Socket socket_;
         private String sessionID_;
         private String hostName_;
@@ -133,22 +135,16 @@ public class DBConnection {
         private ExtendedDataInput in_;
         private boolean remoteLittleEndian_;
         private ReentrantLock lock_;
-        private boolean usePython_ = false;
 
-        public DBConnectionImpl(boolean sslEnable, boolean asynTask, boolean compress){
-            this(sslEnable, asynTask, compress, false);
-        }
-
-        public DBConnectionImpl(boolean sslEnable, boolean asynTask, boolean compress, boolean usePython){
+        private DBConnectionImpl(boolean sslEnable, boolean asynTask, boolean compress){
             sessionID_ = "";
             this.sslEnable_ = sslEnable;
             this.asynTask_ = asynTask;
             this.compress_ = compress;
-            this.usePython_ = usePython;
             this.lock_ = new ReentrantLock();
         }
 
-        public boolean connect(String hostName, int port, String userId, String password, boolean sslEnable, boolean asynTask, boolean compress) throws IOException{
+        private boolean connect(String hostName, int port, String userId, String password, boolean sslEnable, boolean asynTask, boolean compress) throws IOException{
             this.hostName_ = hostName;
             this.port_ = port;
             this.userId_ = userId;
@@ -164,9 +160,14 @@ public class DBConnection {
 
             try {
                 if(sslEnable_)
-                    socket_ = getSSLSocketFactory().createSocket(hostName_,port_);
+                    socket_ = getSSLSocketFactory().createSocket();
                 else
-                    socket_ = new Socket(hostName_, port_);
+                    socket_ = new Socket();
+                if (this.connTimeout_ > 0){
+                    socket_.connect(new InetSocketAddress(hostName_,port_), connTimeout_);
+                }else {
+                    socket_.connect(new InetSocketAddress(hostName_,port_), 3000);
+                }
             } catch (ConnectException ex) {
                 throw ex;
             }
@@ -221,11 +222,13 @@ public class DBConnection {
                 }
             }
 
-            compareRequiredAPIVersion();
+            if (!asynTask_){
+                compareRequiredAPIVersion();
+            }
             return true;
         }
 
-        public void login(String userId, String password, boolean enableEncryption) throws IOException {
+        private void login(String userId, String password, boolean enableEncryption) throws IOException {
             lock_.lock();
             try {
                 this.userId_ = userId;
@@ -256,41 +259,33 @@ public class DBConnection {
             run("login", args);
         }
 
-        public Entity run(String script) throws IOException {
-            return run(script, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
-        }
-
-        public Entity run(String script, String scriptType) throws IOException {
+        private Entity run(String script) throws IOException {
             List<Entity> args = new ArrayList<>();
-            return run(script, scriptType, (ProgressListener)null, args, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false);
+            return run(script, "script", (ProgressListener)null, args, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false);
         }
 
-        public Entity run(String script,  int priority, int parallelism) throws IOException {
-            return run( script, (ProgressListener)null, priority, parallelism, 0,false);
-        }
-
-        public Entity run(String script, ProgressListener listener,int priority, int parallelism, int fetchSize, boolean clearMemory) throws IOException{
+        private Entity run(String script, ProgressListener listener,int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName) throws IOException{
             List<Entity> args = new ArrayList<>();
-            return run(script, "script", (ProgressListener)null, args, priority, parallelism, fetchSize, clearMemory);
+            return run(script, "script", listener, args, priority, parallelism, fetchSize, clearMemory, tableName);
         }
 
-        public Entity run(String function, List<Entity> arguments) throws IOException {
-            return run(function, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
+        private Entity run(String function, List<Entity> arguments) throws IOException {
+            return run(function,"function", (ProgressListener)null, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false);
         }
 
-        public Entity run(String function, String scriptType, List<Entity> arguments)throws IOException{
+        private Entity run(String function, String scriptType, List<Entity> arguments)throws IOException{
             return run(function, scriptType, (ProgressListener)null, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false);
         }
 
-        public Entity run(String function, List<Entity> args, int priority, int parallelism) throws IOException {
-            return run(function, (ProgressListener)null, args, priority, parallelism, 0, false);
-        }
-
-        public Entity run(String function, ProgressListener listener,List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory) throws IOException{
-            return run(function, "function", (ProgressListener)null, args, priority, parallelism, fetchSize, clearMemory);
+        private Entity run(String function, ProgressListener listener,List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory) throws IOException{
+            return run(function, "function", listener, args, priority, parallelism, fetchSize, clearMemory);
         }
 
         private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory) throws IOException{
+            return run(script, scriptType, listener, args, priority, parallelism, fetchSize, clearMemory, "");
+        }
+
+        private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName) throws IOException{
             if (!isConnected_)
                 throw new IOException("Couldn't send script/function to the remote host because the connection has been closed");
 
@@ -307,6 +302,25 @@ public class DBConnection {
                     in_ = remoteLittleEndian_ ? new LittleEndianDataInputStream(new BufferedInputStream(socket_.getInputStream())) :
                             new BigEndianDataInputStream(new BufferedInputStream(socket_.getInputStream()));
                 }
+            }
+
+
+            if (!tableName.equals("")){
+                script = tableName + "=" + script;
+                run(script);
+                BasicDictionary schema = (BasicDictionary) run(tableName + ".schema()");
+                BasicTable colDefs = (BasicTable)schema.get(new BasicString("colDefs"));
+                BasicStringVector colDefsName = (BasicStringVector)colDefs.getColumn("name");
+                BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
+                int cols = colDefs.rows();
+                int rows = ((BasicInt) run("rows(" + tableName + ")")).getInt();
+                Map<Integer, Entity.DATA_TYPE> types2Index = new HashMap<>();
+                Map<Integer, String> name2Index = new HashMap<>();
+                for (int i = 0; i < cols; i++){
+                    types2Index.put(types2Index.size(), Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
+                    name2Index.put(name2Index.size(), colDefsName.getString(i));
+                }
+                return new BasicTableSchema(types2Index, name2Index, rows, cols, tableName,DBConnection.this);
             }
 
             StringBuilder body = new StringBuilder();
@@ -407,6 +421,8 @@ public class DBConnection {
 
                 Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
                 Entity.DATA_TYPE dt = Entity.DATA_TYPE.valueOf(type);
+
+
                 if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
                     return new EntityBlockReader(in);
                 }
@@ -491,12 +507,12 @@ public class DBConnection {
          this(asynchronousTask, useSSL, compress, false);
     }
 
-    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean python){
+    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython){
         this.asynTask_ = asynchronousTask;
         this.enableSSL_ = useSSL;
         this.compress_ = compress;
-        this.python_ = python;
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, python);
+        this.python_ = usePython;
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress);
         this.mutex_ = new ReentrantLock();
     }
     
@@ -519,6 +535,10 @@ public class DBConnection {
         }
         catch (Exception ex) {}
         return 0;
+    }
+
+    public void setLoadBalance(boolean loadBalance){
+        this.loadBalance_ = loadBalance;
     }
     
     private int generateRequestFlag(boolean clearSessionMemory){
@@ -644,55 +664,63 @@ public class DBConnection {
                     }
                 }
 
-                BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
-                BasicIntVector colPort = (BasicIntVector) bt.getColumn("port");
-                BasicIntVector colMode = (BasicIntVector) bt.getColumn("mode");
-                BasicIntVector colmaxConnections = (BasicIntVector) bt.getColumn("maxConnections");
-                BasicIntVector colconnectionNum = (BasicIntVector) bt.getColumn("connectionNum");
-                BasicIntVector colworkerNum = (BasicIntVector) bt.getColumn("workerNum");
-                BasicIntVector colexecutorNum = (BasicIntVector) bt.getColumn("executorNum");
-                double load;
-                for (int i = 0; i < colMode.rows(); i++){
-                    if (colMode.getInt(i) == 0){
-                        Node nodex = new Node(colHost.getString(i), colPort.getInt(i));
-                        Node pexistNode = null;
-                        if (highAvailabilitySites != null){
-                            for (Node node : nodes_){
-                                if (node.hostName.equals(nodex.hostName) && node.port == nodex.port){
-                                    pexistNode = node;
-                                    break;
+                if (bt.getDataForm() != Entity.DATA_FORM.DF_TABLE){
+                    throw new IOException("Run getClusterPerf() failed.");
+                }
+
+                if (loadBalance_){
+                    BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
+                    BasicIntVector colPort = (BasicIntVector) bt.getColumn("port");
+                    BasicIntVector colMode = (BasicIntVector) bt.getColumn("mode");
+                    BasicIntVector colmaxConnections = (BasicIntVector) bt.getColumn("maxConnections");
+                    BasicIntVector colconnectionNum = (BasicIntVector) bt.getColumn("connectionNum");
+                    BasicIntVector colworkerNum = (BasicIntVector) bt.getColumn("workerNum");
+                    BasicIntVector colexecutorNum = (BasicIntVector) bt.getColumn("executorNum");
+                    double load;
+                    for (int i = 0; i < colMode.rows(); i++){
+                        if (colMode.getInt(i) == 0){
+                            Node nodex = new Node(colHost.getString(i), colPort.getInt(i));
+                            Node pexistNode = null;
+                            if (highAvailabilitySites != null){
+                                for (Node node : nodes_){
+                                    if (node.hostName.equals(nodex.hostName) && node.port == nodex.port){
+                                        pexistNode = node;
+                                        break;
+                                    }
                                 }
+                                //node is out of highAvailabilitySites
+                                if (pexistNode == null)
+                                    continue;
                             }
-                            //node is out of highAvailabilitySites
-                            if (pexistNode == null)
-                                continue;
-                        }
 
-                        if (colconnectionNum.getInt(i) < colmaxConnections.getInt(i)){
-                            load = (colconnectionNum.getInt(i) + colworkerNum.getInt(i) + colexecutorNum.getInt(i)) / 3.0;
-                        }else {
-                            load = Double.MAX_VALUE;
-                        }
+                            if (colconnectionNum.getInt(i) < colmaxConnections.getInt(i)){
+                                load = (colconnectionNum.getInt(i) + colworkerNum.getInt(i) + colexecutorNum.getInt(i)) / 3.0;
+                            }else {
+                                load = Double.MAX_VALUE;
+                            }
 
-                        if (pexistNode != null){
-                            pexistNode.load = load;
-                        }else {
-                            nodes_.add(new Node(colHost.getString(i), colPort.getInt(i), load));
+                            if (pexistNode != null){
+                                pexistNode.load = load;
+                            }else {
+                                nodes_.add(new Node(colHost.getString(i), colPort.getInt(i), load));
+                            }
                         }
                     }
-                }
 
-                Node pMinNode = null;
-                for (Node one : nodes_){
-                    if (pMinNode == null || pMinNode.load == -1 || pMinNode.load > one.load){
-                        pMinNode = one;
+                    Node pMinNode = null;
+                    for (Node one : nodes_){
+                        if (pMinNode == null || pMinNode.load == -1 || pMinNode.load > one.load){
+                            pMinNode = one;
+                        }
                     }
-                }
 
-                if (!pMinNode.isEqual(connectedNode)){
-                    System.out.println("Connect to min load node: " + pMinNode.hostName + ":" + pMinNode.port);
-                    conn_.close();
-                    switchDataNode(pMinNode);
+                    if (!pMinNode.isEqual(connectedNode)){
+                        System.out.println("Connect to min load node: " + pMinNode.hostName + ":" + pMinNode.port);
+                        conn_.close();
+                        switchDataNode(pMinNode);
+                        return true;
+                    }
+                }else {
                     return true;
                 }
             }else {
@@ -857,6 +885,10 @@ public class DBConnection {
         }
     }
 
+    public Entity run(String script, String tableName) throws IOException{
+        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, tableName);
+    }
+
     public Entity run(String script) throws IOException {
         return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
     }
@@ -912,12 +944,16 @@ public class DBConnection {
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory) throws IOException{
+        return run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, "");
+    }
+
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory, String tableName) throws IOException{
         mutex_.lock();
         try {
             if (!nodes_.isEmpty()) {
                 while (!closed_) {
                     try {
-                        return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory);
+                        return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName);
                     } catch (IOException e) {
                         Node node = new Node();
                         if (connected()) {
@@ -934,12 +970,14 @@ public class DBConnection {
                 }
                 return null;
             } else {
-                return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory);
+                return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName);
             }
         } finally {
             mutex_.unlock();
         }
     }
+
+
 
     public Entity tryRun(String function, List<Entity> arguments) throws IOException {
         return tryRun(function, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);

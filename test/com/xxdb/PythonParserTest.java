@@ -5,6 +5,7 @@ import com.xxdb.data.BasicTable;
 import com.xxdb.data.Entity;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
-
+@Ignore
 public class PythonParserTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
