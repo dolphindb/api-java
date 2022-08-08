@@ -69,7 +69,7 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 		else{
 			double absVal = Math.abs(value);
 			if((absVal>0 && absVal<=0.000001) || absVal>=1000000.0)
-				return new DecimalFormat("######.00").format(value);
+				return new DecimalFormat("0.######E0").format(value);
 			else
 				return new DecimalFormat("0.######").format(value);
 		}
