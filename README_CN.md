@@ -11,10 +11,9 @@
   - [7.1 保存数据到DolphinDB内存表](#71-保存数据到dolphindb内存表)
     - [7.1.1 使用 `insert into` 保存单条数据](#711-使用-insert-into-保存单条数据)
     - [7.1.3 使用`tableInsert`函数保存BasicTable对象](#713-使用tableinsert函数保存basictable对象)
-  - [7.2 保存数据到本地磁盘表](#72-保存数据到本地磁盘表)
-  - [7.3 保存数据到分布式表](#73-保存数据到分布式表)
-  - [7.4 读取和使用数据表](#74-读取和使用数据表)
-  - [7.5 批量异步追加数据](#75-批量异步追加数据)
+  - [7.2 保存数据到分布式表](#72-保存数据到分布式表)
+  - [7.3 读取和使用数据表](#73-读取和使用数据表)
+  - [7.4 批量异步追加数据](#74-批量异步追加数据)
 - [8. Java原生类型转换为DolphinDB数据类型](#8-java原生类型转换为dolphindb数据类型)
 - [9. Java流数据API](#9-java流数据api)
   - [9.1 接口说明](#91-接口说明)
@@ -39,7 +38,7 @@ Java API遵循面向接口编程的原则。Java API使用接口类Entity来表�
 拓展的接口类|命名规则|例子
 ---|---|---
 scalar|Basic\<DataType\>|BasicInt, BasicDouble, BasicDate, etc.
-vector, matrix|Basic\<DataType\>\<DataForm\>|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, BasicArrayVector, etc.
+vector, matrix|Basic\<DataType\>\<DataForm\>|BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc.
 set, dictionary, table|Basic\<DataForm\>|BasicSet, BasicDictionary, BasicTable.
 chart||BasicChart
 
@@ -334,6 +333,7 @@ public void testAnyVector() throws IOException{
 }
 ```
 
+<!--
 数组向量（array vector）是 DolphinDB 一种特殊的数据形式。与常规的向量不同，它的每个元素是一个数组，具有相同的数据类型，但长度可以不同。目前支持的数据类型为 Logical, Integral（不包括 INT128, COMPRESS 类型）, Floating, Temporal。  
 以下代码展示创建数组向量的两种方式：
 
@@ -363,7 +363,7 @@ System.out.println(v.getString());
 ```
 
 结果为一个 Int 类型的向量[3,4]
-
+-->
 - 集合
 
 ```java
@@ -433,10 +433,9 @@ public void testVoid() throws IOException{
 
 ## 7. 读写DolphinDB数据表
 
-DolphinDB数据表按存储方式分为三种:
+DolphinDB数据表按存储方式分为两种:
 
 - 内存表: 数据仅保存在内存中，存取速度最快，但是节点关闭后数据就不存在了。
-- 本地磁盘表：数据保存在本地磁盘上。可以从磁盘加载到内存。
 - 分布式表：数据分布在不同的节点，通过DolphinDB的分布式计算引擎，逻辑上仍然可以像本地表一样做统一查询。
 
 ### 7.1 保存数据到DolphinDB内存表
@@ -487,7 +486,7 @@ public void test_save_table(BasicTable table1) throws IOException {
     conn.run("tableInsert{shareTable}", args);
 }
 ```
-
+<!--
 ### 7.2 保存数据到本地磁盘表
 
 通常本地磁盘表用于学习环境或者单机静态数据集测试，它不支持事务，不持支并发读写，不保证运行中的数据一致性，所以不建议在生产环境中使用。
@@ -509,12 +508,12 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
     conn.run(String.format("tableInsert{loadTable('%s','tb1')}",dbPath), args);
 }
 ```
-
-### 7.3 保存数据到分布式表
+-->
+### 7.2 保存数据到分布式表
 
 分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性。分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
 
-#### 7.3.1 使用`tableInsert`函数保存BasicTable对象 <!-- omit in toc -->
+#### 7.2.1 使用`tableInsert`函数保存BasicTable对象 <!-- omit in toc -->
 
 ```java
 dbPath = 'dfs://testDatabase'
@@ -543,7 +542,7 @@ List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicInt
 BasicTable table1 = new BasicTable(colNames,cols);
 ```
 
-#### 7.3.2 分布式表的并发写入 <!-- omit in toc -->
+#### 7.2.2 分布式表的并发写入 <!-- omit in toc -->
 
 DolphinDB的分布式表支持并发读写，下面展示如何在Java客户端中将数据并发写入DolphinDB的分布式表。
 
@@ -588,9 +587,9 @@ BasicTable table1 = createTable();
 appender.append(table1);            
 ```
 
-### 7.4 读取和使用数据表
+### 7.3 读取和使用数据表
 
-#### 7.4.1 读取分布式表 <!-- omit in toc -->
+#### 7.3.1 读取分布式表 <!-- omit in toc -->
 * 在Java API中读取分布式表使用如下代码一次性读取数据
 ```java
 String dbPath = "dfs://testDatabase";
@@ -622,7 +621,7 @@ while(v.hasNext()){
     BasicTable t1 = (BasicTable)conn.run("table(1..100 as id1)"); //若没有skipAll此段会抛出异常。
 ```
 
-#### 7.4.2 使用BasicTable对象 <!-- omit in toc -->
+#### 7.3.2 使用BasicTable对象 <!-- omit in toc -->
 在Java API中，数据表保存为BasicTable对象。由于BasicTable是列式存储，所以若要在Java API中读取行数据需要先取出需要的列，再取出行。
 
 以下例子中参数BasicTable的有4个列，列名分别为cstring, cint, ctimestamp, cdouble，数据类型分别是STRING, INT, TIMESTAMP, DOUBLE。
@@ -643,7 +642,7 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 }
 ```
 
-### 7.5 批量异步追加数据
+### 7.4 批量异步追加数据
 
 DolphinDB Java API 提供 `MultithreadedTableWriter` 类对象用于批量异步追加数据，并在客户端维护了一个数据缓冲队列。当服务器端忙于网络 I/O 时，客户端写线程仍然可以将数据持续写入缓冲队列（该队列由客户端维护）。写入队列后即可返回，从而避免了写线程的忙等。目前，`MultithreadedTableWriter` 支持批量写入数据到内存表、分区表和维度表。
 
@@ -652,7 +651,7 @@ DolphinDB Java API 提供 `MultithreadedTableWriter` 类对象用于批量异步
 * API 客户端提交任务到缓冲队列，缓冲队列接到任务后，客户端即认为任务已完成。
 * 提供 `getStatus` 等接口查看状态。
 
-#### 7.5.1 MultithreadedTableWriter <!-- omit in toc -->
+#### 7.4.1 MultithreadedTableWriter <!-- omit in toc -->
 MultithreadedTableWriter支持多线程的并发写入。
 
 MultithreadedTableWriter对象的主要方法介绍如下：
@@ -870,7 +869,7 @@ System.out.println(((BasicLong)conn.run("exec count(*) from pt")).getLong());
 
 由上例可以看出，MTW 内部使用多线程完成数据转换和写入任务。但在 MTW 外部，API 客户端同样支持以多线程方式将数据写入 MTW，且保证了多线程安全。
 
-#### 7.5.2 MultithreadedTableWriter返回异常的几种形式 <!-- omit in toc -->
+#### 7.4.2 MultithreadedTableWriter返回异常的几种形式 <!-- omit in toc -->
 
 MultithreadedTableWriter 类调用 insert 方法插入数据时发生异常：
 
