@@ -1,5 +1,6 @@
 package com.xxdb.streaming.client;
 
+
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.*;
@@ -29,6 +30,8 @@ abstract class AbstractClient implements MessageDispatcher {
     protected Thread pThread;
     protected ConcurrentHashMap<String, Site[]> trueTopicToSites = new ConcurrentHashMap<>();
     protected CopyOnWriteArraySet<String> waitReconnectTopic = new CopyOnWriteArraySet<>();
+    protected Map<String, StreamDeserializer> subInfos_ = new HashMap<>();
+    protected HashMap<List<String>, List<String>> users = new HashMap<>();
 
     class ReconnectItem {
         /**
@@ -152,6 +155,10 @@ abstract class AbstractClient implements MessageDispatcher {
         return null;
     }
 
+    public Map<String, StreamDeserializer> getSubInfos(){
+        return subInfos_;
+    }
+
     public class Site {
         String host;
         int port;
@@ -163,9 +170,12 @@ abstract class AbstractClient implements MessageDispatcher {
         Vector filter = null;
         boolean closed = false;
         boolean allowExistTopic = false;
+        StreamDeserializer deserializer;
+        String userName = "";
+        String passWord = "";
 
         Site(String host, int port, String tableName, String actionName,
-             MessageHandler handler, long msgId, boolean reconnect, Vector filter, boolean allowExistTopic) {
+             MessageHandler handler, long msgId, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord) {
             this.host = host;
             this.port = port;
             this.tableName = tableName;
@@ -175,6 +185,9 @@ abstract class AbstractClient implements MessageDispatcher {
             this.reconnect = reconnect;
             this.filter = filter;
             this.allowExistTopic = allowExistTopic;
+            this.deserializer = deserializer;
+            this.userName = userName;
+            this.passWord = passWord;
         }
     }
 
@@ -393,13 +406,31 @@ abstract class AbstractClient implements MessageDispatcher {
 
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
                                                               String tableName, String actionName, MessageHandler handler,
-                                                              long offset, boolean reconnect, Vector filter, boolean allowExistTopic)
+                                                              long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer, boolean allowExistTopic)
+            throws IOException, RuntimeException {
+        return subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, "", "");
+    }
+
+    protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
+                                                              String tableName, String actionName, MessageHandler handler,
+                                                              long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord)
             throws IOException, RuntimeException {
         Entity re;
         String topic = "";
-
+        List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+        List<String> usr = Arrays.asList(userName, passWord);
+        users.put(tp, usr);
         DBConnection dbConn = new DBConnection();
-        dbConn.connect(host, port);
+        if (!userName.equals(""))
+            dbConn.connect(host, port, userName, passWord);
+        else
+            dbConn.connect(host, port);
+        if (deserializer!=null&&!deserializer.isInited())
+            deserializer.init(dbConn);
+        if (deserializer != null){
+            BasicDictionary schema = (BasicDictionary) dbConn.run(tableName + ".schema()");
+            deserializer.checkSchema(schema);
+        }
         try {
             String localIP = this.listeningHost;
             if (localIP.equals(""))
@@ -442,7 +473,10 @@ abstract class AbstractClient implements MessageDispatcher {
                     String HASiteHost = HASiteHostAndPort[0];
                     int HASitePort = new Integer(HASiteHostAndPort[1]);
                     String HASiteAlias = HASiteHostAndPort[2];
-                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, allowExistTopic);
+                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord);
+                    if (!reconnect){
+                        sites[i].closed = true;
+                    }
                     synchronized (tableNameToTrueTopic) {
                         tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + "/" + tableName + "/" + actionName, topic);
                     }
@@ -451,11 +485,22 @@ abstract class AbstractClient implements MessageDispatcher {
                         HATopicToTrueTopic.put(HATopic, topic);
                     }
                 }
+                if (subInfos_.containsKey(topic)){
+                    throw new RuntimeException("Subscription with topic " + topic + " exist. ");
+                }else {
+                    subInfos_.put(topic, deserializer);
+                }
                 synchronized (trueTopicToSites) {
                     trueTopicToSites.put(topic, sites);
                 }
             } else {
-                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, allowExistTopic)};
+                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, deserializer, allowExistTopic, userName, passWord)};
+                if (!reconnect){
+                    sites[0].closed = true;
+                }
+                synchronized (subInfos_){
+                    subInfos_.put(topic, deserializer);
+                }
                 synchronized (tableNameToTrueTopic) {
                     tableNameToTrueTopic.put(host + ":" + port + "/" + tableName + "/" + actionName, topic);
                 }
@@ -478,7 +523,7 @@ abstract class AbstractClient implements MessageDispatcher {
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
                                                               String tableName, String actionName, long offset, boolean reconnect)
             throws IOException, RuntimeException {
-        return subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, null, false);
+        return subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, null, null, false);
     }
 
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port, String tableName, long offset) throws IOException, RuntimeException {
@@ -491,7 +536,14 @@ abstract class AbstractClient implements MessageDispatcher {
 
     protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
         DBConnection dbConn = new DBConnection();
-        dbConn.connect(host, port);
+        List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+        List<String> usr = users.get(tp);
+        String user = usr.get(0);
+        String pwd = usr.get(1);
+        if (!user.equals(""))
+            dbConn.connect(host, port, user, pwd);
+        else
+            dbConn.connect(host, port);
         try {
             String localIP = this.listeningHost;
             if(localIP.equals(""))
@@ -522,6 +574,10 @@ abstract class AbstractClient implements MessageDispatcher {
             dbConn.close();
         }
         return;
+    }
+
+    public void close(){
+        pThread.interrupt();
     }
 
     protected void unsubscribeInternal(String host, int port, String tableName) throws IOException {

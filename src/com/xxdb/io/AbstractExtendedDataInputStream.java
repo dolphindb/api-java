@@ -86,25 +86,16 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 	}
 	
 	@Override
-	public String readBlob() throws IOException{
+	public byte[] readBlob() throws IOException{
 		int len = readInt();
 		int offset = 0;
 		int actualSize = 0;
-		if(buf_ == null || len > buf_.length){
-			byte[] buf = new byte[len];
-			while(offset < len){
-				actualSize = read(buf, offset, len - offset);
-				offset += actualSize;
-			}
-			return new String(buf, 0, len , UTF8);
+		byte[] buff = new byte[len];
+		while (offset < len){
+			actualSize = read(buff, offset, len-offset);
+			offset += actualSize;
 		}
-		else{
-			while(offset < len){
-				actualSize = read(buf_, offset, len - offset);
-				offset += actualSize;
-			}
-			return new String(buf_, 0, len , UTF8);
-		}
+		return buff;
 	}
 
 	@Override

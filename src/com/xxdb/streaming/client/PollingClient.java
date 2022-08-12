@@ -6,16 +6,18 @@ import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicString;
 import com.xxdb.data.Entity;
 import com.xxdb.data.Vector;
-import com.xxdb.streaming.client.IMessage;
 
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 public class PollingClient extends AbstractClient {
     TopicPoller topicPoller = null;
+    private HashMap<List<String>, List<String>> users = new HashMap<>();
 
     public PollingClient(int subscribePort) throws SocketException {
         super(subscribePort);
@@ -29,7 +31,7 @@ public class PollingClient extends AbstractClient {
     protected boolean doReconnect(Site site) {
         try {
             Thread.sleep(1000);
-            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, null, site.msgId + 1, true, site.filter, site.allowExistTopic);
+            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, (MessageHandler) null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
             System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
             topicPoller.setQueue(queue);
             return true;
@@ -40,10 +42,25 @@ public class PollingClient extends AbstractClient {
         }
     }
 
-    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, null, offset, reconnect, filter, false);
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, (MessageHandler) null, offset, reconnect, filter, deserializer, false, userName, passWord);
+        List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+        List<String> usr = Arrays.asList(userName, passWord);
+        users.put(tp, usr);
         topicPoller = new TopicPoller(queue);
         return topicPoller;
+    }
+
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, String userName, String passWord) throws IOException {
+        return subscribe(host, port, tableName, actionName, offset, reconnect, filter, null, userName, passWord);
+    }
+
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer)throws IOException{
+        return subscribe(host, port, tableName, actionName, offset, reconnect, filter, deserializer, "", "");
+    }
+
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter)throws IOException{
+        return subscribe(host, port, tableName, actionName, offset, reconnect, filter, null);
     }
 
     public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect) throws IOException {
@@ -93,7 +110,14 @@ public class PollingClient extends AbstractClient {
     @Override
     protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
         DBConnection dbConn = new DBConnection();
-        dbConn.connect(host, port);
+        List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+        List<String> usr = users.get(tp);
+        String user = usr.get(0);
+        String pwd = usr.get(1);
+        if (!user.equals(""))
+            dbConn.connect(host, port, user, pwd);
+        else
+            dbConn.connect(host, port);
         try {
             String localIP = this.listeningHost;
             if(localIP.equals(""))

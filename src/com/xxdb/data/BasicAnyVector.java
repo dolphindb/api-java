@@ -40,8 +40,7 @@ public class BasicAnyVector extends AbstractVector{
 			int form = flag>>8;
 			int type = flag & 0xff;
             boolean extended = type >= 128;
-            if(type >= 128)
-            	type -= 128;
+            if(type >= 128) type -= 128;
 			Entity obj = BasicEntityFactory.instance().createEntity(DATA_FORM.values()[form], DATA_TYPE.valueOf(type), in, extended);
 			values[i] = obj;
 		}

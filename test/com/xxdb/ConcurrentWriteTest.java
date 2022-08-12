@@ -5,11 +5,13 @@ import com.xxdb.data.BasicLong;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.ResourceBundle;
 
 public class ConcurrentWriteTest implements Runnable{
     private static DBConnection conn;
-    public static String HOST ;
-    public static Integer PORT ;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     private final int id;
 
     public ConcurrentWriteTest(int i) {

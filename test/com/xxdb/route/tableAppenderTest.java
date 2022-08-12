@@ -1,7 +1,6 @@
 package com.xxdb.route;
 
 import com.xxdb.DBConnection;
-import com.xxdb.DBConnectionPool;
 import com.xxdb.data.*;
 import org.junit.After;
 import org.junit.Assert;
@@ -14,16 +13,17 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
+import java.util.ResourceBundle;
 
 public class tableAppenderTest {
 
     private static String dburl="dfs://tableAppenderTest";
     private static String tableName="testAppend";
     private static DBConnection conn;
-    private static String HOST="localhost";
-    private static int PORT = 8848;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     @Before
     public void setUp() throws IOException {
         conn = new DBConnection();

@@ -378,12 +378,7 @@ public class BasicArrayVector extends AbstractVector {
 				{
 					byteRequest += (indiceCount - 1) * countBytes;
 					countBytes *= 2;
-					if (countBytes == 1)
-						maxCount = Byte.MAX_VALUE;
-					else if (countBytes == 2)
-						maxCount = Short.MAX_VALUE;
-					else if (countBytes == 3)
-						maxCount = Integer.MAX_VALUE;
+					maxCount = Math.min(Integer.MAX_VALUE, (111 << (8 * countBytes)) - 1);
 				}
 				curRows += index;
 				indiceCount++;

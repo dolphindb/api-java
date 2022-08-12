@@ -9,7 +9,6 @@ public class BitConverter {
         return bytes;
     }
 
-
     public static byte[] getBytes(short data) {
         byte[] bytes = new byte[2];
         if (isLittleEndian()) {
@@ -22,7 +21,6 @@ public class BitConverter {
         return bytes;
     }
 
-
     public static byte[] getBytes(char data) {
         byte[] bytes = new byte[2];
         if (isLittleEndian()) {
@@ -34,7 +32,6 @@ public class BitConverter {
         }
         return bytes;
     }
-
 
     public static byte[] getBytes(int data) {
         byte[] bytes = new byte[4];
@@ -51,7 +48,6 @@ public class BitConverter {
         }
         return bytes;
     }
-
 
     public static byte[] getBytes(long data) {
         byte[] bytes = new byte[8];
@@ -77,36 +73,29 @@ public class BitConverter {
         return bytes;
     }
 
-
     public static byte[] getBytes(float data) {
         return getBytes(Float.floatToIntBits(data));
     }
-
 
     public static byte[] getBytes(double data) {
         return getBytes(Double.doubleToLongBits(data));
     }
 
-
     public static byte[] getBytes(String data) {
         return data.getBytes(Charset.forName("UTF-8"));
     }
-
 
     public static byte[] getBytes(String data, String charsetName) {
         return data.getBytes(Charset.forName(charsetName));
     }
 
-
     public static boolean toBoolean(byte[] bytes) {
         return bytes[0] == 0 ? false : true;
     }
 
-
     public static boolean toBoolean(byte[] bytes, int startIndex) {
         return toBoolean(copyFrom(bytes, startIndex, 1));
     }
-
 
     public static short toShort(byte[] bytes) {
         if (isLittleEndian()) {
@@ -115,7 +104,6 @@ public class BitConverter {
             return (short) ((0xff & bytes[1]) | (0xff00 & (bytes[0] << 8)));
         }
     }
-
 
     public static short toShort(byte[] bytes, int startIndex) {
         return toShort(copyFrom(bytes, startIndex, 2));
@@ -129,11 +117,9 @@ public class BitConverter {
         }
     }
 
-
     public static char toChar(byte[] bytes, int startIndex) {
         return toChar(copyFrom(bytes, startIndex, 2));
     }
-
 
     public static int toInt(byte[] bytes) {
         if (isLittleEndian()) {
@@ -186,7 +172,6 @@ public class BitConverter {
     public static float toFloat(byte[] bytes, int startIndex) {
         return Float.intBitsToFloat(toInt(copyFrom(bytes, startIndex, 4)));
     }
-
 
     public static double toDouble(byte[] bytes) {
         return Double.longBitsToDouble(toLong(bytes));

@@ -2,11 +2,11 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.dolphindb</groupId>
     <artifactId>dolphindb-javaapi</artifactId>
-    <version>1.30.17.1-SNAPSHOT</version>
+    <version>1.30.19.1-SNAPSHOT</version>
     <packaging>jar</packaging>
- 
+
     <properties>
-        <dolphindb.version>1.30.17.1</dolphindb.version>
+        <dolphindb.version>1.30.19.1</dolphindb.version>
     </properties>
     <name>DolphinDB Java API</name>
     <description>The messaging and data conversion protocol between Java and DolphinDB server</description>
@@ -31,8 +31,8 @@
         <connection>scm:git:git@github.com:dolphindb/api-java.git</connection>
         <developerConnection>scm:git:git@github.com:dolphindb/api-java.git</developerConnection>
         <url>git@github.com:dolphindb/api-java.git</url>
-      <tag>api-java-1.30.17.1</tag>
-  </scm>
+        <tag>api-java-1.30.19.1</tag>
+    </scm>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -43,6 +43,16 @@
             <groupId>org.lz4</groupId>
             <artifactId>lz4-java</artifactId>
             <version>1.7.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.javatuples</groupId>
+            <artifactId>javatuples</artifactId>
+            <version>1.2</version>
         </dependency>
     </dependencies>
 

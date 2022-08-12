@@ -3,27 +3,17 @@ package com.xxdb;
 import java.io.*;
 import java.net.ConnectException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.xxdb.data.*;
 import com.xxdb.data.Void;
-import com.xxdb.io.AbstractExtendedDataOutputStream;
-import com.xxdb.io.BigEndianDataInputStream;
-import com.xxdb.io.BigEndianDataOutputStream;
-import com.xxdb.io.ExtendedDataInput;
-import com.xxdb.io.ExtendedDataOutput;
-import com.xxdb.io.LittleEndianDataInputStream;
-import com.xxdb.io.LittleEndianDataOutputStream;
-import com.xxdb.io.ProgressListener;
+import com.xxdb.io.*;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -43,43 +33,464 @@ import javax.net.ssl.X509TrustManager;
  */
 
 public class DBConnection {
-    private enum ServerExceptionState {
-        NEW_LEADER, WAIT, CONN_FAIL, OTHER_EXCEPTION, DATA_NODE_NOT_AVAILABLE, CHUNKINTRANSACTION
-    }
-
     private static final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length - 1;
     private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.DT_POINT_ARRAY.getValue();
     private static final int DEFAULT_PRIORITY = 4;
     private static final int DEFAULT_PARALLELISM = 2;
     private static final int localAPIVersion = 210;
 
-    private String ServerVersion = "";
-    private ReentrantLock mutex;
-    private String sessionID;
-    private Socket socket;
-    private boolean remoteLittleEndian;
-    private ExtendedDataOutput out;
-    private ExtendedDataInput in;
-    private EntityFactory factory;
-    private String hostName;
-    private int port;
-    private String mainHostName;
-    private int mainPort;
-    private String userId;
-    private String password;
-    private String initialScript = null;
-    private boolean encrypted;
-    private String controllerHost = null;
-    private int controllerPort;
-    private boolean enableHighAvailability;
-    private String[] highAvailabilitySites = null;
-    private boolean HAReconnect = false;
-    private int connTimeout = 0;
-    private boolean asynTask = false;
-    private boolean isUseSSL = false;
-    private boolean compress = false;
-    private boolean python = false;
-    
+    private ReentrantLock mutex_;
+    private DBConnectionImpl conn_;
+    private String uid_;
+    private String pwd_;
+    private String initialScript_ = null;
+    private boolean enableHighAvailability_;
+    private boolean enableSSL_;
+    private boolean asynTask_;
+    private List<Node> nodes_ = new ArrayList<>();
+    private int lastConnNodeIndex_ = 0;
+    private boolean compress_ = false;
+    private int connTimeout_ = 0;
+    private String[] highAvailabilitySites_ = null;
+    private boolean python_ = false;
+    private boolean closed_ = false;
+    private boolean loadBalance_ = true;
+
+
+    private enum ServerExceptionState {
+        NEW_LEADER, WAIT, CONN_FAIL, OTHER_EXCEPTION, DATA_NODE_NOT_AVAILABLE
+    }
+
+    private enum ExceptionType{
+        ET_IGNORE(0),
+        ET_UNKNOW(1),
+        ET_NEWLEADER(2),
+        ET_NODENOTAVAIL(3);
+
+        public int value;
+        ExceptionType(int value){
+            this.value = value;
+        }
+    }
+
+    private static class Node {
+        private String hostName;
+        private int port;
+        private double load = -1.0;
+
+        public Node(){
+            this.load = -1.0;
+        }
+
+        public Node(String hostName, int port, double load){
+            this.hostName = hostName;
+            this.port = port;
+            this.load = load;
+        }
+
+        public Node(String hostName, int port){
+            this.hostName = hostName;
+            this.port = port;
+            this.load = -1.0;
+        }
+
+        public Node(String ipPort, double loadValue){
+            String[] v = ipPort.split(":");
+            if (v.length < 2){
+                throw new RuntimeException("The ipPort '" + ipPort + "' is invalid.");
+            }
+            this.hostName = v[0];
+            this.port = Integer.parseInt(v[1]);
+        }
+
+        public Node(String ipPort){
+            String[] v = ipPort.split(":");
+            if (v.length < 2){
+                throw new RuntimeException("The ipPort '" + ipPort + "' is invalid.");
+            }
+            this.hostName = v[0];
+            this.port = Integer.parseInt(v[1]);
+            this.load = -1.0;
+        }
+
+        public boolean isEqual(Node node){
+            return hostName.equals(node.hostName) == true && port == node.port;
+        }
+    }
+
+    private class DBConnectionImpl{
+        private Socket socket_;
+        private String sessionID_;
+        private String hostName_;
+        private int port_;
+        private String userId_;
+        private String pwd_;
+        private boolean encrypted_ = true;
+        private boolean isConnected_;
+        private boolean sslEnable_ = false;
+        private boolean asynTask_ = false;
+        private boolean compress_ = false;
+        private int connTimeout_ = 0;
+        private ExtendedDataOutput out_;
+        private ExtendedDataInput in_;
+        private boolean remoteLittleEndian_;
+        private ReentrantLock lock_;
+
+        private DBConnectionImpl(boolean sslEnable, boolean asynTask, boolean compress){
+            sessionID_ = "";
+            this.sslEnable_ = sslEnable;
+            this.asynTask_ = asynTask;
+            this.compress_ = compress;
+            this.lock_ = new ReentrantLock();
+        }
+
+        private boolean connect(String hostName, int port, String userId, String password, boolean sslEnable, boolean asynTask, boolean compress) throws IOException{
+            this.hostName_ = hostName;
+            this.port_ = port;
+            this.userId_ = userId;
+            this.pwd_ = password;
+            this.sslEnable_ = sslEnable;
+            this.asynTask_ = asynTask;
+            this.compress_ = compress;
+            return connect();
+        }
+
+        private boolean connect()throws IOException{
+            this.isConnected_ = false;
+
+            try {
+                if(sslEnable_)
+                    socket_ = getSSLSocketFactory().createSocket();
+                else
+                    socket_ = new Socket();
+                if (this.connTimeout_ > 0){
+                    socket_.connect(new InetSocketAddress(hostName_,port_), connTimeout_);
+                }else {
+                    socket_.connect(new InetSocketAddress(hostName_,port_), 3000);
+                }
+            } catch (ConnectException ex) {
+                throw ex;
+            }
+            if (this.connTimeout_ > 0) {
+                socket_.setSoTimeout(this.connTimeout_);
+            }
+            socket_.setKeepAlive(true);
+            socket_.setTcpNoDelay(true);
+            out_ = new LittleEndianDataOutputStream(new BufferedOutputStream(socket_.getOutputStream()));
+            @SuppressWarnings("resource")
+            ExtendedDataInput input = new LittleEndianDataInputStream(new BufferedInputStream(socket_.getInputStream()));
+            String body = "connect\n";
+            out_.writeBytes("API 0 ");
+            out_.writeBytes(String.valueOf(body.length()));
+            int flag = generateRequestFlag(false);
+            out_.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(4) + "_" + String.valueOf(2));
+            out_.writeByte('\n');
+            out_.writeBytes(body);
+            out_.flush();
+
+            String line = input.readLine();
+            int endPos = line.indexOf(' ');
+            if (endPos <= 0) {
+                close();
+                return false;
+            }
+            sessionID_ = line.substring(0, endPos);
+
+            int startPos = endPos + 1;
+            endPos = line.indexOf(' ', startPos);
+            if (endPos != line.length() - 2) {
+                close();
+                return false;
+            }
+
+            isConnected_ = true;
+
+            if (line.charAt(endPos + 1) == '0') {
+                remoteLittleEndian_ = false;
+                out_ = new BigEndianDataOutputStream(new BufferedOutputStream(socket_.getOutputStream()));
+            } else
+                remoteLittleEndian_ = true;
+
+            in_ = remoteLittleEndian_ ? new LittleEndianDataInputStream(new BufferedInputStream(socket_.getInputStream())) :
+                    new BigEndianDataInputStream(new BufferedInputStream(socket_.getInputStream()));
+
+            if (!userId_.isEmpty() && !pwd_.isEmpty()) {
+                if (asynTask_) {
+                    login(userId_, pwd_, false);
+                } else {
+                    login();
+                }
+            }
+
+            if (!asynTask_){
+                compareRequiredAPIVersion();
+            }
+            return true;
+        }
+
+        private void login(String userId, String password, boolean enableEncryption) throws IOException {
+            lock_.lock();
+            try {
+                this.userId_ = userId;
+                this.pwd_ = password;
+                this.encrypted_ = enableEncryption;
+                login();
+            } finally {
+                lock_.unlock();
+            }
+        }
+
+        private void login() throws IOException {
+            List<Entity> args = new ArrayList<>();
+            if (encrypted_) {
+                BasicString keyCode = (BasicString) run("getDynamicPublicKey", new ArrayList<Entity>());
+                PublicKey key = RSAUtils.getPublicKey(keyCode.getString());
+                byte[] usr = RSAUtils.encryptByPublicKey(userId_.getBytes(), key);
+                byte[] pass = RSAUtils.encryptByPublicKey(pwd_.getBytes(), key);
+
+
+                args.add(new BasicString(Base64.getMimeEncoder().encodeToString(usr)));
+                args.add(new BasicString(Base64.getMimeEncoder().encodeToString(pass)));
+                args.add(new BasicBoolean(true));
+            } else {
+                args.add(new BasicString(userId_));
+                args.add(new BasicString(pwd_));
+            }
+            run("login", args);
+        }
+
+        private Entity run(String script) throws IOException {
+            List<Entity> args = new ArrayList<>();
+            return run(script, "script", (ProgressListener)null, args, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false);
+        }
+
+        private Entity run(String script, ProgressListener listener,int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName) throws IOException{
+            List<Entity> args = new ArrayList<>();
+            return run(script, "script", listener, args, priority, parallelism, fetchSize, clearMemory, tableName);
+        }
+
+        private Entity run(String function, List<Entity> arguments) throws IOException {
+            return run(function,"function", (ProgressListener)null, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false);
+        }
+
+        private Entity run(String function, String scriptType, List<Entity> arguments)throws IOException{
+            return run(function, scriptType, (ProgressListener)null, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false);
+        }
+
+        private Entity run(String function, ProgressListener listener,List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory) throws IOException{
+            return run(function, "function", listener, args, priority, parallelism, fetchSize, clearMemory);
+        }
+
+        private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory) throws IOException{
+            return run(script, scriptType, listener, args, priority, parallelism, fetchSize, clearMemory, "");
+        }
+
+        private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName) throws IOException{
+            if (!isConnected_)
+                throw new IOException("Couldn't send script/function to the remote host because the connection has been closed");
+
+            if (fetchSize > 0 && fetchSize < 8192)
+                throw new IOException("fetchSize must be greater than 8192");
+            if (socket_ == null || !socket_.isConnected() || socket_.isClosed()) {
+                if (sessionID_.isEmpty())
+                    throw new IOException("Database connection is not established yet.");
+                else {
+                    socket_ = new Socket(hostName_, port_);
+                    socket_.setKeepAlive(true);
+                    socket_.setTcpNoDelay(true);
+                    out_ = new LittleEndianDataOutputStream(new BufferedOutputStream(socket_.getOutputStream()));
+                    in_ = remoteLittleEndian_ ? new LittleEndianDataInputStream(new BufferedInputStream(socket_.getInputStream())) :
+                            new BigEndianDataInputStream(new BufferedInputStream(socket_.getInputStream()));
+                }
+            }
+
+
+            if (!tableName.equals("")){
+                script = tableName + "=" + script;
+                run(script);
+                BasicDictionary schema = (BasicDictionary) run(tableName + ".schema()");
+                BasicTable colDefs = (BasicTable)schema.get(new BasicString("colDefs"));
+                BasicStringVector colDefsName = (BasicStringVector)colDefs.getColumn("name");
+                BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
+                int cols = colDefs.rows();
+                int rows = ((BasicInt) run("rows(" + tableName + ")")).getInt();
+                Map<Integer, Entity.DATA_TYPE> types2Index = new HashMap<>();
+                Map<Integer, String> name2Index = new HashMap<>();
+                for (int i = 0; i < cols; i++){
+                    types2Index.put(types2Index.size(), Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
+                    name2Index.put(name2Index.size(), colDefsName.getString(i));
+                }
+                return new BasicTableSchema(types2Index, name2Index, rows, cols, tableName,DBConnection.this);
+            }
+
+            StringBuilder body = new StringBuilder();
+            int argCount = args.size();
+            if (scriptType == "script")
+                body.append("script\n" + script) ;
+            else {
+                body.append(scriptType + "\n" + script);
+                body.append("\n" + String.valueOf(argCount));
+                body.append("\n");
+                body.append(remoteLittleEndian_ ? "1" : "0");
+            }
+
+            try {
+                out_.writeBytes((listener != null ? "API2 " : "API ") + sessionID_ + " ");
+                out_.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body.toString(), 0, 0)));
+                int flag = generateRequestFlag(clearMemory);
+                out_.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
+                if (fetchSize > 0)
+                    out_.writeBytes("__" + String.valueOf(fetchSize));
+                out_.writeByte('\n');
+                out_.writeBytes(body.toString());
+
+                if (argCount > 0){
+                    for (int i = 0; i < args.size(); ++i) {
+                        if (compress_ && args.get(i).isTable()) {
+                            args.get(i).writeCompressed(out_); //TODO: which compress method to use
+                        } else
+                            args.get(i).write(out_);
+                    }
+
+                    out_.flush();
+                }else {
+                    out_.flush();
+                }
+            }catch (IOException ex){
+                isConnected_ = false;
+                socket_ = null;
+                throw new IOException("Couldn't send script/function to the remote host because the connection has been closed");
+            }
+
+            if (asynTask_)
+                return null;
+
+            ExtendedDataInput in = remoteLittleEndian_ ? new LittleEndianDataInputStream(new BufferedInputStream(socket_.getInputStream())) :
+                    new BigEndianDataInputStream(new BufferedInputStream(socket_.getInputStream()));
+            String header = null;
+            try {
+                header = in.readLine();
+            }catch (IOException ex){
+                isConnected_ = false;
+                socket_ = null;
+                throw new IOException("Failed to read response header from the socket with IO error " + ex.getMessage());
+            }
+
+            String[] headers = header.split(" ");
+            if (headers.length != 3){
+                isConnected_ = false;
+                socket_ = null;
+                throw new IOException("Received invalid header");
+            }
+
+
+            int numObject = Integer.parseInt(headers[1]);
+
+            try {
+                header = in.readLine();
+            }catch (IOException ex){
+                isConnected_ = false;
+                socket_ = null;
+                throw new IOException("Failed to read response header from the socket with IO error " + ex.getMessage());
+            }
+
+            if (!header.equals("OK")){
+                if (scriptType == "script")
+                    throw new IOException(hostName_+":"+port_+" Server response: '" + header + "' script: '" + script + "'");
+                else
+                    throw new IOException(hostName_+":"+port_+" Server response: '" + header + "' " + scriptType + ": '" + script + "'");
+            }
+
+            if (numObject == 0){
+                return new Void();
+            }
+
+            short flag;
+            try {
+                flag = in.readShort();
+                int form = flag >> 8;
+                int type = flag & 0xff;
+                boolean extended = type >= 128;
+                if(type >= 128)
+                    type -= 128;
+
+                if (form < 0 || form > MAX_FORM_VALUE)
+                    throw new IOException("Invalid form value: " + form);
+                if (type < 0 || type > MAX_TYPE_VALUE)
+                    throw new IOException("Invalid type value: " + type);
+
+                Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
+                Entity.DATA_TYPE dt = Entity.DATA_TYPE.valueOf(type);
+
+
+                if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
+                    return new EntityBlockReader(in);
+                }
+                EntityFactory factory = BasicEntityFactory.instance();
+                return factory.createEntity(df, dt, in, extended);
+            }catch (IOException ex){
+                isConnected_ = false;
+                socket_ = null;
+                throw new IOException("Failed to read object flag from the socket with IO error type " + ex.getMessage());
+            }
+        }
+
+        public void upload(String name, Entity obj) throws IOException{
+            if (!Utils.isVariableCandidate(name))
+                throw new RuntimeException(name + " is not a qualified variable name.");
+            List<Entity> args = new ArrayList<>();
+            args.add(obj);
+            run(name, "variable", args);
+        }
+
+        public void upload(List<String> names, List<Entity> objs) throws IOException{
+            if (names.size() != objs.size())
+                throw new RuntimeException("the size of variable names doesn't match the size of objects.");
+            if (names.isEmpty())
+                return;
+
+            StringBuilder varNames = new StringBuilder();
+            for (int i = 0; i < names.size(); ++i){
+                if (!Utils.isVariableCandidate(names.get(i)))
+                    throw new RuntimeException(names.get(i) + " is not a qualified variable name.");
+                if (i > 0)
+                    varNames.append(",");
+                varNames.append(names.get(i));
+            }
+
+            run(varNames.toString(), "variable", objs);
+        }
+
+        public void close(){
+            lock_.lock();
+            try {
+                if (socket_ != null){
+                    socket_.close();
+                    socket_ = null;
+                    sessionID_ = "";
+                }
+            }catch (IOException ex){
+                ex.printStackTrace();
+            }finally {
+                lock_.unlock();
+            }
+            isConnected_ = false;
+        }
+
+        public boolean isConnected(){
+            return isConnected_;
+        }
+
+        public void getNode(Node node){
+            node.hostName = hostName_;
+            node.port = port_;
+        }
+
+        public boolean getRemoteLittleEndian(){
+            return this.remoteLittleEndian_;
+        }
+    }
+
     public DBConnection() {
     	this(false, false, false);
     }
@@ -93,25 +504,23 @@ public class DBConnection {
     }
     
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress) {
-        this(asynchronousTask, useSSL, compress, false);
+         this(asynchronousTask, useSSL, compress, false);
     }
 
-    public DBConnection (boolean asynchronousTask, boolean useSSL, boolean compress, boolean python) {
-        factory = BasicEntityFactory.instance();
-        mutex = new ReentrantLock();
-        sessionID = "";
-        asynTask = asynchronousTask;
-        isUseSSL = useSSL;
-        this.compress = compress;
-        this.python = python;
+    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython){
+        this.asynTask_ = asynchronousTask;
+        this.enableSSL_ = useSSL;
+        this.compress_ = compress;
+        this.python_ = usePython;
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress);
+        this.mutex_ = new ReentrantLock();
     }
-
-
+    
     public boolean isBusy() {
-        if (!mutex.tryLock())
+        if (!mutex_.tryLock())
             return true;
         else {
-            mutex.unlock();
+            mutex_.unlock();
             return false;
         }
     }
@@ -127,16 +536,20 @@ public class DBConnection {
         catch (Exception ex) {}
         return 0;
     }
+
+    public void setLoadBalance(boolean loadBalance){
+        this.loadBalance_ = loadBalance;
+    }
     
     private int generateRequestFlag(boolean clearSessionMemory){
     	int flag = 0;
-    	if(asynTask)
+    	if(asynTask_)
     		flag += 4;
     	if(clearSessionMemory)
     		flag += 16;
-    	if(compress)
+    	if(compress_)
     		flag += 64;
-        if (this.python)
+        if (this.python_)
             flag += 2048;
     	return flag;
     }
@@ -146,7 +559,7 @@ public class DBConnection {
     }
 
     public boolean connect(String hostName, int port, int timeout) throws IOException {
-        this.connTimeout = timeout;
+        this.connTimeout_ = timeout;
         return connect(hostName, port, "", "", null, false, null);
     }
 
@@ -195,230 +608,259 @@ public class DBConnection {
     }
 
     public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites) throws IOException {
-        mutex.lock();
-        try {
-            if (!sessionID.isEmpty()) {
-                mutex.unlock();
-                return true;
-            }
+        return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, false);
+    }
 
-            this.hostName = hostName;
-            this.mainHostName = hostName;
-            this.port = port;
-            this.mainPort = port;
-            this.userId = userId;
-            this.password = password;
-            this.encrypted = true;
-            this.initialScript = initialScript;
-            this.enableHighAvailability = enableHighAvailability;
-            this.highAvailabilitySites = highAvailabilitySites;
-            if (highAvailabilitySites != null) {
-                for (String site : highAvailabilitySites) {
-                    String HASite[] = site.split(":");
-                    if (HASite.length != 2)
-                        throw new IllegalArgumentException("The site '" + site + "' is invalid.");
+    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect) throws IOException {
+        mutex_.lock();
+        try {
+            this.uid_ = userId;
+            this.pwd_ = password;
+            this.initialScript_ = initialScript;
+            this.enableHighAvailability_ = enableHighAvailability;
+            this.highAvailabilitySites_ = highAvailabilitySites;
+
+            if (enableHighAvailability){
+                nodes_.add(new Node(hostName, port));
+                if (highAvailabilitySites != null){
+                    for (String site : highAvailabilitySites) {
+                        Node node = new Node(site);
+                        nodes_.add(node);
+                    }
                 }
-            }
-            assert (highAvailabilitySites == null || enableHighAvailability);
+                Node connectedNode = new Node();
+                BasicTable bt = null;
+                while (!closed_){
+                    while (!conn_.isConnected() && !closed_){
+                        for (Node one : nodes_){
+                            if (connectNode(one)){
+                                connectedNode = one;
+                                break;
+                            }
+                            try {
+                                Thread.sleep(100);
+                            }catch (Exception e){
+                                e.printStackTrace();
+                                return false;
+                            }
+                        }
+                    }
+                    try {
+                        bt = (BasicTable) conn_.run("rpc(getControllerAlias(), getClusterPerf)");
+                        break;
+                    }catch (Exception e){
+                        System.out.println("ERROR getting other data nodes, exception: " + e.getMessage());
+                        Node node1 = new Node();
+                        if (isConnected()){
+                            ExceptionType type = parseException(e.getMessage(), node1);
+                            if (type == ExceptionType.ET_IGNORE){
+                                continue;
+                            }else if (type == ExceptionType.ET_NEWLEADER || type == ExceptionType.ET_NODENOTAVAIL){
+                                switchDataNode(node1);
+                            }
+                        }else {
+                            switchDataNode(node1);
+                        }
+                    }
+                }
 
-            boolean connectRet = connect();
-            if(!connectRet)
-                return false;
-            compareRequiredAPIVersion();
-            return true;
-        } finally {
-            mutex.unlock();
-        }
-    }
+                if (bt.getDataForm() != Entity.DATA_FORM.DF_TABLE){
+                    throw new IOException("Run getClusterPerf() failed.");
+                }
 
-    private boolean connect() throws IOException {
-        try {
-            if(isUseSSL)
-                socket = getSSLSocketFactory().createSocket(hostName,port);
-            else
-                socket = new Socket(hostName, port);
-        } catch (ConnectException ex) {
-            if (HAReconnect)
-                return false;
-            if (switchToRandomAvailableSite())
-                return true;
-            throw ex;
-        }
-        if (this.connTimeout > 0) {
-            socket.setSoTimeout(this.connTimeout);
-        }
-        socket.setKeepAlive(true);
-        socket.setTcpNoDelay(true);
-        out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-        @SuppressWarnings("resource")
-        ExtendedDataInput input = new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
-        String body = "connect\n";
-        out.writeBytes("API 0 ");
-        out.writeBytes(String.valueOf(body.length()));
-        int flag = generateRequestFlag(false);
-        out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(4) + "_" + String.valueOf(2));
-        out.writeByte('\n');
-        out.writeBytes(body);
-        out.flush();
+                if (loadBalance_){
+                    BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
+                    BasicIntVector colPort = (BasicIntVector) bt.getColumn("port");
+                    BasicIntVector colMode = (BasicIntVector) bt.getColumn("mode");
+                    BasicIntVector colmaxConnections = (BasicIntVector) bt.getColumn("maxConnections");
+                    BasicIntVector colconnectionNum = (BasicIntVector) bt.getColumn("connectionNum");
+                    BasicIntVector colworkerNum = (BasicIntVector) bt.getColumn("workerNum");
+                    BasicIntVector colexecutorNum = (BasicIntVector) bt.getColumn("executorNum");
+                    double load;
+                    for (int i = 0; i < colMode.rows(); i++){
+                        if (colMode.getInt(i) == 0){
+                            Node nodex = new Node(colHost.getString(i), colPort.getInt(i));
+                            Node pexistNode = null;
+                            if (highAvailabilitySites != null){
+                                for (Node node : nodes_){
+                                    if (node.hostName.equals(nodex.hostName) && node.port == nodex.port){
+                                        pexistNode = node;
+                                        break;
+                                    }
+                                }
+                                //node is out of highAvailabilitySites
+                                if (pexistNode == null)
+                                    continue;
+                            }
 
-        String line = input.readLine();
-        int endPos = line.indexOf(' ');
-        if (endPos <= 0) {
-            close();
-            if (switchToRandomAvailableSite())
-                return true;
-            return false;
-        }
-        sessionID = line.substring(0, endPos);
+                            if (colconnectionNum.getInt(i) < colmaxConnections.getInt(i)){
+                                load = (colconnectionNum.getInt(i) + colworkerNum.getInt(i) + colexecutorNum.getInt(i)) / 3.0;
+                            }else {
+                                load = Double.MAX_VALUE;
+                            }
 
-        int startPos = endPos + 1;
-        endPos = line.indexOf(' ', startPos);
-        if (endPos != line.length() - 2) {
-            close();
-            if (switchToRandomAvailableSite())
-                return true;
-            return false;
-        }
+                            if (pexistNode != null){
+                                pexistNode.load = load;
+                            }else {
+                                nodes_.add(new Node(colHost.getString(i), colPort.getInt(i), load));
+                            }
+                        }
+                    }
 
-        if (line.charAt(endPos + 1) == '0') {
-            remoteLittleEndian = false;
-            out = new BigEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-        } else
-            remoteLittleEndian = true;
-        in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
-                new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
+                    Node pMinNode = null;
+                    for (Node one : nodes_){
+                        if (pMinNode == null || pMinNode.load == -1 || pMinNode.load > one.load){
+                            pMinNode = one;
+                        }
+                    }
 
-        if (!userId.isEmpty() && !password.isEmpty()) {
-            if (asynTask) {
-                login(userId, password, false);
-            } else {
-                login();
-            }
-        }
-
-        if (initialScript != null && initialScript.length() > 0)
-            run(initialScript);
-
-        if (enableHighAvailability && highAvailabilitySites == null) {
-            try {
-                controllerHost = ((BasicString) run("rpc(getControllerAlias(), getNodeHost)")).getString();
-                controllerPort = ((BasicInt) run("rpc(getControllerAlias(), getNodePort)")).getInt();
-            } catch (Exception e) {
-            }
-        }
-
-        return true;
-    }
-
-    public void login(String userId, String password, boolean enableEncryption) throws IOException {
-        mutex.lock();
-        try {
-            this.userId = userId;
-            this.password = password;
-            this.encrypted = enableEncryption;
-
-            login();
-        } finally {
-            mutex.unlock();
-        }
-    }
-
-    private void login() throws IOException {
-        List<Entity> args = new ArrayList<>();
-        if (encrypted) {
-            BasicString keyCode = (BasicString) run("getDynamicPublicKey", new ArrayList<Entity>());
-            PublicKey key = RSAUtils.getPublicKey(keyCode.getString());
-            byte[] usr = RSAUtils.encryptByPublicKey(userId.getBytes(), key);
-            byte[] pass = RSAUtils.encryptByPublicKey(password.getBytes(), key);
-
-
-            args.add(new BasicString(Base64.getMimeEncoder().encodeToString(usr)));
-            args.add(new BasicString(Base64.getMimeEncoder().encodeToString(pass)));
-            args.add(new BasicBoolean(true));
-        } else {
-            args.add(new BasicString(userId));
-            args.add(new BasicString(password));
-        }
-        run("login", args);
-    }
-
-    public boolean getRemoteLittleEndian() {
-        return this.remoteLittleEndian;
-    }
-
-    private boolean switchToRandomAvailableSite() throws IOException {
-        if (!enableHighAvailability)
-            return false;
-
-        while (true) {
-            HAReconnect = true;
-            if (highAvailabilitySites != null) {
-                int rnd = new Random().nextInt(highAvailabilitySites.length);
-                String site[] = highAvailabilitySites[rnd].split(":");
-                hostName = site[0];
-                port = new Integer(site[1]);
-            } else {
-                if (controllerHost == null)
-                    return false;
-                DBConnection tmp = new DBConnection();
-                tmp.connect(controllerHost, controllerPort);
-                BasicStringVector availableSites = (BasicStringVector) tmp.run("getClusterLiveDataNodes(false)");
-                tmp.close();
-                int size = availableSites.rows();
-                if (size <= 0)
-                    return false;
-                String site[] = availableSites.getString(0).split(":");
-                hostName = site[0];
-                port = new Integer(site[1]);
-            }
-            try {
-                System.out.println("Trying to reconnect to " + hostName + ":" + port);
-                if (connect()) {
-                    HAReconnect = false;
-                    System.out.println("Successfully reconnected to " + hostName + ":" + port);
+                    if (!pMinNode.isEqual(connectedNode)){
+                        System.out.println("Connect to min load node: " + pMinNode.hostName + ":" + pMinNode.port);
+                        conn_.close();
+                        switchDataNode(pMinNode);
+                        return true;
+                    }
+                }else {
                     return true;
                 }
-            } catch (Exception e) {
+            }else {
+                if (reconnect){
+                    nodes_.add(new Node(hostName, port));
+                    switchDataNode(new Node(hostName, port));
+                }else {
+                    if (!connectNode(new Node(hostName, port)))
+                        return false;
+                }
+            }
+
+            if (initialScript_!=null && initialScript_.length() > 0){
+                run(initialScript_);
+            }
+            return true;
+        }catch (IOException e){
+            throw e;
+        }finally {
+            mutex_.unlock();
+        }
+    }
+
+    public void switchDataNode(Node node) throws IOException{
+        boolean connected = false;
+        do {
+            if (node.hostName != null && node.hostName.length() > 0){
+                if (connectNode(node)){
+                    connected = true;
+                    break;
+                }
+            }
+            if (nodes_.isEmpty()){
+                throw new RuntimeException("Failed to connect to " + node.hostName + ":" + node.port);
+            }
+            for (int i = nodes_.size()-1; i >= 0; i--){
+                lastConnNodeIndex_ = (lastConnNodeIndex_ + 1) % nodes_.size();
+                if (connectNode(nodes_.get(lastConnNodeIndex_))){
+                    connected = true;
+                    break;
+                }
             }
             try {
                 Thread.sleep(1000);
-            } catch (Exception e) {
+            }catch (Exception e){
+                e.printStackTrace();
+                return;
+            }
+        }while (!connected && !closed_);
+        if (initialScript_ != null && initialScript_.length() > 0){
+            run(initialScript_);
+        }
+    }
+
+    public boolean connectNode(Node node) throws IOException{
+        System.out.println("Connect to " + node.hostName + ":" + node.port + ".");
+        while (!closed_){
+            try {
+                return conn_.connect(node.hostName, node.port, uid_, pwd_, enableSSL_, asynTask_, compress_);
+            }catch (Exception e){
+                if (isConnected()){
+                    ExceptionType type = parseException(e.getMessage(), node);
+                    if (type != ExceptionType.ET_NEWLEADER){
+                        if (type == ExceptionType.ET_IGNORE)
+                            return true;
+                        else if (type == ExceptionType.ET_NODENOTAVAIL)
+                            return false;
+                        else
+                            throw e;
+                    }
+                }else {
+                    System.out.println(e.getMessage());
+                    return false;
+                }
+            }
+            try {
+                Thread.sleep(100);
+            }catch (Exception e){
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public ExceptionType parseException(String msg, Node node){
+        int index = msg.indexOf("<NotLeader>");
+        if (index != -1){
+            index = msg.indexOf(">");
+            String ipport = msg.substring(index + 1);
+            parseIpPort(ipport, node);
+            System.out.println("New leader is " + node.hostName + ":" + node.port);
+            return ExceptionType.ET_NEWLEADER;
+        }else {
+            index = msg.indexOf("<DataNodeNotAvail>");
+            if (index == -1){
+                return ExceptionType.ET_UNKNOW;
+            }
+            index = msg.indexOf(">");
+            String ipport = msg.substring(index + 1);
+            Node nanode = new Node();
+            parseIpPort(ipport, nanode);
+            Node lastnode = new Node();
+            conn_.getNode(lastnode);
+            if (!lastnode.hostName.equals(nanode.hostName)  && lastnode.port == nanode.port){
+                System.out.println("This node " + nanode.hostName + ":" + nanode.port + " is not avail.");
+                return ExceptionType.ET_NODENOTAVAIL;
+            }else {
+                System.out.println("Other node " + nanode.hostName + ":" + nanode.port + " is not avail.");
+                return ExceptionType.ET_IGNORE;
             }
         }
     }
 
-    private ServerExceptionState handleServerException(String errMsg, String function) {
-        if (ServerExceptionUtils.isNotLeader(errMsg)) {
-            String newLeaderString = ServerExceptionUtils.newLeader(errMsg);
-            String[] newLeader = newLeaderString.split(":");
-            String newHostName = newLeader[0];
-            int newPort = new Integer(newLeader[1]);
-            if (hostName.equals(newHostName) && port == newPort) {
-                System.out.println("Got NotLeader exception. Waiting for new leader.");
-                try {
-                    Thread.sleep(1000);
-                } catch (Exception e) {
-                }
-                return ServerExceptionState.WAIT;
-            }
-            hostName = newHostName;
-            port = newPort;
-            try {
-                System.out.println("Got NotLeader exception. Switching to " + hostName + ":" + port);
-                if (connect())
-                    return ServerExceptionState.NEW_LEADER;
-                else
-                    return ServerExceptionState.CONN_FAIL;
-            } catch (IOException e) {
-                return ServerExceptionState.CONN_FAIL;
-            }
-        }else if(ServerExceptionUtils.isDataNodeNotAvailable(errMsg) || ServerExceptionUtils.isDataNodeNotReady(errMsg)
-                || ServerExceptionUtils.isDFSNotEnable(errMsg) || ServerExceptionUtils.isDFSCLIENTIsNull(errMsg)){
-            return ServerExceptionState.DATA_NODE_NOT_AVAILABLE;
-        }else if (ServerExceptionUtils.isChunkInTransaction(errMsg) || ServerExceptionUtils.isChunkInRecovery(errMsg)){
-            return ServerExceptionState.CHUNKINTRANSACTION;
+    public void parseIpPort(String ipport, Node node){
+        String[] v = ipport.split(":");
+        if (v.length < 2){
+            throw new RuntimeException("The ipPort '" + ipport + "' is invalid.");
         }
-        return ServerExceptionState.OTHER_EXCEPTION;
+        node.hostName = v[0];
+        node.port = Integer.parseInt(v[1]);
+    }
+
+    public boolean connected(){
+        try {
+            BasicInt ret= (BasicInt) conn_.run("1+1");
+            return !ret.isNull() && (ret.getInt() == 2);
+        }catch (Exception e){
+            return false;
+        }
+    }
+
+    public void login(String userID, String password, boolean enableEncryption)throws IOException{
+        conn_.login(userID, password, enableEncryption);
+        uid_ = userID;
+        pwd_ = password;
+    }
+
+    public boolean getRemoteLittleEndian() {
+        return this.conn_.getRemoteLittleEndian();
     }
 
     public Entity tryRun(String script) throws IOException {
@@ -434,13 +876,17 @@ public class DBConnection {
     }
 
     public Entity tryRun(String script, int priority, int parallelism,int fetchSize, boolean clearSessionMemory) throws IOException {
-        if (!mutex.tryLock())
+        if (!mutex_.tryLock())
             return null;
         try {
             return run(script, (ProgressListener) null, priority, parallelism, fetchSize, clearSessionMemory);
         } finally {
-            mutex.unlock();
+            mutex_.unlock();
         }
+    }
+
+    public Entity run(String script, String tableName) throws IOException{
+        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, tableName);
     }
 
     public Entity run(String script) throws IOException {
@@ -464,7 +910,7 @@ public class DBConnection {
     }
 
     public Entity run(String script, int priority, boolean clearSessionMemory) throws IOException {
-        return run( script, null,  priority, DEFAULT_PARALLELISM, 0,clearSessionMemory);
+        return run( script, (ProgressListener)null,  priority, DEFAULT_PARALLELISM, 0, clearSessionMemory);
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism) throws IOException {
@@ -476,7 +922,7 @@ public class DBConnection {
     }
 
     public Entity run(String script, int priority, int parallelism, boolean clearSessionMemory) throws IOException {
-        return run( script, null,  priority, parallelism, 0,clearSessionMemory);
+        return run(script, (ProgressListener)null,  priority, parallelism, 0,clearSessionMemory);
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize) throws IOException {
@@ -484,12 +930,12 @@ public class DBConnection {
     }
 
     public Entity tryRun(String script, boolean clearSessionMemory) throws IOException {
-        if (!mutex.tryLock())
+        if (!mutex_.tryLock())
             return null;
         try {
             return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, clearSessionMemory);
         } finally {
-            mutex.unlock();
+            mutex_.unlock();
         }
     }
 
@@ -497,243 +943,41 @@ public class DBConnection {
         return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM,0, clearSessionMemory);
     }
 
-    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory) throws IOException {
-        if(fetchSize>0){
-            if(fetchSize<8192){
-                throw new IOException("fetchSize must be greater than 8192");
-            }
-        }
-        mutex.lock();
-        boolean isUrgentCancelJob = false;
-        if (script.startsWith("cancelJob(") || script.startsWith("cancelConsoleJob("))
-            isUrgentCancelJob = true;
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory) throws IOException{
+        return run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, "");
+    }
+
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory, String tableName) throws IOException{
+        mutex_.lock();
         try {
-            boolean reconnect = false;
-            InputStream is = null;
-            if (socket == null || !socket.isConnected() || socket.isClosed()) {
-                if (sessionID.isEmpty())
-                    throw new IOException("Database connection is not established yet.");
-                else {
-                    socket = new Socket(hostName, port);
-                    socket.setKeepAlive(true);
-                    socket.setTcpNoDelay(true);
-                    out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-                    is = socket.getInputStream();
-                    BufferedInputStream bis = new BufferedInputStream(is);
-                    in = remoteLittleEndian ? new LittleEndianDataInputStream(bis) :
-                            new BigEndianDataInputStream(new BufferedInputStream(bis));
-                }
-            }
-            String body = "script\n" + script;
-            String header = null;
-            try {
-                out.writeBytes((listener != null ? "API2 " : "API ") + sessionID + " ");
-                out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
-                if(isUrgentCancelJob){
-                    out.writeBytes(" / 1_1_8_8");
-                }
-                else{
-                	int flag = generateRequestFlag(false);
-                    out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                }
-                if(fetchSize>0){
-                    out.writeBytes("__" + String.valueOf(fetchSize));
-                }
-                out.writeByte('\n');
-                out.writeBytes(body);
-                out.flush();
-                if(asynTask) return null;
-                header = in.readLine();
-            } catch (IOException ex) {
-                if (reconnect) {
-                    socket = null;
-                    throw ex;
-                }
-
-                ServerExceptionState status = handleServerException(ex.getMessage(), null);
-                if (status == ServerExceptionState.NEW_LEADER){
-                    System.out.println(ex.getMessage());
-                    return run(script, listener, priority, parallelism);
-                } else if (status == ServerExceptionState.WAIT) {
-                    if (!HAReconnect) {
-                        System.out.println(ex.getMessage());
-                        HAReconnect = true;
-                        while (true) {
-                            try {
-                                Entity re = run(script, listener, priority, parallelism);
-                                HAReconnect = false;
-                                return re;
-                            } catch (Exception e) {
-                            }
-                        }
-                    }
-                    throw ex;
-                }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
-                    System.out.println(ex.getMessage());
-                    if (switchToRandomAvailableSite())
-                        return run(script, listener, priority, parallelism);
-                    else
-                        throw ex;
-                }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
-                    System.out.println(ex.getMessage());
+            if (!nodes_.isEmpty()) {
+                while (!closed_) {
                     try {
-                        Thread.sleep(10000);
-                    }catch (Exception e){
-                    }
-                    if (switchToRandomAvailableSite())
-                        return run(script, listener, priority, parallelism);
-                    else
-                        throw ex;
-                }
-
-                try {
-                    connect();
-                    out.writeBytes((listener != null ? "API2 " : "API ") + sessionID + " ");
-                    out.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body, 0, 0)));
-                    if(isUrgentCancelJob){
-                        out.writeBytes(" / 1_1_8_8");
-                    }
-                    else{
-                    	int flag = generateRequestFlag(false);
-                        out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                    }
-                    if(fetchSize>0){
-                        out.writeBytes("__" + String.valueOf(fetchSize));
-                    }
-                    out.writeByte('\n');
-                    out.writeBytes(body);
-                    out.flush();
-                    header = in.readLine();
-                    reconnect = true;
-                } catch (Exception e) {
-                    socket = null;
-                    throw e;
-                }
-            }
-
-            while (header.equals("MSG")) {
-                //read intermediate message to indicate the progress
-                String msg = in.readString();
-                if (listener != null)
-                    listener.progress(msg);
-                header = in.readLine();
-            }
-
-            String[] headers = header.split(" ");
-            if (headers.length != 3) {
-                socket = null;
-                throw new IOException("Received invalid header: " + header);
-            }
-            if (reconnect)
-                sessionID = headers[0];
-            int numObject = Integer.parseInt(headers[1]);
-
-            String msg = in.readLine();
-            if (!msg.equals("OK")) {
-                ServerExceptionState status = handleServerException(msg, null);
-                if (status == ServerExceptionState.NEW_LEADER){
-                    return run(script, listener, priority, parallelism);
-                } else if (status == ServerExceptionState.WAIT) {
-                    if (!HAReconnect) {
-                        HAReconnect = true;
-                        while (true) {
-                            try {
-                                Entity re = run(script, listener, priority, parallelism);
-                                HAReconnect = false;
-                                return re;
-                            } catch (Exception e) {
-                            }
+                        return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName);
+                    } catch (IOException e) {
+                        Node node = new Node();
+                        if (connected()) {
+                            ExceptionType type = parseException(e.getMessage(), node);
+                            if (type == ExceptionType.ET_IGNORE)
+                                return new Void();
+                            else if (type == ExceptionType.ET_UNKNOW)
+                                throw e;
+                        }else {
+                            parseException(e.getMessage(), node);
                         }
-                    }
-                }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
-                    if (switchToRandomAvailableSite())
-                        return run(script, listener, priority, parallelism);
-                }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
-                    try {
-                        Thread.sleep(10000);
-                    }catch (Exception e){
-                    }
-                    if (switchToRandomAvailableSite())
-                        return run(script, listener, priority, parallelism);
-                }
-                if (reconnect && ServerExceptionUtils.isNotLogin(msg)) {
-                    if (userId.length() > 0 && password.length() > 0)
-                        login();
-                } else {
-                    throw new IOException("Server response: '"+msg+"' script: '"+script+"'");
-                }
-            }
-
-            if (numObject == 0)
-                return new Void();
-            try {
-                short flag = in.readShort();
-                int form = flag >> 8;
-                int type = flag & 0xff;
-                boolean extended = type >= 128;
-                if(type >= 128)
-                	type -= 128;
-
-                if (form < 0 || form > MAX_FORM_VALUE)
-                    throw new IOException("Invalid form value: " + form);
-
-                Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
-                Entity.DATA_TYPE dt = Entity.DATA_TYPE.valueOf(type);
-                if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
-                    return new EntityBlockReader(in);
-                }
-                return factory.createEntity(df, dt, in, extended);
-            } catch (IOException ex) {
-                socket = null;
-                throw ex;
-            }
-        } catch (Exception ex) {
-            ServerExceptionState status = handleServerException(ex.getMessage(), null);
-            if (status == ServerExceptionState.NEW_LEADER){
-                System.out.println(ex.getMessage());
-                return run(script, listener, priority, parallelism);
-            }
-            else if (status == ServerExceptionState.WAIT) {
-                if (!HAReconnect) {
-                    System.out.println(ex.getMessage());
-                    HAReconnect = true;
-                    while (true) {
-                        try {
-                            Entity re = run(script, listener, priority, parallelism);
-                            HAReconnect = false;
-                            return re;
-                        } catch (Exception e) {
-                        }
+                        switchDataNode(node);
                     }
                 }
-                throw ex;
-            }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
-                System.out.println(ex.getMessage());
-                if (switchToRandomAvailableSite())
-                    return run(script, listener, priority, parallelism);
-                else
-                    throw ex;
-            }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
-                System.out.println(ex.getMessage());
-                try {
-                    Thread.sleep(10000);
-                }catch (Exception e){
-                }
-                if (switchToRandomAvailableSite())
-                    return run(script, listener, priority, parallelism);
-                else
-                    throw ex;
+                return null;
+            } else {
+                return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName);
             }
-            if (socket != null || !enableHighAvailability)
-                throw ex;
-            if (switchToRandomAvailableSite())
-                return run(script, listener, priority, parallelism);
-            else
-                throw ex;
         } finally {
-            mutex.unlock();
+            mutex_.unlock();
         }
     }
+
+
 
     public Entity tryRun(String function, List<Entity> arguments) throws IOException {
         return tryRun(function, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
@@ -743,12 +987,12 @@ public class DBConnection {
             return tryRun(function, arguments, priority, parallelism,0);
     }
     public Entity tryRun(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize) throws IOException {
-        if (!mutex.tryLock())
+        if (!mutex_.tryLock())
             return null;
         try {
-            return run(function, arguments, priority, parallelism, fetchSize);
+            return run(function, arguments, priority, parallelism, fetchSize );
         } finally {
-            mutex.unlock();
+            mutex_.unlock();
         }
     }
 
@@ -765,454 +1009,133 @@ public class DBConnection {
     }
 
     public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize) throws IOException {
-        if(fetchSize>0){
-            if(fetchSize<8192){
-                throw new IOException("fetchSize must be greater than 8192");
-            }
-        }
-        mutex.lock();
+        mutex_.lock();
         try {
-            boolean reconnect = false;
-
-            if (socket == null || !socket.isConnected() || socket.isClosed()) {
-                if (sessionID.isEmpty())
-                    throw new IOException("Database connection is not established yet.");
-                else {
-                    socket = new Socket(hostName, port);
-                    socket.setKeepAlive(true);
-                    socket.setTcpNoDelay(true);
-                    out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-                    in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
-                            new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
-                }
-            }
-            String body = "function\n" + function;
-            body += ("\n" + arguments.size() + "\n");
-            body += remoteLittleEndian ? "1" : "0";
-
-            String[] headers = null;
-            try {
-                out.writeBytes("API " + sessionID + " ");
-                out.writeBytes(String.valueOf(body.length()));
-                int flag = generateRequestFlag(false);
-                out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                if(fetchSize>0){
-                    out.writeBytes("__" + String.valueOf(fetchSize));
-                }
-                out.writeByte('\n');
-                out.writeBytes(body);
-                for (int i = 0; i < arguments.size(); ++i) {
-                    if (compress && arguments.get(i).isTable()) {
-                        arguments.get(i).writeCompressed(out); //TODO: which compress method to use
-                    } else
-                        arguments.get(i).write(out);
-                }
-                out.flush();
-
-                if (asynTask) return null;
-
-                headers = in.readLine().split(" ");
-            } catch (IOException ex) {
-                if (reconnect) {
-                    socket = null;
-                    throw ex;
-                }
-
-                ServerExceptionState status = handleServerException(ex.getMessage(), null);
-                if (status == ServerExceptionState.NEW_LEADER){
-                    System.out.println(ex.getMessage());
-                    return run(function, arguments, priority, parallelism);
-                } else if (status == ServerExceptionState.WAIT) {
-                    if (!HAReconnect) {
-                        System.out.println(ex.getMessage());
-                        HAReconnect = true;
-                        while (true) {
-                            try {
-                                Entity re = run(function, arguments, priority, parallelism);
-                                HAReconnect = false;
-                                return re;
-                            } catch (Exception e) {
-                            }
-                        }
-                    }
-                    throw ex;
-                }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
-                    System.out.println(ex.getMessage());
-                    if (switchToRandomAvailableSite())
-                        return run(function, arguments, priority, parallelism);
-                    else
-                        throw ex;
-                }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
-                    System.out.println(ex.getMessage());
+            if (!nodes_.isEmpty()){
+                while (!closed_){
                     try {
-                        Thread.sleep(10000);
-                    }catch (Exception e){
-                    }
-                    if (switchToRandomAvailableSite())
-                        return run(function, arguments, priority, parallelism);
-                    else
-                        throw ex;
-                }
-
-                try {
-                    connect();
-                    out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-                    out.writeBytes("API " + sessionID + " ");
-                    out.writeBytes(String.valueOf(body.length()));
-                    int flag = generateRequestFlag(false);
-                    out.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
-                    if(fetchSize>0){
-                        out.writeBytes("__" + String.valueOf(fetchSize));
-                    }
-                    out.writeByte('\n');
-                    out.writeBytes(body);
-                    for (int i = 0; i < arguments.size(); ++i) {
-                        if (compress && arguments.get(i).isTable()) {
-                            arguments.get(i).writeCompressed(out); //TODO: which compress method to use
-                        } else
-                            arguments.get(i).write(out);
-                    }
-                    out.flush();
-
-                    if (asynTask) return null;
-
-                    in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
-                            new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
-                    headers = in.readLine().split(" ");
-
-                    reconnect = true;
-                } catch (Exception e) {
-                    socket = null;
-                    throw e;
-                }
-            }
-
-            if (headers.length != 3) {
-                socket = null;
-                throw new IOException("Received invalid header.");
-            }
-
-            if (reconnect)
-                sessionID = headers[0];
-            int numObject = Integer.parseInt(headers[1]);
-
-            String msg = in.readLine();
-            if (!msg.equals("OK")) {
-                ServerExceptionState status = handleServerException(msg, null);
-                if (status == ServerExceptionState.NEW_LEADER){
-                    return run(function, arguments, priority, parallelism);
-                } else if (status == ServerExceptionState.WAIT) {
-                    if (!HAReconnect) {
-                        HAReconnect = true;
-                        while (true) {
-                            try {
-                                Entity re = run(function, arguments, priority, parallelism);
-                                HAReconnect = false;
-                                return re;
-                            } catch (Exception e) {
-                            }
+                        return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false);
+                    }catch (IOException e){
+                        Node node = new Node();
+                        if (connected()){
+                            ExceptionType type = parseException(e.getMessage(), node);
+                            if (type == ExceptionType.ET_IGNORE)
+                                return new Void();
+                            else if (type == ExceptionType.ET_UNKNOW)
+                                throw e;
+                        }else {
+                            parseException(e.getMessage(), node);
                         }
-                    }
-                }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
-                    if (switchToRandomAvailableSite())
-                        return run(function, arguments, priority, parallelism);
-                }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
-                    try {
-                        Thread.sleep(10000);
-                    }catch (Exception e){
-                    }
-                    if (switchToRandomAvailableSite())
-                        return run(function, arguments, priority, parallelism);
-                }
-                throw new IOException("Server response: '" + msg + "' function: '" + function + "'");
-            }
-
-            if (numObject == 0)
-                return new Void();
-
-            try {
-                short flag = in.readShort();
-                int form = flag >> 8;
-                int type = flag & 0xff;
-                boolean extended = type >= 128;
-                if(type >= 128)
-                	type -= 128;
-
-                if (form < 0 || form > MAX_FORM_VALUE)
-                    throw new IOException("Invalid form value: " + form);
-                if (type < 0 || type > MAX_TYPE_VALUE)
-                    throw new IOException("Invalid type value: " + type);
-
-                Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
-                Entity.DATA_TYPE dt = Entity.DATA_TYPE.valueOf(type);
-                if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
-                    return new EntityBlockReader(in);
-                }
-                return factory.createEntity(df, dt, in, extended);
-            } catch (IOException ex) {
-                socket = null;
-                throw ex;
-            }
-        } catch (Exception ex) {
-            ServerExceptionState status = handleServerException(ex.getMessage(), null);
-            if (status == ServerExceptionState.NEW_LEADER){
-                System.out.println(ex.getMessage());
-                return run(function, arguments, priority, parallelism);
-            }
-            else if (status == ServerExceptionState.WAIT) {
-                if (!HAReconnect) {
-                    System.out.println(ex.getMessage());
-                    HAReconnect = true;
-                    while (true) {
-                        try {
-                            Entity re = run(function, arguments, priority, parallelism);
-                            HAReconnect = false;
-                            return re;
-                        } catch (Exception e) {
-                        }
+                        switchDataNode(node);
                     }
                 }
-                throw ex;
-            }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
-                System.out.println(ex.getMessage());
-                if (switchToRandomAvailableSite())
-                    return run(function, arguments, priority, parallelism);
-                else
-                    throw ex;
-            }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
-                System.out.println(ex.getMessage());
-                try {
-                    Thread.sleep(10000);
-                }catch (Exception e){
-                }
-                if (switchToRandomAvailableSite())
-                    return run(function, arguments, priority, parallelism);
-                else
-                    throw ex;
+                return null;
+            }else {
+                return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false);
             }
-
-            if (socket != null || !enableHighAvailability)
-                throw ex;
-            if (switchToRandomAvailableSite())
-                return run(function, arguments, priority, parallelism);
-            else
-                throw ex;
-        } finally {
-            mutex.unlock();
+        }finally {
+            mutex_.unlock();
         }
     }
 
+
+
     public void tryUpload(final Map<String, Entity> variableObjectMap) throws IOException {
-        if (!mutex.tryLock())
+        if (!mutex_.tryLock())
             throw new IOException("The connection is in use.");
         try {
             upload(variableObjectMap);
         } finally {
-            mutex.unlock();
+            mutex_.unlock();
         }
     }
 
     public void upload(final Map<String, Entity> variableObjectMap) throws IOException {
-        if(asynTask) throw new IOException("Asynchronous upload is not allowed");
-        if (variableObjectMap == null || variableObjectMap.isEmpty())
-            return;
-
-        mutex.lock();
+        mutex_.lock();
         try {
-            boolean reconnect = false;
-            if (socket == null || !socket.isConnected() || socket.isClosed()) {
-                if (sessionID.isEmpty())
-                    throw new IOException("Database connection is not established yet.");
-                else {
-                    reconnect = true;
-                    socket = new Socket(hostName, port);
-                    socket.setKeepAlive(true);
-                    socket.setTcpNoDelay(true);
-                    out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-                    in = remoteLittleEndian ? new LittleEndianDataInputStream(new BufferedInputStream(socket.getInputStream())) :
-                            new BigEndianDataInputStream(new BufferedInputStream(socket.getInputStream()));
-                }
-            }
-
-            List<Entity> objects = new ArrayList<Entity>();
-
-            String body = "variable\n";
-            for (String key : variableObjectMap.keySet()) {
-                if (!isVariableCandidate(key))
-                    throw new IllegalArgumentException("'" + key + "' is not a good variable name.");
-                body += key + ",";
-                objects.add(variableObjectMap.get(key));
-            }
-            body = body.substring(0, body.length() - 1);
-            body += ("\n" + objects.size() + "\n");
-            body += remoteLittleEndian ? "1" : "0";
-
-            try {
-                out.writeBytes("API " + sessionID + " ");
-                out.writeBytes(String.valueOf(body.length()));
-                out.writeByte('\n');
-                out.writeBytes(body);
-                for (int i = 0; i < objects.size(); ++i)
-                    objects.get(i).write(out);
-                out.flush();
-            } catch (IOException ex) {
-                if (reconnect) {
-                    socket = null;
-                    throw ex;
-                }
-
-                try {
-                    socket = new Socket(hostName, port);
-                    socket.setKeepAlive(true);
-                    socket.setTcpNoDelay(true);
-                    out = new LittleEndianDataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-                    out.writeBytes("API " + sessionID + " ");
-                    out.writeBytes(String.valueOf(body.length()));
-                    out.writeByte('\n');
-                    out.writeBytes(body);
-                    for (int i = 0; i < objects.size(); ++i)
-                        objects.get(i).write(out);
-                    out.flush();
-                    reconnect = true;
-                } catch (Exception e) {
-                    socket = null;
-                    throw e;
-                }
-            }
-
-            String[] headers = in.readLine().split(" ");
-            if (headers.length != 3) {
-                socket = null;
-                throw new IOException("Received invalid header.");
-            }
-
-            if (reconnect)
-                sessionID = headers[0];
-
-            int numObject = Integer.parseInt(headers[1]);
-
-            String msg = in.readLine();
-            if (!msg.equals("OK")) {
-                ServerExceptionState status = handleServerException(msg, null);
-                if (status == ServerExceptionState.NEW_LEADER) {
-                    upload(variableObjectMap);
-                    return;
-                }else if (status == ServerExceptionState.WAIT) {
-                    if (!HAReconnect) {
-                        HAReconnect = true;
-                        while (true) {
-                            try {
-                                upload(variableObjectMap);
-                                HAReconnect = false;
-                                return;
-                            } catch (Exception e) {
+            List<String> keys = new ArrayList<>();
+            List<Entity> objs = new ArrayList<>();
+            if (!nodes_.isEmpty()){
+                while (!closed_){
+                    try {
+                        for (String key : variableObjectMap.keySet()){
+                            if (variableObjectMap.size() == 1){
+                                Entity obj = variableObjectMap.get(key);
+                                conn_.upload(key, obj);
+                            }else {
+                                keys.add(key);
+                                objs.add(variableObjectMap.get(key));
                             }
                         }
-                    }
-                }else if(status==ServerExceptionState.DATA_NODE_NOT_AVAILABLE){
-                    if (switchToRandomAvailableSite()) {
-                        upload(variableObjectMap);
-                        return;
-                    }
-                }else if (status==ServerExceptionState.CHUNKINTRANSACTION){
-                    try {
-                        Thread.sleep(10000);
+                        if (variableObjectMap.size() > 1)
+                            conn_.upload(keys, objs);
                     }catch (Exception e){
-                    }
-                    if (switchToRandomAvailableSite()){
-                        upload(variableObjectMap);
-                        return;
+                        Node node = new Node();
+                        if (connected()){
+                            ExceptionType type = parseException(e.getMessage(), node);
+                            if (type == ExceptionType.ET_IGNORE)
+                                continue;
+                            else if (type == ExceptionType.ET_UNKNOW)
+                                throw e;
+                        }else {
+                            parseException(e.getMessage(), node);
+                        }
+                        switchDataNode(node);
                     }
                 }
-                throw new IOException("Server response: '" + msg + "' uploadsize: " + variableObjectMap.size());
-            }
-
-            if (numObject > 0) {
-                try {
-                    short flag = in.readShort();
-                    int form = flag >> 8;
-                    int type = flag & 0xff;
-                    boolean extended = type >= 128;
-                    if(type >= 128)
-                    	type -= 128;
-
-                    if (form < 0 || form > MAX_FORM_VALUE)
-                        throw new IOException("Invalid form value: " + form);
-                    if (type < 0 || type > MAX_TYPE_VALUE)
-                        throw new IOException("Invalid type value: " + type);
-
-                    Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
-                    Entity.DATA_TYPE dt = Entity.DATA_TYPE.valueOf(type);
-                    Entity re =  factory.createEntity(df, dt, in, extended);
-                } catch (IOException ex) {
-                    socket = null;
-                    throw ex;
+            }else {
+                for (String key : variableObjectMap.keySet()){
+                    if (variableObjectMap.size() == 1){
+                        Entity obj = variableObjectMap.get(key);
+                        conn_.upload(key, obj);
+                    }else {
+                        keys.add(key);
+                        objs.add(variableObjectMap.get(key));
+                    }
                 }
+                if (variableObjectMap.size() > 1)
+                    conn_.upload(keys, objs);
             }
-        } catch (Exception ex) {
-            if (socket != null || !enableHighAvailability)
-                throw ex;
-            if (switchToRandomAvailableSite()) {
-                mutex.unlock();
-                upload(variableObjectMap);
-            } else
-                throw ex;
-        } finally {
-            mutex.unlock();
+        }finally {
+            mutex_.unlock();
         }
     }
 
     public void close() {
-        mutex.lock();
+        mutex_.lock();
         try {
-            if (socket != null) {
-                socket.close();
-                sessionID = "";
-                socket = null;
-            }
+            closed_ = true;
+            conn_.close();
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
-            mutex.unlock();
+            mutex_.unlock();
         }
-    }
-
-    private boolean isVariableCandidate(String word) {
-        char cur = word.charAt(0);
-        if ((cur < 'a' || cur > 'z') && (cur < 'A' || cur > 'Z'))
-            return false;
-        for (int i = 1; i < word.length(); i++) {
-            cur = word.charAt(i);
-            if ((cur < 'a' || cur > 'z') && (cur < 'A' || cur > 'Z') && (cur < '0' || cur > '9') && cur != '_')
-                return false;
-        }
-        return true;
     }
 
     public String getHostName() {
-        return hostName;
+        return this.conn_.hostName_;
     }
 
     public int getPort() {
-        return port;
+        return this.conn_.port_;
     }
 
     public String getSessionID() {
-        return sessionID;
+        return this.conn_.sessionID_;
     }
 
     public InetAddress getLocalAddress() {
-        return socket.getLocalAddress();
+        return this.conn_.socket_.getLocalAddress();
     }
 
     public boolean isConnected() {
-        return socket != null && socket.isConnected();
+        return this.conn_.socket_ != null && this.conn_.socket_.isConnected();
     }
 
     private SSLSocketFactory getSSLSocketFactory(){
         try {
             SSLContext context = SSLContext.getInstance("SSL");
-
             context.init(null,
                     new TrustManager[]{new X509TrustManager() {
                         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
@@ -1237,7 +1160,7 @@ public class DBConnection {
      }
      private void compareRequiredAPIVersion() throws IOException {
         try {
-            Entity ret = run("getRequiredAPIVersion('java')");
+            Entity ret = run("getRequiredAPIVersion(`java)");
             if (localAPIVersion < ((BasicInt)((BasicAnyVector) ret).get(0)).getInt()) {
                 throw new IOException("API version is too low and needs to be upgraded");
             }

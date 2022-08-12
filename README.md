@@ -1,22 +1,15 @@
 This tutorial covers the following topics:
-- [1. Java API Introduction](#1-java-api-introduction)
-- [2. Establish DolphinDB connection](#2-establish-dolphindb-connection)
-- [3. Run DolphinDB script](#3-run-dolphindb-script)
-- [4. Execute DolphinDB functions](#4-execute-dolphindb-functions)
-- [5. Upload data to DolphinDB server](#5-upload-data-to-dolphindb-server)
-- [6. Read data](#6-read-data)
-- [7. Read from and write to DolphinDB tables](#7-read-from-and-write-to-dolphindb-tables)
-  - [7.1 Save data to a DolphinDB in-memory table](#71-save-data-to-a-dolphindb-in-memory-table)
-    - [7.1.1 Save a single record to an in-memory table with 'insert into'](#711-save-a-single-record-to-an-in-memory-table-with-insert-into)
-    - [7.1.2 Save data in batches with `tableInsert`](#712-save-data-in-batches-with-tableinsert)
-    - [7.1.3 Use function `tableInsert` to save BasicTable objects](#713-use-function-tableinsert-to-save-basictable-objects)
-  - [7.2 Save data to a distributed table](#72-save-data-to-a-distributed-table)
-  - [7.3 Save data to a local disk table](#73-save-data-to-a-local-disk-table)
-  - [7.4 Load tables](#74-load-tables)
-- [8. Convert Java data types into DolphinDB data types](#8-convert-java-data-types-into-dolphindb-data-types)
-- [9. Java Streaming API](#9-java-streaming-api)
-  - [Reconnect](#reconnect)
-  - [filter](#filter)
+
+- Java API Introduction
+- Establish DolphinDB connection
+- Run DolphinDB script
+- Execute DolphinDB functions
+- Upload data to DolphinDB server
+- Read data
+- Read from and write to DolphinDB tables
+- Convert Java data types into DolphinDB data types
+- Java streaming API
+ 
 
 ### 1. Java API Introduction
 
@@ -68,7 +61,7 @@ To run DolphinDB script in Java:
 ```
 conn.run("script");
 ```
-Please refer to the following section for an example.
+Please refer to the following section for an example. The maximum length of the script is 65,535 bytes.
 
 ### 4. Execute DolphinDB functions
 
@@ -96,7 +89,7 @@ Parameter "x" was generated on DolphinDB server by the Java program, and paramet
 ```
 conn.run("x = [1,3,5]")
 ```
-In this case, we need to use "partial application" to embed parameter "x" in function `add`. For details, please refer to [Partial Application Documentation](https://www.dolphindb.com/help/Functionalprogramming/PartialApplication.html).
+In this case, we need to use "partial application" to embed parameter "x" in function `add`. For details, please refer to [Partial Application Documentation](https://www.dolphindb.com/cn/help/PartialApplication.html)。
 
 ```
 public void testFunction() throws IOException{
@@ -327,7 +320,7 @@ public void test_save_table(BasicTable table1) throws IOException {
 }
 ```
 
-The example above uses partial application in DolphinDB to embed a table in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/help/Functionalprogramming/PartialApplication.html).
+The example above uses partial application in DolphinDB to embed a table in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/help/PartialApplication.html).
 
 ##### 7.1.3 Use function `tableInsert` to save BasicTable objects
 
@@ -421,7 +414,7 @@ The majority of DolphinDB data types can be constructed from corresponding Java 
 
 - CHAR type: as the CHAR type in DolphinDB is stored as a byte, we can use the BasicByte type to construct CHAR in Java API, for example 'new BasicByte((byte)'c')'.
 - SYMBOL type: the SYMBOL type in DolphinDB is stored as INT to improve the efficiency of storage and query of strings. Java doesn't have this data type, so Java API does not provide BasicSymbol. SYMBOL type can be processed directly with BasicString. 
-- Temporal types: temporal data types are stored as INT or LONG in DolphinDB. DolphinDB provides 9 temporal data types: date, month, time, minute, second, datetime, timestamp, nanotime and nanotimestamp. For detailed description, please refer to [DolphinDB Temporal Type and Conversion](https://www.dolphindb.com/help/DataManipulation/TemporalObjects/TemporalTypeandConversion.html). Since Java also provides data types such as LocalDate, LocalTime, LocalDateTime and YearMonth, Java API provides conversion functions in the Utils class between all Java temporal types and INT or LONG.
+- Temporal types: temporal data types are stored as INT or LONG in DolphinDB. DolphinDB provides 9 temporal data types: date, month, time, minute, second, datetime, timestamp, nanotime and nanotimestamp. For detailed description, please refer to [DolphinDB Temporal Type and Conversion] (https://www.dolphindb.com/help/TemporalTypeandConversion.html). Since Java also provides data types such as LocalDate, LocalTime, LocalDateTime and YearMonth, Java API provides conversion functions in the Utils class between all Java temporal types and INT or LONG.
 
 The following script shows the correspondence between DolphinDB temporal types and Java native temporal types:
 

@@ -8,5 +8,5 @@ public interface ExtendedDataInput extends DataInput{
 	String readString() throws IOException;
 	Long2 readLong2() throws IOException;
 	Double2 readDouble2() throws IOException;
-	String readBlob() throws IOException;
+	byte[] readBlob() throws IOException;
 }

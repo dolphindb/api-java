@@ -63,7 +63,7 @@ public class DFSWritingWithMultiThread {
         List<Vector> cols = new ArrayList<Vector>() {
         };
 
-        //Timestamp
+        //Timnstamp
         BasicTimestampVector timestamp = new BasicTimestampVector(n);
         BasicUuidVector areaId = new BasicUuidVector(n);
         BasicUuidVector deviceId = new BasicUuidVector(n);

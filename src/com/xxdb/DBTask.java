@@ -7,5 +7,7 @@ public interface DBTask extends Callable<Entity>{
 	void setDBConnection(DBConnection conn);
 	Entity getResult();
 	String getErrorMsg();
+	String getScript();
 	boolean isSuccessful();
+	boolean isFinished();
 }

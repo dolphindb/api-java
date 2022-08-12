@@ -1,7 +1,6 @@
 package com.xxdb.data;
 
 import com.xxdb.DBConnection;
-import com.xxdb.DBConnectionTest;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -11,16 +10,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
 
 public class BasicStringTest {
     private  DBConnection conn;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     @Before
     public  void setUp(){
         conn = new DBConnection();
         try{
-            if(!conn.connect(DBConnectionTest.HOST,DBConnectionTest.PORT,"admin","123456")){
+            if(!conn.connect(HOST,PORT,"admin","123456")){
                 throw new IOException("Failed to connect to 2xdb server");
             }
         }catch(IOException ex){

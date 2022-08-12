@@ -122,6 +122,10 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 			return true;
 		}
 	}
+
+	public Entity get(String key){
+		return dict.get(new BasicString(key));
+	}
 	
 	public Set<Scalar> keys(){
 		return dict.keySet();

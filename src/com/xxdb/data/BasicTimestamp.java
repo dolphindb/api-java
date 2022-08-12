@@ -1,12 +1,12 @@
 package com.xxdb.data;
 
+import com.xxdb.io.ExtendedDataInput;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.util.Calendar;
-
-import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
@@ -33,12 +33,12 @@ public class BasicTimestamp extends BasicLong{
 	
 	@Override
 	public DATA_CATEGORY getDataCategory() {
-		return Entity.DATA_CATEGORY.TEMPORAL;
+		return DATA_CATEGORY.TEMPORAL;
 	}
 
 	@Override
 	public DATA_TYPE getDataType() {
-		return Entity.DATA_TYPE.DT_TIMESTAMP;
+		return DATA_TYPE.DT_TIMESTAMP;
 	}
 	
 	public LocalDateTime getTimestamp(){

@@ -437,7 +437,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, in, false, true);}
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in, false, true);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in);}
-		public Scalar createScalarWithDefaultValue() { return new BasicString("");}
+		public Scalar createScalarWithDefaultValue() { return new BasicString("", true);}
 		public Vector createVectorWithDefaultValue(int size){ return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, size, false,true);}
 		public Vector createPairWithDefaultValue(){ return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, 2, false,true);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicStringMatrix(rows, columns);}

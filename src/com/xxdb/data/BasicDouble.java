@@ -1,11 +1,11 @@
 package com.xxdb.data;
 
+import com.xxdb.io.ExtendedDataInput;
+import com.xxdb.io.ExtendedDataOutput;
+
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.temporal.Temporal;
-
-import com.xxdb.io.ExtendedDataInput;
-import com.xxdb.io.ExtendedDataOutput;
 
 /**
  * 
@@ -40,12 +40,12 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 
 	@Override
 	public DATA_CATEGORY getDataCategory() {
-		return Entity.DATA_CATEGORY.FLOATING;
+		return DATA_CATEGORY.FLOATING;
 	}
 
 	@Override
 	public DATA_TYPE getDataType() {
-		return Entity.DATA_TYPE.DT_DOUBLE;
+		return DATA_TYPE.DT_DOUBLE;
 	}
 	
 	public Number getNumber() throws Exception{

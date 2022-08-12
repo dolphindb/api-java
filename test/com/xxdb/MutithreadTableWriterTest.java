@@ -1,32 +1,28 @@
-//package com.xxdb;
-//
-//
-//import com.xxdb.comm.ErrorCodeInfo;
-//import com.xxdb.data.*;
-//import com.xxdb.data.Vector;
-//import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
-//
-//import java.io.IOException;
-//import java.time.LocalDate;
-//import java.time.LocalDateTime;
-//import java.time.LocalTime;
-//import java.util.*;
-//import java.util.logging.Logger;
-//
-//import static org.junit.Assert.assertEquals;
-//import static org.junit.Assert.assertTrue;
-//
-//public class MutithreadTableWriterTest implements Runnable{
-//    private Logger logger_=Logger.getLogger(getClass().getName());
-//    private static DBConnection conn;
-//    public static String HOST="127.0.0.1" ;
-//    public static Integer PORT=8900 ;
-//    private final int id;
-//    private static MultithreadedTableWriter mutithreadedTableWriter_ =null;
-//
-//    public MutithreadTableWriterTest(int i) {
-//        this.id=i;
-//    }
+package com.xxdb;
+
+
+import com.xxdb.data.Vector;
+import com.xxdb.data.*;
+import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.logging.Logger;
+
+import static org.junit.Assert.assertEquals;
+
+public class MutithreadTableWriterTest implements Runnable{
+    private Logger logger_=Logger.getLogger(getClass().getName());
+    private static DBConnection conn;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    private final int id;
+    private static MultithreadedTableWriter mutithreadedTableWriter_ =null;
+
+    public MutithreadTableWriterTest(int i) {
+        this.id=i;
+    }
 //
 //    public static void test() throws Exception{
 //        conn = new DBConnection();
@@ -50,8 +46,8 @@
 //                2, "bool");
 //        short s = 0;
 //        long l = 0;
-//        boolean b = mutithreadedTableWriter_.insert(pErrorInfo, false, 'c', s,l);
-//        assertEquals(true, b);
+//        ErrorCodeInfo b = mutithreadedTableWriter_.insert(false, 'c', s,l);
+////        assertEquals(true, b);
 //        System.out.println(pErrorInfo);
 //        mutithreadedTableWriter_.waitForThreadCompletion();
 //        System.out.println("time used "+(System.currentTimeMillis()-starttime));
@@ -59,23 +55,23 @@
 //        BasicTable bt= (BasicTable) conn.run("select * from t1;");
 //        System.out.println(bt.rows());
 //    }
-//    @Override
-//    public void run() {
+    @Override
+    public void run() {
 //        ErrorCodeInfo pErrorInfo=new ErrorCodeInfo();
 //        try {
 //            int lastid = 0;
 //            for (int i = 0; i < 5000; i++) {
 //                lastid ++;
-//                if (mutithreadedTableWriter_.insert(pErrorInfo, System.currentTimeMillis(), "A", lastid)==false) {
-//                    logger_.warning("mutithreadTableWriter_.insert error "+pErrorInfo);
-//                    break;
-//                }
+////                if (mutithreadedTableWriter_.insert(pErrorInfo, System.currentTimeMillis(), "A", lastid)==false) {
+////                    logger_.warning("mutithreadTableWriter_.insert error "+pErrorInfo);
+////                    break;
+////                }
 //            }
 //        } catch (Exception ex) {
 //            ex.printStackTrace();
 //        }finally {
 //        }
-//    }
+    }
 //
 //    public void test2() throws Exception{
 //        StringBuilder sb = new StringBuilder();
@@ -312,8 +308,106 @@
 //        assertEquals(100,bt.rows());
 //    }
 //
-//    public static void main(String[] args) throws InterruptedException, IOException {
-//        conn = new DBConnection(false, false, false);
+    public static void test21212() throws Exception{
+        int[] com = new int[]{Vector.COMPRESS_DELTA, Vector.COMPRESS_LZ4};
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicBooleanVector(2);
+        v.set(0,new BasicBoolean(true));
+        v.set(1,new BasicBoolean(false));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("[true,false]",obj.getVectorValue(0).getString());
+        assertEquals("[true,false]",obj.getVectorValue(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+    }
+
+    public static void testArrayVector() throws Exception{
+        //创建ArrayVector的两种方式
+        //通过传入List<Vector>创建
+        List<Vector> value = new ArrayList<>();
+        int[] intValue1 = new int[]{1,2,3};
+        int[] intValue2 = new int[]{4,5,6};
+        value.add(new BasicIntVector(intValue1));
+        value.add(new BasicIntVector(intValue2));
+        BasicArrayVector arrayVector1 = new BasicArrayVector(value);
+        System.out.println(arrayVector1.getString());
+        //通过设置index并传入Vector创建
+        int[] indexes = new int[]{2,4,8};
+        BasicIntVector vectorValue = new BasicIntVector(new int[]{1,2,3,4,5,6,7,8});
+        BasicArrayVector arrayVector2 = new BasicArrayVector(indexes, vectorValue);
+        System.out.println(arrayVector2.getString());
+
+        Vector v = arrayVector2.getVectorValue(1);
+        System.out.println(v.getString());
+    }
+
+
+    public static void testArrayV() throws Exception{
+        DBConnection conn = new DBConnection(false,false,false);
+        conn.connect(HOST, PORT,"admin","123456");
+        conn.run("share table(100:0,[`arryInt],[INT[]]) as trades");
+        List<Vector> l = new ArrayList<Vector>();
+        int time=5;
+        l.add(0,new BasicDoubleVector(new double[]{}));
+//        for (int i=1;i<time;i++){
+//            Vector v=new BasicDoubleVector(i);
+//            v= (Vector) conn.run("double(1.."+i+")");
+//            l.add(i,v);
+//        }
+//        BasicArrayVector arrayDouble = new BasicArrayVector(l);
+
+        l = new ArrayList<Vector>();
+        l.add(0,new BasicIntVector(new int[]{}));
+        for (int i=1;i<time;i++){
+            Vector v=new BasicIntVector(i);
+            v= (Vector) conn.run("int(1.."+i*100000+")");
+            l.add(i,v);
+        }
+        BasicArrayVector arryInt = new BasicArrayVector(l);
+
+//        l = new ArrayList<Vector>();
+//        l.add(0,new BasicDateVector(new int[]{}));
+//        for (int i=1;i<time;i++){
+//            Vector v=new BasicDateVector(i);
+//            v= (Vector) conn.run("date(1.."+i+")");
+//
+//            l.add(i,v);
+//        }
+//        BasicArrayVector arryDate = new BasicArrayVector(l);
+
+        List<String> colNames=new ArrayList<>();
+//        colNames.add(0,"id");
+        colNames.add(0,"arryInt");
+//        colNames.add(2,"arrayDouble");
+//        colNames.add(3,"arrayDate");
+
+        List<Vector> cols=new ArrayList<>();
+//        cols.add(0, (BasicIntVector)conn.run("1.."+time+""));
+        cols.add(0,arryInt);
+//        cols.add(2,arrayDouble);
+//        cols.add(3,arryDate);
+        BasicTable bt =new BasicTable(colNames,cols);
+        List<Entity> args = Arrays.asList(bt);
+        conn.run("tableInsert{trades}", args);
+        BasicTable res = (BasicTable) conn.run("select * from trades");
+//        for (int i=0;i<time;i++){
+//            assertEquals(arryInt.getVectorValue(i).getString(),((BasicArrayVector)res.getColumn("arryInt")).getVectorValue(i).getString());
+//            assertEquals(arrayDouble.getVectorValue(i).getString(),((BasicArrayVector)res.getColumn("arrayDouble")).getVectorValue(i).getString());
+//            assertEquals(arryDate.getVectorValue(i).getString(),((BasicArrayVector)res.getColumn("arrayDate")).getVectorValue(i).getString());
+//        }
+        conn.close();
+    }
+
+
+
+    public static void main(String[] args) throws InterruptedException, IOException, Exception {
+//        conn = new DBConnection(false, true, false);
 //        try {
 //            //Properties props = new Properties();
 //            //FileInputStream in= new FileInputStream( "test/com/xxdb/setup/settings.properties");
@@ -327,10 +421,11 @@
 //            ex.printStackTrace();
 //        }
 //        try {
-//            testTransform();
+//            test21212();
 //        }catch (Exception e){
 //            e.printStackTrace();
 //        }
 //        System.out.println("test done");
-//    }
-//}
+        testArrayV();
+    }
+}

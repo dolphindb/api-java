@@ -1,28 +1,26 @@
 package com.xxdb.compression;
 
 import com.xxdb.DBConnection;
+import com.xxdb.data.Vector;
 import com.xxdb.data.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+
+import static org.junit.Assert.assertEquals;
 
 public class ServerCompressionTest {
 
     Random rand = new Random();
     private DBConnection conn;
-    public static String HOST = "127.0.0.1";
-    public static Integer PORT = 8848;
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     int testPoints = 600000;
 
     BasicShortVector shortVector;
@@ -33,6 +31,31 @@ public class ServerCompressionTest {
     BasicNanoTimestampVector nanoTimestampVector;
     BasicFloatVector floatVector;
     BasicDoubleVector doubleVector;
+
+    public void clear_env() throws IOException {
+        conn.run("a = getStreamingStat().pubTables\n" +
+                "for(i in a){\n" +
+                "\tstopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)\n" +
+                "}");
+        conn.run("def getAllShare(){\n" +
+                "\treturn select name from objs(true) where shared=1\n" +
+                "\t}\n" +
+                "\n" +
+                "def clearShare(){\n" +
+                "\tlogin(`admin,`123456)\n" +
+                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
+                "\tfor(i in allShare){\n" +
+                "\t\ttry{\n" +
+                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
+                "\t\t\t}catch(ex1){}\n" +
+                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
+                "\t}\n" +
+                "\ttry{\n" +
+                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
+                "\t}catch(ex1){}\n" +
+                "}\n" +
+                "clearShare()");
+    }
 
     @Before
     public void setUp() {
@@ -46,8 +69,9 @@ public class ServerCompressionTest {
         }
     }
 
+
     @Before
-    public void prepareData() {
+    public void prepareData() throws IOException {
         short[] shorts = new short[testPoints];
         int[] date = new int[testPoints];
         int[] minute = new int[testPoints];
@@ -92,8 +116,13 @@ public class ServerCompressionTest {
         nanoTimestampVector = new BasicNanoTimestampVector(nanotimestamp);
         floatVector = new BasicFloatVector(floats);
         doubleVector = new BasicDoubleVector(doubles);
+        clear_env();
     }
 
+    @After
+    public void drop() throws IOException {
+
+    }
     @Test
     public void testCompressLZ4() throws Exception {
         List<String> colNames = new ArrayList<>();

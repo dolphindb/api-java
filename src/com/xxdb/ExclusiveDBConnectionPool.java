@@ -2,39 +2,96 @@ package com.xxdb;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import com.xxdb.data.BasicStringVector;
-import com.xxdb.data.Entity;
+
 
 public class ExclusiveDBConnectionPool implements DBConnectionPool{
-	private List<DBConnection> conns;
-	private ExecutorService executor;
+	private List<AsynWorker> workers_ = new ArrayList<>();
+	private final LinkedList<DBTask> taskLists_ = new LinkedList<>();
+	private int tasksCount_ = 0;
+	private Object finishedTasklock_ = new Object();
+	private int finishedTaskCount_ = 0;
 
-	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability) throws IOException{
-		this(host, port, uid, pwd, count, loadBalance, enableHighAvailability, false);
+	private class AsynWorker implements Runnable{
+		private DBConnection conn_;
+		private Thread workThread_;
+
+		public AsynWorker(DBConnection conn){
+			this.conn_ = conn;
+			workThread_ = new Thread(this);
+			workThread_.start();
+		}
+
+		@Override
+		public void run() {
+			while (true){
+				DBTask task = null;
+				synchronized (taskLists_) {
+					if (taskLists_.size() == 0) {
+						try {
+							taskLists_.wait();
+						} catch (Exception e) {
+							break;
+						}
+					}
+				}
+				while (true){
+					synchronized (taskLists_){
+						task = taskLists_.pollLast();
+					}
+					if (task == null){
+						break;
+					}
+					try {
+						task.setDBConnection(conn_);
+						task.call();
+					}catch (Exception e){
+						e.printStackTrace();
+					}
+					((BasicDBTask)task).finish();
+					synchronized (finishedTasklock_){
+						finishedTaskCount_++;
+					}
+				}
+				synchronized (finishedTasklock_){
+					finishedTasklock_.notify();
+				}
+			}
+			conn_.close();
+		}
 	}
 
-	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability, boolean compress) throws IOException{
-		conns = new ArrayList<DBConnection>(count);
+	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability) throws IOException{
+		this(host, port, uid, pwd, count, loadBalance, enableHighAvailability, null, "",false, false, false);
+	}
+
+	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability, String[] highAvailabilitySites, String initialScript,boolean compress, boolean useSSL, boolean usePython) throws IOException{
+		if (count <= 0)
+			throw new RuntimeException("The thread count can not be less than 0");
 		if(!loadBalance){
 			for(int i=0; i<count; ++i){
-				DBConnection conn = new DBConnection(false, false, compress);
-				if(!conn.connect(host, port, uid, pwd, enableHighAvailability))
+				DBConnection conn = new DBConnection(false, useSSL, compress, usePython);
+				conn.setLoadBalance(false);
+				if(!conn.connect(host, port, uid, pwd, initialScript, enableHighAvailability))
 					throw new RuntimeException("Can't connect to the specified host.");
-				conns.add(conn);
+				workers_.add(new AsynWorker(conn));
 			}
 		}
 		else{
-			DBConnection entryPoint = new DBConnection(false, false, compress);
-			if(!entryPoint.connect(host, port, uid, pwd))
-				throw new RuntimeException("Can't connect to the specified host.");
-			BasicStringVector nodes = (BasicStringVector)entryPoint.run("rpc(getControllerAlias(), getClusterLiveDataNodes{false})");
-			int nodeCount = nodes.rows();
+			BasicStringVector nodes = null;
+			if (highAvailabilitySites != null){
+				nodes = new BasicStringVector(highAvailabilitySites);
+			}else {
+				DBConnection entryPoint = new DBConnection(false, useSSL, compress, usePython);
+				if(!entryPoint.connect(host, port, uid, pwd))
+					throw new RuntimeException("Can't connect to the specified host.");
+				nodes = (BasicStringVector)entryPoint.run("rpc(getControllerAlias(), getClusterLiveDataNodes{false})");
+				entryPoint.close();
+			}
+			int nodeCount = nodes.rows();;
 			String[] hosts = new String[nodeCount];
 			int[] ports = new int[nodeCount];
 			for(int i=0; i<nodeCount; ++i){
@@ -44,65 +101,65 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 				hosts[i] = fields[0];
 				ports[i] = Integer.parseInt(fields[1]);
 			}
-			
 			for(int i=0; i<count; ++i){
-				DBConnection conn = new DBConnection(false, false, compress);
-				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, enableHighAvailability))
+				DBConnection conn = new DBConnection(false, useSSL, compress, usePython);
+				conn.setLoadBalance(false);
+				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, initialScript, enableHighAvailability))
 					throw new RuntimeException("Can't connect to the host " + nodes.getString(i));
-				conns.add(conn);
+				workers_.add(new AsynWorker(conn));
 			}
 		}
-		
-		executor = Executors.newFixedThreadPool(count);
 	}
 	
 	public void execute(List<DBTask> tasks){
-		synchronized(executor){
-			try{
-				int taskCount = tasks.size();
-				if(taskCount > conns.size())
-					throw new RuntimeException("The number of tasks can't exceed the number of connections in the pool.");
-				for(int i=0; i<taskCount; ++i)
-					tasks.get(i).setDBConnection(conns.get(i));
-				List<Future<Entity>> futures = executor.invokeAll(tasks);
-				for(int i=0; i<taskCount; ++i)
-					futures.get(i).get();
-			}
-			catch(InterruptedException ie){
-				throw new RuntimeException(ie);
-			}
-			catch(ExecutionException ie){
-				throw new RuntimeException(ie);
-			}
+		tasksCount_ += tasks.size();
+		synchronized (taskLists_){
+			taskLists_.addAll(tasks);
+			taskLists_.notifyAll();
+		}
+		for (DBTask task : tasks){
+			((BasicDBTask)task).waitFor();
+			((BasicDBTask)task).finish();
 		}
 	}
 	
 	public void execute(DBTask task){
+		tasksCount_++;
+		synchronized (taskLists_){
+			taskLists_.add(task);
+			taskLists_.notify();
+		}
+		((BasicDBTask)task).waitFor();
+		((BasicDBTask)task).finish();
+	}
+
+	public void waitForThreadCompletion(){
 		try {
-			synchronized(executor){
-				task.setDBConnection(conns.get(0));
-				task.call();
+			synchronized (finishedTasklock_){
+				System.out.println("Waiting for tasks to complete, remain Task: " + (tasksCount_-finishedTaskCount_));
+				while (finishedTaskCount_ >= 0){
+					if (finishedTaskCount_ < tasksCount_){
+						finishedTasklock_.wait();
+					}else if (finishedTaskCount_ == tasksCount_){
+						break;
+					}
+				}
 			}
-		} 
-		catch (Exception e) {
-			throw new RuntimeException(e);
+		}catch (Exception e){
+			e.printStackTrace();
 		}
 	}
 	
 	public int getConnectionCount(){
-		return conns.size();
+		return workers_.size();
 	}
 	
 	public void shutdown(){
-		try{
-			executor.shutdown();
-			for(int i=0; i<conns.size(); ++i){
-				conns.get(i).close();
+		waitForThreadCompletion();
+		for (AsynWorker one : workers_){
+			synchronized (one.workThread_){
+				one.workThread_.interrupt();
 			}
-			conns.clear();
-		}
-		catch(Throwable t){
-			throw new RuntimeException(t);
 		}
 	}
 }

@@ -4,8 +4,6 @@ import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import com.xxdb.streaming.client.IMessage;
-
 class QueueManager {
     private HashMap<String, BlockingQueue<List<IMessage>>> queueMap = new HashMap<String, BlockingQueue<List<IMessage>>>();
 

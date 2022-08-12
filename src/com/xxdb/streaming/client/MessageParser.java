@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.xxdb.data.*;
@@ -44,6 +45,7 @@ class MessageParser implements Runnable {
     }
 
     public void run() {
+        Map<String, StreamDeserializer> subinfos = dispatcher.getSubInfos();
         Socket socket = this.socket;
         try {
             if (bis == null) bis = new BufferedInputStream(socket.getInputStream());
@@ -71,7 +73,7 @@ class MessageParser implements Runnable {
                 boolean extended = type >= 128;
                 if(type >= 128)
                 	type -= 128;
-
+                
                 if (form < 0 || form > MAX_FORM_VALUE)
                     throw new IOException("Invalid form value: " + form);
                 if (type < 0 || type > MAX_TYPE_VALUE)
@@ -97,24 +99,28 @@ class MessageParser implements Runnable {
                     topicNameToIndex.put(topic, nameToIndex);
                 } else if (body.isVector()) {
                     BasicAnyVector dTable = (BasicAnyVector) body;
+
                     int colSize = dTable.rows();
                     int rowSize = dTable.getEntity(0).rows();
                     if (rowSize >= 1) {
                         if (rowSize == 1) {
                             BasicMessage rec = new BasicMessage(msgid, topic, dTable, topicNameToIndex.get(topic.split(",")[0]));
+                            if (subinfos.get(topic) != null)
+                                rec = subinfos.get(topic).parse(rec);
                             dispatcher.dispatch(rec);
                         } else {
                             List<IMessage> messages = new ArrayList<>(rowSize);
                             long startMsgId = msgid - rowSize + 1;
                             for (int i = 0; i < rowSize; i++) {
                                 BasicAnyVector row = new BasicAnyVector(colSize);
-
                                 for (int j = 0; j < colSize; j++) {
                                     AbstractVector vector = (AbstractVector) dTable.getEntity(j);
                                     Entity entity = vector.get(i);
                                     row.setEntity(j, entity);
                                 }
                                 BasicMessage rec = new BasicMessage(startMsgId + i, topic, row, topicNameToIndex.get(topic.split(",")[0]));
+                                if (subinfos.get(topic) != null)
+                                    rec = subinfos.get(topic).parse(rec);
                                 messages.add(rec);
                             }
                             dispatcher.batchDispatch(messages);

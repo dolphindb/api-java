@@ -18,6 +18,8 @@ import java.util.concurrent.Executors;
 public class ThreadPooledClient extends AbstractClient {
     private static int CORES = Runtime.getRuntime().availableProcessors();
     private ExecutorService threadPool;
+    private HashMap<String, List<String>> users = new HashMap<>();
+    private Object lock = new Object();
 
     private class QueueHandlerBinder {
         public QueueHandlerBinder(BlockingQueue<List<IMessage>> queue, MessageHandler handler) {
@@ -109,7 +111,7 @@ public class ThreadPooledClient extends AbstractClient {
         threadPool.shutdownNow();
         try {
             Thread.sleep(1000);
-            subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.allowExistTopic);
+            subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
             System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + site.actionName);
             return true;
         } catch (Exception ex) {
@@ -119,19 +121,38 @@ public class ThreadPooledClient extends AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, allowExistTopic);
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord);
+        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = Arrays.asList(userName, passWord);
         synchronized (queueHandlers) {
-            queueHandlers.put(tableNameToTrueTopic.get(host + ":" + port + "/" + tableName + "/" + actionName), new QueueHandlerBinder(queue, handler));
+            queueHandlers.put(tableNameToTrueTopic.get(topicStr), new QueueHandlerBinder(queue, handler));
+            users.put(topicStr, usr);
         }
     }
 
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic, String userName, String passWord) throws IOException{
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, null, allowExistTopic, userName, passWord);
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic) throws IOException{
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, "", "");
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, boolean allowExistTopic) throws IOException {
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, null, allowExistTopic);
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer)throws IOException{
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, false);
+    }
+
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect) throws IOException {
-        subscribe(host, port, tableName, actionName, handler, offset, reconnect, null, false);
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, null, null, false);
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, Vector filter) throws IOException {
-        subscribe(host, port, tableName, actionName, handler, offset, false, filter, false);
+        subscribe(host, port, tableName, actionName, handler, offset, false, filter, null, false);
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset) throws IOException {
@@ -173,7 +194,14 @@ public class ThreadPooledClient extends AbstractClient {
     @Override
     protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
         DBConnection dbConn = new DBConnection();
-        dbConn.connect(host, port);
+        String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = users.get(fullTableName);
+        String user = usr.get(0);
+        String pwd = usr.get(1);
+        if (!user.equals(""))
+            dbConn.connect(host, port, user, pwd);
+        else
+            dbConn.connect(host, port);
         try {
             String localIP = this.listeningHost;
             if(localIP.equals(""))
@@ -186,7 +214,6 @@ public class ThreadPooledClient extends AbstractClient {
 
             dbConn.run("stopPublishTable", params);
             String topic = null;
-            String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
             synchronized (tableNameToTrueTopic) {
                 topic = tableNameToTrueTopic.get(fullTableName);
             }

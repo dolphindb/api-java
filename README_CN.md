@@ -1,6 +1,8 @@
 本教程主要介绍以下内容：
 - [1. Java API 概述](#1-java-api-概述)
 - [2. 建立DolphinDB连接](#2-建立dolphindb连接)
+  - [2.1 DBConnection](#21-dbconnection)
+  - [2.2 ExclusiveDBConnectionPool](#22-exclusivedbconnectionpool)
 - [3.运行DolphinDB脚本](#3运行dolphindb脚本)
 - [4. 运行DolphinDB函数](#4-运行dolphindb函数)
 - [5. 上传本地对象到DolphinDB服务器](#5-上传本地对象到dolphindb服务器)
@@ -8,23 +10,19 @@
 - [7. 读写DolphinDB数据表](#7-读写dolphindb数据表)
   - [7.1 保存数据到DolphinDB内存表](#71-保存数据到dolphindb内存表)
     - [7.1.1 使用 `insert into` 保存单条数据](#711-使用-insert-into-保存单条数据)
-    - [7.1.2 使用`tableInsert`函数批量保存数组对象](#712-使用tableinsert函数批量保存数组对象)
     - [7.1.3 使用`tableInsert`函数保存BasicTable对象](#713-使用tableinsert函数保存basictable对象)
   - [7.2 保存数据到本地磁盘表](#72-保存数据到本地磁盘表)
   - [7.3 保存数据到分布式表](#73-保存数据到分布式表)
-    - [7.3.1 使用`tableInsert`函数保存BasicTable对象](#731-使用tableinsert函数保存basictable对象)
-    - [7.3.2 分布式表的并发写入](#732-分布式表的并发写入)
   - [7.4 读取和使用数据表](#74-读取和使用数据表)
-    - [7.4.1 读取分布式表](#741-读取分布式表)
-    - [7.4.2 使用BasicTable对象](#742-使用basictable对象)
   - [7.5 批量异步追加数据](#75-批量异步追加数据)
-    - [7.5.1 MultithreadedTableWriter](#751-multithreadedtablewriter)
-    - [7.5.2 MultithreadedTableWriter返回异常的几种形式](#752-multithreadedtablewriter返回异常的几种形式)
 - [8. Java原生类型转换为DolphinDB数据类型](#8-java原生类型转换为dolphindb数据类型)
 - [9. Java流数据API](#9-java流数据api)
-  - [断线重连](#断线重连)
-  - [启用filter](#启用filter)
-  - [取消订阅](#取消订阅)
+  - [9.1 接口说明](#91-接口说明)
+  - [9.2 示例代码](#92-示例代码)
+  - [9.3 断线重连](#93-断线重连)
+  - [9.4 启用filter](#94-启用filter)
+  - [9.5 订阅异构流表](#95-订阅异构流表)
+  - [9.6 取消订阅](#96-取消订阅)
 
 ## 1. Java API 概述
 
@@ -53,8 +51,8 @@ DBConnection类提供如下主要方法：
 
 | 方法名        | 详情          |
 |:------------- |:-------------|
-|DBConnection([asynchronousTask, useSSL, compress])|构造对象|
-|connect(host, port, [username, password, initialScript, enableHighAvailability, highAvailabilitySites])|将会话连接到DolphinDB服务器|
+|DBConnection([asynchronousTask, useSSL, compress, usePython])|构造对象|
+|connect(host, port, [username, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect])|将会话连接到DolphinDB服务器|
 |login(username,password,enableEncryption)|登陆服务器|
 |run(script)|将脚本在DolphinDB服务器运行|
 |run(functionName,args)|调用DolphinDB服务器上的函数|
@@ -65,6 +63,8 @@ DBConnection类提供如下主要方法：
 Java API 的实际用例参见[example目录](https://github.com/dolphindb/api-java/tree/master/example)。
 
 ## 2. 建立DolphinDB连接
+
+### 2.1 DBConnection
 
 Java API通过TCP/IP协议连接到DolphinDB服务器。连接正在运行的端口号为8848的本地DolphinDB服务器：
 
@@ -95,6 +95,103 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 
 若未使用用户名及密码连接成功，则脚本在Guest权限下运行。后续运行中若需要提升权限，可以使用 conn.login('admin','123456',true) 登录获取权限。
 
+当需要在应用程序里定义和使用自定义函数时，可以使用 initialScript 参数传入函数定义脚本。这样做的好处是：一、无需每次运行`run`函数的时候重复定义这些函数。二、API提供自动重连机制，断线之后重连时会产生新的会话。如果 initialScript 参数不为空，API会在新的会话中自动执行初始化脚本重新注册函数。在一些网络不是很稳定但是应用程序需要持续运行的场景里，这个参数会非常有用。
+```java
+boolean success = conn.connect("localhost", 8848, "admin", "123456", "");
+```
+### 2.2 ExclusiveDBConnectionPool
+ExclusiveDBConnectionPool可以复用多个DBConnection。可以直接使用ExclusiveDBConnectionPool.run执行命令，也可以通过execute方法执行任务，然后使用BasicDBTask的getResults方法获取该任务的执行结果。
+
+| 方法名        | 详情          |
+|:------------- |:-------------|
+|ExclusiveDBConnectionPoolExclusiveDBConnectionPool(string host, int port, string uid,string pwd, int count, bool loadBalance,bool enableHighAvailability, string[] highAvailabilitySites = null, string initialScript, bool compress = false, bool useSSL = false, bool usePython = false)|构造函数，参数count为连接数，loadBalance为true会连接不同的节点|
+|execute(IDBTask task)|执行任务|
+|execute(List<IDBTask> tasks)|执行批量任务|
+|getConnectionCount()|获取连接数|
+|shutdown()|关闭连接池|
+
+BasicDBTask包装了需要执行的脚本和参数。
+
+| 方法名        | 详情          |
+|:------------- |:-------------|
+|BasicDBTask(string script, List<IEntity> args)|script为需要执行的函数，args为参数。|
+|BasicDBTask(string script)|需要执行的脚本|
+|isSuccessful()|任务是否执行成功|
+|getResult()|获取脚本运行结果|
+|getErrorMsg()|获取任务运行时发生的异常信息|
+
+建立一个DBConnection连接数为10的连接池。
+
+```java
+ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(hostName, port, userName, passWord, 10, false, false);
+```
+
+创建一个任务。
+
+```java
+BasicDBTask task = new BasicDBTask("1..10");
+pool.execute(task);
+```
+
+检查任务是否执行成功。如果执行成功，获取相应结果；如果失败，获取异常信息。
+```java
+BasicIntVector data = null;
+if (task.isSuccessful()) {
+    data = (BasicIntVector)task.getResult();
+} else {
+    throw new Exception(task.getErrorMsg());
+}
+System.out.print(data.getString());
+```
+
+输出
+```
+[1,2,3,4,5,6,7,8,9,10]
+```
+
+创建多个任务，在ExclusiveDBConnectionPool上并行调用。
+
+```java
+List<DBTask> tasks = new ArrayList<>();
+for (int i = 0; i < 10; ++i){
+    //调用函数log。
+    tasks.add(new BasicDBTask("log", Arrays.asList(data.get(i))));
+}
+pool.execute(tasks);
+```
+
+检查任务是否都执行成功。如果执行成功，获取相应结果；如果失败，获取异常信息。
+
+```java
+List<Entity> result = new ArrayList<>();
+for (int i = 0; i < 10; ++i)
+{
+    if (tasks.get(i).isSuccessful())
+    {
+        result.add(tasks.get(i).getResult());
+    }
+    else
+    {
+        throw new Exception(tasks.get(i).getErrorMsg());
+    }
+    System.out.println(result.get(i).getString());
+}
+```
+
+输出
+
+```java
+0
+0.693147
+1.098612
+1.386294
+1.609438
+1.791759
+1.94591
+2.079442
+2.197225
+2.302585
+```
 
 ## 3.运行DolphinDB脚本
 
@@ -367,7 +464,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 }
 ```
 
-#### 7.1.2 使用`tableInsert`函数批量保存数组对象
+#### 7.1.2 使用`tableInsert`函数批量保存数组对象 <!-- omit in toc -->
 
 `tableInsert`函数比较适合用来批量保存数据，它可将多个数组追加到DolphinDB内存表中。若Java程序获取的数据可以组织成List方式，可使用`tableInsert`函数保存。
 
@@ -417,7 +514,7 @@ public void test_save_table(String dbPath, BasicTable table1) throws IOException
 
 分布式表是DolphinDB推荐在生产环境下使用的数据存储方式，它支持快照级别的事务隔离，保证数据一致性。分布式表支持多副本机制，既提供了数据容错能力，又能作为数据访问的负载均衡。
 
-#### 7.3.1 使用`tableInsert`函数保存BasicTable对象
+#### 7.3.1 使用`tableInsert`函数保存BasicTable对象 <!-- omit in toc -->
 
 ```java
 dbPath = 'dfs://testDatabase'
@@ -446,7 +543,7 @@ List<Vector> cols = Arrays.asList(new BasicBooleanVector(boolArray),new BasicInt
 BasicTable table1 = new BasicTable(colNames,cols);
 ```
 
-#### 7.3.2 分布式表的并发写入
+#### 7.3.2 分布式表的并发写入 <!-- omit in toc -->
 
 DolphinDB的分布式表支持并发读写，下面展示如何在Java客户端中将数据并发写入DolphinDB的分布式表。
 
@@ -493,7 +590,7 @@ appender.append(table1);
 
 ### 7.4 读取和使用数据表
 
-#### 7.4.1 读取分布式表
+#### 7.4.1 读取分布式表 <!-- omit in toc -->
 * 在Java API中读取分布式表使用如下代码一次性读取数据
 ```java
 String dbPath = "dfs://testDatabase";
@@ -525,7 +622,7 @@ while(v.hasNext()){
     BasicTable t1 = (BasicTable)conn.run("table(1..100 as id1)"); //若没有skipAll此段会抛出异常。
 ```
 
-#### 7.4.2 使用BasicTable对象
+#### 7.4.2 使用BasicTable对象 <!-- omit in toc -->
 在Java API中，数据表保存为BasicTable对象。由于BasicTable是列式存储，所以若要在Java API中读取行数据需要先取出需要的列，再取出行。
 
 以下例子中参数BasicTable的有4个列，列名分别为cstring, cint, ctimestamp, cdouble，数据类型分别是STRING, INT, TIMESTAMP, DOUBLE。
@@ -555,7 +652,7 @@ DolphinDB Java API 提供 `MultithreadedTableWriter` 类对象用于批量异步
 * API 客户端提交任务到缓冲队列，缓冲队列接到任务后，客户端即认为任务已完成。
 * 提供 `getStatus` 等接口查看状态。
 
-#### 7.5.1 MultithreadedTableWriter
+#### 7.5.1 MultithreadedTableWriter <!-- omit in toc -->
 MultithreadedTableWriter支持多线程的并发写入。
 
 MultithreadedTableWriter对象的主要方法介绍如下：
@@ -573,8 +670,8 @@ MultithreadedTableWriter(String hostName, int port, String userId, String passwo
 * hostName 字符串，表示所连接的服务器的地址.
 * port 整数，表示服务器端口。
 * userId / password: 字符串，登录时的用户名和密码。
-* dbName 字符串，可以是一个分布式数据库地址或内存表的表名。
-* tableName 字符串，若为分布式数据库，则填写分布式表名。若为内存表，则填写空字符串""。
+* dbPath 字符串，表示分布式数据库地址。内存表时该参数为空。请注意，1.30.17及以下版本 API，向内存表写入数据时，该参数需填写内存表表名。
+* tableName 字符串，表示分布式表或内存表的表名。请注意，1.30.17及以下版本 API，向内存表写入数据时，该参数需为空。
 * useSSL 布尔值，表示是否启用加密通讯。
 * enableHighAvailability 布尔值，表示是否开启 API 高可用。
 * highAvailabilitySites 数组类型，表示所有可用节点的 ip:port 构成的 String数组。
@@ -773,7 +870,7 @@ System.out.println(((BasicLong)conn.run("exec count(*) from pt")).getLong());
 
 由上例可以看出，MTW 内部使用多线程完成数据转换和写入任务。但在 MTW 外部，API 客户端同样支持以多线程方式将数据写入 MTW，且保证了多线程安全。
 
-#### 7.5.2 MultithreadedTableWriter返回异常的几种形式
+#### 7.5.2 MultithreadedTableWriter返回异常的几种形式 <!-- omit in toc -->
 
 MultithreadedTableWriter 类调用 insert 方法插入数据时发生异常：
 
@@ -964,9 +1061,40 @@ long timestamp = Utils.countMilliseconds(dt);
 
 ## 9. Java流数据API
 
-Java程序可以通过API订阅流数据。Java API有两种获取数据的方式：
+Java程序可以通过API订阅流数据。Java API有三种获取流数据的方式：单线程回调（ThreadedClient），多线程回调（ThreadPooledClient）和通过 PollingClient 返回的对象获取消息队列。
 
-- 客户机上的应用程序定期去流数据表查询是否有新增数据，若有，应用程序会获取新增数据。
+### 9.1 接口说明
+三种方法对应的 subscribe 接口如下：
+1. 通过 ThreadedClient 方式订阅的接口：
+```cs
+subscribe(string host, int port, string tableName, string actionName, MessageHandler handler, long offset, bool reconnect, IVector filter, int batchSize, float throttle = 0.01f, StreamDeserializer deserializer = null, string user = "", string password = "")
+```
+- **host** 是发布端节点的 IP 地址。
+- **port** 是发布端节点的端口号。
+- **tableName** 是发布表的名称。
+- **actionName** 是订阅任务的名称。
+- **handler** 是用户自定义的回调函数，用于处理每次流入的数据。
+- **offset** 是整数，表示订阅任务开始后的第一条消息所在的位置。消息是流数据表中的行。如果没有指定 *offset*，或它为负数或超过了流数据表的记录行数，订阅将会从流数据表的当前行开始。*offset* 与流数据表创建时的第一行对应。如果某些行因为内存限制被删除，在决定订阅开始的位置时，这些行仍然考虑在内。
+- **reconnect** 是布尔值，表示订阅中断后，是否会自动重订阅。
+- **filter** 是一个向量，表示过滤条件。流数据表过滤列在 *filter* 中的数据才会发布到订阅端，不在 *filter* 中的数据不会发布。
+- **batchSize** 是一个整数，表示批处理的消息的数量。如果它是正数，直到消息的数量达到 *batchSize* 时，*handler* 才会处理进来的消息。如果它没有指定或者是非正数，消息到达之后，*handler* 就会马上处理消息。
+- **throttle** 是一个浮点数，表示 *handler* 处理到达的消息之前等待的时间，以秒为单位。默认值为 1。如果没有指定 *batchSize*，*throttle* 将不会起作用。
+- **deserializer** 是订阅的异构流表对应的反序列化器。
+- **user** 是一个字符串，表示 API 所连接服务器的登录用户名。
+- **password** 是一个字符串，表示 API 所连接服务器的登录密码。
+
+2. 通过 ThreadPooledClient 方式订阅的接口：
+
+```cs
+subscribe(string host, int port, string tableName, string actionName, MessageHandler handler, long offset, bool reconnect, IVector filter, StreamDeserializer deserializer = null, string user = "", string password = "")
+```
+3. 通过 PollingClient 方式订阅的接口：
+```cs
+subscribe(string host, int port, string tableName, string actionName, long offset, bool reconnect, IVector filter, StreamDeserializer deserializer = null, string user = "", string password = "")
+```
+### 9.2 示例代码
+下面分别介绍如何通过3种方法订阅流数据。  
+- 通过客户机上的应用程序定期去流数据表查询是否有新增数据，推荐使用 PollingClient。
 
 ```java
 PollingClient client = new PollingClient(subscribePort);
@@ -982,7 +1110,7 @@ while (true) {
 
 poller1探测到流数据表有新增数据后，会拉取到新数据。无新数据发布时，Java程序会阻塞在poller1.poll方法这里等待。
 
-- Java API使用MessageHandler获取新数据。
+- 使用 MessageHandler 回调的方式获取新数据。
 
 首先需要调用者定义数据处理器handler。handler需要实现com.xxdb.streaming.client.MessageHandler接口。
 
@@ -996,7 +1124,8 @@ public class MyHandler implements MessageHandler {
 }
 ```
 
-在启动订阅时，把handler实例作为参数传入订阅函数。
+在启动订阅时，把handler实例作为参数传入订阅函数。包括单线程回调或多线程回调两种方式：
+1. 单线程回调 ThreadedClient
 
 ```java
 ThreadedClient client = new ThreadedClient(subscribePort);
@@ -1004,8 +1133,12 @@ client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
 ```
 
 当流数据表有新增数据时，系统会通知Java API调用MyHandler方法，将新数据通过msg参数传入。
+2. 多线程回调(ThreadPollingClient)：handler 模式客户端(线程池处理任务)
+```java
 
-### 断线重连
+```
+
+### 9.3 断线重连
 
 reconnect参数是一个布尔值，表示订阅意外中断后，是否会自动重新订阅。默认值为false。
 
@@ -1024,7 +1157,7 @@ PollingClient client = new PollingClient(subscribePort);
 TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset, true);
 ```
 
-### 启用filter
+### 9.4 启用filter
 
 filter参数是一个向量。该参数需要发布端配合`setStreamTableFilterColumn`函数一起使用。使用`setStreamTableFilterColumn`指定流数据表的过滤列，流数据表过滤列在filter中的数据才会发布到订阅端，不在filter中的数据不会发布。
 
@@ -1038,8 +1171,121 @@ filter.setInt(1, 2);
 PollingClient client = new PollingClient(subscribePort);
 TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, actionName, offset, filter);
 ```
+### 9.5 订阅异构流表
 
-### 取消订阅
+DolphinDB server 自 1.30.17 及 2.00.5 版本开始，支持通过 [replay](https://www.dolphindb.cn/cn/help/FunctionsandCommands/FunctionReferences/r/replay.html) 函数将多个结构不同的流数据表，回放（序列化）到一个流表里，这个流表被称为异构流表。Python API 自 1.30.19 版本开始，新增 `StreamDeserializer` 类，用于构造异构流表反序列化器，以实现对异构流表的订阅和反序列化操作。
+
+C# API 通过 `StreamDeserializer` 类来构造异构流表反序列化器，语法如下：
+1. 通过指定表的schema进行构造，包含以下两种方式，指定表的schema信息或指定表的各列类型 ：
+
+指定表的schema信息：
+```java
+StreamDeserializer(Map<String, BasicDictionary> filters)
+```
+指定表的各列类型：
+```java
+StreamDeserializer(HashMap<String, List<Entity.DATA_TYPE>> filters)
+```
+2. 通过指定表进行构造：
+```java
+StreamDeserializer(Map<String, Pair<String, String>> tableNames, DBConnection conn)
+```
+订阅示例：
+```java
+//假设异构流表回放时inputTables如下：
+//d = dict(['msg1', 'msg2'], [table1, table2]); \
+//replay(inputTables = d, outputTables = `outTables, dateColumn = `timestampv, timeColumn = `timestampv)";
+//异构流表解析器的创建方法如下：
+
+{//指定schema的方式
+    BasicDictionary table1_schema = (BasicDictionary)conn.run("table1.schema()");
+    BasicDictionary table2_schema = (BasicDictionary)conn.run("table2.schema()");
+    Map<String,BasicDictionary > tables = new HashMap<>();
+    tables.put("msg1", table1_schema);
+    tables.put("msg2", table2_schema);
+    StreamDeserializer streamFilter = new StreamDeserializer(tables);
+}
+{//指定表的各列类型
+    Entity.DATA_TYPE[] array1 = {DT_DATETIME,DT_TIMESTAMP,DT_SYMBOL,DT_DOUBLE,DT_DOUBLE};
+    Entity.DATA_TYPE[] array2 = {DT_DATETIME,DT_TIMESTAMP,DT_SYMBOL,DT_DOUBLE};
+    List<Entity.DATA_TYPE> filter1 = new ArrayList<>(Arrays.asList(array1));
+    List<Entity.DATA_TYPE> filter2 = new ArrayList<>(Arrays.asList(array2));
+    HashMap<String, List<Entity.DATA_TYPE>> filter = new HashMap<>();
+    filter.put("msg1",filter1);
+    filter.put("msg2",filter2);
+    StreamDeserializer streamFilter = new StreamDeserializer(filter);
+}
+{//指定表的方式
+    Map<String, Pair<String, String>> tables = new HashMap<>();
+    tables.put("msg1", new Pair<>("", "table1"));
+    tables.put("msg2", new Pair<>("", "table2"));
+    //conn是可选参数，如果不传入，在订阅的时候会自动使用订阅的conn进行构造
+    StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+}
+```
+下面分别介绍如何通过 ThreadedClient, ThreadPooledClient 和 PollingClient 三种方式订阅异构流表：
+1. 通过 ThreadedClient 订阅异构流表：通过两种方式完成订阅时对异构流表的解析操作。
+* 通过指定 `subscribe` 函数的 *deserialize* 参数，实现在订阅时直接解析异构流表：
+```java
+ThreadedClient client = new ThreadedClient(8676);
+client.subscribe(hostName, port, tableName, actionName, handler, 0, true, null, streamFilter, false);
+```
+* 异构流表（streamFilter）也可以写入客户自定义的 Handler 中，在回调时被解析：
+```java
+class Handler6 implements MessageHandler {
+    private StreamDeserializer deserializer_;
+    private List<BasicMessage> msg1 = new ArrayList<>();
+    private List<BasicMessage> msg2 = new ArrayList<>();
+
+    public Handler6(StreamDeserializer deserializer) {
+        deserializer_ = deserializer;
+    }
+    public void batchHandler(List<IMessage> msgs) {
+    }
+
+    public void doEvent(IMessage msg) {
+        try {
+                BasicMessage message = deserializer_.parse(msg);
+                if (message.getSym().equals("msg1")) {
+                    msg1.add(message);
+                } else if (message.getSym().equals("msg2")) {
+                    msg2.add(message);
+                }
+        } catch (Exception e) {
+                e.printStackTrace();
+        }
+    }
+
+    public List<BasicMessage> getMsg1() {
+        return msg1;
+    }
+    public List<BasicMessage> getMsg2() {
+        return msg2;
+    }
+}
+
+ThreadedClient client = new ThreadedClient(listenport);
+Handler6 handler = new Handler6(streamFilter);
+client.subscribe(hostName, port, tableName, actionName, handler, 0, true);
+```
+2. 通过 ThreadPooledClient 订阅异构流表的方法和 ThreadedClient 一致。
+* 指定 `subscribe` 函数的 *deserialize* 参数：
+```java
+Handler6 handler = new Handler6(streamFilter);
+ThreadPooledClient client1 = new ThreadPooledClient(listenport, threadCount);
+client.subscribe(hostName, port, tableName, actionName, handler, 0, true);
+```
+* 异构流表（streamFilter）也可以写入客户自定义的 Handler 中，在回调时被解析：
+```java
+ThreadPooledClient client = new ThreadPooledClient(listenport, threadCount);
+client.subscribe(hostName, port, tableName, actionName, handler, 0, true, null, streamFilter, false);
+```
+由于 PollingClient 没有回调函数，只能通过为 `subscirbe` 的 *deserialize* 参数传入 streamFilter 的方式进行解析：
+```java
+PollingClient client = new PollingClient(listenport);
+TopicPoller poller = subscribe(hostName, port, tableName, actionName, 0, true, null, streamFilter);
+```
+### 9.6 取消订阅
 每一个订阅都有一个订阅主题topic作为唯一标识。如果订阅时topic已经存在，那么会订阅失败。这时需要通过unsubscribeTable函数取消订阅才能再次订阅。
 ```java
 client.unsubscribe(serverIP, serverPort, tableName,actionName);

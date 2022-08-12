@@ -1,4 +1,5 @@
 *.class
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
@@ -26,5 +27,3 @@ dolphindb_javaapi.iml
 .settings/org.eclipse.m2e.core.prefs
 /.idea
 /.project
-*.bat
-test/com/xxdb/setup/settings.properties

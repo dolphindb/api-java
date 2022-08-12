@@ -1,12 +1,12 @@
 package com.xxdb.data;
 
+import com.xxdb.io.ExtendedDataInput;
+
 import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.util.Calendar;
-
-import com.xxdb.io.ExtendedDataInput;
 
 /**
  * 
@@ -33,12 +33,12 @@ public class BasicTime extends BasicInt{
 	
 	@Override
 	public DATA_CATEGORY getDataCategory() {
-		return Entity.DATA_CATEGORY.TEMPORAL;
+		return DATA_CATEGORY.TEMPORAL;
 	}
 
 	@Override
 	public DATA_TYPE getDataType() {
-		return Entity.DATA_TYPE.DT_TIME;
+		return DATA_TYPE.DT_TIME;
 	}
 	
 	public LocalTime getTime(){

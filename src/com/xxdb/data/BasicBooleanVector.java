@@ -38,7 +38,7 @@ public class BasicBooleanVector extends AbstractVector{
 	}
 
 	static byte[] convert(boolean[] b){
-		byte[] ret = new byte[]{};
+		byte[] ret = new byte[b.length];
 		for (int i = 0;i < b.length;i++) {
 			ret[i] = (byte)(b[i] ? 0x01 : 0x00);
 		}

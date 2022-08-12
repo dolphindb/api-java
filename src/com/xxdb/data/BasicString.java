@@ -1,7 +1,9 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.temporal.Temporal;
+
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -13,7 +15,8 @@ import com.xxdb.io.ExtendedDataOutput;
 
 public class BasicString extends AbstractScalar implements Comparable<BasicString>{
 	private String value;
-	private boolean isBlob;
+	private boolean isBlob = false;
+	private byte[] blobValue;
 
 	public BasicString(String value){
 		this.value = value;
@@ -21,8 +24,20 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 	}
 
 	public BasicString(String value,boolean blob){
-		this.value = value;
+		if (blob)
+			blobValue = value.getBytes(StandardCharsets.UTF_8);
+		else
+			this.value = value;
 		this.isBlob = blob;
+	}
+
+	public BasicString(byte[] value, boolean isBlob){
+		if (isBlob){
+			this.blobValue = value;
+		}else {
+			this.value = new String(value, StandardCharsets.UTF_8);
+		}
+		this.isBlob = isBlob;
 	}
 
 	public BasicString(ExtendedDataInput in) throws IOException{
@@ -31,29 +46,49 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 	}
 
 	public BasicString(ExtendedDataInput in, boolean blob) throws IOException{
-		this.isBlob = blob;
-		if(!blob)
-			value = in.readString();
+		if (blob)
+			this.blobValue = in.readBlob();
 		else
-			value = in.readBlob();
+			this.value = in.readString();
+		this.isBlob = blob;
 	}
 
 	public String getString(){
+		if (isBlob)
+			return new String(blobValue, StandardCharsets.UTF_8);
 		return value;
+	}
+
+	public byte[] getBytes(){
+		if (isBlob)
+			return blobValue;
+		else
+			throw new RuntimeException("The value must be a string scalar. ");
+
 	}
 	
 	protected void setString(String value){
-		this.value = value;
+		if (isBlob)
+			this.blobValue = value.getBytes(StandardCharsets.UTF_8);
+		else
+			this.value = value;
 	}
 	
 	@Override
 	public boolean isNull() {
-		return  value.isEmpty();
+		if (isBlob)
+			return blobValue.length == 0;
+		else
+			return value.length() == 0;
+
 	}
 	
 	@Override
 	public void setNull() {
-		value = "";
+		if (isBlob)
+			blobValue = new byte[0];
+		else
+			value = "";
 	}
 
 	@Override
@@ -82,18 +117,57 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 	public boolean equals(Object o){
 		if(! (o instanceof BasicString) || o == null)
 			return false;
-		else
-			return value.equals(((BasicString)o).value);
+		else{
+			if (isBlob != ((BasicString)o).isBlob)
+				return false;
+			if (isBlob)
+			{
+				byte[] oValue = ((BasicString)o).blobValue;
+				if (blobValue.length != oValue.length)
+					return false;
+				else
+				{
+					for(int i = 0; i < blobValue.length; ++i)
+					{
+						if (blobValue[i] != oValue[i])
+							return false;
+					}
+				}
+			}
+			else
+				return value.equals(((BasicString)o).value);
+		}
+		return true;
 	}
 	
 	@Override
 	public int hashCode(){
+		if (isBlob)
+		{
+			StringBuilder stringBuilder = new StringBuilder();
+			for(int i = 0; i < blobValue.length; ++i)
+			{
+				stringBuilder.append((char)blobValue[i]);
+			}
+			return stringBuilder.toString().hashCode();
+		}
+
 		return value.hashCode();
 	}
 	
 	@Override
 	public int hashBucket(int buckets){
-		return hashBucket(value, buckets);
+		if (isBlob)
+		{
+			StringBuilder stringBuilder = new StringBuilder();
+			for (int i = 0; i < blobValue.length; ++i)
+			{
+				stringBuilder.append((char)blobValue[i]);
+			}
+			return hashBucket(stringBuilder.toString(), buckets);
+		}
+		else
+			return hashBucket(this.value, buckets);
 	}
 
 	@Override
@@ -104,7 +178,7 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 
 	public static int hashBucket(String str, int buckets){
 		int length = str.length();
-		
+
 		//check utf8 bytes
 		int bytes = 0;
 		for(int i=0; i<length; ++i){
@@ -116,35 +190,35 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 			else
 				bytes += 3;
 		}
-		
+
 		//calculate murmur32 hash
 		int h =bytes;
 		if(bytes == length){
 			int length4 = bytes / 4;
-		    for (int i = 0; i < length4; i++) {
-		        final int i4 = i * 4;
-		        int k = (str.charAt(i4) & 0xff) + ((str.charAt(i4+1) & 0xff) << 8)
-		                + ((str.charAt(i4+2) & 0xff) << 16) + ((str.charAt(i4+3) & 0xff) << 24);
-		        k *= 0x5bd1e995;
-		        k ^= k >>> 24;
-		        k *= 0x5bd1e995;
-		        h *= 0x5bd1e995;
-		        h ^= k;
-		    }
-		    // Handle the last few bytes of the input array
-		    switch (bytes % 4) {
-		        case 3:
-		            h ^= (str.charAt((bytes & ~3) + 2) & 0xff) << 16;
-		        case 2:
-		            h ^= (str.charAt((bytes & ~3) + 1) & 0xff) << 8;
-		        case 1:
-		            h ^= str.charAt(bytes & ~3) & 0xff;
-		            h *= 0x5bd1e995;
-		    }
+			for (int i = 0; i < length4; i++) {
+				final int i4 = i * 4;
+				int k = (str.charAt(i4) & 0xff) + ((str.charAt(i4+1) & 0xff) << 8)
+						+ ((str.charAt(i4+2) & 0xff) << 16) + ((str.charAt(i4+3) & 0xff) << 24);
+				k *= 0x5bd1e995;
+				k ^= k >>> 24;
+				k *= 0x5bd1e995;
+				h *= 0x5bd1e995;
+				h ^= k;
+			}
+			// Handle the last few bytes of the input array
+			switch (bytes % 4) {
+				case 3:
+					h ^= (str.charAt((bytes & ~3) + 2) & 0xff) << 16;
+				case 2:
+					h ^= (str.charAt((bytes & ~3) + 1) & 0xff) << 8;
+				case 1:
+					h ^= str.charAt(bytes & ~3) & 0xff;
+					h *= 0x5bd1e995;
+			}
 
-		    h ^= h >>> 13;
-		    h *= 0x5bd1e995;
-		    h ^= h >>> 15;
+			h ^= h >>> 13;
+			h *= 0x5bd1e995;
+			h ^= h >>> 15;
 		}
 		else{
 			int k=0;
@@ -158,12 +232,12 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 					k +=  (0xc0 | (0x1f & (c >> 6))) << (8*cursor++);
 					if(cursor == 4){
 						k *= 0x5bd1e995;
-				        k ^= k >>> 24;
-				        k *= 0x5bd1e995;
-				        h *= 0x5bd1e995;
-				        h ^= k;
-				        k = 0;
-				        cursor = 0;
+						k ^= k >>> 24;
+						k *= 0x5bd1e995;
+						h *= 0x5bd1e995;
+						h ^= k;
+						k = 0;
+						cursor = 0;
 					}
 					k +=  (0x80 | (0x3f & c)) << (8*cursor++);
 				}
@@ -171,43 +245,43 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 					k +=  (0xe0 | (0x0f & (c >> 12))) << (8*cursor++);
 					if(cursor == 4){
 						k *= 0x5bd1e995;
-				        k ^= k >>> 24;
-				        k *= 0x5bd1e995;
-				        h *= 0x5bd1e995;
-				        h ^= k;
-				        k = 0;
-				        cursor = 0;
+						k ^= k >>> 24;
+						k *= 0x5bd1e995;
+						h *= 0x5bd1e995;
+						h ^= k;
+						k = 0;
+						cursor = 0;
 					}
 					k +=  (0x80 | (0x3f & (c >> 6))) << (8*cursor++);
 					if(cursor == 4){
 						k *= 0x5bd1e995;
-				        k ^= k >>> 24;
-				        k *= 0x5bd1e995;
-				        h *= 0x5bd1e995;
-				        h ^= k;
-				        k = 0;
-				        cursor = 0;
+						k ^= k >>> 24;
+						k *= 0x5bd1e995;
+						h *= 0x5bd1e995;
+						h ^= k;
+						k = 0;
+						cursor = 0;
 					}
 					k +=  (0x80 | (0x3f & c)) << (8*cursor++);
 				}
 				if(cursor == 4){
 					k *= 0x5bd1e995;
-			        k ^= k >>> 24;
-			        k *= 0x5bd1e995;
-			        h *= 0x5bd1e995;
-			        h ^= k;
-			        k = 0;
-			        cursor = 0;
+					k ^= k >>> 24;
+					k *= 0x5bd1e995;
+					h *= 0x5bd1e995;
+					h ^= k;
+					k = 0;
+					cursor = 0;
 				}
 			}
 			if(cursor > 0){
 				h ^= k;
 				h *= 0x5bd1e995;
 			}
-			
-		    h ^= h >>> 13;
-		    h *= 0x5bd1e995;
-		    h ^= h >>> 15;
+
+			h ^= h >>> 13;
+			h *= 0x5bd1e995;
+			h ^= h >>> 15;
 		}
 		if(h>=0)
 			return h % buckets;
@@ -228,13 +302,17 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 		if(!blob) {
 			out.writeString(value);
 		} else {
-			out.writeBlob(value);
+			out.writeBlob(blobValue);
 		}
 
 	}
 
 	@Override
 	public int compareTo(BasicString o) {
-		return value.compareTo(o.value);
+		if (isBlob)
+			return new String(blobValue, StandardCharsets.UTF_8).compareTo(o.value);
+		else
+			return value.compareTo(o.value);
+
 	}
 }

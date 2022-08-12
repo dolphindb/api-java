@@ -1,6 +1,8 @@
 package com.xxdb;
 
 import java.util.List;
+import java.util.concurrent.Semaphore;
+
 import com.xxdb.data.Entity;
 
 public class BasicDBTask implements DBTask{
@@ -9,16 +11,42 @@ public class BasicDBTask implements DBTask{
 	private DBConnection conn;
 	private Entity result = null;
 	private String errMsg = null;
-	private boolean successful = true;
+	private boolean successful = false;
+	private Semaphore semaphore = new Semaphore(1);
+
+	public void waitFor(){
+		try {
+			semaphore.acquire();
+		}catch (InterruptedException e){
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
+	public void finish(){
+		semaphore.release();
+	}
 
 	public BasicDBTask(String script, List<Entity> args){
 		this.script = script;
 		this.args = args;
+		try {
+			semaphore.acquire();
+		}catch (InterruptedException e){
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
 	}
 	
 	public BasicDBTask(String script){
 		this.script = script;
 		this.args = null;
+		try {
+			semaphore.acquire();
+		}catch (InterruptedException e){
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
@@ -58,5 +86,19 @@ public class BasicDBTask implements DBTask{
 	@Override
 	public boolean isSuccessful() {
 		return successful;
+	}
+
+	@Override
+	public String getScript() {
+		return script;
+	}
+
+	@Override
+	public boolean isFinished(){
+		if (successful || errMsg.length() > 0){
+			return true;
+		}else {
+			return false;
+		}
 	}
 }
