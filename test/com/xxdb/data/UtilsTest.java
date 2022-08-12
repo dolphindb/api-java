@@ -119,7 +119,8 @@ public class UtilsTest {
 
     @Test
     public void test_parseTimeStamp(){
-        assertEquals("1970-01-01T23:59:59",Utils.parseNanoTimestamp(-1000000000L).toString());
+
+        assertEquals("1969-12-31T23:59:59",Utils.parseNanoTimestamp(-1000000000L).toString());
         assertEquals("1969-12-31T23:59:59",Utils.parseTimestamp(-1000L).toString());
         assertEquals("1972-03-01",Utils.parseDate(790).toString());
     }
@@ -135,6 +136,7 @@ public class UtilsTest {
         assertEquals(Entity.DATA_CATEGORY.MIXED,Utils.getCategory(Entity.DATA_TYPE.DT_ANY));
         assertEquals(Entity.DATA_CATEGORY.NOTHING,Utils.getCategory(Entity.DATA_TYPE.DT_VOID));
         assertEquals(Entity.DATA_CATEGORY.SYSTEM,Utils.getCategory(Entity.DATA_TYPE.DT_BLOB));
+        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,Utils.getCategory(Entity.DATA_TYPE.DT_INT));
     }
 
     @Test
@@ -178,6 +180,7 @@ public class UtilsTest {
         assertEquals(format,Utils.toDate(conn.run("nanotimestamp(now());")).toString());
         assertEquals(format,Utils.toDate(conn.run("timestamp(now());")).toString());
         assertEquals("[1970.01.01,1971.02.02,1973.03.03]",Utils.toDate(conn.run("nanotimestamp(1970.01.01 1971.02.02 1973.03.03)")).getString());
+        assertEquals("[1970.01.01,1971.02.02,1973.03.03]",Utils.toDate(conn.run("timestamp(1970.01.01 1971.02.02 1973.03.03)")).getString());
     }
 
     @Test

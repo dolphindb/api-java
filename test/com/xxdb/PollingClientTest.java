@@ -51,7 +51,7 @@ public class PollingClientTest {
     public void clear_env() throws IOException {
         conn.run("a = getStreamingStat().pubTables\n" +
                 "for(i in a){\n" +
-                "\tstopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)\n" +
+                "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
                 "}");
         conn.run("def getAllShare(){\n" +
                 "\treturn select name from objs(true) where shared=1\n" +
@@ -71,6 +71,17 @@ public class PollingClientTest {
                 "\t}catch(ex1){}\n" +
                 "}\n" +
                 "clearShare()");
+    }
+    public void wait_data(String table_name,int data_row) throws IOException, InterruptedException {
+        BasicInt row_num;
+        while(true){
+            row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
+//            System.out.println(row_num.getInt());
+            if(row_num.getInt() == data_row){
+                break;
+            }
+            Thread.sleep(100);
+        }
     }
     @Before
     public void setUp() throws IOException {
@@ -124,7 +135,7 @@ public class PollingClientTest {
         ArrayList<IMessage> msgs = poller1.poll(1000,-10);
     }
 
-    @Test
+    @Test(timeout = 120000)
     public  void test_size() throws IOException {
         TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades","subtrades",-1,true);
         ArrayList<IMessage> msgs;
@@ -224,7 +235,7 @@ public class PollingClientTest {
         client.unsubscribe(HOST, PORT, "Trades","subtrades");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public  void test_size_resubscribe() throws IOException {
         for (int j=0;j<10;j++) {
             TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades", "subtrades1", -1, true);
@@ -259,7 +270,7 @@ public class PollingClientTest {
             client.unsubscribe(HOST, PORT, "Trades", "subtrades2");
         }
     }
-    @Test
+    @Test(timeout = 120000)
     public void test_subscribe_admin_login() throws IOException {
         TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades", "subtrades1", -1, true,null,"admin","123456");
         ArrayList<IMessage> msgs1;
@@ -281,7 +292,7 @@ public class PollingClientTest {
 
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_subscribe_admin() throws IOException, InterruptedException {
         TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"admin","123456");
         ArrayList<IMessage> msgs1;
@@ -291,7 +302,7 @@ public class PollingClientTest {
         assertEquals(5000, msgs1.size());
         client.unsubscribe(HOST, PORT, "Trades", "subTread1");
     }
-    @Test
+    @Test(timeout = 120000)
     public void test_subscribe_other_user() throws IOException, InterruptedException {
         conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
                 "rpc(getControllerAlias(),create_user);");
@@ -303,7 +314,7 @@ public class PollingClientTest {
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_subscribe_other_user_unallow() throws IOException, InterruptedException {
         conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
                 "rpc(getControllerAlias(),create_user);" +
@@ -319,7 +330,7 @@ public class PollingClientTest {
         }
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_subscribe_other_some_user() throws IOException, InterruptedException {
         conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};try{deleteUser(`test2)}catch(ex){};try{deleteUser(`test3)}catch(ex){};createUser(`test1, '123456');createUser(`test2, '123456');createUser(`test3, '123456');};"+
                 "rpc(getControllerAlias(),create_user);" +
@@ -349,7 +360,7 @@ public class PollingClientTest {
         client.unsubscribe(HOST, PORT, "Trades", "subTread1");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_subscribe_one_user_some_table() throws IOException, InterruptedException {
         conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
                 "rpc(getControllerAlias(),create_user);" +

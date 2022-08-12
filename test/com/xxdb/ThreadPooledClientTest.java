@@ -149,7 +149,7 @@ public class ThreadPooledClientTest {
     public void test_subscribe_ex1() throws Exception {
             client.subscribe(HOST, PORT, "Trades", "subtrades", MessageHandler_handler);
             conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(10000);
+            Thread.sleep(20000);
             BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
             BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
             client.unsubscribe(HOST, PORT, "Trades", "subtrades");
@@ -450,7 +450,7 @@ public class ThreadPooledClientTest {
         }
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st1.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st2.append!(t)");
-        Thread.sleep(10000);
+        Thread.sleep(20000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(20000,row_num.getInt());
         client.unsubscribe(HOST,PORT,"tmp_st1","subTread1");

@@ -2839,11 +2839,11 @@ public class DBConnectionTest {
                 }
             }
         }
-//        Timer timer = new Timer("Timer");
-//        TimerTask rec = new reconnect();
-//        timer.scheduleAtFixedRate(rec, 0L, 1000L);
-//        Thread.sleep(5000L);
-//        timer.cancel();
+        Timer timer = new Timer("Timer");
+        TimerTask rec = new reconnect();
+        timer.scheduleAtFixedRate(rec, 0L, 1000L);
+        Thread.sleep(5000L);
+        timer.cancel();
     }
 
     @Test

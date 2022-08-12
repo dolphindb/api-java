@@ -7,12 +7,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.nio.ByteBuffer;
+import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class BasicIntTest {
     private DBConnection conn;
@@ -74,5 +72,75 @@ public class BasicIntTest {
             assertEquals(datas[i],res.get(i).getNumber());
         }
         assertEquals(7,res.rows());
+    }
+
+    @Test
+    public void test_BasicInt() throws Exception {
+        BasicInt bi = new BasicInt(Integer.MIN_VALUE);
+        assertNull(bi.getNumber());
+        assertFalse(bi.equals(null));
+    }
+
+    @Test(expected = Exception.class)
+    public void test_BasicIntMatrix_ListNull() throws Exception {
+        BasicIntMatrix bim = new BasicIntMatrix(1,1,null);
+    }
+
+    @Test(expected = Exception.class)
+    public void test_BasicIntMatrix_arrayNull() throws Exception {
+        List<int[]> list = new ArrayList<>();
+        list.add(new int[]{8,11});
+        list.add(null);
+        BasicIntMatrix bim = new BasicIntMatrix(2,2,list);
+    }
+
+    @Test
+    public void test_BasicIntMatrix() throws Exception {
+        List<int[]> list = new ArrayList<>();
+        list.add(new int[]{1,4,5});
+        list.add(new int[]{Integer.MIN_VALUE,0,Integer.MAX_VALUE});
+        list.add(new int[]{5,2,1});
+        BasicIntMatrix bim = new BasicIntMatrix(3,3,list);
+        assertTrue(bim.isNull(0,1));
+        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,bim.getDataCategory());
+        assertEquals(BasicInt.class,bim.getElementClass());
+        bim.setNull(1,1);
+        assertTrue(bim.isNull(1,1));
+    }
+
+    @Test
+    public void test_BasicIntVector(){
+        List<Integer> list = new ArrayList<>();
+        list.add(5);
+        list.add(7);
+        list.add(8);
+        list.add(Integer.MIN_VALUE);
+        list.add(null);
+        BasicIntVector biv = new BasicIntVector(list);
+        assertEquals(BasicInt.class,biv.getElementClass());
+        assertEquals("[5,7,8,,,5,7,8]",biv.getSubVector(new int[]{0,1,2,3,4,0,1,2}).getString());
+    }
+
+    @Test
+    public void test_BasicIntVector_wvtb() throws IOException {
+        List<Integer> list = new ArrayList<>();
+        list.add(5);
+        list.add(7);
+        list.add(8);
+        list.add(Integer.MIN_VALUE);
+        BasicIntVector biv = new BasicIntVector(list);
+        ByteBuffer bb = biv.writeVectorToBuffer(ByteBuffer.allocate(16));
+        assertEquals("[0, 0, 0, 5, 0, 0, 0, 7, 0, 0, 0, 8, -128, 0, 0, 0]",Arrays.toString(bb.array()));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicIntVector_asof_error(){
+        List<Integer> list = new ArrayList<>();
+        list.add(5);
+        list.add(7);
+        list.add(8);
+        list.add(Integer.MIN_VALUE);
+        BasicIntVector biv = new BasicIntVector(list);
+        biv.asof(new BasicComplex(1.9,8.5));
     }
 }

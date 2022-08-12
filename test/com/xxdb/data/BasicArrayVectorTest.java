@@ -4,12 +4,15 @@ import com.xxdb.DBConnection;
 import com.xxdb.io.*;
 import org.junit.Test;
 
+import java.awt.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -953,6 +956,16 @@ public class BasicArrayVectorTest {
         l.add(0,v);
         l.add(1,v);
         BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("1.1+2.5i",obj.get(0).getString());
+        assertEquals("2.6+7.9i",obj.get(1).getString());
+        Map<String,Entity> map = new HashMap<>();
+        map.put("complexVector",obj);
+        conn.upload(map);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("complexVector");
+        assertEquals(new BasicComplex(1.1,2.5),bav.getVectorValue(0).get(0));
+        assertEquals(new BasicComplex(2.6,7.9),bav.getVectorValue(0).get(1));
+        assertEquals(new BasicComplex(1.1,2.5),bav.getVectorValue(1).get(0));
+        assertEquals(new BasicComplex(2.6,7.9),bav.getVectorValue(1).get(1));
     }
     @Test
     public void test_BasicArrayVector_point() throws Exception{
@@ -967,6 +980,16 @@ public class BasicArrayVectorTest {
         l.add(0,v);
         l.add(1,v);
         BasicArrayVector obj = new BasicArrayVector(l);
+        assertEquals("(0.8, 1.9)",obj.get(0).getString());
+        assertEquals("(4.7, 6.2)",obj.get(1).getString());
+        Map<String,Entity> map = new HashMap<>();
+        map.put("complexVector",obj);
+        conn.upload(map);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("complexVector");
+        assertEquals(new BasicPoint(0.8,1.9),bav.getVectorValue(0).get(0));
+        assertEquals(new BasicPoint(4.7,6.2),bav.getVectorValue(0).get(1));
+        assertEquals(new BasicPoint(0.8,1.9),bav.getVectorValue(1).get(0));
+        assertEquals(new BasicPoint(4.7,6.2),bav.getVectorValue(1).get(1));
     }
     @Test
     public void test_Function_get() throws Exception{
@@ -1053,7 +1076,7 @@ public class BasicArrayVectorTest {
             l.add(i,v);
         }
         BasicArrayVector arryDate = new BasicArrayVector(l);
-        System.out.println(arryDate.getString(17));
+        assertEquals("[1970.01.02,1970.01.03,1970.01.04,...]",arryDate.getString(17));
         ByteBuffer bb = ByteBuffer.allocate(time);
         System.out.println(bb.remaining());
         AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(25,15);
