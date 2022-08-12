@@ -1,18 +1,24 @@
 package com.xxdb.data;
 
 import com.xxdb.DBConnection;
+import com.xxdb.io.BigEndianDataInputStream;
+import com.xxdb.io.ExtendedDataInput;
+import com.xxdb.io.Long2;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class BasicInt128Test {
     private DBConnection conn;
@@ -86,5 +92,136 @@ public class BasicInt128Test {
             assertEquals(res128.get(i).toString(),res.get(i).toString());
         }
         assertEquals(6,res.rows());
+    }
+
+    @Test
+    public void test_BasicInt128(){
+        BasicInt128 bi128 = new BasicInt128(75L,10L);
+        assertEquals(10L,bi128.getLong2().low);
+        assertEquals(75L,bi128.getLong2().high);
+        assertFalse(bi128.equals(new BasicDuration(Entity.DURATION.MONTH,Integer.MAX_VALUE)));
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void test_BasicInt128_formString_false(){
+        BasicInt128.fromString("130d6d5a0536c99ac7f9a0");
+    }
+
+    @Test
+    public void test_BasicInt128Vector_list(){
+        List<Long2> list = new ArrayList<>();
+        list.add(new Long2(980L,5L));
+        list.add(null);
+        list.add(new Long2(2022L,0L));
+        BasicInt128Vector bi128v = new BasicInt128Vector(list);
+        assertTrue(bi128v.isNull(1));
+        bi128v.setInt128(1,1566L,220L);
+        assertEquals("[000000000000061e00000000000000dc" +
+                ",00000000000007e60000000000000000," +
+                "00000000000003d40000000000000005]",bi128v.getSubVector(new int[]{1,2,0}).getString());
+        assertEquals(Entity.DATA_CATEGORY.BINARY,bi128v.getDataCategory());
+        assertEquals(BasicInt128.class,bi128v.getElementClass());
+    }
+
+    @Test
+    public void test_BasicInt128Vector_array() throws Exception {
+        Long2[] arr = new Long2[]{new Long2(888L,800L),new Long2(220L,25L),null,new Long2(9000L,650L)};
+        BasicInt128Vector bi128v = new BasicInt128Vector(arr,false);
+        assertEquals("00000000000003780000000000000320",bi128v.get(0).getString());
+        assertEquals("00000000000000000000000000000000",bi128v.get(2).getString());
+    }
+
+    @Test
+    public void test_BasicInt128Vector_df_in() throws IOException {
+        ExtendedDataInput in = new BigEndianDataInputStream(new InputStream() {
+            @Override
+            public int read() throws IOException {
+                return 2;
+            }
+        });
+        BasicInt128Vector bi128v = new BasicInt128Vector(Entity.DATA_FORM.DF_VECTOR,in);
+        assertEquals("02020202020202020202020202020202",bi128v.get(1).getString());
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicInt128Vector_asof(){
+        Long2[] arr = new Long2[]{new Long2(888L,800L),new Long2(220L,25L),null,new Long2(9000L,650L)};
+        BasicInt128Vector bi128v = new BasicInt128Vector(arr,false);
+        bi128v.asof(new BasicInt128(55L,11L));
+    }
+
+    @Test
+    public void test_BasicInt128Vector_wvtb_littleEndian() throws IOException {
+        Long2[] arr = new Long2[]{new Long2(888L,800L),new Long2(220L,25L),null,new Long2(9000L,650L)};
+        BasicInt128Vector bi128v = new BasicInt128Vector(arr,false);
+        ByteBuffer bb1 = ByteBuffer.allocate(64);
+        bb1.order(ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer bb2 = bi128v.writeVectorToBuffer(bb1);
+        assertEquals("[32, 3, 0, 0, 0, 0, 0, 0, " +
+                "120, 3, 0, 0, 0, 0, 0, 0, 25, 0, 0, 0, " +
+                "0, 0, 0, 0, -36, 0, 0, 0, 0, 0, 0, 0, " +
+                "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, " +
+                "0, 0, 0, 0, -118, 2, 0, 0, 0, 0, 0, " +
+                "0, 40, 35, 0, 0, 0, 0, 0, 0]",Arrays.toString(bb2.array()));
+    }
+
+    @Test
+    public void test_BasicInt128Vector_wvtb_BigEndian() throws IOException {
+        Long2[] arr = new Long2[]{new Long2(888L,800L),new Long2(220L,25L),null,new Long2(9000L,650L)};
+        BasicInt128Vector bi128v = new BasicInt128Vector(arr,false);
+        ByteBuffer bb1 = ByteBuffer.allocate(64);
+        bb1.order(ByteOrder.BIG_ENDIAN);
+        ByteBuffer bb2 = bi128v.writeVectorToBuffer(bb1);
+        assertEquals("[0, 0, 0, 0, 0, 0, 3, 120, 0, " +
+                "0, 0, 0, 0, 0, 3, 32, 0, 0, 0, 0, 0, 0, 0, " +
+                "-36, 0, 0, 0, 0, 0, 0, 0, 25, 0, 0, 0, 0, " +
+                "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, " +
+                "0, 0, 0, 0, 35, 40, 0, 0, 0, 0, 0, 0, 2, " +
+                "-118]",Arrays.toString(bb2.array()));
+    }
+
+    @Test
+    public void test_BasicInt128Vector_serialize_LittleEndian() throws IOException {
+        Long2[] arr = new Long2[]{new Long2(888L,800L),new Long2(220L,25L),null,new Long2(9000L,650L)};
+        BasicInt128Vector bi128v = new BasicInt128Vector(arr,false);
+        AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(4,1);
+        ByteBuffer bb = ByteBuffer.allocate(48);
+        bb.order(ByteOrder.LITTLE_ENDIAN);
+        assertEquals(48,bi128v.serialize(0,0,3,numElementAndPartial,bb));
+        assertEquals("[32, 3, 0, 0, 0, 0, 0, 0, 120, 3, 0, 0," +
+                " 0, 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, -36, 0, 0, 0, " +
+                "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, " +
+                "0, 0, 0]",Arrays.toString(bb.array()));
+    }
+
+    @Test
+    public void test_BasicInt128Vector_serialize_BigEndian() throws IOException {
+        Long2[] arr = new Long2[]{new Long2(888L,800L),new Long2(220L,25L),null,new Long2(9000L,650L)};
+        BasicInt128Vector bi128v = new BasicInt128Vector(arr,false);
+        AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(4,1);
+        ByteBuffer bb = ByteBuffer.allocate(48);
+        bb.order(ByteOrder.BIG_ENDIAN);
+        assertEquals(48,bi128v.serialize(0,0,3,numElementAndPartial,bb));
+        assertEquals("[0, 0, 0, 0, 0, 0, 3, 120, 0, 0, 0, 0, 0, 0, 3, 32, " +
+                "0, 0, 0, 0, 0, 0, 0, -36, 0, 0, 0, 0, 0, 0, 0, 25, 0, 0, 0, 0, " +
+                "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]",Arrays.toString(bb.array()));
+    }
+
+    @Test
+    public void test_BasicInt128Vector_deserialize() throws IOException {
+        Long2[] arr = new Long2[]{new Long2(888L,800L),new Long2(220L,25L),null,new Long2(9000L,650L)};
+        BasicInt128Vector bi128v = new BasicInt128Vector(arr,false);
+        String str = bi128v.getString();
+        System.out.println(str);
+        ExtendedDataInput in = new BigEndianDataInputStream(new InputStream() {
+            @Override
+            public int read() throws IOException {
+                return 6;
+            }
+        });
+        bi128v.deserialize(1,3,in);
+        String str2 = bi128v.getString();
+        System.out.println(str2);
+        assertNotEquals(str,str2);
     }
 }

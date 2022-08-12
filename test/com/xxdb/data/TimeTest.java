@@ -821,6 +821,7 @@ public class TimeTest{
     public void test_BasicMinuteVector(){
         int[] array = new int[]{286,796,456,246,Integer.MIN_VALUE};
         BasicMinuteVector btv = new BasicMinuteVector(array,true);
+        assertNull(btv.getMinute(4));
         assertEquals(Entity.DATA_CATEGORY.TEMPORAL,btv.getDataCategory());
         assertEquals("04:06",btv.getMinute(3).toString());
         int[] indices = new int[]{0,2,1};
@@ -933,9 +934,14 @@ public class TimeTest{
         BasicNanoTimestampVector bnts = new BasicNanoTimestampVector(Entity.DATA_FORM.DF_VECTOR,5);
         long[] array = new long[]{23641343568000L,23995876902000L,24104786790000L,12013435579000L,Long.MIN_VALUE};
         BasicNanoTimestampVector btv = new BasicNanoTimestampVector(array,true);
+        assertNull(btv.getNanoTimestamp(4));
         bnts = btv;
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,bnts.getDataCategory());
+        assertEquals("[1970.01.01T03:20:13.435579000,1970.01.01T06:34:01.343568000," +
+                "1970.01.01T06:39:55.876902000,1970.01.01T06:41:44.786790000]",btv.getSubVector(new int[]{3,0,1,2}).getString());
         assertEquals(BasicNanoTimestamp.class,bnts.getElementClass());
-        assertNull(bnts.getNanoTimestamp(4));
+        btv.setNanoTimestamp(4,LocalDateTime.MIN);
+        assertEquals("1982-02-08T12:37:20",btv.getNanoTimestamp(4).toString());
         assertEquals("1970-01-01T06:41:44.786790",bnts.getNanoTimestamp(2).toString());
     }
 
@@ -1074,6 +1080,7 @@ public class TimeTest{
     public void test_BasicDateTimeVector_other(){
         int[] arr = new int[]{32245761,43556722,53367869};
         BasicDateTimeVector bdtv = new BasicDateTimeVector(arr,true);
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,bdtv.getDataCategory());
         assertEquals("[1971.09.10T16:24:29,1971.01.09T05:09:21,1971.05.20T03:05:22]",bdtv.getSubVector(new int[]{2,0,1}).getString());
     }
 }

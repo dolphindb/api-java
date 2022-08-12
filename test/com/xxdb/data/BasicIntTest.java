@@ -118,6 +118,7 @@ public class BasicIntTest {
         list.add(null);
         BasicIntVector biv = new BasicIntVector(list);
         assertEquals(BasicInt.class,biv.getElementClass());
+        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,biv.getDataCategory());
         assertEquals("[5,7,8,,,5,7,8]",biv.getSubVector(new int[]{0,1,2,3,4,0,1,2}).getString());
     }
 
@@ -142,5 +143,17 @@ public class BasicIntTest {
         list.add(Integer.MIN_VALUE);
         BasicIntVector biv = new BasicIntVector(list);
         biv.asof(new BasicComplex(1.9,8.5));
+    }
+
+    @Test
+    public void test_BasicIntVector_asof_normal(){
+        List<Integer> list = new ArrayList<>();
+        list.add(5);
+        list.add(7);
+        list.add(8);
+        list.add(Integer.MIN_VALUE);
+        BasicIntVector biv = new BasicIntVector(list);
+        assertEquals(3,biv.asof(new BasicInt(12)));
+        assertEquals(0,biv.asof(new BasicInt(6)));
     }
 }

@@ -86,4 +86,14 @@ public class BasicDoubleTest {
         assertEquals(0,bdv.asof(new BasicDouble(6.25)));
         bdv.asof(new BasicComplex(2.1,4.2));
     }
+
+    @Test
+    public void test_BasicDouble_get() throws Exception {
+        BasicDouble bd = new BasicDouble(5.73);
+        assertFalse(bd.equals(new BasicBoolean(true)));
+        assertNull(new BasicDouble(-Double.MAX_VALUE).getNumber());
+        assertEquals("1E-6",new BasicDouble(0.000001).getString());
+        assertEquals("1E6",new BasicDouble(1000000.0).getString());
+        assertEquals("Infinity",new BasicDouble(Double.POSITIVE_INFINITY).getString());
+    }
 }

@@ -124,6 +124,7 @@ public class BasicIPAddrTest {
         assertNull(BasicIPAddr.parseIP6("6e01:2a6e:b3b0:323a:745:1527:1537"));
         assertNull(BasicIPAddr.parseIP6("6e01:2a6e:b3b0:323a:745:1527:1537:801#"));
         assertEquals("1:2a6e:b3b0:323a:745:1527:1537:801",BasicIPAddr.parseIP6("::01:2a6e:b3b0:323a:745:1527:1537:801").getString());
+        assertNull(BasicIPAddr.parseIP6("::01:2a6e:b3b0:323a:74515271537801"));
     }
 
     @Test
@@ -145,6 +146,7 @@ public class BasicIPAddrTest {
         BasicIPAddrVector biav = new BasicIPAddrVector(list);
         BasicIPAddrVector biav3 = (BasicIPAddrVector) biav2.combine(biav);
         assertEquals("[0:6e:53a1:b6a1::8535:3f29,0:d:32c:264a::68f:258c]",biav3.getString());
-
     }
+
+
 }

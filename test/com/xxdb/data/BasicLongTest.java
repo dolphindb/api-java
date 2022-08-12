@@ -7,12 +7,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.nio.ByteBuffer;
+import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class BasicLongTest {
     private DBConnection conn;
@@ -75,5 +73,88 @@ public class BasicLongTest {
 
         }
         assertEquals(7,res.rows());
+    }
+
+    @Test
+    public void test_BasicLong() throws Exception {
+        BasicLong bl = new BasicLong(9000L);
+        assertEquals("9000",bl.getJsonString());
+        assertNull(new BasicLong(Long.MIN_VALUE).getNumber());
+        assertEquals("",new BasicLong(Long.MIN_VALUE).getString());
+        assertFalse(bl.equals(null));
+    }
+
+    @Test
+    public void test_BasicLongMatrix(){
+        BasicLongMatrix blm = new BasicLongMatrix(2,2);
+        blm.setLong(0,0,Long.MAX_VALUE);
+        blm.setLong(0,1,7420L);
+        blm.setLong(1,0,9820L);
+        blm.setLong(1,1,Long.MIN_VALUE);
+        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,blm.getDataCategory());
+        assertEquals(BasicLong.class,blm.getElementClass());
+        assertTrue(blm.isNull(1,1));
+        assertFalse(blm.isNull(1,0));
+        blm.setNull(0,0);
+        assertTrue(blm.isNull(0,0));
+    }
+
+    @Test(expected = Exception.class)
+    public void test_BasicLongMatrix_listNull() throws Exception {
+        BasicLongMatrix blm = new BasicLongMatrix(2,2,null);
+    }
+
+    @Test(expected = Exception.class)
+    public void test_BasicLongMatrix_arrNull() throws Exception {
+        List<long[]> list = new ArrayList<>();
+        list.add(new long[]{7420L,9810L,9820L});
+        list.add(new long[]{659L,810L,990L});
+        list.add(null);
+        BasicLongMatrix blm = new BasicLongMatrix(3,3,list);
+    }
+
+    @Test
+    public void test_BasicLongVector(){
+        List<Long> list = new ArrayList<>();
+        list.add(855L);
+        list.add(865L);
+        list.add(null);
+        list.add(888L);
+        BasicLongVector blv = new BasicLongVector(list);
+        assertEquals("[888,865,855]",blv.getSubVector(new int[]{3,1,0}).getString());
+        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,blv.getDataCategory());
+        assertEquals(BasicLong.class,blv.getElementClass());
+    }
+
+    @Test
+    public void test_BasicLongVector_wvtb() throws IOException {
+        List<Long> list = new ArrayList<>();
+        list.add(855L);
+        list.add(865L);
+        list.add(888L);
+        BasicLongVector blv = new BasicLongVector(list);
+        ByteBuffer bb = blv.writeVectorToBuffer(ByteBuffer.allocate(24));
+        assertEquals("[0, 0, 0, 0, 0, 0, 3, 87, 0, 0, 0, 0, " +
+                "0, 0, 3, 97, 0, 0, 0, 0, 0, 0, 3, 120]",Arrays.toString(bb.array()));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicLongVector_asof_error(){
+        List<Long> list = new ArrayList<>();
+        list.add(855L);
+        list.add(865L);
+        list.add(888L);
+        BasicLongVector blv = new BasicLongVector(list);
+        blv.asof(new BasicComplex(5.75,7.37));
+    }
+
+    @Test
+    public void test_BasicLongVector_asof_normal(){
+        List<Long> list = new ArrayList<>();
+        list.add(855L);
+        list.add(865L);
+        list.add(888L);
+        BasicLongVector blv = new BasicLongVector(list);
+        blv.asof(new BasicLong(860L));
     }
 }

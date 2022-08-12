@@ -562,6 +562,7 @@ public class AbstractTest{
             }
         }
         BasicVector bv = new BasicVector(Entity.DATA_FORM.DF_VECTOR);
+        bv.setCompressedMethod(Vector.COMPRESS_LZ4);
         bv.setCompressedMethod(3);
     }
 
@@ -651,7 +652,16 @@ public class AbstractTest{
                 System.out.println(b);
             }
         });
-       bv.writeCompressed(output);
+        bv.writeCompressed(output);
+        assertEquals(16,BasicVector.getUnitLength(Entity.DATA_TYPE.DT_POINT));
         BasicVector.getUnitLength(Entity.DATA_TYPE.DT_ANY);
+    }
+
+    @Test
+    public void test_AbstractVector_CheckCompressedMethod(){
+        assertFalse(AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.DT_POINT_ARRAY,Vector.COMPRESS_DELTA));
+        assertTrue(AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.DT_ANY,Vector.COMPRESS_LZ4));
+        assertTrue(AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.DT_INT,Vector.COMPRESS_DELTA));
+        assertFalse(AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.DT_SYMBOL,2));
     }
 }
