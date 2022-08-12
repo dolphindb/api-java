@@ -10,6 +10,7 @@ import com.xxdb.performance.write.tiny.EntrustWriter;
 import com.xxdb.performance.write.tiny.SnapshotWriter;
 import com.xxdb.performance.write.tiny.TickWriter;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -49,8 +50,8 @@ public class PerformanceWriteTest {
     public static String snapshotPath = bundle.getString("P_DATA_DIR");
     public static String snapshotName = bundle.getString("SNAPSHOT_NAME");
 
-    @Before
-    public void setUp() throws IOException, InterruptedException {
+    @BeforeClass
+    public static void setUp() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(ip,port,"admin","123456");
         //1.create database

@@ -8,6 +8,7 @@ import com.xxdb.data.Scalar;
 import com.xxdb.performance.read.Utils;
 import com.xxdb.performance.stream.Sub;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -32,8 +33,8 @@ public class PerformanceSubTest {
     public static String snapshotPath = bundle.getString("P_DATA_DIR");
     public static String snapshotName = bundle.getString("SNAPSHOT_NAME");
 
-    @Before
-    public void setUp() throws IOException, InterruptedException {
+    @BeforeClass
+    public static void setUp() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(ip,port,"admin","123456");
         //1.create database
