@@ -23,7 +23,7 @@ public class PerformanceSubTest {
     public static String ip = bundle.getString("HOST");
     public static int port = Integer.parseInt(bundle.getString("PORT"));
     public static int clientPort = 31010;
-    public static String clientIp = bundle.getString("HOST");
+    public static String clientIp = "172.17.0.1";
     public static String[] nodeList = bundle.getString("SITES").split(",");
     public static int subPort = 31999;
     public static String entrustPath = bundle.getString("P_DATA_DIR");

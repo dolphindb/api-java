@@ -30,7 +30,7 @@ public class PerformanceWriteTest {
     public static int port = Integer.parseInt(bundle.getString("PORT"));
     private static String user = "admin";
     private static String password = "123456";
-    public static String clientIp = bundle.getString("HOST");
+    public static String clientIp = "172.17.0.1";
     public static int clientPort = 31010;
     public static String[] nodeList = bundle.getString("SITES").split(",");
     public static int queryNum;
