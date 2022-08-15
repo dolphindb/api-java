@@ -8,6 +8,7 @@ import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 import com.xxdb.performance.read.QueryThread;
 import com.xxdb.performance.read.Utils;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -127,8 +128,8 @@ public class PerformanceReadTest {
                 false, false, null, 100, 0.001f, 1, "threadNum");
         result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
     }
-    @Before
-    public void setUp() throws IOException, InterruptedException {
+    @BeforeClass
+    public static void setUp() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(ip,port,"admin","123456");
         //1.create database

@@ -775,8 +775,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
             }
         } catch (Exception ex) {
         }
-        mutithreadTableWriter1.waitForThreadCompletion();
-        mutithreadTableWriter2.waitForThreadCompletion();
         Thread.sleep(60000);
         MultithreadedTableWriter.Status status =mutithreadTableWriter1.getStatus();
         MultithreadedTableWriter.Status status1 =  mutithreadTableWriter2.getStatus();
@@ -834,9 +832,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             mutithreadTableWriter1.insert( 1, 1.3);
             mutithreadTableWriter2.insert( 1, 1.3);
         }
-        mutithreadTableWriter2.waitForThreadCompletion();
-        mutithreadTableWriter1.waitForThreadCompletion();
-        Thread.sleep(10000);
+        Thread.sleep(20000);
         MultithreadedTableWriter.Status status1=mutithreadTableWriter1.getStatus();
         MultithreadedTableWriter.Status status=mutithreadTableWriter2.getStatus();
         if (status.errorInfo.toString().contains(HOST+":"+PORT+" Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter")){
@@ -900,7 +896,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test(timeout = 120000)
     public void test_getUnwrittenData_Parallel_to_the_same_partition_insertUnwrittenData() throws Exception {
-
         StringBuilder sb = new StringBuilder();
         sb.append("\n" +
                 "dbName = \"dfs://test_MultithreadedTableWriter\"\n" +
@@ -923,9 +918,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         writeData(1,tb2);
         mutithreadTableWriter1.insertUnwrittenData(tb1);
         mutithreadTableWriter2.insertUnwrittenData(tb2);
-        mutithreadTableWriter2.waitForThreadCompletion();
-        mutithreadTableWriter1.waitForThreadCompletion();
-
+        Thread.sleep(20000);
         MultithreadedTableWriter.Status status=mutithreadTableWriter2.getStatus();
         //assertTrue(status.errorInfo.toString().contains(HOST+":"+PORT+" Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter"));
         assertEquals("A5",status.errorCode);
@@ -4566,35 +4559,32 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "db = database(dbName,RANGE,0 10 20 30)\n" +
                 "t = table(10:0,`id`price`val,[INT,DOUBLE,INT])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`id)");
-        MultithreadedTableWriter mtw1 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_mtw_concurrentWrite_getFailedData", "pt",
+        MultithreadedTableWriter mtw_getFailedData1 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_mtw_concurrentWrite_getFailedData", "pt",
                 false, false, null, 1000, 0.001f, 10, "id");
-        MultithreadedTableWriter mtw2 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_mtw_concurrentWrite_getFailedData", "pt",
+        MultithreadedTableWriter mtw_getFailedData2 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_mtw_concurrentWrite_getFailedData", "pt",
                 false, false, null, 1000, 0.001f, 10, "id");
 
-        for(int i = 0;i <10000;i++) {
+        for(int i = 0;i <2000;i++) {
             int tmp =5;
-            mtw1.insert(tmp, (double) tmp, 1);
+            mtw_getFailedData1.insert(tmp, (double) tmp, 1);
         }
         // insert false
         try {
-            for (int i = 0; i < 10000; i++) {
+            for (int i = 0; i < 2000; i++) {
                 int tmp = 5;
-                mtw2.insert(tmp, (double) tmp, 2);
+                mtw_getFailedData2.insert(tmp, (double) tmp, 2);
             }
         }catch (Exception ex){
-
         }
-        mtw1.waitForThreadCompletion();
-        mtw2.waitForThreadCompletion();
-        Thread.sleep(60000);
-        List<List<Entity>> failedData1 = mtw1.getFailedData();
-        List<List<Entity>> failedData2 = mtw2.getFailedData();
-        List<List<Entity>> unwrittenData1 = mtw1.getUnwrittenData();
-        List<List<Entity>> unwrittenData2 = mtw2.getUnwrittenData();
+        Thread.sleep(30000);
+        List<List<Entity>> failedData1 = mtw_getFailedData1.getFailedData();
+        List<List<Entity>> failedData2 = mtw_getFailedData2.getFailedData();
+        List<List<Entity>> unwrittenData1 = mtw_getFailedData1.getUnwrittenData();
+        List<List<Entity>> unwrittenData2 = mtw_getFailedData2.getUnwrittenData();
         BasicInt writedData1 = (BasicInt) conn.run("(exec count(*) from pt where val = 1)[0]");
         BasicInt writedData2 = (BasicInt) conn.run("(exec count(*) from pt where val = 2)[0]");
-        assertEquals(10000,writedData1.getInt()+failedData1.size()+unwrittenData1.size());
-        assertEquals(10000,writedData2.getInt()+failedData2.size()+unwrittenData2.size());
+        assertEquals(2000,writedData1.getInt()+failedData1.size()+unwrittenData1.size());
+        assertEquals(2000,writedData2.getInt()+failedData2.size()+unwrittenData2.size());
     }
 
     @Test(timeout = 120000)

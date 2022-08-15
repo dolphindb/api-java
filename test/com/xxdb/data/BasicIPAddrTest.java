@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import com.xxdb.DBConnection;
+import com.xxdb.io.Long2;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class BasicIPAddrTest {
     private DBConnection conn;
@@ -103,4 +105,48 @@ public class BasicIPAddrTest {
         }
         assertEquals(4,res.rows());
     }
+
+    @Test
+    public void test_BasicIPAddr_fromString(){
+        assertNull(BasicIPAddr.fromString("6e01:1"));
+    }
+
+    @Test
+    public void test_BasicIPAddr_parseIP4(){
+        assertNull(BasicIPAddr.parseIP4("192.168.100.10.5"));
+        assertNull(BasicIPAddr.parseIP4("19A.245.12.30"));
+        assertNull(BasicIPAddr.parseIP4("192.255.10"));
+    }
+
+    @Test
+    public void test_BasicIPAddr_ParseIP6(){
+        assertNull(BasicIPAddr.parseIP6("6e01:2a6e:b3b0:323a:745:1527:1537:8019:7008"));
+        assertNull(BasicIPAddr.parseIP6("6e01:2a6e:b3b0:323a:745:1527:1537"));
+        assertNull(BasicIPAddr.parseIP6("6e01:2a6e:b3b0:323a:745:1527:1537:801#"));
+        assertEquals("1:2a6e:b3b0:323a:745:1527:1537:801",BasicIPAddr.parseIP6("::01:2a6e:b3b0:323a:745:1527:1537:801").getString());
+        assertNull(BasicIPAddr.parseIP6("::01:2a6e:b3b0:323a:74515271537801"));
+    }
+
+    @Test
+    public void test_BasicIPAddrVector_list(){
+        List<Long2> list = new ArrayList<>();
+        list.add(new Long2(473849509537L,2234859305L));
+        list.add(new Long2(55887799882L,110044556L));
+        BasicIPAddrVector biav = new BasicIPAddrVector(list);
+        assertEquals("[0:d:32c:264a::68f:258c,0:6e:53a1:b6a1::8535:3f29,0:d:32c:264a::68f:258c]",biav.getSubVector(new int[]{1,0,1}).getString());
+        assertEquals(BasicIPAddr.class,biav.getElementClass());
+    }
+
+    @Test
+    public void test_BasicIPAddrVector_DF_size(){
+        BasicIPAddrVector biav2 = new BasicIPAddrVector(Entity.DATA_FORM.DF_VECTOR,0);
+        List<Long2> list = new ArrayList<>();
+        list.add(new Long2(473849509537L,2234859305L));
+        list.add(new Long2(55887799882L,110044556L));
+        BasicIPAddrVector biav = new BasicIPAddrVector(list);
+        BasicIPAddrVector biav3 = (BasicIPAddrVector) biav2.combine(biav);
+        assertEquals("[0:6e:53a1:b6a1::8535:3f29,0:d:32c:264a::68f:258c]",biav3.getString());
+    }
+
+
 }

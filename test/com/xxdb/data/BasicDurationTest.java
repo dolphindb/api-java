@@ -1,126 +1,33 @@
 package com.xxdb.data;
 
-import com.xxdb.DBConnection;
-import com.xxdb.io.*;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
+import com.xxdb.io.Double2;
+import com.xxdb.io.ExtendedDataOutput;
+import com.xxdb.io.Long2;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.Calendar;
 
 import static org.junit.Assert.*;
-
-public class BasicByteTest {
-    private DBConnection conn;
-    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
-    static String HOST = bundle.getString("HOST");
-    static int PORT = Integer.parseInt(bundle.getString("PORT"));
-    @Before
-    public  void setUp(){
-        conn = new DBConnection();
-        try{
-            if(!conn.connect(HOST,PORT,"admin","123456")){
-                throw new IOException("Failed to connect to 2xdb server");
-            }
-        }catch(IOException ex){
-            ex.printStackTrace();
-        }
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        conn.close();
-    }
-    private int getServerHash(Scalar s, int bucket) throws IOException{
-        List<Entity> args = new ArrayList<>();
-        args.add(s);
-        args.add(new BasicInt(bucket));
-        BasicInt re = (BasicInt)conn.run("hashBucket",args);
-        return re.getInt();
+public class BasicDurationTest {
+    @Test
+    public void test_BasicDuration(){
+        BasicDuration bd = new BasicDuration(Entity.DURATION.MS,2);
+        assertEquals(2,bd.getDuration());
+        assertEquals(Entity.DURATION.MS,bd.getUnit());
+        assertEquals("2ms",bd.getJsonString());
+        assertEquals(-1,bd.compareTo(new BasicDuration(Entity.DURATION.NS,Integer.MIN_VALUE)));
+        assertEquals(-1,bd.compareTo(new BasicDuration(Entity.DURATION.MS,Integer.MIN_VALUE)));
+        assertFalse(bd.equals(null));
+        assertEquals("",new BasicDuration(Entity.DURATION.US,Integer.MIN_VALUE).getString());
     }
 
     @Test
-    public void test_getHash() throws  IOException{
-        List<Integer> num = Arrays.asList(13,43,71,97,4097);
-        BasicByteVector v = new BasicByteVector(6);
-        v.setByte(0,(byte)127);
-        v.setByte(1,(byte)-127);
-        v.setByte(2,(byte)12);
-        v.setByte(3,(byte)0);
-        v.setByte(4,(byte)-128);
-        v.setNull(5);
-        for(int b : num){
-            for(int i=0;i<v.rows();i++){
-                int expected = getServerHash(v.get(i),b);
-                Assert.assertEquals(expected, v.hashBucket(i, b));
-                Assert.assertEquals(expected, v.get(i).hashBucket(b));
-            }
-        }
-    }
-
-    @Test
-    public void TestCombineByteVector() throws Exception {
-        Byte[] data = {'4', '5', '3', '6'};
-        BasicByteVector v = new BasicByteVector(Arrays.asList(data));
-        Byte[] data2 = { '2', '5', '1'};
-        BasicByteVector vector2 = new BasicByteVector(Arrays.asList(data2));
-        BasicByteVector res= (BasicByteVector) v.combine(vector2);
-        Byte[] datas = {'4', '5', '3', '6', '2', '5', '1'};
-        for (int i=0;i<res.rows();i++){
-            assertEquals(datas[i],res.get(i).getNumber());
-
-        }
-        assertEquals(7,res.rows());
-    }
-
-    @Test
-    public void test_BasicByte() throws Exception {
-        BasicByte bb = new BasicByte(Byte.MIN_VALUE);
-        assertNull(bb.getNumber());
-        assertFalse(bb.equals(6));
-    }
-
-    @Test
-    public void test_BasicByteMatrix(){
-        BasicByteMatrix bbm = new BasicByteMatrix(2,2);
-        bbm.setInt(0,0, (byte)24);
-        bbm.setInt(0,1, (byte) 33);
-        bbm.setInt(1,0, (byte) 48);
-        bbm.setInt(1,1, (byte) 72);
-        assertEquals((byte)48,bbm.getByte(1,0));
-        assertFalse(bbm.isNull(0,1));
-        bbm.setNull(1,0);
-        assertTrue(bbm.isNull(1,0));
-        assertEquals(Entity.DATA_TYPE.DT_BYTE,bbm.getDataType());
-        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,bbm.getDataCategory());
-        assertEquals(BasicByte.class,bbm.getElementClass());
-    }
-
-    @Test(expected = Exception.class)
-    public void test_basicByteMatrix_list_null() throws Exception {
-        BasicByteMatrix bbm = new BasicByteMatrix(2,2,null);
-    }
-
-    @Test(expected = Exception.class)
-    public void test_basicByteMatrix_rows() throws Exception {
-        List<byte[]> list = new ArrayList<>();
-        list.add(new byte[]{75,33,69});
-        list.add(new byte[]{42,88,23});
-        BasicByteMatrix bbm = new BasicByteMatrix(4,2,list);
-    }
-
-    @Test
-    public void test_basicByteMatrix_wvtos() throws Exception {
-        List<byte[]> list = new ArrayList<>();
-        list.add(new byte[]{75,33,69});
-        list.add(new byte[]{42,88,23});
-        BasicByteMatrix bbm = new BasicByteMatrix(3,2,list);
+    public void test_BasicDuration_write() throws IOException {
+        BasicDuration bd = new BasicDuration(Entity.DURATION.MONTH,3);
         ExtendedDataOutput out = new ExtendedDataOutput() {
             @Override
             public void writeString(String str) throws IOException {
@@ -249,7 +156,7 @@ public class BasicByteTest {
 
             @Override
             public void writeByte(int v) throws IOException {
-                System.out.println((byte)v);
+
             }
 
             @Override
@@ -264,7 +171,7 @@ public class BasicByteTest {
 
             @Override
             public void writeInt(int v) throws IOException {
-
+                System.out.println(v);
             }
 
             @Override
@@ -297,61 +204,38 @@ public class BasicByteTest {
 
             }
         };
-        bbm.writeVectorToOutputStream(out);
+        bd.writeScalarToOutputStream(out);
     }
 
     @Test
-    public void test_BasicByteVector() throws IOException {
-        List<Byte> list = new ArrayList<>();
-        list.add(0,(byte) 99);
-        list.add(1,(byte) 122);
-        list.add(2,null);
-        list.add(3,(byte) 71);
-        list.add(4,(byte) 7);
-        BasicByteVector bbv = new BasicByteVector(list);
-        assertEquals("[7,'z','G','c']",bbv.getSubVector(new int[]{4,1,3,0}).getString());
-        assertTrue(bbv.isNull(2));
-        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,bbv.getDataCategory());
-        assertEquals(BasicByte.class,bbv.getElementClass());
-        assertEquals((byte)71,bbv.getByte(3));
-        ByteBuffer bb = bbv.writeVectorToBuffer(ByteBuffer.allocate(10));
-        assertEquals((byte)122,bb.get(1));
+    public void test_BasicDurationVector() throws Exception {
+        BasicDurationVector bdv = new BasicDurationVector(3);
+        bdv.setNull(0);
+        bdv.setNull(1);
+        bdv.setNull(2);
+        assertEquals(-2147483648,bdv.get(1).getNumber());
+        assertEquals(0,bdv.hashBucket(0,1));
+        assertEquals(4,bdv.getUnitLength());
     }
 
     @Test
-    public void test_BasicByteVector_asof(){
-        List<Byte> list = new ArrayList<>();
-        list.add(0,null);
-        list.add(1,(byte) 7);
-        list.add(2,(byte) 71);
-        list.add(3,(byte) 99);
-        list.add(4,(byte) 122);
-        BasicByteVector bbv = new BasicByteVector(list);
-        Scalar value= new BasicByte((byte) 117);
-        assertEquals(3,bbv.asof(value));
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void test_BasicByteVector_asof_error(){
-        List<Byte> list = new ArrayList<>();
-        list.add(0,null);
-        list.add(1,(byte) 7);
-        list.add(2,(byte) 71);
-        list.add(3,(byte) 99);
-        list.add(4,(byte) 122);
-        BasicByteVector bbv = new BasicByteVector(list);
-        assertEquals(3,bbv.asof(new BasicComplex(8.3,4.2)));
+    public void test_BasicDurationVector_wvtb() throws Exception {
+        BasicDurationVector bdv = new BasicDurationVector(2);
+        bdv.set(0,new BasicDuration(Entity.DURATION.WEEK,5));
+        bdv.set(1,new BasicDuration(Entity.DURATION.HOUR,2));
+        ByteBuffer bb = bdv.writeVectorToBuffer(ByteBuffer.allocate(16));
+        assertEquals("[0, 0, 0, 5, 0, 0, 0, 7, 0, 0, 0, 2, 0, 0, 0, 5]",Arrays.toString(bb.array()));
     }
 
     @Test
-    public void test_BasicByteVector_serialize() throws IOException {
-        List<Byte> list = new ArrayList<>();
-        list.add(0,null);
-        list.add(1,(byte) 7);
-        list.add(2,(byte) 71);
-        list.add(3,(byte) 99);
-        list.add(4,(byte) 122);
-        BasicByteVector bbv = new BasicByteVector(list);
+    public void test_BasicDuration_serialize() throws Exception {
+        BasicDurationVector bdv = new BasicDurationVector(6);
+        bdv.set(0,new BasicDuration(Entity.DURATION.WEEK,5));
+        bdv.set(1,new BasicDuration(Entity.DURATION.HOUR,2));
+        bdv.set(2,new BasicDuration(Entity.DURATION.SECOND,7));
+        bdv.set(3,new BasicDuration(Entity.DURATION.MINUTE,4));
+        bdv.set(4,new BasicDuration(Entity.DURATION.MONTH,11));
+        bdv.set(5,new BasicDuration(Entity.DURATION.US,3));
         ExtendedDataOutput out = new ExtendedDataOutput() {
             @Override
             public void writeString(String str) throws IOException {
@@ -480,7 +364,7 @@ public class BasicByteTest {
 
             @Override
             public void writeByte(int v) throws IOException {
-                System.out.println((byte)v);
+
             }
 
             @Override
@@ -495,7 +379,7 @@ public class BasicByteTest {
 
             @Override
             public void writeInt(int v) throws IOException {
-
+                System.out.println(v);
             }
 
             @Override
@@ -528,12 +412,8 @@ public class BasicByteTest {
 
             }
         };
-        bbv.serialize(0,3,out);
-        ByteBuffer bb = ByteBuffer.allocate(20);
-        System.out.println(bb.remaining());
-        AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(30,2);
-       int m = bbv.serialize(0,0,4,numElementAndPartial,bb);
-       assertEquals(4,m);
-        System.out.println(bb.get(3));
+        bdv.serialize(1,4,out);
+        AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(6,2);
+        assertEquals(16,bdv.serialize(1,0,4,numElementAndPartial,ByteBuffer.allocate(56)));
     }
 }
