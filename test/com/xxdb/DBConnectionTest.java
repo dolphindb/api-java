@@ -2935,13 +2935,13 @@ public class DBConnectionTest {
             assertEquals("fetchSize must be greater than 8192",ie.getMessage());
         }
         long beforeDT = System.currentTimeMillis();
-        conn.tryRun("x;",1,1,8192,false);
+        conn.tryRun("x;",1,1,8192,true);
         long afterDT = System.currentTimeMillis();
         System.out.println(afterDT-beforeDT);
         Thread.sleep(3000);
         conn.run("y=1..10000000");
         long startDT = System.currentTimeMillis();
-        conn.tryRun("y;",1,1,1000000,false);
+        conn.tryRun("y;",1,1,1000000,true);
         long endDT = System.currentTimeMillis();
         System.out.println(endDT-startDT);
         assertFalse((endDT-startDT)>(afterDT-beforeDT));
