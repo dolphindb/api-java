@@ -370,6 +370,13 @@ public class DBConnection {
             String header = null;
             try {
                 header = in.readLine();
+                while (header.equals("MSG")) {
+                    //read intermediate message to indicate the progress
+                    String msg = in.readString();
+                    if (listener != null)
+                        listener.progress(msg);
+                    header = in.readLine();
+                }
             }catch (IOException ex){
                 isConnected_ = false;
                 socket_ = null;
@@ -561,6 +568,11 @@ public class DBConnection {
     public boolean connect(String hostName, int port, int timeout) throws IOException {
         this.connTimeout_ = timeout;
         return connect(hostName, port, "", "", null, false, null);
+    }
+
+    public boolean connect(String hostName, int port, int timeout, boolean reconnect) throws IOException {
+        this.connTimeout_ = timeout;
+        return connect(hostName, port, "", "", null, false, null, reconnect);
     }
 
     public boolean connect(String hostName, int port, String initialScript) throws IOException {
