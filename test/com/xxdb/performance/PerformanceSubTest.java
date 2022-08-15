@@ -7,11 +7,15 @@ import com.xxdb.data.BasicTable;
 import com.xxdb.data.Scalar;
 import com.xxdb.performance.read.Utils;
 import com.xxdb.performance.stream.Sub;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
@@ -32,7 +36,7 @@ public class PerformanceSubTest {
     public static String tickName = bundle.getString("TICK_NAME");
     public static String snapshotPath = bundle.getString("P_DATA_DIR");
     public static String snapshotName = bundle.getString("SNAPSHOT_NAME");
-
+    public static String performancePersistence = bundle.getString("PERFORMANCE_PERSISTENCE");
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
@@ -270,6 +274,16 @@ public class PerformanceSubTest {
                 "go");
     }
 
+    @AfterClass
+    public static void tearDowm() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(clientIp,clientPort,"admin","123456");
+        String day;
+        SimpleDateFormat parser = new SimpleDateFormat("yyyy_MM_dd");
+        day = parser.format(new Date());
+        String sql1 = String.format("saveText(streamResult, \"%s\",,1)",performancePersistence + File.separator + day + "_streamResult.csv");
+        conn.run(sql1);
+    }
     @Test
     public void SubTest() throws Exception {
         long st = System.currentTimeMillis();
