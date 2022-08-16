@@ -13,8 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class BasicTableTest {
     @Test
@@ -219,6 +218,30 @@ public class BasicTableTest {
         long timeSimpleTable = endTime1-startTime1;
         long time = timeSimpleTable/timeBigTable;
         System.out.println(time);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicTable_setColCompressTypes_match(){
+        BasicTable bt = createBasicTable();
+        System.out.println(bt.getString());
+        int[] colCompresses = new int[]{1,2,3,4,5};
+        bt.setColumnCompressTypes(colCompresses);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicTable_other(){
+        BasicTable bt = createBasicTable();
+        int[] colCompresses = new int[]{2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2};
+        System.out.println(Arrays.toString(colCompresses));
+        bt.setColumnCompressTypes(colCompresses);
+    }
+
+    @Test
+    public void test_BasicTable_basic(){
+        BasicTable bt = createBasicTable();
+        assertEquals(Entity.DATA_CATEGORY.MIXED,bt.getDataCategory());
+        bt.addColumn(null,null);
+        assertNull(bt.getColumn(null));
     }
 
 }

@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import com.xxdb.DBConnection;
+import com.xxdb.io.Long2;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -83,5 +84,22 @@ public class BasicUuidTest {
             assertEquals(res128.get(i).toString(),res.get(i).toString());
         }
         assertEquals(6,res.rows());
+    }
+
+    @Test
+    public void test_BasicUUidVector_Basic(){
+        List<Long2> list = new ArrayList<>();
+        list.add(new Long2(9000L,600L));
+        list.add(new Long2(888L,200L));
+        list.add(new Long2(9000L,10L));
+        BasicUuidVector buv = new BasicUuidVector(list);
+        assertEquals(BasicUuid.class,buv.getElementClass());
+        assertEquals("[00000000-0000-2328-0000-00000000000a,00000000-0000-2328-0000-000000000258,00000000-0000-0378-0000-0000000000c8]",buv.getSubVector(new int[]{2,0,1}).getString());
+    }
+
+    @Test
+    public void test_BasicUUidVector_df(){
+        BasicUuidVector buv = new BasicUuidVector(Entity.DATA_FORM.DF_VECTOR,2);
+        System.out.println(buv.getString());
     }
 }

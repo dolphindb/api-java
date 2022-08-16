@@ -12,8 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ResourceBundle;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class BasicChartTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
@@ -33,8 +32,9 @@ public class BasicChartTest {
     }
 
     @Test
-    public void test_BasicChart_get_NULL(){
+    public void test_BasicChart_get_NULL() throws Exception {
         BasicChart bc = new BasicChart();
+        assertNotEquals(Chart.CHART_TYPE.CT_BAR,Chart.CHART_TYPE.CT_AREA);
         assertEquals("",bc.getTitle());
         assertEquals("",bc.getXAxisName());
         assertEquals("",bc.getYAxisName());
