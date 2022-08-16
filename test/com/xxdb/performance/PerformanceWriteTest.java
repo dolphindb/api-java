@@ -18,7 +18,9 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -54,6 +56,7 @@ public class PerformanceWriteTest {
     public static String snapshotPath = bundle.getString("P_DATA_DIR");
     public static String snapshotName = bundle.getString("SNAPSHOT_NAME");
     public static String performancePersistence = bundle.getString("PERFORMANCE_PERSISTENCE");
+    public static List<Thread> qts = new ArrayList<>();
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();

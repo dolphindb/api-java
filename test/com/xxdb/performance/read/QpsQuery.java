@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 
+import static com.xxdb.performance.PerformanceReadTest.qts;
+
 public class QpsQuery {
 
 	private static String mode;
@@ -52,7 +54,9 @@ public class QpsQuery {
 
 	public static void query(int threadNum) throws IOException {
 		for (int i = 1; i <= threadNum; i++) {
-			new Thread(new QueryThread(i)).start();
+			Thread qt = new Thread(new QueryThread(i));
+			qts.add(qt);
+			qt.start();
 		}
 	}
 
