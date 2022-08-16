@@ -113,7 +113,7 @@ public class QueryThread implements Runnable {
 					long end = System.currentTimeMillis();
 					count += table.rows();
 					if (queryNum%100 == 0){
-						PerformanceReadTest.mtw.insert(QpsQuery.queryTableName, type, QpsQuery.threadNum, queryNum, id + "", i, end - begin, Long.parseLong(table.rows() + ""), "", begin + Utils.timeDelta, end + Utils.timeDelta);
+						//PerformanceReadTest.mtw.insert(QpsQuery.queryTableName, type, QpsQuery.threadNum, queryNum, id + "", i, end - begin, Long.parseLong(table.rows() + ""), "", begin + Utils.timeDelta, end + Utils.timeDelta);
 					}
 				}
 			}
@@ -124,7 +124,7 @@ public class QueryThread implements Runnable {
 					table = (BasicTable) this.conn.run(script);
 					long end = System.currentTimeMillis();
 					count += table.rows();
-					PerformanceReadTest.mtw.insert(PerformanceReadTest.queryTableName, type, PerformanceReadTest.threadNum, queryNum, id + "", i, end - begin, Long.parseLong(table.rows() + ""), "", begin + Utils.timeDelta, end + Utils.timeDelta);
+					//PerformanceReadTest.mtw.insert(PerformanceReadTest.queryTableName, type, PerformanceReadTest.threadNum, queryNum, id + "", i, end - begin, Long.parseLong(table.rows() + ""), "", begin + Utils.timeDelta, end + Utils.timeDelta);
 					//System.out.println("cueernt thread:" + id + ",count:" + count);
 				}
 			}

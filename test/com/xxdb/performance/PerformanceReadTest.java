@@ -114,15 +114,15 @@ public class PerformanceReadTest {
         while (true) {
             Thread.sleep(1);
             if (QueryThread.cdl.get() == threadNum) break;
-            if (System.currentTimeMillis() - st > 1200000){
-                for (Thread qt : qts) {
-                    if (qt.isAlive()){
-                        qt.interrupt();
-                    }
-                }
-                mtw.insert(tableName,type,threadNum,0,0,0,0,0);
-                return;
-            }
+//            if (System.currentTimeMillis() - st > 1200000){
+//                for (Thread qt : qts) {
+//                    if (qt.isAlive()){
+//                        qt.interrupt();
+//                    }
+//                }
+//                mtw.insert(tableName,type,threadNum,0,0,0,0,0);
+//                return;
+//            }
         }
 
         long ed = System.currentTimeMillis();
@@ -134,11 +134,13 @@ public class PerformanceReadTest {
         double rps = count / cost;
         System.out.printf("Total Count : %s, Cost : %s s,QPS : %s, Per Thread QPS : %s, RPS : %s, StartTime : %s, EndTime : %s", count, df.format(cost), df.format(qps), df.format(qps / threadNum), df.format(rps), Utils.timeStamp2Date(QueryThread.minSt.get()), Utils.timeStamp2Date(QueryThread.maxEd.get()));
         System.out.println();
-        mtw.waitForThreadCompletion();
+//        mtw.waitForThreadCompletion();
+//        TimeUnit.MINUTES.sleep(1);
+        MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
+                false, false, null, 100, 0.001f, 1, "threadNum");
+        result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
+        result.waitForThreadCompletion();
         TimeUnit.MINUTES.sleep(1);
-        //MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
-                //false, false, null, 100, 0.001f, 1, "threadNum");
-        //result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
     }
 
     @BeforeClass
