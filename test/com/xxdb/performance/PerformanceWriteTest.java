@@ -9,12 +9,16 @@ import com.xxdb.performance.write.large.Tick;
 import com.xxdb.performance.write.tiny.EntrustWriter;
 import com.xxdb.performance.write.tiny.SnapshotWriter;
 import com.xxdb.performance.write.tiny.TickWriter;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,7 +34,7 @@ public class PerformanceWriteTest {
     public static int port = Integer.parseInt(bundle.getString("PORT"));
     private static String user = "admin";
     private static String password = "123456";
-    public static String clientIp = bundle.getString("HOST");
+    public static String clientIp = "172.17.0.1";
     public static int clientPort = 31010;
     public static String[] nodeList = bundle.getString("SITES").split(",");
     public static int queryNum;
@@ -49,7 +53,7 @@ public class PerformanceWriteTest {
     public static String tickName = bundle.getString("TICK_NAME");
     public static String snapshotPath = bundle.getString("P_DATA_DIR");
     public static String snapshotName = bundle.getString("SNAPSHOT_NAME");
-
+    public static String performancePersistence = bundle.getString("PERFORMANCE_PERSISTENCE");
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
@@ -358,6 +362,17 @@ public class PerformanceWriteTest {
                 "schemaTable = table(1:0, name, type)\n" +
                 "db.createPartitionedTable(table=schemaTable, tableName=tbName, partitionColumns=`Channel`TransactTime`SecurityID, compressMethods={TransactTime:\"delta\"}, sortColumns=`SecurityID`TransactTime, keepDuplicates=ALL)");
         TimeUnit.SECONDS.sleep(2);
+    }
+
+    @AfterClass
+    public static void tearDowm() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(clientIp,clientPort,"admin","123456");
+        String day;
+        SimpleDateFormat parser = new SimpleDateFormat("yyyy_MM_dd");
+        day = parser.format(new Date());
+        String sql1 = String.format("saveText(writeResult, \"%s\",,1)",performancePersistence + File.separator + day + "_writeResult.csv");
+        conn.run(sql1);
     }
 
     //settings/write-entrust-0-1.setting
