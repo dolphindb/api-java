@@ -135,6 +135,7 @@ public class PerformanceReadTest {
         System.out.printf("Total Count : %s, Cost : %s s,QPS : %s, Per Thread QPS : %s, RPS : %s, StartTime : %s, EndTime : %s", count, df.format(cost), df.format(qps), df.format(qps / threadNum), df.format(rps), Utils.timeStamp2Date(QueryThread.minSt.get()), Utils.timeStamp2Date(QueryThread.maxEd.get()));
         System.out.println();
         mtw.waitForThreadCompletion();
+        TimeUnit.MINUTES.sleep(1);
         //MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
                 //false, false, null, 100, 0.001f, 1, "threadNum");
         //result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
@@ -422,11 +423,11 @@ public class PerformanceReadTest {
         readStart("0",100,1000,"dfs://SH_TSDB_snapshot_ArrayVector","snapshot");
     }
     //Single thread and multi client concurrent random query of big pieces of data
-    @Test
+    //@Test
     public void readTick11() throws Exception {
         readStart("1",1,10,"dfs://SH_TSDB_tick","tick");
     }
-    @Test
+    //@Test
     public void readTick110() throws Exception {
         readStart("1",10,10,"dfs://SH_TSDB_tick","tick");
     }

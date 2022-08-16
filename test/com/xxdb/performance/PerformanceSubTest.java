@@ -37,7 +37,7 @@ public class PerformanceSubTest {
     public static String snapshotPath = bundle.getString("P_DATA_DIR");
     public static String snapshotName = bundle.getString("SNAPSHOT_NAME");
     public static String performancePersistence = bundle.getString("PERFORMANCE_PERSISTENCE");
-    @BeforeClass
+    //@BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(ip,port,"admin","123456");
@@ -274,7 +274,7 @@ public class PerformanceSubTest {
                 "go");
     }
 
-    @AfterClass
+    //@AfterClass
     public static void tearDowm() throws IOException {
         DBConnection conn = new DBConnection();
         conn.connect(clientIp,clientPort,"admin","123456");
@@ -284,7 +284,7 @@ public class PerformanceSubTest {
         String sql1 = String.format("saveText(streamResult, \"%s\",,1)",performancePersistence + File.separator + day + "_streamResult.csv");
         conn.run(sql1);
     }
-    @Test
+    //@Test
     public void SubTest() throws Exception {
         long st = System.currentTimeMillis();
         Sub.start2("pro",nodeList,subPort,clientIp,clientPort,ip,port,33613835);
