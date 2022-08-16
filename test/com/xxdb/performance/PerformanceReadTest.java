@@ -120,9 +120,7 @@ public class PerformanceReadTest {
                         qt.interrupt();
                     }
                 }
-                MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
-                        false, false, null, 100, 0.001f, 1, "threadNum");
-                result.insert(tableName,type,threadNum,0,0,0,0,0);
+                mtw.insert(tableName,type,threadNum,0,0,0,0,0);
                 return;
             }
         }
@@ -137,11 +135,9 @@ public class PerformanceReadTest {
         System.out.printf("Total Count : %s, Cost : %s s,QPS : %s, Per Thread QPS : %s, RPS : %s, StartTime : %s, EndTime : %s", count, df.format(cost), df.format(qps), df.format(qps / threadNum), df.format(rps), Utils.timeStamp2Date(QueryThread.minSt.get()), Utils.timeStamp2Date(QueryThread.maxEd.get()));
         System.out.println();
         mtw.waitForThreadCompletion();
-
-        MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
-                false, false, null, 100, 0.001f, 1, "threadNum");
-        result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
-
+        //MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
+                //false, false, null, 100, 0.001f, 1, "threadNum");
+        //result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
     }
 
     @BeforeClass
@@ -381,9 +377,7 @@ public class PerformanceReadTest {
         SimpleDateFormat parser = new SimpleDateFormat("yyyy_MM_dd");
         day = parser.format(new Date());
         String sql1 = String.format("saveText(queryResult, \"%s\",,1)",performancePersistence + File.separator + day + "_queryResult.csv");
-        String sql2 = String.format("saveText(queryResult2, \"%s\",,1)",performancePersistence + File.separator + day + "_queryResultSimple.csv");
         conn.run(sql1);
-        conn.run(sql2);
     }
 
     //Single thread and multi client concurrent random query of small pieces of data
