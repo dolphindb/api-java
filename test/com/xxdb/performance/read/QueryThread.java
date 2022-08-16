@@ -134,6 +134,7 @@ public class QueryThread implements Runnable {
 			maxEd.set(Math.max(maxEd.get(), ed));
 			this.conn.close();
 			cdl.addAndGet(1);
+			System.out.println(cdl.get());
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println(script);

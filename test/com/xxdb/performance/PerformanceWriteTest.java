@@ -57,7 +57,7 @@ public class PerformanceWriteTest {
     public static String snapshotName = bundle.getString("SNAPSHOT_NAME");
     public static String performancePersistence = bundle.getString("PERFORMANCE_PERSISTENCE");
     public static List<Thread> qts = new ArrayList<>();
-    @BeforeClass
+    ////@BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(ip,port,"admin","123456");
@@ -367,7 +367,7 @@ public class PerformanceWriteTest {
         TimeUnit.SECONDS.sleep(2);
     }
 
-    @AfterClass
+    ////@AfterClass
     public static void tearDowm() throws IOException {
         DBConnection conn = new DBConnection();
         conn.connect(clientIp,clientPort,"admin","123456");
@@ -379,7 +379,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-entrust-0-1.setting
-    @Test
+    ////@Test
     public void writeEntrust01() throws Exception {
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -401,7 +401,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-entrust-0-5.setting
-    @Test
+    ////@Test
     public void writeEntrust05() throws Exception {
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -423,7 +423,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-entrust-0-10.setting
-    @Test
+    ////@Test
     public void writeEntrust010() throws Exception {
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -445,7 +445,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-entrust-0-15.setting
-    @Test
+    ////@Test
     public void writeEntrust015() throws Exception {
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -467,7 +467,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-entrust-0-20.setting
-    @Test
+    ////@Test
     public void writeEntrust020() throws Exception {
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -489,7 +489,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-tick-0-1.setting
-    @Test
+    ////@Test
     public void writeTick01() throws Exception {
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -511,7 +511,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-tick-0-5.setting
-    @Test
+    ////@Test
     public void writeTick05() throws Exception {
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -533,7 +533,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-tick-0-10.setting
-    @Test
+    ////@Test
     public void writeTick010() throws Exception {
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -555,7 +555,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-tick-0-20.setting
-    @Test
+    ////@Test
     public void writeTick020() throws Exception {
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -577,7 +577,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-snapshot-0-1.setting
-    @Test
+    ////@Test
     public void writeSnapshot01() throws Exception {
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);

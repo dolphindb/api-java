@@ -104,8 +104,8 @@ public class PerformanceReadTest {
                 "}");
         clientConn.close();
 
-        mtw = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult",
-                false, false, null, 100, 0.001f, 1, "threadName");
+        //mtw = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult",
+               // false, false, null, 100, 0.001f, 1, "threadName");
 
         query(threadNum);
 
@@ -136,10 +136,14 @@ public class PerformanceReadTest {
         System.out.println();
 //        mtw.waitForThreadCompletion();
 //        TimeUnit.MINUTES.sleep(1);
-        MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
-                false, false, null, 100, 0.001f, 1, "threadNum");
-        result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
-        result.waitForThreadCompletion();
+//        MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
+//                false, false, null, 100, 0.001f, 1, "threadNum");
+//        result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
+        clientConn.connect(clientIp,clientPort,"admin","123456");
+        String sql = String.format("insert into queryResult2 values(\"%s\",\"%s\",%d,%f,%f,%f,%s,%s)",tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
+        clientConn.run(sql);
+
+
         TimeUnit.MINUTES.sleep(1);
     }
 
