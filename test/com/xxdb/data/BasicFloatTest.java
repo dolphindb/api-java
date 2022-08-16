@@ -41,6 +41,7 @@ public class BasicFloatTest {
         assertFalse(bf.equals(new GregorianCalendar()));
         BasicFloat bf3 = new BasicFloat((float) 0.000001);
         assertEquals("1E-6",bf3.getString());
+        assertEquals("1E-6",bf3.getJsonString());
     }
 
     @Test
