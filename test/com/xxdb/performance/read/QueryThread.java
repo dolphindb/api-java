@@ -30,6 +30,7 @@ public class QueryThread implements Runnable {
 	public static AtomicLong minSt = new AtomicLong(Long.MAX_VALUE);
 	public static AtomicLong maxEd = new AtomicLong(Long.MIN_VALUE);
 	private int id;
+	public static volatile boolean isInterrupt = false;
 
 
 	public QueryThread(int id) throws IOException {
@@ -137,6 +138,8 @@ public class QueryThread implements Runnable {
 			e.printStackTrace();
 			System.out.println(script);
 		}
+
+
 	}
 
 }

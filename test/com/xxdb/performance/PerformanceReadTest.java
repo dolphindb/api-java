@@ -16,9 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.xxdb.performance.read.QpsQuery.*;
@@ -55,6 +53,7 @@ public class PerformanceReadTest {
     public static String snapshotPath = bundle.getString("P_DATA_DIR");
     public static String snapshotName = bundle.getString("SNAPSHOT_NAME");
     public static String performancePersistence = bundle.getString("PERFORMANCE_PERSISTENCE");
+    public static List<Thread> qts = new ArrayList<>();
 
     public static void readStart(String type,int threadNum,int queryNum,String dbName,String tableName) throws Exception {
         PerformanceReadTest.dbName = dbName;
@@ -114,8 +113,18 @@ public class PerformanceReadTest {
 
         while (true) {
             Thread.sleep(1);
-            if (QueryThread.cdl.get() == threadNum)
-                break;
+            if (QueryThread.cdl.get() == threadNum) break;
+            if (System.currentTimeMillis() - st > 1200000){
+                for (Thread qt : qts) {
+                    if (qt.isAlive()){
+                        qt.interrupt();
+                    }
+                }
+                MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
+                        false, false, null, 100, 0.001f, 1, "threadNum");
+                result.insert(tableName,type,threadNum,0,0,0,0,0);
+                return;
+            }
         }
 
         long ed = System.currentTimeMillis();
@@ -132,7 +141,9 @@ public class PerformanceReadTest {
         MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
                 false, false, null, 100, 0.001f, 1, "threadNum");
         result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
+
     }
+
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
