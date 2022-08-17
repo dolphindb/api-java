@@ -135,14 +135,13 @@ public class PerformanceReadTest {
         System.out.printf("Total Count : %s, Cost : %s s,QPS : %s, Per Thread QPS : %s, RPS : %s, StartTime : %s, EndTime : %s", count, df.format(cost), df.format(qps), df.format(qps / threadNum), df.format(rps), Utils.timeStamp2Date(QueryThread.minSt.get()), Utils.timeStamp2Date(QueryThread.maxEd.get()));
         System.out.println();
         //mtw.waitForThreadCompletion();
-        TimeUnit.MINUTES.sleep(1);
-        MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
+        //MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
                 false, false, null, 100, 0.001f, 1, "threadNum");
-        result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
-        result.waitForThreadCompletion();
-//        clientConn.connect(clientIp,clientPort,"admin","123456");
-//        String sql = String.format("insert into queryResult2 values(\"%s\",\"%s\",%d,%f,%f,%f,%s,%s)",tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
-//        clientConn.run(sql);
+        //result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
+        //result.waitForThreadCompletion();
+        clientConn.connect(clientIp,clientPort,"admin","123456");
+        String sql = String.format("insert into queryResult2 values(\"%s\",\"%s\",%d,%f,%f,%f,%s,%s)",tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
+        clientConn.run(sql);
         QueryThread.cdl.set(0);
 
         TimeUnit.MINUTES.sleep(1);
