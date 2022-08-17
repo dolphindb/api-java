@@ -114,15 +114,6 @@ public class PerformanceReadTest {
         while (true) {
             Thread.sleep(1);
             if (QueryThread.cdl.get() == threadNum) break;
-//            if (System.currentTimeMillis() - st > 1200000){
-//                for (Thread qt : qts) {
-//                    if (qt.isAlive()){
-//                        qt.interrupt();
-//                    }
-//                }
-//                mtw.insert(tableName,type,threadNum,0,0,0,0,0);
-//                return;
-//            }
         }
 
         long ed = System.currentTimeMillis();
@@ -136,12 +127,17 @@ public class PerformanceReadTest {
         System.out.println();
         //mtw.waitForThreadCompletion();
         //MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
-                false, false, null, 100, 0.001f, 1, "threadNum");
+                //false, false, null, 100, 0.001f, 1, "threadNum");
         //result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
         //result.waitForThreadCompletion();
-        clientConn.connect(clientIp,clientPort,"admin","123456");
-        String sql = String.format("insert into queryResult2 values(\"%s\",\"%s\",%d,%f,%f,%f,%s,%s)",tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
-        clientConn.run(sql);
+        try{
+            clientConn.connect(clientIp,clientPort,"admin","123456");
+            String sql = String.format("insert into queryResult2 values(\"%s\",\"%s\",%d,%f,%f,%f,%s,%s)",tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
+            clientConn.run(sql);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
         QueryThread.cdl.set(0);
 
         TimeUnit.MINUTES.sleep(1);
