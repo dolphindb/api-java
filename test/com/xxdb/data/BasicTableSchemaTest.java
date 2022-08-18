@@ -159,7 +159,7 @@ public class BasicTableSchemaTest {
         for(int i = 0;i<3;i++) {
             assertEquals(ex_3.getString(i), tableSchema.toBasicTable().getColumn(0).getString(i));
         }
-
+        tableSchema.write(null);
     }
 
 

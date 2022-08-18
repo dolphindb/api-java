@@ -7,11 +7,15 @@ import com.xxdb.data.BasicTable;
 import com.xxdb.data.Scalar;
 import com.xxdb.performance.read.Utils;
 import com.xxdb.performance.stream.Sub;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
@@ -23,7 +27,7 @@ public class PerformanceSubTest {
     public static String ip = bundle.getString("HOST");
     public static int port = Integer.parseInt(bundle.getString("PORT"));
     public static int clientPort = 31010;
-    public static String clientIp = bundle.getString("HOST");
+    public static String clientIp = "172.17.0.1";
     public static String[] nodeList = bundle.getString("SITES").split(",");
     public static int subPort = 31999;
     public static String entrustPath = bundle.getString("P_DATA_DIR");
@@ -32,8 +36,8 @@ public class PerformanceSubTest {
     public static String tickName = bundle.getString("TICK_NAME");
     public static String snapshotPath = bundle.getString("P_DATA_DIR");
     public static String snapshotName = bundle.getString("SNAPSHOT_NAME");
-
-    @BeforeClass
+    public static String performancePersistence = bundle.getString("PERFORMANCE_PERSISTENCE");
+    //@BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(ip,port,"admin","123456");
@@ -270,7 +274,17 @@ public class PerformanceSubTest {
                 "go");
     }
 
-    @Test
+    //@AfterClass
+    public static void tearDowm() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(clientIp,clientPort,"admin","123456");
+        String day;
+        SimpleDateFormat parser = new SimpleDateFormat("yyyy_MM_dd");
+        day = parser.format(new Date());
+        String sql1 = String.format("saveText(streamResult, \"%s\",,1)",performancePersistence + File.separator + day + "_streamResult.csv");
+        conn.run(sql1);
+    }
+    //@Test
     public void SubTest() throws Exception {
         long st = System.currentTimeMillis();
         Sub.start2("pro",nodeList,subPort,clientIp,clientPort,ip,port,33613835);

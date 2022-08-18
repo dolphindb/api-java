@@ -7,12 +7,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class BasicShortTest {
     private DBConnection conn;
@@ -75,5 +76,91 @@ public class BasicShortTest {
 
         }
         assertEquals(7,res.rows());
+    }
+
+    @Test
+    public void test_isNull() throws Exception {
+        BasicShort bs = new BasicShort(Short.MIN_VALUE);
+        assertNull(bs.getNumber());
+        assertEquals("",bs.getString());
+        assertFalse(new BasicShort(Short.MAX_VALUE).equals(null));
+        assertEquals("11",new BasicShort((short) 11).getJsonString());
+    }
+
+    @Test
+    public void test_BasicShortMatrix_BasicFunctions(){
+        BasicShortMatrix bsm = new BasicShortMatrix(2,2);
+        bsm.setShort(0,0, (short) 7);
+        bsm.setShort(0,1, (short) 3);
+        bsm.setShort(1,0, (short) 19);
+        bsm.setShort(1,1,Short.MAX_VALUE);
+        assertEquals(7,bsm.getShort(0,0));
+        assertEquals(new BasicShort(Short.MAX_VALUE),bsm.get(1,1));
+        bsm.setNull(1,1);
+        assertTrue(bsm.isNull(1,1));
+        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,bsm.getDataCategory());
+        assertEquals(BasicShort.class,bsm.getElementClass());
+    }
+
+    @Test(expected = Exception.class)
+    public void test_BasicShortMatrix_listNull() throws Exception {
+        BasicShortMatrix bsm = new BasicShortMatrix(2,2,null);
+    }
+
+    @Test(expected = Exception.class)
+    public void test_BasicShortMatrix_ArrayNull() throws Exception {
+        List<short[]> list = new ArrayList<>();
+        list.add(new short[]{3,6,9});
+        list.add(new short[]{2,5,8});
+        list.add(null);
+        BasicShortMatrix bsm = new BasicShortMatrix(3,3,list);
+    }
+
+    @Test
+    public void test_BasicShortVector_basicFunctions(){
+        List<Short> list = new ArrayList<>();
+        list.add((short) 2);
+        list.add((short) 7);
+        list.add(null);
+        list.add((short) 4);
+        BasicShortVector bsv = new BasicShortVector(list);
+        assertEquals("[4,2,7]",bsv.getSubVector(new int[]{3,0,1}).getString());
+        assertTrue(bsv.isNull(2));
+        assertEquals((short)7,bsv.getShort(1));
+        assertEquals(BasicShort.class,bsv.getElementClass());
+    }
+
+    @Test
+    public void test_BasicShortVector_wvtb() throws IOException {
+        List<Short> list = new ArrayList<>();
+        list.add((short) 2);
+        list.add((short) 7);
+        list.add((short) 16);
+        list.add((short) 4);
+        BasicShortVector bsv = new BasicShortVector(list);
+        ByteBuffer bb = bsv.writeVectorToBuffer(ByteBuffer.allocate(8));
+        assertEquals("[0, 2, 0, 7, 0, 16, 0, 4]",Arrays.toString(bb.array()));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicShortVector_asof_error(){
+        List<Short> list = new ArrayList<>();
+        list.add((short) 2);
+        list.add((short) 7);
+        list.add((short) 16);
+        list.add((short) 24);
+        BasicShortVector bsv = new BasicShortVector(list);
+        bsv.asof(new BasicPoint(5.9,7.6));
+    }
+
+    @Test
+    public void test_BasicShortVector_asof(){
+        List<Short> list = new ArrayList<>();
+        list.add((short) 2);
+        list.add((short) 7);
+        list.add((short) 16);
+        list.add((short) 24);
+        BasicShortVector bsv = new BasicShortVector(list);
+        assertEquals(2,bsv.asof(new BasicShort((short) 20)));
     }
 }

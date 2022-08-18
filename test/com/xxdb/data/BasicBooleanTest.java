@@ -100,4 +100,18 @@ public class BasicBooleanTest {
         ByteBuffer bb = bbv.writeVectorToBuffer(ByteBuffer.allocate(10));
         assertEquals((byte)1,bb.get(2));
     }
+
+    @Test
+    public void test_basicBooleanVector_wvtb() throws IOException {
+        List<Byte> list = new ArrayList<>();
+        list.add(0,(byte) 1);
+        list.add(1,(byte) 1);
+        list.add(2,null);
+        list.add(3,Byte.MAX_VALUE);
+        list.add(4,(byte) 0);
+        list.add(5,(byte) 0);
+        BasicBooleanVector bbv = new BasicBooleanVector(list);
+        ByteBuffer bb = bbv.writeVectorToBuffer(ByteBuffer.allocate(6));
+        assertEquals("[1, 1, -128, 127, 0, 0]",Arrays.toString(bb.array()));
+    }
 }

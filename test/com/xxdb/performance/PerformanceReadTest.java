@@ -7,14 +7,16 @@ import com.xxdb.data.Entity;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 import com.xxdb.performance.read.QueryThread;
 import com.xxdb.performance.read.Utils;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.Arrays;
-import java.util.ResourceBundle;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.xxdb.performance.read.QpsQuery.*;
@@ -30,7 +32,7 @@ public class PerformanceReadTest {
     public static int port = Integer.parseInt(bundle.getString("PORT"));
     private static String user = "admin";
     private static String password = "123456";
-    public static String clientIp = bundle.getString("HOST");
+    public static String clientIp = "172.17.0.1";
     public static int clientPort = 31010;
     public static String[] nodeList = bundle.getString("SITES").split(",");
     public static int queryNum;
@@ -50,6 +52,8 @@ public class PerformanceReadTest {
     public static String tickName = bundle.getString("TICK_NAME");
     public static String snapshotPath = bundle.getString("P_DATA_DIR");
     public static String snapshotName = bundle.getString("SNAPSHOT_NAME");
+    public static String performancePersistence = bundle.getString("PERFORMANCE_PERSISTENCE");
+    public static List<Thread> qts = new ArrayList<>();
 
     public static void readStart(String type,int threadNum,int queryNum,String dbName,String tableName) throws Exception {
         PerformanceReadTest.dbName = dbName;
@@ -100,8 +104,8 @@ public class PerformanceReadTest {
                 "}");
         clientConn.close();
 
-        mtw = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult",
-                false, false, null, 100, 0.001f, 1, "threadName");
+        //mtw = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult",
+               // false, false, null, 100, 0.001f, 1, "threadName");
 
         query(threadNum);
 
@@ -109,8 +113,7 @@ public class PerformanceReadTest {
 
         while (true) {
             Thread.sleep(1);
-            if (QueryThread.cdl.get() == threadNum)
-                break;
+            if (QueryThread.cdl.get() == threadNum) break;
         }
 
         long ed = System.currentTimeMillis();
@@ -122,12 +125,25 @@ public class PerformanceReadTest {
         double rps = count / cost;
         System.out.printf("Total Count : %s, Cost : %s s,QPS : %s, Per Thread QPS : %s, RPS : %s, StartTime : %s, EndTime : %s", count, df.format(cost), df.format(qps), df.format(qps / threadNum), df.format(rps), Utils.timeStamp2Date(QueryThread.minSt.get()), Utils.timeStamp2Date(QueryThread.maxEd.get()));
         System.out.println();
-        mtw.waitForThreadCompletion();
+        //mtw.waitForThreadCompletion();
+        //MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
+                //false, false, null, 100, 0.001f, 1, "threadNum");
+        //result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
+        //result.waitForThreadCompletion();
+        try{
+            clientConn = new DBConnection();
+            clientConn.connect(clientIp,clientPort,"admin","123456");
+            String sql = String.format("insert into queryResult2 values(\"%s\",\"%s\",%d,%f,%f,%f,%s,%s)",tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
+            clientConn.run(sql);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 
-        MultithreadedTableWriter result = new MultithreadedTableWriter(clientIp, clientPort, "admin", "123456", "", "queryResult2",
-                false, false, null, 100, 0.001f, 1, "threadNum");
-        result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
+        QueryThread.cdl.set(0);
+
+        TimeUnit.MINUTES.sleep(1);
     }
+
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
@@ -355,6 +371,17 @@ public class PerformanceReadTest {
                 "schemaTable = table(1:0, name, type)\n" +
                 "db.createPartitionedTable(table=schemaTable, tableName=tbName, partitionColumns=`TransactTime`SecurityID, compressMethods={TransactTime:\"delta\"}, sortColumns=`SecurityID`TransactTime, keepDuplicates=ALL)");
         TimeUnit.SECONDS.sleep(2);
+    }
+
+    @AfterClass
+    public static void tearDowm() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(clientIp,clientPort,"admin","123456");
+        String day;
+        SimpleDateFormat parser = new SimpleDateFormat("yyyy_MM_dd");
+        day = parser.format(new Date());
+        String sql1 = String.format("saveText(queryResult2, \"%s\",,1)",performancePersistence + File.separator + day + "_queryResult2.csv");
+        conn.run(sql1);
     }
 
     //Single thread and multi client concurrent random query of small pieces of data

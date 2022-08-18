@@ -30,6 +30,7 @@ public class QueryThread implements Runnable {
 	public static AtomicLong minSt = new AtomicLong(Long.MAX_VALUE);
 	public static AtomicLong maxEd = new AtomicLong(Long.MIN_VALUE);
 	private int id;
+	public static volatile boolean isInterrupt = false;
 
 
 	public QueryThread(int id) throws IOException {
@@ -112,7 +113,7 @@ public class QueryThread implements Runnable {
 					long end = System.currentTimeMillis();
 					count += table.rows();
 					if (queryNum%100 == 0){
-						PerformanceReadTest.mtw.insert(QpsQuery.queryTableName, type, QpsQuery.threadNum, queryNum, id + "", i, end - begin, Long.parseLong(table.rows() + ""), "", begin + Utils.timeDelta, end + Utils.timeDelta);
+						//PerformanceReadTest.mtw.insert(QpsQuery.queryTableName, type, QpsQuery.threadNum, queryNum, id + "", i, end - begin, Long.parseLong(table.rows() + ""), "", begin + Utils.timeDelta, end + Utils.timeDelta);
 					}
 				}
 			}
@@ -123,7 +124,7 @@ public class QueryThread implements Runnable {
 					table = (BasicTable) this.conn.run(script);
 					long end = System.currentTimeMillis();
 					count += table.rows();
-					PerformanceReadTest.mtw.insert(PerformanceReadTest.queryTableName, type, PerformanceReadTest.threadNum, queryNum, id + "", i, end - begin, Long.parseLong(table.rows() + ""), "", begin + Utils.timeDelta, end + Utils.timeDelta);
+					//PerformanceReadTest.mtw.insert(PerformanceReadTest.queryTableName, type, PerformanceReadTest.threadNum, queryNum, id + "", i, end - begin, Long.parseLong(table.rows() + ""), "", begin + Utils.timeDelta, end + Utils.timeDelta);
 					//System.out.println("cueernt thread:" + id + ",count:" + count);
 				}
 			}
@@ -133,10 +134,13 @@ public class QueryThread implements Runnable {
 			maxEd.set(Math.max(maxEd.get(), ed));
 			this.conn.close();
 			cdl.addAndGet(1);
+			System.out.println(cdl.get());
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println(script);
 		}
+
+
 	}
 
 }
