@@ -8,11 +8,20 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class BasicDecimal64Vector extends AbstractVector{
-    protected int scale_;
+    protected int scale_ = 0;
     protected long[] values;
 
     public BasicDecimal64Vector(DATA_FORM df) {
         super(df);
+    }
+
+    public BasicDecimal64Vector(int size){
+        this(DATA_FORM.DF_VECTOR, size);
+    }
+
+    public BasicDecimal64Vector(DATA_FORM df, int size){
+        super(df);
+        values = new long[size];
     }
 
     public BasicDecimal64Vector(DATA_FORM df, ExtendedDataInput in) throws IOException{

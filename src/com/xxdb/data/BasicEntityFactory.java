@@ -174,12 +174,12 @@ public class BasicEntityFactory implements EntityFactory{
 
 		@Override
 		public Scalar createScalarWithDefaultValue() {
-			return null;
+			return new BasicDecimal64(0,0);
 		}
 
 		@Override
 		public Vector createVectorWithDefaultValue(int size) {
-			return null;
+			return new BasicDecimal64Vector(size);
 		}
 
 		@Override
@@ -217,12 +217,12 @@ public class BasicEntityFactory implements EntityFactory{
 
 		@Override
 		public Scalar createScalarWithDefaultValue() {
-			return null;
+			return new BasicDecimal32(0, 0);
 		}
 
 		@Override
 		public Vector createVectorWithDefaultValue(int size) {
-			return null;
+			return new BasicDecimal32Vector(size);
 		}
 
 		@Override

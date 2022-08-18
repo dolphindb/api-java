@@ -8,11 +8,20 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class BasicDecimal32Vector extends AbstractVector{
-    protected int scale_;
+    protected int scale_ = 0;
     protected int[] values;
 
     public BasicDecimal32Vector(DATA_FORM df) {
         super(df);
+    }
+
+    public BasicDecimal32Vector(int size){
+        this(DATA_FORM.DF_VECTOR, size);
+    }
+
+    public BasicDecimal32Vector(DATA_FORM df, int size){
+        super(df);
+        values = new int[size];
     }
 
     public BasicDecimal32Vector(DATA_FORM df, ExtendedDataInput in) throws IOException{
