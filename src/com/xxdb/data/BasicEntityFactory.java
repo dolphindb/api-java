@@ -57,6 +57,8 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[Entity.DATA_TYPE.DT_COMPLEX.getValue()] = new ComplexFactory();
 		factories[Entity.DATA_TYPE.DT_POINT.getValue()] = new PointFactory();
 		factories[Entity.DATA_TYPE.DT_DURATION.getValue()] = new DurationFactory();
+		factories[DT_DECIMAL32.getValue()] = new Decimal32Factory();
+		factories[DT_DECIMAL64.getValue()] = new Decimal64Factory();
 		factoriesExt[Entity.DATA_TYPE.DT_SYMBOL.getValue()] = new ExtendedSymbolFactory();
 	}
 	
@@ -147,7 +149,93 @@ public class BasicEntityFactory implements EntityFactory{
 		Vector createPairWithDefaultValue();
 		Matrix createMatrixWithDefaultValue(int rows, int columns);
 	}
-	
+
+	private class Decimal64Factory implements TypeFactory{
+
+		@Override
+		public Scalar createScalar(ExtendedDataInput in) throws IOException {
+			return new BasicDecimal64(in);
+		}
+
+		@Override
+		public Vector createVector(ExtendedDataInput in) throws IOException {
+			return new BasicDecimal64Vector(Entity.DATA_FORM.DF_VECTOR, in);
+		}
+
+		@Override
+		public Vector createPair(ExtendedDataInput in) throws IOException {
+			return null;
+		}
+
+		@Override
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException {
+			return null;
+		}
+
+		@Override
+		public Scalar createScalarWithDefaultValue() {
+			return null;
+		}
+
+		@Override
+		public Vector createVectorWithDefaultValue(int size) {
+			return null;
+		}
+
+		@Override
+		public Vector createPairWithDefaultValue() {
+			return null;
+		}
+
+		@Override
+		public Matrix createMatrixWithDefaultValue(int rows, int columns) {
+			return null;
+		}
+	}
+
+	private class Decimal32Factory implements TypeFactory{
+
+		@Override
+		public Scalar createScalar(ExtendedDataInput in) throws IOException {
+			return new BasicDecimal32(in);
+		}
+
+		@Override
+		public Vector createVector(ExtendedDataInput in) throws IOException {
+			return new BasicDecimal32Vector(Entity.DATA_FORM.DF_VECTOR, in);
+		}
+
+		@Override
+		public Vector createPair(ExtendedDataInput in) throws IOException {
+			return null;
+		}
+
+		@Override
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException {
+			return null;
+		}
+
+		@Override
+		public Scalar createScalarWithDefaultValue() {
+			return null;
+		}
+
+		@Override
+		public Vector createVectorWithDefaultValue(int size) {
+			return null;
+		}
+
+		@Override
+		public Vector createPairWithDefaultValue() {
+			return null;
+		}
+
+		@Override
+		public Matrix createMatrixWithDefaultValue(int rows, int columns) {
+			return null;
+		}
+	}
+
 	private class BooleanFactory implements TypeFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicBoolean(in);}
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicBooleanVector(Entity.DATA_FORM.DF_VECTOR, in);}
