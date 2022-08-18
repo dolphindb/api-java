@@ -131,6 +131,7 @@ public class PerformanceReadTest {
         //result.insert(tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
         //result.waitForThreadCompletion();
         try{
+            clientConn = new DBConnection();
             clientConn.connect(clientIp,clientPort,"admin","123456");
             String sql = String.format("insert into queryResult2 values(\"%s\",\"%s\",%d,%f,%f,%f,%s,%s)",tableName,type,threadNum,cost,qps,rps,st + Utils.timeDelta,ed + Utils.timeDelta);
             clientConn.run(sql);
@@ -379,7 +380,7 @@ public class PerformanceReadTest {
         String day;
         SimpleDateFormat parser = new SimpleDateFormat("yyyy_MM_dd");
         day = parser.format(new Date());
-        String sql1 = String.format("saveText(queryResult, \"%s\",,1)",performancePersistence + File.separator + day + "_queryResult.csv");
+        String sql1 = String.format("saveText(queryResult2, \"%s\",,1)",performancePersistence + File.separator + day + "_queryResult2.csv");
         conn.run(sql1);
     }
 
@@ -425,11 +426,11 @@ public class PerformanceReadTest {
         readStart("0",100,1000,"dfs://SH_TSDB_snapshot_ArrayVector","snapshot");
     }
     //Single thread and multi client concurrent random query of big pieces of data
-    //@Test
+    @Test
     public void readTick11() throws Exception {
         readStart("1",1,10,"dfs://SH_TSDB_tick","tick");
     }
-    //@Test
+    @Test
     public void readTick110() throws Exception {
         readStart("1",10,10,"dfs://SH_TSDB_tick","tick");
     }
