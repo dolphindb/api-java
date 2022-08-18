@@ -38,8 +38,10 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
 
     @Override
     public String getString() {
-        if (scale_ == 0)
+        if (scale_ == 0&&(!isNull()))
             return String.valueOf(value_);
+        else if (isNull())
+            return "";
         else {
             StringBuilder sb = new StringBuilder();
             sb.append((int)(value_ / Math.pow(10, scale_)));
