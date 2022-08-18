@@ -53,7 +53,7 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
                     sb.append("0");
                 }
             }else {
-                sb.append(data);
+                sb.append((int)data);
             }
             return sb.toString();
         }
