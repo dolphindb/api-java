@@ -100,7 +100,7 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public int getUnitLength() {
-        return 0;
+        return 4;
     }
 
     @Override
