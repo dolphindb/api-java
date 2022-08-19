@@ -435,15 +435,15 @@ public class PerformanceReadTest {
         readStart("1",10,10,"dfs://SH_TSDB_tick","tick");
     }
 
-    //@Test
+    @Test
     public void readTick120() throws Exception {
         readStart("1",20,10,"dfs://SH_TSDB_tick","tick");
     }
-    //@Test
+    @Test
     public void readTick150() throws Exception {
         readStart("1",50,10,"dfs://SH_TSDB_tick","tick");
     }
-    //@Test
+    @Test
     public void readTick1100() throws Exception {
         readStart("1",100,1,"dfs://SH_TSDB_tick","tick");
     }
