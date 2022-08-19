@@ -134,6 +134,7 @@ public class Entrust {
 		ResWriter.mtw.insert("entrust", "1", threadNum, cost, rows, rows * insertCount * threadNum / cost,  st + Utils.timeDelta, ed + Utils.timeDelta);
 		System.out.printf("Data : Entrust, rows : %s, size : %s MB, Thread : %s, Insert : %s, cost : %s s, RPS : %s, 吞吐量 : %s, Per RPS : %s, StartTime : %s, EndTime : %s", rows, df.format(size), threadNum, insertCount, cost, df.format(rows * insertCount * threadNum / cost), df.format(size * insertCount * threadNum / cost), df.format(rows * insertCount * threadNum / cost / threadNum), Utils.timeStamp2Date(st), Utils.timeStamp2Date(ed));
 		System.out.println();
+		EntrustTableWriter.cdl.set(0);
 	}
 
 	private static void init2(String ienv,String[] inodeList,int ithreadNum,int irows,int iinsertCount) {
