@@ -32,7 +32,7 @@ public class PerformanceReadTest {
     public static int port = Integer.parseInt(bundle.getString("PORT"));
     private static String user = "admin";
     private static String password = "123456";
-    public static String clientIp = "172.17.0.1";
+    public static String clientIp = bundle.getString("CLIENT_PORT");
     public static int clientPort = 31010;
     public static String[] nodeList = bundle.getString("SITES").split(",");
     public static int queryNum;
@@ -435,15 +435,15 @@ public class PerformanceReadTest {
         readStart("1",10,10,"dfs://SH_TSDB_tick","tick");
     }
 
-    //@Test
+    @Test
     public void readTick120() throws Exception {
         readStart("1",20,10,"dfs://SH_TSDB_tick","tick");
     }
-    //@Test
+    @Test
     public void readTick150() throws Exception {
         readStart("1",50,10,"dfs://SH_TSDB_tick","tick");
     }
-    //@Test
+    @Test
     public void readTick1100() throws Exception {
         readStart("1",100,1,"dfs://SH_TSDB_tick","tick");
     }
