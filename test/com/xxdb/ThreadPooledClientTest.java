@@ -7,6 +7,7 @@ import com.xxdb.streaming.client.*;
 import org.junit.*;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -18,6 +19,8 @@ public class ThreadPooledClientTest {
     public static DBConnection conn;
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
+//    static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    //static int PORT = 9002;
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     private static ThreadPooledClient client;
 
@@ -455,6 +458,119 @@ public class ThreadPooledClientTest {
         assertEquals(20000,row_num.getInt());
         client.unsubscribe(HOST,PORT,"tmp_st1","subTread1");
         client.unsubscribe(HOST,PORT,"tmp_st2","subTread1");
+    }
+
+    @Test
+    public void test_subscribe_tn_handler() throws IOException, InterruptedException {
+        client.subscribe(HOST,PORT,"Trades",MessageHandler_handler);
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
+        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        assertEquals(10000,row_num.getInt());
+        client.unsubscribe(HOST,PORT,"Trades");
+    }
+
+    @Test
+    public void test_subscribe_tn_an_hd_offset_reconnect_filter_de() throws Exception {
+        Vector filter1 = (Vector) conn.run("1..1000");
+        client.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler, -1, true, filter1, null);
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
+        client.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        assertEquals(2000, re.rows());
+        for (int i = 0; i < 1000; i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 1000));
+            assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
+            assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 1000).getNumber().doubleValue(), 4);
+        }
+    }
+
+    @Test
+    public void test_subscribe_tn_an_handler_reconnect() throws Exception {
+        client.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
+        client.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        assertEquals(20000, re.rows());
+        for (int i = 0; i < 1000; i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 1000));
+            assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
+            assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 1000).getNumber().doubleValue(), 4);
+        }
+    }
+
+    @Test
+    public void test_subscribe_tn_handler_ofst_reconnect() throws Exception {
+        client.subscribe(HOST, PORT, "Trades",MessageHandler_handler, -1,true);
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
+        client.unsubscribe(HOST, PORT, "Trades");
+        assertEquals(20000, re.rows());
+        for (int i = 0; i < 1000; i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 1000));
+            assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
+            assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 1000).getNumber().doubleValue(), 4);
+        }
+    }
+
+    @Test
+    public void test_ThreadPooledClient_null() throws Exception {
+        ThreadPooledClient client1 = new ThreadPooledClient();
+        client1.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
+        client1.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        assertEquals(20000, re.rows());
+        for (int i = 0; i < 1000; i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 1000));
+            assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
+            assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 1000).getNumber().doubleValue(), 4);
+        }
+    }
+
+    @Test
+    public void test_ThreadPooledClient_subPort_thCount() throws Exception {
+        ThreadPooledClient client1 = new ThreadPooledClient(10000,10);
+        client1.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
+        client1.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        assertEquals(20000, re.rows());
+        for (int i = 0; i < 1000; i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 1000));
+            assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
+            assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 1000).getNumber().doubleValue(), 4);
+        }
     }
 
 }
