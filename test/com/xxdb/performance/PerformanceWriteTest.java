@@ -31,7 +31,7 @@ public class PerformanceWriteTest {
     private static String dayTableName = "day";
     private static String symDBName = "dfs://symDB";
     private static String symTableName = "sym";
-    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings2");
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     public static String ip = bundle.getString("HOST");
     public static int port = Integer.parseInt(bundle.getString("PORT"));
     private static String user = "admin";
