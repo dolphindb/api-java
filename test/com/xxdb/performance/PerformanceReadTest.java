@@ -144,7 +144,7 @@ public class PerformanceReadTest {
         TimeUnit.MINUTES.sleep(1);
     }
 
-    @BeforeClass
+    //@BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(ip,port,"admin","123456");
@@ -373,7 +373,7 @@ public class PerformanceReadTest {
         TimeUnit.SECONDS.sleep(2);
     }
 
-    @AfterClass
+    //@AfterClass
     public static void tearDowm() throws IOException {
         DBConnection conn = new DBConnection();
         conn.connect(clientIp,clientPort,"admin","123456");
@@ -385,77 +385,77 @@ public class PerformanceReadTest {
     }
 
     //Single thread and multi client concurrent random query of small pieces of data
-    @Test
+    //@Test
     public void readTick01() throws Exception {
         readStart("0",1,1000,"dfs://SH_TSDB_tick","tick");
     }
-    @Test
+    //@Test
     public void readTick010() throws Exception {
         readStart("0",10,1000,"dfs://SH_TSDB_tick","tick");
     }
-    @Test
+    //@Test
     public void readTick020() throws Exception {
         readStart("0",20,1000,"dfs://SH_TSDB_tick","tick");
     }
-    @Test
+    //@Test
     public void readTick050() throws Exception {
         readStart("0",50,1000,"dfs://SH_TSDB_tick","tick");
     }
-    @Test
+    //@Test
     public void readTick0100() throws Exception {
         readStart("0",100,1000,"dfs://SH_TSDB_tick","tick");
     }
-    @Test
+    //@Test
     public void readSnapshot01() throws Exception {
         readStart("0",1,1000,"dfs://SH_TSDB_snapshot_ArrayVector","snapshot");
     }
-    @Test
+    //@Test
     public void readSnapshot010() throws Exception {
         readStart("0",10,1000,"dfs://SH_TSDB_snapshot_ArrayVector","snapshot");
     }
-    @Test
+    //@Test
     public void readSnapshot020() throws Exception {
         readStart("0",20,1000,"dfs://SH_TSDB_snapshot_ArrayVector","snapshot");
     }
-    @Test
+    //@Test
     public void readSnapshot050() throws Exception {
         readStart("0",50,1000,"dfs://SH_TSDB_snapshot_ArrayVector","snapshot");
     }
-    @Test
+    //@Test
     public void readSnapshot0100() throws Exception {
         readStart("0",100,1000,"dfs://SH_TSDB_snapshot_ArrayVector","snapshot");
     }
     //Single thread and multi client concurrent random query of big pieces of data
-    @Test
+    //@Test
     public void readTick11() throws Exception {
         readStart("1",1,10,"dfs://SH_TSDB_tick","tick");
     }
-    @Test
+    //@Test
     public void readTick110() throws Exception {
         readStart("1",10,10,"dfs://SH_TSDB_tick","tick");
     }
 
-    @Test
+    //@Test
     public void readTick120() throws Exception {
         readStart("1",20,10,"dfs://SH_TSDB_tick","tick");
     }
-    @Test
+    //@Test
     public void readTick150() throws Exception {
         readStart("1",50,10,"dfs://SH_TSDB_tick","tick");
     }
-    @Test
+    //@Test
     public void readTick1100() throws Exception {
         readStart("1",100,1,"dfs://SH_TSDB_tick","tick");
     }
-    //@Test
+    //////@Test
     public void readSnapshot11() throws Exception {
         readStart("1",1,10,"dfs://SH_TSDB_snapshot_ArrayVector","snapshot");
     }
-    //@Test
+    ///////@Test
     public void readSnapshot110() throws Exception {
         readStart("1",10,10,"dfs://SH_TSDB_snapshot_ArrayVector","snapshot");
     }
-    //@Test//oom
+    ///////@Test//oom
     public void readSnapshot120() throws Exception {
         readStart("1",20,10,"dfs://SH_TSDB_snapshot_ArrayVector","snapshot");
     }
