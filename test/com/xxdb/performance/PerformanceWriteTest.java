@@ -731,7 +731,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-entrust-1-10.setting
-    @Test
+    //@Test
     public void writeEntrust110() throws Exception{
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -753,7 +753,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-entrust-1-15.setting
-    @Test
+    //@Test
     public void writeEntrust115() throws Exception{
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -775,7 +775,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-entrust-1-20.setting
-    @Test
+    //@Test
     public void writeEntrust120() throws Exception{
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -841,7 +841,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-tick-1-10.setting
-    @Test
+    //@Test
     public void writeTick110() throws Exception{
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -863,7 +863,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-tick-1-15.setting
-    @Test
+    //@Test
     public void writeTick115() throws Exception{
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
@@ -885,7 +885,7 @@ public class PerformanceWriteTest {
     }
 
     //settings/write-tick-1-20.setting
-    @Test
+    //@Test
     public void writeTick120() throws Exception{
         ResWriter.start2(clientIp,clientPort);
         writeFlag = new AtomicInteger(1);
