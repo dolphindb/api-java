@@ -11,8 +11,8 @@ import java.net.SocketException;
 
 public class ThreadPooledClientTester {
     public static DBConnection conn;
-    public static String HOST = "192.168.1.132";
-    public static Integer PORT = 8848;
+    public static String HOST = "192.168.0.21";
+    public static Integer PORT = 9002;
     private static ThreadPooledClient client;
     public static void main(String args[]) {
         MessageHandler handler = new MessageHandler() {
@@ -39,8 +39,8 @@ public class ThreadPooledClientTester {
             String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                     "enableTableShareAndPersistence(table=st2, tableName=`Receive, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n";
             conn.run(script2);
-            client = new ThreadPooledClient(8778,10);
-            client.subscribe("192.168.1.132", 8848, "Trades", handler);
+            client = new ThreadPooledClient(9050,10);
+            client.subscribe("192.168.0.21", 9002, "Trades", handler);
 
         } catch (IOException ex) {
             ex.printStackTrace();
