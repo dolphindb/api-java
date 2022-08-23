@@ -189,7 +189,7 @@ public class ThreadedClientsubscribeTest {
 
         }
     }
-    @Test(timeout = 60000)
+    @Test(timeout = 180000)
     public void test_subscribe_ex2() throws Exception{
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -327,7 +327,7 @@ public class ThreadedClientsubscribeTest {
 
     }
 
-    @Test
+    @Test(timeout = 180000)
     public void test_subscribe_tableName_offset_usr_pass() throws Exception {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -352,7 +352,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "Trades");
     }
 
-    @Test
+    @Test(timeout = 180000)
     public void test_subscribe_tableName_actionName() throws Exception {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -378,7 +378,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "Trades","subTrades1");
     }
 
-    @Test
+    @Test(timeout = 180000)
     public void test_subscribe_tableName_handler_offset_reconnect_success() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -407,7 +407,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST,PORT,"Trades");
     }
 
-    @Test
+    @Test(timeout = 180000)
     public void test_subscribe_TableName_ActionName_Handler_reconnect() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -436,7 +436,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST,PORT,"Trades","subTrades1");
     }
 
-    @Test
+    @Test(timeout = 180000)
     public void test_subscribe_tn_an_hd_ofst_reconnect_filter_ae_bs_thFloat_usr_pass() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -465,7 +465,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test
+    @Test(timeout = 180000)
     public void test_subscribe_tn_an_bmhd_ofst_reconnect_filter_ae_bs_th_usr_pass() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -494,7 +494,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test
+    @Test(timeout = 180000)
     public void test_subscribe_tn_an_bmhd_ofst_reconnect_filter_ae_bs_thFloat_usr_pass() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -523,7 +523,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test
+    @Test(timeout = 180000)
     public void test_subscribe_tn_an_hd_ofst_reconnect_filter_deserialize() throws Exception {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -552,7 +552,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test
+    @Test(timeout = 180000)
     public void test_tn_an_handler_ofst_reconnect_filter_ae_usr_pass() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -614,7 +614,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "Trades");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 120000)
     public void test_subscribe_ofst_negative1() throws Exception {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1063,7 +1063,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 120000)
     public void test_func_BatchMessageHandler_batchSize_over_meg_size_small_throttle() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1081,7 +1081,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 120000)
     public void test_func_BatchMessageHandler_batchSize_over_meg_size_big_throttle() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1099,7 +1099,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 120000)
     public void test_func_BatchMessageHandler_mul_subscribe() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1132,7 +1132,7 @@ public class ThreadedClientsubscribeTest {
             }
         }
     }
-    @Test
+    @Test(timeout = 120000)
     public void test_subscribe_reconnect_successful() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1161,7 +1161,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_subscribe_reconnect_error() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1182,7 +1182,7 @@ public class ThreadedClientsubscribeTest {
         }catch (Exception ex){}
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_subscribe_reconnect_false() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1241,7 +1241,7 @@ public class ThreadedClientsubscribeTest {
 
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_BasicMessage_parse_outputTable_col_size_2() throws IOException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1268,7 +1268,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_BasicMessage_parse_outputTable_second_col_not_string() throws IOException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1296,7 +1296,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_BasicMessage_parse_outputTable_third_col_not_blob() throws IOException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1324,7 +1324,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_BasicMessage_parse_outputTable_filter_col_not_exist() throws IOException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1352,7 +1352,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_pair_filters_subscribe_isomate_table_StreamDeserializer_tableName_NULL() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1378,7 +1378,7 @@ public class ThreadedClientsubscribeTest {
         }
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_pair_filters_subscribe_isomate_table_StreamDeserializer_tableName_unexists() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1404,7 +1404,7 @@ public class ThreadedClientsubscribeTest {
         }
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_pair_filters_subscribe_isomate_table_StreamDeserializer_tableNames_NULL() throws IOException, InterruptedException {
         try {
             StreamDeserializer streamFilter = new StreamDeserializer(null, conn);
@@ -1414,7 +1414,7 @@ public class ThreadedClientsubscribeTest {
         }
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_pair_filters_subscribe_isomate_table_StreamDeserializer_connect_NULL_error() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1489,7 +1489,7 @@ public class ThreadedClientsubscribeTest {
         }
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_pair_filters_subscribe_partition_table_StreamDeserializer_connect_NULL() throws Exception {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1554,7 +1554,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_pair_memory_table_filters_subscribe_isomate_table_write()throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1613,7 +1613,7 @@ public class ThreadedClientsubscribeTest {
     }
 
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_pair_partition_table_filters_subscribe_isomate_table()throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1678,7 +1678,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_pair_stream_table_filters_subscribe_isomate_table_write()throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1771,7 +1771,7 @@ public class ThreadedClientsubscribeTest {
             return msg2;
         }
     }
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1832,7 +1832,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_ERROR_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1877,7 +1877,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_null_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1913,7 +1913,7 @@ public class ThreadedClientsubscribeTest {
         }
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_error_key_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1956,7 +1956,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_NULL_dir_filters_subscribe_isomate_table() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1990,7 +1990,7 @@ public class ThreadedClientsubscribeTest {
         }
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_dir_filters_subscribe_isomate_table() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -2048,7 +2048,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_StreamDeserializer_pair_stream_table_filters_subscribe_isomate_table_frequently_write()throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
