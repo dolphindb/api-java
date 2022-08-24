@@ -19,9 +19,9 @@ public class ThreadPooledClientTest {
     public static DBConnection conn;
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
-//    static int PORT = Integer.parseInt(bundle.getString("PORT"));
-    //static int PORT = 9002;
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    //static int PORT = 9002;
+
     private static ThreadPooledClient client;
 
     @BeforeClass
@@ -572,5 +572,4 @@ public class ThreadPooledClientTest {
             assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 1000).getNumber().doubleValue(), 4);
         }
     }
-
 }

@@ -160,8 +160,19 @@ public class ThreadedClientsubscribeTest {
     @Test
     public void test_ThreadedClient_only_subscribePort() throws IOException {
         ThreadedClient client2 = new ThreadedClient(10012);
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        client2.subscribe(HOST,PORT,"Trades","subTrades1",MessageHandler_handler);
+        client2.unsubscribe(HOST,PORT,"Trades","subTrades1");
         client2.close();
     }
+
+
 
     @Test(timeout = 60000)
     public void test_subscribe_ex1() throws Exception {
