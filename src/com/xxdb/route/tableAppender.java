@@ -46,7 +46,7 @@ public class tableAppender {
             case DT_CODE:
                 return "CODE";
             case DT_COMPRESS:
-                return "COMPRESS";
+                return "COMPRESSED";
             case DT_DATASOURCE:
                 return "DATASOURCE";
             case DT_DATE:
