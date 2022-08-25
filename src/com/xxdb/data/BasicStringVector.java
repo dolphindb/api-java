@@ -87,12 +87,14 @@ public class BasicStringVector extends AbstractVector{
 	public BasicStringVector(String[] array, boolean blob, boolean copy){
 		super(DATA_FORM.DF_VECTOR);
 		if (blob){
+			blobValues = new ArrayList<>(array.length);
 			if (copy){
 				String[] valuecopy = array.clone();
 				for (int i = 0; i < valuecopy.length; i++){
 					blobValues.add(valuecopy[i].getBytes(StandardCharsets.UTF_8));
 				}
 			}else {
+				values = array;
 				for (int i = 0; i < values.length; i++){
 					blobValues.add(array[i].getBytes(StandardCharsets.UTF_8));
 				}
