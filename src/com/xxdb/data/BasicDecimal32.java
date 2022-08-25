@@ -24,7 +24,7 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
 
     public BasicDecimal32(double value, int scale){
         scale_ = scale;
-        value_ = (int) (value * (int)Math.pow(10, scale_));
+        value_ = (int) (value * Math.pow(10, scale_));
     }
 
     @Override
