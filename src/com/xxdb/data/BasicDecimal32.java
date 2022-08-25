@@ -15,11 +15,15 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
         value_ = in.readInt();
     }
 
-    public BasicDecimal32(int scale, int value){
+    public BasicDecimal32(int value, int scale){
         scale_ = scale;
-        value_ = value;
+        value_ = value * (int)Math.pow(10, scale_);
     }
 
+    public BasicDecimal32(double value, int scale){
+        scale_ = scale;
+        value_ = (int) (value * (int)Math.pow(10, scale_));
+    }
 
     @Override
     protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
