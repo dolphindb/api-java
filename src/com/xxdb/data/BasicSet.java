@@ -103,7 +103,7 @@ public class BasicSet extends AbstractEntity implements Set {
 
 	@Override
 	public boolean add(Scalar key) {
-		if(key.getDataType() != key.getDataType())
+		if(key.getDataType() != keyType)
 			return false;
 		return set.add(key);
 	}
