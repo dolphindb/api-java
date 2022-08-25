@@ -24,7 +24,7 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
 
     public BasicDecimal64(double value, int scale){
         scale_ = scale;
-        value_ = (long) (value * (int)Math.pow(10, scale_));
+        value_ = (long) (value * Math.pow(10, scale_));
     }
 
     @Override
@@ -63,6 +63,7 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
             }
             DecimalFormat df = new DecimalFormat(sb.toString());
             df.setRoundingMode(RoundingMode.FLOOR);
+            double x = (double) value_ / Math.pow(10, scale_);
             return df.format((double) value_ / Math.pow(10, scale_));
         }
     }
