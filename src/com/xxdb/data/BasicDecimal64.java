@@ -50,9 +50,16 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
             return "";
         else {
             StringBuilder sb = new StringBuilder();
-            sb.append("0.");
-            for (int i = 0; i < scale_; i++){
-                sb.append("#");
+            if ((double) value_ / Math.pow(10, scale_) >= 1.0 || (double) value_ / Math.pow(10, scale_) <= -1.0){
+                sb.append("#.");
+                for (int i = 0; i < scale_; i++){
+                    sb.append("0");
+                }
+            }else {
+                sb.append("0.");
+                for (int i = 0; i < scale_; i++){
+                    sb.append("#");
+                }
             }
             DecimalFormat df = new DecimalFormat(sb.toString());
             df.setRoundingMode(RoundingMode.FLOOR);
