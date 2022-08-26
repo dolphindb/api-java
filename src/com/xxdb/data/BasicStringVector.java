@@ -48,7 +48,11 @@ public class BasicStringVector extends AbstractVector{
 			int rows = list.size();
 			this.blobValues = new ArrayList<>();
 			for (int i = 0; i < rows; ++i){
-				this.blobValues.add(list.get(i).getBytes(StandardCharsets.UTF_8));
+				if(list.get(i) != null){
+					this.blobValues.add(list.get(i).getBytes(StandardCharsets.UTF_8));
+				}else{
+					this.blobValues.add("".getBytes(StandardCharsets.UTF_8));
+				}
 			}
 		}
 		if (list != null) {
@@ -91,12 +95,21 @@ public class BasicStringVector extends AbstractVector{
 			if (copy){
 				String[] valuecopy = array.clone();
 				for (int i = 0; i < valuecopy.length; i++){
-					blobValues.add(valuecopy[i].getBytes(StandardCharsets.UTF_8));
+					if(valuecopy[i] != null){
+						this.blobValues.add(valuecopy[i].getBytes(StandardCharsets.UTF_8));
+					}else{
+						this.blobValues.add("".getBytes(StandardCharsets.UTF_8));
+					}
 				}
 			}else {
 				values = array;
 				for (int i = 0; i < values.length; i++){
-					blobValues.add(array[i].getBytes(StandardCharsets.UTF_8));
+					if(array[i] != null){
+						this.blobValues.add(array[i].getBytes(StandardCharsets.UTF_8));
+					}else {
+						this.blobValues.add("".getBytes(StandardCharsets.UTF_8));
+					}
+
 				}
 			}
 		}else {
