@@ -4,6 +4,8 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 import java.io.IOException;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.time.temporal.Temporal;
 
 public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDecimal32>{
@@ -15,11 +17,15 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
         value_ = in.readInt();
     }
 
-    public BasicDecimal32(int scale, int value){
+    public BasicDecimal32(int value, int scale){
         scale_ = scale;
-        value_ = value;
+        value_ = value * (int)Math.pow(10, scale_);
     }
 
+    public BasicDecimal32(double value, int scale){
+        scale_ = scale;
+        value_ = (int) (value * Math.pow(10, scale_));
+    }
 
     @Override
     protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
@@ -44,18 +50,20 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
             return "";
         else {
             StringBuilder sb = new StringBuilder();
-            sb.append((int)(value_ / Math.pow(10, scale_)));
-            int sign = value_ < 0? -1 : 1;
-            double data = value_ % Math.pow(10, scale_) * sign;
-            sb.append(".");
-            if (data == 0){
-                for (int i = 0; i < scale_;i++){
+            if ((double) value_ / Math.pow(10, scale_) >= 1.0 || (double) value_ / Math.pow(10, scale_) <= -1.0){
+                sb.append("#.");
+                for (int i = 0; i < scale_; i++){
                     sb.append("0");
                 }
             }else {
-                sb.append((int)data);
+                sb.append("0.");
+                for (int i = 0; i < scale_; i++){
+                    sb.append("#");
+                }
             }
-            return sb.toString();
+            DecimalFormat df = new DecimalFormat(sb.toString());
+            df.setRoundingMode(RoundingMode.FLOOR);
+            return df.format((double) value_ / Math.pow(10, scale_));
         }
     }
 

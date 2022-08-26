@@ -4,6 +4,8 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 import java.io.IOException;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.time.temporal.Temporal;
 
 public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDecimal32>{
@@ -15,9 +17,14 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
         value_ = in.readLong();
     }
 
-    public BasicDecimal64(int scale, long value){
+    public BasicDecimal64(long value, int scale){
         scale_ = scale;
         value_ = value;
+    }
+
+    public BasicDecimal64(double value, int scale){
+        scale_ = scale;
+        value_ = (long) (value * Math.pow(10, scale_));
     }
 
     @Override
@@ -43,18 +50,21 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
             return "";
         else {
             StringBuilder sb = new StringBuilder();
-            sb.append((long)(value_ / Math.pow(10, scale_)));
-            int sign = value_ < 0? -1 : 1;
-            double data = value_ % Math.pow(10, scale_) * sign;
-            sb.append(".");
-            if (data == 0){
-                for (int i = 0; i < scale_;i++){
+            if ((double) value_ / Math.pow(10, scale_) >= 1.0 || (double) value_ / Math.pow(10, scale_) <= -1.0){
+                sb.append("#.");
+                for (int i = 0; i < scale_; i++){
                     sb.append("0");
                 }
             }else {
-                sb.append((int)data);
+                sb.append("0.");
+                for (int i = 0; i < scale_; i++){
+                    sb.append("#");
+                }
             }
-            return sb.toString();
+            DecimalFormat df = new DecimalFormat(sb.toString());
+            df.setRoundingMode(RoundingMode.FLOOR);
+            double x = (double) value_ / Math.pow(10, scale_);
+            return df.format((double) value_ / Math.pow(10, scale_));
         }
     }
 

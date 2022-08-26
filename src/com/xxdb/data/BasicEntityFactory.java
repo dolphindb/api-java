@@ -164,7 +164,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 		@Override
 		public Vector createPair(ExtendedDataInput in) throws IOException {
-			return null;
+			return new BasicDecimal64Vector(Entity.DATA_FORM.DF_PAIR, in);
 		}
 
 		@Override
@@ -207,7 +207,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 		@Override
 		public Vector createPair(ExtendedDataInput in) throws IOException {
-			return null;
+			return new BasicDecimal32Vector(Entity.DATA_FORM.DF_PAIR, in);
 		}
 
 		@Override
