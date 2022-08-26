@@ -61,7 +61,8 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
             BigDecimal result = new BigDecimal(value_ % pow.longValue() * sign);
             sb.append(".");
             String s = result.toString();
-            while (sb.length()-2 < scale_ - s.length()){
+            int nowLen = sb.length();
+            while (sb.length()-nowLen < scale_ - s.length()){
                 sb.append("0");
             }
             sb.append(s);
