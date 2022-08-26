@@ -80,7 +80,7 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public Scalar get(int index) {
-        return new BasicDecimal64((double) values[index] / Math.pow(10, scale_), scale_);
+        return new BasicDecimal64(scale_, values[index]);
     }
 
     @Override

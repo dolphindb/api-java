@@ -174,7 +174,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 		@Override
 		public Scalar createScalarWithDefaultValue() {
-			return new BasicDecimal64(0,0);
+			return new BasicDecimal64((long) 0,0);
 		}
 
 		@Override

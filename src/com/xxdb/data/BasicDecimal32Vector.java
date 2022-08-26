@@ -80,7 +80,7 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public Scalar get(int index) {
-        return new BasicDecimal32((double) values[index] / Math.pow(10, scale_), scale_);
+        return new BasicDecimal32(new int[]{scale_, values[index]});
     }
 
     @Override

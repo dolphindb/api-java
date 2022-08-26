@@ -4,9 +4,11 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.time.temporal.Temporal;
+import java.util.logging.Level;
 
 public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDecimal32>{
     private int scale_=0;
@@ -22,9 +24,9 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
         value_ = value;
     }
 
-    public BasicDecimal64(double value, int scale){
+    BasicDecimal64(int scale, long value){
         scale_ = scale;
-        value_ = (long) (value * Math.pow(10, scale_));
+        value_ = value;
     }
 
     @Override
@@ -50,21 +52,20 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
             return "";
         else {
             StringBuilder sb = new StringBuilder();
-            if ((double) value_ / Math.pow(10, scale_) >= 1.0 || (double) value_ / Math.pow(10, scale_) <= -1.0){
-                sb.append("#.");
-                for (int i = 0; i < scale_; i++){
-                    sb.append("0");
-                }
-            }else {
-                sb.append("0.");
-                for (int i = 0; i < scale_; i++){
-                    sb.append("#");
-                }
+            BigDecimal pow = new BigDecimal(10);
+            for (long i = 0; i < scale_ - 1; i++) {
+                pow = pow.multiply(new BigDecimal(10));
             }
-            DecimalFormat df = new DecimalFormat(sb.toString());
-            df.setRoundingMode(RoundingMode.FLOOR);
-            double x = (double) value_ / Math.pow(10, scale_);
-            return df.format((double) value_ / Math.pow(10, scale_));
+            sb.append(value_ / pow.longValue());
+            int sign = value_ < 0 ? -1 : 1;
+            BigDecimal result = new BigDecimal(value_ % pow.longValue() * sign);
+            sb.append(".");
+            String s = result.toString();
+            while (sb.length()-2 < scale_ - s.length()){
+                sb.append("0");
+            }
+            sb.append(s);
+            return sb.toString();
         }
     }
 
