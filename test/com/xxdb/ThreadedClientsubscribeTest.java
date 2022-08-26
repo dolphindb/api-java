@@ -135,14 +135,14 @@ public class ThreadedClientsubscribeTest {
         }
     }
     @Test
-    public void test_ThreadedClient_HOST_host_error() throws IOException, InterruptedException {
+    public void test_ThreadedClient_HOST_error() throws IOException {
         ThreadedClient client2 = new ThreadedClient("host_error",10022);
         client2.close();
     }
 
     @Test
-    public void test_ThreadedClient_HOST_port_error() throws IOException {
-        ThreadedClient client2 = new ThreadedClient("host_error",0);
+    public void test_ThreadedClient_PORT_error() throws IOException {
+        ThreadedClient client2 = new ThreadedClient(HOST,0);
         client2.close();
     }
 
