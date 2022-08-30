@@ -23,6 +23,15 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
         value_ = value * (int)Math.pow(10, scale_);
     }
 
+    public BasicDecimal32(float value, int scale){
+        scale_ = scale;
+        if (value == 0)
+            value_ = 0;
+        else {
+            value_ = (int) Math.floor(value * (int)Math.pow(10, scale_));
+        }
+    }
+
     BasicDecimal32(int[] all){
         scale_ = all[0];
         value_ = all[1];
@@ -30,7 +39,8 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
 
     @Override
     protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
-
+        out.writeInt(scale_);
+        out.writeInt(value_);
     }
 
     @Override

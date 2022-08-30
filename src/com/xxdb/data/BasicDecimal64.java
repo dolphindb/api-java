@@ -31,7 +31,8 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
 
     @Override
     protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
-
+        out.writeInt(scale_);
+        out.writeLong(value_);
     }
 
     @Override

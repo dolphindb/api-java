@@ -168,6 +168,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 			case DT_DATEHOUR:
 			case DT_DATEMINUTE:
 			case DT_SYMBOL:
+			case DT_DECIMAL32:
 				unitLength = 4;
 				break;
 			case DT_LONG:
@@ -176,6 +177,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 			case DT_TIMESTAMP:
 			case DT_NANOTIMESTAMP:
 			case DT_DURATION:
+			case DT_DECIMAL64:
 				unitLength = 8;
 				break;
 			case DT_INT128:
@@ -189,6 +191,10 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 				throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + type.name());
 		}
 		return unitLength;
+	}
+
+	public int getExtraParamForType(){
+		throw new RuntimeException("Not support yet");
 	}
 
 	@Override

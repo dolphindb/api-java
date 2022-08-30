@@ -50,7 +50,8 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
-
+        out.writeInt(scale_);
+        out.writeLongArray(values);
     }
 
     @Override
@@ -116,5 +117,22 @@ public class BasicDecimal64Vector extends AbstractVector{
     @Override
     public int rows() {
         return values.length;
+    }
+
+    @Override
+    public int getExtraParamForType(){
+        return scale_;
+    }
+
+    @Override
+    public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
+        targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
+        for (int i = 0; i < targetNumElement; ++i)
+        {
+            out.putLong(values[indexStart + i]);
+        }
+        numElementAndPartial.numElement = targetNumElement;
+        numElementAndPartial.partial = 0;
+        return targetNumElement * 8;
     }
 }
