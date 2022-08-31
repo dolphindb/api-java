@@ -1132,9 +1132,11 @@ client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
 ```
 
 当流数据表有新增数据时，系统会通知Java API调用MyHandler方法，将新数据通过msg参数传入。
-2. 多线程回调(ThreadPollingClient)：handler 模式客户端(线程池处理任务)
-```java
 
+2. 多线程回调 ThreadPooledClient
+```java
+ThreadPooledClient client = new ThreadPooledClient(10000,10);
+client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
 ```
 
 ### 9.3 断线重连
@@ -1172,9 +1174,9 @@ TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, actionNa
 ```
 ### 9.5 订阅异构流表
 
-DolphinDB server 自 1.30.17 及 2.00.5 版本开始，支持通过 [replay](https://www.dolphindb.cn/cn/help/FunctionsandCommands/FunctionReferences/r/replay.html) 函数将多个结构不同的流数据表，回放（序列化）到一个流表里，这个流表被称为异构流表。Python API 自 1.30.19 版本开始，新增 `StreamDeserializer` 类，用于构造异构流表反序列化器，以实现对异构流表的订阅和反序列化操作。
+DolphinDB server 自 1.30.17 及 2.00.5 版本开始，支持通过 [replay](https://www.dolphindb.cn/cn/help/FunctionsandCommands/FunctionReferences/r/replay.html) 函数将多个结构不同的流数据表，回放（序列化）到一个流表里，这个流表被称为异构流表。Java API 自 1.30.19 版本开始，新增 `StreamDeserializer` 类，用于构造异构流表反序列化器，以实现对异构流表的订阅和反序列化操作。
 
-C# API 通过 `StreamDeserializer` 类来构造异构流表反序列化器，语法如下：
+Java API 通过 `StreamDeserializer` 类来构造异构流表反序列化器，语法如下：
 1. 通过指定表的schema进行构造，包含以下两种方式，指定表的schema信息或指定表的各列类型 ：
 
 指定表的schema信息：
