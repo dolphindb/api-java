@@ -11,4 +11,11 @@ public abstract class AbstractDecoder implements Decoder {
 		out.putInt(extra);
 		return out;
 	}
+
+	protected ByteBuffer createLZ4ColumnVector(int rows, boolean isLittleEndian, int extra){
+		ByteBuffer out = ByteBuffer.allocate(8).order(isLittleEndian ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+		out.putInt(rows);
+		out.putInt(extra);
+		return out;
+	}
 }
