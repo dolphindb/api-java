@@ -24,6 +24,15 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
         value_ = value;
     }
 
+    public BasicDecimal64(double value, int scale){
+        scale_ = scale;
+        if (value == 0)
+            value_ = 0;
+        else {
+            value_ = (long) Math.floor(value * (long)Math.pow(10, scale_));
+        }
+    }
+
     BasicDecimal64(int scale, long value){
         scale_ = scale;
         value_ = value;
