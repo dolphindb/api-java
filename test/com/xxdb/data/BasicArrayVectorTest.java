@@ -629,15 +629,15 @@ public class BasicArrayVectorTest {
         l.add(0,v);
         l.add(1,v);
         BasicArrayVector obj = new BasicArrayVector(l);
-        assertEquals(time,obj.getVectorValue(0).get(0).getNumber());
-        assertEquals(time,obj.getVectorValue(0).get(1).getNumber());
+        assertEquals(time,((Scalar)obj.getVectorValue(0).get(0)).getNumber());
+        assertEquals(time,((Scalar)obj.getVectorValue(0).get(1)).getNumber());
 
         Map<String, Entity> map = new HashMap<String, Entity>();
         map.put("arrayvector", obj);
         conn.upload(map);
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
-        assertEquals(time,res.getVectorValue(0).get(0).getNumber());
-        assertEquals(time,res.getVectorValue(0).get(1).getNumber());
+        assertEquals(time,((Scalar)res.getVectorValue(0).get(0)).getNumber());
+        assertEquals(time,((Scalar)res.getVectorValue(0).get(1)).getNumber());
         conn.close();
     }
 
@@ -652,19 +652,19 @@ public class BasicArrayVectorTest {
         l.add(0,v);
         l.add(1,v);
         BasicArrayVector obj = new BasicArrayVector(l);
-        assertEquals(LocalTime.of(1,1,1,1323433),obj.getVectorValue(0).get(0).getTemporal());
-        assertEquals(LocalTime.of(1,1,1,1323433),obj.getVectorValue(1).get(0).getTemporal());
-        assertEquals(LocalTime.of(1,1,2,1323433),obj.getVectorValue(0).get(1).getTemporal());
-        assertEquals(LocalTime.of(1,1,2,1323433),obj.getVectorValue(1).get(1).getTemporal());
+        assertEquals(LocalTime.of(1,1,1,1323433),((Scalar)obj.getVectorValue(0).get(0)).getTemporal());
+        assertEquals(LocalTime.of(1,1,1,1323433),((Scalar)obj.getVectorValue(1).get(0)).getTemporal());
+        assertEquals(LocalTime.of(1,1,2,1323433),((Scalar)obj.getVectorValue(0).get(1)).getTemporal());
+        assertEquals(LocalTime.of(1,1,2,1323433),((Scalar)obj.getVectorValue(1).get(1)).getTemporal());
 
         Map<String, Entity> map = new HashMap<String, Entity>();
         map.put("arrayvector", obj);
         conn.upload(map);
         BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
-        assertEquals(LocalTime.of(1,1,1,1323433),res.getVectorValue(0).get(0).getTemporal());
-        assertEquals(LocalTime.of(1,1,1,1323433),res.getVectorValue(1).get(0).getTemporal());
-        assertEquals(LocalTime.of(1,1,2,1323433),res.getVectorValue(0).get(1).getTemporal());
-        assertEquals(LocalTime.of(1,1,2,1323433),res.getVectorValue(1).get(1).getTemporal());
+        assertEquals(LocalTime.of(1,1,1,1323433),((Scalar)res.getVectorValue(0).get(0)).getTemporal());
+        assertEquals(LocalTime.of(1,1,1,1323433),((Scalar)res.getVectorValue(1).get(0)).getTemporal());
+        assertEquals(LocalTime.of(1,1,2,1323433),((Scalar)res.getVectorValue(0).get(1)).getTemporal());
+        assertEquals(LocalTime.of(1,1,2,1323433),((Scalar)res.getVectorValue(1).get(1)).getTemporal());
         conn.close();
     }
 

@@ -15,14 +15,14 @@ import com.xxdb.data.Entity.DATA_TYPE;
 public class ListDomain implements Domain {
 	private Entity.DATA_TYPE type;
 	private Entity.DATA_CATEGORY cat;
-	private Map<Scalar, Integer> dict;
+	private Map<Entity, Integer> dict;
 
 	public ListDomain(Vector list, Entity.DATA_TYPE type, Entity.DATA_CATEGORY cat){
 		this.type = type;
 		this.cat = cat;
 		if(list.getDataType() != Entity.DATA_TYPE.DT_ANY)
 			throw new RuntimeException("The input list must be a tuple.");
-		dict = new HashMap<Scalar, Integer>();
+		dict = new HashMap<Entity, Integer>();
 		BasicAnyVector values = (BasicAnyVector)list;
 		int partitions = values.rows();
 		for(int i=0; i<partitions; ++i){

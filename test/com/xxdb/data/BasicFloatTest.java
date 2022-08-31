@@ -27,7 +27,7 @@ public class BasicFloatTest {
         BasicFloatVector res= (BasicFloatVector) v.combine(vector2);
         Float[] datas = {1.1f,0.0f,1.3f,1.1f,0.0f,1.3f};
         for (int i=0;i<res.rows();i++){
-            assertEquals(datas[i],res.get(i).getNumber());
+            assertEquals(datas[i],((Scalar)res.get(i)).getNumber());
 
         }
         assertEquals(6,res.rows());

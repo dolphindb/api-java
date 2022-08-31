@@ -1027,9 +1027,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
         assertEquals(1048576, bt.rows());
         for (int i = 0; i < 1048576; i++) {
-            assertEquals(i, bt.getColumn("int").get(i).getNumber());
-            assertEquals((short)(i%32768), bt.getColumn("short").get(i).getNumber());
-            assertEquals(Long.valueOf(i), bt.getColumn("long").get(i).getNumber());
+            assertEquals(i, ((Scalar)bt.getColumn("int").get(i)).getNumber());
+            assertEquals((short)(i%32768), ((Scalar)bt.getColumn("short").get(i)).getNumber());
+            assertEquals(Long.valueOf(i), ((Scalar)bt.getColumn("long").get(i)).getNumber());
 
         }
         conn.run("undef(`t1,SHARED)");
@@ -1513,9 +1513,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals("false", bt.getColumn("bool").get(i).getString());
             assertEquals(String.valueOf(0), bt.getColumn("short").get(i).getString());
             assertEquals(String.valueOf(0), bt.getColumn("long").get(i).getString());
-            assertEquals(0.0f, bt.getColumn("float").get(i).getNumber());
-            assertEquals(0.0, bt.getColumn("double").get(i).getNumber());
-            assertEquals(0, bt.getColumn("id").get(i).getNumber());
+            assertEquals(0.0f, ((Scalar)bt.getColumn("float").get(i)).getNumber());
+            assertEquals(0.0, ((Scalar)bt.getColumn("double").get(i)).getNumber());
+            assertEquals(0, ((Scalar)bt.getColumn("id").get(i)).getNumber());
         }
         conn.run("undef(`t1,SHARED)");
     }
@@ -1888,8 +1888,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable bt= (BasicTable) conn.run("select * from t1;");
         assertEquals(10,bt.rows());
         for (int i=0;i<10;i++) {
-            assertEquals(1, ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0).getNumber());
-            assertEquals(i, ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1).getNumber());
+            assertEquals(1, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
+            assertEquals(i, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
         }
         conn.run("undef(`t1,SHARED)");
     }
@@ -1967,8 +1967,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable bt= (BasicTable) conn.run("select * from t1;");
         assertEquals(time,bt.rows());
         for (int i=0;i<time;i++) {
-            assertEquals(1l, ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0).getNumber());
-            assertEquals(Long.valueOf(i), ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1).getNumber());
+            assertEquals(1l, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
+            assertEquals(Long.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
         }
     }
 
@@ -1992,8 +1992,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable bt= (BasicTable) conn.run("select * from t1;");
         assertEquals(time,bt.rows());
         for (int i=0;i<time;i++) {
-            assertEquals(Short.valueOf("1"), ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0).getNumber());
-            assertEquals(Short.valueOf(""+i+""), ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1).getNumber());
+            assertEquals(Short.valueOf("1"), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
+            assertEquals(Short.valueOf(""+i+""), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
         }
     }
 
@@ -2017,8 +2017,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable bt= (BasicTable) conn.run("select * from t1;");
         assertEquals(time,bt.rows());
         for (int i=0;i<time;i++) {
-            assertEquals(0.0f, ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0).getNumber());
-            assertEquals(Float.valueOf(i), ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1).getNumber());
+            assertEquals(0.0f, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
+            assertEquals(Float.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
         }
     }
 
@@ -2042,8 +2042,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable bt= (BasicTable) conn.run("select * from t1;");
         assertEquals(time,bt.rows());
         for (int i=0;i<time;i++) {
-            assertEquals(Double.valueOf(0), ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0).getNumber());
-            assertEquals(Double.valueOf(i-10), ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1).getNumber());
+            assertEquals(Double.valueOf(0), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
+            assertEquals(Double.valueOf(i-10), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
         }
     }
 
@@ -2067,7 +2067,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable bt= (BasicTable) conn.run("select * from t1;");
         assertEquals(time,bt.rows());
         for (int i=0;i<time;i++) {
-            assertEquals(LocalDate.of(1,1,1), ((BasicArrayVector)bt.getColumn("arrayv1")).getVectorValue(i).get(0).getTemporal());
+            assertEquals(LocalDate.of(1,1,1), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv1")).getVectorValue(i).get(0)).getTemporal());
             assertEquals("2021.01M", ((BasicArrayVector)bt.getColumn("arrayv2")).getVectorValue(i).get(0).getString());
         }
     }
@@ -2127,13 +2127,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
         mutithreadTableWriter_.waitForThreadCompletion();
         BasicTable bt= (BasicTable) conn.run("select * from t1;");
         assertEquals(time,bt.rows());
-        System.out.println(((BasicArrayVector)bt.getColumn("timestamp")).getVectorValue(0).get(0).getTemporal());
+        System.out.println(((Scalar)((BasicArrayVector)bt.getColumn("timestamp")).getVectorValue(0).get(0)).getTemporal());
 
         for (int i=0;i<time;i++) {
-            assertEquals(LocalDateTime.of(2022,2,1,1,1,2), ((BasicArrayVector)bt.getColumn("datetime")).getVectorValue(i).get(0).getTemporal());
-            assertEquals(LocalDateTime.of(2022,2,1,1,1,2,45000000), ((BasicArrayVector)bt.getColumn("timestamp")).getVectorValue(i).get(0).getTemporal());
-            assertEquals(LocalTime.of(1,1,1,45364654+i), ((BasicArrayVector)bt.getColumn("nanotime")).getVectorValue(i).get(0).getTemporal());
-            assertEquals(LocalDateTime.of(2022,2,1,1,1,2,45364654+i), ((BasicArrayVector)bt.getColumn("nanotimstamp")).getVectorValue(i).get(0).getTemporal());
+            assertEquals(LocalDateTime.of(2022,2,1,1,1,2), ((Scalar)((BasicArrayVector)bt.getColumn("datetime")).getVectorValue(i).get(0)).getTemporal());
+            assertEquals(LocalDateTime.of(2022,2,1,1,1,2,45000000), ((Scalar)((BasicArrayVector)bt.getColumn("timestamp")).getVectorValue(i).get(0)).getTemporal());
+            assertEquals(LocalTime.of(1,1,1,45364654+i), ((Scalar)((BasicArrayVector)bt.getColumn("nanotime")).getVectorValue(i).get(0)).getTemporal());
+            assertEquals(LocalDateTime.of(2022,2,1,1,1,2,45364654+i), ((Scalar)((BasicArrayVector)bt.getColumn("nanotimstamp")).getVectorValue(i).get(0)).getTemporal());
         }
     }
 

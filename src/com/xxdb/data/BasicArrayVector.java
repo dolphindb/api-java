@@ -185,7 +185,7 @@ public class BasicArrayVector extends AbstractVector {
 	}
 
 	@Override
-	public Scalar get(int index) {
+	public Entity get(int index) {
 		return valueVec.get(index);
 	}
 
@@ -212,7 +212,7 @@ public class BasicArrayVector extends AbstractVector {
 	}
 
 	@Override
-	public void set(int index, Scalar value) throws Exception {
+	public void set(int index, Entity value) throws Exception {
 		// TODO Auto-generated method stub
 		throw new RuntimeException("BasicArrayVector.set not supported.");
 	}

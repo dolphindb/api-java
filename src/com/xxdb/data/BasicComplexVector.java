@@ -107,7 +107,7 @@ public class BasicComplexVector extends AbstractVector{
 		return 16;
 	}
 
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicComplex(values[index].x, values[index].y);
 	}
 	
@@ -127,7 +127,7 @@ public class BasicComplexVector extends AbstractVector{
 		return sub;
 	}
 	
-	public void set(int index, Scalar value) throws Exception {
+	public void set(int index, Entity value) throws Exception {
 		values[index].x = ((BasicComplex)value).getReal();
 		values[index].y = ((BasicComplex)value).getImage();
 	}

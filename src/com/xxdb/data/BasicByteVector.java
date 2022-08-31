@@ -86,7 +86,7 @@ public class BasicByteVector extends AbstractVector{
 		return new BasicByteVector(newValue);
 	}
 	
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicByte(values[index]);
 	}
 	
@@ -102,11 +102,11 @@ public class BasicByteVector extends AbstractVector{
 		return values[index];
 	}
 	
-	public void set(int index, Scalar value) throws Exception {
-		if(value.isNull()){
+	public void set(int index, Entity value) throws Exception {
+		if(((Scalar)value).isNull()){
 			values[index] = Byte.MIN_VALUE;
 		}else{
-			values[index] = value.getNumber().byteValue();
+			values[index] = ((Scalar)value).getNumber().byteValue();
 		}
 	}
 

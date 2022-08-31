@@ -98,7 +98,7 @@ public class BasicShortVector extends AbstractVector{
 		return values[index];
 	}
 	
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicShort(values[index]);
 	}
 	
@@ -110,11 +110,11 @@ public class BasicShortVector extends AbstractVector{
 		return new BasicShortVector(sub, false);
 	}
 	
-	public void set(int index, Scalar value) throws Exception {
-		if(value.isNull()){
+	public void set(int index, Entity value) throws Exception {
+		if(((Scalar)value).isNull()){
 			values[index] = Short.MIN_VALUE;
 		}else{
-			values[index] = value.getNumber().shortValue();
+			values[index] = ((Scalar)value).getNumber().shortValue();
 		}
 
 	}

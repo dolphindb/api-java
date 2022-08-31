@@ -38,7 +38,7 @@ public class BasicDurationVector extends AbstractVector{
 		}
 	}
 	
-	public Scalar get(int index){
+	public Entity get(int index){
 		int unitIndex = values[2*index + 1];
 		if(unitIndex == Integer.MIN_VALUE)
 			return new BasicDuration(DURATION.NS, Integer.MIN_VALUE);
@@ -46,7 +46,7 @@ public class BasicDurationVector extends AbstractVector{
 			return new BasicDuration(DURATION.values()[values[2*index + 1]], values[2*index]);
 	}
 		
-	public void set(int index, Scalar value) throws Exception {
+	public void set(int index, Entity value) throws Exception {
 		BasicDuration duration = (BasicDuration)value;
 		values[2*index] = duration.getDuration();
 		values[2*index + 1] = duration.getUnit().ordinal();

@@ -271,7 +271,7 @@ public class AbstractTest{
             }
 
             @Override
-            public void set(int index, Scalar value) throws Exception {
+            public void set(int index, Entity value) throws Exception {
 
             }
 
@@ -360,7 +360,7 @@ public class AbstractTest{
             }
 
             @Override
-            public void set(int index, Scalar value) throws Exception {
+            public void set(int index, Entity value) throws Exception {
 
             }
 
@@ -444,7 +444,7 @@ public class AbstractTest{
             }
 
             @Override
-            public void set(int index, Scalar value) throws Exception {
+            public void set(int index, Entity value) throws Exception {
 
             }
 
@@ -527,7 +527,7 @@ public class AbstractTest{
             }
 
             @Override
-            public void set(int index, Scalar value) throws Exception {
+            public void set(int index, Entity value) throws Exception {
 
             }
 
@@ -611,7 +611,7 @@ public class AbstractTest{
             }
 
             @Override
-            public void set(int index, Scalar value) throws Exception {
+            public void set(int index, Entity value) throws Exception {
 
             }
 

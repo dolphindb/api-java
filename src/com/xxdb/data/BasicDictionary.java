@@ -17,7 +17,7 @@ import com.xxdb.io.ExtendedDataOutput;
  */
 
 public class BasicDictionary extends AbstractEntity implements Dictionary{
-	private Map<Scalar, Entity> dict;
+	private Map<Entity, Entity> dict;
 	private DATA_TYPE keyType;
 	private DATA_TYPE valueType;
 	
@@ -54,7 +54,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 		
 		int size = keys.rows();
 		int capacity = (int)(size/0.75);
-		dict = new HashMap<Scalar, Entity>(capacity);
+		dict = new HashMap<Entity, Entity>(capacity);
 		if(values.getDataType() == DATA_TYPE.DT_ANY){
 			BasicAnyVector entityValues = (BasicAnyVector)values;
 			for(int i=0; i<size; ++i)
@@ -71,7 +71,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 			throw new IllegalArgumentException("Invalid keyType: " + keyType.name());
 		this.keyType = keyType;
 		this.valueType = valueType;
-		dict = new HashMap<Scalar, Entity>();
+		dict = new HashMap<Entity, Entity>();
 	}
 	
 	public BasicDictionary(DATA_TYPE keyType, DATA_TYPE valueType){
@@ -127,7 +127,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 		return dict.get(new BasicString(key));
 	}
 	
-	public Set<Scalar> keys(){
+	public Set<Entity> keys(){
 		return dict.keySet();
 	}
 	
@@ -135,7 +135,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 		return dict.values();
 	}
 	
-	public Set<Map.Entry<Scalar, Entity>> entrySet(){
+	public Set<Map.Entry<Entity, Entity>> entrySet(){
 		return dict.entrySet();
 	}
 	
@@ -143,10 +143,10 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 		if(valueType == DATA_TYPE.DT_ANY){
 			StringBuilder content = new StringBuilder();
 			int count=0;
-			Set<Map.Entry<Scalar, Entity>> entries = dict.entrySet();
-			Iterator<Map.Entry<Scalar, Entity>> it = entries.iterator();
+			Set<Map.Entry<Entity, Entity>> entries = dict.entrySet();
+			Iterator<Map.Entry<Entity, Entity>> it = entries.iterator();
 			while(it.hasNext() && count<20){
-				Map.Entry<Scalar, Entity> entry = it.next();
+				Map.Entry<Entity, Entity> entry = it.next();
 				content.append(entry.getKey().getString());
 				content.append("->");
 				DATA_FORM form = entry.getValue().getDataForm();
@@ -167,16 +167,16 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 		else{
 			StringBuilder sbKeys = new StringBuilder("{");
 			StringBuilder sbValues = new StringBuilder("{");
-			Set<Map.Entry<Scalar, Entity>> entries = dict.entrySet();
-			Iterator<Map.Entry<Scalar, Entity>> it = entries.iterator();
+			Set<Map.Entry<Entity, Entity>> entries = dict.entrySet();
+			Iterator<Map.Entry<Entity, Entity>> it = entries.iterator();
 			if(it.hasNext()){
-				Map.Entry<Scalar, Entity> entry = it.next();
+				Map.Entry<Entity, Entity> entry = it.next();
 				sbKeys.append(entry.getKey().getString());
 				sbValues.append(entry.getValue().getString());
 			}
 			int count=1;
 			while(it.hasNext() && count<20){
-				Map.Entry<Scalar, Entity> entry = it.next();
+				Map.Entry<Entity, Entity> entry = it.next();
 				sbKeys.append(',');
 				sbKeys.append(entry.getKey().getString());
 				sbValues.append(',');
@@ -202,7 +202,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 		Vector values = (Vector)factory.createVectorWithDefaultValue(valueType, dict.size());
 		int index = 0;
 		try{
-			for(Map.Entry<Scalar, Entity> entry : dict.entrySet()){
+			for(Map.Entry<Entity, Entity> entry : dict.entrySet()){
 				keys.set(index, entry.getKey());
 				values.set(index, (Scalar)entry.getValue());
 				++index;

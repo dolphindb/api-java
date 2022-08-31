@@ -36,7 +36,7 @@ public class BasicTableTest {
             bt.getColumn("cshort").set(0,new BasicShort(Short.MIN_VALUE));
             bt.getColumn("cshort").set(0,new BasicShort(Short.MIN_VALUE));
             bt.getColumn("cshort").set(0,new BasicShort(Short.MIN_VALUE));
-            assertTrue(bt.getColumn("clong").get(0).isNull());
+            assertTrue(((Scalar)bt.getColumn("clong").get(0)).isNull());
         }catch (Exception e){
             e.printStackTrace();
         }

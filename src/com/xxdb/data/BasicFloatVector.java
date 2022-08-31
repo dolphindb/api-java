@@ -99,7 +99,7 @@ public class BasicFloatVector extends AbstractVector{
 		return 4;
 	}
 
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicFloat(values[index]);
 	}
 	
@@ -115,11 +115,11 @@ public class BasicFloatVector extends AbstractVector{
 		return values[index];
 	}
 	
-	public void set(int index, Scalar value) throws Exception {
-		if(value.isNull()){
+	public void set(int index, Entity value) throws Exception {
+		if(((Scalar)value).isNull()){
 			values[index] = -Float.MAX_VALUE;
 		}else{
-			values[index] = value.getNumber().floatValue();
+			values[index] = ((Scalar)value).getNumber().floatValue();
 		}
 
 	}

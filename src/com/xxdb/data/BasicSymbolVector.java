@@ -75,7 +75,7 @@ public class BasicSymbolVector extends AbstractVector {
 		}
 	}
 	
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicString(base.getSymbol(values[index]));
 	}
 	
@@ -97,7 +97,7 @@ public class BasicSymbolVector extends AbstractVector {
 		return 4;
 	}
 
-	public void set(int index, Scalar value) throws Exception {
+	public void set(int index, Entity value) throws Exception {
 		values[index] = base.find(value.getString(), true);
 	}
 

@@ -14,7 +14,7 @@ import com.xxdb.io.ExtendedDataOutput;
  */
 
 public class BasicSet extends AbstractEntity implements Set {
-	private java.util.Set<Scalar> set;
+	private java.util.Set<Entity> set;
 	private DATA_TYPE keyType;
 	
 	public BasicSet(DATA_TYPE keyType, ExtendedDataInput in) throws IOException{
@@ -36,7 +36,7 @@ public class BasicSet extends AbstractEntity implements Set {
 			
 		int size = keys.rows();
 		int capacity = (int)(size/0.75);
-		set = new HashSet<Scalar>(capacity);
+		set = new HashSet<Entity>(capacity);
 		for(int i=0; i<size; ++i)
 			set.add(keys.get(i));
 	}
@@ -45,7 +45,7 @@ public class BasicSet extends AbstractEntity implements Set {
 		if(keyType == DATA_TYPE.DT_VOID || keyType == DATA_TYPE.DT_SYMBOL || keyType.getValue() >= DATA_TYPE.DT_FUNCTIONDEF.getValue())
 			throw new IllegalArgumentException("Invalid keyType: " + keyType.name());
 		this.keyType = keyType;
-		set = new HashSet<Scalar>();
+		set = new HashSet<Entity>();
 	}
 	
 	public BasicSet(DATA_TYPE keyType){
@@ -84,7 +84,7 @@ public class BasicSet extends AbstractEntity implements Set {
 	private Vector keys(int top){
 		int size = Math.min(top, set.size());
 		Vector keys = (Vector)BasicEntityFactory.instance().createVectorWithDefaultValue(keyType, size);
-		Iterator<Scalar> it = set.iterator();
+		Iterator<Entity> it = set.iterator();
 		int count = 0;
 		try{
 			while(count<size)

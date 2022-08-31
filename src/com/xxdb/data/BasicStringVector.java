@@ -198,7 +198,7 @@ public class BasicStringVector extends AbstractVector{
 		}
 	}
 	
-	public Scalar get(int index){
+	public Entity get(int index){
 		if(isBlob)
 			return new BasicString(blobValues.get(index), true);
 		else
@@ -236,7 +236,7 @@ public class BasicStringVector extends AbstractVector{
 		return 1;
 	}
 
-	public void set(int index, Scalar value) throws Exception {
+	public void set(int index, Entity value) throws Exception {
 		if (isBlob)
 		{
 			if (value.getDataType() == DATA_TYPE.DT_BLOB)
@@ -270,7 +270,7 @@ public class BasicStringVector extends AbstractVector{
 	
 	@Override
 	public int hashBucket(int index, int buckets){
-		return get(index).hashBucket(buckets);
+		return ((Scalar)get(index)).hashBucket(buckets);
 	}
 
 	@Override

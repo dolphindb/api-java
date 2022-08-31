@@ -102,7 +102,7 @@ public class BasicPointVector extends AbstractVector{
 		}
 	}
 
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicPoint(values[index].x, values[index].y);
 	}
 	
@@ -122,7 +122,7 @@ public class BasicPointVector extends AbstractVector{
 		return sub;
 	}
 	
-	public void set(int index, Scalar value) throws Exception {
+	public void set(int index, Entity value) throws Exception {
 		values[index].x = ((BasicPoint)value).getX();
 		values[index].y = ((BasicPoint)value).getY();
 	}

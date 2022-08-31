@@ -93,7 +93,7 @@ public class BasicLongVector extends AbstractVector{
 		}
 	}
 
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicLong(values[index]);
 	}
 	
@@ -117,11 +117,11 @@ public class BasicLongVector extends AbstractVector{
 		return values[index];
 	}
 	
-	public void set(int index, Scalar value) throws Exception {
-		if(value.isNull()){
+	public void set(int index, Entity value) throws Exception {
+		if(((Scalar)value).isNull()){
 			values[index] = Long.MIN_VALUE;
 		}else{
-			values[index] = value.getNumber().longValue();
+			values[index] = ((Scalar)value).getNumber().longValue();
 		}
 	}
 

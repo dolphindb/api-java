@@ -93,7 +93,7 @@ public class BasicDoubleVector extends AbstractVector{
 		}
 	}
 
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicDouble(values[index]);
 	}
 	
@@ -109,11 +109,11 @@ public class BasicDoubleVector extends AbstractVector{
 		return values[index];
 	}
 	
-	public void set(int index, Scalar value) throws Exception {
-		if(value.isNull()){
+	public void set(int index, Entity value) throws Exception {
+		if(((Scalar)value).isNull()){
 			values[index] = -Double.MAX_VALUE;
 		}else{
-			values[index] = value.getNumber().doubleValue();
+			values[index] = ((Scalar)value).getNumber().doubleValue();
 		}
 
 	}

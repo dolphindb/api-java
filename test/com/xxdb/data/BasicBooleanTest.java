@@ -23,7 +23,7 @@ public class BasicBooleanTest {
         AbstractVector.Offect offect = new AbstractVector.Offect(1);
         assertEquals(-1,v.hashBucket(0,1));
         for (int i=0;i<res.rows();i++){
-            assertEquals(data.get(i).getNumber(),res.get(i).getNumber());
+            assertEquals(((Scalar)data.get(i)).getNumber(),((Scalar)res.get(i)).getNumber());
 
         }
         assertEquals(4,res.rows());

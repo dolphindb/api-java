@@ -51,11 +51,8 @@ public class BasicAnyVector extends AbstractVector{
 		return values[index];
 	}
 	
-	public Scalar get(int index){
-		if(values[index].isScalar())
-			return (Scalar)values[index];
-		else
-			throw new RuntimeException("The element of the vector is not a scalar object.");
+	public Entity get(int index){
+		return values[index];
 	}
 	
 	public Vector getSubVector(int[] indices){
@@ -66,7 +63,7 @@ public class BasicAnyVector extends AbstractVector{
 		return new BasicAnyVector(sub, false);
 	}
 	
-	public void set(int index, Scalar value) throws Exception {
+	public void set(int index, Entity value) throws Exception {
 		values[index] = value;
 	}
 

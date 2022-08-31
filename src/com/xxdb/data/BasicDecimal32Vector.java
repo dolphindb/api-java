@@ -80,12 +80,12 @@ public class BasicDecimal32Vector extends AbstractVector{
     }
 
     @Override
-    public Scalar get(int index) {
+    public Entity get(int index) {
         return new BasicDecimal32(new int[]{scale_, values[index]});
     }
 
     @Override
-    public void set(int index, Scalar value) throws Exception {
+    public void set(int index, Entity value) throws Exception {
 
     }
 

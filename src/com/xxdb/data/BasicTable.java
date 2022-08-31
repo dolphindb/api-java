@@ -259,9 +259,9 @@ public class BasicTable extends AbstractEntity implements Table{
 					jsonStr.append(names_.get(i));
 					jsonStr.append(":");
 					if (columns_.get(i) instanceof BasicDoubleVector || columns_.get(i) instanceof BasicFloatVector)
-						jsonStr.append(columns_.get(i).get(rowIndex).isNull() ? "null" : columns_.get(i).get(rowIndex).getNumber());
+						jsonStr.append(((Scalar)columns_.get(i).get(rowIndex)).isNull() ? "null" : ((Scalar) columns_.get(i).get(rowIndex)).getNumber());
 					else
-						jsonStr.append(columns_.get(i).get(rowIndex).getJsonString());
+						jsonStr.append(((Scalar)columns_.get(i).get(rowIndex)).getJsonString());
 					if(i<names_.size()-1)
 						jsonStr.append(",");
 				}

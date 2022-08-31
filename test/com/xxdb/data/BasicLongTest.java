@@ -53,9 +53,9 @@ public class BasicLongTest {
         v.setNull(5);
         for(int b : num){
             for(int i=0;i<v.rows();i++){
-                int expected = getServerHash(v.get(i),b);
+                int expected = getServerHash(((Scalar)v.get(i)),b);
                 Assert.assertEquals(expected, v.hashBucket(i, b));
-                Assert.assertEquals(expected, v.get(i).hashBucket(b));
+                Assert.assertEquals(expected, ((Scalar)v.get(i)).hashBucket(b));
             }
         }
     }
@@ -69,7 +69,7 @@ public class BasicLongTest {
         BasicLongVector res= (BasicLongVector) v.combine(vector2);
         Long[] datas = {1l,-1l,3l,1l,-1l,3l,9l};
         for (int i=0;i<res.rows();i++){
-            assertEquals(datas[i],res.get(i).getNumber());
+            assertEquals(datas[i],((Scalar)res.get(i)).getNumber());
 
         }
         assertEquals(7,res.rows());

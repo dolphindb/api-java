@@ -3,9 +3,13 @@ package com.xxdb;
 
 import com.xxdb.data.Vector;
 import com.xxdb.data.*;
+import com.xxdb.io.ProgressListener;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -32,12 +36,25 @@ public class MutithreadTableWriterTest implements Runnable{
 
 
     public static void main(String[] args) throws InterruptedException, IOException, Exception {
-        DBConnection connection = new DBConnection();
+        DBConnection connection = new DBConnection(false, false, true);
         connection.connect("192.168.1.116", 18999, "admin", "123456");
-        BasicDecimal32Vector bsv = (BasicDecimal32Vector) connection.run("[23$DECIMAL32(4), 1233$DECIMAL32(4), 9876$DECIMAL32(4)]");
-        BasicDecimal32 bs = (BasicDecimal32) bsv.get(0);
-        System.out.println(bs);
-        BasicDecimal32 Decimal32 = new BasicDecimal32(1233,4);
-        System.out.println(Decimal32);
+        connection.run("x=0.1*(1..100)\n" +
+                "y=0.1*(100..1)\n" +
+                "t=table(x,y)\n" +
+                "plot(t,extras={multiYAxes: true})");
+//        connection.run("t = table(1:0, [`b], [DECIMAL32(2)]);share t as TT");
+//        connection.run("t.append!(table([4,5,6] as b))");
+//
+//        BasicTable bt = (BasicTable) connection.run("TT");
+//        List<Entity> argss = new ArrayList<>();
+//        argss.add(bt);
+//        connection.run("tableInsert{TT}", argss);
+//        connection.run("t = table(1:0, [`b], [INT]);share t as TT");
+//        connection.run("t.append!(table([400,500,600] as b))");
+//        BasicTable bt = (BasicTable) connection.run("TT");
+//        List<Entity> argss = new ArrayList<>();
+//        argss.add(bt);
+//        connection.run("tableInsert{TT}", argss);
+
     }
 }

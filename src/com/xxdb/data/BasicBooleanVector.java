@@ -88,7 +88,7 @@ public class BasicBooleanVector extends AbstractVector{
 		}
 	}
 
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicBoolean(values[index]);
 	}
 	
@@ -104,11 +104,11 @@ public class BasicBooleanVector extends AbstractVector{
 		return values[index] != 0;
 	}
 	
-	public void set(int index, Scalar value) throws Exception {
-		if(value.isNull()){
+	public void set(int index, Entity value) throws Exception {
+		if(((Scalar)value).isNull()){
 			values[index] = Byte.MIN_VALUE;
 		}else{
-			values[index] = value.getNumber().byteValue();
+			values[index] = ((Scalar)value).getNumber().byteValue();
 		}
 	}
 

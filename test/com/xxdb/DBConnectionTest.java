@@ -1279,10 +1279,10 @@ public class DBConnectionTest {
     @Test
     public void testAnyVector() throws IOException, Exception {
         BasicAnyVector result = (BasicAnyVector) conn.run("(1, 2, (1,3, 5),(0.9, 0.8))");
-        assertEquals(1, result.get(0).getNumber().intValue());
+        assertEquals(1, ((Scalar)result.get(0)).getNumber().intValue());
 
         result = (BasicAnyVector) conn.run("eachRight(def(x,y):x+y,1,(1,2,3))");
-        assertEquals(2, result.get(0).getNumber().intValue());
+        assertEquals(2, ((Scalar)result.get(0)).getNumber().intValue());
     }
 
     @Test
@@ -3022,7 +3022,7 @@ public void test_SSL() throws Exception {
     map.put("table",conn.run("t=table(x,y,z);"));
     conn.upload(map);
     BasicTable res = (BasicTable) conn.run("t;");
-    assertEquals(10,res.getColumn(0).get(3).getNumber());
+    assertEquals(10,((Scalar)res.getColumn(0).get(3)).getNumber());
 }
 
     @Test
@@ -3035,7 +3035,7 @@ public void test_SSL() throws Exception {
         conn.run("b=[2 1 6];");
         arguments.add(conn.run("b;"));
         BasicTable res = (BasicTable) conn.tryRun("table",arguments);
-        assertEquals(6,res.getColumn(1).get(2).getNumber());
+        assertEquals(6,((Scalar)res.getColumn(1).get(2)).getNumber());
     }
     @Test
     public void test_TryRun_priority_parallelism() throws Exception {
@@ -3052,7 +3052,7 @@ public void test_SSL() throws Exception {
         List<Entity> args = new ArrayList<>();
         args.add(res);
         BasicTable res1 = (BasicTable) conn.tryRun("sum",args,1,1);
-        assertEquals(9L,res1.getColumn(1).get(0).getNumber());
+        assertEquals(9L,((Scalar)res1.getColumn(1).get(0)).getNumber());
     }
 
     @Test

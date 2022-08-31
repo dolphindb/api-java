@@ -23,9 +23,9 @@ public interface Vector extends Entity{
 	boolean isNull(int index);
 	void setNull(int index);
 	int hashBucket(int index, int buckets);
-	Scalar get(int index);
+	Entity get(int index);
 	String getString(int index);
-	void set(int index, Scalar value) throws Exception;
+	void set(int index, Entity value) throws Exception;
 	Class<?> getElementClass();
 	void deserialize(int start, int count, ExtendedDataInput in) throws IOException;
 	void serialize(int start, int count, ExtendedDataOutput out) throws IOException;

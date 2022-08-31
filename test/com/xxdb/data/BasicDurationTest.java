@@ -213,7 +213,7 @@ public class BasicDurationTest {
         bdv.setNull(0);
         bdv.setNull(1);
         bdv.setNull(2);
-        assertEquals(-2147483648,bdv.get(1).getNumber());
+        assertEquals(-2147483648,((Scalar)bdv.get(1)).getNumber());
         assertEquals(0,bdv.hashBucket(0,1));
         assertEquals(4,bdv.getUnitLength());
     }

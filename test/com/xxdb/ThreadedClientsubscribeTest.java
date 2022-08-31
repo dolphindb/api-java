@@ -192,7 +192,7 @@ public class ThreadedClientsubscribeTest {
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
         try {
             client.unsubscribe(HOST, PORT, "Trades", "subtrades");
@@ -218,7 +218,7 @@ public class ThreadedClientsubscribeTest {
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
         client.unsubscribe(HOST, PORT, "Trades");
     }
@@ -358,7 +358,7 @@ public class ThreadedClientsubscribeTest {
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
         client.unsubscribe(HOST, PORT, "Trades");
     }
@@ -384,7 +384,7 @@ public class ThreadedClientsubscribeTest {
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i + 100));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i + 100));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i + 100).getNumber().doubleValue(),4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 100)).getNumber().doubleValue(),4);
         }
         client.unsubscribe(HOST, PORT, "Trades","subTrades1");
     }
@@ -612,7 +612,7 @@ public class ThreadedClientsubscribeTest {
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
         client.unsubscribe(HOST, PORT, "Trades");
     }
@@ -647,7 +647,7 @@ public class ThreadedClientsubscribeTest {
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i + 100));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i + 100));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i + 100).getNumber().doubleValue(),4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 100)).getNumber().doubleValue(),4);
         }
         client.unsubscribe(HOST, PORT, "Trades");
     }
@@ -674,7 +674,7 @@ public class ThreadedClientsubscribeTest {
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i + 10));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i + 10));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i + 10).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 10)).getNumber().doubleValue(), 4);
         }
         client.unsubscribe(HOST, PORT, "Trades");
     }
@@ -730,13 +730,13 @@ public class ThreadedClientsubscribeTest {
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
 
         for (int i = 0; i < fil.rows(); i++) {
             assertEquals(fil.getColumn(0).get(i), tra.getColumn(0).get(i + 2000));
             assertEquals(fil.getColumn(1).get(i), tra.getColumn(1).get(i + 2000));
-            assertEquals(fil.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i + 2000).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)fil.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 2000)).getNumber().doubleValue(), 4);
         }
     }
 
@@ -761,10 +761,10 @@ public class ThreadedClientsubscribeTest {
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
             assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 10000));
             assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 10000));
-            assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 10000).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i + 1000)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 10000)).getNumber().doubleValue(), 4);
         }
     }
 
@@ -789,7 +789,7 @@ public class ThreadedClientsubscribeTest {
         for (int i = 0; i <re.rows();i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
     }
 

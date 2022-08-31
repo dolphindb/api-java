@@ -298,7 +298,7 @@ public class PerformanceSubTest {
 
             BasicTable data = (BasicTable) dbConnection.run("t = getStreamingStat().pubTables;t;");
             if (data.rows() == 0) break;
-            Scalar scalar = data.getColumn(2).get(0);
+            Scalar scalar = ((Scalar)data.getColumn(2).get(0));
             String msgOffset = scalar.getString();
             BasicTable data2 = (BasicTable) dbConnection.run("t = select count(*) from sharedTick; t;");
             String ho = data2.getColumn(0).get(0).toString();

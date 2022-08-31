@@ -2,6 +2,7 @@ package com.xxdb;
 
 import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicTable;
+import com.xxdb.data.Scalar;
 import com.xxdb.data.Vector;
 import com.xxdb.streaming.client.*;
 import org.junit.*;
@@ -161,7 +162,7 @@ public class ThreadPooledClientTest {
             for (int i = 0; i < re.rows(); i++) {
                 assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
                 assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-                assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+                assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
             }
 
     }
@@ -178,7 +179,7 @@ public class ThreadPooledClientTest {
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
 
     }
@@ -198,7 +199,7 @@ public class ThreadPooledClientTest {
             for (int i = 0; i < re.rows(); i++) {
                 assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
                 assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-                assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+                assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
             }
     }
 
@@ -289,13 +290,13 @@ public class ThreadPooledClientTest {
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
 
         for (int i = 0; i < fil.rows(); i++) {
             assertEquals(fil.getColumn(0).get(i), tra.getColumn(0).get(i + 2000));
             assertEquals(fil.getColumn(1).get(i), tra.getColumn(1).get(i + 2000));
-            assertEquals(fil.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i + 2000).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)fil.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 2000)).getNumber().doubleValue(), 4);
         }
 
     }
@@ -314,10 +315,10 @@ public class ThreadPooledClientTest {
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
             assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 1000));
             assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
-            assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 1000).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i + 1000)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 1000)).getNumber().doubleValue(), 4);
         }
     }
 
@@ -335,7 +336,7 @@ public class ThreadPooledClientTest {
         for (int i = 0; i <re.rows();i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
     }
 
@@ -484,10 +485,10 @@ public class ThreadPooledClientTest {
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
             assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 1000));
             assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
-            assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 1000).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i + 1000)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 1000)).getNumber().doubleValue(), 4);
         }
     }
 
@@ -504,10 +505,10 @@ public class ThreadPooledClientTest {
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
             assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 1000));
             assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
-            assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 1000).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i + 1000)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 1000)).getNumber().doubleValue(), 4);
         }
     }
 
@@ -524,10 +525,10 @@ public class ThreadPooledClientTest {
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
             assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 1000));
             assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
-            assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 1000).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i + 1000)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 1000)).getNumber().doubleValue(), 4);
         }
     }
 
@@ -545,10 +546,10 @@ public class ThreadPooledClientTest {
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
             assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 1000));
             assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
-            assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 1000).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i + 1000)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 1000)).getNumber().doubleValue(), 4);
         }
     }
 
@@ -566,10 +567,10 @@ public class ThreadPooledClientTest {
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(re.getColumn(2).get(i).getNumber().doubleValue(), tra.getColumn(2).get(i).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
             assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 1000));
             assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
-            assertEquals(re.getColumn(2).get(i + 1000).getNumber().doubleValue(), tra.getColumn(2).get(i + 1000).getNumber().doubleValue(), 4);
+            assertEquals(((Scalar)re.getColumn(2).get(i + 1000)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 1000)).getNumber().doubleValue(), 4);
         }
     }
 }

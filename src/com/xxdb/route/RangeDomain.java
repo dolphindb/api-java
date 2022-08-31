@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.xxdb.data.Entity;
+import com.xxdb.data.Scalar;
 import com.xxdb.data.Utils;
 import com.xxdb.data.Vector;
 import com.xxdb.data.Entity.DATA_TYPE;
@@ -33,7 +34,7 @@ public class RangeDomain implements Domain{
  		int rows = partitionCol.rows();
 		ArrayList<Integer> keys = new ArrayList<Integer>(rows);
 		for(int i=0; i<rows; ++i){
-			int index = range.asof(partitionCol.get(i));
+			int index = range.asof(((Scalar) partitionCol.get(i)));
 			if(index >= partitions)
 				keys.add(-1);
 			else

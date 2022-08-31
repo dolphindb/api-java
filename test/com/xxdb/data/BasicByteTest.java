@@ -57,9 +57,9 @@ public class BasicByteTest {
         v.setNull(5);
         for(int b : num){
             for(int i=0;i<v.rows();i++){
-                int expected = getServerHash(v.get(i),b);
+                int expected = getServerHash(((Scalar)v.get(i)),b);
                 Assert.assertEquals(expected, v.hashBucket(i, b));
-                Assert.assertEquals(expected, v.get(i).hashBucket(b));
+                Assert.assertEquals(expected, ((Scalar)v.get(i)).hashBucket(b));
             }
         }
     }
@@ -73,7 +73,7 @@ public class BasicByteTest {
         BasicByteVector res= (BasicByteVector) v.combine(vector2);
         Byte[] datas = {'4', '5', '3', '6', '2', '5', '1'};
         for (int i=0;i<res.rows();i++){
-            assertEquals(datas[i],res.get(i).getNumber());
+            assertEquals(datas[i],((Scalar)res.get(i)).getNumber());
 
         }
         assertEquals(7,res.rows());

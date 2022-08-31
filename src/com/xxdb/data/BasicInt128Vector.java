@@ -121,7 +121,7 @@ public class BasicInt128Vector extends AbstractVector{
 		}
 	}
 
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicInt128(values[index].high, values[index].low);
 	}
 	
@@ -141,7 +141,7 @@ public class BasicInt128Vector extends AbstractVector{
 		return sub;
 	}
 	
-	public void set(int index, Scalar value) throws Exception {
+	public void set(int index, Entity value) throws Exception {
 		values[index].high = ((BasicInt128)value).getMostSignicantBits();
 		values[index].low = ((BasicInt128)value).getLeastSignicantBits();
 	}

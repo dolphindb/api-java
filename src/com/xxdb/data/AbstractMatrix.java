@@ -77,11 +77,11 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 		return columnLabels != null;
 	}
 	
-	public Scalar getRowLabel(int index){
+	public Entity getRowLabel(int index){
 		return rowLabels.get(index);
 	}
 	
-	public Scalar getColumnLabel(int index){
+	public Entity getColumnLabel(int index){
 		return columnLabels.get(index);
 	}
 	
