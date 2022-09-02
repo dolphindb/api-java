@@ -85,7 +85,8 @@ abstract class AbstractClient implements MessageDispatcher {
     public void setNeedReconnect(String topic, int v) {
         if (topic.equals("")) return;
         String site = topic.substring(0, topic.indexOf("/"));
-        if (!reconnectTable.contains(site)) {
+        Set<String> keys = reconnectTable.keySet();
+        if (!keys.contains(site)) {
             ReconnectItem item = new ReconnectItem(v, System.currentTimeMillis());
             item.putTopic(topic);
             reconnectTable.put(site, item);
