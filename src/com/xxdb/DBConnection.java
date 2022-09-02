@@ -65,7 +65,8 @@ public class DBConnection {
         ET_IGNORE(0),
         ET_UNKNOW(1),
         ET_NEWLEADER(2),
-        ET_NODENOTAVAIL(3);
+        ET_NODENOTAVAIL(3),
+        ET_NOINITIALIZED(4);
 
         public int value;
         ExceptionType(int value){
@@ -826,24 +827,25 @@ public class DBConnection {
             parseIpPort(ipport, node);
             System.out.println("New leader is " + node.hostName + ":" + node.port);
             return ExceptionType.ET_NEWLEADER;
-        }else {
-            index = msg.indexOf("<DataNodeNotAvail>");
-            if (index == -1){
-                return ExceptionType.ET_UNKNOW;
-            }
+        }else if ((index = msg.indexOf("<DataNodeNotAvail>")) != -1){
             index = msg.indexOf(">");
             String ipport = msg.substring(index + 1);
-            Node nanode = new Node();
-            parseIpPort(ipport, nanode);
-            Node lastnode = new Node();
-            conn_.getNode(lastnode);
-            if (!lastnode.hostName.equals(nanode.hostName)  && lastnode.port == nanode.port){
-                System.out.println("This node " + nanode.hostName + ":" + nanode.port + " is not avail.");
-                return ExceptionType.ET_NODENOTAVAIL;
-            }else {
-                System.out.println("Other node " + nanode.hostName + ":" + nanode.port + " is not avail.");
-                return ExceptionType.ET_IGNORE;
-            }
+            Node newNode = new Node();
+            parseIpPort(ipport, newNode);
+            Node lastNode = new Node();
+            conn_.getNode(lastNode);
+            node.hostName = "";
+            node.port = 0;
+            System.out.println(msg);
+            return ExceptionType.ET_NODENOTAVAIL;
+        }else if ((index = msg.indexOf("The datanode isn't initialized yet. Please try again later")) != -1){
+            node.hostName = "";
+            node.port = 0;
+            return ExceptionType.ET_NOINITIALIZED;
+        }else {
+            node.hostName = "";
+            node.port = 0;
+            return ExceptionType.ET_UNKNOW;
         }
     }
 
@@ -1081,6 +1083,7 @@ public class DBConnection {
                         }
                         if (variableObjectMap.size() > 1)
                             conn_.upload(keys, objs);
+                        break;
                     }catch (Exception e){
                         Node node = new Node();
                         if (connected()){
