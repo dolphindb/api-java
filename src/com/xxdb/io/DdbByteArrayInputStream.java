@@ -56,8 +56,8 @@ public class DdbByteArrayInputStream extends InputStream {
                 bufPos_ = 0;
                 bufIndex_ ++;
             }else {
-                n = 0;
                 bufPos_ += n;
+                n = 0;
             }
         }
         return ret;
