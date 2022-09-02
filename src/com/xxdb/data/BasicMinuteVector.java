@@ -48,7 +48,7 @@ public class BasicMinuteVector extends BasicIntVector{
 		return Entity.DATA_TYPE.DT_MINUTE;
 	}
 	
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicMinute(getInt(index));
 	}
 	

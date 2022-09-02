@@ -49,7 +49,7 @@ public class BasicMonthVector extends BasicIntVector{
 		return Entity.DATA_TYPE.DT_MONTH;
 	}
 	
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicMonth(getInt(index));
 	}
 	

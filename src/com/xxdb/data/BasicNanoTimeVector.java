@@ -48,7 +48,7 @@ public class BasicNanoTimeVector extends BasicLongVector{
 		return DATA_TYPE.DT_NANOTIME;
 	}
 	
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicNanoTime(getLong(index));
 	}
 	

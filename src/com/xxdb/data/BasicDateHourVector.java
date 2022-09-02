@@ -48,7 +48,7 @@ public class BasicDateHourVector extends BasicIntVector {
 		return Entity.DATA_TYPE.DT_DATEHOUR;
 	}
 	
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicDateHour(getInt(index));
 	}
 	

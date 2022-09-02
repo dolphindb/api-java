@@ -48,7 +48,7 @@ public class BasicTimestampVector extends BasicLongVector{
 		return Entity.DATA_TYPE.DT_TIMESTAMP;
 	}
 	
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicTimestamp(getLong(index));
 	}
 	

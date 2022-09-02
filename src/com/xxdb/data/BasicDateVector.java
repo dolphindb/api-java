@@ -49,7 +49,7 @@ public class BasicDateVector extends BasicIntVector{
 		return Entity.DATA_TYPE.DT_DATE;
 	}
 	
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicDate(getInt(index));
 	}
 	

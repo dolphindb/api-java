@@ -48,7 +48,7 @@ public class BasicSecondVector extends BasicIntVector{
 		return Entity.DATA_TYPE.DT_SECOND;
 	}
 	
-	public Scalar get(int index){
+	public Entity get(int index){
 		return new BasicSecond(getInt(index));
 	}
 	
