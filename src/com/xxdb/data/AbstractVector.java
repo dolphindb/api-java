@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.EventListener;
 
 import com.xxdb.compression.EncoderFactory;
 import com.xxdb.io.ExtendedDataInput;
@@ -220,7 +221,10 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		out.put((byte) dataType);
 		out.put((byte) unitLength);
 		out.position(out.position() + 2); //reserved
-		out.putInt(-1); //extra
+		if (Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL32 || Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL64)
+			out.putInt(getExtraParamForType()); //extra
+		else
+			out.putInt(-1);
 		out.putInt(elementCount);
 		out.putInt(-1); //TODO: checkSum
 
