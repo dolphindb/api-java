@@ -59,4 +59,14 @@ public class BasicUuidVector extends BasicInt128Vector {
 	public Class<?> getElementClass(){
 		return BasicUuid.class;
 	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		add(new Long2(((BasicUuid)value).getMostSignicantBits(), ((BasicUuid)value).getLeastSignicantBits()));
+	}
+
+	@Override
+	public void Append(Vector value) throws Exception{
+		addRange(((BasicUuidVector)value).getdataArray());
+	}
 }

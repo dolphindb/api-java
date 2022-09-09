@@ -50,9 +50,9 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 	
 	public Number getNumber() throws Exception{
 		if(isNull())
-			return null;
+			return -Double.MAX_VALUE;
 		else
-			return new Double(value);
+			return value;
 	}
 
 	@Override

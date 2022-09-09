@@ -51,131 +51,80 @@ public class MultithreadedTableWriter {
             conn_ = conn;
             exit_ = false;
             isFinished_ = false;
+            writeQueue_.add(tableWriter_.createListVector());
             writeThread_ = new Thread(this);
             writeThread_.start();
         }
         @Override
         public void run(){
-            if (init() == false)//init
+            if (!init())//init
                 return;
             long batchWaitTimeout, diff;
-            while (isExiting() == false) {
-                try {
+            try {
+                while (!isExiting()) {
                     synchronized (writeQueue_) {
                         //tableWriter_.logger_.info(writeThread_.getId()+" run wait0 start");
                         //if (!isExiting()&&writeQueue_.size()==0)
                         writeQueue_.wait();
-                        //tableWriter_.logger_.info(writeThread_.getId()+" run wait0 end");
-                        if (isExiting() ==false && tableWriter_.batchSize_ > 1 && tableWriter_.throttleMilsecond_ > 0) {
+                        if (!isExiting() && tableWriter_.batchSize_ > 1 && tableWriter_.throttleMilsecond_ > 0) {
                             batchWaitTimeout = System.currentTimeMillis() + tableWriter_.throttleMilsecond_;
-                            //tableWriter_.logger_.info(writeThread_.getId()+" run wait1 start");
-                            while (isExiting() ==false && writeQueue_.size() < tableWriter_.batchSize_) {//check batchsize
+                            while (!isExiting() && (writeQueue_.size() - 1) * vectorSize + writeQueue_.get(writeQueue_.size() - 1).get(0).rows() < tableWriter_.batchSize_) {//check batchsize
                                 diff = batchWaitTimeout - System.currentTimeMillis();
                                 if (diff > 0) {
                                     writeQueue_.wait(diff);
-                                }
-                                else {
+                                } else {
                                     break;
                                 }
                             }
-                            //tableWriter_.logger_.info(writeThread_.getId()+" run wait1 end");
                         }
                     }
-                    //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData start size "+writeQueue_.size());
-                    while(isExiting() == false && writeAllData());
-                    //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData end size "+writeQueue_.size());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    tableWriter_.errorCodeInfo_.set(ErrorCodeInfo.Code.EC_None, e.getMessage());
-                    break;
+                    while (!isExiting() && writeAllData());
                 }
+                while (!tableWriter_.hasError_ && writeAllData()) ;
+            }catch (Exception e) {
+                    e.printStackTrace();
+                    tableWriter_.hasError_ = true;
+                    tableWriter_.errorCodeInfo_.set(ErrorCodeInfo.Code.EC_None, e.getMessage());
             }
-            //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData2 start");
-            while(tableWriter_.isExiting()==false && writeAllData());
-            //tableWriter_.logger_.info(writeThread_.getId()+" run writeAllData2 end");
             synchronized (writeThread_){
+                conn_.close();
                 isFinished_ = true;
                 writeThread_.notify();
             }
         }
+
         boolean writeAllData(){
             synchronized (busyLock_) {
-                List<List<Entity>> items = new ArrayList<>();
+                List<Vector> items = new ArrayList<>();
+                int addRowCount = 0;
                 synchronized (writeQueue_) {
-                    items.addAll(writeQueue_);
-                    writeQueue_.clear();
+                    items = writeQueue_.get(0);
+                    addRowCount = items.get(0).rows();
+                    if (addRowCount < 1)
+                        return false;
+                    writeQueue_.remove(0);
+                    if (writeQueue_.size() == 0)
+                        writeQueue_.add(tableWriter_.createListVector());
                 }
-                int size = items.size();
-                if (size < 1)
-                    return false;
-                //std::cout << "writeTableAllData size:" << size << std::endl;
-                //tableWriter_.logger_.info(" writeAllData=" + size);
+
                 boolean isWriteDone = true;
                 BasicTable writeTable = null;
-                int addRowCount = 0;
-                try {//create table
-                    //RECORDTIME("MTTW:createTable");
-                    //tableWriter_.logger_.info(" createTable=" + size);
-                    List<Vector> columns = new ArrayList<>();
-                    int colCount = 0;
-                    for (Entity.DATA_TYPE one : tableWriter_.colTypes_) {
-                        List<Vector> VectorList = new ArrayList<>();
-                        Vector vector;
-                        if (one.getValue() >= 65) {
-                            for (int i = 0; i < size; i++) {
-                                VectorList.add((Vector) items.get(i).get(colCount));
-                            }
-                            vector = new BasicArrayVector(VectorList);
-                        } else {
-                            vector = BasicEntityFactory.instance().createVectorWithDefaultValue(one, size);
-                        }
-                        colCount++;
-                        columns.add(vector);
-                    }
-                    writeTable = new BasicTable(tableWriter_.colNames_, columns);
-                    writeTable.setColumnCompressTypes(tableWriter_.compressTypes_);
-                    for (List<Entity> row : items) {
-                        try {
-                            for (int colindex = 0; colindex < columns.size(); colindex++) {
-                                Vector col = columns.get(colindex);
-                                if (!(col instanceof BasicArrayVector)) {
-                                    Scalar scalar = (Scalar) row.get(colindex);
-                                    if (scalar != null)
-                                        col.set(addRowCount, scalar);
-                                    else
-                                        col.setNull(addRowCount);
-                                }
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            isWriteDone = false;
-                            tableWriter_.logger_.warning("threadid = " + writeThread_.getId() + " sendindex = " + sentRows_ + " Failed to append data to the table. " + e);
-                            tableWriter_.setError(ErrorCodeInfo.Code.EC_InvalidObject, "Failed to append data to the table. " + e);
-                            break;
-                        }
-                        addRowCount++;
-                    }
-                } catch (Exception e) {
+                try {
+                    writeTable = new BasicTable(tableWriter_.colNames_, items);
+                }catch (Exception e){
                     e.printStackTrace();
-                    tableWriter_.logger_.warning("threadid=" + writeThread_.getId() + " Create table error: " + e);
-                    tableWriter_.setError(ErrorCodeInfo.Code.EC_InvalidObject, "Create table error: " + e);
+                    tableWriter_.logger_.warning("threadid=" + writeThread_.getId() + " sendindex=" + sentRows_ + " create table error: " + e);
+                    tableWriter_.setError(ErrorCodeInfo.Code.EC_Server, "Failed to createTable: " + e);
                     isWriteDone = false;
-                    //std::cerr << Util::createTimestamp(Util::getEpochTime())->getString() << " Backgroud thread of table (" << tableWriter_.dbName_ << " " << tableWriter_.tableName_ << "). Failed to send data to server, with exception: " << e.what() << std::endl;
                 }
-                if (isWriteDone && writeTable != null && addRowCount > 0) {//may contain empty vector for exit
+                if (isWriteDone) {//may contain empty vector for exit
                     String runscript = "";
                     try {//save table
-                        //RECORDTIME("MTTW:saveTable");
-                        //tableWriter_.logger_.info(" saveTable=" + size);
                         List<Entity> args = new ArrayList<>();
                         args.add(writeTable);
                         runscript = scriptTableInsert_;
-                        BasicInt result = (BasicInt) conn_.run(runscript, args);
-                        if (result.getInt() != addRowCount) {
-                            //throw new RuntimeException("Insert data failed "+result.getInt()+" expect size "+addRowCount+".");
-                            //tableWriter_.logger_.warning("Write complete size "+result.getInt()+" is less than expect "+addRowCount);
-                        }
-                        if (scriptSaveTable_ != null && scriptSaveTable_.isEmpty() == false) {
+                        conn_.run(runscript, args);
+                        if (scriptSaveTable_ != null && !scriptSaveTable_.isEmpty()) {
                             runscript = scriptSaveTable_;
                             conn_.run(runscript);
                         }
@@ -184,32 +133,40 @@ public class MultithreadedTableWriter {
                         e.printStackTrace();
                         tableWriter_.logger_.warning("threadid=" + writeThread_.getId() + " sendindex=" + sentRows_ + " Save table error: " + e + " script:" + runscript);
                         tableWriter_.setError(ErrorCodeInfo.Code.EC_Server, "Failed to save the inserted data: " + e + " script: " + runscript);
-                        conn_ = null;
                         isWriteDone = false;
-                        //std::cerr << Util::createTimestamp(Util::getEpochTime())->getString() << " Backgroud thread of table (" << tableWriter_.dbName_ << " " << tableWriter_.tableName_ << "). Failed to send data to server, with exception: " << e.what() << std::endl;
+                        tableWriter_.hasError_ = true;
                     }
                 }
-                //tableWriter_.logger_.info(" done=" + isWriteDone);
-                if (isWriteDone == false) {
+                if (!isWriteDone) {
                     synchronized (failedQueue_) {
-                        failedQueue_.addAll(items);
-                    }
-                }
-                if (addRowCount > 0) {//check GC
-                    boolean startgc = false;
-                    synchronized (tableWriter_) {
-                        tableWriter_.sentRowsAfterGc_ += addRowCount;
-                        if (tableWriter_.sentRowsAfterGc_ > 10000) {//every sent 10000 rows, manual start gc to avoid out of memory
-                            tableWriter_.sentRowsAfterGc_ = 0;
-                            startgc = true;
+                        int cols = items.size();
+                        int rows = items.get(0).rows();
+                        for (int i = 0; i < rows; i++){
+                            List<Entity> tmp = new ArrayList<>();
+                            for (int j = 0; j < cols; j++){
+                                if (tableWriter_.colTypes_.get(j).getValue() < 65)
+                                    tmp.add(items.get(j).get(i));
+                                else
+                                    tmp.add(((BasicArrayVector) items.get(j)).getVectorValue(i));
+                            }
+                            failedQueue_.add(tmp);
                         }
                     }
-                    if (startgc && Runtime.getRuntime().freeMemory() < 104857600)
-                        System.gc();
                 }
+                boolean startgc = false;
+                synchronized (tableWriter_) {
+                    tableWriter_.sentRowsAfterGc_ += addRowCount;
+                    if (tableWriter_.sentRowsAfterGc_ > 10000) {//every sent 10000 rows, manual start gc to avoid out of memory
+                        tableWriter_.sentRowsAfterGc_ = 0;
+                        startgc = true;
+                    }
+                }
+                if (startgc && Runtime.getRuntime().freeMemory() < 104857600)
+                    System.gc();
             }
             return true;
         }
+
         boolean init(){
             if (tableWriter_.dbName_.isEmpty()) {
                 scriptTableInsert_ = "tableInsert{\"" + tableWriter_.tableName_ + "\"}";
@@ -219,36 +176,16 @@ public class MultithreadedTableWriter {
             }
             else {// single partitioned table
                 scriptTableInsert_ = "tableInsert{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")}";
-                /*{
-                    String tempTableName = "tmp" + tableWriter_.tableName_;
-                    String colNames="";
-                    String colTypes="";
-                    for (int i = 0; i < tableWriter_.colNames_.size(); i++) {
-                        colNames += "`" + tableWriter_.colNames_.get(i);
-                        colTypes += "`" + tableWriter_.colTypeString_.get(i);
-                    }
-                    String scriptCreateTmpTable = "tempTable = table(" + "1000:0," + colNames + "," + colTypes + ")";
-                    try {
-                        conn_.run(scriptCreateTmpTable);
-                    }catch (Exception e) {
-                        e.printStackTrace();
-                        tableWriter_.logger_.warning("threadid=" + writeThread_.getId()+ " Init table error: "+e+ " script:"+scriptCreateTmpTable);
-                        setError(ErrorCodeInfo.Code.EC_Server, "Init table error: " + e + " script: " + scriptCreateTmpTable);
-                        conn_ = null;
-                        //std::cerr << Util::createTimestamp(Util::getEpochTime())->getString() << " Backgroud thread of table (" << tableWriter_.dbName_ << " " << tableWriter_.tableName_ << "). Failed to init data to server, with exception: " << e.what() << std::endl;
-                        return false;
-                    }
-                }
-                scriptTableInsert_ = "tableInsert{tempTable}";
-                scriptSaveTable_ = "saveTable(database(\"" + tableWriter_.dbName_ + "\")" + ",tempTable,\"" + tableWriter_.tableName_ + "\", 1);tempTable.clear!();";
-                */
             }
             return true;
         }
+
         void getStatus(ThreadStatus status){
             status.threadId = writeThread_.getId();
             status.sentRows = sentRows_;
-            status.unsentRows = writeQueue_.size();
+            synchronized (writeQueue_){
+                status.unsentRows = (long) (writeQueue_.size() - 1) *  vectorSize+ writeQueue_.get(writeQueue_.size() - 1).get(0).rows();
+            }
             status.sendFailedRows = failedQueue_.size();
         }
 
@@ -256,8 +193,8 @@ public class MultithreadedTableWriter {
             return exit_ || tableWriter_.hasError_;
         }
         void exit(){
-            exit_ = true;
             synchronized (writeQueue_) {
+                exit_ = true;
                 writeQueue_.notify();
             }
         }
@@ -267,12 +204,13 @@ public class MultithreadedTableWriter {
 
         String scriptTableInsert_,scriptSaveTable_;
 
-        List<List<Entity>> writeQueue_=new ArrayList<>();
+        List<List<Vector>> writeQueue_ = new ArrayList<>();
         List<List<Entity>> failedQueue_=new ArrayList<>();
         Thread writeThread_;
         long sentRows_;
         boolean exit_;//Only set when exit
         boolean isFinished_;
+        public static int vectorSize = 65536;
     };
     private String dbName_;
     private String tableName_;
@@ -280,6 +218,7 @@ public class MultithreadedTableWriter {
     private int throttleMilsecond_;
     private boolean isPartionedTable_;
     private boolean hasError_;
+    private boolean isExiting_ = false;
     private String partitionedColName_;
     private List<String> colNames_=new ArrayList<>(),colTypeString_=new ArrayList<>();
     private List<Entity.DATA_TYPE> colTypes_=new ArrayList<>();
@@ -356,7 +295,7 @@ public class MultithreadedTableWriter {
         if(partColNames!=null){//partitioned table
             isPartionedTable_ = true;
         }else{//没有分区
-            if(dbName.isEmpty() == false){//Single partitioned table
+            if(!dbName.isEmpty()){//Single partitioned table
                 if(threadCount > 1){
                     throw new RuntimeException("The parameter threadCount must be 1 for a dimension table.");
                 }
@@ -391,7 +330,7 @@ public class MultithreadedTableWriter {
             Entity partitionSchema;
             int partitionType;
             if(partColNames.isScalar()){
-                if (partColNames.getString().equals(partitionCol) == false) {
+                if (!partColNames.getString().equals(partitionCol)) {
                     throw new RuntimeException("The parameter partionCol must be the partitioning column "+ partColNames.getString()+" in the table.");
                 }
                 partitionColumnIdx_ = ((BasicInt)schema.get(new BasicString("partitionColumnIndex"))).getInt();
@@ -445,7 +384,7 @@ public class MultithreadedTableWriter {
         }
     }
 
-    public List<List<Entity>> getUnwrittenData() throws InterruptedException{
+    public List<List<Entity>> getUnwrittenData() {
         List<List<Entity>> unwrittenData = new ArrayList<>();
         for(WriterThread writeThread : threads_){
             synchronized (writeThread.busyLock_) {
@@ -454,8 +393,24 @@ public class MultithreadedTableWriter {
                     writeThread.failedQueue_.clear();
                 }
                 synchronized (writeThread.writeQueue_) {
-                    unwrittenData.addAll(writeThread.writeQueue_);
+                    int cols = colTypes_.size();
+                    int size = writeThread.writeQueue_.size();
+                    for (int i = 0; i < size; ++i)
+                    {
+                        int rows = writeThread.writeQueue_.get(i).get(0).rows();
+                        for (int row = 0; row < rows; ++row)
+                        {
+                            List<Entity> tmp = new ArrayList<>();
+                            for (int j = 0; j < cols; ++j)
+                            {
+                                tmp.add(writeThread.writeQueue_.get(i).get(j).get(row));
+                            }
+                            unwrittenData.add(tmp);
+                        }
+                    }
+                    unwrittenData.addAll(writeThread.failedQueue_);
                     writeThread.writeQueue_.clear();
+                    writeThread.writeQueue_.add(createListVector());
                 }
             }
         }
@@ -493,12 +448,13 @@ public class MultithreadedTableWriter {
     }
 
     public void waitForThreadCompletion() throws InterruptedException{
+        isExiting_ = true;
         for(WriterThread one:threads_){
             one.exit();
         }
         for (WriterThread one : threads_) {
             synchronized (one.writeThread_) {
-                if(one.isFinished_ == false) {
+                if(!one.isFinished_) {
                     one.writeThread_.wait();
                 }
             }
@@ -536,8 +492,11 @@ public class MultithreadedTableWriter {
                             " mismatch type " + colTypes_.get(partitionColumnIdx_));
                 }
                 List<Integer> threadindexes = partitionDomain_.getPartitionKeys(pvector);
-                for(int row = 0; row < threadindexes.size(); row++){
-                    insertThreadWrite(threadindexes.get(row), records.get(row));
+                try {
+                    for(int row = 0; row < threadindexes.size(); row++){
+                        insertThreadWrite(threadindexes.get(row), records.get(row));
+                    }
+                }catch (Exception e){
                 }
             }else{
                 Vector partionvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(threadByColIndexForNonPartion_),records.size());
@@ -560,33 +519,49 @@ public class MultithreadedTableWriter {
                             " mismatch type " + colTypes_.get(partitionColumnIdx_));
                 }
                 int threadindex;
-                for(rowindex=0;rowindex<records.size();rowindex++){
-                    threadindex=partionvector.hashBucket(rowindex,threads_.size());
-                    insertThreadWrite(threadindex, records.get(rowindex));
+                try {
+                    for(rowindex=0;rowindex<records.size();rowindex++){
+                        threadindex=partionvector.hashBucket(rowindex,threads_.size());
+                        insertThreadWrite(threadindex, records.get(rowindex));
+                    }
+                }catch (Exception e){
                 }
             }
         }else{
-            for(List<Entity> row : records){
-                insertThreadWrite(0, row);
+            try {
+                for(List<Entity> row : records){
+                    insertThreadWrite(0, row);
+                }
+            }catch (Exception e){
             }
         }
         return new ErrorCodeInfo();
     }
-    private void insertThreadWrite(int threadhashkey, List<Entity> row){
-        if(threadhashkey < 0){
-            //logger_.warning("add invalid hash="+threadhashkey);
+
+    private void insertThreadWrite(int threadhashkey, List<Entity> row) throws Exception{
+        if(threadhashkey < 0)
             threadhashkey = 0;
-            //pErrorInfo->set(ErrorCodeInfo::EC_InvalidColumnType, "Failed to get thread by coluname.");
-            //return false;
-        }
         int threadIndex = threadhashkey % threads_.size();
         WriterThread writerThread=threads_.get(threadIndex);
         synchronized (writerThread.writeQueue_) {
-            writerThread.writeQueue_.add(row);
-            //logger_.info(writerThread.writeThread_.getId()+" size "+writerThread.writeQueue_.size());
-            writerThread.writeQueue_.notify();
+            int rows = writerThread.writeQueue_.get(writerThread.writeQueue_.size() - 1).get(0).rows();
+            if (rows > WriterThread.vectorSize){
+                writerThread.writeQueue_.add(createListVector());
+            }
+
+            int size = row.size();
+            for (int i = 0; i < size; i++){
+                if (colTypes_.get(i).getValue() < 65){
+                    writerThread.writeQueue_.get(writerThread.writeQueue_.size()-1).get(i).Append((Scalar) row.get(i));
+                }else {
+                    writerThread.writeQueue_.get(writerThread.writeQueue_.size()-1).get(i).Append((Vector) row.get(i));
+                }
+            }
+            if (writerThread.writeQueue_.get(writerThread.writeQueue_.size()-1).get(0).rows() >= batchSize_)
+                writerThread.writeQueue_.notify();
         }
     }
+
     public ErrorCodeInfo insert(Object... args){
         if(isExiting()){
             throw new RuntimeException("Thread is exiting. ");
@@ -649,7 +624,21 @@ public class MultithreadedTableWriter {
             return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, "Invalid object error " + e);
         }
     }
-    private boolean isExiting() { return hasError_; }
+
+    private List<Vector> createListVector(){
+        int cols = colTypes_.size();
+        List<Vector> tmp = new ArrayList<>();
+        for (int i = 0; i < cols; i++){
+            Entity.DATA_TYPE type = colTypes_.get(i);
+            if (type.getValue() >= 65)
+                tmp.add(new BasicArrayVector(type, 1));
+            else
+                tmp.add(BasicEntityFactory.instance().createVectorWithDefaultValue(type, 0));
+        }
+        return tmp;
+    }
+
+    private boolean isExiting() { return hasError_ || isExiting_; }
     private DBConnection newConn(String hostName, int port, String userId, String password,
                                  String dbName, String tableName, boolean useSSL,
                                  boolean enableHighAvailability, String[] highAvailabilitySites,boolean compress) throws IOException {

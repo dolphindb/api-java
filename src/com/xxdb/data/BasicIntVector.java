@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -16,6 +17,8 @@ import com.xxdb.io.ExtendedDataOutput;
 
 public class BasicIntVector extends AbstractVector{
 	protected int[] values;
+	protected int size;
+	protected int capaticy;
 	
 	public BasicIntVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -32,6 +35,9 @@ public class BasicIntVector extends AbstractVector{
 					values[i] = Integer.MIN_VALUE;
 			}
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	public BasicIntVector(int[] array){
@@ -44,11 +50,17 @@ public class BasicIntVector extends AbstractVector{
 			values = array.clone();
 		else
 			values = array;
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	protected BasicIntVector(DATA_FORM df, int size){
 		super(df);
 		values = new int[size];
+
+		this.size = values.length;;
+		capaticy = values.length;
 	}
 	
 	protected BasicIntVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -68,6 +80,9 @@ public class BasicIntVector extends AbstractVector{
 				values[i + start] = byteBuffer.getInt(i * 4);
 			off += len;
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	@Override
@@ -84,6 +99,9 @@ public class BasicIntVector extends AbstractVector{
 			off += len;
 			start += end;
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 
 	@Override
@@ -146,6 +164,40 @@ public class BasicIntVector extends AbstractVector{
 		return 4;
 	}
 
+	public void add(int value) {
+		if (size + 1 > capaticy && values.length > 0){
+			values = Arrays.copyOf(values, values.length * 2);
+		}else if (values.length <= 0){
+			values = Arrays.copyOf(values, values.length + 1);
+		}
+		capaticy = values.length;
+		values[size] = value;
+		size++;
+	}
+
+	public void addRange(int[] valueList) {
+		values = Arrays.copyOf(values, valueList.length + values.length);
+		System.arraycopy(valueList, 0, values, size, valueList.length);
+		size += valueList.length;
+		capaticy = values.length;
+	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		add(value.getNumber().intValue());
+	}
+
+	@Override
+	public void Append(Vector value) throws Exception{
+		addRange(((BasicIntVector)value).getdataArray());
+	}
+
+	public int[] getdataArray(){
+		int[] data = new int[size];
+		System.arraycopy(values, 0, data, 0, size);
+		return data;
+	}
+
 	@Override
 	public Vector combine(Vector vector) {
 		BasicIntVector v = (BasicIntVector)vector;
@@ -183,16 +235,20 @@ public class BasicIntVector extends AbstractVector{
 
 	@Override
 	public int rows() {
-		return values.length;
+		return size;
 	}
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		out.writeIntArray(values);
+		int[] data = new int[size];
+		System.arraycopy(values, 0, data, 0, size);
+		out.writeIntArray(data);
 	}
 
 	@Override
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
-		for (int val: values) {
+		int[] data = new int[size];
+		System.arraycopy(values, 0, data, 0, size);
+		for (int val: data) {
 			buffer.putInt(val);
 		}
 		return buffer;
@@ -209,7 +265,7 @@ public class BasicIntVector extends AbstractVector{
 		}
 		
 		int start = 0;
-		int end = values.length - 1;
+		int end = size - 1;
 		int mid;
 		while(start <= end){
 			mid = (start + end)/2;

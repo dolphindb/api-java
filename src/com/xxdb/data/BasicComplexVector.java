@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -11,6 +12,8 @@ import com.xxdb.io.Double2;
 
 public class BasicComplexVector extends AbstractVector{
 	protected Double2[] values;
+	private int size;
+	private int capaticy;
 	
 	public BasicComplexVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -27,6 +30,9 @@ public class BasicComplexVector extends AbstractVector{
 				}
 			}
 		}
+
+		this.size = values.length;
+		this.capaticy = values.length;
 	}
 	
 	public BasicComplexVector(Double2[] array){
@@ -44,6 +50,9 @@ public class BasicComplexVector extends AbstractVector{
 				values[i] = new Double2(-Double.MAX_VALUE, -Double.MAX_VALUE);
 			}
 		}
+
+		this.size = values.length;
+		this.capaticy = values.length;
 	}
 	
 	protected BasicComplexVector(DATA_FORM df, int size){
@@ -51,6 +60,9 @@ public class BasicComplexVector extends AbstractVector{
 		values = new Double2[size];
 		for(int i=0; i<size; ++i)
 			values[i] = new Double2(0, 0);
+
+		this.size = values.length;
+		this.capaticy = values.length;
 	}
 	
 	protected BasicComplexVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -74,6 +86,9 @@ public class BasicComplexVector extends AbstractVector{
 			}
 			off += len;
 		}
+
+		this.size = values.length;
+		this.capaticy = values.length;
 	}
 	
 	@Override
@@ -93,6 +108,9 @@ public class BasicComplexVector extends AbstractVector{
 			off += len;
 			start += end;
 		}
+
+		this.size = values.length;
+		this.capaticy = values.length;
 	}
 
 	@Override
@@ -105,6 +123,40 @@ public class BasicComplexVector extends AbstractVector{
 	@Override
 	public int getUnitLength(){
 		return 16;
+	}
+
+	public void add(Double2 value) {
+		if (size + 1 > capaticy && values.length > 0){
+			values = Arrays.copyOf(values, values.length * 2);
+		}else if (values.length <= 0){
+			values = Arrays.copyOf(values, values.length + 1);
+		}
+		capaticy = values.length;
+		values[size] = value;
+		size++;
+	}
+
+	public void addRange(Double2[] valueList) {
+		values = Arrays.copyOf(values, valueList.length + values.length);
+		System.arraycopy(valueList, 0, values, size, valueList.length);
+		size += valueList.length;
+		capaticy = values.length;
+	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		add(new Double2(((BasicComplex)value).getReal(), ((BasicComplex)value).getImage()));
+	}
+
+	@Override
+	public void Append(Vector value) {
+		addRange(((BasicComplexVector)value).getdataArray());
+	}
+
+	public Double2[] getdataArray(){
+		Double2[] data = new Double2[size];
+		System.arraycopy(values, 0, data, 0, size);
+		return data;
 	}
 
 	public Entity get(int index){
@@ -179,11 +231,13 @@ public class BasicComplexVector extends AbstractVector{
 
 	@Override
 	public int rows() {
-		return values.length;
+		return size;
 	}
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		out.writeDouble2Array(values);
+		Double2[] data = new Double2[size];
+		System.arraycopy(values, 0, data, 0, size);
+		out.writeDouble2Array(data);
 	}
 	
 	@Override
@@ -194,7 +248,9 @@ public class BasicComplexVector extends AbstractVector{
 	@Override
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		boolean isLittleEndian = buffer.order() == ByteOrder.LITTLE_ENDIAN;
-		for (Double2 val: values) {
+		Double2[] data = new Double2[size];
+		System.arraycopy(values, 0, data, 0, size);
+		for (Double2 val: data) {
 			if (isLittleEndian) {
 				buffer.putDouble(val.x);
 				buffer.putDouble(val.y);

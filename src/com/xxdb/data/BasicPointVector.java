@@ -3,13 +3,17 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.List;
 import com.xxdb.io.Double2;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+import com.xxdb.io.Long2;
 
 public class BasicPointVector extends AbstractVector{
 	protected Double2[] values;
+	protected int size;
+	protected int capaticy;
 	
 	public BasicPointVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -27,6 +31,9 @@ public class BasicPointVector extends AbstractVector{
 				}
 			}
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	public BasicPointVector(Double2[] array){
@@ -44,6 +51,9 @@ public class BasicPointVector extends AbstractVector{
 				values[i]=new Double2(-Double.MAX_VALUE, -Double.MAX_VALUE);
 			}
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	protected BasicPointVector(DATA_FORM df, int size){
@@ -51,6 +61,9 @@ public class BasicPointVector extends AbstractVector{
 		values = new Double2[size];
 		for(int i=0; i<size; ++i)
 			values[i] = new Double2(0, 0);
+
+		this.size = values.length;;
+		capaticy = values.length;
 	}
 	
 	protected BasicPointVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -74,6 +87,9 @@ public class BasicPointVector extends AbstractVector{
 			}
 			off += len;
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	@Override
@@ -93,6 +109,9 @@ public class BasicPointVector extends AbstractVector{
 			off += len;
 			start += end;
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 
 	@Override
@@ -142,6 +161,42 @@ public class BasicPointVector extends AbstractVector{
 		return 16;
 	}
 
+
+	public void add(Double2 value) {
+		if (size + 1 > capaticy && values.length > 0){
+			values = Arrays.copyOf(values, values.length * 2);
+		}else if (values.length <= 0){
+			values = Arrays.copyOf(values, values.length + 1);
+		}
+		capaticy = values.length;
+		values[size] = value;
+		size++;
+	}
+
+
+	public void addRange(Double2[] valueList) {
+		values = Arrays.copyOf(values, valueList.length + values.length);
+		System.arraycopy(valueList, 0, values, size, valueList.length);
+		size += valueList.length;
+		capaticy = values.length;
+	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		add(new Double2(((BasicPoint)value).getX(), ((BasicPoint)value).getY()));
+	}
+
+	@Override
+	public void Append(Vector value) throws Exception{
+		addRange(((BasicPointVector)value).getdataArray());
+	}
+
+	public Double2[] getdataArray(){
+		Double2[] data = new Double2[size];
+		System.arraycopy(values, 0, data, 0, size);
+		return data;
+	}
+
 	@Override
 	public Vector combine(Vector vector) {
 		BasicPointVector v = (BasicPointVector)vector;
@@ -179,11 +234,13 @@ public class BasicPointVector extends AbstractVector{
 
 	@Override
 	public int rows() {
-		return values.length;
+		return size;
 	}
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		out.writeDouble2Array(values);
+		Double2[] data = new Double2[size];
+		System.arraycopy(values, 0, data, 0, size);
+		out.writeDouble2Array(data);
 	}
 	
 	@Override
@@ -194,7 +251,9 @@ public class BasicPointVector extends AbstractVector{
 	@Override
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		boolean isLittleEndian = buffer.order() == ByteOrder.LITTLE_ENDIAN;
-		for (Double2 val: values) {
+		Double2[] data = new Double2[size];
+		System.arraycopy(values, 0, data, 0, size);
+		for (Double2 val: data) {
 			if (isLittleEndian) {
 				buffer.putDouble(val.x);
 				buffer.putDouble(val.y);

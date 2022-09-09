@@ -81,4 +81,14 @@ public class BasicMinuteVector extends BasicIntVector{
 		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
 		return new BasicMinuteVector(newValue);
 	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		add(value.getNumber().intValue());
+	}
+
+	@Override
+	public void Append(Vector value) throws Exception{
+		addRange(((BasicMinuteVector)value).getdataArray());
+	}
 }

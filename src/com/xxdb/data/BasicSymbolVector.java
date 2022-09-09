@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
@@ -14,17 +15,25 @@ import com.xxdb.io.ExtendedDataOutput;
 public class BasicSymbolVector extends AbstractVector {
 	private SymbolBase base;
 	private int[] values;
+	private int size;
+	private int capaticy;
 	
 	public BasicSymbolVector(int size){
 		super(DATA_FORM.DF_VECTOR);
 		base = new SymbolBase(0);
 		values = new int[size];
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	public BasicSymbolVector(SymbolBase base, int size){
 		super(DATA_FORM.DF_VECTOR);
 		this.base = base;
 		values = new int[size];
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	public BasicSymbolVector(List<String> list){
@@ -37,6 +46,9 @@ public class BasicSymbolVector extends AbstractVector {
 			else
 				values[i] = 0;
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	public BasicSymbolVector(SymbolBase base, int[] values, boolean copy){
@@ -49,6 +61,9 @@ public class BasicSymbolVector extends AbstractVector {
 		else{
 			this.values = values;
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 
 	protected BasicSymbolVector(DATA_FORM df, ExtendedDataInput in) throws IOException {
@@ -61,6 +76,9 @@ public class BasicSymbolVector extends AbstractVector {
 		for (int i = 0; i < size; ++i){
 			values[i] = in.readInt();
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	protected BasicSymbolVector(DATA_FORM df, ExtendedDataInput in, SymbolBaseCollection collection) throws IOException{
@@ -73,6 +91,9 @@ public class BasicSymbolVector extends AbstractVector {
 		for (int i = 0; i < size; ++i){
 			values[i] = in.readInt();
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	public Entity get(int index){
@@ -95,6 +116,31 @@ public class BasicSymbolVector extends AbstractVector {
 	@Override
 	public int getUnitLength() {
 		return 4;
+	}
+
+
+	public void add(String value) {
+		throw new RuntimeException("SymbolVector does not support add");
+	}
+
+
+	public void addRange(String[] valueList) {
+		throw new RuntimeException("SymbolVector does not support addRange");
+	}
+
+	@Override
+	public void Append(Scalar value) {
+		if (size + 1 > capaticy){
+			values = Arrays.copyOf(values, values.length * 2);
+			capaticy = values.length;
+		}
+		values[size] = base.find(value.getString(), true);
+		size++;
+	}
+
+	@Override
+	public void Append(Vector value) {
+		throw new RuntimeException("SymbolVector does not support append a vector");
 	}
 
 	public void set(int index, Entity value) throws Exception {
@@ -168,29 +214,33 @@ public class BasicSymbolVector extends AbstractVector {
 
 	@Override
 	public int rows() {
-		return values.length;
+		return size;
 	}	
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
+		int[] data = new int[size];
+		System.arraycopy(values, 0, data, 0, size);
 		base.write(out);
-		out.writeIntArray(values);
+		out.writeIntArray(data);
 	}
 	
 	public void write(ExtendedDataOutput out, SymbolBaseCollection collection) throws IOException{
 		int dataType = getDataType().getValue() + 128;
-			int flag = (DATA_FORM.DF_VECTOR.ordinal() << 8) + dataType;
+		int flag = (DATA_FORM.DF_VECTOR.ordinal() << 8) + dataType;
+		int[] data = new int[size];
+		System.arraycopy(values, 0, data, 0, size);
 		out.writeShort(flag);
 		out.writeInt(rows());
 		out.writeInt(columns());
 		collection.write(out, base);
-		out.writeIntArray(values);
+		out.writeIntArray(data);
 	}
 	
 	@Override
 	public int asof(Scalar value) {
 		String target = value.getString();
 		int start = 0;
-		int end = values.length - 1;
+		int end = size - 1;
 		int mid;
 		while(start <= end){
 			mid = (start + end)/2;

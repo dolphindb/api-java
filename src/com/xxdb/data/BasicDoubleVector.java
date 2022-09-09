@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -16,6 +17,8 @@ import com.xxdb.io.ExtendedDataOutput;
 
 public class BasicDoubleVector extends AbstractVector{
 	private double[] values;
+	private int size;
+	private int capaticy;
 	
 	public BasicDoubleVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -32,6 +35,9 @@ public class BasicDoubleVector extends AbstractVector{
 					values[i]= -Double.MAX_VALUE;
 			}
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	public BasicDoubleVector(double[] array){
@@ -44,11 +50,17 @@ public class BasicDoubleVector extends AbstractVector{
 			values = array.clone();
 		else
 			values = array;
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	protected BasicDoubleVector(DATA_FORM df, int size){
 		super(df);
 		values = new double[size];
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 
 	protected BasicDoubleVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -68,6 +80,9 @@ public class BasicDoubleVector extends AbstractVector{
 				values[i + start] = byteBuffer.getDouble(i * 8);
 			off += len;
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	@Override
@@ -84,6 +99,9 @@ public class BasicDoubleVector extends AbstractVector{
 			off += len;
 			start += end;
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 
 	@Override
@@ -159,11 +177,13 @@ public class BasicDoubleVector extends AbstractVector{
 
 	@Override
 	public int rows() {
-		return values.length;
+		return size;
 	}
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		out.writeDoubleArray(values);
+		double[] data = new double[size];
+		System.arraycopy(values, 0, data, 0, size);
+		out.writeDoubleArray(data);
 	}
 
 	@Override
@@ -171,9 +191,47 @@ public class BasicDoubleVector extends AbstractVector{
 		return 8;
 	}
 
+
+	public void add(double value) {
+		if (size + 1 > capaticy && values.length > 0){
+			values = Arrays.copyOf(values, values.length * 2);
+		}else if (values.length <= 0){
+			values = Arrays.copyOf(values, values.length + 1);
+		}
+		capaticy = values.length;
+		values[size] = value;
+		size++;
+	}
+
+
+	public void addRange(double[] valueList) {
+		values = Arrays.copyOf(values, valueList.length + values.length);
+		System.arraycopy(valueList, 0, values, size, valueList.length);
+		size += valueList.length;
+		capaticy = values.length;
+	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		add(value.getNumber().doubleValue());
+	}
+
+	@Override
+	public void Append(Vector value) {
+		addRange(((BasicDoubleVector)value).getdataArray());
+	}
+
+	public double[] getdataArray(){
+		double[] data = new double[size];
+		System.arraycopy(values, 0, data, 0, size);
+		return data;
+	}
+
 	@Override
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
-		for (double val: values) {
+		double[] data = new double[size];
+		System.arraycopy(values, 0, data, 0, size);
+		for (double val: data) {
 			buffer.putDouble(val);
 		}
 		return buffer;
@@ -190,7 +248,7 @@ public class BasicDoubleVector extends AbstractVector{
 		}
 		
 		int start = 0;
-		int end = values.length - 1;
+		int end = size - 1;
 		int mid;
 		while(start <= end){
 			mid = (start + end)/2;

@@ -3,12 +3,15 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 public class BasicDurationVector extends AbstractVector{
 	private int[] values;
+	private int size;
+	private int capaticy;
 	
 	public BasicDurationVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -17,6 +20,9 @@ public class BasicDurationVector extends AbstractVector{
 	protected BasicDurationVector(DATA_FORM df, int size){
 		super(df);
 		values = new int[2*size];
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	protected BasicDurationVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -36,6 +42,9 @@ public class BasicDurationVector extends AbstractVector{
 				values[i + start] = byteBuffer.getInt(i * 4);
 			off += len;
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	public Entity get(int index){
@@ -60,6 +69,43 @@ public class BasicDurationVector extends AbstractVector{
 	@Override
 	public int getUnitLength() {
 		return 4;
+	}
+
+
+	public void add(int value, int duration) {
+		if (size + 1 > capaticy && values.length > 0){
+			values = Arrays.copyOf(values, values.length * 2);
+		}else if (values.length <= 0){
+			values = Arrays.copyOf(values, values.length + 1);
+		}
+		capaticy = values.length;
+		values[size] = value;
+		values[size+1] = duration;
+		size++;
+	}
+
+
+	public void addRange(int[] valueList) {
+		values = Arrays.copyOf(values, valueList.length + values.length);
+		System.arraycopy(valueList, 0, values, size, valueList.length);
+		size += valueList.length;
+		capaticy = values.length;
+	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		add(((BasicDuration)value).getDuration(), ((BasicDuration)value).getUnit().ordinal());
+	}
+
+	@Override
+	public void Append(Vector value) throws Exception{
+		addRange(((BasicDurationVector)value).getdataArray());
+	}
+
+	public int[] getdataArray(){
+		int[] data = new int[size];
+		System.arraycopy(values, 0, data, 0, size);
+		return data;
 	}
 
 	@Override
@@ -102,16 +148,20 @@ public class BasicDurationVector extends AbstractVector{
 
 	@Override
 	public int rows() {
-		return values.length/2;
+		return size/2;
 	}
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		out.writeIntArray(values);
+		int[] data = new int[size];
+		System.arraycopy(values, 0, data, 0, size);
+		out.writeIntArray(data);
 	}
 
 	@Override
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
-		for (int val: values) {
+		int[] data = new int[size];
+		System.arraycopy(values, 0, data, 0, size);
+		for (int val: data) {
 			buffer.putInt(val);
 		}
 		return buffer;
@@ -131,7 +181,7 @@ public class BasicDurationVector extends AbstractVector{
 	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
 		targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
 		for (int i = 0; i < targetNumElement; ++i){
-				out.putInt(values[indexStart + i]);
+			out.putInt(values[indexStart + i]);
 		}
 		numElementAndPartial.numElement = targetNumElement;
 		numElementAndPartial.partial = 0;

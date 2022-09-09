@@ -97,6 +97,9 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 
 	public abstract int getUnitLength();
 
+	public abstract void Append(Scalar value) throws Exception;
+	public abstract void Append(Vector value) throws Exception;
+
 	public static boolean checkCompressedMethod(DATA_TYPE type, int compressedMethod) {
 		if(compressedMethod==COMPRESS_DELTA) {
 			if(type.getValue()>64){

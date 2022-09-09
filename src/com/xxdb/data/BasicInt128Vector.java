@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -11,6 +12,8 @@ import com.xxdb.io.Long2;
 
 public class BasicInt128Vector extends AbstractVector{
 	protected Long2[] values;
+	protected int size;
+	protected int capaticy;
 	
 	public BasicInt128Vector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -27,6 +30,9 @@ public class BasicInt128Vector extends AbstractVector{
 					values[i] = new Long2(0, 0);
 			}
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	public BasicInt128Vector(Long2[] array){
@@ -44,6 +50,9 @@ public class BasicInt128Vector extends AbstractVector{
 				values[i] = new Long2(0, 0);
 			}
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	protected BasicInt128Vector(DATA_FORM df, int size){
@@ -51,6 +60,9 @@ public class BasicInt128Vector extends AbstractVector{
 		values = new Long2[size];
 		for(int i=0; i<size; ++i)
 			values[i] = new Long2(0, 0);
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	protected BasicInt128Vector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -83,6 +95,10 @@ public class BasicInt128Vector extends AbstractVector{
 			}
 			off += len;
 		}
+
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	@Override
@@ -112,6 +128,10 @@ public class BasicInt128Vector extends AbstractVector{
 			off += len;
 			start += end;
 		}
+
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 
 	@Override
@@ -161,6 +181,42 @@ public class BasicInt128Vector extends AbstractVector{
 		return 16;
 	}
 
+
+	public void add(Long2 value) {
+		if (size + 1 > capaticy && values.length > 0){
+			values = Arrays.copyOf(values, values.length * 2);
+		}else if (values.length <= 0){
+			values = Arrays.copyOf(values, values.length + 1);
+		}
+		capaticy = values.length;
+		values[size] = value;
+		size++;
+	}
+
+
+	public void addRange(Long2[] valueList) {
+		values = Arrays.copyOf(values, valueList.length + values.length);
+		System.arraycopy(valueList, 0, values, size, valueList.length);
+		size += valueList.length;
+		capaticy = values.length;
+	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		add(new Long2(((BasicInt128)value).getMostSignicantBits(), ((BasicInt128)value).getLeastSignicantBits()));
+	}
+
+	@Override
+	public void Append(Vector value) throws Exception{
+		addRange(((BasicInt128Vector)value).getdataArray());
+	}
+
+	public Long2[] getdataArray(){
+		Long2[] data = new Long2[size];
+		System.arraycopy(values, 0, data, 0, size);
+		return data;
+	}
+
 	@Override
 	public Vector combine(Vector vector) {
 		BasicInt128Vector v = (BasicInt128Vector)vector;
@@ -198,11 +254,13 @@ public class BasicInt128Vector extends AbstractVector{
 
 	@Override
 	public int rows() {
-		return values.length;
+		return size;
 	}
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		out.writeLong2Array(values);
+		Long2[] data = new Long2[size];
+		System.arraycopy(values, 0, data, 0, size);
+		out.writeLong2Array(data);
 	}
 	
 	@Override
@@ -213,7 +271,9 @@ public class BasicInt128Vector extends AbstractVector{
 	@Override
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		boolean isLittleEndian = buffer.order() == ByteOrder.LITTLE_ENDIAN;
-		for (Long2 val: values) {
+		Long2[] data = new Long2[size];
+		System.arraycopy(values, 0, data, 0, size);
+		for (Long2 val: data) {
 			if(isLittleEndian){
 				buffer.putLong(val.low);
 				buffer.putLong(val.high);

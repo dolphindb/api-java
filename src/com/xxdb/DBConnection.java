@@ -47,6 +47,7 @@ public class DBConnection {
     private boolean enableHighAvailability_;
     private boolean enableSSL_;
     private boolean asynTask_;
+    private boolean isUrgent_ = false;
     private List<Node> nodes_ = new ArrayList<>();
     private int lastConnNodeIndex_ = 0;
     private boolean compress_ = false;
@@ -131,17 +132,19 @@ public class DBConnection {
         private boolean sslEnable_ = false;
         private boolean asynTask_ = false;
         private boolean compress_ = false;
+        private boolean ifUrgent_ = false;
         private int connTimeout_ = 0;
         private ExtendedDataOutput out_;
         private ExtendedDataInput in_;
         private boolean remoteLittleEndian_;
         private ReentrantLock lock_;
 
-        private DBConnectionImpl(boolean sslEnable, boolean asynTask, boolean compress){
+        private DBConnectionImpl(boolean sslEnable, boolean asynTask, boolean compress, boolean ifUrgent){
             sessionID_ = "";
             this.sslEnable_ = sslEnable;
             this.asynTask_ = asynTask;
             this.compress_ = compress;
+            this.ifUrgent_ = ifUrgent;
             this.lock_ = new ReentrantLock();
         }
 
@@ -520,7 +523,17 @@ public class DBConnection {
         this.enableSSL_ = useSSL;
         this.compress_ = compress;
         this.python_ = usePython;
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, false);
+        this.mutex_ = new ReentrantLock();
+    }
+
+    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent){
+        this.asynTask_ = asynchronousTask;
+        this.enableSSL_ = useSSL;
+        this.compress_ = compress;
+        this.python_ = usePython;
+        this.isUrgent_ = isUrgent;
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, isUrgent);
         this.mutex_ = new ReentrantLock();
     }
     
@@ -551,6 +564,8 @@ public class DBConnection {
     
     private int generateRequestFlag(boolean clearSessionMemory){
     	int flag = 0;
+        if (isUrgent_)
+            flag += 1;
     	if(asynTask_)
     		flag += 4;
     	if(clearSessionMemory)

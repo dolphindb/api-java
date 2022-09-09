@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -16,6 +17,8 @@ import com.xxdb.io.ExtendedDataOutput;
 
 public class BasicFloatVector extends AbstractVector{
 	private float[] values;
+	private int size;
+	private int capaticy;
 	
 	public BasicFloatVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -33,6 +36,9 @@ public class BasicFloatVector extends AbstractVector{
 				}
 			}
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	public BasicFloatVector(float[] array){
@@ -45,11 +51,17 @@ public class BasicFloatVector extends AbstractVector{
 			values = array.clone();
 		else
 			values = array;
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	protected BasicFloatVector(DATA_FORM df, int size){
 		super(df);
 		values = new float[size];
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	protected BasicFloatVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -69,6 +81,9 @@ public class BasicFloatVector extends AbstractVector{
 				values[i + start] = byteBuffer.getFloat(i * 4);
 			off += len;
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 	
 	@Override
@@ -85,6 +100,9 @@ public class BasicFloatVector extends AbstractVector{
 			off += len;
 			start += end;
 		}
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 
 	@Override
@@ -97,6 +115,42 @@ public class BasicFloatVector extends AbstractVector{
 	@Override
 	public int getUnitLength(){
 		return 4;
+	}
+
+
+	public void add(float value) {
+		if (size + 1 > capaticy && values.length > 0){
+			values = Arrays.copyOf(values, values.length * 2);
+		}else if (values.length <= 0){
+			values = Arrays.copyOf(values, values.length + 1);
+		}
+		capaticy = values.length;
+		values[size] = value;
+		size++;
+	}
+
+
+	public void addRange(float[] valueList) {
+		values = Arrays.copyOf(values, valueList.length + values.length);
+		System.arraycopy(valueList, 0, values, size, valueList.length);
+		size += valueList.length;
+		capaticy = values.length;
+	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		add(value.getNumber().floatValue());
+	}
+
+	@Override
+	public void Append(Vector value) throws Exception{
+		addRange(((BasicFloatVector)value).getdataArray());
+	}
+
+	public float[] getdataArray(){
+		float[] data = new float[size];
+		System.arraycopy(values, 0, data, 0, size);
+		return data;
 	}
 
 	public Entity get(int index){
@@ -160,7 +214,7 @@ public class BasicFloatVector extends AbstractVector{
 
 	@Override
 	public int rows() {
-		return values.length;
+		return size;
 	}
 	
 	@Override
@@ -169,12 +223,16 @@ public class BasicFloatVector extends AbstractVector{
 	}
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
-		out.writeFloatArray(values);
+		float[] data = new float[size];
+		System.arraycopy(values, 0, data, 0, size);
+		out.writeFloatArray(data);
 	}
 
 	@Override
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
-		for (float val: values) {
+		float[] data = new float[size];
+		System.arraycopy(values, 0, data, 0, size);
+		for (float val: data) {
 			buffer.putFloat(val);
 		}
 		return buffer;
@@ -191,7 +249,7 @@ public class BasicFloatVector extends AbstractVector{
 		}
 		
 		int start = 0;
-		int end = values.length - 1;
+		int end = size - 1;
 		int mid;
 		while(start <= end){
 			mid = (start + end)/2;

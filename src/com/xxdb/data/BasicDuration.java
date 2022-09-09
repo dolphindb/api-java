@@ -41,7 +41,7 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 
 	@Override
 	public Number getNumber() throws Exception {
-		return new Integer(value);
+		return value;
 	}
 
 	@Override

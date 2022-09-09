@@ -49,9 +49,9 @@ public class BasicInt extends AbstractScalar implements Comparable<BasicInt>{
 	
 	public Number getNumber() throws Exception{
 		if(isNull())
-			return null;
+			return Integer.MIN_VALUE;
 		else
-			return new Integer(value);
+			return value;
 	}
 
 	@Override

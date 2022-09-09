@@ -105,7 +105,21 @@ public class BasicAnyVector extends AbstractVector{
 	public int getUnitLength(){
 		throw new RuntimeException("BasicAnyVector.getUnitLength not supported.");
 	}
-	
+
+	public void addRange(Object[] valueList) {
+		throw new RuntimeException("AnyVector not support addRange");
+	}
+
+	@Override
+	public void Append(Scalar value) {
+		throw new RuntimeException("AnyVector not support append");
+	}
+
+	@Override
+	public void Append(Vector value) {
+		throw new RuntimeException("AnyVector not support append");
+	}
+
 	public String getString(){
 		StringBuilder sb = new StringBuilder("(");
 		int size = Math.min(10, rows());
@@ -133,6 +147,10 @@ public class BasicAnyVector extends AbstractVector{
 	@Override
 	public int serialize(int indexStart, int offect, int targetNumElement, AbstractVector.NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
 		throw new RuntimeException("BasicAnyVector.serialize not supported.");
+	}
+
+	public void add(Object value) {
+		throw new RuntimeException("AnyVector not support add");
 	}
 
 	@Override

@@ -50,9 +50,9 @@ public class BasicByte extends AbstractScalar implements Comparable<BasicByte>{
 	
 	public Number getNumber() throws Exception{
 		if(isNull())
-			return null;
+			return Byte.MIN_VALUE;
 		else
-			return new Byte(value);
+			return value;
 	}
 
 	@Override

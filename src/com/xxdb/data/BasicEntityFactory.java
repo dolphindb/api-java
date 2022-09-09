@@ -120,7 +120,7 @@ public class BasicEntityFactory implements EntityFactory{
 		else
 			return factories[index].createVectorWithDefaultValue(size);
 	}
-	
+
 	@Override
 	public Vector createPairWithDefaultValue(Entity.DATA_TYPE type) {
 		int index = type.getValue();

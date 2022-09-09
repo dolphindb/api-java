@@ -49,9 +49,9 @@ public class BasicLong extends AbstractScalar implements Comparable<BasicLong>{
 	
 	public Number getNumber() throws Exception{
 		if(isNull())
-			return null;
+			return Long.MIN_VALUE;
 		else
-			return new Long(value);
+			return value;
 	}
 
 	@Override

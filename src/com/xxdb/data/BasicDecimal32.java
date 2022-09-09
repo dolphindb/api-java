@@ -91,7 +91,15 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
 
     @Override
     public Number getNumber() throws Exception {
-        return value_;
+        if (isNull())
+            return Integer.MIN_VALUE;
+        else
+            return value_;
+    }
+
+    @Override
+    public int getScale(){
+        return scale_;
     }
 
     @Override

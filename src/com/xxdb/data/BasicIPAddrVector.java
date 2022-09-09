@@ -58,4 +58,14 @@ public class BasicIPAddrVector extends BasicInt128Vector {
 	public Class<?> getElementClass(){
 		return BasicIPAddr.class;
 	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		add(new Long2(((BasicIPAddr)value).getMostSignicantBits(), ((BasicIPAddr)value).getLeastSignicantBits()));
+	}
+
+	@Override
+	public void Append(Vector value) throws Exception{
+		addRange(((BasicIPAddrVector)value).getdataArray());
+	}
 }

@@ -81,4 +81,14 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
 		return new BasicNanoTimestampVector(newValue);
 	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		add(value.getNumber().longValue());
+	}
+
+	@Override
+	public void Append(Vector value) throws Exception{
+		addRange(((BasicNanoTimestampVector)value).getdataArray());
+	}
 }

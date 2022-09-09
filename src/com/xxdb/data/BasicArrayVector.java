@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -14,6 +15,20 @@ public class BasicArrayVector extends AbstractVector {
 	private int[] rowIndices;
 	private Vector valueVec;
 	private int baseUnitLength_;
+	private int rowIndicesSize;
+	private int capacity;
+
+	public BasicArrayVector(DATA_TYPE type, int size){
+		super(DATA_FORM.DF_VECTOR);
+
+		rowIndices = new int[size];
+		if (type.getValue() == 81 || type.getValue() == 82)
+			throw new RuntimeException("ArrayVector do not support String and Symbol");
+		this.type = DATA_TYPE.valueOf(type.getValue());
+		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(DATA_TYPE.valueOf(type.getValue() - 64), 0);
+		rowIndicesSize = 0;
+		capacity = rowIndices.length;
+	}
 
 	public BasicArrayVector(List<Vector> value) throws Exception{
 		super(DATA_FORM.DF_VECTOR);
@@ -56,9 +71,10 @@ public class BasicArrayVector extends AbstractVector {
 				}
 				this.rowIndices[indexPos++] = curRows;
 			}
+			rowIndicesSize = rowIndices.length;
+			capacity = rowIndices.length;
 			this.baseUnitLength_ = (this.valueVec).getUnitLength();
 		}
-
 	}
 
 	public BasicArrayVector(int[] index, Vector value) {
@@ -70,6 +86,8 @@ public class BasicArrayVector extends AbstractVector {
 		rowIndices = new int[indexCount];
 		System.arraycopy(index, 0, this.rowIndices, 0, indexCount);
 		this.baseUnitLength_ = value.getUnitLength();
+		rowIndicesSize = rowIndices.length;
+		capacity = rowIndices.length;
 	}
 
 	public BasicArrayVector(DATA_TYPE type, ExtendedDataInput in) throws IOException {
@@ -135,6 +153,8 @@ public class BasicArrayVector extends AbstractVector {
 			
 			rowsRead += rowsReadInBlock;
 		}
+		rowIndicesSize = rowIndices.length;
+		capacity = rowIndices.length;
 	}
 	
 	@Override
@@ -239,12 +259,44 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public int rows() {
-		return rowIndices.length;
+		return rowIndicesSize;
 	}
 
 	@Override
 	public int getUnitLength(){
 		throw new RuntimeException("BasicArrayVector.getUnitLength() not supported.");
+	}
+
+	public void addRange(Object[] valueList) {
+		throw new RuntimeException("ArrayVector not support addRange");
+	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		throw new RuntimeException("ArrayVector not support append scalar value");
+	}
+
+	@Override
+	public void Append(Vector value) throws Exception{
+		if (value.isVector()){
+			int indexCount = rowIndicesSize;
+			int prev = indexCount == 0? 0 : rowIndices[indexCount - 1];
+			if (rowIndicesSize + 1 > capacity){
+				rowIndices = Arrays.copyOf(rowIndices, rowIndices.length * 2);
+				capacity = rowIndices.length;
+			}
+			if (value.rows() != 0){
+				rowIndices[rowIndicesSize] = prev + value.rows();
+				valueVec.Append(value);
+			}else {
+				rowIndices[rowIndicesSize] = prev + 1;
+				Scalar scalar = BasicEntityFactory.instance().createScalarWithDefaultValue(value.getDataType());
+				scalar.setNull();
+				valueVec.Append(scalar);
+			}
+			rowIndicesSize++;
+		}else
+			throw new RuntimeException("Append to arrayctor must be a vector. ");
 	}
 
 	@Override
@@ -359,10 +411,14 @@ public class BasicArrayVector extends AbstractVector {
 		return byteSent + bytes;
 	}
 
+	public void add(Object value) {
+		throw new RuntimeException("ArrayVector not support add");
+	}
+
 	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
 		// TODO Auto-generated method stub
-		int indexCount = rowIndices.length;
+		int indexCount = rowIndicesSize;
 		int maxCount = 255;
 		int countBytes = 1;
 		int indicesPos = 0;
@@ -401,9 +457,6 @@ public class BasicArrayVector extends AbstractVector {
 			indicesPos += indiceCount;
 			valuesOffect += curRows;
 		}
-
-
-
 	}
 
 }

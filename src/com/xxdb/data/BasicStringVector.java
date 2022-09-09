@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -22,6 +23,8 @@ public class BasicStringVector extends AbstractVector{
 	private boolean isSymbol;
 	private boolean isBlob = false;
 	private List<byte[]> blobValues;
+	private int size;
+	private int capaticy;
 
 	public BasicStringVector(int size){
 		this(DATA_FORM.DF_VECTOR, size, false);
@@ -40,6 +43,9 @@ public class BasicStringVector extends AbstractVector{
 			}
 		}
 		this.isSymbol = false;
+
+		this.size = values.length;
+		capaticy = values.length;
 	}
 
 	public BasicStringVector(List<String> list, boolean blob){
@@ -67,6 +73,14 @@ public class BasicStringVector extends AbstractVector{
 		}
 		this.isSymbol = false;
 		this.isBlob = blob;
+
+		if (blob){
+			this.size = blobValues.size();
+			capaticy = blobValues.size();
+		}else {
+			this.size = values.length;
+			capaticy = values.length;
+		}
 	}
 
 	public BasicStringVector(byte[][] array){
@@ -78,6 +92,9 @@ public class BasicStringVector extends AbstractVector{
 		}
 		blobValues.addAll(arraycopy);
 		isBlob = true;
+
+		this.size = blobValues.size();
+		capaticy = blobValues.size();
 	}
 
 	public BasicStringVector(String[] array){
@@ -125,12 +142,22 @@ public class BasicStringVector extends AbstractVector{
 
 		this.isSymbol = false;
 		this.isBlob = blob;
+
+		if (blob){
+			this.size = blobValues.size();
+			capaticy = blobValues.size();
+		}else {
+			this.size = values.length;
+			capaticy = values.length;
+		}
 	}
 
 	protected BasicStringVector(DATA_FORM df, int size, boolean isSymbol){
 		super(df);
 		values = new String[size];
 		this.isSymbol = isSymbol;
+		this.size = values.length;
+		capaticy = values.length;
 	}
 
 	protected BasicStringVector(DATA_FORM df, int size, boolean isSymbol, boolean isBlob){
@@ -146,6 +173,13 @@ public class BasicStringVector extends AbstractVector{
 		}
 		this.isSymbol = isSymbol;
 		this.isBlob = isBlob;
+		if (isBlob){
+			this.size = blobValues.size();
+			capaticy = blobValues.size();
+		}else {
+			this.size = values.length;
+			capaticy = values.length;
+		}
 	}
 
 	protected BasicStringVector(DATA_FORM df, ExtendedDataInput in, boolean isSymbol, boolean blob) throws IOException {
@@ -171,6 +205,14 @@ public class BasicStringVector extends AbstractVector{
 				values[i] = in.readString();
 			}
 		}
+
+		if (blob){
+			this.size = blobValues.size();
+			capaticy = blobValues.size();
+		}else {
+			this.size = values.length;
+			capaticy = values.length;
+		}
 	}
 	
 	protected BasicStringVector(DATA_FORM df, ExtendedDataInput in, boolean blob, SymbolBaseCollection collection) throws IOException{
@@ -195,6 +237,14 @@ public class BasicStringVector extends AbstractVector{
 			blobValues = new ArrayList<>(size);
 			for (int i = 0; i < size; ++i)
 				blobValues.add(in.readBlob());
+		}
+
+		if (blob){
+			this.size = blobValues.size();
+			capaticy = blobValues.size();
+		}else {
+			this.size = values.length;
+			capaticy = values.length;
 		}
 	}
 	
@@ -234,6 +284,72 @@ public class BasicStringVector extends AbstractVector{
 	@Override
 	public int getUnitLength() {
 		return 1;
+	}
+
+
+	public void add(String value) {
+		if (isBlob){
+			blobValues.add(value.getBytes(StandardCharsets.UTF_8));
+			capaticy = blobValues.size();
+		}
+		else{
+			if (size + 1 > capaticy && values.length > 0){
+				values = Arrays.copyOf(values, values.length * 2);
+			}else if (values.length <= 0){
+				values = Arrays.copyOf(values, values.length + 1);
+			}
+			capaticy = values.length;
+			values[size] = value;
+		}
+		size++;
+	}
+
+
+	public void addRange(String[] valueList) {
+		if (isBlob){
+			for (int i = 0; i < valueList.length; i++){
+				blobValues.add(valueList[i].getBytes(StandardCharsets.UTF_8));
+			}
+			size += valueList.length;
+			capaticy = blobValues.size();
+		}else {
+			values = Arrays.copyOf(values, valueList.length + values.length);
+			System.arraycopy(valueList, 0, values, size, valueList.length);
+			size += valueList.length;
+			capaticy = values.length;
+		}
+	}
+
+	@Override
+	public void Append(Scalar value) {
+		if (isBlob){
+			blobValues.add(((BasicString)value).getBytes());
+			size++;
+			capaticy = blobValues.size();
+		} else{
+			add(((BasicString)value).getString());
+		}
+	}
+
+	@Override
+	public void Append(Vector value) {
+		if (isBlob){
+			blobValues.addAll(((BasicStringVector)value).getdataByteArray());
+			size += value.rows();
+			capaticy = blobValues.size();
+		} else {
+			addRange(((BasicStringVector)value).getdataArray());
+		}
+	}
+
+	public String[] getdataArray(){
+		String[] data = new String[size];
+		System.arraycopy(values, 0, data, 0, size);
+		return data;
+	}
+
+	public List<byte[]> getdataByteArray(){
+		return blobValues;
 	}
 
 	public void set(int index, Entity value) throws Exception {
@@ -335,10 +451,7 @@ public class BasicStringVector extends AbstractVector{
 
 	@Override
 	public int rows() {
-		if (isBlob)
-			return blobValues.size();
-		else
-			return values.length;
+		return size;
 	}	
 	
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
@@ -351,7 +464,9 @@ public class BasicStringVector extends AbstractVector{
 		}
 		else
 		{
-			for (String str : values)
+			String[] data = new String[size];
+			System.arraycopy(values, 0, data, 0, size);
+			for (String str : data)
 			{
 				if (str == null){
 					out.writeString("");
@@ -388,7 +503,7 @@ public class BasicStringVector extends AbstractVector{
 				throw new RuntimeException("value must be a blob scalar. ");
 			byte[] target = ((BasicString)value).getBytes();
 			int start = 0;
-			int end = blobValues.size() - 1;
+			int end = size - 1;
 			int mid;
 			while (start <= end)
 			{
@@ -405,7 +520,7 @@ public class BasicStringVector extends AbstractVector{
 		{
 			String target = value.getString();
 			int start = 0;
-			int end = values.length - 1;
+			int end = size - 1;
 			int mid;
 			while (start <= end)
 			{
@@ -435,7 +550,9 @@ public class BasicStringVector extends AbstractVector{
 		}
 		else
 		{
-			for (String val : values)
+			String[] data = new String[size];
+			System.arraycopy(values, 0, data, 0, size);
+			for (String val : data)
 			{
 				byte[] tmp = val.getBytes(StandardCharsets.UTF_8);
 				while(tmp.length + 1 + buffer.position() > buffer.limit()) {
@@ -451,7 +568,7 @@ public class BasicStringVector extends AbstractVector{
 	public int serialize(byte[] buf, int bufSize, int start, int elementCount, Offect offect)
 	{
 		int len = 0;
-		int total = blobValues.size();
+		int total = size;
 		int count = 0;
 		if (isBlob)
 		{

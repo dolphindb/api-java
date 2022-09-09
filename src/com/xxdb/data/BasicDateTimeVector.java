@@ -85,9 +85,21 @@ public class BasicDateTimeVector extends BasicIntVector{
 
 	@Override
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
-		for (int val: values) {
+		int[] data = new int[size];
+		System.arraycopy(values, 0, data, 0, size);
+		for (int val: data) {
 			buffer.putInt(val);
 		}
 		return buffer;
+	}
+
+	@Override
+	public void Append(Scalar value) throws Exception{
+		add(value.getNumber().intValue());
+	}
+
+	@Override
+	public void Append(Vector value) throws Exception{
+		addRange(((BasicDateTimeVector)value).getdataArray());
 	}
 }

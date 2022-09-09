@@ -49,9 +49,9 @@ public class BasicShort extends AbstractScalar implements Comparable<BasicShort>
 	
 	public Number getNumber() throws Exception{
 		if(isNull())
-			return null;
+			return Short.MIN_VALUE;
 		else
-			return new Short(value);
+			return value;
 	}
 
 	@Override

@@ -14,4 +14,5 @@ public interface Scalar extends Entity{
 	Temporal getTemporal() throws Exception;
 	int hashBucket(int buckets);
 	String getJsonString();
+	int getScale();
 }

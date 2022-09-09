@@ -6,14 +6,13 @@ import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 
 public class BasicDecimal32Vector extends AbstractVector{
-    protected int scale_ = 0;
-    protected int[] values;
-
-    public BasicDecimal32Vector(DATA_FORM df) {
-        super(df);
-    }
+    private int scale_ = 0;
+    private int[] values;
+    private int size;
+    private int capaticy;
 
     public BasicDecimal32Vector(int size){
         this(DATA_FORM.DF_VECTOR, size);
@@ -22,6 +21,9 @@ public class BasicDecimal32Vector extends AbstractVector{
     public BasicDecimal32Vector(DATA_FORM df, int size){
         super(df);
         values = new int[size];
+
+        this.size = values.length;
+        capaticy = values.length;
     }
 
     public BasicDecimal32Vector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -46,12 +48,17 @@ public class BasicDecimal32Vector extends AbstractVector{
             }
             off += len;
         }
+
+        this.size = values.length;
+        capaticy = values.length;
     }
 
     @Override
     protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
+        int[] data = new int[size];
+        System.arraycopy(values, 0, data, 0, size);
         out.writeInt(scale_);
-        out.writeIntArray(values);
+        out.writeIntArray(data);
     }
 
     @Override
@@ -86,7 +93,15 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
-
+        if (((Scalar)value).getScale() != scale_)
+            throw new RuntimeException("Value's scale is not the same as the vector's!");
+        else
+            scale_ = ((Scalar) value).getScale();
+        if(((Scalar)value).isNull()){
+            values[index] = Integer.MIN_VALUE;
+        }else{
+            values[index] = ((Scalar)value).getNumber().intValue();
+        }
     }
 
     @Override
@@ -96,12 +111,46 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
-
+        throw new RuntimeException("Decimal32 does not support arrayVector");
     }
 
     @Override
     public int getUnitLength() {
         return 4;
+    }
+
+    public void add(int value) {
+        if (size + 1 > capaticy && values.length > 0){
+            values = Arrays.copyOf(values, values.length * 2);
+        }else if (values.length <= 0){
+            values = Arrays.copyOf(values, values.length + 1);
+        }
+        capaticy = values.length;
+        values[size] = value;
+        size++;
+    }
+
+    public void addRange(int[] valueList) {
+        values = Arrays.copyOf(values, valueList.length + values.length);
+        System.arraycopy(valueList, 0, values, size, valueList.length);
+        size += valueList.length;
+        capaticy = values.length;
+    }
+
+    @Override
+    public void Append(Scalar value) throws Exception{
+        add(value.getNumber().intValue());
+    }
+
+    @Override
+    public void Append(Vector value) throws Exception{
+        addRange(((BasicDecimal32Vector)value).getdataArray());
+    }
+
+    public int[] getdataArray(){
+        int[] data = new int[size];
+        System.arraycopy(values, 0, data, 0, size);
+        return data;
     }
 
     @Override
@@ -116,7 +165,7 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public int rows() {
-        return values.length;
+        return size;
     }
 
     @Override

@@ -50,9 +50,9 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 	
 	public Number getNumber() throws Exception{
 		if(isNull())
-			return null;
+			return -Float.MAX_VALUE;
 		else
-			return new Float(value);
+			return value;
 	}
 
 	@Override
