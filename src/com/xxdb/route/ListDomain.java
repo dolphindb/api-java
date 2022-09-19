@@ -59,4 +59,20 @@ public class ListDomain implements Domain {
 		}
 		return keys;
 	}
+
+	@Override
+	public int getPartitionKey(Scalar partitionCol) {
+		if (partitionCol.getDataCategory() != cat)
+			throw new RuntimeException("Data category incompatible.");
+		if (cat == Entity.DATA_CATEGORY.TEMPORAL && type != partitionCol.getDataType())
+		{
+			DATA_TYPE old = partitionCol.getDataType();
+			partitionCol = (Scalar)Utils.castDateTime(partitionCol, type);
+			if (partitionCol == null)
+				throw new RuntimeException("Can't convert type from " + old + " to " + type);
+		}
+		int index = 0;
+		index = dict.getOrDefault(partitionCol, -1);
+		return index;
+	}
 }

@@ -70,7 +70,7 @@ public class BasicByteVector extends AbstractVector{
 		values = new byte[size];
 		int off = 0;
 		while (off < size) {
-			int len = Math.min(BUF_SIZE, size - off);
+			int len = Math.min(4096, size - off);
 			in.readFully(values, off, len);
 			off += len;
 		}

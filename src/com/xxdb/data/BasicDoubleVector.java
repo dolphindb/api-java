@@ -71,8 +71,9 @@ public class BasicDoubleVector extends AbstractVector{
 		values = new double[size];
 		int totalBytes = size * 8, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		byte[] buf = new byte[4096];
 		while (off < totalBytes) {
-			int len = Math.min(BUF_SIZE, totalBytes - off);
+			int len = Math.min(4096, totalBytes - off);
 			in.readFully(buf, 0, len);
 			int start = off / 8, end = len / 8;
 			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
@@ -89,8 +90,9 @@ public class BasicDoubleVector extends AbstractVector{
 	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
 		int totalBytes = count * 8, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		byte[] buf = new byte[4096];
 		while (off < totalBytes) {
-			int len = Math.min(BUF_SIZE, totalBytes - off);
+			int len = Math.min(4096, totalBytes - off);
 			in.readFully(buf, 0, len);
 			int end = len / 8;
 			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);

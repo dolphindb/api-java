@@ -100,7 +100,7 @@ public class BasicArrayVector extends AbstractVector {
 		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, cols);
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		this.baseUnitLength_ = valueVec.getUnitLength();
-		
+		byte[] buf = new byte[4096];
 		int rowsRead = 0;
 		int rowsReadInBlock = 0;
 		int prevIndex = 0;
@@ -116,7 +116,7 @@ public class BasicArrayVector extends AbstractVector {
 			rowsReadInBlock = 0;
 			int offset = 0;
 			while(offset < totalBytes){
-				int len = Math.min(BUF_SIZE, totalBytes - offset);
+				int len = Math.min(4096, totalBytes - offset);
 				in.readFully(buf, 0, len);
 				int curRows = len / countBytes;
 				if(countBytes == 1){
@@ -427,7 +427,7 @@ public class BasicArrayVector extends AbstractVector {
 			int byteRequest = 4;
 			int curRows = 0;
 			int indiceCount = 1;
-			while (byteRequest < BUF_SIZE && indicesPos + indiceCount - 1 < indexCount && indiceCount < 65536){// && indiceCount < 65536
+			while (byteRequest < 4096 && indicesPos + indiceCount - 1 < indexCount && indiceCount < 65536){// && indiceCount < 65536
 				int curIndiceOffect = indicesPos + indiceCount - 1;
 				int index = curIndiceOffect == 0 ? rowIndices[curIndiceOffect] : rowIndices[curIndiceOffect] - rowIndices[curIndiceOffect - 1];
 				while(index > maxCount)

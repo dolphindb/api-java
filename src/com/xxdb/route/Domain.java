@@ -2,6 +2,7 @@ package com.xxdb.route;
 
 import java.util.List;
 
+import com.xxdb.data.Scalar;
 import com.xxdb.data.Vector;
 
 public interface Domain {
@@ -11,4 +12,5 @@ public interface Domain {
 	 * @return a list of partition keys
 	 */
 	List<Integer> getPartitionKeys(Vector partitionCol);
+	int getPartitionKey(Scalar partitionCol);
 }

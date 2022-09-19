@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.xxdb.data.Entity;
 import com.xxdb.data.Entity.DATA_TYPE;
+import com.xxdb.data.Scalar;
 import com.xxdb.data.Utils;
 import com.xxdb.data.Vector;
 
@@ -34,5 +35,19 @@ public class HashDomain implements Domain{
 		for(int i=0; i<rows; ++i)
 			keys.add(partitionCol.hashBucket(i, buckets));
 		return keys;
+	}
+
+	@Override
+	public int getPartitionKey(Scalar partitionCol) {
+		if(partitionCol.getDataCategory() != cat)
+			throw new RuntimeException("Data category incompatible.");
+		if(cat == Entity.DATA_CATEGORY.TEMPORAL && type != partitionCol.getDataType())
+		{
+			DATA_TYPE old = partitionCol.getDataType();
+			partitionCol = (Scalar)Utils.castDateTime(partitionCol, type);
+			if (partitionCol == null)
+				throw new RuntimeException("Can't convert type from " + old + " to " + type);
+		}
+		return partitionCol.hashBucket(buckets);
 	}
 }

@@ -639,24 +639,14 @@ public class MultithreadedTableWriter {
             int threadindex;
             if(threads_.size() > 1){
                 if(isPartionedTable_){
-                    Vector pvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(partitionColumnIdx_),1);
-                    if(prow.get(partitionColumnIdx_) != null){
-                        pvector.set(0, (Scalar) prow.get(partitionColumnIdx_));
-                        List<Integer> indexes = partitionDomain_.getPartitionKeys(pvector);
-                        if(indexes.isEmpty()==false){
-                            threadindex = indexes.get(0);
-                        }else{
-                            return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_Server,"Failed to obtain the partition scheme.");
-                        }
-                    }
-                    else {
-                        threadindex = 0;
+                    try {
+                        threadindex = partitionDomain_.getPartitionKey((Scalar) prow.get(partitionColumnIdx_));
+                    }catch (Exception e){
+                        return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, e.getMessage());
                     }
                 }else{
                     if (prow.get(threadByColIndexForNonPartion_) != null) {
-                        Vector pvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(threadByColIndexForNonPartion_),1);
-                        pvector.set(0,(Scalar) prow.get(threadByColIndexForNonPartion_));
-                        threadindex =pvector.hashBucket(0,threads_.size());
+                        threadindex = ((Scalar) prow.get(threadByColIndexForNonPartion_)).hashBucket(threads_.size());
                     }
                     else {
                         threadindex = 0;

@@ -37,8 +37,9 @@ public class BasicDecimal64Vector extends AbstractVector{
         int off = 0;
         boolean little = in.isLittleEndian();
         ByteOrder bo = little ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+        byte[] buf = new byte[4096];
         while (off < totalBytes){
-            int len = Math.min(BUF_SIZE, totalBytes - off);
+            int len = Math.min(4096, totalBytes - off);
             in.readFully(buf, 0, len);
             int start = off / 8, end = len / 8;
             ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);

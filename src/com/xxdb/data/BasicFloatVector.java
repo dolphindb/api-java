@@ -72,8 +72,9 @@ public class BasicFloatVector extends AbstractVector{
 		values = new float[size];
 		int totalBytes = size * 4, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		byte[] buf = new byte[4096];
 		while (off < totalBytes) {
-			int len = Math.min(BUF_SIZE, totalBytes - off);
+			int len = Math.min(4096, totalBytes - off);
 			in.readFully(buf, 0, len);
 			int start = off / 4, end = len / 4;
 			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
@@ -90,8 +91,9 @@ public class BasicFloatVector extends AbstractVector{
 	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
 		int totalBytes = count * 4, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		byte[] buf = new byte[4096];
 		while (off < totalBytes) {
-			int len = Math.min(BUF_SIZE, totalBytes - off);
+			int len = Math.min(4096, totalBytes - off);
 			in.readFully(buf, 0, len);
 			int end = len / 4;
 			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
