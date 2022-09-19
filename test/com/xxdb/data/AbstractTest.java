@@ -291,6 +291,16 @@ public class AbstractTest{
             }
 
             @Override
+            public void Append(Scalar value) throws Exception {
+
+            }
+
+            @Override
+            public void Append(Vector value) throws Exception {
+
+            }
+
+            @Override
             public DATA_CATEGORY getDataCategory() {
                 return null;
             }
@@ -380,6 +390,16 @@ public class AbstractTest{
             }
 
             @Override
+            public void Append(Scalar value) throws Exception {
+
+            }
+
+            @Override
+            public void Append(Vector value) throws Exception {
+
+            }
+
+            @Override
             public DATA_CATEGORY getDataCategory() {
                 return null;
             }
@@ -461,6 +481,16 @@ public class AbstractTest{
             @Override
             public int getUnitLength() {
                 return 0;
+            }
+
+            @Override
+            public void Append(Scalar value) throws Exception {
+
+            }
+
+            @Override
+            public void Append(Vector value) throws Exception {
+
             }
 
             @Override
@@ -547,6 +577,16 @@ public class AbstractTest{
             }
 
             @Override
+            public void Append(Scalar value) throws Exception {
+
+            }
+
+            @Override
+            public void Append(Vector value) throws Exception {
+
+            }
+
+            @Override
             public DATA_CATEGORY getDataCategory() {
                 return null;
             }
@@ -628,6 +668,16 @@ public class AbstractTest{
             @Override
             public int getUnitLength() {
                 return 0;
+            }
+
+            @Override
+            public void Append(Scalar value) throws Exception {
+
+            }
+
+            @Override
+            public void Append(Vector value) throws Exception {
+
             }
 
             @Override
