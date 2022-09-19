@@ -65,6 +65,8 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
             for (long i = 0; i < scale_ - 1; i++) {
                 pow = pow.multiply(new BigDecimal(10));
             }
+            if (value_ < 0)
+                sb.append("-");
             sb.append(value_ / pow.longValue());
             int sign = value_ < 0 ? -1 : 1;
             BigDecimal result = new BigDecimal(value_ % pow.longValue() * sign);
