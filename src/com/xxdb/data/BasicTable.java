@@ -193,7 +193,7 @@ public class BasicTable extends AbstractEntity implements Table{
 	    	listTmp[0]=getColumnName(curCol);
 	    	maxColWidth=0;
 	    	for(i=0;i<rows;i++){
-	    		listTmp[i+1]=getColumn(curCol).get(i).getString();
+				listTmp[i+1]=getColumn(curCol).getString(i);
 	    		if(listTmp[i+1].length()>maxColWidth)
 	    			maxColWidth=listTmp[i+1].length();
 	    	}

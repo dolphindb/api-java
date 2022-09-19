@@ -605,7 +605,7 @@ public class BasicStringVector extends AbstractVector{
 	}
 
 	@Override
-	public  int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out)throws IOException {
+	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out)throws IOException {
 		int readByte = 0;
 		targetNumElement = Math.min(targetNumElement, isBlob ? blobValues.size() - indexStart: values.length - indexStart);
 		numElementAndPartial.numElement = 0;

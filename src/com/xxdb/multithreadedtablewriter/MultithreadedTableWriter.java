@@ -22,6 +22,21 @@ public class MultithreadedTableWriter {
             return sb.toString();
         }
     };
+
+    public enum Mode{
+        M_Append(0),
+        M_Upsert(1);
+
+        private int value;
+        Mode(int value){
+            this.value = value;
+        }
+
+        Mode(){
+
+        }
+    }
+
     public static class Status extends ErrorCodeInfo{
         public boolean isExiting;
         public long sentRows, unsentRows, sendFailedRows;
@@ -168,14 +183,33 @@ public class MultithreadedTableWriter {
         }
 
         boolean init(){
-            if (tableWriter_.dbName_.isEmpty()) {
-                scriptTableInsert_ = "tableInsert{\"" + tableWriter_.tableName_ + "\"}";
-            }
-            else if (tableWriter_.isPartionedTable_) {//partitioned table
-                scriptTableInsert_ = "tableInsert{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")}";
-            }
-            else {// single partitioned table
-                scriptTableInsert_ = "tableInsert{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")}";
+            if (tableWriter_.mode_ == Mode.M_Append){
+                if (tableWriter_.dbName_.isEmpty()) {
+                    scriptTableInsert_ = "tableInsert{\"" + tableWriter_.tableName_ + "\"}";
+                }
+                else if (tableWriter_.isPartionedTable_) {//partitioned table
+                    scriptTableInsert_ = "tableInsert{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")}";
+                }
+                else {// single partitioned table
+                    scriptTableInsert_ = "tableInsert{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")}";
+                }
+            }else if (tableWriter_.mode_ == Mode.M_Upsert){
+                StringBuilder sb = new StringBuilder();
+                if(tableWriter_.dbName_.isEmpty()){
+                    sb.append("upsert!{" + tableWriter_.tableName_);
+                }else if(tableWriter_.isPartionedTable_){
+                    sb.append("upsert!{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")");
+                }else{
+                    sb.append("upsert!{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")");
+                }
+                sb.append(",");
+                if (tableWriter_.pModeOption_ != null && tableWriter_.pModeOption_.length != 0){
+                    for (String one : tableWriter_.pModeOption_){
+                        sb.append("," + one);
+                    }
+                }
+                sb.append("}");
+                scriptTableInsert_ = sb.toString();
             }
             return true;
         }
@@ -229,6 +263,18 @@ public class MultithreadedTableWriter {
     private int sentRowsAfterGc_;//manual start gc after sent some rows
     private List<WriterThread> threads_=new ArrayList<>();
     private ErrorCodeInfo errorCodeInfo_ = new ErrorCodeInfo();
+    private Mode mode_;
+    private String[] pModeOption_;
+
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean enableHighAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionCol,
+                                    int[] compressTypes, Mode mode, String[] pModeOption) throws Exception{
+        init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
+                batchSize, throttle,threadCount,partitionCol,compressTypes, mode, pModeOption);
+    }
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
                                     boolean enableHighAvailability, String[] highAvailabilitySites,
@@ -236,7 +282,7 @@ public class MultithreadedTableWriter {
                                     int threadCount, String partitionCol,
                                     int[] compressTypes) throws Exception{
         init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
-                batchSize, throttle,threadCount,partitionCol,compressTypes);
+                batchSize, throttle,threadCount,partitionCol,compressTypes, Mode.M_Append, null);
     }
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
@@ -244,19 +290,21 @@ public class MultithreadedTableWriter {
                                     int batchSize, float throttle,
                                     int threadCount, String partitionCol) throws Exception{
         init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
-                batchSize, throttle,threadCount,partitionCol,null);
+                batchSize, throttle,threadCount,partitionCol,null, Mode.M_Append, null);
     }
     private void init(String hostName, int port, String userId, String password,
                       String dbName, String tableName, boolean useSSL,
                       boolean enableHighAvailability, String[] highAvailabilitySites,
                       int batchSize, float throttle,
                       int threadCount, String partitionCol,
-                      int[] compressTypes) throws Exception{
+                      int[] compressTypes, Mode mode, String[] pModeOption) throws Exception{
         dbName_=dbName;
         tableName_=tableName;
         batchSize_=batchSize;
         throttleMilsecond_=(int)throttle*1000;
         hasError_=false;
+        mode_ = mode;
+        pModeOption_ = pModeOption;
         if(threadCount < 1){
             throw new RuntimeException("The parameter threadCount must be greater than or equal to 1.");
         }
@@ -359,7 +407,7 @@ public class MultithreadedTableWriter {
             Entity.PARTITION_TYPE partitionColtype=Entity.PARTITION_TYPE.values()[partitionType];
             partitionDomain_ = DomainFactory.createDomain(partitionColtype, dataColType, partitionSchema);
         } else {//isPartionedTable_==false
-            if(partitionCol.isEmpty() == false){
+            if(!partitionCol.isEmpty()){
                 int threadcolindex = -1;
                 for(int i=0; i<colNames_.size(); i++){
                     if(colNames_.get(i).equals(partitionCol)){
