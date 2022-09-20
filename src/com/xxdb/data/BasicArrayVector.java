@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -185,7 +186,26 @@ public class BasicArrayVector extends AbstractVector {
 	@Override
 	public Vector getSubVector(int[] indices) {
 		// TODO Auto-generated method stub
-		return null;
+		if (indices.length == 0)
+			return null;
+		List<Vector> value = new ArrayList<>();
+		for (int i = 0; i < indices.length; i++){
+			int start = indices[i] == 0 ? 0 : rowIndices[indices[i]-1];
+			int end = rowIndices[indices[i]];
+			int[] indexs = new int[end - start];
+			for (int j = 0; j < indexs.length; j++){
+				indexs[j] = start+j;
+			}
+			Vector subValue = valueVec.getSubVector(indexs);
+			value.add(subValue);
+		}
+		try {
+			return new BasicArrayVector(value);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	@Override
