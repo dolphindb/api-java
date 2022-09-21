@@ -118,6 +118,7 @@ public class BasicIntTest {
         list.add(null);
         BasicIntVector biv = new BasicIntVector(list);
         assertEquals(BasicInt.class,biv.getElementClass());
+        assertEquals(new BasicInt(7),biv.get(1));
         assertEquals(Entity.DATA_CATEGORY.INTEGRAL,biv.getDataCategory());
         assertEquals("[5,7,8,,,5,7,8]",biv.getSubVector(new int[]{0,1,2,3,4,0,1,2}).getString());
     }

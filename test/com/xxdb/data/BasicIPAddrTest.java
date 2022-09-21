@@ -133,6 +133,7 @@ public class BasicIPAddrTest {
         list.add(new Long2(473849509537L,2234859305L));
         list.add(new Long2(55887799882L,110044556L));
         BasicIPAddrVector biav = new BasicIPAddrVector(list);
+        assertEquals("0:d:32c:264a::68f:258c",biav.get(1).getString());
         assertEquals("[0:d:32c:264a::68f:258c,0:6e:53a1:b6a1::8535:3f29,0:d:32c:264a::68f:258c]",biav.getSubVector(new int[]{1,0,1}).getString());
         assertEquals(BasicIPAddr.class,biav.getElementClass());
     }

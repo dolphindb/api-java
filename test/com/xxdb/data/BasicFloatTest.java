@@ -83,6 +83,7 @@ public class BasicFloatTest {
         assertEquals(-Float.MAX_VALUE,bfv.getFloat(2),0);
         assertTrue(bfv.isNull(2));
         assertFalse(bfv.isNull(1));
+        assertEquals(bfv.get(0),new BasicFloat((float)0.79));
         bfv.setFloat(2, (float) 15.45);
         bfv.setNull(3);
         assertEquals("[15.45,8.85,,0.79]",bfv.getSubVector(new int[]{2,1,3,0}).getString());

@@ -62,7 +62,6 @@ public class PartitionedTableAppender {
             if(!task.isSuccessful())
             	throw new RuntimeException(task.getErrorMsg());
             tableInfo = (BasicDictionary) task.getResult();
-            
             Entity partColNames = tableInfo.get(new BasicString("partitionColumnName"));
             if(partColNames == null)
             	throw new RuntimeException("Can't find specified partition column name.");
@@ -101,7 +100,6 @@ public class PartitionedTableAppender {
                 this.columnTypes[i] = Entity.DATA_TYPE.valueOf(typeInts.getInt(i));
                 this.columnCategories[i] = Entity.typeToCategory(this.columnTypes[i]);
             }
-            
             domain = DomainFactory.createDomain(Entity.PARTITION_TYPE.values()[partitionType], partitionColType, partitionSchema);
         } catch (IOException e) {
             throw e;

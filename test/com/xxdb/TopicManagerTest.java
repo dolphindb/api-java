@@ -38,15 +38,7 @@ public class TopicManagerTest{
        assertEquals("dolphindb", TopicManager.Utils.getSiteFromTopic("dolphindb/"));
        tp.addTopic("oceanBase");
        tp.addTopic("kingBase");
-
        assertEquals("[dolphindb, kingBase, oceanBase]",tp.getAllTopic().toString());
     }
-
-    @Test
-    public void test_TopicManager_TopicInfo(){
-
-
-    }
-
 
 }

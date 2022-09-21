@@ -303,8 +303,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         sb.append("t = table(1000:0, `date`id`values,[TIMESTAMP,SYMBOL,INT]);share t as t1;");
         conn.run(sb.toString());
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false, null, 10, 2,
-                5, "date");
+                "", "t1", false, false, null, 10,2,5, "date");
         ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( System.currentTimeMillis(), "A", 1);
         assertEquals("code= info=",pErrorInfo.toString());
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
@@ -800,7 +799,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(true,status.succeed());
             assertEquals(false,status1.succeed());
             assertEquals(true,status1.isExiting);
-            assertEquals(true,status.isExiting);
+            assertEquals(false,status.isExiting);
             assertEquals(1000,status1.unsentRows+status1.sendFailedRows+status1.sentRows);
             assertEquals(1000,status.unsentRows+status.sendFailedRows+status.sentRows);
 
@@ -844,7 +843,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(false,status.succeed());
             assertEquals(true,status1.succeed());
             assertEquals(true,status.isExiting);
-            assertEquals(true,status1.isExiting);
+            assertEquals(false,status1.isExiting);
             assertEquals(1000,status.unsentRows+status.sendFailedRows+status.sentRows);
             assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
 

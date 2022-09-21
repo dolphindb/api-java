@@ -1006,6 +1006,7 @@ public class BasicArrayVectorTest {
         assertNull(obj.getSubVector(index));
         assertFalse(obj.isNull(0));
         assertEquals("false",obj.get(1).toString());
+        assertEquals(Entity.DATA_CATEGORY.LOGICAL,obj.get(1).getDataCategory());
         assertEquals("interface com.xxdb.data.Entity",obj.getElementClass().toString());
         assertEquals("ARRAY",obj.getDataCategory().toString());
         try{
