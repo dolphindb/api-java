@@ -30,10 +30,10 @@ import java.util.ArrayList;
 
 public class PollingClientTester {
     public static void main(String args[]) throws SocketException {
-        PollingClient client = new PollingClient(8992);
+        PollingClient client = new PollingClient(9051);
 
         try {
-            TopicPoller poller1 = client.subscribe("192.168.1.25", 8847, "Trades");
+            TopicPoller poller1 = client.subscribe("192.168.0.21", 9002, "Trades");
             int count = 0;
             boolean started = false;
             long start = System.currentTimeMillis();
@@ -86,6 +86,5 @@ public class PollingClientTester {
             e.printStackTrace();
         }
         System.exit(0);
-
     }
 }

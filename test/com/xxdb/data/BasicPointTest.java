@@ -339,6 +339,7 @@ public class BasicPointTest {
         BasicPointVector bpv = new BasicPointVector(list);
         assertEquals("[(3.8, 7.4),(5.6, 6.5),(1.0, 9.2)]",bpv.getSubVector(new int[]{1,3,0}).getString());
         assertTrue(bpv.isNull(2));
+        assertEquals(new BasicPoint(1.0,9.2),bpv.get(0));
         assertEquals(Entity.DATA_CATEGORY.BINARY,bpv.getDataCategory());
         assertEquals(BasicPoint.class,bpv.getElementClass());
     }

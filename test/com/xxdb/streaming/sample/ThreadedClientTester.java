@@ -15,8 +15,8 @@ public class ThreadedClientTester {
         //String tb = args[2];
         ThreadedClient client = new ThreadedClient(port);
         try {
-            client.subscribe("192.168.1.107", 8902, "st", act, new SampleMessageHandler());
-            client.subscribe("192.168.1.107", 8902, "st2", act, new SampleMessageHandler());
+            client.subscribe("192.168.0.21", 9002, "st", act, new SampleMessageHandler());
+            client.subscribe("192.168.0.21", 9002, "st2", act, new SampleMessageHandler());
         } catch (IOException e) {
             e.printStackTrace();
         }

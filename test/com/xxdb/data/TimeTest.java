@@ -173,167 +173,6 @@ public class TimeTest{
             }
         }
     }
-
-//    @Test
-//    public void testTime(){
-//        {
-//            LocalDateTime dt = LocalDateTime.of(2017,8,11,10,03,10,2030);
-//            int days = Utils.countDays(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth());
-//            long nanoTime = days * Utils.NANOS_PER_DAY + dt.getHour() * Utils.NANOS_PER_HOUR + dt.getMinute() * Utils.NANOS_PER_MINUTE + dt.getSecond() * Utils.NANOS_PER_SECOND + 2030;
-//            if (nanoTime != Utils.countNanoseconds(dt)) {
-//                throw new RuntimeException("expect" + nanoTime + ", got " + Utils.countNanoseconds(dt));
-//            }
-//        }
-//
-//        {
-//            LocalTime t = LocalTime.of(10, 03, 10, 2030);
-//            long nanoTime = t.getHour() * Utils.NANOS_PER_HOUR + t.getMinute() * Utils.NANOS_PER_MINUTE + t.getSecond() * Utils.NANOS_PER_SECOND + 2030;
-//            if (nanoTime != Utils.countNanoseconds(t)) {
-//                throw new RuntimeException("expect" + nanoTime + ", got " + Utils.countNanoseconds(t));
-//            }
-//        }
-//
-//        {
-//            LocalDateTime dt = LocalDateTime.of(2000,12,31,12,12,12, 8500);
-//            BasicNanoTimestamp t = new BasicNanoTimestamp(dt);
-//            int days = Utils.countDays(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth());
-//            long nanoTime = days * Utils.NANOS_PER_DAY + dt.getHour() * Utils.NANOS_PER_HOUR + dt.getMinute() * Utils.NANOS_PER_MINUTE + dt.getSecond() * Utils.NANOS_PER_SECOND + 8500;
-//            if (nanoTime != t.getLong()) {
-//                throw new RuntimeException("expect" + nanoTime + ", got " + t.getLong());
-//            }
-//        }
-//
-//        {
-//            LocalDateTime dt = Utils.parseNanoTimestamp(5);
-//            if (dt.getYear() != 1999)
-//                throw new RuntimeException("expect 1999, got " + dt.getYear());
-//            if (dt.getMonthValue() != 12)
-//                throw new RuntimeException("expect 12, got " + dt.getMonthValue());
-//            if (dt.getDayOfMonth() != 31)
-//                throw new RuntimeException("expect 31, got " + dt.getDayOfMonth());
-//            if (dt.getHour() != 0)
-//                throw new RuntimeException("expect 0, got " + dt.getHour());
-//            if (dt.getMinute() != 0)
-//                throw new RuntimeException("expect 0, got " + dt.getMinute());
-//            if (dt.getSecond() != 0)
-//                throw new RuntimeException("expect 0, got " + dt.getSecond());
-//            if (dt.getNano() != 5)
-//                throw new RuntimeException("expect 5, got " + dt.getNano());
-//        }
-//
-//        {
-//            LocalDateTime dt = Utils.parseNanoTimestamp(-1);
-//            if (dt.getYear() != 1999)
-//                throw new RuntimeException("expect 1999, got " + dt.getYear());
-//            if (dt.getMonthValue() != 12)
-//                throw new RuntimeException("expect 12, got " + dt.getMonthValue());
-//            if (dt.getDayOfMonth() != 30)
-//                throw new RuntimeException("expect 30, got " + dt.getDayOfMonth());
-//            if (dt.getHour() != 23)
-//                throw new RuntimeException("expect 23, got " + dt.getHour());
-//            if (dt.getMinute() != 59)
-//                throw new RuntimeException("expect 59, got " + dt.getMinute());
-//            if (dt.getSecond() != 59)
-//                throw new RuntimeException("expect 59, got " + dt.getSecond());
-//            if (dt.getNano() != Utils.NANOS_PER_SECOND - 1)
-//                throw new RuntimeException("expect " + (Utils.NANOS_PER_SECOND - 1) + ", got " + dt.getNano());
-//        }
-//
-//        {
-//            LocalDateTime dt = Utils.parseTimestamp(-1);
-//            if (dt.getYear() != 1999)
-//                throw new RuntimeException("expect 1999, got " + dt.getYear());
-//            if (dt.getMonthValue() != 12)
-//                throw new RuntimeException("expect 12, got " + dt.getMonthValue());
-//            if (dt.getDayOfMonth() != 30)
-//                throw new RuntimeException("expect 30, got " + dt.getDayOfMonth());
-//            if (dt.getHour() != 23)
-//                throw new RuntimeException("expect 23, got " + dt.getHour());
-//            if (dt.getMinute() != 59)
-//                throw new RuntimeException("expect 59, got " + dt.getMinute());
-//            if (dt.getSecond() != 59)
-//                throw new RuntimeException("expect 59, got " + dt.getSecond());
-//            if (dt.getNano() != Utils.NANOS_PER_SECOND - 1000000)
-//                throw new RuntimeException("expect " + (Utils.NANOS_PER_SECOND - 1000000) + ", got " + dt.getNano());
-//        }
-//        {
-//            LocalTime dt = Utils.parseNanoTime(Utils.NANOS_PER_DAY - 5);
-//            if (dt.getHour() != 23)
-//                throw new RuntimeException("expect 0, got " + dt.getHour());
-//            if (dt.getMinute() != 59)
-//                throw new RuntimeException("expect 0, got " + dt.getMinute());
-//            if (dt.getSecond() != 59)
-//                throw new RuntimeException("expect 0, got " + dt.getSecond());
-//            if (dt.getNano() != Utils.NANOS_PER_SECOND - 5)
-//                throw new RuntimeException("expect " + (Utils.NANOS_PER_SECOND - 5) + ", got " + dt.getNano());
-//            System.out.println(dt);
-//        }
-//        {
-//            LocalTime dt = Utils.parseNanoTime(5);
-//            if (dt.getHour() != 0)
-//                throw new RuntimeException("expect 0, got " + dt.getHour());
-//            if (dt.getMinute() != 0)
-//                throw new RuntimeException("expect 0, got " + dt.getMinute());
-//            if (dt.getSecond() != 0)
-//                throw new RuntimeException("expect 0, got " + dt.getSecond());
-//            if (dt.getNano() != 5)
-//                throw new RuntimeException("expect 5, got " + dt.getNano());
-//        }
-//
-//        {
-//            LocalDateTime dt = LocalDateTime.of(1999,12,30,23,59,59,999000000);
-//            long mills = Utils.countMilliseconds(dt);
-//            if (mills != -1)
-//                throw new RuntimeException("expect -1, got " + mills);
-//        }
-//
-//        {
-//            LocalDateTime dt = LocalDateTime.of(1999,12,30,23,59,59,999999995);
-//            long nanos = Utils.countNanoseconds(dt);
-//            if (nanos != -5)
-//                throw new RuntimeException("expect -1, got " + nanos);
-//        }
-//
-//        {
-//            LocalDateTime dt = LocalDateTime.of(1999,12,31,0,0,0,0);
-//            long mills = Utils.countMilliseconds(dt);
-//            if (mills != 0)
-//                throw new RuntimeException("expect 0, got " + mills);
-//        }
-//
-//
-//        {
-//            LocalDateTime dt = LocalDateTime.of(1999,12,26,0,0,0,0);
-//            long nanos = Utils.countNanoseconds(dt);
-//            if (nanos != -Utils.NANOS_PER_DAY * 5)
-//                throw new RuntimeException("expect " + -Utils.NANOS_PER_DAY * 5 + ", got " + nanos);
-//            LocalDateTime dt2 = Utils.parseNanoTimestamp(nanos);
-//            if (dt.equals(dt2) == false) {
-//                throw new RuntimeException(dt + " != " + dt2);
-//            }
-//        }
-//
-//        {
-//            LocalDateTime dt = LocalDateTime.of(2000,1,1,0,0,0,0);
-//            long mills = Utils.countMilliseconds(dt);
-//            if (mills != Utils.MILLS_PER_DAY)
-//                throw new RuntimeException("expect " + Utils.MILLS_PER_DAY + ", got " + mills);
-//            LocalDateTime dt2 = Utils.parseTimestamp(mills);
-//            if (dt.equals(dt2) == false) {
-//                throw new RuntimeException(dt + " != " + dt2);
-//            }
-//        }
-//        {
-//            LocalDateTime dt = LocalDateTime.of(1999,12,26,0,0,0,0);
-//            long mills = Utils.countMilliseconds(dt);
-//            if (mills != -Utils.MILLS_PER_DAY * 5)
-//                throw new RuntimeException("expect " + -Utils.MILLS_PER_DAY * 5 + ", got " + mills);
-//            LocalDateTime dt2 = Utils.parseTimestamp(mills);
-//            if (dt.equals(dt2) == false) {
-//                throw new RuntimeException(dt + " != " + dt2);
-//            }
-//        }
-//    }
     @Test
     public void testMonthCombine(){
         List<Integer> list = Arrays.asList(1,2,3);
@@ -706,6 +545,7 @@ public class TimeTest{
         assertNull(btv.getTime(4));
         BasicTimeVector btv3 = new BasicTimeVector(1);
         assertEquals("00:00",btv3.getTime(0).toString());
+        assertEquals(new BasicTime(53000),btv.get(0));
     }
 
     @Test
@@ -737,6 +577,7 @@ public class TimeTest{
         assertEquals("1984-07-14",btv.getDate(2).toString());
         assertNull(btv.getDate(4));
         assertEquals(BasicDate.class,btv.getElementClass());
+        assertEquals(new BasicDate(LocalDate.of(1976,10,3)),btv.get(3));
         BasicDateVector bdhv = new BasicDateVector(Entity.DATA_FORM.DF_VECTOR,1);
         assertEquals("1970-01-01",bdhv.getDate(0).toString());
         List<Integer> list = Arrays.asList(2861,7963,4565,2467,Integer.MIN_VALUE);
@@ -790,6 +631,7 @@ public class TimeTest{
         btv.setDateHour(2,LocalDateTime.of(1984,7,14,11,25));
         assertEquals("1984-07-14T11:00",btv.getDateHour(2).toString());
         assertNull(btv.getDateHour(4));
+        assertEquals("2251.06.08T16",btv.get(3).getString());
         assertEquals(BasicDateHour.class,btv.getElementClass());
         BasicDateHourVector bdhv = new BasicDateHourVector(Entity.DATA_FORM.DF_VECTOR,1);
         assertEquals("1970-01-01T00:00",bdhv.getDateHour(0).toString());
@@ -834,6 +676,7 @@ public class TimeTest{
         List<Integer> list = Arrays.asList(286,796,456,246,Integer.MIN_VALUE);
         BasicMinuteVector bdhv2 = new BasicMinuteVector(list);
         assertEquals("13:16",bdhv2.getMinute(1).toString());
+        assertEquals("13:16m",bdhv2.get(1).getString());
         BasicMinuteVector bmv = new BasicMinuteVector(5);
         bmv = bdhv2;
         assertEquals("07:36",bmv.getMinute(2).toString());
@@ -867,6 +710,7 @@ public class TimeTest{
         btv.setMonth(2,YearMonth.of(2012,12));
         assertEquals("2012-12",btv.getMonth(2).toString());
         assertEquals(YearMonth.class,btv.getElementClass());
+        assertEquals("2012.12M",btv.get(2).getString());
         BasicMonthVector bdhv = new BasicMonthVector(Entity.DATA_FORM.DF_VECTOR,1);
         assertEquals("0000-01",bdhv.getMonth(0).toString());
         List<Integer> list = Arrays.asList(23641,23995,24104,1201);
@@ -905,6 +749,7 @@ public class TimeTest{
         assertEquals("[06:34:01.343568000,06:41:44.786790000,06:39:55.876902000]",btv.getSubVector(indices).getString());
         btv.setNanoTime(2,LocalTime.of(22,12,17));
         assertEquals("22:12:17",btv.getNanoTime(2).toString());
+        assertEquals("22:12:17.000000000",btv.get(2).toString());
         assertEquals(BasicNanoTime.class,btv.getElementClass());
         BasicNanoTimeVector bdhv = new BasicNanoTimeVector(Entity.DATA_FORM.DF_VECTOR,1);
         assertEquals("00:00",bdhv.getNanoTime(0).toString());
@@ -942,6 +787,7 @@ public class TimeTest{
         assertEquals(BasicNanoTimestamp.class,bnts.getElementClass());
         btv.setNanoTimestamp(4,LocalDateTime.MIN);
         assertEquals("1982-02-08T12:37:20",btv.getNanoTimestamp(4).toString());
+        assertEquals("1982.02.08T12:37:20.000000000",btv.get(4).getString());
         assertEquals("1970-01-01T06:41:44.786790",bnts.getNanoTimestamp(2).toString());
     }
 
@@ -975,6 +821,7 @@ public class TimeTest{
         BasicSecondVector bsv2 = new BasicSecondVector(Entity.DATA_FORM.DF_VECTOR,4);
         bsv2 = bsv;
         assertEquals("23:57:55",bsv2.getSecond(3).toString());
+        assertEquals("23:57:55",bsv2.get(3).toString());
         int[] array = new int[]{28800,43215,21630,54845,Integer.MIN_VALUE};
         BasicSecondVector bsv3 = new BasicSecondVector(array,true);
         assertEquals("[08:00:00,06:00:30,12:00:15]",bsv3.getSubVector(new int[]{0,2,1}).getString());
@@ -1007,6 +854,7 @@ public class TimeTest{
         assertEquals(BasicTimestamp.class,btsv.getElementClass());
         assertNull(btsv.getTimestamp(4));
         assertEquals("2733-11-07T14:06:30",btsv.getTimestamp(2).toString());
+        assertEquals("2733.11.07T14:06:30.000",btsv.get(2).toString());
     }
 
     @Test
@@ -1051,11 +899,13 @@ public class TimeTest{
         bdtv.setDateTime(1,LocalDateTime.MAX);
         bdtv.setDateTime(2,LocalDateTime.now());
         assertEquals("1982-02-08T12:37:20",bdtv.getDateTime(0).toString());
+        assertEquals("1982.02.08T12:37:20",bdtv.get(0).toString());
         bdtv.setNull(2);
         assertNull(bdtv.getDateTime(2));
         ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
         String HOST = bundle.getString("HOST");
         int PORT = Integer.parseInt(bundle.getString("PORT"));
+       // int PORT = 8848;
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT);
         Map<String,Entity> map = new HashMap<>();

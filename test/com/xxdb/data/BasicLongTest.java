@@ -121,6 +121,7 @@ public class BasicLongTest {
         list.add(null);
         list.add(888L);
         BasicLongVector blv = new BasicLongVector(list);
+        assertEquals("888",blv.get(3).getString());
         assertEquals("[888,865,855]",blv.getSubVector(new int[]{3,1,0}).getString());
         assertEquals(Entity.DATA_CATEGORY.INTEGRAL,blv.getDataCategory());
         assertEquals(BasicLong.class,blv.getElementClass());

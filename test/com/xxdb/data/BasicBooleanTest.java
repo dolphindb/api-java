@@ -82,6 +82,7 @@ public class BasicBooleanTest {
         list.add(5,(byte) 0);
         BasicBooleanVector bbv = new BasicBooleanVector(list);
         assertTrue(bbv.isNull(2));
+        assertEquals(Entity.DATA_TYPE.DT_BOOL,bbv.get(2).getDataType());
         assertEquals("[true,false,false,true]",bbv.getSubVector(new int[]{0,5,4,1}).getString());
         assertFalse(bbv.getBoolean(4));
         bbv.setBoolean(2,false);

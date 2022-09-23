@@ -63,6 +63,7 @@ public class BasicSymbolTest {
         list.add(null);
         list.add("OceanBase");
         BasicSymbolVector bsv = new BasicSymbolVector(list);
+        assertEquals("vastBase",bsv.get(1).getString());
         assertFalse(bsv.isNull(1));
         bsv.setNull(2);
         assertTrue(bsv.isNull(2));

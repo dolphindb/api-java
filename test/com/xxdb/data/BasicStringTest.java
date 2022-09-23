@@ -266,6 +266,7 @@ public class BasicStringTest {
         BasicStringVector bsv = new BasicStringVector(list,true);
         System.out.println(bsv.getString());
         assertEquals(1,bsv.getUnitLength());
+        assertEquals("GoldenDB",bsv.get(2).getString());
         assertFalse(bsv.isNull(2));
         bsv.setNull(3);
         assertTrue(bsv.isNull(3));
@@ -572,7 +573,7 @@ public class BasicStringTest {
         list.add("MangoDB");
         BasicStringVector bsv = new BasicStringVector(list,true);
         BasicStringVector bsv2 = new BasicStringVector(list,false);
-        assertNotEquals(bsv.serialize(new byte[40],40,0,5,new AbstractVector.Offect(1)),
+        assertEquals(bsv.serialize(new byte[40],40,0,5,new AbstractVector.Offect(1)),
                 bsv2.serialize(new byte[40],40,0,5,new AbstractVector.Offect(1)));
     }
 
@@ -722,6 +723,23 @@ public class BasicStringTest {
         System.out.println(bsv2.getString());
         BasicStringVector bsv3 = new BasicStringVector(Entity.DATA_FORM.DF_VECTOR,in,false,null);
         System.out.println(bsv3.getString());
+    }
+
+    @Test
+    public void test_BasicStringVector_array_blob_copy(){
+        String[] array = new String[]{"Dolphindb","MongoDB","GaussDB","GoldenDB"};
+        BasicStringVector bsv = new BasicStringVector(array,true,true);
+        BasicStringVector bsv2 = new BasicStringVector(array,true,false);
+        assertEquals(bsv.getString(),bsv2.getString());
+        BasicStringVector bsv3 = new BasicStringVector(array,false,true);
+        BasicStringVector bsv4 = new BasicStringVector(array,false,false);
+        assertEquals(bsv3.getString(),bsv4.getString());
+        String[] array2 = new String[]{"a","b",null,"d"};
+        BasicStringVector bsv7 = new BasicStringVector(array2,true,false);
+        BasicStringVector bsv5 = new BasicStringVector(array2,true,true);
+        BasicStringVector bsv6 = new BasicStringVector(array2,false,false);
+        assertEquals(bsv5.getString(),bsv6.getString());
+        assertEquals(bsv5.getString(),bsv7.getString());
     }
 
 

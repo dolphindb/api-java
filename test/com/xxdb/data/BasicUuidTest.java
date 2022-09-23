@@ -94,6 +94,7 @@ public class BasicUuidTest {
         list.add(new Long2(9000L,10L));
         BasicUuidVector buv = new BasicUuidVector(list);
         assertEquals(BasicUuid.class,buv.getElementClass());
+        System.out.println(buv.get(1));
         assertEquals("[00000000-0000-2328-0000-00000000000a,00000000-0000-2328-0000-000000000258,00000000-0000-0378-0000-0000000000c8]",buv.getSubVector(new int[]{2,0,1}).getString());
     }
 

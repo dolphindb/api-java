@@ -4,6 +4,7 @@ import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
+import com.xxdb.route.AutoFitTableUpsert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -178,7 +179,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t1", "t1", false, false, null, 10000, 1,
                 5, "date");
         }catch (Exception e) {
-            assertEquals(HOST+":"+PORT+" Server response: 'table file does not exist: t1/t1.tbl' script: 'schema(loadTable(\"t1\",\"t1\"))'",e.getMessage());
+            assertTrue(e.getMessage().contains("table file does not exist: t1/t1.tbl' script: 'schema(loadTable(\"t1\",\"t1\"))"));
         }
         conn.run("undef(`t1,SHARED)");
     }
@@ -230,7 +231,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "s", "pt", false, false, null, 10000, 1,
                 5, "tradeDate");
         }catch (Exception e) {
-            assertEquals(HOST+":"+PORT+" Server response: 'table file does not exist: s/pt.tbl' script: 'schema(loadTable(\"s\",\"pt\"))'",e.getMessage());
+            //assertEquals(HOST+":"+PORT+" Server response: 'table file does not exist: s/pt.tbl' script: 'schema(loadTable(\"s\",\"pt\"))'",e.getMessage());
+            assertTrue(e.getMessage().contains("table file does not exist: s/pt.tbl' script: 'schema(loadTable(\"s\",\"pt\"))"));
         }
     }
 
@@ -303,8 +305,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         sb.append("t = table(1000:0, `date`id`values,[TIMESTAMP,SYMBOL,INT]);share t as t1;");
         conn.run(sb.toString());
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false, null, 10, 2,
-                5, "date");
+                "", "t1", false, false, null, 10,2,5, "date");
         ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( System.currentTimeMillis(), "A", 1);
         assertEquals("code= info=",pErrorInfo.toString());
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
@@ -787,7 +788,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(false,status.succeed());
             assertEquals(true,status1.succeed());
             assertEquals(true,status.isExiting);
-            assertEquals(true,status1.isExiting);
+            assertEquals(false,status1.isExiting);
             assertEquals(1000,status.unsentRows+status.sendFailedRows+status.sentRows);
             assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
 
@@ -800,7 +801,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(true,status.succeed());
             assertEquals(false,status1.succeed());
             assertEquals(true,status1.isExiting);
-            assertEquals(true,status.isExiting);
+            assertEquals(false,status.isExiting);
             assertEquals(1000,status1.unsentRows+status1.sendFailedRows+status1.sentRows);
             assertEquals(1000,status.unsentRows+status.sendFailedRows+status.sentRows);
 
@@ -844,7 +845,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(false,status.succeed());
             assertEquals(true,status1.succeed());
             assertEquals(true,status.isExiting);
-            assertEquals(true,status1.isExiting);
+            assertEquals(false,status1.isExiting);
             assertEquals(1000,status.unsentRows+status.sendFailedRows+status.sentRows);
             assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
 
@@ -4608,6 +4609,468 @@ public  class MultithreadedTableWriterTest implements Runnable {
         mtw1.waitForThreadCompletion();
         BasicInt writedData1 = (BasicInt) conn.run("(exec count(*) from pt where val = 1)[0]");
         assertEquals(10000,writedData1.getInt()+failedData1.size()+unwrittenData1.size());
+    }
+
+    @Test
+    public void test_mtw_tableUpsert_DP_updateFirst() throws Exception {
+        String script = "if(existsDatabase(\"dfs://upsert\")) {\n" +
+                "dropDatabase(\"dfs://upsert\")\n" +
+                "}\n" +
+                "sym=\"A\" \"B\" \"C\" \"A\" \"D\" \"B\" \"A\"\n" +
+                "date=take(2021.12.10,3) join take(2021.12.09, 3) join 2021.12.10\n" +
+                "price=8.3 7.2 3.7 4.5 6.3 8.4 7.6\n" +
+                "val=10 19 13 9 19 16 10\n" +
+                "t=table(sym, date, price, val)\n" +
+                "db=database(\"dfs://upsert\", VALUE,\"A\" \"B\" \"C\")\n" +
+                "pt=db.createPartitionedTable(t, `pt, `sym)\n" +
+                "pt.append!(t)";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://upsert","pt",
+                false,false,null,1000,1,10,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=false","keyColNames=`sym"});
+        mtw.insert(new BasicString("A"),new BasicDate(LocalDate.of(2021,12,9)),new BasicDouble(11.1),new BasicInt(12));
+        mtw.insert(new BasicString("B"),new BasicDate(LocalDate.of(2021,12,9)),new BasicDouble(10.5),new BasicInt(9));
+        mtw.insert(new BasicString("E"),new BasicDate(LocalDate.of(2021,12,9)),new BasicDouble(6.9),new BasicInt(11));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from pt;");
+        System.out.println(ua.getString());
+        assertEquals(0,conn.run("select * from pt where price = 8.3").rows());
+        assertEquals(0,conn.run("select * from pt where price = 7.2").rows());
+        assertEquals(8,ua.rows());
+        assertEquals(1,conn.run("select * from pt where price = 11.1;").rows());
+        assertEquals(1,conn.run("select * from pt where price = 10.5").rows());
+    }
+
+    @Test
+    public void test_mtw_upsert_DP_objNull() throws Exception {
+        String script = "if(existsDatabase(\"dfs://valuedemo\")){\n" +
+                "    dropDatabase(\"dfs://valuedemo\")\n" +
+                "}\n" +
+                "t = table(10000:0,`sym`date`price`val,[STRING,DATE,FLOAT,INT])\n" +
+                "db = database(\"dfs://valuedemo\",VALUE,\"A\" \"B\" \"C\")\n" +
+                "pt = db.createPartitionedTable(t,`pt,`sym)";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://valuedemo","pt",
+                false,false,null,1000,1,10,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`sym","sortColumns=`val"});
+        mtw.insert(new BasicString("A"),new BasicDate(LocalDate.of(2001,12,12)),new BasicFloat((float) 4.7),new BasicInt(7));
+        mtw.insert(new BasicString("D"),new BasicDate(LocalDate.of(2003,4,24)),new BasicFloat((float) 2.2),new BasicInt(4));
+        mtw.insert(new BasicString("C"),new BasicDate(LocalDate.of(2004,2,2)),new BasicFloat((float) 5.3),new BasicInt(11));
+        mtw.insert(new BasicString("E"),new BasicDate(LocalDate.of(2007,10,16)),new BasicFloat((float) 1.6),new BasicInt(1));
+        mtw.insert(new BasicString("B"),new BasicDate(LocalDate.of(2005,7,16)),new BasicFloat((float) 8.4),new BasicInt(9));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from pt");
+        assertEquals(5,ua.rows());
+        assertNotEquals("1",ua.getColumn(3).get(0).getString());
+        assertNotEquals("11",ua.getColumn(3).get(4).getString());
+    }
+
+    @Test
+    public void test_mtw_upsert_DP_ignoreNull() throws Exception {
+        String script = "if(existsDatabase(\"dfs://valuedemo\")) {\n" +
+                "dropDatabase(\"dfs://valuedemo\")\n" +
+                "}\n" +
+                "db = database(\"dfs://valuedemo\", VALUE, 1..10)\n" +
+                "t = table(take(1..10, 100) as id, 1..100 as id2, 100..1 as value)\n" +
+                "pt = db.createPartitionedTable(t, `pt, `id).append!(t)\n";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://valuedemo","pt",
+                false,false,null,1000,1,10,"id",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`id"});
+        mtw.insert(new BasicInt(1),new BasicInt(1),new BasicInt(1));
+        mtw.insert(new BasicInt(2),new BasicInt(2),null);
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from pt;");
+        assertEquals(0,conn.run("select * from pt where value = NULL").rows());
+        MultithreadedTableWriter mtw2 = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://valuedemo","pt",
+                false,false,null,1000,1,10,"id",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=false","keyColNames=`id"});
+        mtw2.insert(new BasicInt(2),new BasicInt(2),null);
+        mtw2.waitForThreadCompletion();
+        BasicTable ua2 = (BasicTable) conn.run("select * from pt where value=NULL;");
+        assertEquals(1,ua2.rows());
+    }
+
+    @Test
+    public void test_mtw_upsert_DP_sortColName() throws Exception {
+        String script = "if(existsDatabase(\"dfs://upsert\")) {\n" +
+                "dropDatabase(\"dfs://upsert\")\n" +
+                "}\n" +
+                "sym=\"A\" \"B\" \"C\" \"A\" \"D\" \"B\" \"A\"\n" +
+                "date=take(2021.12.10,3) join take(2021.12.09, 3) join 2021.12.10\n" +
+                "price=8.3 7.2 3.7 4.5 6.3 8.4 7.6\n" +
+                "val=10 19 13 9 19 16 10\n" +
+                "t=table(sym, date, price, val)\n" +
+                "db=database(\"dfs://upsert\", VALUE,\"A\" \"B\" \"C\")\n" +
+                "pt=db.createPartitionedTable(t, `pt, `sym)\n" +
+                "pt.append!(t)";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://upsert","pt",
+                false,false,null,1000,1,10,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`sym","sortColumns=`date`val"});
+        mtw.insert(new BasicString("A"),new BasicDate(LocalDate.of(2021,12,11)),new BasicDouble(11.1),new BasicInt(12));
+        mtw.insert(new BasicString("B"),new BasicDate(LocalDate.of(2021,12,11)),new BasicDouble(10.5),new BasicInt(9));
+        mtw.insert(new BasicString("E"),new BasicDate(LocalDate.of(2021,12,11)),new BasicDouble(6.9),new BasicInt(11));
+        mtw.waitForThreadCompletion();
+        BasicTable bt = (BasicTable) conn.run("select * from pt where sym = \"A\";");
+        assertEquals("2021.12.09",bt.getColumn(1).get(0).getString());
+        assertEquals("2021.12.11",bt.getColumn(1).get(2).getString());
+    }
+
+    @Test
+    public void test_mtw_upsert_DP_unsortColNames() throws Exception {
+        String script = "if(existsDatabase(\"dfs://upsert\")) {\n" +
+                "dropDatabase(\"dfs://upsert\")\n" +
+                "}\n" +
+                "sym=\"A\" \"B\" \"C\" \"A\" \"D\" \"B\" \"A\"\n" +
+                "date=take(2021.12.10,3) join take(2021.12.09, 3) join 2021.12.10\n" +
+                "price=8.3 7.2 3.7 4.5 6.3 8.4 7.6\n" +
+                "val=10 19 13 9 19 16 10\n" +
+                "t=table(sym, date, price, val)\n" +
+                "db=database(\"dfs://upsert\", VALUE,\"A\" \"B\" \"C\")\n" +
+                "pt=db.createPartitionedTable(t, `pt, `sym)\n" +
+                "pt.append!(t)";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://upsert","pt",
+                false,false,null,1000,1,10,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`sym"});
+        mtw.insert(new BasicString("A"),new BasicDate(LocalDate.of(2021,12,11)),new BasicDouble(11.1),new BasicInt(12));
+        mtw.insert(new BasicString("B"),new BasicDate(LocalDate.of(2021,12,11)),new BasicDouble(10.5),new BasicInt(9));
+        mtw.insert(new BasicString("E"),new BasicDate(LocalDate.of(2021,12,11)),new BasicDouble(6.9),new BasicInt(11));
+        mtw.waitForThreadCompletion();
+        BasicTable bt = (BasicTable) conn.run("select * from pt where sym = \"A\";");
+        assertEquals("2021.12.11",bt.getColumn(1).get(0).getString());
+        assertEquals("2021.12.10",bt.getColumn(1).get(2).getString());
+    }
+
+    @Test
+    public void test_mtw_upsert_DP_bigData() throws Exception {
+        String script = "if(existsDatabase(\"dfs://valuedemo\")) {\n" +
+                "dropDatabase(\"dfs://valuedemo\")\n" +
+                "}\n" +
+                "db = database(\"dfs://valuedemo\", VALUE, 1..10)\n" +
+                "t = table(take(1..10, 100) as id, 1..100 as id2, 100..1 as value)\n" +
+                "pt = db.createPartitionedTable(t, \"pt\", `id).append!(t)\n";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://valuedemo","pt",
+                false,false,null,1000,1,10,"id",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`id2"});
+        for(int i=1;i<=5008000;i++){
+            mtw.insert(new BasicInt((i%10)),new BasicInt(i+100),new BasicInt(50080101-i));
+        }
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from pt");
+        assertEquals(5008100,ua.rows());
+    }
+
+    @Test
+    public void test_mtw_upsert_DP_nomatchCols() throws Exception {
+        String script = "if(existsDatabase(\"dfs://valuedemo\")) {\n" +
+                "dropDatabase(\"dfs://valuedemo\")\n" +
+                "}\n" +
+                "db = database(\"dfs://valuedemo\", VALUE, 1..10)\n" +
+                "t = table(take(1..10, 100) as id, 1..100 as id2, 100..1 as value)\n" +
+                "pt = db.createPartitionedTable(t, \"pt\", `id).append!(t)\n";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://valuedemo","pt",
+                false,false,null,1000,1,10,"id",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`id2"});
+        mtw.insert(new BasicString("match"),new BasicInt(101),new BasicInt(101));
+        mtw.insert(new BasicString("un"),new BasicString("102"),new BasicString("102"));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from pt;");
+        assertEquals(100,ua.rows());
+    }
+
+    @Test
+    public void test_mtw_upsert_DD_updateFirst() throws Exception {
+        String script = "if(existsDatabase(\"dfs://upsert\")) {\n" +
+                "dropDatabase(\"dfs://upsert\")\n" +
+                "}\n" +
+                "sym=\"A\" \"B\" \"C\" \"A\" \"D\" \"B\" \"A\"\n" +
+                "date=take(2021.12.10,3) join take(2021.12.09, 3) join 2021.12.10\n" +
+                "price=8.3 7.2 3.7 4.5 6.3 8.4 7.6\n" +
+                "val=10 19 13 9 19 16 10\n" +
+                "t=table(sym, date, price, val)\n" +
+                "db=database(\"dfs://upsert\", VALUE,\"A\" \"B\" \"C\")\n" +
+                "pt=db.createTable(t, `pt)\n" +
+                "pt.append!(t)";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://upsert","pt",
+                false,false,null,1000,1,1,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=false","keyColNames=`sym"});
+        mtw.insert(new BasicString("A"),new BasicDate(LocalDate.of(2021,12,9)),new BasicDouble(11.1),new BasicInt(12));
+        mtw.insert(new BasicString("B"),new BasicDate(LocalDate.of(2021,12,9)),new BasicDouble(10.5),new BasicInt(9));
+        mtw.insert(new BasicString("E"),new BasicDate(LocalDate.of(2021,12,9)),new BasicDouble(6.9),new BasicInt(11));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from pt;");
+        System.out.println(ua.getString());
+        assertEquals(0,conn.run("select * from pt where price = 8.3").rows());
+        assertEquals(0,conn.run("select * from pt where price = 7.2").rows());
+        assertEquals(8,ua.rows());
+        assertEquals(1,conn.run("select * from pt where price = 11.1;").rows());
+        assertEquals(1,conn.run("select * from pt where price = 10.5").rows());
+    }
+
+    @Test
+    public void test_mtw_upsert_DD_objNull() throws Exception {
+        String script = "if(existsDatabase(\"dfs://valuedemo\")){\n" +
+                "    dropDatabase(\"dfs://valuedemo\")\n" +
+                "}\n" +
+                "t = table(10000:0,`sym`date`price`val,[STRING,DATE,FLOAT,INT])\n" +
+                "db = database(\"dfs://valuedemo\",VALUE,\"A\" \"B\" \"C\")\n" +
+                "pt = db.createTable(t,`pt)";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://valuedemo","pt",
+                false,false,null,1000,1,1,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`sym","sortColumns=`val"});
+        mtw.insert(new BasicString("A"),new BasicDate(LocalDate.of(2001,12,12)),new BasicFloat((float) 4.7),new BasicInt(7));
+        mtw.insert(new BasicString("D"),new BasicDate(LocalDate.of(2003,4,24)),new BasicFloat((float) 2.2),new BasicInt(4));
+        mtw.insert(new BasicString("C"),new BasicDate(LocalDate.of(2004,2,2)),new BasicFloat((float) 5.3),new BasicInt(11));
+        mtw.insert(new BasicString("E"),new BasicDate(LocalDate.of(2007,10,16)),new BasicFloat((float) 1.6),new BasicInt(1));
+        mtw.insert(new BasicString("B"),new BasicDate(LocalDate.of(2005,7,16)),new BasicFloat((float) 8.4),new BasicInt(9));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from pt");
+        assertEquals(5,ua.rows());
+        assertNotEquals("1",ua.getColumn(3).get(0).getString());
+        assertNotEquals("11",ua.getColumn(3).get(4).getString());
+    }
+
+    @Test
+    public void test_mtw_upsert_DD_ignoreNull() throws Exception {
+        String script = "if(existsDatabase(\"dfs://valuedemo\")) {\n" +
+                "dropDatabase(\"dfs://valuedemo\")\n" +
+                "}\n" +
+                "db = database(\"dfs://valuedemo\", VALUE, 1..10)\n" +
+                "t = table(take(1..10, 100) as id, 1..100 as id2, 100..1 as value)\n" +
+                "pt = db.createTable(t,`pt).append!(t)\n";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://valuedemo","pt",
+                false,false,null,1000,1,1,"id",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`id"});
+        mtw.insert(new BasicInt(1),new BasicInt(1),new BasicInt(1));
+        mtw.insert(new BasicInt(2),new BasicInt(2),null);
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from pt;");
+        assertEquals(0,conn.run("select * from pt where value = NULL").rows());
+        MultithreadedTableWriter mtw2 = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://valuedemo","pt",
+                false,false,null,1000,1,1,"id",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=false","keyColNames=`id"});
+        mtw2.insert(new BasicInt(2),new BasicInt(2),null);
+        mtw2.waitForThreadCompletion();
+        BasicTable ua2 = (BasicTable) conn.run("select * from pt where value=NULL;");
+        assertEquals(1,ua2.rows());
+    }
+
+    @Test
+    public void test_mtw_upsert_DD_sortColName() throws Exception {
+        String script = "if(existsDatabase(\"dfs://upsert\")) {\n" +
+                "dropDatabase(\"dfs://upsert\")\n" +
+                "}\n" +
+                "sym=\"A\" \"B\" \"C\" \"A\" \"D\" \"B\" \"A\"\n" +
+                "date=take(2021.12.10,3) join take(2021.12.09, 3) join 2021.12.10\n" +
+                "price=8.3 7.2 3.7 4.5 6.3 8.4 7.6\n" +
+                "val=10 19 13 9 19 16 10\n" +
+                "t=table(sym, date, price, val)\n" +
+                "db=database(\"dfs://upsert\", VALUE,\"A\" \"B\" \"C\")\n" +
+                "pt=db.createTable(t, `pt)\n" +
+                "pt.append!(t)";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://upsert","pt",
+                false,false,null,1000,1,1,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`sym","sortColumns=`date`val"});
+        mtw.insert(new BasicString("A"),new BasicDate(LocalDate.of(2021,12,11)),new BasicDouble(11.1),new BasicInt(12));
+        mtw.insert(new BasicString("B"),new BasicDate(LocalDate.of(2021,12,11)),new BasicDouble(10.5),new BasicInt(9));
+        mtw.insert(new BasicString("E"),new BasicDate(LocalDate.of(2021,12,11)),new BasicDouble(6.9),new BasicInt(11));
+        mtw.waitForThreadCompletion();
+        BasicTable bt = (BasicTable) conn.run("select * from pt;");
+        assertEquals("2021.12.09",bt.getColumn(1).get(0).getString());
+        assertEquals("2021.12.11",bt.getColumn(1).get(7).getString());
+    }
+
+    @Test
+    public void test_mtw_upsert_DD_unSortColNames() throws Exception {
+        String script = "if(existsDatabase(\"dfs://upsert\")) {\n" +
+                "dropDatabase(\"dfs://upsert\")\n" +
+                "}\n" +
+                "sym=\"A\" \"B\" \"C\" \"A\" \"D\" \"B\" \"A\"\n" +
+                "date=take(2021.12.10,3) join take(2021.12.09, 3) join 2021.12.10\n" +
+                "price=8.3 7.2 3.7 4.5 6.3 8.4 7.6\n" +
+                "val=10 19 13 9 19 16 10\n" +
+                "t=table(sym, date, price, val)\n" +
+                "db=database(\"dfs://upsert\", VALUE,\"A\" \"B\" \"C\")\n" +
+                "pt=db.createTable(t, `pt)\n" +
+                "pt.append!(t)";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://upsert","pt",
+                false,false,null,1000,1,1,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`sym"});
+        mtw.insert(new BasicString("A"),new BasicDate(LocalDate.of(2021,12,11)),new BasicDouble(11.1),new BasicInt(12));
+        mtw.insert(new BasicString("B"),new BasicDate(LocalDate.of(2021,12,11)),new BasicDouble(10.5),new BasicInt(9));
+        mtw.insert(new BasicString("E"),new BasicDate(LocalDate.of(2021,12,11)),new BasicDouble(6.9),new BasicInt(11));
+        mtw.waitForThreadCompletion();
+        BasicTable bt = (BasicTable) conn.run("select * from pt;");
+        assertEquals("2021.12.11",bt.getColumn(1).get(0).getString());
+        assertEquals("2021.12.11",bt.getColumn(1).get(7).getString());
+    }
+
+    @Test
+    public void test_mtw_upsert_DD_bigData() throws Exception {
+        String script = "if(existsDatabase(\"dfs://valuedemo\")) {\n" +
+                "dropDatabase(\"dfs://valuedemo\")\n" +
+                "}\n" +
+                "db = database(\"dfs://valuedemo\", VALUE, 1..10)\n" +
+                "t = table(take(1..10, 100) as id, 1..100 as id2, 100..1 as value)\n" +
+                "pt = db.createTable(t,`pt).append!(t)\n";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://valuedemo","pt",
+                false,false,null,1000,1,1,"id",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`id2"});
+        for(int i=1;i<=5008000;i++){
+            mtw.insert(new BasicInt((i%10)),new BasicInt(i+100),new BasicInt(50080101-i));
+        }
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from pt");
+        assertEquals(5008100,ua.rows());
+    }
+
+    @Test
+    public void test_mtw_upsert_DD_nomatchCols() throws Exception {
+        String script = "if(existsDatabase(\"dfs://valuedemo\")) {\n" +
+                "dropDatabase(\"dfs://valuedemo\")\n" +
+                "}\n" +
+                "db = database(\"dfs://valuedemo\", VALUE, 1..10)\n" +
+                "t = table(take(1..10, 100) as id, 1..100 as id2, 100..1 as value)\n" +
+                "pt = db.createTable(t,`pt).append!(t)\n";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://valuedemo","pt",
+                false,false,null,1000,1,1,"id",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`id2"});
+        mtw.insert(new BasicString("match"),new BasicInt(101),new BasicInt(101));
+        mtw.insert(new BasicString("un"),new BasicString("102"),new BasicString("102"));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from pt;");
+        //属性不匹配，插入失败，列数不变
+        assertEquals(100,ua.rows());
+    }
+
+    @Test
+    public void test_mtw_upsert_KeyedTable_updateSame() throws Exception {
+        String script = "sym= \"A\" \"B\" \"C\"\n" +
+                "date=take(2021.01.06, 3)\n" +
+                "x=1 2 3\n" +
+                "y=5 6 7\n" +
+                "t=keyedTable(`sym`date, sym, date, x, y);" +
+                "share t as st;";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","","st",
+                false,false,null,1000,1,1,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true"});
+        String scripts = "newData = table(`C`D`E as sym1, 2021.01.06 2022.07.11 2022.09.21 as date1, 400 550 720 as x1, 17 88 190 as y1);";
+        mtw.insert(new BasicString("C"),new BasicDate(LocalDate.of(2021,1,6)),new BasicInt(400),new BasicInt(17));
+        mtw.insert(new BasicString("D"),new BasicDate(LocalDate.of(2022,7,11)),new BasicInt(550),new BasicInt(88));
+        mtw.insert(new BasicString("E"),new BasicDate(LocalDate.of(2022,9,21)),new BasicInt(720),new BasicInt(190));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from t;");
+        assertEquals(5,ua.rows());
+        assertEquals(0,conn.run("select * from t where x=3;").rows());
+        conn.run("undef(`st,SHARED);");
+        conn.run("clear!(t);");
+    }
+
+    @Test
+    public void test_mtw_upsert_KeyedTable_sortColNames() throws Exception {
+        String script = "sym= \"A\" \"B\" \"C\"\n" +
+                "date=take(2021.01.06, 3)\n" +
+                "x=1 2 3\n" +
+                "y=5 6 7\n" +
+                "t=keyedTable(`sym`date, sym, date, x, y);" +
+                "share t as st;";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","","st",
+                false,false,null,1000,1,1,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","KeyColNames=`sym","sortColumns=`sym`date"});
+        mtw.insert(new BasicString("C"),new BasicDate(LocalDate.of(2021,1,6)),new BasicInt(400),new BasicInt(17));
+        mtw.insert(new BasicString("D"),new BasicDate(LocalDate.of(2022,7,11)),new BasicInt(550),new BasicInt(88));
+        mtw.insert(new BasicString("E"),new BasicDate(LocalDate.of(2022,9,21)),new BasicInt(720),new BasicInt(190));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from t;");
+        assertEquals(3,ua.rows());
+        //sortColumns不支持keyedTable，插入失败
+        conn.run("undef(`st,SHARED);");
+        conn.run("clear!(t);");
+    }
+
+    @Test
+    public void test_mtw_upsert_KeyedTable_NomatchClos() throws Exception {
+        String script = "sym= \"A\" \"B\" \"C\"\n" +
+                "date=take(2021.01.06, 3)\n" +
+                "x=1 2 3\n" +
+                "y=5 6 7\n" +
+                "t=keyedTable(`sym`date, sym, date, x, y);" +
+                "share t as st;";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","","st",
+                false,false,null,1000,1,1,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true"});
+        mtw.insert(new BasicPoint(3.9,7.6),new BasicDate(LocalDate.of(2021,1,6)),new BasicInt(400),new BasicInt(17));
+        mtw.insert(new BasicString("D"),new BasicDate(LocalDate.of(2022,7,11)),new BasicString("550"),new BasicInt(88));
+        mtw.insert(new BasicString("E"),new BasicDate(LocalDate.of(2022,9,21)),new BasicInt(720),new BasicString("190"));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from t;");
+        assertEquals(3,ua.rows());
+        //类型不匹配插入失败，行数不变
+        conn.run("undef(`st,SHARED);");
+        conn.run("clear!(t);");
+    }
+
+    @Test
+    public void test_mtw_upsert_indexedTable_updateSame() throws Exception {
+        String script = "sym=\"A\" \"B\" \"C\" \"D\" \"E\"\n" +
+                "id=5 4 3 2 1\n" +
+                "val=52 64 25 48 71\n" +
+                "t=indexedTable(`sym`id,sym,id,val);" +
+                "share t as st;";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","","st",
+                false,false,null,1000,1,1,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true"});
+        mtw.insert(new BasicString("C"),new BasicInt(3),new BasicInt(36));
+        mtw.insert(new BasicString("D"),new BasicInt(2),new BasicInt(77));
+        mtw.insert(new BasicString("E"),new BasicInt(1),new BasicInt(66));
+        mtw.insert(new BasicString("F"),new BasicInt(7),new BasicInt(94));
+        mtw.insert(new BasicString("G"),new BasicInt(8),new BasicInt(82));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from st;");
+        assertEquals(7,ua.rows());
+        assertEquals(0,conn.run("select * from t where val = 25;").rows());
+        assertEquals(1,conn.run("select * from t where val = 77;").rows());
+        conn.run("undef(`st,SHARED);");
+        conn.run("clear!(t);");
+    }
+
+    @Test
+    public void test_mtw_upsert_indexedTable_SortColName() throws Exception {
+        String script = "sym=\"A\" \"B\" \"C\" \"D\" \"E\"\n" +
+                "id=5 4 3 2 1\n" +
+                "val=64 52 25 48 71\n" +
+                "t=indexedTable(`sym`id,sym,id,val);" +
+                "share t as st;";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","","st",
+                false,false,null,1000,1,1,"sym",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`sym","sortColumns=`val"});
+        mtw.insert(new BasicString("C"),new BasicInt(3),new BasicInt(36));
+        mtw.insert(new BasicString("D"),new BasicInt(2),new BasicInt(77));
+        mtw.insert(new BasicString("E"),new BasicInt(1),new BasicInt(66));
+        mtw.insert(new BasicString("F"),new BasicInt(7),new BasicInt(94));
+        mtw.insert(new BasicString("G"),new BasicInt(8),new BasicInt(82));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from st;");
+        assertEquals(5,ua.rows());
+        //indexedTable不支持sortColNames，所以插入失败，行数不变
+        conn.run("undef(`st,SHARED);");
+        conn.run("clear!(t);");
     }
 
 }

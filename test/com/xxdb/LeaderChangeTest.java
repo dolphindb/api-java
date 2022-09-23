@@ -11,6 +11,7 @@ public class LeaderChangeTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    //static int PORT = 9002;
     public static Random random = new Random();
 
     public static class MTWInsertThreads implements Runnable{

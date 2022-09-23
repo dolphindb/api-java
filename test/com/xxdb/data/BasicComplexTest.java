@@ -17,7 +17,8 @@ import static org.junit.Assert.*;
 public class BasicComplexTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
-    static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    //static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    static int PORT = 8848;
     @Test
     public void test_complex_function(){
         BasicComplex bc = new BasicComplex(25.14,42.33);
@@ -395,6 +396,7 @@ public class BasicComplexTest {
         list.add(null);
         BasicComplexVector bcv = new BasicComplexVector(list);
         assertEquals("5.6+6.5i",bcv.get(2).getString());
+        assertEquals(new BasicComplex(5.6,6.5),bcv.get(2));
         assertEquals("[1.0+9.2i,5.6+6.5i,3.8+7.4i,5.6+6.5i]",bcv.getSubVector(new int[]{0,2,1,2}).getString());
         Map<String,Entity> map = new HashMap<>();
         map.put("complexVector",bcv);

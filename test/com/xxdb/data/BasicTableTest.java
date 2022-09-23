@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.xxdb.DBConnection;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -8,11 +9,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
+import static com.xxdb.data.BasicDecimalTest.HOST;
 import static org.junit.Assert.*;
 
 public class BasicTableTest {

@@ -311,6 +311,7 @@ public class BasicByteTest {
         BasicByteVector bbv = new BasicByteVector(list);
         assertEquals("[7,'z','G','c']",bbv.getSubVector(new int[]{4,1,3,0}).getString());
         assertTrue(bbv.isNull(2));
+        assertEquals("",bbv.get(2).getString());
         assertEquals(Entity.DATA_CATEGORY.INTEGRAL,bbv.getDataCategory());
         assertEquals(BasicByte.class,bbv.getElementClass());
         assertEquals((byte)71,bbv.getByte(3));

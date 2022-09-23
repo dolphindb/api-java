@@ -324,8 +324,8 @@ abstract class AbstractClient implements MessageDispatcher {
         pThread.start();
     }
 
-    public AbstractClient(String subsribeHost, int subscribePort) throws SocketException {
-        this.listeningHost = subsribeHost;
+    public AbstractClient(String subscribeHost, int subscribePort) throws SocketException {
+        this.listeningHost = subscribeHost;
         this.listeningPort = subscribePort;
         Daemon daemon = new Daemon(subscribePort, this);
         pThread = new Thread(daemon);

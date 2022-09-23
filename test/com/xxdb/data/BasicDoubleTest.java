@@ -64,6 +64,7 @@ public class BasicDoubleTest {
         list.add(8.18);
         BasicDoubleVector bdv = new BasicDoubleVector(list);
         assertTrue(bdv.isNull(2));
+        assertEquals(new BasicDouble(8.18),bdv.get(3));
         assertEquals(Entity.DATA_CATEGORY.FLOATING,bdv.getDataCategory());
         assertEquals(BasicDouble.class,bdv.getElementClass());
         assertEquals("[8.13,8.18,8.14]",bdv.getSubVector(new int[]{1,3,0}).getString());

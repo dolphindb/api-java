@@ -124,6 +124,7 @@ public class BasicShortTest {
         list.add(null);
         list.add((short) 4);
         BasicShortVector bsv = new BasicShortVector(list);
+
         assertEquals("[4,2,7]",bsv.getSubVector(new int[]{3,0,1}).getString());
         assertTrue(bsv.isNull(2));
         assertEquals((short)7,bsv.getShort(1));

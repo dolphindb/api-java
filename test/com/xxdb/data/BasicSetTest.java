@@ -206,7 +206,7 @@ public class BasicSetTest {
 
             @Override
             public short readShort() throws IOException {
-                return 422;
+                return 425;
             }
 
             @Override

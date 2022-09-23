@@ -17,16 +17,21 @@
  */
 package com.xxdb;
 
-import com.xxdb.data.BasicInt;
-import com.xxdb.data.BasicTable;
+import com.xxdb.data.*;
+import com.xxdb.streaming.client.BasicMessage;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.PollingClient;
 import com.xxdb.streaming.client.TopicPoller;
 import org.junit.*;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import static org.junit.Assert.*;
 
@@ -35,6 +40,7 @@ public class PollingClientTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    //static int PORT=9002;
     public static PollingClient client;
     @BeforeClass
     public static void set() throws IOException {
@@ -43,7 +49,7 @@ public class PollingClientTest {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
                 throw new IOException("Failed to connect to 2xdb server");
             }
-            client = new PollingClient(HOST,8676);
+            client = new PollingClient(HOST,9053);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -381,7 +387,279 @@ public class PollingClientTest {
         assertEquals(10000, msgs1.size());
         ArrayList<IMessage> msgs2 = poller2.poll(100, 10000);
         assertEquals(10000, msgs1.size());
+    }
 
+    @Test
+    public void test_subscribe_offset() throws IOException {
+        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        ArrayList<IMessage> msg1;
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades.append!(t)");
+        msg1 = poller1.poll(100, 10000);
+        assertEquals(5000, msg1.size());
+        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+    }
+
+    @Test
+    public void test_subscribe_defaultActionName_offset() throws IOException {
+        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades",-1);
+        ArrayList<IMessage> msg1;
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades.append!(t)");
+        msg1 = poller1.poll(100, 10000);
+        assertEquals(5000, msg1.size());
+        client.unsubscribe(HOST,PORT,"Trades");
+    }
+
+    @Test
+    public void test_subscribe_TableName() throws IOException {
+        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades");
+        ArrayList<IMessage> msg1;
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades.append!(t)");
+        msg1 = poller1.poll(100, 10000);
+        assertEquals(5000, msg1.size());
+        client.unsubscribe(HOST,PORT,"Trades");
+    }
+
+    @Test
+    public void test_subscribe_tableName_ActionName() throws IOException {
+        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1");
+        ArrayList<IMessage> msg1;
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades.append!(t)");
+        msg1 = poller1.poll(100, 10000);
+        assertEquals(5000, msg1.size());
+        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+    }
+
+    @Test
+    public void test_subscribe_tableName_ActionName_offset_filter() throws IOException {
+        conn.run("setStreamTableFilterColumn(Trades,`tag);" +
+                "filter=1 2 3 4 5");
+        BasicIntVector filter = (BasicIntVector) conn.run("filter");
+        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,filter);
+        ArrayList<IMessage> msg1;
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades.append!(t)");
+        msg1 = poller1.poll(100, 10000);
+        assertEquals(5, msg1.size());
+        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+    }
+
+    @Test(timeout = 120000)
+    public void test_subscribe_tableName_reconnect() throws IOException {
+        for (int j=0;j<10;j++) {
+            TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades",true);
+            PollingClient client1 = new PollingClient(HOST,9069);
+            TopicPoller poller2 = client1.subscribe(HOST, PORT, "Trades",true);
+            ArrayList<IMessage> msgs1;
+            ArrayList<IMessage> msgs2;
+            for (int i = 0; i < 10; i++) {
+                conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+                msgs1 = poller1.poll(100, 10000);
+                msgs2 = poller2.poll(100, 1000);
+                if (msgs1 == null) {
+                    continue;
+                } else if (msgs1.size() > 0) {
+                    BasicTable t = (BasicTable) conn.run("t");
+                    assertEquals(5000, msgs1.size());
+                    for (int k=0;k<msgs1.size();k++){
+                        assertEquals(t.getColumn(0).get(k),msgs1.get(k).getEntity(0));
+                        assertEquals(t.getColumn(1).get(k),msgs1.get(k).getEntity(1));
+                        assertEquals(t.getColumn(2).get(k),msgs1.get(k).getEntity(2));
+                    }
+
+                }
+                if (msgs2 == null) {
+                    continue;
+                } else if (msgs2.size() > 0) {
+                    BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
+                    assertTrue(msgs2.size() >= 1000);
+                }
+
+            }
+            client.unsubscribe(HOST, PORT, "Trades");
+            client1.unsubscribe(HOST, PORT, "Trades");
+        }
+
+    }
+
+    @Test
+    public void test_subscribe_offset_reconnect() throws IOException {
+        for (int j=0;j<10;j++) {
+            TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades",-1,true);
+            PollingClient client1 = new PollingClient(HOST,9069);
+            TopicPoller poller2 = client1.subscribe(HOST, PORT, "Trades",-1,true);
+            ArrayList<IMessage> msgs1;
+            ArrayList<IMessage> msgs2;
+            for (int i = 0; i < 10; i++) {
+                conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+                msgs1 = poller1.poll(100, 10000);
+                msgs2 = poller2.poll(100, 1000);
+                if (msgs1 == null) {
+                    continue;
+                } else if (msgs1.size() > 0) {
+                    BasicTable t = (BasicTable) conn.run("t");
+                    assertEquals(5000, msgs1.size());
+                    for (int k=0;k<msgs1.size();k++){
+                        assertEquals(t.getColumn(0).get(k),msgs1.get(k).getEntity(0));
+                        assertEquals(t.getColumn(1).get(k),msgs1.get(k).getEntity(1));
+                        assertEquals(t.getColumn(2).get(k),msgs1.get(k).getEntity(2));
+                    }
+
+                }
+                if (msgs2 == null) {
+                    continue;
+                } else if (msgs2.size() > 0) {
+                    BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
+                    assertTrue(msgs2.size() >= 1000);
+                }
+
+            }
+            client.unsubscribe(HOST, PORT, "Trades");
+            client1.unsubscribe(HOST, PORT, "Trades");
+        }
+    }
+
+    @Test
+    public void test_subscribe_tableName_actionName_offset_reconnect() throws IOException {
+        for (int j=0;j<10;j++) {
+            TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades","subTrades1",-1,true);
+            TopicPoller poller2 = client.subscribe(HOST, PORT, "Trades","subTrades2",-1,true);
+            ArrayList<IMessage> msgs1;
+            ArrayList<IMessage> msgs2;
+            for (int i = 0; i < 10; i++) {
+                conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+                msgs1 = poller1.poll(100, 10000);
+                msgs2 = poller2.poll(100, 1000);
+                if (msgs1 == null) {
+                    continue;
+                } else if (msgs1.size() > 0) {
+                    BasicTable t = (BasicTable) conn.run("t");
+                    assertEquals(5000, msgs1.size());
+                    for (int k=0;k<msgs1.size();k++){
+                        assertEquals(t.getColumn(0).get(k),msgs1.get(k).getEntity(0));
+                        assertEquals(t.getColumn(1).get(k),msgs1.get(k).getEntity(1));
+                        assertEquals(t.getColumn(2).get(k),msgs1.get(k).getEntity(2));
+                    }
+
+                }
+                if (msgs2 == null) {
+                    continue;
+                } else if (msgs2.size() > 0) {
+                    BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
+                    assertTrue(msgs2.size() >= 1000);
+                }
+
+            }
+            client.unsubscribe(HOST, PORT, "Trades","subTrades1");
+            client.unsubscribe(HOST, PORT, "Trades","subTrades2");
+        }
+    }
+
+    @Test
+    public void test_subscribe_tableName_actionName_reconnect() throws IOException {
+        for (int j=0;j<10;j++) {
+            TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades","subTrades1",true);
+            PollingClient client1 = new PollingClient(HOST,9069);
+            TopicPoller poller2 = client.subscribe(HOST, PORT, "Trades","subTrades2",true);
+            ArrayList<IMessage> msgs1;
+            ArrayList<IMessage> msgs2;
+            for (int i = 0; i < 10; i++) {
+                conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+                msgs1 = poller1.poll(100, 10000);
+                msgs2 = poller2.poll(100, 1000);
+                if (msgs1 == null) {
+                    continue;
+                } else if (msgs1.size() > 0) {
+                    BasicTable t = (BasicTable) conn.run("t");
+                    assertEquals(5000, msgs1.size());
+                    for (int k=0;k<msgs1.size();k++){
+                        assertEquals(t.getColumn(0).get(k),msgs1.get(k).getEntity(0));
+                        assertEquals(t.getColumn(1).get(k),msgs1.get(k).getEntity(1));
+                        assertEquals(t.getColumn(2).get(k),msgs1.get(k).getEntity(2));
+                    }
+
+                }
+                if (msgs2 == null) {
+                    continue;
+                } else if (msgs2.size() > 0) {
+                    BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
+                    assertTrue(msgs2.size() >= 1000);
+                }
+
+            }
+            client.unsubscribe(HOST, PORT, "Trades","subTrades1");
+            client.unsubscribe(HOST, PORT, "Trades","subTrades2");
+        }
+    }
+
+    @Test
+    public void test_TopicPoller_take() throws Exception {
+        List<IMessage> list = new ArrayList<>();
+        HashMap<String,Integer> map = new HashMap<>();
+        map.put("dolphindb",1);
+        map.put("mongodb",2);
+        map.put("gaussdb",3);
+        map.put("goldendb",4);
+        BasicAnyVector bav = new BasicAnyVector(4);
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        Entity res = conn.run("blob(\"hello\")");
+        System.out.println(res.getDataType());
+        bav.set(0,new BasicInt(5));
+        bav.set(1,new BasicString("DataBase"));
+        bav.set(2, (Scalar) res);
+        bav.set(3,new BasicDouble(15.48));
+        IMessage message =new BasicMessage(0L,"first",bav,map);
+        list.add(message);
+        BlockingQueue<List<IMessage>> queue = new ArrayBlockingQueue<>(2);
+        queue.add(list);
+        TopicPoller poller1 = new TopicPoller(queue);
+        System.out.println(poller1.take().getTopic());
+    }
+
+    @Test
+    public void test_TopicPoller_poll() throws IOException {
+        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",true);
+        ArrayList<IMessage> msg1;
+        conn.run("n=1;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades.append!(t)");
+        msg1 = poller1.poll(100);
+        assertEquals(1, msg1.size());
+        BasicTable bt = (BasicTable) conn.run("getStreamingStat().pubTables;");
+        System.out.println(bt.getString());
+        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_TopicPoller_setQueue() throws IOException {
+        TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades", "subTread1", true);
+        client.unsubscribe(HOST, PORT, "Trades", "subTread1");
+        poller1.setQueue(null);
+        ArrayList<IMessage> msg1;
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades.append!(t)");
+        msg1 = poller1.poll(100, 10000);
+        assertEquals(5000, msg1.size());
+    }
+
+    @Test
+    public void test_PollingClient_doReconnect() throws SocketException {
+        class MyPollingClient extends PollingClient{
+
+            public MyPollingClient(String subscribeHost, int subscribePort) throws SocketException {
+                super(subscribeHost, subscribePort);
+            }
+
+            @Override
+            protected boolean doReconnect(Site site) {
+                return super.doReconnect(site);
+            }
+        }
+        MyPollingClient mpl = new MyPollingClient(HOST,10086);
+        assertFalse(mpl.doReconnect(null));
     }
 
 }

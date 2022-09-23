@@ -38,7 +38,7 @@ public class BasicAnyVectorTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void test_getUintlength(){
+    public void test_getUnitlength(){
         BasicAnyVector bav = new BasicAnyVector(2);
         bav.getUnitLength();
     }

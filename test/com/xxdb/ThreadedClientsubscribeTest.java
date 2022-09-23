@@ -7,6 +7,7 @@ import org.javatuples.Pair;
 import org.junit.*;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.*;
 
 import static com.xxdb.data.Entity.DATA_TYPE.*;
@@ -625,7 +626,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "Trades");
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout=180000)
     public void test_subscribe_ofst_negative1() throws Exception {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1143,7 +1144,7 @@ public class ThreadedClientsubscribeTest {
             }
         }
     }
-    @Test(timeout = 120000)
+    @Test(timeout=120000)
     public void test_subscribe_reconnect_successful() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1245,11 +1246,6 @@ public class ThreadedClientsubscribeTest {
         public List<BasicMessage> getMsg2() {
             return msg2;
         }
-    }
-
-    @Test
-    public void test_BasicMessage_parse_out_col_size(){
-
     }
 
     @Test(timeout = 120000)
