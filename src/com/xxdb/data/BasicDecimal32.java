@@ -23,7 +23,7 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
         value_ = value * (int)Math.pow(10, scale_);
     }
 
-    public BasicDecimal32(float value, int scale){
+    public BasicDecimal32(double value, int scale){
         scale_ = scale;
         if (value == 0)
             value_ = 0;
@@ -45,7 +45,7 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
 
     @Override
     public DATA_CATEGORY getDataCategory() {
-        return DATA_CATEGORY.DECIMAL;
+        return DATA_CATEGORY.DENARY;
     }
 
     @Override

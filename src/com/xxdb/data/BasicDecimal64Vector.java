@@ -55,6 +55,27 @@ public class BasicDecimal64Vector extends AbstractVector{
     }
 
     @Override
+    public void deserialize(int start, int count, ExtendedDataInput in) throws IOException{
+        int totalBytes = count * 4, off = 0;
+        scale_ = in.readInt();
+        ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+        byte[] buf = new byte[4096];
+        while (off < totalBytes) {
+            int len = Math.min(4096, totalBytes - off);
+            in.readFully(buf, 0, len);
+            int end = len / 4;
+            ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+            for (int i = 0; i < end; i++)
+                values[i + start] = byteBuffer.getLong(i * 4);
+            off += len;
+            start += end;
+        }
+
+        this.size = values.length;
+        capaticy = values.length;
+    }
+
+    @Override
     protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
         long[] data = new long[size];
         System.arraycopy(values, 0, data, 0, size);
@@ -94,7 +115,7 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
-        if (((Scalar)value).getScale() != scale_)
+        if (((Scalar)value).getScale() != scale_ && scale_ != 0)
             throw new RuntimeException("Value's scale is not the same as the vector's!");
         else
             scale_ = ((Scalar) value).getScale();
@@ -158,7 +179,7 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public DATA_CATEGORY getDataCategory() {
-        return DATA_CATEGORY.DECIMAL;
+        return DATA_CATEGORY.DENARY;
     }
 
     @Override

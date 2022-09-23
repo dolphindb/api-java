@@ -76,7 +76,7 @@ public class BasicEntityFactory implements EntityFactory{
 			return new BasicChunkMeta(in);
 		else if(type == Entity.DATA_TYPE.DT_ANY && (form == Entity.DATA_FORM.DF_VECTOR || form == Entity.DATA_FORM.DF_PAIR))
 			return new BasicAnyVector(in);
-		else if(type.getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && type.getValue() <= Entity.DATA_TYPE.DT_POINT_ARRAY.getValue())
+		else if(type.getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && type.getValue() <= DT_DECIMAL64_ARRAY.getValue())
 			return new BasicArrayVector(type, in);
 		else if(type == Entity.DATA_TYPE.DT_VOID && form == Entity.DATA_FORM.DF_SCALAR){
 			in.readBoolean();
