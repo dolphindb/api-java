@@ -128,15 +128,14 @@ public class AutoFitTableUpsertTest {
                 "pt=db.createPartitionedTable(t, `pt, `sym)\n" +
                 "pt.append!(t)";
         conn.run(script);
-        BasicTable bt = (BasicTable) conn.run("t1=table(`A`B`E as sym, take(2021.12.09, 3) as date, 11.1 10.5 6.9 as price, 12 9 11 as val);t1;");
+        BasicTable bt = (BasicTable) conn.run("t1=table(`A`B`E as sym, take(2021.12.11, 3) as date, 11.1 10.5 6.9 as price, 12 9 11 as val);t1;");
         String[] keyColName = new String[]{"sym"};
         String[] psortColumns = new String[]{"date","val"};
         AutoFitTableUpsert aftu = new AutoFitTableUpsert("dfs://upsert","pt",conn,false,keyColName,psortColumns);
         aftu.upsert(bt);
         BasicTable ua = (BasicTable) conn.run("select * from pt");
-        float a = Float.parseFloat(ua.getColumn(2).get(0).toString());
-        float b = Float.parseFloat(ua.getColumn(2).get(1).toString());
-        assertTrue(a<b);
+        assertEquals("2021.12.09",ua.getColumn(1).get(0).getString());
+        assertEquals("2021.12.11",ua.getColumn(1).get(2).getString());
     }
 
     @Test
@@ -155,14 +154,13 @@ public class AutoFitTableUpsertTest {
                 "pt=db.createPartitionedTable(t, `pt, `sym)\n" +
                 "pt.append!(t)";
         conn.run(script);
-        BasicTable bt = (BasicTable) conn.run("t1=table(`A`B`E as sym, take(2021.12.09, 3) as date, 11.1 10.5 6.9 as price, 12 9 11 as val);t1;");
+        BasicTable bt = (BasicTable) conn.run("t1=table(`A`B`E as sym, take(2021.12.11, 3) as date, 11.1 10.5 6.9 as price, 12 9 11 as val);t1;");
         String[] keyColName = new String[]{"sym"};
         AutoFitTableUpsert aftu = new AutoFitTableUpsert("dfs://upsert","pt",conn,false,keyColName,null);
         aftu.upsert(bt);
-        BasicTable ua = (BasicTable) conn.run("select * from pt");
-        int a = Integer.parseInt(ua.getColumn(3).get(0).toString());
-        int b = Integer.parseInt(ua.getColumn(3).get(1).toString());
-        assertFalse(a<b);
+        BasicTable ua = (BasicTable) conn.run("select * from pt where sym = `A");
+        assertEquals("2021.12.11",ua.getColumn(1).get(0).getString());
+        assertEquals("2021.12.10",ua.getColumn(1).get(2).getString());
     }
 
     @Test(expected = RuntimeException.class)
@@ -419,7 +417,7 @@ public class AutoFitTableUpsertTest {
         conn.run(scripts);
         BasicTable bt = (BasicTable) conn.run("t2;");
         String[] keyColName = new String[]{"sym"};
-        String[] psortColumns = new String[]{"date","val"};
+        String[] psortColumns = new String[]{"price","val"};
         AutoFitTableUpsert aftu = new AutoFitTableUpsert("dfs://valuedemo","pt",conn,false,keyColName,psortColumns);
         aftu.upsert(bt);
         BasicTable ua = (BasicTable) conn.run("select * from pt");

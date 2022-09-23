@@ -2990,7 +2990,7 @@ public class DBConnectionTest {
     @Test
    public void test_tryUpload() throws IOException{
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Boolean noError =true;
         BasicTable tb = (BasicTable) conn.run("table(1..100 as id,take(`aaa,100) as name)");
         Map<String, Entity> upObj = new HashMap<String, Entity>();
