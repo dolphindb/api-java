@@ -1,6 +1,8 @@
 package com.xxdb;
 
 import com.xxdb.data.*;
+import com.xxdb.io.Double2;
+import com.xxdb.io.Long2;
 import com.xxdb.route.PartitionedTableAppender;
 import org.junit.After;
 import org.junit.Before;
@@ -1022,6 +1024,403 @@ public class ConnectionPoolTest {
         assertEquals(true,tcompleteTime>5000);
         thread1.interrupt();
         pool_task_async.shutdown();
+    }
+
+    @Test
+    public void test_PartitionedTableAppender_ArrayVector_Int() throws Exception {
+        conn.run("if(existsDatabase(\"dfs://testArrayVector\")){\n" +
+                "dropDatabase(\"dfs://testArrayVector\")\n" +
+                "}\n" +
+                "db=database(\"dfs://testArrayVector\",RANGE,int(1..10),,\"TSDB\")\n" +
+                "t = table(1000000:0,`sym`tradeDate`volume`valueTrade,[INT,DATETIME,INT[],DOUBLE])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`sym,,`tradeDate)");
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testArrayVector","pt","sym",pool);
+        List<String> colNames = new ArrayList<>();
+        colNames.add("sym");
+        colNames.add("tradesDate");
+        colNames.add("volume");
+        colNames.add("valueTrade");
+        List<Vector> cols = new ArrayList<>();
+        BasicIntVector biv = new BasicIntVector(new int[]{1,2,3});
+        cols.add(biv);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{10,20,30});
+        cols.add(bdtv);
+        List<Vector> value = new ArrayList<>();
+        value.add(new BasicIntVector(new int[]{1,2,3}));
+        value.add(new BasicIntVector(new int[]{4,5,6,7,8}));
+        value.add(new BasicIntVector(new int[]{9,10,11,13,17,21}));
+        BasicArrayVector bav = new BasicArrayVector(value);
+        cols.add(bav);
+        BasicDoubleVector bdv = new BasicDoubleVector(new double[]{1.1,3.6,7.9});
+        cols.add(bdv);
+        BasicTable bt = new BasicTable(colNames,cols);
+        int x = appender.append(bt);
+        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
+        assertEquals(3,res.rows());
+        assertEquals(Entity.DATA_TYPE.DT_INT_ARRAY,res.getColumn(2).getDataType());
+        System.out.println(res.getColumn(2).getString());
+        pool.shutdown();
+    }
+
+    @Test
+    public void test_PartitionedTableAppender_ArrayVector_Double() throws Exception {
+        conn.run("if(existsDatabase(\"dfs://testArrayVector\")){\n" +
+                "dropDatabase(\"dfs://testArrayVector\")\n" +
+                "}\n" +
+                "db=database(\"dfs://testArrayVector\",RANGE,int(1..10),,\"TSDB\")\n" +
+                "t = table(1000000:0,`sym`tradeDate`volume`valueTrade,[INT,DATETIME,DOUBLE[],DOUBLE])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`sym,,`tradeDate)");
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testArrayVector","pt","sym",pool);
+        List<String> colNames = new ArrayList<>();
+        colNames.add("sym");
+        colNames.add("tradesDate");
+        colNames.add("volume");
+        colNames.add("valueTrade");
+        List<Vector> cols = new ArrayList<>();
+        BasicIntVector biv = new BasicIntVector(new int[]{1,2,3});
+        cols.add(biv);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{10,20,30});
+        cols.add(bdtv);
+        List<Vector> value = new ArrayList<>();
+        value.add(new BasicDoubleVector(new double[]{1.8,2.7,3.9}));
+        value.add(new BasicDoubleVector(new double[]{4.8}));
+        value.add(new BasicDoubleVector(new double[]{9.05,0.32,4.92,7.32}));
+        BasicArrayVector bav = new BasicArrayVector(value);
+        cols.add(bav);
+        BasicDoubleVector bdv = new BasicDoubleVector(new double[]{1.1,3.6,7.9});
+        cols.add(bdv);
+        BasicTable bt = new BasicTable(colNames,cols);
+        int x = appender.append(bt);
+        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
+        assertEquals(3,res.rows());
+        assertEquals(Entity.DATA_TYPE.DT_DOUBLE_ARRAY,res.getColumn(2).getDataType());
+        System.out.println(res.getColumn(2).getString());
+        pool.shutdown();
+    }
+
+    @Test
+    public void test_PartitionedTableAppender_ArrayVector_AllDataType() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testArrayVector\")){\n" +
+                "    dropDatabase(\"dfs://testArrayVector\")\n" +
+                "}\n" +
+                "db = database(\"dfs://testArrayVector\",RANGE,int(1..100),,\"TSDB\")\n" +
+                "t = table(1000000:0,`cint`char`complex`datehour`datetime`date`double`float`int128`int`ipaddr`long`minute`month`nanotimestamp`nanotime`point`second`short`timestamp`time`uuid,[INT,CHAR[],COMPLEX[],DATEHOUR[],DATETIME[],DATE[],DOUBLE[],FLOAT[],INT128[],INT[],IPADDR[],LONG[],MINUTE[],MONTH[],NANOTIMESTAMP[],NANOTIME[],POINT[],SECOND[],SHORT[],TIMESTAMP[],TIME[],UUID[]])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
+        conn.run(script);
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testArrayVector","pt","cint",pool);
+        List<String> colNames = new ArrayList<>();
+        colNames.add("cint");
+        colNames.add("char");
+        colNames.add("complex");
+        colNames.add("datehour");
+        colNames.add("datetime");
+        colNames.add("date");
+        colNames.add("double");
+        colNames.add("float");
+        colNames.add("int128");
+        colNames.add("int");
+        colNames.add("ipaddr");
+        colNames.add("long");
+        colNames.add("minute");
+        colNames.add("month");
+        colNames.add("nanotimestamp");
+        colNames.add("nanotime");
+        colNames.add("point");
+        colNames.add("second");
+        colNames.add("short");
+        colNames.add("timestamp");
+        colNames.add("time");
+        colNames.add("uuid");
+        List<Vector> cols = new ArrayList<>();
+        cols.add(new BasicIntVector(new int[]{12,29,31}));
+        List<Vector> bbl = new ArrayList<>();
+        bbl.add(new BasicByteVector(new byte[]{'a','b','c'}));
+        bbl.add(new BasicByteVector(new byte[]{'d'}));
+        bbl.add(new BasicByteVector(new byte[]{'x','y','z','g'}));
+        BasicArrayVector bbla = new BasicArrayVector(bbl);
+        cols.add(bbla);
+        List<Vector> bcvl = new ArrayList<>();
+        bcvl.add(new BasicComplexVector(new Double2[]{new Double2(1.1,3.9)}));
+        bcvl.add(new BasicComplexVector(new Double2[]{new Double2(0.6,8.3),new Double2(2.05,7.91)}));
+        bcvl.add(new BasicComplexVector(new Double2[]{new Double2(5.213,7.398),new Double2(10.02,20.01),new Double2(0.71,17.0)}));
+        BasicArrayVector bcvla = new BasicArrayVector(bcvl);
+        cols.add(bcvla);
+        List<Vector> bdhv = new ArrayList<>();
+        bdhv.add(new BasicDateHourVector(new int[]{10,50}));
+        bdhv.add(new BasicDateHourVector(new int[]{10422,19422}));
+        bdhv.add(new BasicDateHourVector(new int[]{4090}));
+        BasicArrayVector bdhva = new BasicArrayVector(bdhv);
+        cols.add(bdhva);
+        List<Vector> bdtvl = new ArrayList<>();
+        bdtvl.add(new BasicDateTimeVector(new int[]{7}));
+        bdtvl.add(new BasicDateTimeVector(new int[]{18,890,9000}));
+        bdtvl.add(new BasicDateTimeVector(new int[]{55,73}));
+        BasicArrayVector bdtvla = new BasicArrayVector(bdtvl);
+        cols.add(bdtvla);
+        List<Vector> bdvl = new ArrayList<>();
+        bdvl.add(new BasicDateVector(new int[]{9000,659}));
+        bdvl.add(new BasicDateVector(new int[]{888,865,855}));
+        bdvl.add(new BasicDateVector(new int[]{1200,1300,8000,8100,9000}));
+        BasicArrayVector bdvla = new BasicArrayVector(bdvl);
+        cols.add(bdvla);
+        List<Vector> bdbl = new ArrayList<>();
+        bdbl.add(new BasicDoubleVector(new double[]{17.01}));
+        bdbl.add(new BasicDoubleVector(new double[]{35.72,88.41,91.06}));
+        bdbl.add(new BasicDoubleVector(new double[]{40.2,0.98}));
+        BasicArrayVector bdbla = new BasicArrayVector(bdbl);
+        cols.add(bdbla);
+        List<Vector> bfvl = new ArrayList<>();
+        bfvl.add(new BasicFloatVector(new float[]{(float) 15.6, (float) 9.92, (float) 4.71}));
+        bfvl.add(new BasicFloatVector(new float[]{(float)6.23, (float) 7.71, (float) 1.24}));
+        bfvl.add(new BasicFloatVector(new float[]{(float)0.83,(float)5.12,(float)10.1}));
+        BasicArrayVector bfvla = new BasicArrayVector(bfvl);
+        cols.add(bfvla);
+        List<Vector> biv128l = new ArrayList<>();
+        biv128l.add(new BasicInt128Vector(new Long2[]{new Long2(10000,1)}));
+        biv128l.add(new BasicInt128Vector(new Long2[]{new Long2(323,11),new Long2(571,232)}));
+        biv128l.add(new BasicInt128Vector(new Long2[]{new Long2(536,521)}));
+        BasicArrayVector biv128la = new BasicArrayVector(biv128l);
+        cols.add(biv128la);
+        List<Vector> bivl = new ArrayList<>();
+        bivl.add(new BasicIntVector(new int[]{1,2,3}));
+        bivl.add(new BasicIntVector(new int[]{4,5,6,7}));
+        bivl.add(new BasicIntVector(new int[]{8,9,10,11,12}));
+        BasicArrayVector bivla = new BasicArrayVector(bivl);
+        cols.add(bivla);
+        List<Vector> biavl = new ArrayList<>();
+        biavl.add(new BasicIPAddrVector(new Long2[]{new Long2(110,104)}));
+        biavl.add(new BasicIPAddrVector(new Long2[]{new Long2(1450,251),new Long2(2022,2019)}));
+        biavl.add(new BasicIPAddrVector(new Long2[]{new Long2(2022,1949),new Long2(2022,1984),new Long2(1949,1840)}));
+        BasicArrayVector bivala = new BasicArrayVector(biavl);
+        cols.add(bivala);
+        List<Vector> blvl = new ArrayList<>();
+        blvl.add(new BasicLongVector(new long[]{717L,851L}));
+        blvl.add(new BasicLongVector(new long[]{13L}));
+        blvl.add(new BasicLongVector(new long[]{2345L,361L,8080L}));
+        BasicArrayVector blvla = new BasicArrayVector(blvl);
+        cols.add(blvla);
+        List<Vector> bmvl = new ArrayList<>();
+        bmvl.add(new BasicMinuteVector(new int[]{60,120,180}));
+        bmvl.add(new BasicMinuteVector(new int[]{240,300,360,420}));
+        bmvl.add(new BasicMinuteVector(new int[]{480,540}));
+        BasicArrayVector bmvla = new BasicArrayVector(bmvl);
+        cols.add(bmvla);
+        List<Vector> bmol = new ArrayList<>();
+        bmol.add(new BasicMonthVector(new int[]{30,52}));
+        bmol.add(new BasicMonthVector(new int[]{91,122,43}));
+        bmol.add(new BasicMonthVector(new int[]{84,352,271}));
+        BasicArrayVector bmola = new BasicArrayVector(bmol);
+        cols.add(bmola);
+        List<Vector> bntsvl = new ArrayList<>();
+        bntsvl.add(new BasicNanoTimestampVector(new long[]{1234L,2345L}));
+        bntsvl.add(new BasicNanoTimestampVector(new long[]{3456L,4567L,5678L}));
+        bntsvl.add(new BasicNanoTimestampVector(new long[]{6789L,23456L,34567L}));
+        BasicArrayVector bntsvla = new BasicArrayVector(bntsvl);
+        cols.add(bntsvla);
+        List<Vector> bntvl = new ArrayList<>();
+        bntvl.add(new BasicNanoTimeVector(new long[]{1919L,1979L}));
+        bntvl.add(new BasicNanoTimeVector(new long[]{1908L,1912L,1937L}));
+        bntvl.add(new BasicNanoTimeVector(new long[]{1952L,1956L,1961L}));
+        BasicArrayVector bntvla = new BasicArrayVector(bntvl);
+        cols.add(bntvla);
+        List<Vector> bpvl = new ArrayList<>();
+        bpvl.add(new BasicPointVector(new Double2[]{new Double2(0.5,5.0)}));
+        bpvl.add(new BasicPointVector(new Double2[]{new Double2(1.7,7.1),new Double2(2.3,3.2)}));
+        bpvl.add(new BasicPointVector(new Double2[]{new Double2(5.9,9.2),new Double2(1.8,8.1)}));
+        BasicArrayVector bpvla = new BasicArrayVector(bpvl);
+        cols.add(bpvla);
+        List<Vector> bsvl = new ArrayList<>();
+        bsvl.add(new BasicSecondVector(new int[]{1,7}));
+        bsvl.add(new BasicSecondVector(new int[]{26,99,83}));
+        bsvl.add(new BasicSecondVector(new int[]{24,61,59,74}));
+        BasicArrayVector bsvla = new BasicArrayVector(bsvl);
+        cols.add(bsvla);
+        List<Vector> bshv = new ArrayList<>();
+        bshv.add(new BasicShortVector(new short[]{2,11,32}));
+        bshv.add(new BasicShortVector(new short[]{7,16,27}));
+        bshv.add(new BasicShortVector(new short[]{10,19,22}));
+        BasicArrayVector bshva = new BasicArrayVector(bshv);
+        cols.add(bshva);
+        List<Vector> btsvl = new ArrayList<>();
+        btsvl.add(new BasicTimestampVector(new long[]{16L}));
+        btsvl.add(new BasicTimestampVector(new long[]{32L,57L}));
+        btsvl.add(new BasicTimestampVector(new long[]{26L,73L,54L}));
+        BasicArrayVector btsvla = new BasicArrayVector(btsvl);
+        cols.add(btsvla);
+        List<Vector> btvl = new ArrayList<>();
+        btvl.add(new BasicTimeVector(new int[]{27,99,175483}));
+        btvl.add(new BasicTimeVector(new int[]{98,7896,2557}));
+        btvl.add(new BasicTimeVector(new int[]{178,9897,3728}));
+        BasicArrayVector btvla = new BasicArrayVector(btvl);
+        cols.add(btvla);
+        List<Vector> buvl = new ArrayList<>();
+        buvl.add(new BasicUuidVector(new Long2[]{new Long2(3,2)}));
+        buvl.add(new BasicUuidVector(new Long2[]{new Long2(123,121)}));
+        buvl.add(new BasicUuidVector(new Long2[]{new Long2(17,11),new Long2(25,6)}));
+        BasicArrayVector buvla = new BasicArrayVector(buvl);
+        cols.add(buvla);
+        BasicTable bt = new BasicTable(colNames,cols);
+        int x = appender.append(bt);
+        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
+        assertEquals(3,res.rows());
+        assertEquals(Entity.DATA_TYPE.DT_COMPLEX_ARRAY,res.getColumn(2).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_INT,res.getColumn(0).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_BYTE_ARRAY,res.getColumn(1).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_DATEHOUR_ARRAY,res.getColumn(3).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_DATETIME_ARRAY,res.getColumn(4).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_DATE_ARRAY,res.getColumn(5).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_DOUBLE_ARRAY,res.getColumn(6).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_FLOAT_ARRAY,res.getColumn(7).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_INT128_ARRAY,res.getColumn(8).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_INT_ARRAY,res.getColumn(9).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_IPADDR_ARRAY,res.getColumn(10).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_LONG_ARRAY,res.getColumn(11).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_MINUTE_ARRAY,res.getColumn(12).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_MONTH_ARRAY,res.getColumn(13).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_NANOTIMESTAMP_ARRAY,res.getColumn(14).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_NANOTIME_ARRAY,res.getColumn(15).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_POINT_ARRAY,res.getColumn(16).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_SECOND_ARRAY,res.getColumn(17).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_SHORT_ARRAY,res.getColumn(18).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_TIMESTAMP_ARRAY,res.getColumn(19).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_TIME_ARRAY,res.getColumn(20).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_UUID_ARRAY,res.getColumn(21).getDataType());
+        pool.shutdown();
+    }
+
+    @Test(timeout = 120000)
+    public void test_PartitionedTableAppender_ArrayVector_BigData() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testArrayVector\")){\n" +
+                "    dropDatabase(\"dfs://testArrayVector\")\n" +
+                "}\n" +
+                "db = database(\"dfs://testArrayVector\",RANGE,int(0..100),,\"TSDB\")\n" +
+                "t = table(1048576:0,`cint`char`complex`datehour`datetime`date`double`float`int128`int`ipaddr`long`minute`month`nanotimestamp`nanotime`point`second`short`timestamp`time`uuid," +
+                "[INT,CHAR[],COMPLEX[],DATEHOUR[],DATETIME[],DATE[],DOUBLE[],FLOAT[],INT128[],INT[],IPADDR[],LONG[],MINUTE[],MONTH[],NANOTIMESTAMP[],NANOTIME[],POINT[],SECOND[],SHORT[],TIMESTAMP[],TIME[],UUID[]])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
+        conn.run(script);
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testArrayVector","pt","cint",pool);
+        List<String> colNames = new ArrayList<>();
+        colNames.add("cint");
+        colNames.add("char");
+        colNames.add("complex");
+        colNames.add("datehour");
+        colNames.add("datetime");
+        colNames.add("date");
+        colNames.add("double");
+        colNames.add("float");
+        colNames.add("int128");
+        colNames.add("int");
+        colNames.add("ipaddr");
+        colNames.add("long");
+        colNames.add("minute");
+        colNames.add("month");
+        colNames.add("nanotimestamp");
+        colNames.add("nanotime");
+        colNames.add("point");
+        colNames.add("second");
+        colNames.add("short");
+        colNames.add("timestamp");
+        colNames.add("time");
+        colNames.add("uuid");
+        List<Vector> cols = new ArrayList<>();
+        BasicIntVector biv = new BasicIntVector(1048576);
+        List<Vector> bcvl = new ArrayList<>();
+        List<Vector> bcpvl = new ArrayList<>();
+        List<Vector> bdhvl = new ArrayList<>();
+        List<Vector> bdtvl = new ArrayList<>();
+        List<Vector> bdvl = new ArrayList<>();
+        List<Vector> bdbvl = new ArrayList<>();
+        List<Vector> bfvl = new ArrayList<>();
+        List<Vector> bi128vl = new ArrayList<>();
+        List<Vector> bivl = new ArrayList<>();
+        List<Vector> bipvl = new ArrayList<>();
+        List<Vector> blvl = new ArrayList<>();
+        List<Vector> bmivl = new ArrayList<>();
+        List<Vector> bmnvl = new ArrayList<>();
+        List<Vector> bntsvl = new ArrayList<>();
+        List<Vector> bntvl = new ArrayList<>();
+        List<Vector> bpvl = new ArrayList<>();
+        List<Vector> bsevl = new ArrayList<>();
+        List<Vector> bshvl = new ArrayList<>();
+        List<Vector> btsvl = new ArrayList<>();
+        List<Vector> btvl = new ArrayList<>();
+        List<Vector> buvl = new ArrayList<>();
+        for(int i=0;i<1048576;i++){
+            biv.setInt(i,i%100);
+            bcvl.add(new BasicByteVector(new byte[]{'d','o','l','p','h','i','n','d','b'}));
+            bcpvl.add(new BasicComplexVector(new Double2[]{new Double2(i+0.1,i+0.2),new Double2(i+2.0,i+3.0)}));
+            bdhvl.add(new BasicDateHourVector(new int[]{i+3,i+5}));
+            bdtvl.add(new BasicDateTimeVector(new int[]{i+4,i+7}));
+            bdvl.add(new BasicDateVector(new int[]{i+5,i+6}));
+            bdbvl.add(new BasicDoubleVector(new double[]{i+7.0,i+7.5}));
+            bfvl.add(new BasicFloatVector(new float[]{(float) (i+6.3), (float) (i+3.9)}));
+            bi128vl.add(new BasicInt128Vector(new Long2[]{new Long2(i+8,i),new Long2(i+18,i+2)}));
+            bivl.add(new BasicIntVector(new int[]{i+11,i+8}));
+            bipvl.add(new BasicIPAddrVector(new Long2[]{new Long2(i+17,i+2),new Long2(i+15,i+4)}));
+            blvl.add(new BasicLongVector(new long[]{i+15L,i+2L}));
+            bmivl.add(new BasicMinuteVector(new int[]{i+13,i+10}));
+            bmnvl.add(new BasicMonthVector(new int[]{i+12,i+28}));
+            bntsvl.add(new BasicNanoTimestampVector(new long[]{i+10000L,i+30000L}));
+            bntvl.add(new BasicNanoTimeVector(new long[]{i+1000L,i+2000L}));
+            bpvl.add(new BasicPointVector(new Double2[]{new Double2(i+0.17,i+0.86)}));
+            bsevl.add(new BasicSecondVector(new int[]{i+30,i+50}));
+            bshvl.add(new BasicShortVector(new short[]{(short) (i+9), (short) (i+3)}));
+            btsvl.add(new BasicTimestampVector(new long[]{i+6000L,i+12000L}));
+            btvl.add(new BasicTimeVector(new int[]{i+20,i+10}));
+            buvl.add(new BasicUuidVector(new Long2[]{new Long2(i+1000L,i+19L)}));
+        }
+        cols.add(biv);
+        BasicArrayVector bcvla = new BasicArrayVector(bcvl);
+        cols.add(bcvla);
+        BasicArrayVector bcpvla = new BasicArrayVector(bcpvl);
+        cols.add(bcpvla);
+        BasicArrayVector bdhvla = new BasicArrayVector(bdhvl);
+        cols.add(bdhvla);
+        BasicArrayVector bdtvla = new BasicArrayVector(bdtvl);
+        cols.add(bdtvla);
+        BasicArrayVector bdvla = new BasicArrayVector(bdvl);
+        cols.add(bdvla);
+        BasicArrayVector bdbvla = new BasicArrayVector(bdbvl);
+        cols.add(bdbvla);
+        BasicArrayVector bfvla = new BasicArrayVector(bfvl);
+        cols.add(bfvla);
+        BasicArrayVector bi128vla = new BasicArrayVector(bi128vl);
+        cols.add(bi128vla);
+        BasicArrayVector bivla = new BasicArrayVector(bivl);
+        cols.add(bivla);
+        BasicArrayVector bipvla = new BasicArrayVector(bipvl);
+        cols.add(bipvla);
+        BasicArrayVector blvla = new BasicArrayVector(blvl);
+        cols.add(blvla);
+        BasicArrayVector bmivla = new BasicArrayVector(bmivl);
+        cols.add(bmivla);
+        BasicArrayVector bmnvla = new BasicArrayVector(bmnvl);
+        cols.add(bmnvla);
+        BasicArrayVector bntsvla = new BasicArrayVector(bntsvl);
+        cols.add(bntsvla);
+        BasicArrayVector bntvla = new BasicArrayVector(bntvl);
+        cols.add(bntvla);
+        BasicArrayVector bpvla = new BasicArrayVector(bpvl);
+        cols.add(bpvla);
+        BasicArrayVector bsevla = new BasicArrayVector(bsevl);
+        cols.add(bsevla);
+        BasicArrayVector bshvla = new BasicArrayVector(bshvl);
+        cols.add(bshvla);
+        BasicArrayVector btsvla = new BasicArrayVector(btsvl);
+        cols.add(btsvla);
+        BasicArrayVector btvla = new BasicArrayVector(btvl);
+        cols.add(btvla);
+        BasicArrayVector buvla = new BasicArrayVector(buvl);
+        cols.add(buvla);
+        BasicTable bt = new BasicTable(colNames,cols);
+        int x = appender.append(bt);
+        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
+        assertEquals(1048576,res.rows());
+        pool.shutdown();
     }
 
 
