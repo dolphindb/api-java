@@ -48,7 +48,7 @@ public class TopicPoller {
     // take one message from the topic, block if necessary
     public IMessage take() {
         while(true) {
-            if (cache.isEmpty() == false) {
+            if (!cache.isEmpty()) {
                 IMessage message = cache.get(0);
                 cache.remove(0);
                 return message;
