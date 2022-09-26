@@ -5,12 +5,10 @@ import com.xxdb.io.ExtendedDataOutput;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.time.temporal.Temporal;
-import java.util.logging.Level;
 
-public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDecimal32>{
+
+public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDecimal64>{
     private int scale_=0;
     private long value_;
 
@@ -122,7 +120,7 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
     }
 
     @Override
-    public int compareTo(BasicDecimal32 o) {
+    public int compareTo(BasicDecimal64 o) {
         double a = Double.parseDouble(getString());
         double b = Double.parseDouble(o.getString());
         return Double.compare(a, b);

@@ -265,6 +265,7 @@ public class MultithreadedTableWriter {
     private ErrorCodeInfo errorCodeInfo_ = new ErrorCodeInfo();
     private Mode mode_;
     private String[] pModeOption_;
+    private int[] colExtras_;
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
@@ -357,10 +358,12 @@ public class MultithreadedTableWriter {
         if (compressTypes_!=null && compressTypes_.length != columnSize) {
             throw new RuntimeException("The number of elements in parameter compressMethods does not match the column size "+columnSize);
         }
-
+        colExtras_ = new int[columnSize];
+        BasicIntVector colExtra= (BasicIntVector)colDefs.getColumn("extra");
         BasicStringVector colDefsName = (BasicStringVector)colDefs.getColumn("name");
         BasicStringVector colDefsTypeString = (BasicStringVector)colDefs.getColumn("typeString");
         for(int i = 0; i < columnSize; i++){
+            colExtras_[i] = colExtra.getInt(i);
             colNames_.add(colDefsName.getString(i));
             if (compressTypes_ != null){
                 boolean check = AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)), compressTypes_[i]);
@@ -626,7 +629,7 @@ public class MultithreadedTableWriter {
                 dataType = colTypes_.get(colindex);
                 Entity entity;
                 isAllNull = false;
-                entity = BasicEntityFactory.createScalar(dataType, one);
+                entity = BasicEntityFactory.createScalar(dataType, one, colExtras_[colindex]);
                 if (entity == null) {
                     return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, "Data conversion error: " + dataType);
                 }

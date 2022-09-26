@@ -5,8 +5,6 @@ import com.xxdb.io.ExtendedDataOutput;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.time.temporal.Temporal;
 
 public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDecimal32>{
