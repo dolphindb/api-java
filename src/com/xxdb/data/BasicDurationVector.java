@@ -82,7 +82,7 @@ public class BasicDurationVector extends AbstractVector{
 		capaticy = values.length;
 		values[size] = value;
 		values[size+1] = duration;
-		size++;
+		size+=2;
 	}
 
 
