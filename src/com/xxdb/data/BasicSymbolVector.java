@@ -55,7 +55,7 @@ public class BasicSymbolVector extends AbstractVector {
 		super(DATA_FORM.DF_VECTOR);
 		this.base  = base;
 		if(copy){
-			values = new int[values.length];
+			this.values = new int[values.length];
 			System.arraycopy(this.values, 0, values, 0, values.length);
 		}
 		else{
