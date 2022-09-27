@@ -18,7 +18,7 @@ public class BasicComplexTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     //static int PORT = Integer.parseInt(bundle.getString("PORT"));
-    static int PORT = 8848;
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     @Test
     public void test_complex_function(){
         BasicComplex bc = new BasicComplex(25.14,42.33);
@@ -482,5 +482,20 @@ public class BasicComplexTest {
         ByteBuffer buffer = ByteBuffer.allocate(48);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         assertEquals(48,bcv.serialize(0,0,4,numElementAndPartial,buffer));
+    }
+
+    @Test
+    public void test_BasicComplexVector_Append() throws Exception {
+        List<Double2> list = new ArrayList<>();
+        list.add(new Double2(1.0, 9.2));
+        list.add(new Double2(3.8, 7.4));
+        list.add(new Double2(5.6, 6.5));
+        BasicComplexVector bcv = new BasicComplexVector(list);
+        int size = bcv.rows();
+        bcv.Append(new BasicComplex(7.2,3.9));
+        assertEquals(size+1,bcv.rows());
+        bcv.Append(new BasicComplexVector(new Double2[]{new Double2(0.9,0.2),new Double2(1.5,2.2)}));
+        assertEquals(size+3,bcv.rows());
+        assertEquals("0.9+0.2i",bcv.get(4).getString());
     }
 }

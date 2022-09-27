@@ -79,7 +79,7 @@ public class BasicLongTest {
     public void test_BasicLong() throws Exception {
         BasicLong bl = new BasicLong(9000L);
         assertEquals("9000",bl.getJsonString());
-        assertNull(new BasicLong(Long.MIN_VALUE).getNumber());
+        assertTrue(new BasicLong(Long.MIN_VALUE).isNull());
         assertEquals("",new BasicLong(Long.MIN_VALUE).getString());
         assertFalse(bl.equals(null));
     }
@@ -157,5 +157,18 @@ public class BasicLongTest {
         list.add(888L);
         BasicLongVector blv = new BasicLongVector(list);
         blv.asof(new BasicLong(860L));
+    }
+
+    @Test
+    public void test_BasicLongVector_Append() throws Exception {
+        BasicLongVector blv = new BasicLongVector(new long[]{600,615,617});
+        int size = blv.size;
+        int capacity = blv.capaticy;
+        blv.Append(new BasicLong(625));
+        assertEquals(size+1,blv.size);
+        assertEquals(capacity*2,blv.capaticy);
+        blv.Append(new BasicLongVector(new long[]{630,632,636}));
+        assertEquals(size+4,blv.size);
+        assertEquals(capacity*2+3,blv.capaticy);
     }
 }

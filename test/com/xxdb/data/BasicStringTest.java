@@ -742,6 +742,16 @@ public class BasicStringTest {
         assertEquals(bsv5.getString(),bsv7.getString());
     }
 
+    @Test
+    public void test_BasicStringVector_Append(){
+        BasicStringVector bsv = new BasicStringVector(new String[]{"MySQL","Oracle"});
+        int size = bsv.rows();
+        bsv.Append(new BasicString("PortageSQL"));
+        assertEquals(size+1,bsv.rows());
+        bsv.Append(new BasicStringVector(new String[]{"GaussDB","GoldenDB"}));
+        assertEquals(size+3,bsv.rows());
+    }
+
 
 
 }

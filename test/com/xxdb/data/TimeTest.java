@@ -549,6 +549,19 @@ public class TimeTest{
     }
 
     @Test
+    public void test_BasicTimeVector_Append() throws Exception {
+        BasicTimeVector btv = new BasicTimeVector(new int[]{1893,1976});
+        int size = btv.size;
+        int capacity = btv.capaticy;
+        btv.Append(new BasicTime(2022));
+        assertEquals(size+1,btv.size);
+        assertEquals(capacity*2,btv.capaticy);
+        btv.Append(new BasicTimeVector(new int[]{618,755,907}));
+        assertEquals(size+4,btv.size);
+        assertEquals(capacity*2+3,btv.capaticy);
+    }
+
+    @Test
     public void test_BasicDateMatrix() throws Exception {
         BasicDateMatrix bdhm = new BasicDateMatrix(2,2);
         bdhm.setDate(0,0,LocalDate.of(2022,7,29));
@@ -585,6 +598,19 @@ public class TimeTest{
         assertEquals("1991-10-21",bdhv2.getDate(1).toString());
         ByteBuffer bb = ByteBuffer.allocate(10000);
         bdhv2.writeVectorToBuffer(bb);
+    }
+
+    @Test
+    public void test_BasicDateVector_Append() throws Exception {
+        BasicDateVector bdv = new BasicDateVector(new int[]{25,220,280});
+        int size = bdv.size;
+        int capacity = bdv.capaticy;
+        bdv.Append(new BasicDate(317));
+        assertEquals(capacity*2,bdv.capaticy);
+        bdv.Append(new BasicDateVector(new int[]{420,587,618}));
+        assertEquals(capacity*2+3,bdv.capaticy);
+        assertEquals(size+4,bdv.size);
+        System.out.println(bdv.getString());
     }
 
     @Test
@@ -643,6 +669,19 @@ public class TimeTest{
     }
 
     @Test
+    public void test_BasicDateHourVector_Append() throws Exception {
+        BasicDateHourVector bdhv = new BasicDateHourVector(new int[]{476,1004});
+        int size = bdhv.size;
+        int capacity = bdhv.capaticy;
+        bdhv.Append(new BasicDateHour(LocalDateTime.now()));
+        assertEquals(capacity*2,bdhv.capaticy);
+        System.out.println(bdhv.get(2));
+        bdhv.Append(bdhv);
+        assertEquals(size+4,bdhv.size);
+        assertEquals(7,bdhv.capaticy);
+    }
+
+    @Test
     public void test_BasicMinuteMatrix() throws Exception{
         BasicMinuteMatrix bdhm = new BasicMinuteMatrix(2,2);
         bdhm.setMinute(0,0,LocalTime.of(1,9,4));
@@ -680,6 +719,19 @@ public class TimeTest{
         BasicMinuteVector bmv = new BasicMinuteVector(5);
         bmv = bdhv2;
         assertEquals("07:36",bmv.getMinute(2).toString());
+    }
+
+    @Test
+    public void test_BasicMinuteVector_Append() throws Exception {
+        BasicMinuteVector bmv = new BasicMinuteVector(new int[]{15,45});
+        int size = bmv.size;
+        int capacity = bmv.capaticy;
+        bmv.Append(new BasicMinute(LocalTime.now()));
+        assertEquals(capacity*2,bmv.capaticy);
+        bmv.Append(new BasicMinuteVector(new int[]{78,32}));
+        assertEquals(capacity*2+2,bmv.capaticy);
+        assertNotEquals(bmv.size,bmv.capaticy);
+        System.out.println(bmv.getString());
     }
 
     @Test
@@ -722,6 +774,18 @@ public class TimeTest{
     }
 
     @Test
+    public void test_BasicMonthVector_Append() throws Exception {
+        BasicMonthVector bmv = new BasicMonthVector(new int[]{1,3,5});
+        int size = bmv.size;
+        int capacity = bmv.capaticy;
+        bmv.Append(new BasicMonth(13));
+        assertEquals(capacity*2,bmv.capaticy);
+        bmv.Append(new BasicMonthVector(new int[]{7,8,10,12}));
+        assertEquals(size+5,bmv.size);
+        assertNotEquals(bmv.size,bmv.capaticy);
+    }
+
+    @Test
     public void test_BasicNanoTimeMatrix() throws Exception{
         BasicNanoTimeMatrix bdhm = new BasicNanoTimeMatrix(2,2);
         bdhm.setNanoTime(0,0,LocalTime.of(19,12,25));
@@ -757,6 +821,20 @@ public class TimeTest{
         bmv = btv;
         assertEquals("22:12:17",bmv.getNanoTime(2).toString());
     }
+
+    @Test
+    public void test_BasicNanotimeVector_Append() throws Exception {
+        BasicNanoTimeVector bntv = new BasicNanoTimeVector(new long[]{2314571,72668945,29934552});
+        int size = bntv.size;
+        int capacity = bntv.capaticy;
+        bntv.Append(new BasicNanoTime(899034671));
+        bntv.Append(new BasicNanoTime(9012343536L));
+        assertEquals(size+2,bntv.size);
+        assertEquals(capacity*2,bntv.capaticy);
+        bntv.Append(new BasicNanoTimeVector(new long[]{65534,21485432,1798093345}));
+        assertEquals(capacity*2+3,bntv.capaticy);
+        assertNotEquals(bntv.size,bntv.capaticy);
+    }
     @Test
     public void test_BasicNanoTimeStampMatrix() throws Exception{
         BasicNanoTimestampMatrix bdhm = new BasicNanoTimestampMatrix(2,2);
@@ -791,6 +869,16 @@ public class TimeTest{
         assertEquals("1970-01-01T06:41:44.786790",bnts.getNanoTimestamp(2).toString());
     }
 
+    @Test
+    public void test_BasicNanoTimeStampVector_Append() throws Exception {
+        BasicNanoTimestampVector bntsv = new BasicNanoTimestampVector(new long[]{7554784040L,46274927491L});
+        int capacity = bntsv.capaticy;
+        bntsv.Append(new BasicNanoTimestamp(4738492949L));
+        bntsv.Append(new BasicNanoTimestamp(7843849393L));
+        assertEquals(bntsv.size,bntsv.capaticy);
+        bntsv.Append(new BasicNanoTimestampVector(new long[]{36273293,3749284,73859372,47593902}));
+        assertEquals(capacity*4,bntsv.size);
+    }
     @Test
     public void test_BasicSecondMatrix() throws Exception {
         BasicSecondMatrix bsm = new BasicSecondMatrix(2,2);
@@ -829,6 +917,19 @@ public class TimeTest{
     }
 
     @Test
+    public void test_BasicSecondVector_Append() throws Exception {
+        BasicSecondVector bsv = new BasicSecondVector(new int[]{12,34,56});
+        int size = bsv.size;
+        int capacity = bsv.capaticy;
+        bsv.Append(new BasicSecond(LocalTime.now()));
+        assertEquals(size+1,bsv.size);
+        assertEquals(capacity*2,bsv.capaticy);
+        bsv.Append(bsv);
+        assertEquals(size+5,bsv.size);
+        assertEquals(capacity*2+4,bsv.capaticy);
+    }
+
+    @Test
     public void test_BasicTimeStampMatrix() throws Exception {
         BasicTimestampMatrix bdhm = new BasicTimestampMatrix(2,2);
         bdhm.setTimestamp(0,0,LocalDateTime.of(1970,11,22,19,12,25));
@@ -855,6 +956,18 @@ public class TimeTest{
         assertNull(btsv.getTimestamp(4));
         assertEquals("2733-11-07T14:06:30",btsv.getTimestamp(2).toString());
         assertEquals("2733.11.07T14:06:30.000",btsv.get(2).toString());
+    }
+
+    @Test
+    public void test_BasicTimeStampVector_Append() throws Exception {
+        BasicTimestampVector btsv = new BasicTimestampVector(new long[]{34724264,7472947292L,3742839,3473293});
+        int size = btsv.size;
+        int capacity = btsv.capaticy;
+        btsv.Append(new BasicTimestamp(LocalDateTime.now()));
+        assertEquals(capacity*2,btsv.capaticy);
+        btsv.Append(btsv);
+        System.out.println(btsv.getString());
+        assertEquals(size+6,btsv.size);
     }
 
     @Test
@@ -932,6 +1045,20 @@ public class TimeTest{
         BasicDateTimeVector bdtv = new BasicDateTimeVector(arr,true);
         assertEquals(Entity.DATA_CATEGORY.TEMPORAL,bdtv.getDataCategory());
         assertEquals("[1971.09.10T16:24:29,1971.01.09T05:09:21,1971.05.20T03:05:22]",bdtv.getSubVector(new int[]{2,0,1}).getString());
+    }
+
+    @Test
+    public void test_BasicDateTimeVector_Append() throws Exception {
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{3354,324,342});
+        bdtv.Append(bdtv);
+        assertEquals(bdtv.size,bdtv.capaticy);
+        int size = bdtv.size;
+        int capacity = bdtv.capaticy;
+        bdtv.Append(new BasicDateTime(37483940));
+        bdtv.Append(new BasicDateTime(LocalDateTime.now()));
+        assertEquals(capacity*2,bdtv.capaticy);
+        assertEquals(size+2,bdtv.size);
+        System.out.println(bdtv.getString());
     }
 }
 

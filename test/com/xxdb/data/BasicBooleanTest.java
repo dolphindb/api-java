@@ -34,7 +34,7 @@ public class BasicBooleanTest {
         BasicBoolean bb = new BasicBoolean(Byte.MIN_VALUE);
         assertEquals(1,bb.columns(),0);
         assertEquals(1,bb.rows());
-        assertNull(bb.getNumber());
+        assertTrue(bb.isNull());
         assertFalse(bb.equals(3));
     }
 
@@ -114,5 +114,15 @@ public class BasicBooleanTest {
         BasicBooleanVector bbv = new BasicBooleanVector(list);
         ByteBuffer bb = bbv.writeVectorToBuffer(ByteBuffer.allocate(6));
         assertEquals("[1, 1, -128, 127, 0, 0]",Arrays.toString(bb.array()));
+    }
+
+    @Test
+    public void test_basicBooleanVector_Append() throws Exception {
+        BasicBooleanVector bbv = new BasicBooleanVector(new boolean[]{true,false,false,true});
+        int size = bbv.rows();
+        bbv.Append(new BasicBoolean(false));
+        assertEquals(size+1,bbv.rows());
+        bbv.Append(new BasicBooleanVector(new boolean[]{true,true,false}));
+        assertEquals(size+4,bbv.rows());
     }
 }

@@ -35,7 +35,7 @@ public class BasicFloatTest {
     @Test
     public void test_BasicFloat() throws Exception {
         BasicFloat bf = new BasicFloat(-Float.MAX_VALUE);
-        assertNull(bf.getNumber());
+        assertNotNull(bf.getNumber());
         BasicFloat bf2 = new BasicFloat(Float.NEGATIVE_INFINITY);
         assertEquals(String.valueOf(Float.NEGATIVE_INFINITY),bf2.getString());
         assertFalse(bf.equals(new GregorianCalendar()));
@@ -119,5 +119,16 @@ public class BasicFloatTest {
         BasicFloatVector bfv = new BasicFloatVector(arr,false);
         AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(3,1);
         assertEquals(16,bfv.serialize(0,0,4,numElementAndPartial,ByteBuffer.allocate(16)));
+    }
+
+    @Test
+    public void test_BasicFloatVector_Append() throws Exception {
+        BasicFloatVector bfv = new BasicFloatVector(new float[]{(float) 5.1, (float) 0.04, (float) 7.31});
+        int size = bfv.rows();
+        bfv.Append(new BasicFloat((float) 2.76));
+        bfv.Append(new BasicFloat((float) 5.2334));
+        assertEquals(size+2,bfv.rows());
+        bfv.Append(new BasicFloatVector(new float[]{(float) 3.992, (float) 9.705, (float) 4.441}));
+        assertEquals(size+5,bfv.rows());
     }
 }

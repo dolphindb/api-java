@@ -232,4 +232,23 @@ public class BasicAnyVectorTest {
         });
         bav.writeVectorToOutputStream(out);
     }
+
+    @Test(expected = RuntimeException.class)
+    public void test_basicAnyVector_Append() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        Entity[] arr = new Entity[12];
+        for (int i = 0; i < 10; i++) {
+            arr[i] = conn.run(""+i);
+        }
+        arr[10] = conn.run("11.11");
+        arr[11] = conn.run("true");
+        BasicAnyVector bav = new BasicAnyVector(arr,false);
+        assertEquals("4",bav.get(4).getString());
+        assertEquals("(0,1,2,3,4,5,6,7,8,9,...)",bav.getString());
+        bav.set(11, (Scalar) conn.run("date(2022.08.01);"));
+        assertEquals("2022.08.01",bav.get(11).getString());
+        bav.Append(new BasicInt(16));
+    }
+
 }

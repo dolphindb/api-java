@@ -228,6 +228,25 @@ public class BasicDurationTest {
     }
 
     @Test
+    public void test_BasicDurationVector_Append() throws Exception {
+        BasicDurationVector bdv = new BasicDurationVector(2);
+        bdv.set(0,new BasicDuration(Entity.DURATION.WEEK,5));
+        bdv.set(1,new BasicDuration(Entity.DURATION.HOUR,2));
+        int size = bdv.rows();
+        System.out.println(size);
+        bdv.Append(new BasicDuration(Entity.DURATION.NS,7));
+        bdv.Append(new BasicDuration(Entity.DURATION.NS,8));
+        assertEquals(size=2,bdv.rows());
+        BasicDurationVector bdv2 = new BasicDurationVector(2);
+        bdv2.set(0,new BasicDuration(Entity.DURATION.MONTH,6));
+        bdv2.set(1,new BasicDuration(Entity.DURATION.SECOND,15));
+        bdv.Append(bdv2);
+        System.out.println(bdv.getString());
+        assertEquals(size+4,bdv.rows());
+
+    }
+
+    @Test
     public void test_BasicDuration_serialize() throws Exception {
         BasicDurationVector bdv = new BasicDurationVector(6);
         bdv.set(0,new BasicDuration(Entity.DURATION.WEEK,5));

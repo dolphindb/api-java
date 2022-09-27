@@ -149,5 +149,19 @@ public class BasicIPAddrTest {
         assertEquals("[0:6e:53a1:b6a1::8535:3f29,0:d:32c:264a::68f:258c]",biav3.getString());
     }
 
+    @Test
+    public void test_BasicIPAddrVector_Append() throws Exception {
+        BasicIPAddrVector bipv = new BasicIPAddrVector(new Long2[]{new Long2(18L,11L),new Long2(9000L,659L)});
+        int size = bipv.size;
+        int capacity = bipv.capaticy;
+        bipv.Append(new BasicIPAddr(1300L,800L));
+        bipv.Append(new BasicIPAddr(888L,600L));
+        assertEquals(size+2,bipv.size);
+        assertEquals(capacity*2,bipv.capaticy);
+        bipv.Append(new BasicIPAddrVector(new Long2[]{new Long2(8100L,1300L),new Long2(820L,710L)}));
+        assertEquals(capacity*2+2,bipv.capaticy);
+        assertEquals(size+4,bipv.rows());
+    }
+
 
 }
