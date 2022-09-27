@@ -1,10 +1,9 @@
 package com.xxdb;
 
 import com.xxdb.comm.ErrorCodeInfo;
-import com.xxdb.data.*;
 import com.xxdb.data.Vector;
+import com.xxdb.data.*;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
-import com.xxdb.route.AutoFitTableUpsert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -858,7 +857,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(true,status.succeed());
             assertEquals(false,status1.succeed());
             assertEquals(true,status1.isExiting);
-            assertEquals(true,status.isExiting);
+            assertEquals(false,status.isExiting);
             assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
             assertEquals(1000,status.unsentRows+status.sendFailedRows+status.sentRows);
 

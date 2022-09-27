@@ -3180,4 +3180,48 @@ public void test_SSL() throws Exception {
         assertEquals(HOST,conn.getHostName());
         assertEquals(PORT,conn.getPort());
     }
+
+    @Test
+    public void test_append_into_partition_table() throws IOException{
+        conn=new DBConnection();
+        List<String> colNames = new ArrayList<String>(2);
+        colNames.add("date");
+        colNames.add("sym");
+        List<Vector> cols = new ArrayList<Vector>(2);
+        BasicDateVector date = new BasicDateVector(2);
+        date.setDate(1, LocalDate.now());
+        date.setDate(0,LocalDate.now());
+        BasicStringVector sym = new BasicStringVector(2);
+        sym.setString(0,"w");
+        sym.setString(1,"w");
+        cols.add(date);
+        cols.add(sym);
+        try {
+            if (!conn.connect(HOST, PORT, "admin", "123456",true)) {
+                throw new IOException("Failed to connect to 2xdb server");
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        String script="t = table(100:0,`date`sym,[DATE,SYMBOL]);" +
+                "if(existsDatabase('dfs://test_append_pt')){\n" +
+                "\tdropDB('dfs://test_append_pt')\n" +
+                "}" +
+                "db = database('dfs://test_append_pt',HASH,[DATE,4]);" +
+                "pt = db.createPartitionedTable(t,`pt,`date);";
+        conn.run(script);
+        BasicInt i= (BasicInt) conn.run("exec count(*) from pt");
+        System.out.println("sum="+i);
+        try {
+            BasicTable t=  new BasicTable(colNames, cols);
+            List<Entity> arg = Arrays.asList(t);
+            conn.run("append!{pt}", arg);
+            i= (BasicInt) conn.run("exec count(*) from pt");
+            assertEquals(2,i.getInt());
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        conn.close();
+    }
+
 }

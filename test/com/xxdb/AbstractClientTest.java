@@ -1,11 +1,13 @@
 package com.xxdb;
 
-import com.xxdb.streaming.client.*;
+import com.xxdb.streaming.client.PollingClient;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.*;
+import java.util.ResourceBundle;
+
+import static org.junit.Assert.*;
 
 
 public class AbstractClientTest {
@@ -33,12 +35,12 @@ public class AbstractClientTest {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         conn.run("st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-                "enableTableShareAndPersistence(table=st2, tableName=`Trades, asynWrite=true, compress=true, cacheSize=20000, retentionMinutes=180)\t\n");
-        client.subscribe(HOST,PORT,"Trades","subTrades");
+                "enableTableShareAndPersistence(table=st2, tableName=`Trades_AbstractClient, asynWrite=true, compress=true, cacheSize=20000, retentionMinutes=180)\t\n");
+        client.subscribe(HOST,PORT,"Trades_AbstractClient","subTrades");
         assertTrue(client.isRemoteLittleEndian(HOST));
-        client.unsubscribe(HOST,PORT,"Trades","subTrades");
+        client.unsubscribe(HOST,PORT,"Trades_AbstractClient","subTrades");
         assertFalse(client.isRemoteLittleEndian("192.168.11.5"));
-        conn.run("dropStreamTable(`Trades);");
+        conn.run("dropStreamTable(`Trades_AbstractClient);");
 //        conn.run("x=1..100000000;y=compress(x,\"delta\");");
 //        Entity res = conn.run("y;");
 //        System.out.println(res.getString());

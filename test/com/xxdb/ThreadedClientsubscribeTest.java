@@ -1,13 +1,12 @@
 package com.xxdb;
 
-import com.xxdb.data.*;
 import com.xxdb.data.Vector;
+import com.xxdb.data.*;
 import com.xxdb.streaming.client.*;
 import org.javatuples.Pair;
 import org.junit.*;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.util.*;
 
 import static com.xxdb.data.Entity.DATA_TYPE.*;
@@ -1381,7 +1380,7 @@ public class ThreadedClientsubscribeTest {
             StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
             fail("no exception thrown");
         }catch(Exception ex){
-            assertEquals(HOST+":"+PORT+" Server response: 'The function [schema] expects 1 argument(s), but the actual number of arguments is: 0' script: 'schema()'",ex.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: 'schema() => The function [schema] expects 1 argument(s), but the actual number of arguments is: 0' script: 'schema()'",ex.getMessage());
         }
     }
 
