@@ -24,7 +24,7 @@ public class TopicManagerTest{
         assertEquals("dolphindb",tp1.getTopic("dolphindb"));
         tp.removeTopic("dolphindb");
         assertFalse(tp1.isTopicExists("dolphindb"));
-        assertTrue(tp.getAllTopic().isEmpty());
+        assertFalse(tp1.getAllTopic().isEmpty());
         assertNull(tp.getNameToIndex("dolphindb"));
 
     }
@@ -32,13 +32,13 @@ public class TopicManagerTest{
     @Test
     public void test_TopicManager_getAllTopic(){
         TopicManager tp = TopicManager.getInstance();
-        tp.addTopic("dolphindb");
-       assertNull(tp.getNameToIndex("dolphindb"));
+        tp.addTopic("dolphindb1");
+       assertNull(tp.getNameToIndex("dolphindb1"));
        TopicManager.Utils utils = new TopicManager.Utils();
-       assertEquals("dolphindb", TopicManager.Utils.getSiteFromTopic("dolphindb/"));
-       tp.addTopic("oceanBase");
+       assertEquals("dolphindb1", TopicManager.Utils.getSiteFromTopic("dolphindb1/"));
+       tp.addTopic("OceanBase");
        tp.addTopic("kingBase");
-       assertEquals("[dolphindb, kingBase, oceanBase]",tp.getAllTopic().toString());
+       assertEquals("[OceanBase, kingBase, dolphindb1]",tp.getAllTopic().toString());
     }
 
 }
