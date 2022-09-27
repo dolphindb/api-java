@@ -34,7 +34,7 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
                 for (long i = 0; i < scale_ - 1; i++) {
                     pow = pow.multiply(new BigDecimal(10));
                 }
-                BigDecimal dbvalue = new BigDecimal(value);
+                BigDecimal dbvalue = new BigDecimal(Double.toString(value));
                 value_ = (dbvalue.multiply(pow)).longValue();
             }
         }
