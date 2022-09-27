@@ -236,7 +236,7 @@ public class BasicDurationTest {
         System.out.println(size);
         bdv.Append(new BasicDuration(Entity.DURATION.NS,7));
         bdv.Append(new BasicDuration(Entity.DURATION.NS,8));
-        assertEquals(size=2,bdv.rows());
+        assertEquals(size+2,bdv.rows());
         BasicDurationVector bdv2 = new BasicDurationVector(2);
         bdv2.set(0,new BasicDuration(Entity.DURATION.MONTH,6));
         bdv2.set(1,new BasicDuration(Entity.DURATION.SECOND,15));
