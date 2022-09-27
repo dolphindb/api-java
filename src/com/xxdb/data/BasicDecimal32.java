@@ -23,16 +23,21 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
 
     public BasicDecimal32(double value, int scale){
         scale_ = scale;
-        if (value == 0)
-            value_ = 0;
-        else {
-            BigDecimal pow = new BigDecimal(10);
-            for (long i = 0; i < scale_ - 1; i++) {
-                pow = pow.multiply(new BigDecimal(10));
+        if (scale_ == 0){
+            value_ = (int) value;
+        }else {
+            if (value == 0)
+                value_ = 0;
+            else {
+                BigDecimal pow = new BigDecimal(10);
+                for (long i = 0; i < scale_ - 1; i++) {
+                    pow = pow.multiply(new BigDecimal(10));
+                }
+                BigDecimal dbvalue = new BigDecimal(value);
+                value_ = (dbvalue.multiply(pow)).intValue();
             }
-            BigDecimal dbvalue = new BigDecimal(value);
-            value_ = (dbvalue.multiply(pow)).intValue();
         }
+
     }
 
     BasicDecimal32(int[] all){
