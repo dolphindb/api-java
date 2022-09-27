@@ -4,6 +4,7 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.time.temporal.Temporal;
 
@@ -103,8 +104,18 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
     public Number getNumber() throws Exception {
         if (isNull())
             return Integer.MIN_VALUE;
-        else
-            return value_;
+        else{
+            BigDecimal pow = new BigDecimal(10);
+            for (long i = 0; i < scale_ - 1; i++) {
+                pow = pow.multiply(new BigDecimal(10));
+            }
+            BigDecimal dbvalue = new BigDecimal(value_);
+            double num = (dbvalue.divide(pow)).doubleValue();
+            if (num % 1 == 0)
+                return (int)num;
+            else
+                return num;
+        }
     }
 
     @Override

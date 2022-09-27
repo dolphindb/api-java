@@ -103,8 +103,18 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
     public Number getNumber() throws Exception {
         if (isNull())
             return Long.MIN_VALUE;
-        else
-            return value_;
+        else{
+            BigDecimal pow = new BigDecimal(10);
+            for (long i = 0; i < scale_ - 1; i++) {
+                pow = pow.multiply(new BigDecimal(10));
+            }
+            BigDecimal dbvalue = new BigDecimal(value_);
+            double num = (dbvalue.divide(pow)).doubleValue();
+            if (num % 1 == 0)
+                return (long)num;
+            else
+                return num;
+        }
     }
 
     @Override
