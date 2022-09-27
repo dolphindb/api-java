@@ -81,7 +81,7 @@ public class BasicShortTest {
     @Test
     public void test_isNull() throws Exception {
         BasicShort bs = new BasicShort(Short.MIN_VALUE);
-        assertNull(bs.getNumber());
+        assertTrue(bs.isNull());
         assertEquals("",bs.getString());
         assertFalse(new BasicShort(Short.MAX_VALUE).equals(null));
         assertEquals("11",new BasicShort((short) 11).getJsonString());
@@ -163,5 +163,15 @@ public class BasicShortTest {
         list.add((short) 24);
         BasicShortVector bsv = new BasicShortVector(list);
         assertEquals(2,bsv.asof(new BasicShort((short) 20)));
+    }
+
+    @Test
+    public void test_BasicShortVector_Append() throws Exception {
+        BasicShortVector bsv = new BasicShortVector(new short[]{55,11,46});
+        int size = bsv.rows();
+        bsv.Append(new BasicShort((short) 88));
+        assertEquals(size+1,bsv.rows());
+        bsv.Append(new BasicShortVector(new short[]{16,23,11}));
+        assertEquals(size+4,bsv.rows());
     }
 }

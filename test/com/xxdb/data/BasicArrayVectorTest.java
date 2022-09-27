@@ -996,14 +996,15 @@ public class BasicArrayVectorTest {
         DBConnection conn = new DBConnection();
         conn.connect(HOST, PORT);
         int[] index = new int[]{0,1,2};
-        Vector v=new BasicBooleanVector(2);
+        Vector v=new BasicBooleanVector(3);
         v.set(0,new BasicBoolean(true));
         v.set(1,new BasicBoolean(false));
+        v.set(2,new BasicBoolean(true));
         BasicArrayVector obj = new BasicArrayVector(index,v);
         assertEquals("[true]",obj.getVectorValue(1).getString());
         assertEquals("[false]",obj.getVectorValue(2).getString());
         assertTrue(obj.getString(1).contains("true"));
-        assertNull(obj.getSubVector(index));
+        assertNotNull(obj.getSubVector(index));
         assertFalse(obj.isNull(0));
         assertEquals("false",obj.get(1).toString());
         assertEquals(Entity.DATA_CATEGORY.LOGICAL,obj.get(1).getDataCategory());
@@ -1083,4 +1084,26 @@ public class BasicArrayVectorTest {
         AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(25,15);
         System.out.println(arryDate.serialize(0,1,71532,numElementAndPartial,bb));
     }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicArrayVector_AppendScalar() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("j = arrayVector(9 13 16 18,14:10:50+0..17);j;");
+        assertEquals(Entity.DATA_TYPE.DT_SECOND_ARRAY,bav.getDataType());
+        bav.Append(new BasicSecond(51072));
+    }
+
+    @Test
+    public void test_BasicArrayVector_AppendVector() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("c = arrayVector(1 6 14 15,take(21..75,15));c;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_INT_ARRAY,bav.getDataType());
+        bav.Append(new BasicIntVector(new int[]{78,92,15}));
+        assertEquals(size+1,bav.rows());
+    }
+
+
 }

@@ -92,11 +92,23 @@ public class BasicDoubleTest {
     public void test_BasicDouble_get() throws Exception {
         BasicDouble bd = new BasicDouble(5.73);
         assertFalse(bd.equals(new BasicBoolean(true)));
-        assertNull(new BasicDouble(-Double.MAX_VALUE).getNumber());
+        assertNotNull(new BasicDouble(-Double.MAX_VALUE).getNumber());
         assertEquals("1E-6",new BasicDouble(0.000001).getString());
         assertEquals("1E6",new BasicDouble(1000000.0).getString());
         assertEquals("1E6",new BasicDouble(1000000.0).getJsonString());
         assertEquals("Infinity",new BasicDouble(Double.POSITIVE_INFINITY).getString());
+    }
+
+    @Test
+    public void test_BasicDoubleVector_Append() throws Exception {
+        BasicDoubleVector bdv = new BasicDoubleVector(new double[]{0.61,0.32,0.77});
+        int size = bdv.rows();
+        bdv.Append(new BasicDouble(1.243));
+        assertEquals(size+1,bdv.rows());
+        assertEquals("1.243",bdv.get(3).getString());
+        bdv.Append(new BasicDoubleVector(new double[]{2.33,2.798}));
+        assertEquals(size+3,bdv.rows());
+        assertEquals(2.798,bdv.getDouble(5),0);
     }
 
 

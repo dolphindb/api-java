@@ -56,7 +56,7 @@ public class BasicSymbolVector extends AbstractVector {
 		this.base  = base;
 		if(copy){
 			this.values = new int[values.length];
-			System.arraycopy(this.values, 0, values, 0, values.length);
+			System.arraycopy(values, 0, this.values, 0, values.length);
 		}
 		else{
 			this.values = values;

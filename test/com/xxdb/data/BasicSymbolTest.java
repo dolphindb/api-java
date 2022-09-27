@@ -8,10 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
 import static org.junit.Assert.*;
 public class BasicSymbolTest {
@@ -69,9 +66,9 @@ public class BasicSymbolTest {
         assertTrue(bsv.isNull(2));
     }
 
-    @Test
+    @Test(expected = Exception.class)
     public void test_basicSymbolVector_values(){
-        BasicSymbolVector bsv = new BasicSymbolVector(new SymbolBase(3),new int[]{2,9,16,75,34},true);
+        BasicSymbolVector bsv = new BasicSymbolVector(new SymbolBase(5),new int[]{2,9,16,75,34},true);
         System.out.println(bsv.getString());
     }
 
@@ -482,5 +479,23 @@ public class BasicSymbolTest {
         AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(3,1);
         assertEquals(12,bsv.serialize(0,0,3,numElementAndPartial,bb));
         System.out.println(Arrays.toString(bb.array()));
+    }
+
+    @Test
+    public void test_BasicSymbolVector_Append(){
+        List<String> list = new ArrayList<>();
+        list.add("GaussDB");
+        list.add("GoldenDB");
+        BasicSymbolVector bsv = new BasicSymbolVector(list);
+        int size = bsv.rows();
+        bsv.Append(new BasicInt(0));
+        assertEquals(size+1,bsv.rows());
+        System.out.println(bsv.getString());
+        try {
+            bsv.Append(new BasicShortVector(new short[]{5, 7, 1}));
+        }catch(RuntimeException re){
+            assertTrue(re.getMessage().contains("SymbolVector does not support append a vector"));
+        }
+        assertEquals(size+1,bsv.rows());
     }
 }

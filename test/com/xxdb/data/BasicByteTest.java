@@ -82,7 +82,7 @@ public class BasicByteTest {
     @Test
     public void test_BasicByte() throws Exception {
         BasicByte bb = new BasicByte(Byte.MIN_VALUE);
-        assertNull(bb.getNumber());
+        assertTrue(bb.isNull());
         assertFalse(bb.equals(6));
     }
 
@@ -533,8 +533,19 @@ public class BasicByteTest {
         ByteBuffer bb = ByteBuffer.allocate(20);
         System.out.println(bb.remaining());
         AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(30,2);
-       int m = bbv.serialize(0,0,4,numElementAndPartial,bb);
-       assertEquals(4,m);
+        int m = bbv.serialize(0,0,4,numElementAndPartial,bb);
+        assertEquals(4,m);
         System.out.println(bb.get(3));
+    }
+
+    @Test
+    public void test_BasicByteVector_Append() throws Exception {
+        BasicByteVector bbv = new BasicByteVector(new byte[]{'d','o','l','p','h','i','n'});
+        int size = bbv.rows();
+        bbv.Append(new BasicByte((byte) 'd'));
+        bbv.Append(new BasicByte((byte) 'b'));
+        assertEquals(size+2,bbv.rows());
+        bbv.Append(new BasicByteVector(new byte[]{'t','i','m','i','n','g'}));
+        assertEquals(size+8,bbv.rows());
     }
 }

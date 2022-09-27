@@ -77,7 +77,7 @@ public class BasicIntTest {
     @Test
     public void test_BasicInt() throws Exception {
         BasicInt bi = new BasicInt(Integer.MIN_VALUE);
-        assertNull(bi.getNumber());
+        assertNotNull(bi.getNumber());
         assertFalse(bi.equals(null));
     }
 
@@ -156,5 +156,18 @@ public class BasicIntTest {
         BasicIntVector biv = new BasicIntVector(list);
         assertEquals(3,biv.asof(new BasicInt(12)));
         assertEquals(0,biv.asof(new BasicInt(6)));
+    }
+
+    @Test
+    public void test_BasicIntVector_Append() throws Exception {
+        BasicIntVector biv = new BasicIntVector(new int[]{5,11,23});
+        int size = biv.size;
+        int capacity = biv.capaticy;
+        biv.Append(new BasicInt(12));
+        assertEquals(size+1,biv.rows());
+        assertEquals(capacity*2,biv.capaticy);
+        biv.Append(new BasicIntVector(new int[]{40,21,33}));
+        assertEquals(size+4,biv.size);
+        assertEquals(capacity*2+3,biv.capaticy);
     }
 }
