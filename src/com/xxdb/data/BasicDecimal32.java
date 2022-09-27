@@ -104,7 +104,9 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
     public Number getNumber() throws Exception {
         if (isNull())
             return Integer.MIN_VALUE;
-        else{
+        else if (scale_ == 0){
+            return value_;
+        }else {
             BigDecimal pow = new BigDecimal(10);
             for (long i = 0; i < scale_ - 1; i++) {
                 pow = pow.multiply(new BigDecimal(10));
