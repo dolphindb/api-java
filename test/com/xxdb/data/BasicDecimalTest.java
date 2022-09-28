@@ -481,6 +481,32 @@ public class BasicDecimalTest {
         conn.run("undef(`t1,SHARED);");
     }
 
+    @Test
+    public void test_BasicDecimal32_compareTo(){
+        BasicDecimal32 bd1 = new BasicDecimal32(15,2);
+        BasicDecimal32 bd2 = new BasicDecimal32(15,2);
+        assertEquals(0,bd1.compareTo(bd2));
+        assertEquals(0,bd2.compareTo(bd1));
+        BasicDecimal32 bd3 = new BasicDecimal32(15,3);
+        assertEquals(0,bd1.compareTo(bd3));
+        BasicDecimal32 bd4 = new BasicDecimal32(17,3);
+        assertEquals(-1,bd1.compareTo(bd4));
+        assertEquals(1,bd4.compareTo(bd1));
+    }
+
+    @Test
+    public void test_BasicDecimal64_compareTo(){
+        BasicDecimal64 bd1 = new BasicDecimal64(15L,2);
+        BasicDecimal64 bd2 = new BasicDecimal64(15L,2);
+        assertEquals(0,bd1.compareTo(bd2));
+        assertEquals(0,bd2.compareTo(bd1));
+        BasicDecimal64 bd3 = new BasicDecimal64(15L,3);
+        assertEquals(0,bd1.compareTo(bd3));
+        BasicDecimal64 bd4 = new BasicDecimal64(17L,3);
+        assertEquals(-1,bd1.compareTo(bd4));
+        assertEquals(1,bd4.compareTo(bd1));
+    }
+
 
 
 
