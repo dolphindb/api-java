@@ -5072,5 +5072,197 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("clear!(t);");
     }
 
+    @Test
+    public void test_mtw_upsert_indexedTable_AlmostAllDatatype() throws Exception {
+        String script = "cbool = true false false;\n" +
+                "cchar = 'a' 'b' 'c';\n" +
+                "cshort = 122h 32h 45h;\n" +
+                "cint = 1 4 9;\n" +
+                "clong = 17l 39l 72l;\n" +
+                "cdate = 2013.06.13 2015.07.12 2019.08.15;\n" +
+                "cmonth = 2011.08M 2014.02M 2019.07M;\n" +
+                "ctime = 04:15:51.921 09:27:16.095 11:32:28.387;\n" +
+                "cminute = 03:25m 08:12m 10:15m;\n" +
+                "csecond = 01:15:20 04:26:45 09:22:59;\n" +
+                "cdatetime = 1976.09.10 02:31:42 1987.12.13 11:58:31 1999.12.10 20:49:23;\n" +
+                "ctimestamp = 1997.07.20 21:45:16.339 2002.11.26 12:40:31.783 2008.08.10 23:54:27.629;\n" +
+                "cnanotime = 01:25:33.365869429 03:47:25.364828475 08:16:22.748395721;\n" +
+                "cnanotimestamp = 2005.09.23 13:30:35.468385940 2007.12.11 14:54:38.949792731 2009.09.30 16:39:51.973463623;\n" +
+                "cfloat = 7.5f 0.79f 8.27f;\n" +
+                "cdouble = 5.7 7.2 3.9;\n" +
+                "cstring = \"hello\" \"hi\" \"here\";\n" +
+                "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n" +
+                "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
+                "cdecimal32 = decimal32(12 17 135.2,2)\n" +
+                "cdecimal64 = decimal64(18 24 33.878,4)\n" +
+                "t = indexedTable(`cint,cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
+                "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
+                "cstring,cdatehour,cdecimal32,cdecimal64);" +
+                "share t as st;";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","","st",
+                false,false,null,1000,1,1,"cint",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true"});
+        mtw.insert(new BasicBoolean(true),new BasicByte((byte) 'D'),new BasicShort((short) 21),new BasicInt(4),new BasicLong(55),new BasicDate(LocalDate.now()),
+                new BasicMonth(2012,Month.AUGUST),new BasicTime(LocalTime.of(13,7,55)),new BasicMinute(LocalTime.of(11,40,53)),
+                new BasicSecond(895),new BasicDateTime(LocalDateTime.MIN),new BasicTimestamp(LocalDateTime.MAX),new BasicNanoTime(LocalTime.of(22,14,58,43847)),
+                new BasicNanoTimestamp(LocalDateTime.of(2013,11,4,13,34,49,424246)),new BasicFloat((float) 12.71),new BasicDouble(0.783),
+                new BasicString("MongoDB"),new BasicDateHour(LocalDateTime.now()),new BasicDecimal32(98,2),new BasicDecimal64(188.68,4));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from st;");
+        assertEquals(3,ua.rows());
+        System.out.println(ua.getString());
+        assertEquals(0,conn.run("select * from st where cminute=08:12m").rows());
+        assertEquals(1,conn.run("select * from st where cminute=11:40m").rows());
+        conn.run("undef(`st,SHARED);");
+        conn.run("clear!(t);");
+    }
+
+    @Test
+    public void test_mtw_upsert_KeyedTable_AlmostAllDatatype() throws Exception {
+        String script = "cbool = true false false;\n" +
+                "cchar = 'a' 'b' 'c';\n" +
+                "cshort = 122h 32h 45h;\n" +
+                "cint = 1 4 9;\n" +
+                "clong = 17l 39l 72l;\n" +
+                "cdate = 2013.06.13 2015.07.12 2019.08.15;\n" +
+                "cmonth = 2011.08M 2014.02M 2019.07M;\n" +
+                "ctime = 04:15:51.921 09:27:16.095 11:32:28.387;\n" +
+                "cminute = 03:25m 08:12m 10:15m;\n" +
+                "csecond = 01:15:20 04:26:45 09:22:59;\n" +
+                "cdatetime = 1976.09.10 02:31:42 1987.12.13 11:58:31 1999.12.10 20:49:23;\n" +
+                "ctimestamp = 1997.07.20 21:45:16.339 2002.11.26 12:40:31.783 2008.08.10 23:54:27.629;\n" +
+                "cnanotime = 01:25:33.365869429 03:47:25.364828475 08:16:22.748395721;\n" +
+                "cnanotimestamp = 2005.09.23 13:30:35.468385940 2007.12.11 14:54:38.949792731 2009.09.30 16:39:51.973463623;\n" +
+                "cfloat = 7.5f 0.79f 8.27f;\n" +
+                "cdouble = 5.7 7.2 3.9;\n" +
+                "cstring = \"hello\" \"hi\" \"here\";\n" +
+                "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n" +
+                "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
+                "cdecimal32 = decimal32(12 17 135.2,2)\n" +
+                "cdecimal64 = decimal64(18 24 33.878,4)\n" +
+                "t = keyedTable(`cint,cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
+                "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
+                "cstring,cdatehour,cdecimal32,cdecimal64);" +
+                "share t as st;";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","","st",
+                false,false,null,1000,1,1,"cint",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true"});
+        mtw.insert(new BasicBoolean(true),new BasicByte((byte) 'D'),new BasicShort((short) 21),new BasicInt(4),new BasicLong(55),new BasicDate(LocalDate.now()),
+                new BasicMonth(2012,Month.AUGUST),new BasicTime(LocalTime.of(13,7,55)),new BasicMinute(LocalTime.of(11,40,53)),
+                new BasicSecond(895),new BasicDateTime(LocalDateTime.MIN),new BasicTimestamp(LocalDateTime.MAX),new BasicNanoTime(LocalTime.of(22,14,58,43847)),
+                new BasicNanoTimestamp(LocalDateTime.of(2013,11,4,13,34,49,424246)),new BasicFloat((float) 12.71),new BasicDouble(0.783),
+                new BasicString("MongoDB"),new BasicDateHour(LocalDateTime.now()),new BasicDecimal32(98,2),new BasicDecimal64(188.68,4));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from st;");
+        assertEquals(3,ua.rows());
+        System.out.println(ua.getString());
+        assertEquals(0,conn.run("select * from st where cminute=08:12m").rows());
+        assertEquals(1,conn.run("select * from st where cminute=11:40m").rows());
+        conn.run("undef(`st,SHARED);");
+        conn.run("clear!(t);");
+    }
+
+    @Test
+    public void test_mtw_upsert_PartitionedTable_AlmostAllDatatype() throws Exception {
+        String script = "cbool = true false false;\n" +
+                "cchar = 'a' 'b' 'c';\n" +
+                "cshort = 122h 32h 45h;\n" +
+                "cint = 1 4 9;\n" +
+                "clong = 17l 39l 72l;\n" +
+                "cdate = 2013.06.13 2015.07.12 2019.08.15;\n" +
+                "cmonth = 2011.08M 2014.02M 2019.07M;\n" +
+                "ctime = 04:15:51.921 09:27:16.095 11:32:28.387;\n" +
+                "cminute = 03:25m 08:12m 10:15m;\n" +
+                "csecond = 01:15:20 04:26:45 09:22:59;\n" +
+                "cdatetime = 1976.09.10 02:31:42 1987.12.13 11:58:31 1999.12.10 20:49:23;\n" +
+                "ctimestamp = 1997.07.20 21:45:16.339 2002.11.26 12:40:31.783 2008.08.10 23:54:27.629;\n" +
+                "cnanotime = 01:25:33.365869429 03:47:25.364828475 08:16:22.748395721;\n" +
+                "cnanotimestamp = 2005.09.23 13:30:35.468385940 2007.12.11 14:54:38.949792731 2009.09.30 16:39:51.973463623;\n" +
+                "cfloat = 7.5f 0.79f 8.27f;\n" +
+                "cdouble = 5.7 7.2 3.9;\n" +
+                "cstring = \"hello\" \"hi\" \"here\";\n" +
+                "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n" +
+                "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
+                "cdecimal32 = decimal32(12 17 135.2,2)\n" +
+                "cdecimal64 = decimal64(18 24 33.878,4)\n" +
+                "t = table(cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
+                "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
+                "cstring,cdatehour,cdecimal32,cdecimal64);" +
+                "if(existsDatabase(\"dfs://testDecimal\")){" +
+                "dropDatabase(\"dfs://testDecimal\")}" +
+                "db = database(\"dfs://testDecimal\",VALUE,1..10);" +
+                "pt = db.createPartitionedTable(t,`pt,`cint);" +
+                "pt.append!(t)";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://testDecimal","pt",
+                false,false,null,1000,1,20,"cint",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`cint"});
+        mtw.insert(new BasicBoolean(true),new BasicByte((byte) 'D'),new BasicShort((short) 21),new BasicInt(4),new BasicLong(55),new BasicDate(LocalDate.now()),
+                new BasicMonth(2012,Month.AUGUST),new BasicTime(LocalTime.of(13,7,55)),new BasicMinute(LocalTime.of(11,40,53)),
+                new BasicSecond(895),new BasicDateTime(LocalDateTime.MIN),new BasicTimestamp(LocalDateTime.MAX),new BasicNanoTime(LocalTime.of(22,14,58,43847)),
+                new BasicNanoTimestamp(LocalDateTime.of(2013,11,4,13,34,49,424246)),new BasicFloat((float) 12.71),new BasicDouble(0.783),
+                new BasicString("MongoDB"),new BasicDateHour(LocalDateTime.now()),new BasicDecimal32(98,2),new BasicDecimal64(188.68,4));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from pt;");
+        assertEquals(3,ua.rows());
+        System.out.println(ua.getString());
+        assertEquals(0,conn.run("select * from pt where cminute=08:12m").rows());
+        assertEquals(1,conn.run("select * from pt where cminute=11:40m").rows());
+        conn.run("clear!(t);");
+    }
+
+    @Test
+    public void test_mtw_upsert_DimensionTable_AlmostAllDatatype() throws Exception {
+        String script = "cbool = true false false;\n" +
+                "cchar = 'a' 'b' 'c';\n" +
+                "cshort = 122h 32h 45h;\n" +
+                "cint = 1 4 9;\n" +
+                "clong = 17l 39l 72l;\n" +
+                "cdate = 2013.06.13 2015.07.12 2019.08.15;\n" +
+                "cmonth = 2011.08M 2014.02M 2019.07M;\n" +
+                "ctime = 04:15:51.921 09:27:16.095 11:32:28.387;\n" +
+                "cminute = 03:25m 08:12m 10:15m;\n" +
+                "csecond = 01:15:20 04:26:45 09:22:59;\n" +
+                "cdatetime = 1976.09.10 02:31:42 1987.12.13 11:58:31 1999.12.10 20:49:23;\n" +
+                "ctimestamp = 1997.07.20 21:45:16.339 2002.11.26 12:40:31.783 2008.08.10 23:54:27.629;\n" +
+                "cnanotime = 01:25:33.365869429 03:47:25.364828475 08:16:22.748395721;\n" +
+                "cnanotimestamp = 2005.09.23 13:30:35.468385940 2007.12.11 14:54:38.949792731 2009.09.30 16:39:51.973463623;\n" +
+                "cfloat = 7.5f 0.79f 8.27f;\n" +
+                "cdouble = 5.7 7.2 3.9;\n" +
+                "cstring = \"hello\" \"hi\" \"here\";\n" +
+                "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n" +
+                "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
+                "cdecimal32 = decimal32(12 17 135.2,2)\n" +
+                "cdecimal64 = decimal64(18 24 33.878,4)\n" +
+                "t = table(cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
+                "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
+                "cstring,cdatehour,cdecimal32,cdecimal64);" +
+                "if(existsDatabase(\"dfs://testDecimal\")){" +
+                "dropDatabase(\"dfs://testDecimal\")}" +
+                "db = database(\"dfs://testDecimal\",VALUE,1..10);" +
+                "pt = db.createTable(t,`pt);" +
+                "pt.append!(t)";
+        conn.run(script);
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://testDecimal","pt",
+                false,false,null,1000,1,1,"cint",null,
+                MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`cint"});
+        mtw.insert(new BasicBoolean(true),new BasicByte((byte) 'D'),new BasicShort((short) 21),new BasicInt(4),new BasicLong(55),new BasicDate(LocalDate.now()),
+                new BasicMonth(2012,Month.AUGUST),new BasicTime(LocalTime.of(13,7,55)),new BasicMinute(LocalTime.of(11,40,53)),
+                new BasicSecond(895),new BasicDateTime(LocalDateTime.MIN),new BasicTimestamp(LocalDateTime.MAX),new BasicNanoTime(LocalTime.of(22,14,58,43847)),
+                new BasicNanoTimestamp(LocalDateTime.of(2013,11,4,13,34,49,424246)),new BasicFloat((float) 12.71),new BasicDouble(0.783),
+                new BasicString("MongoDB"),new BasicDateHour(LocalDateTime.now()),new BasicDecimal32(98,2),new BasicDecimal64(188.68,4));
+        mtw.waitForThreadCompletion();
+        BasicTable ua = (BasicTable) conn.run("select * from pt;");
+        assertEquals(3,ua.rows());
+        System.out.println(ua.getString());
+        assertEquals(0,conn.run("select * from pt where cminute=08:12m").rows());
+        assertEquals(1,conn.run("select * from pt where cminute=11:40m").rows());
+        conn.run("clear!(t);");
+    }
+
+
+
 }
 
