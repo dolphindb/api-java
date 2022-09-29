@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.ResourceBundle;
 
@@ -995,6 +996,45 @@ public class tableAppenderTest {
             Assert.assertEquals(expTime,vector.getNanoTime(ind));
 
         }
+    }
+
+    @Test
+    public void testBasicDecimal() throws Exception {
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3);
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3);
+        bd32v.set(0,new BasicDecimal32(31,4));
+        bd32v.set(1,new BasicDecimal32(22,4));
+        bd32v.set(2,new BasicDecimal32(17,4));
+        bd64v.set(0,new BasicDecimal64(45,2));
+        bd64v.set(1,new BasicDecimal64(9,2));
+        bd64v.set(2,new BasicDecimal64(11,2));
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        colNames.add("id");
+        colNames.add("a");
+        colNames.add("b");
+        BasicIntVector biv = new BasicIntVector(new int[]{1,2,3});
+        cols.add(biv);
+        cols.add(bd32v);
+        cols.add(bd64v);
+        BasicTable bt = new BasicTable(colNames,cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`a`b,[INT,DECIMAL32(2),DECIMAL64(4)])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","pt",conn);
+        appender.append(bt);
+        BasicTable aa = (BasicTable) conn.run("select * from pt");
+        Assert.assertEquals(Entity.DATA_TYPE.DT_DECIMAL32,aa.getColumn("a").getDataType());
+        Assert.assertEquals(Entity.DATA_TYPE.DT_DECIMAL64,aa.getColumn("b").getDataType());
+        BasicDecimal32 bd32 = (BasicDecimal32) aa.getColumn("a").get(1);
+        Assert.assertEquals(2,bd32.getScale());
+        BasicDecimal64 bd64 = (BasicDecimal64) aa.getColumn("b").get(1);
+        Assert.assertEquals(4,bd64.getScale());
     }
 
 }
