@@ -612,4 +612,171 @@ public class AutoFitTableUpsertTest {
         aftu.upsert(bt);
     }
 
+    @Test
+    public void test_BasicDecimal_AutoFitTableUpsert_indexedTable() throws Exception {
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        String script = "t=indexedTable(`sym,1:0,`sym`datetime`price`qty,[STRING,DATETIME,DECIMAL32(2),DECIMAL64(4)])";
+        conn.run(script);
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        colNames.add("sym");
+        colNames.add("datetime");
+        colNames.add("price");
+        colNames.add("qty");
+        BasicStringVector bsv = new BasicStringVector(new String[]{"Huya","Tonghuashun","maoyan"});
+        cols.add(bsv);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
+        cols.add(bdtv);
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3);
+        bd32v.set(0,new BasicDecimal32(11,2));
+        bd32v.set(1,new BasicDecimal32(19,2));
+        bd32v.set(2,new BasicDecimal32(23,2));
+        cols.add(bd32v);
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3);
+        bd64v.set(0,new BasicDecimal64(25,4));
+        bd64v.set(1,new BasicDecimal64(49,4));
+        bd64v.set(2,new BasicDecimal64(14,4));
+        cols.add(bd64v);
+        BasicTable bt = new BasicTable(colNames,cols);
+        AutoFitTableUpsert aftu = new AutoFitTableUpsert("","t",conn,true,null,null);
+        aftu.upsert(bt);
+        BasicTable ua = (BasicTable) conn.run("select * from t;");
+        for (int i = 0; i < 3; i++) {
+            assertEquals(bsv.get(i),ua.getColumn("sym").get(i));
+            assertEquals(bdtv.get(i),ua.getColumn("datetime").get(i));
+            assertEquals(bd32v.get(i).getString(),ua.getColumn("price").get(i).getString());
+            assertEquals(bd64v.get(i).getString(),ua.getColumn("qty").get(i).getString());
+        }
+        conn.run("clear!(t)");
+    }
+
+    @Test
+    public void test_BasicDecimal_AutoFitTableUpsert_KeyTable() throws Exception {
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        String script = "t=keyedTable(`sym,1:0,`sym`datetime`price`qty,[STRING,DATETIME,DECIMAL32(2),DECIMAL64(4)])";
+        conn.run(script);
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        colNames.add("sym");
+        colNames.add("datetime");
+        colNames.add("price");
+        colNames.add("qty");
+        BasicStringVector bsv = new BasicStringVector(new String[]{"Huya","Tonghuashun","maoyan"});
+        cols.add(bsv);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
+        cols.add(bdtv);
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3);
+        bd32v.set(0,new BasicDecimal32(11,2));
+        bd32v.set(1,new BasicDecimal32(19,2));
+        bd32v.set(2,new BasicDecimal32(23,2));
+        cols.add(bd32v);
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3);
+        bd64v.set(0,new BasicDecimal64(25,4));
+        bd64v.set(1,new BasicDecimal64(49,4));
+        bd64v.set(2,new BasicDecimal64(14,4));
+        cols.add(bd64v);
+        BasicTable bt = new BasicTable(colNames,cols);
+        AutoFitTableUpsert aftu = new AutoFitTableUpsert("","t",conn,true,null,null);
+        aftu.upsert(bt);
+        BasicTable ua = (BasicTable) conn.run("select * from t;");
+        for (int i = 0; i < 3; i++) {
+            assertEquals(bsv.get(i),ua.getColumn("sym").get(i));
+            assertEquals(bdtv.get(i),ua.getColumn("datetime").get(i));
+            assertEquals(bd32v.get(i).getString(),ua.getColumn("price").get(i).getString());
+            assertEquals(bd64v.get(i).getString(),ua.getColumn("qty").get(i).getString());
+        }
+        conn.run("clear!(t)");
+    }
+
+    @Test
+    public void test_BasicDecimal_AutoFitTableUpsert_PartitionedTable() throws Exception {
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        String script = "if(existsDatabase(\"dfs://testDecimal\")){" +
+                "dropDatabase(\"dfs://testDecimal\")}" +
+                "db = database(\"dfs://testDecimal\",VALUE,\"Huya\" \"Tonghuashun\" \"maoyan\");" +
+                "t=keyedTable(`sym,1000:0,`sym`datetime`price`qty,[STRING,DATETIME,DECIMAL32(2),DECIMAL64(4)]);" +
+                "pt = db.createPartitionedTable(t,`pt,`sym);" +
+                "pt.append!(t)";
+        conn.run(script);
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        colNames.add("sym");
+        colNames.add("datetime");
+        colNames.add("price");
+        colNames.add("qty");
+        BasicStringVector bsv = new BasicStringVector(new String[]{"Huya","Tonghuashun","maoyan"});
+        cols.add(bsv);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
+        cols.add(bdtv);
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3);
+        bd32v.set(0,new BasicDecimal32(11,2));
+        bd32v.set(1,new BasicDecimal32(19,2));
+        bd32v.set(2,new BasicDecimal32(23,2));
+        cols.add(bd32v);
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3);
+        bd64v.set(0,new BasicDecimal64(25,4));
+        bd64v.set(1,new BasicDecimal64(49,4));
+        bd64v.set(2,new BasicDecimal64(14,4));
+        cols.add(bd64v);
+        BasicTable bt = new BasicTable(colNames,cols);
+        String[] keyCols = new String[]{"sym"};
+        AutoFitTableUpsert aftu = new AutoFitTableUpsert("dfs://testDecimal","pt",conn,true,keyCols,null);
+        aftu.upsert(bt);
+        BasicTable ua = (BasicTable) conn.run("select * from pt;");
+        for (int i = 0; i < 3; i++) {
+            assertEquals(bsv.get(i),ua.getColumn("sym").get(i));
+            assertEquals(bdtv.get(i),ua.getColumn("datetime").get(i));
+            assertEquals(bd32v.get(i).getString(),ua.getColumn("price").get(i).getString());
+            assertEquals(bd64v.get(i).getString(),ua.getColumn("qty").get(i).getString());
+        }
+        conn.run("clear!(t)");
+    }
+
+    @Test
+    public void test_BasicDecimal_AutoFitTableUpsert_DimensionTable() throws Exception {
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        String script = "if(existsDatabase(\"dfs://testDecimal\")){" +
+                "dropDatabase(\"dfs://testDecimal\")}" +
+                "db = database(\"dfs://testDecimal\",VALUE,\"Huya\" \"Tonghuashun\" \"maoyan\");" +
+                "t=keyedTable(`sym,1000:0,`sym`datetime`price`qty,[STRING,DATETIME,DECIMAL32(2),DECIMAL64(4)]);" +
+                "pt = db.createTable(t,`pt);" +
+                "pt.append!(t)";
+        conn.run(script);
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        colNames.add("sym");
+        colNames.add("datetime");
+        colNames.add("price");
+        colNames.add("qty");
+        BasicStringVector bsv = new BasicStringVector(new String[]{"Huya","Tonghuashun","maoyan"});
+        cols.add(bsv);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
+        cols.add(bdtv);
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3);
+        bd32v.set(0,new BasicDecimal32(11,2));
+        bd32v.set(1,new BasicDecimal32(19,2));
+        bd32v.set(2,new BasicDecimal32(23,2));
+        cols.add(bd32v);
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3);
+        bd64v.set(0,new BasicDecimal64(25,4));
+        bd64v.set(1,new BasicDecimal64(49,4));
+        bd64v.set(2,new BasicDecimal64(14,4));
+        cols.add(bd64v);
+        BasicTable bt = new BasicTable(colNames,cols);
+        String[] keyCols = new String[]{"sym"};
+        AutoFitTableUpsert aftu = new AutoFitTableUpsert("dfs://testDecimal","pt",conn,true,keyCols,null);
+        aftu.upsert(bt);
+        BasicTable ua = (BasicTable) conn.run("select * from pt;");
+        for (int i = 0; i < 3; i++) {
+            assertEquals(bsv.get(i),ua.getColumn("sym").get(i));
+            assertEquals(bdtv.get(i),ua.getColumn("datetime").get(i));
+            assertEquals(bd32v.get(i).getString(),ua.getColumn("price").get(i).getString());
+            assertEquals(bd64v.get(i).getString(),ua.getColumn("qty").get(i).getString());
+        }
+        conn.run("clear!(t)");
+    }
 }

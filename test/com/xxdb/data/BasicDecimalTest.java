@@ -4,6 +4,7 @@ import com.xxdb.*;
 import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 import com.xxdb.route.PartitionedTableAppender;
+import com.xxdb.route.tableAppender;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.PollingClient;
 import com.xxdb.streaming.client.TopicPoller;
@@ -506,8 +507,5 @@ public class BasicDecimalTest {
         assertEquals(-1,bd1.compareTo(bd4));
         assertEquals(1,bd4.compareTo(bd1));
     }
-
-
-
 
 }
