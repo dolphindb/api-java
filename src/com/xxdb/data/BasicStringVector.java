@@ -277,8 +277,12 @@ public class BasicStringVector extends AbstractVector{
 		{
 			return new String(blobValues.get(index), StandardCharsets.UTF_8);
 		}
-		else
-			return values[index];
+		else{
+			if (isNull(index))
+				return "";
+			else
+				return values[index];
+		}
 	}
 
 	@Override

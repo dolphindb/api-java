@@ -22,7 +22,11 @@ public class BasicUuid extends BasicInt128 {
 
 	@Override
 	public String getString() {
-		return new UUID(value.high, value.low).toString();
+		if (isNull())
+			return "";
+		else
+			return new UUID(value.high, value.low).toString();
+
 	}
 	
 	public static BasicUuid fromString(String name){

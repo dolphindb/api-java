@@ -56,6 +56,8 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 	public String getString(){
 		if (isBlob)
 			return new String(blobValue, StandardCharsets.UTF_8);
+		if (isNull())
+			return "";
 		return value;
 	}
 

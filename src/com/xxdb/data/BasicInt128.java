@@ -61,7 +61,10 @@ public class BasicInt128 extends AbstractScalar {
 
 	@Override
 	public String getString() {
-		return String.format("%016x%016x", value.high, value.low);
+		if(isNull())
+			return "";
+		else
+			return String.format("%016x%016x", value.high, value.low);
 	}
 
 	@Override
