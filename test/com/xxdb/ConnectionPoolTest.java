@@ -1106,7 +1106,8 @@ public class ConnectionPoolTest {
                 "    dropDatabase(\"dfs://testArrayVector\")\n" +
                 "}\n" +
                 "db = database(\"dfs://testArrayVector\",RANGE,int(1..100),,\"TSDB\")\n" +
-                "t = table(1000000:0,`cint`char`complex`datehour`datetime`date`double`float`int128`int`ipaddr`long`minute`month`nanotimestamp`nanotime`point`second`short`timestamp`time`uuid,[INT,CHAR[],COMPLEX[],DATEHOUR[],DATETIME[],DATE[],DOUBLE[],FLOAT[],INT128[],INT[],IPADDR[],LONG[],MINUTE[],MONTH[],NANOTIMESTAMP[],NANOTIME[],POINT[],SECOND[],SHORT[],TIMESTAMP[],TIME[],UUID[]])\n" +
+                "t = table(1000000:0,`cint`char`complex`datehour`datetime`date`double`float`int128`int`ipaddr`long`minute`month`nanotimestamp`nanotime`point`second`short`timestamp`time`uuid" +
+                ",[INT,CHAR[],COMPLEX[],DATEHOUR[],DATETIME[],DATE[],DOUBLE[],FLOAT[],INT128[],INT[],IPADDR[],LONG[],MINUTE[],MONTH[],NANOTIMESTAMP[],NANOTIME[],POINT[],SECOND[],SHORT[],TIMESTAMP[],TIME[],UUID[]])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
         conn.run(script);
         ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);

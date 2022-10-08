@@ -34,7 +34,8 @@ public class BasicMonth extends BasicInt{
 	protected BasicMonth(int value){
 		super(value);
 	}
-	
+
+
 	public YearMonth getMonth(){
 		if(isNull())
 			return null;
