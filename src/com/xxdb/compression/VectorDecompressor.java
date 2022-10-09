@@ -1,5 +1,7 @@
 package com.xxdb.compression;
 
+import com.xxdb.data.BasicDecimal32Vector;
+import com.xxdb.data.BasicDecimal64Vector;
 import com.xxdb.data.Vector;
 
 import java.io.IOException;
@@ -18,16 +20,22 @@ public class VectorDecompressor {
 		int dataType = in.readByte();
 		int unitLength = in.readByte();
 		in.skipBytes(2);
-		int extra = in.readInt();
+		int extra = 0;
+		extra = in.readInt();
 		int elementCount = in.readInt();
 		//read checkSum
 		in.readInt();
-
+		int tmp = extra;
 		if (dataType < DATA_TYPE.DT_BOOL_ARRAY.getValue())
 			extra=1;
 		ExtendedDataInput decompressedIn = DecoderFactory.get(compression).	decompress(in, compressedBytes - 20, unitLength, elementCount, isLittleEndian, extra);
 		DATA_TYPE dt = DATA_TYPE.valueOf(dataType);
-		return (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, dt, decompressedIn, extended);
+		if (dt == DATA_TYPE.DT_DECIMAL32)
+			return new BasicDecimal32Vector(DATA_FORM.DF_VECTOR, decompressedIn, extra);
+		else if (dt == DATA_TYPE.DT_DECIMAL64)
+			return new BasicDecimal64Vector(DATA_FORM.DF_VECTOR, decompressedIn, extra);
+		else
+			return (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, dt, decompressedIn, extended);
 	}
 
 }
