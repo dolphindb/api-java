@@ -26,13 +26,16 @@ public class BasicDecimal64Vector extends AbstractVector{
         capaticy = values.length;
     }
 
-    public BasicDecimal64Vector(DATA_FORM df, ExtendedDataInput in) throws IOException{
+    public BasicDecimal64Vector(DATA_FORM df, ExtendedDataInput in, int extra) throws IOException{
         super(df);
         int rows = in.readInt();
         int cols = in.readInt();
         int size = rows * cols;
         values = new long[size];
-        scale_ = in.readInt();
+        if (extra != -1)
+            scale_ = extra;
+        else
+            scale_ = in.readInt();
         int totalBytes = size * 8;
         int off = 0;
         boolean little = in.isLittleEndian();
