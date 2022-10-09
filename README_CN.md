@@ -59,7 +59,7 @@ DBConnection类提供如下主要方法：
 |isBusy()|判断当前会话是否正忙|
 |close()|关闭当前会话|
 
-Java API 的实际用例参见[example目录](https://github.com/dolphindb/api-java/tree/master/example)。
+Java API 的实际用例参见[example目录](./example)。
 
 ## 2. 建立DolphinDB连接
 
