@@ -4,7 +4,6 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.math.BigDecimal;
 import java.time.temporal.Temporal;
 
@@ -38,7 +37,6 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
                 value_ = (dbvalue.multiply(pow)).intValue();
             }
         }
-
     }
 
     BasicDecimal32(int[] all){
