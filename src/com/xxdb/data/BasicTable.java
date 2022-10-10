@@ -341,6 +341,21 @@ public class BasicTable extends AbstractEntity implements Table{
 		return new BasicTable(names_, cols);
 	}
 
+	public Table getSubTable(int startRow, int endRow){
+		int colCount = columns_.size();
+		List<Vector> cols = new ArrayList<>();
+		for (int i = 0; i < colCount; i++){
+			int index = startRow;
+			int[] indices = new int[endRow - startRow+1];
+			for (int j = 0; j < indices.length; j++){
+				indices[j] = index;
+				index++;
+			}
+			cols.add(columns_.get(i).getSubVector(indices));
+		}
+		return new BasicTable(names_, cols);
+	}
+
 	@Override
 	public void addColumn(String colName, Vector col) {
 		names_.add(colName);
