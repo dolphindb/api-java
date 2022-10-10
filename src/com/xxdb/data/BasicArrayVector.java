@@ -226,10 +226,6 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public Entity get(int index) {
-		return valueVec.get(index);
-	}
-
-	public Vector getVectorValue(int index) {
 		int startPosValueVec = index == 0 ? 0 : rowIndices[index - 1];
 		int rows = rowIndices[index] - startPosValueVec;
 		DATA_TYPE valueType = DATA_TYPE.valueOf(type.getValue()-64);
@@ -249,6 +245,10 @@ public class BasicArrayVector extends AbstractVector {
 			}
 		}
 		return value;
+	}
+
+	public Vector getVectorValue(int index) {
+		return (Vector) get(index);
 	}
 
 	@Override
@@ -317,6 +317,19 @@ public class BasicArrayVector extends AbstractVector {
 			rowIndicesSize++;
 		}else
 			throw new RuntimeException("Append to arrayctor must be a vector. ");
+	}
+
+	@Override
+	public String getJsonString(int rowIndex) {
+		StringBuilder sb = new StringBuilder("[");
+		Vector value = (Vector) get(rowIndex);
+		for (int j = 0; j < value.rows(); j++){
+			sb.append(((Scalar)(value.get(j))).getJsonString());
+			if (j != value.rows() - 1)
+				sb.append(",");
+		}
+		sb.append("]");
+		return sb.toString();
 	}
 
 	@Override

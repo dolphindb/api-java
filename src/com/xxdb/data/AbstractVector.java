@@ -67,6 +67,11 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		return get(index).getString();
 	}
 
+	@Override
+	public String getJsonString(int rowIndex){
+		throw new RuntimeException("Only ArrayVector Support getJsonString");
+	}
+
 	public String getString(){
 		StringBuilder sb = new StringBuilder("[");
 		int size = Math.min(DISPLAY_ROWS, rows());
@@ -94,7 +99,6 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	}
 
 	public abstract int getUnitLength();
-
 	public abstract void Append(Scalar value) throws Exception;
 	public abstract void Append(Vector value) throws Exception;
 

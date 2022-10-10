@@ -33,4 +33,5 @@ public interface Vector extends Entity{
 	int serialize(int indexStart, int offect, int targetNumElement, AbstractVector.NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException;
 	void Append(Scalar value) throws Exception;
 	void Append(Vector value) throws Exception;
+	String getJsonString(int rowIndex);
 }

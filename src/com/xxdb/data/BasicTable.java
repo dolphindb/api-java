@@ -254,12 +254,14 @@ public class BasicTable extends AbstractEntity implements Table{
 		StringBuilder jsonStr = new StringBuilder();
 		try {
 			if(rowIndex<rows()){
-				jsonStr.append("{");
+				jsonStr.append("{\"");
 				for(int i=0;i<names_.size();i++){
 					jsonStr.append(names_.get(i));
-					jsonStr.append(":");
+					jsonStr.append("\":");
 					if (columns_.get(i) instanceof BasicDoubleVector || columns_.get(i) instanceof BasicFloatVector)
 						jsonStr.append(((Scalar)columns_.get(i).get(rowIndex)).isNull() ? "null" : ((Scalar) columns_.get(i).get(rowIndex)).getNumber());
+					else if (columns_.get(i).getDataType().getValue() >= 65)
+						jsonStr.append(columns_.get(i).getJsonString(rowIndex));
 					else
 						jsonStr.append(((Scalar)columns_.get(i).get(rowIndex)).getJsonString());
 					if(i<names_.size()-1)
