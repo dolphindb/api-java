@@ -400,8 +400,12 @@ public class MultithreadedTableWriter {
             ifCallback_ = true;
             colTypes_.add(Entity.DATA_TYPE.DT_STRING);
         }
+        if (colExtra != null){
+            for (int i = 0; i < columnSize; i++){
+                colExtras_[i] = colExtra.getInt(i);
+            }
+        }
         for(int i = 0; i < columnSize; i++){
-            colExtras_[i] = colExtra.getInt(i);
             colNames_.add(colDefsName.getString(i));
             if (compressTypes_ != null){
                 boolean check = AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)), compressTypes_[i]);
