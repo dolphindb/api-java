@@ -254,8 +254,9 @@ public class BasicTable extends AbstractEntity implements Table{
 		StringBuilder jsonStr = new StringBuilder();
 		try {
 			if(rowIndex<rows()){
-				jsonStr.append("{\"");
+				jsonStr.append("{");
 				for(int i=0;i<names_.size();i++){
+					jsonStr.append("\"");
 					jsonStr.append(names_.get(i));
 					jsonStr.append("\":");
 					if (columns_.get(i) instanceof BasicDoubleVector || columns_.get(i) instanceof BasicFloatVector)
