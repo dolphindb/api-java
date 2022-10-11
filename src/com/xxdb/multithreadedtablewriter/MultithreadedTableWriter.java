@@ -132,7 +132,7 @@ public class MultithreadedTableWriter {
                     if (writeQueue_.size() == 0)
                         writeQueue_.add(tableWriter_.createListVector());
                 }
-                int startIndex = 1;
+                int startIndex = 0;
                 boolean isWriteDone = true;
                 BasicTable writeTable = null;
                 List<String> colNames = new ArrayList<>();
@@ -143,6 +143,7 @@ public class MultithreadedTableWriter {
                     callbackList.add(items.get(0));
                     items.remove(0);
                     colNames.remove(0);
+                    startIndex = 1;
                 }
                 try {
                     writeTable = new BasicTable(colNames, items);
