@@ -23,6 +23,18 @@ public class MultithreadedTableWriter {
         }
     };
 
+    static class ColInfo{
+        public Entity.DATA_TYPE type_;
+        public String name_;
+        public int extra_;
+
+        public ColInfo(){
+            type_ = Entity.DATA_TYPE.DT_OBJECT;
+            name_ = "";
+            extra_ = 0;
+        }
+    }
+
     public enum Mode{
         M_Append(0),
         M_Upsert(1);
@@ -30,10 +42,6 @@ public class MultithreadedTableWriter {
         private int value;
         Mode(int value){
             this.value = value;
-        }
-
-        Mode(){
-
         }
     }
 
@@ -108,7 +116,7 @@ public class MultithreadedTableWriter {
                 writeThread_.notify();
             }
         }
-
+        int allRow = 0;
         boolean writeAllData(){
             synchronized (busyLock_) {
                 List<Vector> items = new ArrayList<>();
@@ -124,14 +132,20 @@ public class MultithreadedTableWriter {
                     if (writeQueue_.size() == 0)
                         writeQueue_.add(tableWriter_.createListVector());
                 }
+                int startIndex = 1;
+                boolean isWriteDone = true;
+                BasicTable writeTable = null;
+                List<String> colNames = new ArrayList<>();
+                for (int i = 0; i < tableWriter_.colInfos_.length; i++){
+                    colNames.add(tableWriter_.colInfos_[i].name_);
+                }
                 if(tableWriter_.ifCallback_){
                     callbackList.add(items.get(0));
                     items.remove(0);
+                    colNames.remove(0);
                 }
-                boolean isWriteDone = true;
-                BasicTable writeTable = null;
                 try {
-                    writeTable = new BasicTable(tableWriter_.colNames_, items);
+                    writeTable = new BasicTable(colNames, items);
                 }catch (Exception e){
                     e.printStackTrace();
                     tableWriter_.logger_.warning("threadid=" + writeThread_.getId() + " sendindex=" + sentRows_ + " create table error: " + e);
@@ -165,7 +179,7 @@ public class MultithreadedTableWriter {
                         for (int i = 0; i < rows; i++){
                             List<Entity> tmp = new ArrayList<>();
                             for (int j = 0; j < cols; j++){
-                                if (tableWriter_.colTypes_.get(j).getValue() < 65)
+                                if (tableWriter_.colInfos_[startIndex].type_.getValue() < 65)
                                     tmp.add(items.get(j).get(i));
                                 else
                                     tmp.add(((BasicArrayVector) items.get(j)).getVectorValue(i));
@@ -278,9 +292,6 @@ public class MultithreadedTableWriter {
     private boolean isPartionedTable_;
     private boolean hasError_;
     private boolean isExiting_ = false;
-    private String partitionedColName_;
-    private List<String> colNames_=new ArrayList<>();
-    private List<Entity.DATA_TYPE> colTypes_=new ArrayList<>();
     private int[] compressTypes_=null;
     private Domain partitionDomain_;
     private int partitionColumnIdx_;
@@ -290,8 +301,8 @@ public class MultithreadedTableWriter {
     private ErrorCodeInfo errorCodeInfo_ = new ErrorCodeInfo();
     private Mode mode_;
     private String[] pModeOption_;
-    private int[] colExtras_;
     private boolean ifCallback_ = false;
+    private ColInfo[] colInfos_;
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
@@ -393,29 +404,39 @@ public class MultithreadedTableWriter {
         if (compressTypes_!=null && compressTypes_.length != columnSize) {
             throw new RuntimeException("The number of elements in parameter compressMethods does not match the column size "+columnSize);
         }
-        colExtras_ = new int[columnSize];
-        BasicIntVector colExtra= (BasicIntVector)colDefs.getColumn("extra");
-        BasicStringVector colDefsName = (BasicStringVector)colDefs.getColumn("name");
         if (callbackHandler != null){
             ifCallback_ = true;
-            colTypes_.add(Entity.DATA_TYPE.DT_STRING);
+            colInfos_ = new ColInfo[columnSize+1];
+        }else
+            colInfos_ = new ColInfo[columnSize];
+        for (int i = 0; i < colInfos_.length; i++){
+            ColInfo colInfo = new ColInfo();
+            colInfos_[i] = colInfo;
         }
-        if (colExtra != null){
-            for (int i = 0; i < columnSize; i++){
-                colExtras_[i] = colExtra.getInt(i);
-            }
-        }
-        for(int i = 0; i < columnSize; i++){
-            colNames_.add(colDefsName.getString(i));
-            if (compressTypes_ != null){
-                boolean check = AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)), compressTypes_[i]);
-                if (check)
-                    colTypes_.add(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
-                else
-                    throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
-            }
-            else{
-                colTypes_.add(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
+        BasicIntVector colExtra= (BasicIntVector)colDefs.getColumn("extra");
+        BasicStringVector colDefsName = (BasicStringVector)colDefs.getColumn("name");
+        int colDefsIndex = 0;
+        for(int i = 0; i < colInfos_.length; i++){
+            if (i == 0 && ifCallback_){
+                colInfos_[i].type_ = Entity.DATA_TYPE.DT_STRING;
+                colInfos_[i].name_ = colDefsName.getString(0) + "_id";
+                colInfos_[i].extra_ = -1;
+            }else {
+                colInfos_[i].name_ = colDefsName.getString(colDefsIndex);
+                if (colExtra != null){
+                    colInfos_[i].extra_ = colExtra.getInt(colDefsIndex);
+                }
+                if (compressTypes_ != null){
+                    boolean check = AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(colDefsIndex)), compressTypes_[colDefsIndex]);
+                    if (check)
+                        colInfos_[i].type_ = Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(colDefsIndex));
+                    else
+                        throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(colDefsIndex)));
+                }
+                else{
+                    colInfos_[i].type_ = Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(colDefsIndex));
+                }
+                colDefsIndex++;
             }
         }
         if(isPartionedTable_){
@@ -449,14 +470,14 @@ public class MultithreadedTableWriter {
             }
             if (ifCallback_)
                 partitionColumnIdx_++;
-            Entity.DATA_TYPE dataColType = colTypes_.get(partitionColumnIdx_);
+            Entity.DATA_TYPE dataColType = colInfos_[partitionColumnIdx_].type_;
             Entity.PARTITION_TYPE partitionColtype=Entity.PARTITION_TYPE.values()[partitionType];
             partitionDomain_ = DomainFactory.createDomain(partitionColtype, dataColType, partitionSchema);
         } else {//isPartionedTable_==false
             if(!partitionCol.isEmpty()){
                 int threadcolindex = -1;
-                for(int i=0; i<colNames_.size(); i++){
-                    if(colNames_.get(i).equals(partitionCol)){
+                for(int i=0; i<colInfos_.length; i++){
+                    if(colInfos_[i].name_.equals(partitionCol)){
                         threadcolindex=i;
                         break;
                     }
@@ -487,16 +508,19 @@ public class MultithreadedTableWriter {
                     writeThread.failedQueue_.clear();
                 }
                 synchronized (writeThread.writeQueue_) {
-                    int cols = colTypes_.size();
+                    int cols = colInfos_.length;
                     int size = writeThread.writeQueue_.size();
                     for (int i = 0; i < size; ++i)
                     {
+                        int startIndex = 1;
                         int rows = writeThread.writeQueue_.get(i).get(0).rows();
                         for (int row = 0; row < rows; ++row)
                         {
                             List<Entity> tmp = new ArrayList<>();
                             for (int j = 0; j < cols; ++j)
                             {
+                                if (ifCallback_ && j == 0)
+                                    continue;
                                 tmp.add(writeThread.writeQueue_.get(i).get(j).get(row));
                             }
                             unwrittenData.add(tmp);
@@ -562,11 +586,11 @@ public class MultithreadedTableWriter {
         }
         if(threads_.size() > 1){
             if(isPartionedTable_){
-                Vector pvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(partitionColumnIdx_),records.size());
+                Vector pvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colInfos_[partitionColumnIdx_].type_,records.size());
                 int rowindex=0;
                 try {
                     for (List<Entity> row : records) {
-                        if (row.size() != colTypes_.size()) {
+                        if (row.size() != colInfos_.length) {
                             return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter, "Column counts don't match.");
                         }
                         if (row.get(partitionColumnIdx_) != null) {
@@ -583,7 +607,7 @@ public class MultithreadedTableWriter {
                 }catch (Exception e){
                     e.printStackTrace();
                     return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter, "Row in records " + rowindex +
-                            " mismatch type " + colTypes_.get(partitionColumnIdx_));
+                            " mismatch type " + colInfos_[partitionColumnIdx_].type_);
                 }
                 List<Integer> threadindexes = partitionDomain_.getPartitionKeys(pvector);
                 try {
@@ -593,11 +617,11 @@ public class MultithreadedTableWriter {
                 }catch (Exception e){
                 }
             }else{
-                Vector partionvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colTypes_.get(threadByColIndexForNonPartion_),records.size());
+                Vector partionvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colInfos_[threadByColIndexForNonPartion_].type_,records.size());
                 int rowindex=0;
                 try{
                     for(List<Entity> row : records) {
-                        if (row.size() != colTypes_.size()) {
+                        if (row.size() != colInfos_.length) {
                             return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter, "Column counts don't match.");
                         }
                         Scalar scalar=(Scalar) row.get(threadByColIndexForNonPartion_);
@@ -610,7 +634,7 @@ public class MultithreadedTableWriter {
                 }catch (Exception e){
                     e.printStackTrace();
                     return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter, "Row in records " + rowindex +
-                            " mismatch type " + colTypes_.get(partitionColumnIdx_));
+                            " mismatch type " + colInfos_[partitionColumnIdx_].type_);
                 }
                 int threadindex;
                 try {
@@ -644,7 +668,7 @@ public class MultithreadedTableWriter {
             }
             int size = row.size();
             for (int i = 0; i < size; i++){
-                if (colTypes_.get(i).getValue() < 65){
+                if (colInfos_[i].type_.getValue() < 65){
                     writerThread.writeQueue_.get(writerThread.writeQueue_.size()-1).get(i).Append((Scalar) row.get(i));
                 }else {
                     writerThread.writeQueue_.get(writerThread.writeQueue_.size()-1).get(i).Append((Vector) row.get(i));
@@ -659,7 +683,7 @@ public class MultithreadedTableWriter {
         if(isExiting()){
             throw new RuntimeException("Thread is exiting. ");
         }
-        if(!ifCallback_ && args.length!=colTypes_.size()){
+        if(args.length!=colInfos_.length){
             return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter,"Column counts don't match.");
         }
         try {
@@ -667,21 +691,16 @@ public class MultithreadedTableWriter {
             int colindex = 0;
             Entity.DATA_TYPE dataType;
             boolean isAllNull = true;
-            int j = 0;
             for (Object one : args) {
-                dataType = colTypes_.get(colindex);
+                dataType = colInfos_[colindex].type_;
                 Entity entity;
                 isAllNull = false;
-                entity = BasicEntityFactory.createScalar(dataType, one, colExtras_[j]);
+                entity = BasicEntityFactory.createScalar(dataType, one, colInfos_[colindex].extra_);
                 if (entity == null) {
                     return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, "Data conversion error: " + dataType);
                 }
                 prow.add(entity);
                 colindex++;
-                if (one instanceof String && ifCallback_ && j == 0) {
-                    continue;
-                }
-                j++;
             }
             if(isAllNull){
                 return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, "Can't insert a Null row.");
@@ -715,9 +734,9 @@ public class MultithreadedTableWriter {
 
     private List<Vector> createListVector(){
         List<Vector> tmp = new ArrayList<>();
-        int cols = colTypes_.size();
+        int cols = colInfos_.length;
         for (int i = 0; i < cols; i++){
-            Entity.DATA_TYPE type = colTypes_.get(i);
+            Entity.DATA_TYPE type = colInfos_[i].type_;
             if (type.getValue() >= 65)
                 tmp.add(new BasicArrayVector(type, 1));
             else

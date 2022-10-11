@@ -491,5 +491,4 @@ public class BasicArrayVector extends AbstractVector {
 			valuesOffect += curRows;
 		}
 	}
-
 }
