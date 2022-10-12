@@ -15,6 +15,7 @@ import java.time.YearMonth;
 import java.util.*;
 
 import static com.xxdb.data.BasicDecimalTest.HOST;
+import static com.xxdb.data.BasicDecimalTest.PORT;
 import static org.junit.Assert.*;
 
 public class BasicTableTest {
@@ -389,7 +390,155 @@ public class BasicTableTest {
             assertTrue(isJSON2(bt.getRowJson(i)));
             System.out.println(bt.getRowJson(i));
         }
+    }
 
+    @Test
+    public void test_BasicTable_getSubTable() {
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        colNames.add("bool");
+        colNames.add("char");
+        colNames.add("short");
+        colNames.add("int");
+        colNames.add("long");
+        colNames.add("date");
+        colNames.add("month");
+        colNames.add("time");
+        colNames.add("minute");
+        colNames.add("second");
+        colNames.add("datetime");
+        colNames.add("timestamp");
+        colNames.add("nanotime");
+        colNames.add("nanotimestamp");
+        colNames.add("float");
+        colNames.add("double");
+        colNames.add("string");
+        colNames.add("uuid");
+        colNames.add("datehour");
+        colNames.add("ipaddr");
+        colNames.add("int128");
+        colNames.add("complex");
+        colNames.add("point");
+        //colNames.add("decimal32");
+        //colNames.add("decimal64");
+        BasicBooleanVector bbv = new BasicBooleanVector(1);
+        BasicByteVector bbyv = new BasicByteVector(1);
+        BasicShortVector bsv = new BasicShortVector(1);
+        BasicIntVector biv = new BasicIntVector(1);
+        BasicLongVector blv = new BasicLongVector(1);
+        BasicDateVector bdv = new BasicDateVector(1);
+        BasicMonthVector bmv = new BasicMonthVector(1);
+        BasicTimeVector btv = new BasicTimeVector(1);
+        BasicMinuteVector bmiv = new BasicMinuteVector(1);
+        BasicSecondVector bsev = new BasicSecondVector(1);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(1);
+        BasicTimestampVector btsv = new BasicTimestampVector(1);
+        BasicNanoTimeVector bntv = new BasicNanoTimeVector(1);
+        BasicNanoTimestampVector bntsv = new BasicNanoTimestampVector(1);
+        BasicFloatVector bfv = new BasicFloatVector(1);
+        BasicDoubleVector bdov = new BasicDoubleVector(1);
+        BasicStringVector bstv = new BasicStringVector(1);
+        BasicUuidVector buv = new BasicUuidVector(1);
+        BasicDateHourVector bdhv = new BasicDateHourVector(1);
+        BasicIPAddrVector bipv = new BasicIPAddrVector(1);
+        BasicInt128Vector bi128v = new BasicInt128Vector(1);
+        BasicComplexVector bcv = new BasicComplexVector(1);
+        BasicPointVector bpv = new BasicPointVector(1);
+        //BasicDecimal32Vector bd32v = new BasicDecimal32Vector(1);
+        //BasicDecimal64Vector bd64v = new BasicDecimal64Vector(1);
+        for(int i=0;i<1048576;i++){
+            bbv.add((byte) (i%2));
+            bbyv.add((byte) ('a'+i%26));
+            bsv.add((short) (i%255));
+            biv.add(i);
+            blv.add(i);
+            bdv.add(i);
+            bmv.add(i);
+            btv.add(i);
+            bmiv.add(i%1440);
+            bsev.add(i%86400);
+            bdtv.add(i);
+            btsv.add(i);
+            bntv.add(i);
+            bntsv.add(i);
+            bfv.add((float) (i+3.5));
+            bdov.add(i+0.75);
+            bstv.add(i+"st");
+            buv.add(new Long2(i+15,i+1));
+            bdhv.add(i);
+            bipv.add(new Long2(i+13,i+31));
+            bi128v.add(new Long2(i+4,i+19));
+            bcv.add(new Double2(i+0.35,i+1.66));
+            bpv.add(new Double2(i+1.98,i+0.21));
+            //bd32v.add(i);
+            //bd64v.add(i);
+        }
+        cols.add(bbv);
+        cols.add(bbyv);
+        cols.add(bsv);
+        cols.add(biv);
+        cols.add(blv);
+        cols.add(bdv);
+        cols.add(bmv);
+        cols.add(btv);
+        cols.add(bmiv);
+        cols.add(bsev);
+        cols.add(bdtv);
+        cols.add(btsv);
+        cols.add(bntv);
+        cols.add(bntsv);
+        cols.add(bfv);
+        cols.add(bdov);
+        cols.add(bstv);
+        cols.add(buv);
+        cols.add(bdhv);
+        cols.add(bipv);
+        cols.add(bi128v);
+        cols.add(bcv);
+        cols.add(bpv);
+        //cols.add(bd32v);
+        //cols.add(bd64v);
+        BasicTable bt = new BasicTable(colNames,cols);
+        assertEquals(1048577,bt.rows());
+        Table gs = bt.getSubTable(5,15);
+        System.out.println(gs.getString());
+        Table ge = bt.getSubTable(100000,100100);
+        System.out.println(ge.getString());
+    }
+
+    @Test(timeout = 60000)
+    public void test_BasicTable_GetSubTable_DFS() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        String script = "n=10000000;\n" +
+                "bool = take(true false,n);\n" +
+                "char = take('a'..'z',n);\n" +
+                "short = take(1h..255h,n);\n" +
+                "int = take(1..2000,n);\n" +
+                "long = take(2000l..5000l,n);\n" +
+                "date = take(2012.01.01..2016.12.31,n);\n" +
+                "month = take(2012.01M..2021.12M,n);\n" +
+                "time = take(01:01:01.001..23:59:59.999,n);\n" +
+                "minute = take(01:01m..23:59m,n);\n" +
+                "second = take(01:01:01..23:59:59,n);\n" +
+                "datetime = take(2022.10.14 01:01:01..2022.10.14 23:59:59,n);\n" +
+                "timestamp = take(2022.10.14 01:01:01.001..2022.10.14 23:59:59.999,n);\n" +
+                "nanotime = take(14:00:00.000000001..14:00:00.199999999,n);\n" +
+                "nanotimestamp = take(2022.10.14 13:39:51.000000001..2022.10.14 13:39:51.199999999,n);\n" +
+                "float = rand(33.2f,n);\n" +
+                "double = rand(53.1,n);\n" +
+                "string = take(\"orcl\" \"APPL\" \"AMZON\" \"GOOG\",n)\n" +
+                "datehour = take(datehour(2011.01.01 01:01:01..2011.12.31 23:59:59),n)\n" +
+                "t = table(bool,char,short,int,long,date,month,time,minute,second,datetime,timestamp,nanotime,nanotimestamp,float,double,string,datehour);\n" +
+                "if(existsDatabase(\"dfs://testSubTable\")){dropDatabase(\"dfs://testSubTable\")}\n" +
+                "db = database(\"dfs://testSubTable\",VALUE,1..2000);\n" +
+                "pt = db.createPartitionedTable(t,`pt,`int);\n" +
+                "pt.append!(t)";
+        conn.run(script);
+        BasicTable bt = (BasicTable) conn.run("select * from pt;");
+        assertEquals(10000000,bt.rows());
+        Table gs = bt.getSubTable(0,9999999);
+        System.out.println(gs.getString());
     }
 
 }
