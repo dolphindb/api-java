@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 public class BasicDecimal64Test {
 
@@ -60,6 +61,13 @@ public class BasicDecimal64Test {
         BasicDecimal64 Decimal64 = new BasicDecimal64(1.2312,18);
         assertEquals("1.231200000000000000",Decimal64.getString());
         assertEquals(1.2312,Decimal64.getNumber());
+    }
+
+    @Test
+    public void testBasicDecimal64_scale_19() throws Exception {
+        BasicDecimal64 Decimal64 = new BasicDecimal64(1.2312,19);
+       // assertEquals("1.2312000000000000000",Decimal64.getString());
+        assertNotEquals(1.2312,Decimal64.getNumber());
     }
 
     @Test
@@ -210,7 +218,7 @@ public class BasicDecimal64Test {
         BasicDecimal64 re1 =(BasicDecimal64) conn.run("decimal64(NULL,6)");
         assertEquals("",re1.getString());
         assertEquals(true,re1.isNull());
-        assertEquals(null,re1.getNumber());
+        assertEquals(-9223372036854775808L,re1.getNumber());
     }
 
     @Test

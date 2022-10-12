@@ -714,4 +714,35 @@ public class AbstractTest{
         assertTrue(AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.DT_INT,Vector.COMPRESS_DELTA));
         assertFalse(AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.DT_SYMBOL,2));
     }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicAbstractScalar_getScale(){
+        AbstractScalar as = new BasicInt(3);
+        as.getScale();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_AbstractVector_getJsonString(){
+        AbstractVector av = new BasicIntVector(new int[]{1,2,3});
+        av.getJsonString(1);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_AbstractVector_getExtraParamForType(){
+        AbstractVector av = new BasicDateVector(new int[]{15,22,37});
+        av.getExtraParamForType();
+    }
+
+    @Test
+    public void test_AbstractVector_writeCompressed() throws Exception {
+        AbstractVector av = new BasicDecimal32Vector(2);
+        av.set(0,new BasicDecimal32(11,2));
+        av.set(1,new BasicDecimal32(24,2));
+        av.writeCompressed(new BigEndianDataOutputStream(new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+                System.out.println(b);
+            }
+        }));
+    }
 }

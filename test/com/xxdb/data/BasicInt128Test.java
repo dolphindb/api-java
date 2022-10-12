@@ -128,7 +128,7 @@ public class BasicInt128Test {
         Long2[] arr = new Long2[]{new Long2(888L,800L),new Long2(220L,25L),null,new Long2(9000L,650L)};
         BasicInt128Vector bi128v = new BasicInt128Vector(arr,false);
         assertEquals("00000000000003780000000000000320",bi128v.get(0).getString());
-        assertEquals("00000000000000000000000000000000",bi128v.get(2).getString());
+        assertEquals("",bi128v.get(2).getString());
     }
 
     @Test

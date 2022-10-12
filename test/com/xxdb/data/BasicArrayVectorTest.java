@@ -998,8 +998,8 @@ public class BasicArrayVectorTest {
         l.add(0,v);
         l.add(1,v);
         BasicArrayVector obj = new BasicArrayVector(l);
-        assertEquals("1.1+2.5i",obj.get(0).getString());
-        assertEquals("2.6+7.9i",obj.get(1).getString());
+        assertEquals("[1.1+2.5i,2.6+7.9i]",obj.get(0).getString());
+        assertEquals("[1.1+2.5i,2.6+7.9i]",obj.get(1).getString());
         Map<String,Entity> map = new HashMap<>();
         map.put("complexVector",obj);
         conn.upload(map);
@@ -1022,8 +1022,8 @@ public class BasicArrayVectorTest {
         l.add(0,v);
         l.add(1,v);
         BasicArrayVector obj = new BasicArrayVector(l);
-        assertEquals("(0.8, 1.9)",obj.get(0).getString());
-        assertEquals("(4.7, 6.2)",obj.get(1).getString());
+        assertEquals("[(0.8, 1.9),(4.7, 6.2)]",obj.get(0).getString());
+        assertEquals("[(0.8, 1.9),(4.7, 6.2)]",obj.get(1).getString());
         Map<String,Entity> map = new HashMap<>();
         map.put("complexVector",obj);
         conn.upload(map);
@@ -1048,7 +1048,7 @@ public class BasicArrayVectorTest {
         assertTrue(obj.getString(1).contains("true"));
         assertNotNull(obj.getSubVector(index));
         assertFalse(obj.isNull(0));
-        assertEquals("false",obj.get(1).toString());
+        assertEquals("[true]",obj.get(1).getString());
         assertEquals(Entity.DATA_CATEGORY.LOGICAL,obj.get(1).getDataCategory());
         assertEquals("interface com.xxdb.data.Entity",obj.getElementClass().toString());
         assertEquals("ARRAY",obj.getDataCategory().toString());
@@ -1167,5 +1167,27 @@ public class BasicArrayVectorTest {
         assertEquals("['%','>','7']",bav.getVectorValue(3).getString());
     }
 
+    @Test(expected = RuntimeException.class)
+    public void test_BasicArrayVector_String(){
+        BasicArrayVector bav = new BasicArrayVector(Entity.DATA_TYPE.DT_STRING_ARRAY,3);
+    }
+
+    @Test
+    public void test_BasicArrayVector_getSubVector_Null(){
+        BasicArrayVector bav = new BasicArrayVector(new int[]{1,2,3,4},new BasicIntVector(new int[]{1,2,3,4}));
+        assertNull(bav.getSubVector(new int[0]));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicArrayVector_add() throws Exception {
+        BasicArrayVector bav = new BasicArrayVector(new int[]{1,2,3,4},new BasicIntVector(new int[]{1,2,3,4}));
+        bav.add(new BasicInt(5));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicArrayVector_addRange(){
+        BasicArrayVector bav = new BasicArrayVector(new int[]{1,2,3,4},new BasicIntVector(new int[]{2,4,6,8}));
+        bav.addRange(new Object[]{new BasicInt(9),new BasicInt(17)});
+    }
 
 }

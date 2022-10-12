@@ -141,7 +141,7 @@ public class BasicDecimalTest {
         conn.run("insert into t values(10,20,50);");
         BasicTable resn = (BasicTable) conn.run("t;");
         assertNotNull(resn.getRowJson(3));
-        assertEquals("{a:10,b:20.00,c:50.0000}",resn.getRowJson(3));
+        assertEquals("{\"a\":10,\"b\":20.00,\"c\":50.0000}",resn.getRowJson(3));
         assertEquals(4,resn.rows());
     }
 

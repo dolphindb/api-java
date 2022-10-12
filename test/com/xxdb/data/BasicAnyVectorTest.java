@@ -234,7 +234,7 @@ public class BasicAnyVectorTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void test_basicAnyVector_Append() throws Exception {
+    public void test_basicAnyVector_Append_scalar() throws Exception {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT);
         Entity[] arr = new Entity[12];
@@ -250,5 +250,61 @@ public class BasicAnyVectorTest {
         assertEquals("2022.08.01",bav.get(11).getString());
         bav.Append(new BasicInt(16));
     }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicAnyVector_Append_vector() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        Entity[] arr = new Entity[12];
+        for (int i = 0; i < 10; i++) {
+            arr[i] = conn.run(""+i);
+        }
+        arr[10] = conn.run("11.11");
+        arr[11] = conn.run("true");
+        BasicAnyVector bav = new BasicAnyVector(arr,false);
+        assertEquals("4",bav.get(4).getString());
+        assertEquals("(0,1,2,3,4,5,6,7,8,9,...)",bav.getString());
+        bav.set(11, (Scalar) conn.run("date(2022.08.01);"));
+        assertEquals("2022.08.01",bav.get(11).getString());
+        bav.Append(new BasicIntVector(new int[]{26,31,23,24}));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicAnyVector_AddRange() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        Entity[] arr = new Entity[12];
+        for (int i = 0; i < 10; i++) {
+            arr[i] = conn.run(""+i);
+        }
+        arr[10] = conn.run("11.11");
+        arr[11] = conn.run("true");
+        BasicAnyVector bav = new BasicAnyVector(arr,false);
+        assertEquals("4",bav.get(4).getString());
+        assertEquals("(0,1,2,3,4,5,6,7,8,9,...)",bav.getString());
+        bav.set(11, (Scalar) conn.run("date(2022.08.01);"));
+        assertEquals("2022.08.01",bav.get(11).getString());
+        bav.addRange(new Object[]{new BasicInt(36),new BasicInt(54)});
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicAnyVector_Add() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        Entity[] arr = new Entity[12];
+        for (int i = 0; i < 10; i++) {
+            arr[i] = conn.run(""+i);
+        }
+        arr[10] = conn.run("11.11");
+        arr[11] = conn.run("true");
+        BasicAnyVector bav = new BasicAnyVector(arr,false);
+        assertEquals("4",bav.get(4).getString());
+        assertEquals("(0,1,2,3,4,5,6,7,8,9,...)",bav.getString());
+        bav.set(11, (Scalar) conn.run("date(2022.08.01);"));
+        assertEquals("2022.08.01",bav.get(11).getString());
+        bav.add(new BasicInt(33));
+    }
+
+
 
 }

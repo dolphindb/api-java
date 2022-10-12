@@ -28,8 +28,8 @@ public class AutoFitTableUpsertTest {
         conn.connect(HOST,PORT,"admin","123456");
         String dbName ="dfs://test_upsertTablewithIntArrayVectorToPartitionTableRangeType";
         String tableName = "pt";
-        String script = "dbName = \"dfs://test_upsertTablewithIntArrayVectorToPartitionTableRangeType\"\n"+
-                "if(exists(dbName)){\n"+
+        String script = "dbName = \"dfs://test_upsertTablewithIntArrayVectorToPartitionTableRangeType\";\n"+
+                "if(existsDatabase(dbName)){\n"+
                 "\tdropDatabase(dbName)\t\n"+
                 "}\n"+
                 "db  = database(dbName, RANGE,1 10000,,'TSDB')\n"+

@@ -3408,6 +3408,44 @@ public void test_SSL() throws Exception {
         assertEquals(4,tua.rows());
         assertEquals(25,tua.columns());
         assertEquals(ta.getString(),tua.getString());
+        conn.close();
+    }
+
+    @Test
+    public void test_upload_WideTable() throws Exception {
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        for(int i=0;i<1000;i++){
+            colNames.add("id"+i);
+            Vector v = null;
+            if((i%6) == 0){
+                v = new BasicIntVector(new int[]{i,i+5,i+10,i+15});
+            }else if((i%6) == 1){
+                v = new BasicDateVector(new int[]{i,i+105,i+110,i+115});
+            }else if((i%6) == 2){
+                v = new BasicComplexVector(new Double2[]{new Double2(i+0.1,i+0.2),new Double2(i+100.5,i-0.25),new Double2(i+1.35,i-0.75),new Double2(i+1.65,i-0.5)});
+            }else if((i%6) == 3){
+                v = new BasicDecimal32Vector(4);
+                v.set(0,new BasicDecimal32(i+3,4));
+                v.set(1,new BasicDecimal32(i+6,4));
+                v.set(2,new BasicDecimal32(i+9,4));
+                v.set(3,new BasicDecimal32(i+12,4));
+            }else if((i%6) == 4){
+                v = new BasicNanoTimeVector(new long[]{i+4,i+8,i+12,i+16});
+            }else{
+                v = new BasicByteVector(new byte[]{(byte) ('a'+i%6), (byte) ('e'+i%6), (byte) ('k'+i%6), (byte) ('q'+i%6)});
+            }
+            cols.add(v);
+        }
+        BasicTable bt = new BasicTable(colNames,cols);
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        Map<String,Entity> map = new HashMap<>();
+        map.put("wideTable",bt);
+        conn.upload(map);
+        BasicTable ua = (BasicTable) conn.run("wideTable;");
+        assertEquals(1000,ua.columns());
+        System.out.println(ua.getColumn("id15").getString());
     }
 
 }
