@@ -1,6 +1,9 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson.JSON;
 import com.xxdb.DBConnection;
+import com.xxdb.io.Double2;
+import com.xxdb.io.Long2;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -241,6 +244,152 @@ public class BasicTableTest {
         assertEquals(Entity.DATA_CATEGORY.MIXED,bt.getDataCategory());
         bt.addColumn(null,null);
         assertNull(bt.getColumn(null));
+    }
+
+    @Test
+    public void test_BasicTable_Date_ArrayVector_getRowJson() throws Exception {
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        colNames.add("id");
+        cols.add(new BasicIntVector(new int[]{1,2,3,4}));
+        colNames.add("date");
+        BasicDateVector bdv = new BasicDateVector(new int[]{13,637,4898,8495,9400,493,8009,1039,938,2748});
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,2,4,10},bdv);
+        cols.add(bdav);
+        colNames.add("month");
+        BasicMonthVector bmv = new BasicMonthVector(new int[]{291,284,2810,102,392,482,1839});
+        BasicArrayVector bmav = new BasicArrayVector(new int[]{2,3,6,7},bmv);
+        cols.add(bmav);
+        colNames.add("time");
+        BasicTimeVector btv = new BasicTimeVector(new int[]{940,293,139,589,348,468});
+        BasicArrayVector btav = new BasicArrayVector(new int[]{3,4,5,6},btv);
+        cols.add(btav);
+        colNames.add("minute");
+        BasicMinuteVector bmv2 = new BasicMinuteVector(new int[]{1,15,38,98,21,384,892,984,1371,904});
+        BasicArrayVector bmav2 = new BasicArrayVector(new int[]{4,6,9,10},bmv2);
+        cols.add(bmav2);
+        colNames.add("second");
+        BasicSecondVector bsv = new BasicSecondVector(new int[]{1440,2880,1560,1676,2022,4859,1020,8923});
+        BasicArrayVector bsav = new BasicArrayVector(new int[]{0,3,5,8},bsv);
+        cols.add(bsav);
+        colNames.add("datetime");
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{3849,1039,2301,4821,2392,9821,903});
+        BasicArrayVector bdtav = new BasicArrayVector(new int[]{1,2,3,7},bdtv);
+        cols.add(bdtav);
+        colNames.add("timestamp");
+        BasicTimestampVector btsv = new BasicTimestampVector(new long[]{47849203,338203920,447490282,484772,5940583,6443982847L,374626,58694873,57694732,69827472,6840392});
+        BasicArrayVector btsav = new BasicArrayVector(new int[]{2,5,9,11},btsv);
+        cols.add(btsav);
+        colNames.add("nanotime");
+        BasicNanoTimeVector bntv = new BasicNanoTimeVector(new long[]{4833,593028487,82019282,59481048,482487283,594829,920492030,583849291038L,382847373,482048294,5839490,40229482});
+        BasicArrayVector bntav = new BasicArrayVector(new int[]{2,8,9,12},bntv);
+        cols.add(bntav);
+        colNames.add("nanotimestamp");
+        BasicNanoTimestampVector bntsv = new BasicNanoTimestampVector(new long[]{37,4728,293,5920,29448,92854,29482,5938,39203});
+        BasicArrayVector bntsav = new BasicArrayVector(new int[]{1,3,4,9},bntsv);
+        cols.add(bntsav);
+        BasicTable bt = new BasicTable(colNames,cols);
+        for(int i=0;i<4;i++){
+            assertTrue(isJSON2(bt.getRowJson(i)));
+            System.out.println(bt.getRowJson(i));
+        }
+    }
+
+    public static boolean isJSON2(String str){
+        boolean result = false;
+        try{
+            Object obj = JSON.parse(str);
+            result = true;
+        }catch (Exception e){
+            result = false;
+        }
+        return result;
+    }
+
+    @Test
+    public void test_BasicTable_ArrayVector_NonDate_getRowJson() throws Exception {
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        colNames.add("id");
+        cols.add(new BasicIntVector(new int[]{1,2,3,4}));
+        colNames.add("bool");
+        BasicBooleanVector bbv = new BasicBooleanVector(new boolean[]{true,true,false,false,false,true,true,false,true});
+        BasicArrayVector bbav = new BasicArrayVector(new int[]{1,4,7,9},bbv);
+        cols.add(bbav);
+        colNames.add("char");
+        BasicByteVector byv = new BasicByteVector(new byte[]{'a','b','c','d','f','h','j','k','o','p','x','y','z'});
+        BasicArrayVector byav = new BasicArrayVector(new int[]{3,5,7,13},byv);
+        cols.add(byav);
+        colNames.add("short");
+        BasicShortVector bsv = new BasicShortVector(new short[]{1,2,4,5,6,10,11,13});
+        BasicArrayVector bsav = new BasicArrayVector(new int[]{2,5,7,8},bsv);
+        cols.add(bsav);
+        colNames.add("int");
+        BasicIntVector biv = new BasicIntVector(new int[]{3,4,5,7,8,10,11,12,13,16,17});
+        BasicArrayVector biav = new BasicArrayVector(new int[]{3,5,9,11},biv);
+        cols.add(biav);
+        colNames.add("long");
+        BasicLongVector blv = new BasicLongVector(new long[]{12,13,14,155,156,255,256,257,258,259,371,372});
+        BasicArrayVector blav = new BasicArrayVector(new int[]{3,5,10,12},blv);
+        cols.add(blav);
+        colNames.add("float");
+        BasicFloatVector bfv = new BasicFloatVector(new float[]{0.15F, 0.25F, 0.35F, 1.74F,1.84f,2.31F,2.41f,2.51f,3.62f});
+        BasicArrayVector bfav = new BasicArrayVector(new int[]{3,5,8,9},bfv);
+        cols.add(bfav);
+        colNames.add("double");
+        BasicDoubleVector bdv = new BasicDoubleVector(new double[]{4.731,4.732,4.733,5.105,5.115,5.125,5.135,6.001,6.102,6.203,7.009});
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{3,7,10,11},bdv);
+        cols.add(bdav);
+        colNames.add("string");
+        BasicStringVector bstv = new BasicStringVector(new String[]{"MySQL","Oracle","PostgreSQL","dolphindb"});
+        BasicArrayVector bstav = new BasicArrayVector(new int[]{1,2,3,4},bstv);
+        cols.add(bstav);
+        colNames.add("uuid");
+        BasicUuidVector buv = new BasicUuidVector(new Long2[]{new Long2(11,2),new Long2(32,175),new Long2(88,186)});
+        BasicArrayVector buav = new BasicArrayVector(new int[]{1,1,2,3},buv);
+        cols.add(buav);
+        colNames.add("datehour");
+        BasicDateHourVector bdhv = new BasicDateHourVector(new int[]{11,12,13,231,241,251,369,379,424,434,454});
+        BasicArrayVector bdhav = new BasicArrayVector(new int[]{3,6,8,11},bdhv);
+        cols.add(bdhav);
+        colNames.add("ipaddr");
+        BasicIPAddrVector bipv = new BasicIPAddrVector(new Long2[]{new Long2(980,12),new Long2(11,333),new Long2(15,345),new Long2(1,1997)});
+        BasicArrayVector bipav = new BasicArrayVector(new int[]{2,2,3,4},bipv);
+        cols.add(bipav);
+        colNames.add("int128");
+        BasicInt128Vector bi128v = new BasicInt128Vector(new Long2[]{new Long2(16,31),new Long2(1928,12),new Long2(201,2022),new Long2(189,342)});
+        BasicArrayVector bi128av = new BasicArrayVector(new int[]{1,3,3,4},bi128v);
+        cols.add(bi128av);
+        colNames.add("complex");
+        BasicComplexVector bcv = new BasicComplexVector(new Double2[]{new Double2(0.31,0.71),new Double2(87.28,28.12),new Double2(35.25,26.12),new Double2(27.09,90.23)});
+        BasicArrayVector bcav = new BasicArrayVector(new int[]{1,2,4,4},bcv);
+        cols.add(bcav);
+        colNames.add("point");
+        BasicPointVector bpv = new BasicPointVector(new Double2[]{new Double2(12.02,23.05),new Double2(21.02,32.05),new Double2(0.98,23.10),new Double2(22.45,0.76)});
+        BasicArrayVector bpav = new BasicArrayVector(new int[]{1,1,2,4},bpv);
+        cols.add(bpav);
+        colNames.add("decimal32");
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(4);
+        bd32v.set(0,new BasicDecimal32(16,2));
+        bd32v.set(1,new BasicDecimal32(25.3,2));
+        bd32v.set(2,new BasicDecimal32(32.4,2));
+        bd32v.set(3,new BasicDecimal32(66,2));
+        BasicArrayVector bd32av = new BasicArrayVector(new int[]{1,2,2,4},bd32v);
+        cols.add(bd32av);
+        colNames.add("decimal64");
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(4);
+        bd64v.set(0,new BasicDecimal64(31L,4));
+        bd64v.set(1,new BasicDecimal64(98.296,4));
+        bd64v.set(2,new BasicDecimal64(27.12,4));
+        bd64v.set(3,new BasicDecimal64(18L,4));
+        BasicArrayVector bd64av = new BasicArrayVector(new int[]{1,2,4,4},bd64v);
+        cols.add(bd64av);
+        BasicTable bt = new BasicTable(colNames,cols);
+        for(int i=0;i<bt.rows();i++){
+            assertTrue(isJSON2(bt.getRowJson(i)));
+            System.out.println(bt.getRowJson(i));
+        }
+
     }
 
 }

@@ -1482,9 +1482,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(2, bt.rows());
         assertEquals("[QQ,]", bt.getColumn("symbol").getString());
         assertEquals("[qq,]", bt.getColumn("string").getString());
-        assertEquals("[5d212a78-cc48-e3b1-4235-b4d91473ee87,00000000-0000-0000-0000-000000000000]", bt.getColumn("uuid").getString());
+        assertEquals("[5d212a78-cc48-e3b1-4235-b4d91473ee87,]", bt.getColumn("uuid").getString());
         assertEquals("[192.168.1.13,0.0.0.0]", bt.getColumn("ipaddr").getString());
-        assertEquals("[e1671797c52e15f763380b45e841ec32,00000000000000000000000000000000]", bt.getColumn("int128").getString());
+        assertEquals("[e1671797c52e15f763380b45e841ec32,]", bt.getColumn("int128").getString());
         assertEquals("[dsfgv,]", bt.getColumn("blob").getString());
         conn.run("undef(`t1,SHARED)");
     }

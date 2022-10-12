@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class BasicDecimal32Test {
     private static DBConnection conn;
@@ -62,9 +62,16 @@ public class BasicDecimal32Test {
     }
 
     @Test
+    public void testBasicDecimal32_scale_10() throws Exception {
+        BasicDecimal32 decimal32 = new BasicDecimal32(2.11,10);
+        assertNotEquals(2.11,decimal32.getNumber());
+    }
+
+    @Test
     public void testBasicDecimal32_getString1() {
         BasicDecimal32 Decimal32_a = new BasicDecimal32(103, 6);
         assertEquals("103.000000", Decimal32_a.getString());
+        assertEquals(Entity.DATA_CATEGORY.DENARY,Decimal32_a.getDataCategory());
     }
     @Test
     public void testBasicDecimal32_getString2() {
@@ -213,7 +220,7 @@ public class BasicDecimal32Test {
         BasicDecimal32 re1 =(BasicDecimal32) conn.run("decimal32(NULL,6)");
         assertEquals("",re1.getString());
         assertEquals(true,re1.isNull());
-        assertEquals(null,re1.getNumber());
+        assertEquals(-2147483648,re1.getNumber());
         assertEquals("DT_DECIMAL32",re1.getDataType().toString());
     }
 
@@ -329,6 +336,24 @@ public class BasicDecimal32Test {
     public void testBasicDecimal32_run_vector_all_NULL() throws IOException {
         BasicDecimal32Vector re1 =(BasicDecimal32Vector) conn.run("decimal32([int(),NULL,NULL],6)");
         assertEquals("[,,]",re1.getString());
+    }
+
+    @Test
+    public void test_BasicDecimal32Vector_basicFunction() throws Exception {
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(2);
+        bd32v.set(0,new BasicDecimal32(11,2));
+        bd32v.set(1,new BasicDecimal32(17,2));
+        assertFalse(bd32v.isNull(1));
+        assertEquals(BasicDecimal32.class,bd32v.getElementClass());
+        bd32v.setNull(0);
+        assertTrue(bd32v.isNull(0));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicDecimal32Vector_set() throws Exception {
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(2);
+        bd32v.set(0,new BasicDecimal32(12,3));
+        bd32v.set(1,new BasicDecimal32(16,4));
     }
 
 }
