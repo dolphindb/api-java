@@ -31,9 +31,9 @@ public class VectorDecompressor {
 		ExtendedDataInput decompressedIn = DecoderFactory.get(compression).	decompress(in, compressedBytes - 20, unitLength, elementCount, isLittleEndian, extra);
 		DATA_TYPE dt = DATA_TYPE.valueOf(dataType);
 		if (dt == DATA_TYPE.DT_DECIMAL32)
-			return new BasicDecimal32Vector(DATA_FORM.DF_VECTOR, decompressedIn, extra);
+			return new BasicDecimal32Vector(DATA_FORM.DF_VECTOR, decompressedIn, tmp);
 		else if (dt == DATA_TYPE.DT_DECIMAL64)
-			return new BasicDecimal64Vector(DATA_FORM.DF_VECTOR, decompressedIn, extra);
+			return new BasicDecimal64Vector(DATA_FORM.DF_VECTOR, decompressedIn, tmp);
 		else
 			return (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, dt, decompressedIn, extended);
 	}
