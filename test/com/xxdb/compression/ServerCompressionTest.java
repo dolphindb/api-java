@@ -462,7 +462,7 @@ public class ServerCompressionTest {
 
     @Test
     public void testCompressInt() throws Exception {
-        int n=1000000;
+        int n=10000000;
         Random rand = new Random();
         List<String> colNames = new ArrayList<>();
         colNames.add("date");
@@ -815,6 +815,35 @@ public class ServerCompressionTest {
         }
         assertEquals("Total unmatched values found", 0, count);
     }
+
+
+    static void compareBasicTable_has_decimal(BasicTable table, BasicTable newTable) throws Exception {
+        assertEquals("rows not equal", table.rows(), newTable.rows());
+        assertEquals("cols not equal", table.columns(), newTable.columns());
+        int count = 0;
+        int cols = table.columns();
+        for (int i = 0; i < cols; i++) {
+            AbstractVector v1 = (AbstractVector) table.getColumn(i);
+            AbstractVector v2 = (AbstractVector) newTable.getColumn(i);
+            if (!v1.equals(v2)) {
+                for (int j = 0; j < table.rows(); j++) {
+                    if (i == 1){
+                        String e1 = table.getColumn(i).get(j).getString();
+                        String e2 = newTable.getColumn(i).get(j).getString();
+                        if (!e1.equals(e2)) {
+                            if (count < 1000)
+                                System.out.println(i + "," + j + ": " + " expected: " + e1 + " actual: " + e2);
+                            count++;
+                        }
+                    }
+                }
+            }
+        }
+        assertEquals("Total unmatched values found", 0, count);
+    }
+
+
+
 
     @Test
     public void testCompressCharlz4() throws Exception {
@@ -1331,6 +1360,157 @@ public class ServerCompressionTest {
         compareBasicTable(table, newT);
     }
 */
+
+    @Test(expected = RuntimeException.class)
+    public void testCompressDecimal32delta() throws Exception {
+        int n=5000000;
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[n*2];
+        int baseTime = Utils.countDays(2000,1,1);
+        for (int i = 0; i < n*2; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        List<Vector> colVectors = new ArrayList<>();
+        BasicDateVector dateVector = new BasicDateVector(time);
+        dateVector.setCompressedMethod(1);
+        colVectors.add(dateVector);
+        conn.run("n=5000000*2;\n" +
+                "a = decimal32(rand(1000,n)\\10,4)");
+        BasicDecimal32Vector valVector = (BasicDecimal32Vector) conn.run("a");
+        valVector.setCompressedMethod(2);
+        colVectors.add(valVector);
+
+        BasicTable table = new BasicTable(colNames, colVectors);
+
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(100000:0,`date`val,[DATE,DECIMAL32(4)])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+    }
+
+    @Test
+    public void testCompressDecimal32() throws Exception {
+        int n=5000000;
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[n*2];
+        int baseTime = Utils.countDays(2000,1,1);
+        for (int i = 0; i < n*2; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        List<Vector> colVectors = new ArrayList<>();
+        BasicDateVector dateVector = new BasicDateVector(time);
+        dateVector.setCompressedMethod(1);
+        colVectors.add(dateVector);
+        conn.run("n="+n+"*2;\n" +
+                "a = decimal32(rand(1000,n)\\10,4)");
+        BasicDecimal32Vector valVector = (BasicDecimal32Vector) conn.run("a");
+        valVector.setCompressedMethod(1);
+        colVectors.add(valVector);
+
+        BasicTable table = new BasicTable(colNames, colVectors);
+
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(100000:0,`date`val,[DATE,DECIMAL32(4)])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(n*2, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable_has_decimal(table, newT);
+        //include null
+        BasicDecimal32Vector val1 = (BasicDecimal32Vector) conn.run("decimal32(rand(10.0,"+n+"),4)  join take(double(),"+n+")");
+        val1.setCompressedMethod(Vector.COMPRESS_LZ4);
+        colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val1);
+        table = new BasicTable(colNames, colVectors);
+        args = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,DECIMAL32(4)])" +
+                "share t as st");
+        count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(2*n, count.getInt());
+        newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable_has_decimal(table, newT);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testCompressDecimal64delta() throws Exception {
+        int n=5000000;
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[n*2];
+        int baseTime = Utils.countDays(2000,1,1);
+        for (int i = 0; i < n*2; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        List<Vector> colVectors = new ArrayList<>();
+        BasicDateVector dateVector = new BasicDateVector(time);
+        dateVector.setCompressedMethod(1);
+        colVectors.add(dateVector);
+        conn.run("n=5000000*2;\n" +
+                "a = decimal64(rand(1000,n)\\10,8)");
+        BasicDecimal64Vector valVector = (BasicDecimal64Vector) conn.run("a");
+        valVector.setCompressedMethod(2);
+        colVectors.add(valVector);
+
+        BasicTable table = new BasicTable(colNames, colVectors);
+
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(100000:0,`date`val,[DATE,DECIMAL64(8)])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+    }
+
+    @Test
+    public void testCompressDecimal64() throws Exception {
+        int n=5000000;
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[n*2];
+        int baseTime = Utils.countDays(2000,1,1);
+        for (int i = 0; i < n*2; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        List<Vector> colVectors = new ArrayList<>();
+        BasicDateVector dateVector = new BasicDateVector(time);
+        dateVector.setCompressedMethod(1);
+        colVectors.add(dateVector);
+        conn.run("n="+n+"*2;\n" +
+                "a = decimal64(rand(1000,n)\\10,8)");
+        BasicDecimal64Vector valVector = (BasicDecimal64Vector) conn.run("a");
+        valVector.setCompressedMethod(1);
+        colVectors.add(valVector);
+
+        BasicTable table = new BasicTable(colNames, colVectors);
+
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(100000:0,`date`val,[DATE,DECIMAL64(8)])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(n*2, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable_has_decimal(table, newT);
+        //include null
+        BasicDecimal64Vector val1 = (BasicDecimal64Vector) conn.run("decimal64(rand(10.0,"+n+"),8)  join take(double(),"+n+")");
+        val1.setCompressedMethod(Vector.COMPRESS_LZ4);
+        colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val1);
+        table = new BasicTable(colNames, colVectors);
+        args = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,DECIMAL64(8)])" +
+                "share t as st");
+        count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(2*n, count.getInt());
+        newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable_has_decimal(table, newT);
+    }
+
     @After
     public void tearDown() throws Exception {
         conn.close();
