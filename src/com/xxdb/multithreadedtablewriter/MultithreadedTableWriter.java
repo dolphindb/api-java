@@ -116,7 +116,6 @@ public class MultithreadedTableWriter {
                 writeThread_.notify();
             }
         }
-        int allRow = 0;
         boolean writeAllData(){
             synchronized (busyLock_) {
                 List<Vector> items = new ArrayList<>();
@@ -184,6 +183,7 @@ public class MultithreadedTableWriter {
                                     tmp.add(items.get(j).get(i));
                                 else
                                     tmp.add(((BasicArrayVector) items.get(j)).getVectorValue(i));
+                                startIndex++;
                             }
                             failedQueue_.add(tmp);
                         }
@@ -226,19 +226,13 @@ public class MultithreadedTableWriter {
             if (tableWriter_.mode_ == Mode.M_Append){
                 if (tableWriter_.dbName_.isEmpty()) {
                     scriptTableInsert_ = "tableInsert{\"" + tableWriter_.tableName_ + "\"}";
-                }
-                else if (tableWriter_.isPartionedTable_) {//partitioned table
-                    scriptTableInsert_ = "tableInsert{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")}";
-                }
-                else {// single partitioned table
+                } else {// single partitioned table
                     scriptTableInsert_ = "tableInsert{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")}";
                 }
             }else if (tableWriter_.mode_ == Mode.M_Upsert){
                 StringBuilder sb = new StringBuilder();
                 if(tableWriter_.dbName_.isEmpty()){
                     sb.append("upsert!{" + tableWriter_.tableName_);
-                }else if(tableWriter_.isPartionedTable_){
-                    sb.append("upsert!{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")");
                 }else{
                     sb.append("upsert!{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")");
                 }
@@ -513,7 +507,6 @@ public class MultithreadedTableWriter {
                     int size = writeThread.writeQueue_.size();
                     for (int i = 0; i < size; ++i)
                     {
-                        int startIndex = 1;
                         int rows = writeThread.writeQueue_.get(i).get(0).rows();
                         for (int row = 0; row < rows; ++row)
                         {

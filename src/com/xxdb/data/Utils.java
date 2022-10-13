@@ -326,7 +326,8 @@ public class Utils {
 	}
 	
 	public static LocalTime parseMinute(int minutes){
-		return LocalTime.of(minutes / 60, minutes % 60);
+		int hours = (minutes / 60) % 24;
+		return LocalTime.of(hours, minutes % 60);
 	}
 	
 	public static int murmur32(final byte[] data, final int len, final int seed) {
