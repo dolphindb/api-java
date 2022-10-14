@@ -508,4 +508,49 @@ public class BasicDecimalTest {
         assertEquals(1,bd4.compareTo(bd1));
     }
 
+    @Test
+    public void test_BasicDecimal32_method() throws Exception{
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456");
+        BasicDecimal32Vector b32v1 = (BasicDecimal32Vector) connection.run("decimal32(1..10, 4)");
+        BasicDecimal32Vector b32v2 = (BasicDecimal32Vector) connection.run("decimal32(1..5, 4)");
+        b32v1.combine(b32v2);
+        Vector b1 = b32v1.getSubVector(new int[]{1,3,4});
+        assertFalse(b32v1.isNull(1));
+        b32v1.setNull(1);
+        assertTrue(b32v1.isNull(1));
+        BasicDecimal32 b32 = new BasicDecimal32(11, 4);
+        b32.setNull();
+        b32v1.set(2, b32);
+        assertTrue(b32v1.isNull(2));
+        BasicDecimal32 bd = new BasicDecimal32(1, 2);
+        try {
+            b32v1.set(0, b32);
+        }catch (Exception e){
+            assertEquals("Value's scale is not the same as the vector's!", e.getMessage());
+        }
+    }
+
+    @Test
+    public void test_BasicDecimal64_method() throws Exception{
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect("192.168.1.116", 18999, "admin", "123456");
+        BasicDecimal64Vector b64v1 = (BasicDecimal64Vector) connection.run("decimal64(1..10, 4)");
+        BasicDecimal64Vector b64v2 = (BasicDecimal64Vector) connection.run("decimal64(1..5, 4)");
+        b64v1.combine(b64v2);
+        Vector b1 = b64v1.getSubVector(new int[]{1,3,4});
+        assertFalse(b64v1.isNull(1));
+        b64v1.setNull(1);
+        assertTrue(b64v1.isNull(1));
+        BasicDecimal64 b64 = new BasicDecimal64(11L, 4);
+        b64.setNull();
+        b64v1.set(2, b64);
+        assertTrue(b64v1.isNull(2));
+        BasicDecimal64 bd = new BasicDecimal64(1L, 2);
+        try {
+            b64v1.set(0, b64);
+        }catch (Exception e){
+            assertEquals("Value's scale is not the same as the vector's!", e.getMessage());
+        }
+    }
 }

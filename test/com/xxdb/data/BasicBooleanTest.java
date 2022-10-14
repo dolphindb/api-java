@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class BasicBooleanTest {
     @Test
@@ -124,5 +125,50 @@ public class BasicBooleanTest {
         assertEquals(size+1,bbv.rows());
         bbv.Append(new BasicBooleanVector(new boolean[]{true,true,false}));
         assertEquals(size+4,bbv.rows());
+    }
+
+    @Test
+    public void test_basicBooleanMartix(){
+        List<byte[]> value1 = new ArrayList<>();
+        for (int i = 0; i < 4; i++){
+            byte[] data = new byte[4];
+            for (int j = 0; j < 4; j++){
+                data[j] = (byte) j;
+            }
+            value1.add(data);
+        }
+        try {
+            BasicBooleanMatrix bm = new BasicBooleanMatrix(4, 4, null);
+        }catch (Exception e){
+            assertEquals("input list of arrays does not have 4 columns", e.getMessage());
+        }
+
+        try {
+            BasicBooleanMatrix bm = new BasicBooleanMatrix(4, 3, value1);
+        }catch (Exception e){
+            assertEquals("input list of arrays does not have 3 columns", e.getMessage());
+        }
+
+        List<byte[]> value2 = new ArrayList<>();
+        value2.add(null);
+        value2.add(new byte[]{1,2,3});
+
+        try {
+            BasicBooleanMatrix bm = new BasicBooleanMatrix(3, 2, value2);
+        }catch (Exception e){
+            assertEquals("The length of array 1 doesn't have 3 elements", e.getMessage());
+        }
+        BasicBooleanMatrix bm;
+        try {
+            bm = new BasicBooleanMatrix(4, 4, value1);
+            assertTrue(bm.getBoolean(1, 1));
+            assertEquals(new BasicBoolean(true).getBoolean(), ((BasicBoolean)bm.get(1, 1)).getBoolean());
+            assertFalse(bm.isNull(1, 1));
+            bm.setNull(1, 2);
+            assertTrue(bm.isNull(1, 2));
+            assertEquals(Entity.DATA_CATEGORY.LOGICAL, bm.getDataCategory());
+            bm.getClass();
+        }catch (Exception e){
+        }
     }
 }
