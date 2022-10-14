@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.awt.*;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.ResourceBundle;
+
+import static org.junit.Assert.assertEquals;
 
 public class tableAppenderTest {
 
@@ -1037,4 +1040,489 @@ public class tableAppenderTest {
         Assert.assertEquals(4,bd64.getScale());
     }
 
+    @Test
+    public void testgetDTString() throws IOException{
+        DBConnection connection = new DBConnection();
+        connection.connect("192.168.1.116", 18999, "admin", "123456");
+        tableAppender tableAppender = new tableAppender("dfs://twapinfo", "pt", connection, com.xxdb.route.tableAppender.APPEND_ACTION.fitColumnType);
+        Entity.DATA_TYPE[] data_types = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_ANY, Entity.DATA_TYPE.DT_BLOB,
+                Entity.DATA_TYPE.DT_BOOL, Entity.DATA_TYPE.DT_BYTE, Entity.DATA_TYPE.DT_CODE, Entity.DATA_TYPE.DT_COMPRESS,
+                Entity.DATA_TYPE.DT_DATASOURCE, Entity.DATA_TYPE.DT_DATE, Entity.DATA_TYPE.DT_DATEHOUR, Entity.DATA_TYPE.DT_DATEMINUTE,
+                Entity.DATA_TYPE.DT_DATETIME, Entity.DATA_TYPE.DT_DICTIONARY, Entity.DATA_TYPE.DT_DOUBLE, Entity.DATA_TYPE.DT_FLOAT,
+        Entity.DATA_TYPE.DT_FUNCTIONDEF, Entity.DATA_TYPE.DT_HANDLE, Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_INT128,
+        Entity.DATA_TYPE.DT_IPADDR, Entity.DATA_TYPE.DT_LONG, Entity.DATA_TYPE.DT_MINUTE, Entity.DATA_TYPE.DT_MONTH, Entity.DATA_TYPE.DT_NANOTIME,
+        Entity.DATA_TYPE.DT_NANOTIMESTAMP, Entity.DATA_TYPE.DT_OBJECT, Entity.DATA_TYPE.DT_STRING, Entity.DATA_TYPE.DT_RESOURCE, Entity.DATA_TYPE.DT_SECOND,
+        Entity.DATA_TYPE.DT_SHORT, Entity.DATA_TYPE.DT_SYMBOL, Entity.DATA_TYPE.DT_TIME, Entity.DATA_TYPE.DT_TIMESTAMP, Entity.DATA_TYPE.DT_UUID,
+                Entity.DATA_TYPE.DT_VOID, Entity.DATA_TYPE.DT_BOOL_ARRAY};
+
+        String[] data_type_string = new String[]{"ANY", "BLOB", "BOOL", "BYTE", "CODE", "COMPRESSED", "DATASOURCE", "DATE", "DATEHOUR", "DATEMINUTE",
+                "DATETIME", "DICTIONARY", "DOUBLE", "FLOAT", "FUNCTIONDEF", "HANDLE", "INT", "INT128", "IPADDR", "LONG", "MINUTE", "NANOTIME", "NANOTIMESTAMP",
+                "OBJECT", "STRING", "RESOURCE", "SECOND", "SHORT", "SYMBOL", "TIME", "TIMESTAMP", "UUID", "VOID", "Unrecognized type"};
+
+        for (int i = 0; i < data_types.length; i++){
+            String s = tableAppender.getDTString(data_types[i]);
+            assertEquals(data_type_string[i], s);
+        }
+    }
+
+    @Test
+    public void TestMon() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicMonthVector MONTH = (BasicMonthVector) conn.run("2021.05M + 1..10");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(MONTH);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("Mon");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`Mon,[INT,MONTH])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestMon,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestMon",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicMonthVector Tvector = (BasicMonthVector) Tappender.getColumn("Mon");
+            YearMonth expTime = MONTH.getMonth(ind);
+            Assert.assertEquals(expTime,Tvector.getMonth(ind));
+        }
+    }
+
+
+    @Test
+    public void TestDate() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicDateVector DATE = (BasicDateVector) conn.run("2021.05.04 + 1..10");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(DATE);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("date");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`date,[INT,DATE])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestDate,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestDate",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicDateVector Tvector = (BasicDateVector) Tappender.getColumn("date");
+            LocalDate expTime = DATE.getDate(ind);
+            Assert.assertEquals(expTime,Tvector.getDate(ind));
+        }
+    }
+
+
+    @Test
+    public void TestTime() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicTimeVector TIME = (BasicTimeVector) conn.run("12:32:56.356 + 1..10");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(TIME);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("time");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`time,[INT,TIME])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestTime,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestTime",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicTimeVector Tvector = (BasicTimeVector) Tappender.getColumn("time");
+            LocalTime expTime = TIME.getTime(ind);
+            Assert.assertEquals(expTime,Tvector.getTime(ind));
+        }
+    }
+
+    @Test
+    public void TestMinute() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicMinuteVector MINUTE = (BasicMinuteVector) conn.run("minute(2012.12.03 01:22:01) + 1..10");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(MINUTE);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("minute");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`minute,[INT,MINUTE])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestMinute,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestMinute",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicMinuteVector Tvector = (BasicMinuteVector) Tappender.getColumn("minute");
+            LocalTime expTime = MINUTE.getMinute(ind);
+            Assert.assertEquals(expTime,Tvector.getMinute(ind));
+        }
+    }
+
+
+    @Test
+    public void TestSecond() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicSecondVector SECOND = (BasicSecondVector) conn.run("09:00:01 + 1..10");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(SECOND);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("second");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`second,[INT,SECOND])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestSecond,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestSecond",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicSecondVector Tvector = (BasicSecondVector) Tappender.getColumn("second");
+            LocalTime expTime = SECOND.getSecond(ind);
+            Assert.assertEquals(expTime,Tvector.getSecond(ind));
+        }
+    }
+
+
+    @Test
+    public void TestDatetime() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicDateTimeVector DATETIME = (BasicDateTimeVector) conn.run("datetime(now()) + 1..10");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(DATETIME);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("datetime");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`datetime,[INT,DATETIME])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestDatetime,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestDatetime",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicDateTimeVector Tvector = (BasicDateTimeVector) Tappender.getColumn("datetime");
+            LocalDateTime expTime = DATETIME.getDateTime(ind);
+            Assert.assertEquals(expTime,Tvector.getDateTime(ind));
+        }
+    }
+
+    @Test
+    public void TestTimeStamp() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicTimestampVector TIMESTAMP = (BasicTimestampVector) conn.run("timestamp(now()) + 1..10");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(TIMESTAMP);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("timestamp");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`timestamp,[INT,TIMESTAMP])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestTimeStamp,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestTimeStamp",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicTimestampVector Tvector = (BasicTimestampVector) Tappender.getColumn("timestamp");
+            LocalDateTime expTime = TIMESTAMP.getTimestamp(ind);
+            Assert.assertEquals(expTime,Tvector.getTimestamp(ind));
+        }
+    }
+
+    @Test
+    public void TestNanoTime() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicNanoTimeVector NANOTIME = (BasicNanoTimeVector) conn.run("13:30:10.008007006 + 1..10");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(NANOTIME);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("nanotime");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`nanotime,[INT,NANOTIME])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestNanotime,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanotime",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicNanoTimeVector Tvector = (BasicNanoTimeVector) Tappender.getColumn("nanotime");
+            LocalTime expTime = NANOTIME.getNanoTime(ind);
+            Assert.assertEquals(expTime,Tvector.getNanoTime(ind));
+        }
+    }
+
+
+    @Test
+    public void TestNanoTimeStamp() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicNanoTimestampVector NANOTIMESTAMP = (BasicNanoTimestampVector) conn.run("2012.12.03 13:30:10.008007006 + 1..10");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(NANOTIMESTAMP);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("nanotimestamp");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`nanotimestamp,[INT,NANOTIMESTAMP])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestNanotimestamp,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanotimestamp",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicNanoTimestampVector Tvector = (BasicNanoTimestampVector) Tappender.getColumn("nanotimestamp");
+            LocalDateTime expTime = NANOTIMESTAMP.getNanoTimestamp(ind);
+            Assert.assertEquals(expTime,Tvector.getNanoTimestamp(ind));
+        }
+    }
+
+    @Test
+    public void TestDateHour() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicDateHourVector DATEHOUR = (BasicDateHourVector) conn.run("datehour(2012.06.13 13:30:10) + 1..10");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(DATEHOUR);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("datehour");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`datehour,[INT,DATEHOUR])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestNanotimestamp,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanotimestamp",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicDateHourVector Tvector = (BasicDateHourVector) Tappender.getColumn("datehour");
+            LocalDateTime expTime = DATEHOUR.getDateHour(ind);
+            Assert.assertEquals(expTime,Tvector.getDateHour(ind));
+        }
+    }
+
+    @Test
+    public void TestDateTimeToDateHour() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicDateTimeVector DATETIME = (BasicDateTimeVector) conn.run("datetime(2012.06.13 13:30:10) + 1..10");
+        BasicDateHour result = (BasicDateHour) conn.run("datehour(2012.06.13 13:30:10)");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(DATETIME);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("datehour");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`datehour,[INT,DATEHOUR])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestDateTimeToDateHour,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestDateTimeToDateHour",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicDateHourVector vector = (BasicDateHourVector)  Tappender.getColumn("datehour");
+            Assert.assertEquals(result.getDateHour(),vector.getDateHour(ind));
+        }
+    }
+
+    @Test
+    public void TestTimeStampToDateHour() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicTimestampVector DATETIME = (BasicTimestampVector) conn.run("timestamp(2012.06.13 13:30:10) + 1..10");
+        BasicDateHour result = (BasicDateHour) conn.run("datehour(2012.06.13 13:30:10)");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(DATETIME);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("datehour");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`datehour,[INT,DATEHOUR])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestTimeStampToDateHour,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestTimeStampToDateHour",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicDateHourVector vector = (BasicDateHourVector)  Tappender.getColumn("datehour");
+            Assert.assertEquals(result.getDateHour(),vector.getDateHour(ind));
+        }
+    }
+
+
+    @Test
+    public void TestNanotimeTimeStampToDateHour() throws IOException {
+        int size=10;
+        int[] id=new int[size];
+        BasicNanoTimestampVector DATETIME = (BasicNanoTimestampVector) conn.run("nanotimestamp('2012.12.13 13:30:10.008007006') + 1..10");
+        BasicDateHour result = (BasicDateHour) conn.run("datehour(2012.12.13 13:30:10)");
+
+        for(int i=0;i<size;++i){
+            id[i]= i;
+        }
+        BasicIntVector idVector=new BasicIntVector(id);
+        ArrayList<Vector> cols=new ArrayList<>();
+        cols.add(idVector);
+        cols.add(DATETIME);
+        ArrayList<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("datehour");
+        BasicTable insert=new BasicTable(colName, cols);
+        conn.run("\n" +
+                "login(`admin,`123456)\n" +
+                "dbPath = \"dfs://tableAppenderTest\"\n" +
+                "if(existsDatabase(dbPath))\n" +
+                "dropDatabase(dbPath)\n" +
+                "t = table(1000:0,`id`datehour,[INT,DATEHOUR])\n" +
+                "db=database(dbPath,HASH, [INT,10])\n" +
+                "pt = db.createPartitionedTable(t,`TestNanoTimeStampToDateHour,`id)");
+        tableAppender appender=new tableAppender("dfs://tableAppenderTest","TestNanoTimeStampToDateHour",conn);
+        appender.append(insert);
+        BasicTable Tappender=(BasicTable) conn.run("select * from pt");
+        for (int ind=0;ind<Tappender.rows();++ind) {
+            BasicDateHourVector vector = (BasicDateHourVector)  Tappender.getColumn("datehour");
+            Assert.assertEquals(result.getDateHour(),vector.getDateHour(ind));
+        }
+    }
 }
