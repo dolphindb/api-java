@@ -1,6 +1,7 @@
 package com.xxdb.route;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class BitConverter {
     public static byte[] getBytes(boolean data) {
@@ -182,7 +183,7 @@ public class BitConverter {
     }
 
     public static String toString(byte[] bytes) {
-        return new String(bytes, Charset.forName("UTF-8"));
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     public static String toString(byte[] bytes, String charsetName) {
