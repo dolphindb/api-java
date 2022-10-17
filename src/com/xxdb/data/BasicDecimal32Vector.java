@@ -4,6 +4,7 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
@@ -53,6 +54,23 @@ public class BasicDecimal32Vector extends AbstractVector{
             off += len;
         }
 
+        this.size = values.length;
+        capaticy = values.length;
+    }
+
+    public BasicDecimal32Vector(double[] data, int scale){
+        super(DATA_FORM.DF_VECTOR);
+        scale_ = scale;
+        int[] newIntValue = new int[data.length];
+        for(int i = 0; i < data.length; i++){
+            BigDecimal pow = new BigDecimal(10);
+            for (long j = 0; j < scale_ - 1; j++) {
+                pow = pow.multiply(new BigDecimal(10));
+            }
+            BigDecimal dbvalue = new BigDecimal(Double.toString(data[i]));
+            newIntValue[i] = (dbvalue.multiply(pow)).intValue();
+        }
+        values = newIntValue;
         this.size = values.length;
         capaticy = values.length;
     }
@@ -143,32 +161,63 @@ public class BasicDecimal32Vector extends AbstractVector{
         return 4;
     }
 
-    public void add(int value) {
+    public void add(double value) {
         if (size + 1 > capaticy && values.length > 0){
             values = Arrays.copyOf(values, values.length * 2);
         }else if (values.length <= 0){
             values = Arrays.copyOf(values, values.length + 1);
         }
         capaticy = values.length;
-        values[size] = value;
+        if (value == 0.0)
+            values[size] = 0;
+        else {
+            BigDecimal pow = new BigDecimal(10);
+            for (long i = 0; i < scale_ - 1; i++) {
+                pow = pow.multiply(new BigDecimal(10));
+            }
+            BigDecimal dbvalue = new BigDecimal(Double.toString(value));
+            values[size] = (dbvalue.multiply(pow)).intValue();
+        }
         size++;
     }
 
-    public void addRange(int[] valueList) {
+    void addRange(int[] valueList) {
         values = Arrays.copyOf(values, valueList.length + values.length);
         System.arraycopy(valueList, 0, values, size, valueList.length);
         size += valueList.length;
         capaticy = values.length;
     }
 
+    public void addRange(double[] valueList) {
+        int[] newIntValue = new int[valueList.length];
+        for(int i = 0; i < valueList.length; i++){
+            BigDecimal pow = new BigDecimal(10);
+            for (long j = 0; j < scale_ - 1; j++) {
+                pow = pow.multiply(new BigDecimal(10));
+            }
+            BigDecimal dbvalue = new BigDecimal(Double.toString(valueList[i]));
+            newIntValue[i] = (dbvalue.multiply(pow)).intValue();
+        }
+        values = Arrays.copyOf(values, newIntValue.length + values.length);
+        System.arraycopy(newIntValue, 0, values, size, newIntValue.length);
+        size += newIntValue.length;
+        capaticy = values.length;
+    }
+
     @Override
     public void Append(Scalar value) throws Exception{
-        add(value.getNumber().intValue());
+        add(value.getNumber().doubleValue());
     }
 
     @Override
     public void Append(Vector value) throws Exception{
+        if (((BasicDecimal32Vector)value).getScale() != scale_)
+            throw new RuntimeException("The value's scale is different from the inserted target.");
         addRange(((BasicDecimal32Vector)value).getdataArray());
+    }
+
+    public int getScale(){
+        return scale_;
     }
 
     public int[] getdataArray(){

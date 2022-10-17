@@ -4,6 +4,7 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
@@ -53,6 +54,23 @@ public class BasicDecimal64Vector extends AbstractVector{
             off += len;
         }
 
+        this.size = values.length;
+        capaticy = values.length;
+    }
+
+    public BasicDecimal64Vector(double[] data, int scale){
+        super(DATA_FORM.DF_VECTOR);
+        scale_ = scale;
+        long[] newIntValue = new long[data.length];
+        for(int i = 0; i < data.length; i++){
+            BigDecimal pow = new BigDecimal(10);
+            for (long j = 0; j < scale_ - 1; j++) {
+                pow = pow.multiply(new BigDecimal(10));
+            }
+            BigDecimal dbvalue = new BigDecimal(Double.toString(data[i]));
+            newIntValue[i] = (dbvalue.multiply(pow)).longValue();
+        }
+        values = newIntValue;
         this.size = values.length;
         capaticy = values.length;
     }
@@ -145,28 +163,53 @@ public class BasicDecimal64Vector extends AbstractVector{
     }
 
 
-    public void add(long value) {
+    public void add(double value) {
         if (size + 1 > capaticy && values.length > 0){
             values = Arrays.copyOf(values, values.length * 2);
         }else if (values.length <= 0){
             values = Arrays.copyOf(values, values.length + 1);
         }
         capaticy = values.length;
-        values[size] = value;
+        if (value == 0.0)
+            values[size] = 0;
+        else {
+            BigDecimal pow = new BigDecimal(10);
+            for (long i = 0; i < scale_ - 1; i++) {
+                pow = pow.multiply(new BigDecimal(10));
+            }
+            BigDecimal dbvalue = new BigDecimal(Double.toString(value));
+            values[size] = (dbvalue.multiply(pow)).longValue();
+        }
         size++;
     }
 
 
-    public void addRange(long[] valueList) {
+    void addRange(long[] valueList) {
         values = Arrays.copyOf(values, valueList.length + values.length);
         System.arraycopy(valueList, 0, values, size, valueList.length);
         size += valueList.length;
         capaticy = values.length;
     }
 
+    public void addRange(double[] valueList) {
+        long[] newLongValue = new long[valueList.length];
+        for(int i = 0; i < valueList.length; i++){
+            BigDecimal pow = new BigDecimal(10);
+            for (long j = 0; j < scale_ - 1; j++) {
+                pow = pow.multiply(new BigDecimal(10));
+            }
+            BigDecimal dbvalue = new BigDecimal(Double.toString(valueList[i]));
+            newLongValue[i] = (dbvalue.multiply(pow)).longValue();
+        }
+        values = Arrays.copyOf(values, newLongValue.length + values.length);
+        System.arraycopy(newLongValue, 0, values, size, newLongValue.length);
+        size += newLongValue.length;
+        capaticy = values.length;
+    }
+
     @Override
     public void Append(Scalar value) throws Exception{
-        add(value.getNumber().longValue());
+        add(value.getNumber().doubleValue());
     }
 
     @Override
