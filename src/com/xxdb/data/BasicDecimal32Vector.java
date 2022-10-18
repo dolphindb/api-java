@@ -142,7 +142,17 @@ public class BasicDecimal32Vector extends AbstractVector{
         if(((Scalar)value).isNull()){
             values[index] = Integer.MIN_VALUE;
         }else{
-            values[index] = ((Scalar)value).getNumber().intValue();
+            double data = ((Scalar)value).getNumber().doubleValue();
+            if (data == 0.0)
+                values[index] = 0;
+            else {
+                BigDecimal pow = new BigDecimal(10);
+                for (long i = 0; i < scale_ - 1; i++) {
+                    pow = pow.multiply(new BigDecimal(10));
+                }
+                BigDecimal dbvalue = new BigDecimal(Double.toString(data));
+                values[index] = (dbvalue.multiply(pow)).intValue();
+            }
         }
     }
 
