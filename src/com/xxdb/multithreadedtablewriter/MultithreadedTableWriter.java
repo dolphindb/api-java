@@ -194,11 +194,13 @@ public class MultithreadedTableWriter {
                     boolean[] bArray;
                     if (!isWriteDone){
                         int allLength = callbackRows;
-                        for (int i = 0; i < writeQueue_.size(); i++){
-                            List<Vector> notInsertV = writeQueue_.get(i);
-                            Vector id = notInsertV.get(0);
-                            ((BasicStringVector)callbackList.get(0)).Append(id);
-                            allLength += id.rows();
+                        synchronized (writeQueue_){
+                            for (int i = 0; i < writeQueue_.size(); i++){
+                                List<Vector> notInsertV = writeQueue_.get(i);
+                                Vector id = notInsertV.get(0);
+                                ((BasicStringVector)callbackList.get(0)).Append(id);
+                                allLength += id.rows();
+                            }
                         }
                         bArray = new boolean[allLength];
                         for (int i = 0; i < allLength; i++){
