@@ -176,27 +176,36 @@ public class MultithreadedTableWriter {
                     synchronized (failedQueue_) {
                         int cols = items.size();
                         int rows = items.get(0).rows();
-                        for (int i = 0; i < rows; i++){
+                        for (int i = 0; i < cols; i++){
                             List<Entity> tmp = new ArrayList<>();
-                            for (int j = 0; j < cols; j++){
+                            for (int j = 0; j < rows; j++){
                                 if (tableWriter_.colInfos_[startIndex].type_.getValue() < 65)
-                                    tmp.add(items.get(j).get(i));
+                                    tmp.add(items.get(i).get(j));
                                 else
-                                    tmp.add(((BasicArrayVector) items.get(j)).getVectorValue(i));
-                                startIndex++;
+                                    tmp.add(((BasicArrayVector) items.get(i)).getVectorValue(j));
                             }
+                            startIndex++;
                             failedQueue_.add(tmp);
                         }
                     }
                 }
                 if (tableWriter_.ifCallback_){
                     callbackRows = callbackList.get(0).rows();
-                    boolean[] bArray = new boolean[callbackRows];
+                    boolean[] bArray;
                     if (!isWriteDone){
-                        for (int i = 0; i < callbackRows; i++){
+                        int allLength = callbackRows;
+                        for (int i = 0; i < writeQueue_.size(); i++){
+                            List<Vector> notInsertV = writeQueue_.get(i);
+                            Vector id = notInsertV.get(0);
+                            ((BasicStringVector)callbackList.get(0)).Append(id);
+                            allLength += id.rows();
+                        }
+                        bArray = new boolean[allLength];
+                        for (int i = 0; i < allLength; i++){
                             bArray[i] = false;
                         }
                     }else {
+                        bArray = new boolean[callbackRows];
                         for (int i = 0; i < callbackRows; i++){
                             bArray[i] = true;
                         }
