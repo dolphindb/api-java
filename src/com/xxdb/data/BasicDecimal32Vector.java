@@ -15,11 +15,20 @@ public class BasicDecimal32Vector extends AbstractVector{
     private int size;
     private int capaticy;
 
-    public BasicDecimal32Vector(int size){
+    BasicDecimal32Vector(int size){
         this(DATA_FORM.DF_VECTOR, size);
     }
 
-    public BasicDecimal32Vector(DATA_FORM df, int size){
+    public BasicDecimal32Vector(int size, int scale){
+        super(DATA_FORM.DF_VECTOR);
+        this.scale_ = scale;
+        values = new int[size];
+
+        this.size = values.length;
+        capaticy = values.length;
+    }
+
+    BasicDecimal32Vector(DATA_FORM df, int size){
         super(df);
         values = new int[size];
 
@@ -172,6 +181,9 @@ public class BasicDecimal32Vector extends AbstractVector{
     }
 
     public void add(double value) {
+        if (scale_ <= 0){
+            throw new RuntimeException("Please set scale first.");
+        }
         if (size + 1 > capaticy && values.length > 0){
             values = Arrays.copyOf(values, values.length * 2);
         }else if (values.length <= 0){
@@ -199,6 +211,9 @@ public class BasicDecimal32Vector extends AbstractVector{
     }
 
     public void addRange(double[] valueList) {
+        if (scale_ <= 0){
+            throw new RuntimeException("Please set scale first.");
+        }
         int[] newIntValue = new int[valueList.length];
         for(int i = 0; i < valueList.length; i++){
             BigDecimal pow = new BigDecimal(10);
@@ -224,6 +239,10 @@ public class BasicDecimal32Vector extends AbstractVector{
         if (((BasicDecimal32Vector)value).getScale() != scale_)
             throw new RuntimeException("The value's scale is different from the inserted target.");
         addRange(((BasicDecimal32Vector)value).getdataArray());
+    }
+
+    public void setScale(int scale){
+        this.scale_ = scale;
     }
 
     public int getScale(){

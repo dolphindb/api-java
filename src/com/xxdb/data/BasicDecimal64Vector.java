@@ -15,11 +15,20 @@ public class BasicDecimal64Vector extends AbstractVector{
     private int size;
     private int capaticy;
 
-    public BasicDecimal64Vector(int size){
+    BasicDecimal64Vector(int size){
         this(DATA_FORM.DF_VECTOR, size);
     }
 
-    public BasicDecimal64Vector(DATA_FORM df, int size){
+    public BasicDecimal64Vector(int size, int scale){
+        super(DATA_FORM.DF_VECTOR);
+        this.scale_ = scale;
+        values = new long[size];
+
+        this.size = values.length;
+        capaticy = values.length;
+    }
+
+    BasicDecimal64Vector(DATA_FORM df, int size){
         super(df);
         values = new long[size];
 
