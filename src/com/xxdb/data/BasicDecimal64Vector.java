@@ -242,6 +242,14 @@ public class BasicDecimal64Vector extends AbstractVector{
         return data;
     }
 
+    public void setScale(int scale){
+        this.scale_ = scale;
+    }
+
+    public int getScale(){
+        return scale_;
+    }
+
     @Override
     public DATA_CATEGORY getDataCategory() {
         return DATA_CATEGORY.DENARY;
