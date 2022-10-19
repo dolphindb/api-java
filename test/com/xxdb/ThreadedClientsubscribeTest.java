@@ -47,6 +47,10 @@ public class ThreadedClientsubscribeTest {
 
     @BeforeClass
     public static void setUp() throws IOException {
+
+    }
+    @Before
+    public void clear() throws IOException {
         conn = new DBConnection();
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
@@ -56,9 +60,6 @@ public class ThreadedClientsubscribeTest {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-    }
-    @Before
-    public void clear() throws IOException {
         try{client.unsubscribe(HOST, PORT, "Trades");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "Trades", "subTrades2");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "Trades", "subTrades1");}catch (Exception ex){}
@@ -66,11 +67,10 @@ public class ThreadedClientsubscribeTest {
         try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
         clear_env();
-
     }
 
     @After
-    public void after() throws IOException {
+    public void after() throws IOException, InterruptedException {
         try{client.unsubscribe(HOST, PORT, "Trades");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "Trades", "subTrades2");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "Trades", "subTrades1");}catch (Exception ex){}
@@ -78,12 +78,13 @@ public class ThreadedClientsubscribeTest {
         try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
         clear_env();
+        Thread.sleep(2000);
+        client.close();
+        conn.close();
     }
 
     @AfterClass
     public static void clear_conn() {
-        client.close();
-        conn.close();
     }
     public static MessageHandler MessageHandler_handler = new MessageHandler() {
         @Override
