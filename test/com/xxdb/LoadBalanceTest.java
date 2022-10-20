@@ -37,7 +37,7 @@ public class LoadBalanceTest {
     public void tearDown() throws Exception {
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_load_balance_create_connect_highAvailabilitySites_error() throws IOException {
         conn = new DBConnection();
         String[] tmp_ipports = new String[]{"192.168.1.32:23"};
@@ -46,7 +46,7 @@ public class LoadBalanceTest {
         assertEquals(port_list[0],conn.getPort());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_load_balance_create_session() throws IOException, InterruptedException {
         List<String> hosts = Arrays.asList(host_list);
         List<Integer> ports = Arrays.stream(port_list).boxed().collect(Collectors.toList());
@@ -139,7 +139,7 @@ public class LoadBalanceTest {
         }
     };
 
-    @Test
+    @Test(timeout = 120000)
     public void test_load_balance_ha_stream() throws IOException, InterruptedException {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host,controller_port,"admin","123456");
@@ -165,7 +165,7 @@ public class LoadBalanceTest {
 
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_load_balance_select_session() throws IOException, InterruptedException {
         for(int i = 0;i < 30;i++) {
             for(int x = 3;x > 0;x--) {
