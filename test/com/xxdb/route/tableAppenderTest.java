@@ -7,7 +7,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.awt.*;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -1003,8 +1002,8 @@ public class tableAppenderTest {
 
     @Test
     public void testBasicDecimal() throws Exception {
-        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3);
-        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3);
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3,4);
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3,2);
         bd32v.set(0,new BasicDecimal32(31,4));
         bd32v.set(1,new BasicDecimal32(22,4));
         bd32v.set(2,new BasicDecimal32(17,4));

@@ -3379,14 +3379,14 @@ public void test_SSL() throws Exception {
         System.out.println(bpv.rows());
         cols.add(bpv);
         colNames.add("cpoint");
-        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(1);
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(1,2);
         bd32v.add(35);
         bd32v.Append(new BasicDecimal32(17,2));
         bd32v.Append(new BasicDecimal32(25,2));
         System.out.println(bd32v.rows());
         cols.add(bd32v);
         colNames.add("cdecimal32");
-        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(1);
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(1,4);
         bd64v.add(349);
         bd64v.Append(new BasicDecimal64(5372,4));
         bd64v.Append(new BasicDecimal64(2336,4));
@@ -3425,7 +3425,7 @@ public void test_SSL() throws Exception {
             }else if((i%6) == 2){
                 v = new BasicComplexVector(new Double2[]{new Double2(i+0.1,i+0.2),new Double2(i+100.5,i-0.25),new Double2(i+1.35,i-0.75),new Double2(i+1.65,i-0.5)});
             }else if((i%6) == 3){
-                v = new BasicDecimal32Vector(4);
+                v = new BasicDecimal32Vector(4,4);
                 v.set(0,new BasicDecimal32(i+3,4));
                 v.set(1,new BasicDecimal32(i+6,4));
                 v.set(2,new BasicDecimal32(i+9,4));

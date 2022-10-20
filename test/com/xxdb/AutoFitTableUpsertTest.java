@@ -3,12 +3,14 @@ package com.xxdb;
 import com.xxdb.data.*;
 import com.xxdb.route.AutoFitTableUpsert;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
+
+import static org.junit.Assert.*;
 
 public class AutoFitTableUpsertTest {
     private DBConnection conn;
@@ -628,12 +630,12 @@ public class AutoFitTableUpsertTest {
         cols.add(bsv);
         BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
         cols.add(bdtv);
-        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3);
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3,2);
         bd32v.set(0,new BasicDecimal32(11,2));
         bd32v.set(1,new BasicDecimal32(19,2));
         bd32v.set(2,new BasicDecimal32(23,2));
         cols.add(bd32v);
-        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3);
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3,4);
         bd64v.set(0,new BasicDecimal64(25,4));
         bd64v.set(1,new BasicDecimal64(49,4));
         bd64v.set(2,new BasicDecimal64(14,4));
@@ -667,12 +669,12 @@ public class AutoFitTableUpsertTest {
         cols.add(bsv);
         BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
         cols.add(bdtv);
-        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3);
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3,2);
         bd32v.set(0,new BasicDecimal32(11,2));
         bd32v.set(1,new BasicDecimal32(19,2));
         bd32v.set(2,new BasicDecimal32(23,2));
         cols.add(bd32v);
-        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3);
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3,4);
         bd64v.set(0,new BasicDecimal64(25,4));
         bd64v.set(1,new BasicDecimal64(49,4));
         bd64v.set(2,new BasicDecimal64(14,4));
@@ -711,12 +713,12 @@ public class AutoFitTableUpsertTest {
         cols.add(bsv);
         BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
         cols.add(bdtv);
-        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3);
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3,2);
         bd32v.set(0,new BasicDecimal32(11,2));
         bd32v.set(1,new BasicDecimal32(19,2));
         bd32v.set(2,new BasicDecimal32(23,2));
         cols.add(bd32v);
-        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3);
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3,4);
         bd64v.set(0,new BasicDecimal64(25,4));
         bd64v.set(1,new BasicDecimal64(49,4));
         bd64v.set(2,new BasicDecimal64(14,4));
@@ -756,12 +758,12 @@ public class AutoFitTableUpsertTest {
         cols.add(bsv);
         BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
         cols.add(bdtv);
-        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3);
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3,2);
         bd32v.set(0,new BasicDecimal32(11,2));
         bd32v.set(1,new BasicDecimal32(19,2));
         bd32v.set(2,new BasicDecimal32(23,2));
         cols.add(bd32v);
-        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3);
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3,4);
         bd64v.set(0,new BasicDecimal64(25,4));
         bd64v.set(1,new BasicDecimal64(49,4));
         bd64v.set(2,new BasicDecimal64(14,4));
