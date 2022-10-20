@@ -81,6 +81,7 @@ public class ThreadedClientsubscribeTest {
         Thread.sleep(2000);
         client.close();
         conn.close();
+        Thread.sleep(2000);
     }
 
     @AfterClass
