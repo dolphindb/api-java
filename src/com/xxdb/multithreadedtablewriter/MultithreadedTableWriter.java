@@ -265,7 +265,10 @@ public class MultithreadedTableWriter {
             synchronized (writeQueue_){
                 status.unsentRows = (long) (writeQueue_.size() - 1) *  vectorSize+ writeQueue_.get(writeQueue_.size() - 1).get(0).rows();
             }
-            status.sendFailedRows = failedQueue_.size();
+            if (failedQueue_.size() > 0)
+                status.sendFailedRows = failedQueue_.get(0).size();
+            else
+                status.sendFailedRows = 0;
         }
 
         boolean isExiting(){
