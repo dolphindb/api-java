@@ -208,7 +208,7 @@ public class BasicDoubleVector extends AbstractVector{
 
 	public void addRange(double[] valueList) {
 		values = Arrays.copyOf(values, valueList.length + values.length);
-		System.arraycopy(valueList, 0, values, size, valueList.length);
+		System.arraycopy(valueList, 0, values, size-1, valueList.length);
 		size += valueList.length;
 		capaticy = values.length;
 	}
