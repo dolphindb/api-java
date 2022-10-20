@@ -25,8 +25,8 @@ public class tableAppenderTest {
     private static String tableName="testAppend";
     private static DBConnection conn;
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
-    static String HOST = bundle.getString("HOST");
-    static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    static String HOST = "192.168.1.116";
+    static int PORT = 18999;
     @Before
     public void setUp() throws IOException {
         conn = new DBConnection();
@@ -1055,7 +1055,7 @@ public class tableAppenderTest {
                 Entity.DATA_TYPE.DT_VOID, Entity.DATA_TYPE.DT_BOOL_ARRAY};
 
         String[] data_type_string = new String[]{"ANY", "BLOB", "BOOL", "BYTE", "CODE", "COMPRESSED", "DATASOURCE", "DATE", "DATEHOUR", "DATEMINUTE",
-                "DATETIME", "DICTIONARY", "DOUBLE", "FLOAT", "FUNCTIONDEF", "HANDLE", "INT", "INT128", "IPADDR", "LONG", "MINUTE", "NANOTIME", "NANOTIMESTAMP",
+                "DATETIME", "DICTIONARY", "DOUBLE", "FLOAT", "FUNCTIONDEF", "HANDLE", "INT", "INT128", "IPADDR", "LONG", "MINUTE", "MONTH", "NANOTIME", "NANOTIMESTAMP",
                 "OBJECT", "STRING", "RESOURCE", "SECOND", "SHORT", "SYMBOL", "TIME", "TIMESTAMP", "UUID", "VOID", "Unrecognized type"};
 
         for (int i = 0; i < data_types.length; i++){
