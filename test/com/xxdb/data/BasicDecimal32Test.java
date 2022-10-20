@@ -319,41 +319,4 @@ public class BasicDecimal32Test {
         assertEquals(true, res.getBoolean());
     }
 
-    @Test
-    public void testBasicDecimal32_run_vector() throws IOException {
-        BasicDecimal32Vector re1 =(BasicDecimal32Vector) conn.run("decimal32([1.232,-12.43,123.53],6)");
-        assertEquals("[1.232000,-12.430000,123.530000]",re1.getString());
-        assertEquals("[1.232000,-12.430000,123.530000]",re1.getString());
-    }
-
-    @Test
-    public void testBasicDecimal32_run_vector_has_NULL() throws IOException {
-        BasicDecimal32Vector re1 =(BasicDecimal32Vector) conn.run("decimal32([1.232,-12.43,NULL],6)");
-        assertEquals("[1.232000,-12.430000,]",re1.getString());
-    }
-
-    @Test
-    public void testBasicDecimal32_run_vector_all_NULL() throws IOException {
-        BasicDecimal32Vector re1 =(BasicDecimal32Vector) conn.run("decimal32([int(),NULL,NULL],6)");
-        assertEquals("[,,]",re1.getString());
-    }
-
-    @Test
-    public void test_BasicDecimal32Vector_basicFunction() throws Exception {
-        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(2);
-        bd32v.set(0,new BasicDecimal32(11,2));
-        bd32v.set(1,new BasicDecimal32(17,2));
-        assertFalse(bd32v.isNull(1));
-        assertEquals(BasicDecimal32.class,bd32v.getElementClass());
-        bd32v.setNull(0);
-        assertTrue(bd32v.isNull(0));
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void test_BasicDecimal32Vector_set() throws Exception {
-        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(2);
-        bd32v.set(0,new BasicDecimal32(12,3));
-        bd32v.set(1,new BasicDecimal32(16,4));
-    }
-
 }
