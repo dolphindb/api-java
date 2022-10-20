@@ -231,13 +231,19 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void Append(Scalar value) throws Exception{
+        if (((BasicDecimal32)value).getScale() != scale_ && scale_ > 0)
+            throw new RuntimeException("The value's scale is different from the inserted target.");
+        else
+            scale_ = ((BasicDecimal32)value).getScale();
         add(value.getNumber().doubleValue());
     }
 
     @Override
     public void Append(Vector value) throws Exception{
-        if (((BasicDecimal32Vector)value).getScale() != scale_)
+        if (((BasicDecimal32Vector)value).getScale() != scale_ && scale_ > 0)
             throw new RuntimeException("The value's scale is different from the inserted target.");
+        else
+            scale_ = ((BasicDecimal32Vector)value).getScale();
         addRange(((BasicDecimal32Vector)value).getdataArray());
     }
 
