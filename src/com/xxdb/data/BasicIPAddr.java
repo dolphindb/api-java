@@ -21,10 +21,7 @@ public class BasicIPAddr extends BasicInt128 {
 
 	@Override
 	public String getString() {
-		if (isNull())
-			return "";
-		else
-			return getString(value);
+		return getString(value);
 	}
 	
 	public static String getString(Long2 value) {
