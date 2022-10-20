@@ -131,7 +131,6 @@ public class MultithreadedTableWriter {
                     if (writeQueue_.size() == 0)
                         writeQueue_.add(tableWriter_.createListVector());
                 }
-                int startIndex = 0;
                 boolean isWriteDone = true;
                 BasicTable writeTable = null;
                 List<String> colNames = new ArrayList<>();
@@ -142,7 +141,6 @@ public class MultithreadedTableWriter {
                     callbackList.add(items.get(0));
                     items.remove(0);
                     colNames.remove(0);
-                    startIndex = 1;
                 }
                 try {
                     writeTable = new BasicTable(colNames, items);
@@ -176,15 +174,11 @@ public class MultithreadedTableWriter {
                     synchronized (failedQueue_) {
                         int cols = items.size();
                         int rows = items.get(0).rows();
-                        for (int i = 0; i < cols; i++){
+                        for (int i = 0; i < rows; i++){
                             List<Entity> tmp = new ArrayList<>();
-                            for (int j = 0; j < rows; j++){
-                                if (tableWriter_.colInfos_[startIndex].type_.getValue() < 65)
-                                    tmp.add(items.get(i).get(j));
-                                else
-                                    tmp.add(((BasicArrayVector) items.get(i)).getVectorValue(j));
+                            for (int j = 0; j < cols; j++){
+                                tmp.add(items.get(j).get(i));
                             }
-                            startIndex++;
                             failedQueue_.add(tmp);
                         }
                     }
@@ -265,10 +259,7 @@ public class MultithreadedTableWriter {
             synchronized (writeQueue_){
                 status.unsentRows = (long) (writeQueue_.size() - 1) *  vectorSize+ writeQueue_.get(writeQueue_.size() - 1).get(0).rows();
             }
-            if (failedQueue_.size() > 0)
-                status.sendFailedRows = failedQueue_.get(0).size();
-            else
-                status.sendFailedRows = 0;
+            status.sendFailedRows = failedQueue_.size();
         }
 
         boolean isExiting(){
@@ -517,7 +508,11 @@ public class MultithreadedTableWriter {
                     writeThread.failedQueue_.clear();
                 }
                 synchronized (writeThread.writeQueue_) {
-                    int cols = colInfos_.length;
+                    int cols;
+                    if (ifCallback_)
+                        cols = colInfos_.length-1;
+                    else
+                        cols = colInfos_.length;
                     int size = writeThread.writeQueue_.size();
                     for (int i = 0; i < size; ++i)
                     {
@@ -534,7 +529,6 @@ public class MultithreadedTableWriter {
                             unwrittenData.add(tmp);
                         }
                     }
-                    unwrittenData.addAll(writeThread.failedQueue_);
                     writeThread.writeQueue_.clear();
                     writeThread.writeQueue_.add(createListVector());
                 }
