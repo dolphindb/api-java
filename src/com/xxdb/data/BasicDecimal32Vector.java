@@ -205,7 +205,7 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     void addRange(int[] valueList) {
         values = Arrays.copyOf(values, valueList.length + values.length);
-        System.arraycopy(valueList, 0, values, size-1, valueList.length);
+        System.arraycopy(valueList, 0, values, size, valueList.length);
         size += valueList.length;
         capaticy = values.length;
     }
@@ -224,7 +224,7 @@ public class BasicDecimal32Vector extends AbstractVector{
             newIntValue[i] = (dbvalue.multiply(pow)).intValue();
         }
         values = Arrays.copyOf(values, newIntValue.length + values.length);
-        System.arraycopy(newIntValue, 0, values, size-1, newIntValue.length);
+        System.arraycopy(newIntValue, 0, values, size, newIntValue.length);
         size += newIntValue.length;
         capaticy = values.length;
     }

@@ -178,7 +178,7 @@ public class BasicPointVector extends AbstractVector{
 
 	public void addRange(Double2[] valueList) {
 		values = Arrays.copyOf(values, valueList.length + values.length);
-		System.arraycopy(valueList, 0, values, size-1, valueList.length);
+		System.arraycopy(valueList, 0, values, size, valueList.length);
 		size += valueList.length;
 		capaticy = values.length;
 	}
