@@ -25,8 +25,8 @@ public class tableAppenderTest {
     private static String tableName="testAppend";
     private static DBConnection conn;
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
-    static String HOST = "192.168.1.116";
-    static int PORT = 18999;
+    static String HOST = bundle.getString("HOST");
+    static int PORT = Integer.parseInt(bundle.getString("PORT"));
     @Before
     public void setUp() throws IOException {
         conn = new DBConnection();
