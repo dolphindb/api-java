@@ -150,7 +150,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         else
             scale_ = ((Scalar) value).getScale();
         if(((Scalar)value).isNull()){
-            values[index] = Integer.MIN_VALUE;
+            values[index] = Long.MIN_VALUE;
         }else{
             double data = ((Scalar)value).getNumber().doubleValue();
             if (data == 0.0)
