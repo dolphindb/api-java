@@ -55,7 +55,7 @@ public class BasicDecimal64VectorTest {
 
     @Test
     public void test_BasicDecimal64Vector_basicFunction() throws Exception {
-        BasicDecimal64Vector bd32v = new BasicDecimal64Vector(2);
+        BasicDecimal64Vector bd32v = new BasicDecimal64Vector(2,2);
         bd32v.set(0,new BasicDecimal64(11.0,2));
         bd32v.set(1,new BasicDecimal64(17.0,2));
         assertFalse(bd32v.isNull(1));
@@ -142,11 +142,6 @@ public class BasicDecimal64VectorTest {
         assertEquals(8,a);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void test_BasicDecimal64Vector_add_unset_scalar() throws Exception {
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(0);
-        tmp_32_v.add(1.11223);
-    }
 
     @Test
     public void test_BasicDecimal64Vector_add() throws Exception {
@@ -177,13 +172,6 @@ public class BasicDecimal64VectorTest {
         double[] tmp = new double[]{0.0,-123.00432,132.204234,100.0};
         tmp_32_v.addRange(tmp);
         assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void test_BasicDecimal64Vector_addRange_unset_scalar() throws Exception {
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(0);
-        double[] tmp = new double[]{0.0,-123.00432,132.204234,100.0};
-        tmp_32_v.addRange(tmp);
     }
 
     @Test

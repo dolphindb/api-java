@@ -55,7 +55,7 @@ public class BasicDecimal32VectorTest {
 
     @Test
     public void test_BasicDecimal32Vector_basicFunction() throws Exception {
-        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(2);
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(2,2);
         bd32v.set(0,new BasicDecimal32(11,2));
         bd32v.set(1,new BasicDecimal32(17,2));
         assertFalse(bd32v.isNull(1));
@@ -142,11 +142,6 @@ public class BasicDecimal32VectorTest {
         assertEquals(4,a);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void test_BasicDecimal32Vector_add_unset_scalar() throws Exception {
-        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(0);
-        tmp_32_v.add(1.11223);
-    }
 
     @Test
     public void test_BasicDecimal32Vector_add() throws Exception {
@@ -179,12 +174,6 @@ public class BasicDecimal32VectorTest {
         assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
     }
 
-    @Test(expected = RuntimeException.class)
-    public void test_BasicDecimal32Vector_addRange_unset_scalar() throws Exception {
-        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(0);
-        double[] tmp = new double[]{0.0,-123.00432,132.204234,100.0};
-        tmp_32_v.addRange(tmp);
-    }
 
     @Test
     public void test_BasicDecimal32Vector_addRange2() throws Exception {
