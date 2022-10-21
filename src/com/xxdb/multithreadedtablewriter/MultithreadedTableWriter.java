@@ -300,7 +300,7 @@ public class MultithreadedTableWriter {
     private List<WriterThread> threads_=new ArrayList<>();
     private ErrorCodeInfo errorCodeInfo_ = new ErrorCodeInfo();
     private Mode mode_;
-    private String[] pModeOption_;
+    private String[] pModeOption_ = null;
     private boolean ifCallback_ = false;
     private ColInfo[] colInfos_;
 
