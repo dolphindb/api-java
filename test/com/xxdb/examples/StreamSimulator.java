@@ -1,7 +1,11 @@
 package com.xxdb.examples;
 
 import com.xxdb.DBConnection;
-import com.xxdb.data.*;
+import com.xxdb.data.BasicTable;
+import com.xxdb.data.BasicTimeVector;
+import com.xxdb.data.Entity;
+import com.xxdb.data.Table;
+
 import java.util.ArrayList;
 import java.util.List;
 
