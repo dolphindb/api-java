@@ -930,7 +930,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         writeData(1,tb2);
         mutithreadTableWriter1.insertUnwrittenData(tb1);
         mutithreadTableWriter2.insertUnwrittenData(tb2);
-        Thread.sleep(20000);
+        Thread.sleep(30000);
         MultithreadedTableWriter.Status status=mutithreadTableWriter2.getStatus();
         //assertTrue(status.errorInfo.toString().contains(HOST+":"+PORT+" Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter"));
         assertEquals("A5",status.errorCode);
@@ -6196,12 +6196,12 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 }
 
                 for (int i = 0; i < successV.rows(); i++){
-                    //System.out.println(idV.getString(i) + " " + successV.getBoolean(i));
+                    System.out.println(idV.getString(i) + " " + successV.getBoolean(i));
                 }
             }
         };
         MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_MultithreadedTableWriter", "pt", false,
-                false, null, 100000, 1, 20, "id", null, callbackHandler);
+                false, null, 1000, 1, 20, "id", null, callbackHandler);
 
         for (int i = 0; i < 3000000; i++){
             if(i==500000){
@@ -6240,12 +6240,225 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable ex = (BasicTable)conn2.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
         assertEquals(ex.rows(), act.rows());
         assertEquals(ex.rows(), act.rows());
+        System.out.println("ex rows"+ex.rows());
+
         for (int i = 0; i < ex.rows(); i++){
             assertEquals(ex.getColumn(0).get(i).getString(), act.getColumn(0).get(i).getString());
             System.out.println(ex.getColumn(0).get(i).getString());
+            //System.out.println("callback rows"+callback.rows());
         }
         conn.close();
         conn2.close();
     }
+
+    @Test
+    public  void test_MultithreadedTableWriter_Callback_dfs_single_thread_false_insertUnwrittenData()throws Exception {
+        DBConnection conn= new DBConnection(false, false, false, true);
+        conn.connect(HOST, PORT, "admin", "123456");
+        DBConnection conn1= new DBConnection(false, false, false, true);
+        conn1.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
+        StringBuilder sb = new StringBuilder();
+        sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
+                "if(existsDatabase(dbName)){\n" +
+                "\tdropDB(dbName);\n" +
+                "}\n" +
+                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "dummy = table(100:0, [`id], [STRING]);\n" +
+                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+        conn.run(sb.toString());
+        List<Vector> cols = new ArrayList<>();
+        List<String> colNames = new ArrayList<>();
+        BasicStringVector bsv = new BasicStringVector(1);
+        BasicBooleanVector bbv = new BasicBooleanVector(1);
+        colNames.add("id");
+        colNames.add("issuccess");
+        cols.add(bsv);
+        cols.add(bbv);
+        BasicTable callback = new BasicTable(colNames,cols);;
+        Callback callbackHandler = new Callback(){
+            public void writeCompletion(Table callbackTable) {
+                BasicStringVector idV = (BasicStringVector) callbackTable.getColumn(0);
+                BasicBooleanVector successV = (BasicBooleanVector) callbackTable.getColumn(1);
+                try {
+                    callback.getColumn(0).Append(idV);
+                    callback.getColumn(1).Append(successV);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+                for (int i = 0; i < successV.rows(); i++){
+                    System.out.println(idV.getString(i) + " " + successV.getBoolean(i));
+                }
+            }
+        };
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_MultithreadedTableWriter", "pt", false,
+                false, null, 5, 1, 1, "id", null, callbackHandler);
+
+        for (int i = 0; i < 300; i++){
+            if(i==100){
+                try{
+                    conn1.run("stopDataNode([\""+HOST+":"+PORT+"\"])");
+                }
+                catch(IOException ex)
+                {
+                    System.out.println(ex.getMessage());
+                }
+            }
+            try{
+                ErrorCodeInfo pErrorInfo = mtw.insert(Integer.toString(i), Integer.toString(i));
+            }
+            catch(RuntimeException ex)
+            {
+                System.out.println(ex.getMessage());
+            }
+        }
+        mtw.waitForThreadCompletion();
+        try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
+
+        }
+        catch(IOException ex) {
+            System.out.println(ex.getMessage());
+        }
+        conn1.run("sleep(1000)");
+        DBConnection conn2= new DBConnection(false, false, false, true);
+        conn2.connect(HOST, PORT, "admin", "123456");
+        conn1.run("sleep(1000)");
+        System.out.println("callback rows"+callback.rows());
+        int callbackrows = callback.rows()-1;
+        Map<String,Entity> map = new HashMap<>();
+        map.put("testUpload",callback);
+        conn2.upload(map);
+        BasicTable act = (BasicTable) conn2.run("select * from testUpload where issuccess = true order by id");
+        BasicTable ex = (BasicTable)conn2.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
+        assertEquals(ex.rows(), act.rows());
+        assertEquals(ex.rows(), act.rows());
+        System.out.println("ex.rows()"+ex.rows());
+
+        for (int i = 0; i < ex.rows(); i++){
+            assertEquals(ex.getColumn(0).get(i).getString(), act.getColumn(0).get(i).getString());
+            System.out.println(ex.getColumn(0).get(i).getString());
+        }
+        List<List<Entity>> unwrite1 = mtw.getUnwrittenData();
+        assertTrue(unwrite1.size() >0);
+        //System.out.println("unwrite1.size()"+unwrite1.size());
+
+        MultithreadedTableWriter mtw1 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_MultithreadedTableWriter", "pt", false,
+                false, null, 5, 1, 1, "id", null, callbackHandler);
+        mtw1.insertUnwrittenData(unwrite1);
+        mtw1.waitForThreadCompletion();
+        BasicTable ex1 = (BasicTable)conn2.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
+        //System.out.println("ex1"+ex1.rows());
+
+        assertEquals(callbackrows,ex1.rows());
+        conn.close();
+        conn2.close();
+    }
+
+    @Test
+    public  void test_MultithreadedTableWriter_Callback_dfs_multiple_thread_false_insertUnwrittenData()throws Exception {
+        DBConnection conn= new DBConnection(false, false, false, true);
+        conn.connect(HOST, PORT, "admin", "123456");
+        DBConnection conn1= new DBConnection(false, false, false, true);
+        conn1.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
+        StringBuilder sb = new StringBuilder();
+        sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
+                "if(existsDatabase(dbName)){\n" +
+                "\tdropDB(dbName);\n" +
+                "}\n" +
+                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "dummy = table(100:0, [`id], [STRING]);\n" +
+                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+        conn.run(sb.toString());
+        List<Vector> cols = new ArrayList<>();
+        List<String> colNames = new ArrayList<>();
+        BasicStringVector bsv = new BasicStringVector(1);
+        BasicBooleanVector bbv = new BasicBooleanVector(1);
+        colNames.add("id");
+        colNames.add("issuccess");
+        cols.add(bsv);
+        cols.add(bbv);
+        BasicTable callback = new BasicTable(colNames,cols);;
+        Callback callbackHandler = new Callback(){
+            public void writeCompletion(Table callbackTable) {
+                BasicStringVector idV = (BasicStringVector) callbackTable.getColumn(0);
+                BasicBooleanVector successV = (BasicBooleanVector) callbackTable.getColumn(1);
+                synchronized (callback){
+                    try {
+                        callback.getColumn(0).Append(idV);
+                        callback.getColumn(1).Append(successV);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                for (int i = 0; i < successV.rows(); i++){
+                    System.out.println(idV.getString(i) + " " + successV.getBoolean(i));
+                }
+            }
+        };
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_MultithreadedTableWriter", "pt", false,
+                false, null, 5, 1, 5, "id", null, callbackHandler);
+
+        for (int i = 0; i < 300; i++){
+            if(i==100){
+                try{
+                    conn1.run("stopDataNode([\""+HOST+":"+PORT+"\"])");
+                }
+                catch(IOException ex)
+                {
+                    System.out.println(ex.getMessage());
+                }
+            }
+            try{
+                ErrorCodeInfo pErrorInfo = mtw.insert(Integer.toString(i), Integer.toString(i));
+            }
+            catch(RuntimeException ex)
+            {
+                System.out.println(ex.getMessage());
+            }
+        }
+        mtw.waitForThreadCompletion();
+        try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
+
+        }
+        catch(IOException ex) {
+            System.out.println(ex.getMessage());
+        }
+        conn1.run("sleep(1000)");
+        DBConnection conn2= new DBConnection(false, false, false, true);
+        conn2.connect(HOST, PORT, "admin", "123456");
+        conn1.run("sleep(1000)");
+        System.out.println("callback rows"+callback.rows());
+        int callbackrows = callback.rows()-1;
+        Map<String,Entity> map = new HashMap<>();
+        map.put("testUpload",callback);
+        conn2.upload(map);
+        BasicTable act = (BasicTable) conn2.run("select * from testUpload where issuccess = true order by id");
+        BasicTable ex = (BasicTable)conn2.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
+        assertEquals(ex.rows(), act.rows());
+        assertEquals(ex.rows(), act.rows());
+        System.out.println("ex.rows()"+ex.rows());
+        System.out.println("act.rows()"+act.rows());
+
+        for (int i = 0; i < ex.rows(); i++){
+            assertEquals(ex.getColumn(0).get(i).getString(), act.getColumn(0).get(i).getString());
+            System.out.println(ex.getColumn(0).get(i).getString());
+        }
+        List<List<Entity>> unwrite1 = mtw.getUnwrittenData();
+        assertTrue(unwrite1.size() >0);
+        System.out.println("unwrite1.size()"+unwrite1.size());
+
+        MultithreadedTableWriter mtw1 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_MultithreadedTableWriter", "pt", false,
+                false, null, 5, 1, 1, "id", null, callbackHandler);
+        mtw1.insertUnwrittenData(unwrite1);
+        mtw1.waitForThreadCompletion();
+        BasicTable ex1 = (BasicTable)conn2.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
+        System.out.println("ex1"+ex1.rows());
+
+        assertEquals(callbackrows,ex1.rows());
+        conn.close();
+        conn2.close();
+    }
+
 }
 
