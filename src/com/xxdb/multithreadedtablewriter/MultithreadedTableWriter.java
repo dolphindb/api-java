@@ -350,7 +350,10 @@ public class MultithreadedTableWriter {
         batchSize_=batchSize;
         throttleMilsecond_=(int)throttle*1000;
         hasError_=false;
-        mode_ = mode;
+        if (mode == null)
+            mode_ = Mode.M_Append;
+        else
+            mode_ = mode;
         pModeOption_ = pModeOption;
         if(threadCount < 1){
             throw new RuntimeException("The parameter threadCount must be greater than or equal to 1.");
