@@ -7,6 +7,7 @@ import com.xxdb.route.Domain;
 import com.xxdb.route.DomainFactory;
 
 import java.io.IOException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -753,8 +754,14 @@ public class MultithreadedTableWriter {
             Entity.DATA_TYPE type = colInfos_[i].type_;
             if (type.getValue() >= 65)
                 tmp.add(new BasicArrayVector(type, 1));
-            else
-                tmp.add(BasicEntityFactory.instance().createVectorWithDefaultValue(type, 0));
+            else{
+                Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(type, 0);
+                if (type == Entity.DATA_TYPE.DT_DECIMAL32)
+                    ((BasicDecimal32Vector)value).setScale(colInfos_[i].extra_);
+                else if (type == Entity.DATA_TYPE.DT_DECIMAL64)
+                    ((BasicDecimal64Vector)value).setScale(colInfos_[i].extra_);
+                tmp.add(value);
+            }
         }
         return tmp;
     }
