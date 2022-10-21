@@ -176,6 +176,8 @@ public class MultithreadedTableWriter {
                         int rows = items.get(0).rows();
                         for (int i = 0; i < rows; i++){
                             List<Entity> tmp = new ArrayList<>();
+                            if (tableWriter_.ifCallback_)
+                                tmp.add(callbackList.get(0).get(i));
                             for (int j = 0; j < cols; j++){
                                 tmp.add(items.get(j).get(i));
                             }
@@ -511,11 +513,7 @@ public class MultithreadedTableWriter {
                     writeThread.failedQueue_.clear();
                 }
                 synchronized (writeThread.writeQueue_) {
-                    int cols;
-                    if (ifCallback_)
-                        cols = colInfos_.length-1;
-                    else
-                        cols = colInfos_.length;
+                    int cols = colInfos_.length;
                     int size = writeThread.writeQueue_.size();
                     for (int i = 0; i < size; ++i)
                     {
@@ -525,8 +523,6 @@ public class MultithreadedTableWriter {
                             List<Entity> tmp = new ArrayList<>();
                             for (int j = 0; j < cols; ++j)
                             {
-                                if (ifCallback_ && j == 0)
-                                    continue;
                                 tmp.add(writeThread.writeQueue_.get(i).get(j).get(row));
                             }
                             unwrittenData.add(tmp);
