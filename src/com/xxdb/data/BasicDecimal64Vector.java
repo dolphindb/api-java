@@ -145,7 +145,7 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
-        if (((Scalar)value).getScale() != scale_ && scale_ != 0)
+        if (((Scalar)value).getScale() != scale_ && scale_ >= 0)
             throw new RuntimeException("Value's scale is not the same as the vector's!");
         else
             scale_ = ((Scalar) value).getScale();
@@ -183,7 +183,7 @@ public class BasicDecimal64Vector extends AbstractVector{
 
 
     public void add(double value) {
-        if (scale_ <= 0){
+        if (scale_ < 0){
             throw new RuntimeException("Please set scale first.");
         }
         if (size + 1 > capaticy && values.length > 0){
@@ -214,7 +214,7 @@ public class BasicDecimal64Vector extends AbstractVector{
     }
 
     public void addRange(double[] valueList) {
-        if (scale_ <= 0){
+        if (scale_ < 0){
             throw new RuntimeException("Please set scale first.");
         }
         long[] newLongValue = new long[valueList.length];
@@ -234,7 +234,7 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public void Append(Scalar value) throws Exception{
-        if (((BasicDecimal64)value).getScale() != scale_ && scale_ > 0)
+        if (((BasicDecimal64)value).getScale() != scale_ && scale_ >= 0)
             throw new RuntimeException("The value's scale is different from the inserted target.");
         else
             scale_ = ((BasicDecimal64)value).getScale();
@@ -243,7 +243,7 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public void Append(Vector value) throws Exception{
-        if (((BasicDecimal64Vector)value).getScale() != scale_ && scale_ > 0)
+        if (((BasicDecimal64Vector)value).getScale() != scale_ && scale_ >= 0)
             throw new RuntimeException("The value's scale is different from the inserted target.");
         else
             scale_ = ((BasicDecimal64Vector)value).getScale();
