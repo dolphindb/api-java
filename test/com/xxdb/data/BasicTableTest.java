@@ -369,26 +369,26 @@ public class BasicTableTest {
         BasicPointVector bpv = new BasicPointVector(new Double2[]{new Double2(12.02,23.05),new Double2(21.02,32.05),new Double2(0.98,23.10),new Double2(22.45,0.76)});
         BasicArrayVector bpav = new BasicArrayVector(new int[]{1,1,2,4},bpv);
         cols.add(bpav);
-        colNames.add("decimal32");
-        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(4);
-        bd32v.set(0,new BasicDecimal32(16,2));
-        bd32v.set(1,new BasicDecimal32(25.3,2));
-        bd32v.set(2,new BasicDecimal32(32.4,2));
-        bd32v.set(3,new BasicDecimal32(66,2));
-        BasicArrayVector bd32av = new BasicArrayVector(new int[]{1,2,2,4},bd32v);
-        cols.add(bd32av);
-        colNames.add("decimal64");
-        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(4);
-        bd64v.set(0,new BasicDecimal64(31L,4));
-        bd64v.set(1,new BasicDecimal64(98.296,4));
-        bd64v.set(2,new BasicDecimal64(27.12,4));
-        bd64v.set(3,new BasicDecimal64(18L,4));
-        BasicArrayVector bd64av = new BasicArrayVector(new int[]{1,2,4,4},bd64v);
-        cols.add(bd64av);
+//        colNames.add("decimal32");
+//        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(4,2);
+//        bd32v.set(0,new BasicDecimal32(16,2));
+//        bd32v.set(1,new BasicDecimal32(25.3,2));
+//        bd32v.set(2,new BasicDecimal32(32.4,2));
+//        bd32v.set(3,new BasicDecimal32(66,2));
+//        BasicArrayVector bd32av = new BasicArrayVector(new int[]{1,2,2,4},bd32v);
+//        cols.add(bd32av);
+//        colNames.add("decimal64");
+//        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(4,4);
+//        bd64v.set(0,new BasicDecimal64(31L,4));
+//        bd64v.set(1,new BasicDecimal64(98.296,4));
+//        bd64v.set(2,new BasicDecimal64(27.12,4));
+//        bd64v.set(3,new BasicDecimal64(18L,4));
+//        BasicArrayVector bd64av = new BasicArrayVector(new int[]{1,2,4,4},bd64v);
+//        cols.add(bd64av);
         BasicTable bt = new BasicTable(colNames,cols);
         for(int i=0;i<bt.rows();i++){
             assertTrue(isJSON2(bt.getRowJson(i)));
-            System.out.println(bt.getRowJson(i));
+            System.out.println("---------"+bt.getRowJson(i)+"-------");
         }
     }
 

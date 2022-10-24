@@ -735,7 +735,7 @@ public class AbstractTest{
 
     @Test
     public void test_AbstractVector_writeCompressed() throws Exception {
-        AbstractVector av = new BasicDecimal32Vector(2);
+        AbstractVector av = new BasicDecimal32Vector(2,2);
         av.set(0,new BasicDecimal32(11,2));
         av.set(1,new BasicDecimal32(24,2));
         av.writeCompressed(new BigEndianDataOutputStream(new OutputStream() {
