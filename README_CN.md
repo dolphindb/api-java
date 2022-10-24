@@ -111,7 +111,7 @@ ExclusiveDBConnectionPool可以复用多个DBConnection。可以直接使用Excl
 
 | 方法名        | 详情          |
 |:------------- |:-------------|
-|ExclusiveDBConnectionPoolExclusiveDBConnectionPool(string host, int port, string uid,string pwd, int count, bool loadBalance,bool enableHighAvailability, string[] highAvailabilitySites = null, string initialScript, bool compress = false, bool useSSL = false, bool usePython = false)|构造函数，参数count为连接数，loadBalance为true会连接不同的节点|
+|ExclusiveDBConnectionPool(string host, int port, string uid,string pwd, int count, bool loadBalance,bool enableHighAvailability, string[] highAvailabilitySites = null, string initialScript, bool compress = false, bool useSSL = false, bool usePython = false)|构造函数，参数count为连接数，loadBalance为true会连接不同的节点|
 |execute(IDBTask task)|执行任务|
 |execute(List<IDBTask> tasks)|执行批量任务|
 |getConnectionCount()|获取连接数|
