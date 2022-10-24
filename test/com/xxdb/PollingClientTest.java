@@ -42,18 +42,6 @@ public class PollingClientTest {
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     //static int PORT=9002;
     public static PollingClient client;
-    @BeforeClass
-    public static void set() throws IOException {
-        conn = new DBConnection();
-        try {
-            if (!conn.connect(HOST, PORT, "admin", "123456")) {
-                throw new IOException("Failed to connect to 2xdb server");
-            }
-            client = new PollingClient(HOST,9053);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
     public void clear_env() throws IOException {
         conn.run("a = getStreamingStat().pubTables\n" +
                 "for(i in a){\n" +
@@ -78,26 +66,25 @@ public class PollingClientTest {
                 "}\n" +
                 "clearShare()");
     }
-    public void wait_data(String table_name,int data_row) throws IOException, InterruptedException {
-        BasicInt row_num;
-        while(true){
-            row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
-//            System.out.println(row_num.getInt());
-            if(row_num.getInt() == data_row){
-                break;
-            }
-            Thread.sleep(100);
-        }
-    }
+
     @Before
     public void setUp() throws IOException {
+        conn = new DBConnection();
+        try {
+            if (!conn.connect(HOST, PORT, "admin", "123456")) {
+                throw new IOException("Failed to connect to 2xdb server");
+            }
+            client = new PollingClient(HOST,9053);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
         clear_env();
         conn.run("st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "enableTableShareAndPersistence(table=st2, tableName=`Trades, asynWrite=true, compress=true, cacheSize=20000, retentionMinutes=180)\t\n");
     }
 
     @After
-    public  void after() throws IOException {
+    public  void after() throws IOException, InterruptedException {
         try {
             client.unsubscribe(HOST, PORT, "Trades", "subtrades");
             client.unsubscribe(HOST, PORT, "Trades", "subtrades1");
@@ -118,14 +105,20 @@ public class PollingClientTest {
         }
         try{conn.run("dropStreamTable(`Trades)");}catch (Exception e){}
         clear_env();
+        client.close();
+        conn.close();
+        Thread.sleep(2000);
     }
 
-    @AfterClass
-    public static void cls() throws IOException {
-        try {
-            conn.close();
-            client.close();
-        }catch (Exception e){
+    public void wait_data(String table_name,int data_row) throws IOException, InterruptedException {
+        BasicInt row_num;
+        while(true){
+            row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
+//            System.out.println(row_num.getInt());
+            if(row_num.getInt() == data_row){
+                break;
+            }
+            Thread.sleep(100);
         }
     }
 
