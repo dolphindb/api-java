@@ -95,6 +95,13 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 
 若未使用用户名及密码连接成功，则脚本在Guest权限下运行。后续运行中若需要提升权限，可以使用 conn.login('admin','123456',true) 登录获取权限。
 
+若需要开启 API 高可用，则需要设置 highAvailability=true，API 会选择可用的节点进行连接，也可以通过 highAvailabilitySites 指定可连接的节点组，此时，API 将从 highAvailabilitySites 中选择可用节点进行连接。示例如下：
+
+```java
+sites=["192.168.1.2:24120", "192.168.1.3:24120", "192.168.1.4:24120"]
+boolean success = conn.connect("192.168.1.2", 24120, "admin", "123456", highAvailability=true, highAvailabilitySites=sites);
+```
+
 当需要在应用程序里定义和使用自定义函数时，可以使用 initialScript 参数传入函数定义脚本。这样做的好处是：一、无需每次运行`run`函数的时候重复定义这些函数。二、API提供自动重连机制，断线之后重连时会产生新的会话。如果 initialScript 参数不为空，API会在新的会话中自动执行初始化脚本重新注册函数。在一些网络不是很稳定但是应用程序需要持续运行的场景里，这个参数会非常有用。
 ```java
 boolean success = conn.connect("localhost", 8848, "admin", "123456", "");
