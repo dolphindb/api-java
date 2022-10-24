@@ -14,7 +14,7 @@
   - [7.2 保存数据到分布式表](#72-保存数据到分布式表)
   - [7.3 读取和使用数据表](#73-读取和使用数据表)
   - [7.4 批量异步追加数据](#74-批量异步追加数据)
-  - [7.5 更新并写入Dolphindb的数据表](#75-更新并写入Dolphindb的数据表)
+  - [7.5 更新并写入DolphinDB的数据表](#75-更新并写入dolphindb的数据表)
 - [8. Java原生类型转换为DolphinDB数据类型](#8-java原生类型转换为dolphindb数据类型)
 - [9. Java流数据API](#9-java流数据api)
   - [9.1 接口说明](#91-接口说明)
@@ -684,7 +684,7 @@ MultithreadedTableWriter(String hostName, int port, String userId, String passwo
 * highAvailabilitySites 数组类型，表示所有可用节点的 ip:port 构成的 String数组。
 * batchSize 整数，表示批处理的消息的数量。如果该参数值为 1，表示客户端写入数据后就立即发送给服务器；
   如果该参数大于 1，表示数据量达到 batchSize 时，客户端才会将数据发送给服务器。
-* throttle 大于0的浮点数，单位为秒。若客户端有数据写入，但数据量不足 batchSize，则等待 throttle的时间再发送数据。
+* throttle 大于0的浮点数，单位为秒。若客户端有数据写入，但数据量不足 batchSize，则等待 throttle 的时间再发送数据。
 * threadCount 整数，表示创建的工作线程数量，如果值为 1，表示单线程。对于维度表，其值必须为 1。
 * partitionCol 字符串类型，默认为空，仅在 threadCount 大于1时起效。对于分区表，必须指定为分区字段名；
   如果是流表，必须指定为表的字段名；对于维度表，该参数不起效。
@@ -692,12 +692,11 @@ MultithreadedTableWriter(String hostName, int port, String userId, String passwo
   包括：
    * Vector.COMPRESS_LZ4：LZ4压缩
    * Vector.COMPRESS_DELTA：DELTAOFDELTA 压缩
-* mode 写入模式，用于指定该MultithreadedTableWriter对象是用于insert数据还是upsert数据
-  包括：
-   * Mode.M_Append：表示此MultithreadedTableWriter对象将会用于insert数据
-   * Mode.M_Upsert：表示此MultithreadedTableWriter对象将会用于upsert数据
-* pModeOption：upsert的参数，用于存放upsert脚本除了数据以外的参数。
-* callbackHandler：回调类，若需要开启MultithreadedTableWriter的回调功能则需要继承回调接口Callback并重载回调方法，并将回调的接口对象传入MultithreadedTableWriter。
+* mode 写入模式，用于指定 MultithreadedTableWriter 对象写入数据的方式，包括两种：
+   * Mode.M_Append：表示以 [tableInsert](https://www.dolphindb.cn/cn/help/FunctionsandCommands/FunctionReferences/t/tableInsert.html) 的方式向追加数据。
+   * Mode.M_Upsert：表示以 [upsert!](https://www.dolphindb.cn/cn/help/FunctionsandCommands/FunctionReferences/u/upsert!.html) 方式更新（或追加）数据。
+* pModeOption：字符串数组，表示不同模式下的扩展选项，目前，仅当 mode 指定为 Mode.M_Upsert 时有效，表示由 upsert! 可选参数组成的字符串数组。
+* callbackHandler：回调类，默认为空，表示不使用回调。开启回调后，将继承回调接口 Callback 并重载回调方法，将回调的接口对象传入 MultithreadedTableWriter。
 
 以下是MultithreadedTableWriter对象包含的函数方法介绍：
 
@@ -711,8 +710,7 @@ ErrorCodeInfo insert(Object... args)
 当 errorCode 不为 "" 时，表示 MTW 写入失败，此时，errorInfo 会显示失败的详细信息。 之后的版本
 中会对错误信息进行详细说明，给出错误信息的代码、错误原因及解决办法。 另外，ErrorCodeInfo 类提供了 
 hasError() 和 succeed() 方法用于获取数据插入的结果。hasError() 返回 True，则表示存在错误，否则表示无错误。succeed() 返回 True，则表示插入成功，
-否则表示插入失败。如果在MultithreadedTableWriter构造的时候开启了回调，则每次写入需要在每行数据前面额外增加一列string类型的数据用于标志每一行的id，
-该额外列不会写入表中，仅用于回调时返回给用户。
+否则表示插入失败。如果构造 MultithreadedTableWriter 时开启了回调，则每次调用 insert 时，需要在每行数据前面增加一列 string 类型的数据作为每行的标识符（id），此 id 列仅用于回调时返回给用户，不会写入表中。
 
 参数说明：
 
@@ -884,12 +882,12 @@ System.out.println(((BasicLong)conn.run("exec count(*) from pt")).getLong());
 
 由上例可以看出，MTW 内部使用多线程完成数据转换和写入任务。但在 MTW 外部，API 客户端同样支持以多线程方式将数据写入 MTW，且保证了多线程安全。
 
-#### 7.4.2 MultithreadedTableWriter回调的使用
+#### 7.4.2 MultithreadedTableWriter 回调的使用 <!-- omit in toc -->
 
-MultithreadedTableWriter在开启回调后，用户会在回调的方法中获取到一个BasicTable类型的回调表，该表由两列构成，
-第一列的数据类型是String，存放的是调用MultithreadedTableWriter.insert时额外写入的每一行的id，第二列的数据类型是boolean，用于表示每一行写入成功与否，true表示该行写入成功，false表示该行写入失败。
+`MultithreadedTableWriter` 在开启回调后，用户会在回调的方法中获取到一个 BasicTable 类型的回调表，该表由两列构成：
+第一列（String类型），存放的是调用 `MultithreadedTableWriter.insert` 时增加的每一行的 id；第二列（布尔值），表示每一行写入成功与否，true 表示写入成功，false 表示写入失败。
 
--继承Callback接口并重载writeCompletion方法用于获取回调数据
+-继承 Callback 接口并重载 writeCompletion 方法用于获取回调数据
 
 示例：
 
@@ -908,7 +906,7 @@ Callback callbackHandler = new Callback(){
 };
 ```
 
--构造MultithreadedTableWriter对象并传入回调对象
+-构造 `MultithreadedTableWriter` 对象并传入回调对象
 
 示例：
 
@@ -917,20 +915,20 @@ MultithreadedTableWriter mtw = new MultithreadedTableWriter(host, port, userName
         enableHighAvailability, null, 10000, 1, 1, "price", callbackHandler);
 ```
 
--调用MultithreadedTableWriter的insert方法并在第一列中写入每一行的id
+-调用 `MultithreadedTableWriter` 的 `insert` 方法并在第一列中为每一行写入 id
 
 ```java
 String theme = "theme1";
 for (int id = 0; id < 1000000; id++){
-    mtw.insert(theme + id, code, price); //theme+id为每一行对应的id，在回调时会返回回来
+    mtw.insert(theme + id, code, price); //theme+id 为每一行对应的 id，将在回调时返回
 }
 ```
 
 #### 7.4.3 MultithreadedTableWriter返回异常的几种形式 <!-- omit in toc -->
 
-MultithreadedTableWriter 类调用 insert 方法插入数据时发生异常：
+`MultithreadedTableWriter` 类调用 `insert` 方法插入数据时发生异常：
 
-在调用 MultithreadedTableWriter 的 insert 方法时，若插入数据的类型与表对应列的类型不匹配，则 MultithreadedTableWriter 会立刻返回错误信息并打印出堆栈。
+在调用 `MultithreadedTableWriter` 的 `insert` 方法时，若插入数据的类型与表对应列的类型不匹配，则 `MultithreadedTableWriter` 会立刻返回错误信息并打印出堆栈。
 
 示例：
 
@@ -972,7 +970,7 @@ if (!ret.errorInfo.equals(""))
 """
 ```
 
-在调用 MultithreadedTableWriter 的 insert 方法时，若 insert 插入数据的列数和表的列数不匹配，MultithreadedTableWriter 会立刻返回错误信息。
+在调用 `MultithreadedTableWriter` 的 `insert` 方法时，若 `insert` 插入数据的列数和表的列数不匹配，`MultithreadedTableWriter` 会立刻返回错误信息。
 
 示例：
 
@@ -1009,8 +1007,8 @@ if (!ret.errorInfo.equals(""))
 """
 ```
 
-如果 MultithreadedTableWriter 在运行时连接断开，则所有工作线程被终止。继续通过 MultithreadedTableWriter 向服务器写数据时，会因为工作线程终止而抛出异常，且数据不会被写入。此时，
-可通过调用 MultithreadedTableWriter 的 getUnwrittenData 获取未插入的数据，并重新插入。
+如果 `MultithreadedTableWriter` 在运行时连接断开，则所有工作线程被终止。继续通过 `MultithreadedTableWriter` 向服务器写数据时，会因为工作线程终止而抛出异常，且数据不会被写入。此时，
+可通过调用 `MultithreadedTableWriter` 的 `getUnwrittenData` 获取未插入的数据，并重新插入。
 
 示例：
 
@@ -1058,9 +1056,9 @@ finally
 """
 ```
 
-### 7.5 更新并写入Dolphindb的数据表
+### 7.5 更新并写入DolphinDB的数据表
 
-DolphinDB Java API 提供'AutoFitTableUpsert'类对象来更新并写入Dolphindb的表。
+DolphinDB Java API 提供 `AutoFitTableUpsert` 类对象来更新并写入 DolphinDB 的表。`AutoFitTableUpsert` 同 `MultithreadedTableWriter` 指定 mode 为 Mode.M_Upsert 时更新表数据的功能一样，区别在于 `AutoFitTableUpsert` 为单线程写入，而 `MultithreadedTableWriter` 为多线程写入。
 
 -AutoFitTableUpsert的主要方法如下：
 
@@ -1074,10 +1072,10 @@ AutoFitTableUpsert(String dbUrl, String tableName, DBConnection connection, bool
 
 * dbUrl 字符串，表示分布式数据库地址。内存表时该参数为空。
 * tableName 字符串，表示分布式表或内存表的表名。
-* connection DBConnection对象，用于连接server并upsert数据
-* ignoreNull 布尔值，表示upsert脚本的一个参数，其含义为若upsert的新数据表中某元素为 NULL 值，是否对目标表中的相应数据进行更新。
-* pkeyColNames 字符串数组，表示upsert脚本的一个参数，用于指定upsert的键值列
-* psortColumns 字符串数组，表示upsert脚本的一个参数，设置该参数，更新的分区内的所有数据会根据指定的列进行排序。排序在每个分区内部进行，不会跨分区排序。
+* connection DBConnection 对象，用于连接 server 并 upsert 数据
+* ignoreNull 布尔值，表示 [upsert!](https://www.dolphindb.cn/cn/help/FunctionsandCommands/FunctionReferences/u/upsert!.html) 的一个参数，其含义为若 upsert! 的新数据表中某元素为 NULL 值，是否对目标表中的相应数据进行更新。
+* pkeyColNames 字符串数组，表示 upsert! 的一个参数，用于指定 DFS 表（目标表）的键值列。
+* psortColumns 字符串数组，表示 upsert! 的一个参数，设置该参数，更新的分区内的所有数据会根据指定的列进行排序。排序在每个分区内部进行，不会跨分区排序。
 
 -写入并更新数据的方法：
 
@@ -1087,16 +1085,16 @@ int upsert(BasicTable table)
 
 函数说明：
 
-将一个BasicTable对象upsert到目标表中，返回一个int类型，表示upsert了多少行的数据。
+将一个 BasicTable 对象更新到目标表中，返回一个 int 类型，表示更新了多少行数据。
 
-AutoFitTableUpsert正常使用示例如下：
+`AutoFitTableUpsert` 使用示例如下：
 
 ```java
 DBConnection conn = new DBConnection(false, false, false);
 conn.connect("192.168.1.116", 18999, "admin", "123456");
-String dbName ="dfs://test_upsertTablewithIntArrayVectorToPartitionTableRangeType";
+String dbName ="dfs://upsertTable";
 String tableName = "pt";
-String script = "dbName = \"dfs://test_upsertTablewithIntArrayVectorToPartitionTableRangeType\"\n"+
+String script = "dbName = \"dfs://upsertTable\"\n"+
 "if(exists(dbName)){\n"+
 "\tdropDatabase(dbName)\t\n"+
 "}\n"+
@@ -1305,7 +1303,7 @@ TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, actionNa
 DolphinDB server 自 1.30.17 及 2.00.5 版本开始，支持通过 [replay](https://www.dolphindb.cn/cn/help/FunctionsandCommands/FunctionReferences/r/replay.html) 函数将多个结构不同的流数据表，回放（序列化）到一个流表里，这个流表被称为异构流表。Java API 自 1.30.19 版本开始，新增 `StreamDeserializer` 类，用于构造异构流表反序列化器，以实现对异构流表的订阅和反序列化操作。
 
 Java API 通过 `StreamDeserializer` 类来构造异构流表反序列化器，语法如下：
-1. 通过指定表的schema进行构造，包含以下两种方式，指定表的schema信息或指定表的各列类型 ：
+1. 通过指定表的schema进行构造，包含以下两种方式，指定表的schema信息或指定表的各列类型：
 
 指定表的schema信息：
 ```java
