@@ -60,7 +60,7 @@ The most important object provided by DolphinDB Java API is `DBConnection`. It a
 | isBusy()                                                     | Check if the current session is busy     |
 | close()                                                      | Close the current session                |
 
-For a detailed example, you can refer to the [example directory](./example).
+For a detailed example, you can refer to the [example directory](https://github.com/dolphindb/api-java/tree/release130/example).
 
 
 ## 2. Establish DolphinDB Connection
