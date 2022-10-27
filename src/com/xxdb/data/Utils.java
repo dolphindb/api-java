@@ -2,6 +2,8 @@ package com.xxdb.data;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -25,6 +27,12 @@ public class Utils {
 	private static final int[] cumLeapMonthDays={0,31,60,91,121,152,182,213,244,274,305,335,366};
 	private static final int[] monthDays={31,28,31,30,31,30,31,31,30,31,30,31};
 	private static final int[] leapMonthDays={31,29,31,30,31,30,31,31,30,31,30,31};
+
+	public static int SCALE = -1;
+
+	public static void setFormat(int scale){
+		SCALE = scale;
+	}
 	
 	public static int countMonths(YearMonth date){
 		return date.getYear() * 12 + date.getMonthValue()-1;

@@ -4,8 +4,12 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.time.temporal.Temporal;
+
+import static com.xxdb.data.Utils.SCALE;
 
 /**
  * 
@@ -67,11 +71,16 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 		else if(Float.isNaN(value) || Float.isInfinite(value))
 			return String.valueOf(value);
 		else{
-			float absVal = Math.abs(value);
-			if((absVal>0 && absVal<=0.000001) || absVal>=1000000.0)
-				return new DecimalFormat("0.######E0").format(value);
-			else
-				return new DecimalFormat("0.######").format(value);
+			if (SCALE < 0) {
+				float absVal = Math.abs(value);
+				if ((absVal > 0 && absVal <= 0.000001) || absVal >= 1000000.0)
+					return new DecimalFormat("0.######E0").format(value);
+				else
+					return new DecimalFormat("0.######").format(value);
+			}else {
+				BigDecimal bd = new BigDecimal(value);
+				return bd.setScale(SCALE, RoundingMode.DOWN).toString();
+			}
 		}
 	}
 	
