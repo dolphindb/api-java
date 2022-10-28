@@ -78,7 +78,7 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 				else
 					return new DecimalFormat("0.######").format(value);
 			}else {
-				BigDecimal bd = new BigDecimal(value);
+				BigDecimal bd = new BigDecimal(value+"");
 				return bd.setScale(SCALE, RoundingMode.DOWN).toString();
 			}
 		}
