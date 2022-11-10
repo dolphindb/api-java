@@ -689,8 +689,7 @@ public class MultithreadedTableWriter {
                     writerThread.writeQueue_.get(writerThread.writeQueue_.size()-1).get(i).Append((Vector) row.get(i));
                 }
             }
-            if (writerThread.writeQueue_.get(writerThread.writeQueue_.size()-1).get(0).rows() >= batchSize_)
-                writerThread.writeQueue_.notify();
+            writerThread.writeQueue_.notify();
         }
     }
 
