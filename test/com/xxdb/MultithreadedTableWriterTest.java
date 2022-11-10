@@ -6459,6 +6459,78 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.close();
         conn2.close();
     }
+    @Test
+    public  void test_MultithreadedTableWriter_batchSize_greater_than_Number_of_inserts_no_waitForThreadCompletion()throws Exception {
+        DBConnection conn= new DBConnection(false, false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        StringBuilder sb = new StringBuilder();
+        sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
+                "if(existsDatabase(dbName)){\n" +
+                "\tdropDB(dbName);\n" +
+                "}\n" +
+                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "dummy = table(100:0, [`id], [STRING]);\n" +
+                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+        conn.run(sb.toString());
+
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_MultithreadedTableWriter", "pt", false,
+                false, null, 200000, 0, 5, "id", null, callbackHandler);
+
+        for (int i = 0; i < 1000; i++){
+            try{
+                ErrorCodeInfo pErrorInfo = mtw.insert(Integer.toString(i), Integer.toString(i));
+            }
+            catch(RuntimeException ex)
+            {
+                System.out.println(ex.getMessage());
+            }
+        }
+        //mtw.waitForThreadCompletion();
+        conn.run("sleep(2000)");
+        System.out.println("callback rows");
+
+
+        BasicTable ex = (BasicTable)conn.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
+        System.out.println("ex.rows()" + ex.rows());
+        assertEquals(ex.rows(), 1000);
+        conn.close();
+    }
+    @Test
+    public  void test_MultithreadedTableWriter_batchSize_greater_than_Number_of_inserts_waitForThreadCompletion()throws Exception {
+        DBConnection conn= new DBConnection(false, false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        StringBuilder sb = new StringBuilder();
+        sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
+                "if(existsDatabase(dbName)){\n" +
+                "\tdropDB(dbName);\n" +
+                "}\n" +
+                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "dummy = table(100:0, [`id], [STRING]);\n" +
+                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+        conn.run(sb.toString());
+
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_MultithreadedTableWriter", "pt", false,
+                false, null, 200000, 0, 5, "id", null, callbackHandler);
+
+        for (int i = 0; i < 1000; i++){
+            try{
+                ErrorCodeInfo pErrorInfo = mtw.insert(Integer.toString(i), Integer.toString(i));
+            }
+            catch(RuntimeException ex)
+            {
+                System.out.println(ex.getMessage());
+            }
+        }
+        mtw.waitForThreadCompletion();
+        //conn.run("sleep(2000)");
+        System.out.println("callback rows");
+
+
+        BasicTable ex = (BasicTable)conn.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
+        System.out.println("ex.rows()" + ex.rows());
+        assertEquals(ex.rows(), 1000);
+        conn.close();
+    }
 
 }
 
