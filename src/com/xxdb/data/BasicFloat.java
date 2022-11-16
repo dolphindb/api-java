@@ -81,10 +81,14 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 				BigDecimal bd;
 				if(value >= 10000000.0){
 					bd = new BigDecimal(value);
+					return bd.setScale(SCALE, RoundingMode.DOWN).toString();
+				}else if (value == 0){
+					bd = new BigDecimal(value + "");
+					return String.valueOf(0);
 				}else {
 					bd = new BigDecimal(value + "");
+					return bd.setScale(SCALE, RoundingMode.DOWN).toString();
 				}
-				return bd.setScale(SCALE, RoundingMode.DOWN).toString();
 			}
 		}
 	}

@@ -81,10 +81,13 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 				BigDecimal bd;
 				if(value >= 10000000.0){
 					bd = new BigDecimal(value);
+					return bd.setScale(SCALE, RoundingMode.DOWN).toString();
+				}else if(value == 0){
+					return String.valueOf(0);
 				}else {
 					bd = new BigDecimal(value + "");
+					return bd.setScale(SCALE, RoundingMode.DOWN).toString();
 				}
-				return bd.setScale(SCALE, RoundingMode.DOWN).toString();
 			}
 		}
 	}
