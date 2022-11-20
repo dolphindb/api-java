@@ -33,4 +33,8 @@ public class BasicUuid extends BasicInt128 {
 		UUID uuid = UUID.fromString(name);
 		return new BasicUuid(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
 	}
+	public static BasicUuid random() {
+		UUID uuid = UUID.randomUUID();
+		return new BasicUuid(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
+	}
 }
