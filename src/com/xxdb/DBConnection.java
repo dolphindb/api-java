@@ -358,8 +358,10 @@ public class DBConnection {
                 int flag = generateRequestFlag(clearMemory);
                 Map<Property,Object> properties=new HashMap<>();
                 properties.put(Property.flag, flag);
+                properties.put(Property.cancel,1);
                 properties.put(Property.priority, priority);
                 properties.put(Property.parallelism, parallelism);
+                String propInfo=" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism);
                 //out_.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                 //if (fetchSize > 0)
                 //    out_.writeBytes("__" + String.valueOf(fetchSize));
@@ -384,7 +386,7 @@ public class DBConnection {
                         }
                         sbProp.append("_");
                     }
-                    sbProp.delete(lastNotNullValue + 1, sbProp.length());
+                    sbProp.delete(lastNotNullValue, sbProp.length());
                     sbProp.append('\n');
                     out_.writeBytes(sbProp.toString());
                 }
