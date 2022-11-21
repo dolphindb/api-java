@@ -260,7 +260,7 @@ public class DBConnection {
         private void login() throws IOException {
             List<Entity> args = new ArrayList<>();
             if (encrypted_) {
-                BasicString keyCode = (BasicString) run("getDynamicPublicKey", new ArrayList<Entity>(),false);
+                BasicString keyCode = (BasicString) run("getDynamicPublicKey", new ArrayList<Entity>(),0);
                 PublicKey key = RSAUtils.getPublicKey(keyCode.getString());
                 byte[] usr = RSAUtils.encryptByPublicKey(userId_.getBytes(), key);
                 byte[] pass = RSAUtils.encryptByPublicKey(pwd_.getBytes(), key);
@@ -273,37 +273,38 @@ public class DBConnection {
                 args.add(new BasicString(userId_));
                 args.add(new BasicString(pwd_));
             }
-            run("login", args, false);
+            run("login", args, 0);
         }
 
-        private Entity run(String script,boolean resend) throws IOException {
+        private Entity run(String script,long seqNum) throws IOException {
             List<Entity> args = new ArrayList<>();
-            return run(script, "script", (ProgressListener)null, args, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, resend);
+            return run(script, "script", (ProgressListener)null, args, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, seqNum);
         }
 
-        private Entity run(String script, ProgressListener listener,int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName, boolean resend) throws IOException{
+        private Entity run(String script, ProgressListener listener,int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName, long seqNum) throws IOException{
             List<Entity> args = new ArrayList<>();
-            return run(script, "script", listener, args, priority, parallelism, fetchSize, clearMemory, tableName,resend);
+            return run(script, "script", listener, args, priority, parallelism, fetchSize, clearMemory, tableName,seqNum);
         }
-        private Entity run(String function, List<Entity> arguments,boolean resend) throws IOException {
-            return run(function,"function", (ProgressListener)null, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, resend);
-        }
-
-        private Entity run(String function, String scriptType, List<Entity> arguments,boolean resend)throws IOException{
-            return run(function, scriptType, (ProgressListener)null, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, resend);
+        private Entity run(String function, List<Entity> arguments,long seqNum) throws IOException {
+            return run(function,"function", (ProgressListener)null, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, seqNum);
         }
 
-        private Entity run(String function, ProgressListener listener,List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory,boolean resend) throws IOException{
-            return run(function, "function", listener, args, priority, parallelism, fetchSize, clearMemory,resend);
+        private Entity run(String function, String scriptType, List<Entity> arguments,long seqNum)throws IOException{
+            return run(function, scriptType, (ProgressListener)null, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, seqNum);
         }
 
-        private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory,boolean resend) throws IOException{
-            return run(script, scriptType, listener, args, priority, parallelism, fetchSize, clearMemory, "", resend);
+        private Entity run(String function, ProgressListener listener,List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory,long seqNum) throws IOException{
+            return run(function, "function", listener, args, priority, parallelism, fetchSize, clearMemory,seqNum);
+        }
+
+        private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory,long seqNum) throws IOException{
+            return run(script, scriptType, listener, args, priority, parallelism, fetchSize, clearMemory, "", seqNum);
         }
         //flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
         //                if (fetchSize > 0)
         //                    out_.writeBytes("__" + String.valueOf(fetchSize
-        private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName, boolean resend) throws IOException{
+        private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName, long seqNum) throws IOException{
+            System.out.println("script " + script);
             if (!isConnected_)
                 throw new IOException("Couldn't send script/function to the remote host because the connection has been closed");
 
@@ -325,13 +326,13 @@ public class DBConnection {
 
             if (!tableName.equals("")){
                 script = tableName + "=" + script;
-                run(script,false);
-                BasicDictionary schema = (BasicDictionary) run(tableName + ".schema()",false);
+                run(script,0);
+                BasicDictionary schema = (BasicDictionary) run(tableName + ".schema()",0);
                 BasicTable colDefs = (BasicTable)schema.get(new BasicString("colDefs"));
                 BasicStringVector colDefsName = (BasicStringVector)colDefs.getColumn("name");
                 BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
                 int cols = colDefs.rows();
-                int rows = ((BasicInt) run("rows(" + tableName + ")",false)).getInt();
+                int rows = ((BasicInt) run("rows(" + tableName + ")",0)).getInt();
                 Map<Integer, Entity.DATA_TYPE> types2Index = new HashMap<>();
                 Map<Integer, String> name2Index = new HashMap<>();
                 for (int i = 0; i < cols; i++){
@@ -368,14 +369,13 @@ public class DBConnection {
                 //out_.writeByte('\n');
                 if (fetchSize > 0)
                     properties.put(Property.fetchSize, fetchSize);
-                if(enableHighAvailability_ && runClientId_ != null){
+                if(enableHighAvailability_ && runClientId_ != null && seqNum != 0){
                     properties.put(Property.clientId, runClientId_);
-                    if(resend == false) {
-                        properties.put(Property.seqNo, runSeqNo_);
-                        System.out.println("clientId " + runClientId_+" seqNo "+runSeqNo_);
+                    properties.put(Property.seqNo, seqNum);
+                    if(seqNum>0){
+                        System.out.println("clientId " + runClientId_+" seqNo "+seqNum);
                     }else {
-                        properties.put(Property.seqNo, -runSeqNo_);
-                        System.out.println("****************Resend for clientId " + runClientId_+" seqNo "+runSeqNo_);
+                        System.out.println("****************Resend for clientId " + runClientId_+" seqNo "+seqNum);
                     }
                 }
                 {//write properties
@@ -494,15 +494,15 @@ public class DBConnection {
             }
         }
 
-        public void upload(String name, Entity obj,boolean resend) throws IOException{
+        public void upload(String name, Entity obj,long seqNum) throws IOException{
             if (!Utils.isVariableCandidate(name))
                 throw new RuntimeException(name + " is not a qualified variable name.");
             List<Entity> args = new ArrayList<>();
             args.add(obj);
-            run(name, "variable", args, resend);
+            run(name, "variable", args, seqNum);
         }
 
-        public void upload(List<String> names, List<Entity> objs,boolean resend) throws IOException{
+        public void upload(List<String> names, List<Entity> objs,long seqNum) throws IOException{
             if (names.size() != objs.size())
                 throw new RuntimeException("the size of variable names doesn't match the size of objects.");
             if (names.isEmpty())
@@ -517,7 +517,7 @@ public class DBConnection {
                 varNames.append(names.get(i));
             }
 
-            run(varNames.toString(), "variable", objs, resend);
+            run(varNames.toString(), "variable", objs, seqNum);
         }
 
         public void close(){
@@ -722,7 +722,7 @@ public class DBConnection {
                         }
                     }
                     try {
-                        bt = (BasicTable) conn_.run("rpc(getControllerAlias(), getClusterPerf)",false);
+                        bt = (BasicTable) conn_.run("rpc(getControllerAlias(), getClusterPerf)",0);
                         break;
                     }catch (Exception e){
                         System.out.println("ERROR getting other data nodes, exception: " + e.getMessage());
@@ -924,7 +924,7 @@ public class DBConnection {
 
     public boolean connected(){
         try {
-            BasicInt ret= (BasicInt) conn_.run("1+1",false);
+            BasicInt ret= (BasicInt) conn_.run("1+1",0);
             return !ret.isNull() && (ret.getInt() == 2);
         }catch (Exception e){
             return false;
@@ -1029,16 +1029,13 @@ public class DBConnection {
         mutex_.lock();
         try {
             if (!nodes_.isEmpty()) {
-                boolean resend=false;
-                runSeqNo_++;
-                if(runSeqNo_ <= 0){
-                    runSeqNo_ = 1;
-                }
+                long curSeqNo = newSeqNo();
                 while (!closed_) {
                     try {
-                        return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, resend);
+                        return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, curSeqNo);
                     } catch (IOException e) {
-                        resend = true;
+                        if(curSeqNo>0)
+                            curSeqNo = -curSeqNo;
                         Node node = new Node();
                         if (connected()) {
                             ExceptionType type = parseException(e.getMessage(), node);
@@ -1054,7 +1051,7 @@ public class DBConnection {
                 }
                 return null;
             } else {
-                return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, false);
+                return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, 0);
             }
         } finally {
             mutex_.unlock();
@@ -1091,21 +1088,28 @@ public class DBConnection {
     public Entity run(String function, List<Entity> arguments, int priority, int parallelism) throws IOException {
         return run(function, arguments, priority, parallelism, 0);
     }
+    private long newSeqNo(){
+        mutex_.lock();
+        runSeqNo_++;
+        if(runSeqNo_ <= 0){
+            runSeqNo_ = 1;
+        }
+        long res=runSeqNo_;
+        mutex_.unlock();
+        return res;
+    }
 
     public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize) throws IOException {
         mutex_.lock();
         try {
             if (!nodes_.isEmpty()){
-                boolean resend=false;
-                runSeqNo_++;
-                if(runSeqNo_ <= 0){
-                    runSeqNo_ = 1;
-                }
+                long seqNo = newSeqNo();
                 while (!closed_){
                     try {
-                        return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false,resend);
+                        return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false,seqNo);
                     }catch (IOException e){
-                        resend = true;
+                        if(seqNo > 0)
+                            seqNo = -seqNo;
                         Node node = new Node();
                         if (connected()){
                             ExceptionType type = parseException(e.getMessage(), node);
@@ -1121,7 +1125,7 @@ public class DBConnection {
                 }
                 return null;
             }else {
-                return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false, false);
+                return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false, 0);
             }
         }finally {
             mutex_.unlock();
@@ -1146,27 +1150,21 @@ public class DBConnection {
             List<String> keys = new ArrayList<>();
             List<Entity> objs = new ArrayList<>();
             if (!nodes_.isEmpty()){
-                boolean resend=false;
-                runSeqNo_++;
-                if(runSeqNo_ <= 0){
-                    runSeqNo_ = 1;
-                }
                 while (!closed_){
                     try {
                         for (String key : variableObjectMap.keySet()){
                             if (variableObjectMap.size() == 1){
                                 Entity obj = variableObjectMap.get(key);
-                                conn_.upload(key, obj,resend);
+                                conn_.upload(key, obj,0);
                             }else {
                                 keys.add(key);
                                 objs.add(variableObjectMap.get(key));
                             }
                         }
                         if (variableObjectMap.size() > 1)
-                            conn_.upload(keys, objs,resend);
+                            conn_.upload(keys, objs,0);
                         break;
                     }catch (Exception e){
-                        resend=true;
                         Node node = new Node();
                         if (connected()){
                             ExceptionType type = parseException(e.getMessage(), node);
@@ -1184,14 +1182,14 @@ public class DBConnection {
                 for (String key : variableObjectMap.keySet()){
                     if (variableObjectMap.size() == 1){
                         Entity obj = variableObjectMap.get(key);
-                        conn_.upload(key, obj, false);
+                        conn_.upload(key, obj, 0);
                     }else {
                         keys.add(key);
                         objs.add(variableObjectMap.get(key));
                     }
                 }
                 if (variableObjectMap.size() > 1)
-                    conn_.upload(keys, objs, false);
+                    conn_.upload(keys, objs, 0);
             }
         }finally {
             mutex_.unlock();
@@ -1257,7 +1255,11 @@ public class DBConnection {
      }
      private void compareRequiredAPIVersion() throws IOException {
         try {
-            Entity ret = run("getRequiredAPIVersion(`java)");
+            Entity ret = conn_.run("getRequiredAPIVersion(`java)",0);
+            if(ret==null){
+                throw new IOException("run getRequiredAPIVersion failed");
+            }
+            //Entity ret = run("getRequiredAPIVersion(`java)");
             if (localAPIVersion < ((BasicInt)((BasicAnyVector) ret).get(0)).getInt()) {
                 throw new IOException("API version is too low and needs to be upgraded");
             }
