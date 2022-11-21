@@ -392,6 +392,7 @@ public class DBConnection {
                     sbProp.delete(lastNotNullValue, sbProp.length());
                     sbProp.append('\n');
                     out_.writeBytes(sbProp.toString());
+                    System.out.println("prop: "+sbProp);
                 }
                 out_.writeBytes(body.toString());
 
