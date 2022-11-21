@@ -370,10 +370,13 @@ public class DBConnection {
                     properties.put(Property.fetchSize, fetchSize);
                 if(nodes_.isEmpty() == false && runClientId_ != null){
                     properties.put(Property.clientId, runClientId_);
-                    if(resend == false)
+                    if(resend == false) {
                         properties.put(Property.seqNo, runSeqNo_);
-                    else
+                        System.out.println("clientId " + runClientId_+" seqNo "+runSeqNo_);
+                    }else {
                         properties.put(Property.seqNo, -runSeqNo_);
+                        System.out.println("****************Resend for clientId " + runClientId_+" seqNo "+runSeqNo_);
+                    }
                 }
                 {//write properties
                     int lastNotNullValue = -1;
@@ -790,10 +793,7 @@ public class DBConnection {
                         System.out.println("Connect to min load node: " + pMinNode.hostName + ":" + pMinNode.port);
                         conn_.close();
                         switchDataNode(pMinNode);
-                        return true;
                     }
-                }else {
-                    return true;
                 }
             }else {
                 if (reconnect){
