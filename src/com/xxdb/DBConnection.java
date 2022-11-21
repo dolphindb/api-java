@@ -368,7 +368,7 @@ public class DBConnection {
                 //out_.writeByte('\n');
                 if (fetchSize > 0)
                     properties.put(Property.fetchSize, fetchSize);
-                if(nodes_.isEmpty() == false && runClientId_ != null){
+                if(enableHighAvailability_ && runClientId_ != null){
                     properties.put(Property.clientId, runClientId_);
                     if(resend == false) {
                         properties.put(Property.seqNo, runSeqNo_);
