@@ -361,7 +361,7 @@ public class DBConnection {
                 properties.put(Property.cancel,1);
                 properties.put(Property.priority, priority);
                 properties.put(Property.parallelism, parallelism);
-                String propInfo=" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism);
+                //String propInfo=" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism);
                 //out_.writeBytes(" / " + String.valueOf(flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
                 //if (fetchSize > 0)
                 //    out_.writeBytes("__" + String.valueOf(fetchSize));
@@ -1030,6 +1030,9 @@ public class DBConnection {
             if (!nodes_.isEmpty()) {
                 boolean resend=false;
                 runSeqNo_++;
+                if(runSeqNo_ <= 0){
+                    runSeqNo_ = 1;
+                }
                 while (!closed_) {
                     try {
                         return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, resend);
@@ -1094,6 +1097,9 @@ public class DBConnection {
             if (!nodes_.isEmpty()){
                 boolean resend=false;
                 runSeqNo_++;
+                if(runSeqNo_ <= 0){
+                    runSeqNo_ = 1;
+                }
                 while (!closed_){
                     try {
                         return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false,resend);
@@ -1141,6 +1147,9 @@ public class DBConnection {
             if (!nodes_.isEmpty()){
                 boolean resend=false;
                 runSeqNo_++;
+                if(runSeqNo_ <= 0){
+                    runSeqNo_ = 1;
+                }
                 while (!closed_){
                     try {
                         for (String key : variableObjectMap.keySet()){
