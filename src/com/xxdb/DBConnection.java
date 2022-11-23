@@ -58,6 +58,7 @@ public class DBConnection {
     private boolean loadBalance_ = true;
     private String runClientId_ = null;
     private long runSeqNo_ = 0;
+    private int[] serverVersion_;
 
 
     private enum ServerExceptionState {
@@ -798,19 +799,27 @@ public class DBConnection {
                         return false;
                 }
             }
-            if(!nodes_.isEmpty()){
-                runClientId_ = BasicUuid.random().getString();
-                runSeqNo_ = 0;
-            }
-
-            if (initialScript_!=null && initialScript_.length() > 0){
-                run(initialScript_);
-            }
+            InitConnection();
             return true;
         }catch (IOException e){
             throw e;
         }finally {
             mutex_.unlock();
+        }
+    }
+
+    private void InitConnection() throws IOException{
+        runClientId_ = null;
+        if(enableHighAvailability_){
+            if(getServerVersion()) {
+                if (checkClientIdValid()) {
+                    runClientId_ = BasicUuid.random().getString();
+                    runSeqNo_ = 0;
+                }
+            }
+        }
+        if (initialScript_!=null && initialScript_.length() > 0){
+            run(initialScript_);
         }
     }
 
@@ -840,9 +849,7 @@ public class DBConnection {
                 return;
             }
         }while (!connected && !closed_);
-        if (initialScript_ != null && initialScript_.length() > 0){
-            run(initialScript_);
-        }
+        InitConnection();
     }
 
     public boolean connectNode(Node node) throws IOException{
@@ -1248,6 +1255,8 @@ public class DBConnection {
      }
      private void compareRequiredAPIVersion() throws IOException {
         try {
+            //1.30.20.5
+            //2.00.9
             Entity ret = conn_.run("getRequiredAPIVersion(`java)",0);
             if(ret==null){
                 throw new IOException("run getRequiredAPIVersion failed");
@@ -1262,4 +1271,47 @@ public class DBConnection {
             }
         }
      }
+    private boolean getServerVersion() throws IOException {
+        try {
+            Entity ret = conn_.run("version()",0);
+            if(ret==null){
+                throw new IOException("run version failed");
+            }
+            String version = ret.getString();
+            String[] verList=version.split(" ");
+            if(verList.length > 1){
+                version=verList[0];
+            }
+            verList = version.split("\\.");
+            serverVersion_=new int[4];
+            int size=verList.length;
+            if(size>4)
+                size=4;
+            else if(size<3)
+                return false;
+            for(int i=0;i<size;i++){
+                serverVersion_[i] = Integer.parseInt(verList[i]);
+            }
+        }catch (Exception e){
+            throw new IOException("Run version failed error: "+e.getMessage());
+        }
+        return true;
+    }
+    //if serverVersion_ is greater or equal than version
+    private boolean compareVersionGE(int[] version){
+        for(int i=0;i<version.length;i++){
+            if(serverVersion_[i] != version[i]){
+                return serverVersion_[i] > version[i];
+            }
+        }
+        return true;
+    }
+    private boolean checkClientIdValid(){
+        if(serverVersion_[0]==1){//1.30.20.5
+            return compareVersionGE(new int[]{1,30,20,5});
+        }else if(serverVersion_[0]==2){//2.00.9
+            return compareVersionGE(new int[]{2,0,9,0});
+        }else
+            return true;
+    }
 }
