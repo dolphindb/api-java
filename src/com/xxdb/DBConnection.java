@@ -857,7 +857,9 @@ public class DBConnection {
                 return;
             }
         }while (!connected && !closed_);
-        InitConnection();
+        if (initialScript_!=null && initialScript_.length() > 0){
+            run(initialScript_);
+        }
     }
 
     public boolean connectNode(Node node) throws IOException{
