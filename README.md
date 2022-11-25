@@ -60,6 +60,8 @@ The most important object provided by DolphinDB Java API is `DBConnection`. It a
 | isBusy()                                                     | Check if the current session is busy     |
 | close()                                                      | Close the current session                |
 
+Note: If the current session is no longer in use, Java API will automatically close the connection after a while. You can close the session by calling `close()` to release the connection. Otherwise, other sessions may be unable to connect to the server due to too many connections.
+
 For a detailed example, you can refer to the [example directory](https://github.com/dolphindb/api-java/tree/release130/example).
 
 
@@ -116,6 +118,8 @@ Multiple DBconnection objects can be reused by ExclusiveDBConnectionPool. You ca
 | execute(List tasks)                                          | Execute tasks in batches.                                    |
 | getConnectionCount()                                         | Get the number of connections.                               |
 | shutdown()                                                   | Shut down the connection pool.                               |
+
+Note: If the current `ExclusiveDBConnectionPool` is no longer in use, Java API will automatically close the connection after a while. To release the connection resources, call `shutdown()`upon the completion of thread tasks. 
 
 `BasicDBTask` wraps the functions and arguments to be executed.
 
