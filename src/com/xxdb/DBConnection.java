@@ -305,7 +305,6 @@ public class DBConnection {
         //                if (fetchSize > 0)
         //                    out_.writeBytes("__" + String.valueOf(fetchSize
         private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName, long seqNum) throws IOException{
-            System.out.println("script " + script);
             if (!isConnected_)
                 throw new IOException("Couldn't send script/function to the remote host because the connection has been closed");
 
@@ -373,12 +372,6 @@ public class DBConnection {
                 if(enableHighAvailability_ && runClientId_ != null && seqNum != 0){
                     properties.put(Property.clientId, runClientId_);
                     properties.put(Property.seqNo, seqNum);
-                    if(seqNum>0){
-                        System.out.println("clientId " + runClientId_+" seqNo "+seqNum);
-                    }else {
-                        System.out.println("****************Resend for clientId " + runClientId_+" seqNo "+seqNum);
-                    }
-
                 }
                 {//write properties
                     int lastNotNullValue = -1;
@@ -394,7 +387,6 @@ public class DBConnection {
                     sbProp.delete(lastNotNullValue, sbProp.length());
                     sbProp.append('\n');
                     out_.writeBytes(sbProp.toString());
-                    System.out.println("prop: "+sbProp);
                 }
                 out_.writeBytes(body.toString());
 
