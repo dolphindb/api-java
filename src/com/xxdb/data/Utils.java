@@ -594,13 +594,13 @@ public class Utils {
 	}
 
 	public static class Timer{
-		Long start = new Long(0);
-		Long end = new Long(0);
+		long start = 0;
+		long end = 0;
 		Map<String, ArrayList<Double>> runtime = new HashMap<>();
 
 		public void reset(){
-			start = new Long(0);
-			end = new Long(0);
+			start = 0;
+			end = 0;
 			runtime = new HashMap<>();
 		}
 
@@ -638,6 +638,61 @@ public class Utils {
 			}
 			time.add((end-start)/1000000.0);
 			runtime.put(prefix, time);
+		}
+	}
+
+	public static String getDataTypeString(DATA_TYPE dt)
+	{
+		switch (dt)
+		{
+			case DT_BOOL:
+				return "bool";
+			case DT_BYTE:
+				return "byte";
+			case DT_SHORT:
+				return "short";
+			case DT_INT:
+				return "int";
+			case DT_LONG:
+				return "long";
+			case DT_FLOAT:
+				return "float";
+			case DT_DOUBLE:
+				return "double";
+			case DT_NANOTIME:
+				return "nanotime";
+			case DT_NANOTIMESTAMP:
+				return "nanotimestamp";
+			case DT_TIMESTAMP:
+				return "timestamp";
+			case DT_DATE:
+				return "date";
+			case DT_MONTH:
+				return "month";
+			case DT_TIME:
+				return "time";
+			case DT_SECOND:
+				return "second";
+			case DT_MINUTE:
+				return "minute";
+			case DT_DATETIME:
+				return "datetime";
+			case DT_INT128:
+				return "int128";
+			case DT_IPADDR:
+				return "ipaddr";
+			case DT_UUID:
+				return "uuid";
+			case DT_STRING:
+				return "string";
+			case DT_SYMBOL:
+				return "symbol";
+			case DT_DECIMAL32:
+				return "decimal32";
+			case DT_DECIMAL64:
+				return "decimal64";
+			default:
+				return dt.toString();
 		}
 	}
 }
