@@ -83,7 +83,7 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 					bd = new BigDecimal(value);
 					return bd.setScale(SCALE, RoundingMode.DOWN).toString();
 				}else if(value == 0){
-					return String.valueOf(0);
+					return String.valueOf(value);
 				}else {
 					bd = new BigDecimal(value + "");
 					return bd.setScale(SCALE, RoundingMode.DOWN).toString();
