@@ -18,6 +18,7 @@ public class BasicArrayVector extends AbstractVector {
 	private int baseUnitLength_;
 	private int rowIndicesSize;
 	private int capacity;
+	private int scale_ = -1;
 
 	public BasicArrayVector(DATA_TYPE type, int size){
 		super(DATA_FORM.DF_VECTOR);
@@ -95,10 +96,16 @@ public class BasicArrayVector extends AbstractVector {
 		super(DATA_FORM.DF_VECTOR);
 		this.type = type;
 		int rows = in.readInt();
-		int cols = in.readInt(); 
+		int cols = in.readInt();
+		this.scale_ = in.readInt();
 		rowIndices = new int[rows];
 		DATA_TYPE valueType = DATA_TYPE.valueOf(type.getValue() - 64);
 		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, cols);
+		if (valueType == DATA_TYPE.DT_DECIMAL32){
+			((BasicDecimal32Vector)valueVec).setScale(scale_);
+		}else if (valueType == DATA_TYPE.DT_DECIMAL64){
+			((BasicDecimal64Vector)valueVec).setScale(scale_);
+		}
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		this.baseUnitLength_ = valueVec.getUnitLength();
 		byte[] buf = new byte[4096];
