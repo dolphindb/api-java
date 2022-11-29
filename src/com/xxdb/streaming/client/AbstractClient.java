@@ -32,6 +32,7 @@ abstract class AbstractClient implements MessageDispatcher {
     protected CopyOnWriteArraySet<String> waitReconnectTopic = new CopyOnWriteArraySet<>();
     protected Map<String, StreamDeserializer> subInfos_ = new HashMap<>();
     protected HashMap<List<String>, List<String>> users = new HashMap<>();
+    protected boolean isClose_ = false;
 
     class ReconnectItem {
         /**
@@ -579,6 +580,11 @@ abstract class AbstractClient implements MessageDispatcher {
 
     public void close(){
         pThread.interrupt();
+        isClose_ = true;
+    }
+
+    public boolean isClose(){
+        return isClose_;
     }
 
     protected void unsubscribeInternal(String host, int port, String tableName) throws IOException {

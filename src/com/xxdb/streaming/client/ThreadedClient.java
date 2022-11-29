@@ -73,7 +73,7 @@ public class ThreadedClient extends AbstractClient {
         }
 
         public void run() {
-            while (!isInterrupted()) {
+            while (!isClose()) {
                 List<IMessage> msgs = null;
                 if(batchSize == -1 && throttle == -1 || batchSize == -1 && secondThrottle == -1.0f) {
                     try {
@@ -85,12 +85,15 @@ public class ThreadedClient extends AbstractClient {
                 else if(batchSize != -1 && throttle != -1 || batchSize != -1 && secondThrottle != -1.0f){
                     LocalTime end;
                     if (throttle != -1){
-                        end = LocalTime.now().plusNanos(throttle*1000000);
+                        end = LocalTime.now().plusNanos(throttle* 1000000L);
                     }else {
                         end = LocalTime.now().plusNanos((long) secondThrottle*1000000000);
                     }
-                    while (msgs == null || ((msgs == null||msgs.size()<batchSize) && LocalTime.now().isBefore(end))){
+                    while (msgs == null || (msgs.size()<batchSize && LocalTime.now().isBefore(end))){
                         List<IMessage> tmp = queue.poll();
+                        boolean timeout = LocalTime.now().isBefore(end);
+                        if (!timeout)
+                            break;
                         if(tmp != null){
                             if(msgs == null)
                                 msgs = new ArrayList<>(tmp);
@@ -102,12 +105,15 @@ public class ThreadedClient extends AbstractClient {
                 else {
                     LocalTime end;
                     if (throttle != -1){
-                        end = LocalTime.now().plusNanos(throttle*1000000);
+                        end = LocalTime.now().plusNanos(throttle* 1000000L);
                     }else {
                         end = LocalTime.now().plusNanos((long) secondThrottle*1000000000);
                     }
                     while (msgs == null || LocalTime.now().isBefore(end)){
                         List<IMessage> tmp = queue.poll();
+                        boolean timeout = LocalTime.now().isBefore(end);
+                        if (!timeout)
+                            break;
                         if(tmp != null){
                             if(msgs == null)
                                 msgs = tmp;
@@ -116,7 +122,7 @@ public class ThreadedClient extends AbstractClient {
                         }
                     }
                 }
-                if(msgs == null)
+                if (msgs == null)
                     continue;
                 if (batchHandler!=null)
                     batchHandler.batchHandler(msgs);
@@ -406,5 +412,6 @@ public class ThreadedClient extends AbstractClient {
             handlerLoppers.clear();
         }
         pThread.interrupt();
+        isClose_ = true;
     }
 }

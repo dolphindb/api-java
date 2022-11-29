@@ -64,7 +64,7 @@ public class ThreadPooledClient extends AbstractClient {
 
             private void refill() {
                 int count = 200;
-                while (fillBacklog() == false) {
+                while (!fillBacklog()) {
                     if (count > 100) {
                         ;
                     } else if (count > 0) {
@@ -247,5 +247,6 @@ public class ThreadPooledClient extends AbstractClient {
         }
         threadPool.shutdownNow();
         pThread.interrupt();
+        isClose_ = true;
     }
 }
