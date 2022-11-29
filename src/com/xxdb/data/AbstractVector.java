@@ -95,6 +95,9 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		out.writeShort(flag);
 		out.writeInt(rows());
 		out.writeInt(columns());
+		if (Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL32_ARRAY ||
+				Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL64_ARRAY)
+			out.writeInt(getExtraParamForType()); //extra
 		writeVectorToOutputStream(out);
 	}
 
@@ -225,11 +228,13 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		out.put((byte) compressedMethod);
 		out.put((byte) dataType);
 		out.put((byte) unitLength);
-		out.position(out.position() + 2); //reserved
-		if (Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL32 || Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL64)
-			out.putInt(getExtraParamForType()); //extra
+		if (Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL32 || Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL64
+				|| Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL32_ARRAY || Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL64_ARRAY)
+			out.put((byte)getExtraParamForType()); //reserved low
 		else
-			out.putInt(-1);
+			out.position(out.position() + 1);
+		out.position(out.position() + 1); //reserved high
+		out.putInt(-1);//extra
 		out.putInt(elementCount);
 		out.putInt(-1); //TODO: checkSum
 

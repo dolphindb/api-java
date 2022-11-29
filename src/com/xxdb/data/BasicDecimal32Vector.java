@@ -10,7 +10,7 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 public class BasicDecimal32Vector extends AbstractVector{
-    private int scale_ = 0;
+    private int scale_ = -1;
     private int[] values;
     private int size;
     private int capaticy;
@@ -144,10 +144,8 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
-        if (((Scalar)value).getScale() != scale_ && scale_ >= 0)
-            throw new RuntimeException("Value's scale is not the same as the vector's!");
-        else
-            scale_ = ((Scalar) value).getScale();
+        if (scale_ < 0)
+            throw new RuntimeException("Please set scale first.");
         if(((Scalar)value).isNull()){
             values[index] = Integer.MIN_VALUE;
         }else{
@@ -172,7 +170,9 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
-        throw new RuntimeException("Decimal32 does not support arrayVector");
+        for (int i = 0; i < count; i++){
+            out.writeInt(values[start + i]);
+        }
     }
 
     @Override
@@ -231,19 +231,17 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void Append(Scalar value) throws Exception{
-        if (((BasicDecimal32)value).getScale() != scale_ && scale_ >= 0)
-            throw new RuntimeException("The value's scale is different from the inserted target.");
-        else
-            scale_ = ((BasicDecimal32)value).getScale();
+        if (scale_ < 0){
+            throw new RuntimeException("Please set scale first.");
+        }
         add(value.getNumber().doubleValue());
     }
 
     @Override
     public void Append(Vector value) throws Exception{
-        if (((BasicDecimal32Vector)value).getScale() != scale_ && scale_ >= 0)
-            throw new RuntimeException("The value's scale is different from the inserted target.");
-        else
-            scale_ = ((BasicDecimal32Vector)value).getScale();
+        if (scale_ < 0){
+            throw new RuntimeException("Please set scale first.");
+        }
         addRange(((BasicDecimal32Vector)value).getdataArray());
     }
 

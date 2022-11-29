@@ -456,6 +456,11 @@ public class BasicArrayVector extends AbstractVector {
 	}
 
 	@Override
+	public int getExtraParamForType(){
+		return scale_;
+	}
+
+	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
 		// TODO Auto-generated method stub
 		int indexCount = rowIndicesSize;
