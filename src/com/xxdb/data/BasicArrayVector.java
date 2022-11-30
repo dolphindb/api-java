@@ -237,6 +237,10 @@ public class BasicArrayVector extends AbstractVector {
 		int rows = rowIndices[index] - startPosValueVec;
 		DATA_TYPE valueType = DATA_TYPE.valueOf(type.getValue()-64);
 		Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, rows);
+		if (valueType == DATA_TYPE.DT_DECIMAL32){
+			((BasicDecimal32Vector)value).setScale(scale_);
+		}else if (valueType == DATA_TYPE.DT_DECIMAL64)
+			((BasicDecimal64Vector)value).setScale(scale_);
 		if (rows > 0){
 			try {
 				value.set(0, valueVec.get(startPosValueVec));
