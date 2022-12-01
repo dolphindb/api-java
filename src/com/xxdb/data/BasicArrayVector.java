@@ -39,6 +39,16 @@ public class BasicArrayVector extends AbstractVector {
 		else{
 			this.type = DATA_TYPE.valueOf(value.get(0).getDataType().getValue() + 64);
 			DATA_TYPE valueType = DATA_TYPE.valueOf(value.get(0).getDataType().getValue());
+			if (valueType == DATA_TYPE.DT_DECIMAL32 || valueType == DATA_TYPE.DT_DECIMAL64){
+				int scale = ((AbstractVector)value.get(0)).getExtraParamForType();
+				for (int i = 0; i < value.size(); i++){
+					int scaleCopy = ((AbstractVector)value.get(i)).getExtraParamForType();
+					if (scaleCopy != scale){
+						throw new RuntimeException("The scale of decimal arrayVector's value is not same.");
+					}
+				}
+				this.scale_ = scale;
+			}
 			int len = 0;
 			for (Vector one : value){
 				if(one.rows()>0)
@@ -50,6 +60,11 @@ public class BasicArrayVector extends AbstractVector {
 			int indexCount = value.size();
 			this.rowIndices = new int[indexCount];
 			this.valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, len);
+			if (valueType == DATA_TYPE.DT_DECIMAL32){
+				((BasicDecimal32Vector)valueVec).setScale(scale_);
+			}else if (valueType == DATA_TYPE.DT_DECIMAL64){
+				((BasicDecimal64Vector)valueVec).setScale(scale_);
+			}
 			int index = 0;
 			int curRows = 0;
 			for (int valuePos = 0; valuePos < indexCount; valuePos++){
