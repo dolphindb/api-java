@@ -359,6 +359,86 @@ public class BasicArrayVectorTest {
         assertEquals(Entity.DATA_TYPE.DT_DATEHOUR_ARRAY,obj.getDataType());
         conn.close();
     }
+    @Test
+    public void TestBasic_decimal32_ArrayVector() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        String script="\n" +
+                "a = array(DECIMAL32(4)[],0)\n" +
+                "a.append!([[1.11111,2],[1.000001,3],[34.1,2,111.0],[]])\n" +
+                "a";
+        BasicArrayVector obj = (BasicArrayVector)conn.run(script);
+        System.out.println(obj.getString());
+        assertEquals("[1.1111,2.0000]",obj.getVectorValue(0).getString());
+        assertEquals("[1.0000,3.0000]",obj.getVectorValue(1).getString());
+        assertEquals("[34.1000,2.0000,111.0000]",obj.getVectorValue(2).getString());
+        assertEquals("[]",obj.getVectorValue(3).getString());
+
+        obj.Append(new BasicDecimal32Vector(new double[] {0.0,-123.00432,132.204234,100.0},4));
+        assertEquals(5,obj.rows());
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",obj.getVectorValue(4).getString());
+        conn.close();
+    }
+    @Test
+    public void TestBasic_decimal32_ArrayVector_compress_true() throws Exception {
+        DBConnection conn = new DBConnection(false,false,true);
+        conn.connect(HOST, PORT);
+        String script="\n" +
+                "a = array(DECIMAL32(4)[],0)\n" +
+                "a.append!([[1.11111,2],[1.000001,3],[34.1,2,111.0],[]])\n" +
+                "a";
+        BasicArrayVector obj = (BasicArrayVector)conn.run(script);
+        System.out.println(obj.getString());
+        assertEquals("[1.1111,2.0000]",obj.getVectorValue(0).getString());
+        assertEquals("[1.0000,3.0000]",obj.getVectorValue(1).getString());
+        assertEquals("[34.1000,2.0000,111.0000]",obj.getVectorValue(2).getString());
+        assertEquals("[]",obj.getVectorValue(3).getString());
+
+        obj.Append(new BasicDecimal32Vector(new double[] {0.0,-123.00432,132.204234,100.0},4));
+        assertEquals(5,obj.rows());
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",obj.getVectorValue(4).getString());
+        conn.close();
+    }
+    @Test
+    public void TestBasic_decimal64_ArrayVector() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        String script="\n" +
+                "a = array(DECIMAL64(4)[],0)\n" +
+                "a.append!([[1.11111,2],[1.000001,3],[34.1,2,111.0],[]])\n" +
+                "a";
+        BasicArrayVector obj = (BasicArrayVector)conn.run(script);
+        System.out.println(obj.getString());
+        assertEquals("[1.1111,2.0000]",obj.getVectorValue(0).getString());
+        assertEquals("[1.0000,3.0000]",obj.getVectorValue(1).getString());
+        assertEquals("[34.1000,2.0000,111.0000]",obj.getVectorValue(2).getString());
+        assertEquals("[]",obj.getVectorValue(3).getString());
+
+        obj.Append(new BasicDecimal64Vector(new double[] {0.0,-123.00432,132.204234,100.0},4));
+        assertEquals(5,obj.rows());
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",obj.getVectorValue(4).getString());
+        conn.close();
+    }
+    @Test
+    public void TestBasic_decimal64_ArrayVector_compress_true() throws Exception {
+        DBConnection conn = new DBConnection(false,false,true);
+        conn.connect(HOST, PORT);
+        String script="\n" +
+                "a = array(DECIMAL64(4)[],0)\n" +
+                "a.append!([[1.11111,2],[1.000001,3],[34.1,2,111.0],[]])\n" +
+                "a";
+        BasicArrayVector obj = (BasicArrayVector)conn.run(script);
+        System.out.println(obj.getString());
+        assertEquals("[1.1111,2.0000]",obj.getVectorValue(0).getString());
+        assertEquals("[1.0000,3.0000]",obj.getVectorValue(1).getString());
+        assertEquals("[34.1000,2.0000,111.0000]",obj.getVectorValue(2).getString());
+        assertEquals("[]",obj.getVectorValue(3).getString());
+
+        obj.Append(new BasicDecimal64Vector(new double[] {0.0,-123.00432,132.204234,100.0},4));
+        assertEquals(5,obj.rows());
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",obj.getVectorValue(4).getString());
+        conn.close();
+    }
 
     @Test
     public void TestBasicIntArrayVector_allNULL() throws Exception {
@@ -815,6 +895,122 @@ public class BasicArrayVectorTest {
         assertEquals(new BasicInt128(24635,34563).getString(),res.getVectorValue(0).get(1).getString());
         assertEquals(new BasicInt128(15645,564353).getString(),res.getVectorValue(1).get(0).getString());
         assertEquals(new BasicInt128(24635,34563).getString(),res.getVectorValue(1).get(1).getString());
+        conn.close();
+    }
+    @Test
+    public void Test_new_BasicArrayVector_decimal32() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicDecimal32Vector(2,4);
+        v.set(0,new BasicDecimal32(15645.00,2));
+        v.set(1,new BasicDecimal32(24635.00001,4));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        System.out.println(obj.getString());
+
+        assertEquals("15645.0000",obj.getVectorValue(0).get(0).getString());
+        assertEquals("24635.0000",obj.getVectorValue(0).get(1).getString());
+        assertEquals("15645.0000",obj.getVectorValue(1).get(0).getString());
+        assertEquals("24635.0000",obj.getVectorValue(1).get(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+
+        assertEquals("15645.0000",res.getVectorValue(0).get(0).getString());
+        assertEquals("24635.0000",res.getVectorValue(0).get(1).getString());
+        assertEquals("15645.0000",res.getVectorValue(1).get(0).getString());
+        assertEquals("24635.0000",res.getVectorValue(1).get(1).getString());
+        conn.close();
+    }
+    @Test
+    public void Test_new_BasicArrayVector_decimal32_compress_true() throws Exception {
+        DBConnection conn = new DBConnection(false,false,true);
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicDecimal32Vector(2,4);
+        v.set(0,new BasicDecimal32(15645.00,2));
+        v.set(1,new BasicDecimal32(24635.00001,4));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        System.out.println(obj.getString());
+
+        assertEquals("15645.0000",obj.getVectorValue(0).get(0).getString());
+        assertEquals("24635.0000",obj.getVectorValue(0).get(1).getString());
+        assertEquals("15645.0000",obj.getVectorValue(1).get(0).getString());
+        assertEquals("24635.0000",obj.getVectorValue(1).get(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+
+        assertEquals("15645.0000",res.getVectorValue(0).get(0).getString());
+        assertEquals("24635.0000",res.getVectorValue(0).get(1).getString());
+        assertEquals("15645.0000",res.getVectorValue(1).get(0).getString());
+        assertEquals("24635.0000",res.getVectorValue(1).get(1).getString());
+        conn.close();
+    }
+    @Test
+    public void Test_new_BasicArrayVector_decimal64() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicDecimal64Vector(2,4);
+        v.set(0,new BasicDecimal64(15645.00,2));
+        v.set(1,new BasicDecimal64(24635.00001,4));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        System.out.println(obj.getString());
+
+        assertEquals("15645.0000",obj.getVectorValue(0).get(0).getString());
+        assertEquals("24635.0000",obj.getVectorValue(0).get(1).getString());
+        assertEquals("15645.0000",obj.getVectorValue(1).get(0).getString());
+        assertEquals("24635.0000",obj.getVectorValue(1).get(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+
+        assertEquals("15645.0000",res.getVectorValue(0).get(0).getString());
+        assertEquals("24635.0000",res.getVectorValue(0).get(1).getString());
+        assertEquals("15645.0000",res.getVectorValue(1).get(0).getString());
+        assertEquals("24635.0000",res.getVectorValue(1).get(1).getString());
+        conn.close();
+    }
+    @Test
+    public void Test_new_BasicArrayVector_decimal64_compress_true() throws Exception {
+        DBConnection conn = new DBConnection(false,false,true);
+        conn.connect(HOST, PORT);
+        List<Vector> l = new ArrayList<Vector>();
+        Vector v=new BasicDecimal64Vector(2,4);
+        v.set(0,new BasicDecimal64(15645.00,2));
+        v.set(1,new BasicDecimal64(24635.00001,4));
+        l.add(0,v);
+        l.add(1,v);
+        BasicArrayVector obj = new BasicArrayVector(l);
+        System.out.println(obj.getString());
+
+        assertEquals("15645.0000",obj.getVectorValue(0).get(0).getString());
+        assertEquals("24635.0000",obj.getVectorValue(0).get(1).getString());
+        assertEquals("15645.0000",obj.getVectorValue(1).get(0).getString());
+        assertEquals("24635.0000",obj.getVectorValue(1).get(1).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("arrayvector", obj);
+        conn.upload(map);
+        BasicArrayVector res= (BasicArrayVector) conn.run("arrayvector");
+
+        assertEquals("15645.0000",res.getVectorValue(0).get(0).getString());
+        assertEquals("24635.0000",res.getVectorValue(0).get(1).getString());
+        assertEquals("15645.0000",res.getVectorValue(1).get(0).getString());
+        assertEquals("24635.0000",res.getVectorValue(1).get(1).getString());
         conn.close();
     }
 
