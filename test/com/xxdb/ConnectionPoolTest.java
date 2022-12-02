@@ -1106,8 +1106,8 @@ public class ConnectionPoolTest {
                 "    dropDatabase(\"dfs://testArrayVector\")\n" +
                 "}\n" +
                 "db = database(\"dfs://testArrayVector\",RANGE,int(1..100),,\"TSDB\")\n" +
-                "t = table(1000000:0,`cint`char`complex`datehour`datetime`date`double`float`int128`int`ipaddr`long`minute`month`nanotimestamp`nanotime`point`second`short`timestamp`time`uuid" +
-                ",[INT,CHAR[],COMPLEX[],DATEHOUR[],DATETIME[],DATE[],DOUBLE[],FLOAT[],INT128[],INT[],IPADDR[],LONG[],MINUTE[],MONTH[],NANOTIMESTAMP[],NANOTIME[],POINT[],SECOND[],SHORT[],TIMESTAMP[],TIME[],UUID[]])\n" +
+                "t = table(1000000:0,`cint`char`complex`datehour`datetime`date`double`float`int128`int`ipaddr`long`minute`month`nanotimestamp`nanotime`point`second`short`timestamp`time`uuid`declmal64`decimal32" +
+                ",[INT,CHAR[],COMPLEX[],DATEHOUR[],DATETIME[],DATE[],DOUBLE[],FLOAT[],INT128[],INT[],IPADDR[],LONG[],MINUTE[],MONTH[],NANOTIMESTAMP[],NANOTIME[],POINT[],SECOND[],SHORT[],TIMESTAMP[],TIME[],UUID[],DECIMAL64(4)[],DECIMAL32(3)[]])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
         conn.run(script);
         ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
@@ -1135,6 +1135,8 @@ public class ConnectionPoolTest {
         colNames.add("timestamp");
         colNames.add("time");
         colNames.add("uuid");
+        colNames.add("decimal64");
+        colNames.add("decimal32");
         List<Vector> cols = new ArrayList<>();
         cols.add(new BasicIntVector(new int[]{12,29,31}));
         List<Vector> bbl = new ArrayList<>();
@@ -1263,6 +1265,26 @@ public class ConnectionPoolTest {
         buvl.add(new BasicUuidVector(new Long2[]{new Long2(17,11),new Long2(25,6)}));
         BasicArrayVector buvla = new BasicArrayVector(buvl);
         cols.add(buvla);
+        List<Vector> bdv64 = new ArrayList<Vector>();
+        Vector v64=new BasicDecimal64Vector(3,4);
+        v64.set(0,new BasicDecimal64(15645.00,2));
+        v64.set(1,new BasicDecimal64(24635.00001,4));
+        v64.set(2,new BasicDecimal64(24635.00001,4));
+        bdv64.add(0,v64);
+        bdv64.add(1,v64);
+        bdv64.add(2,v64);
+        BasicArrayVector bdv64a = new BasicArrayVector(bdv64);
+        cols.add(bdv64a);
+        List<Vector> bdv32 = new ArrayList<Vector>();
+        Vector v32=new BasicDecimal32Vector(3,4);
+        v32.set(0,new BasicDecimal32(15645.00,2));
+        v32.set(1,new BasicDecimal32(24635.00001,4));
+        v32.set(2,new BasicDecimal32(24635.00001,4));
+        bdv32.add(0,v32);
+        bdv32.add(1,v32);
+        bdv32.add(2,v32);
+        BasicArrayVector bdv32a = new BasicArrayVector(bdv32);
+        cols.add(bdv32a);
         BasicTable bt = new BasicTable(colNames,cols);
         int x = appender.append(bt);
         BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
@@ -1289,6 +1311,9 @@ public class ConnectionPoolTest {
         assertEquals(Entity.DATA_TYPE.DT_TIMESTAMP_ARRAY,res.getColumn(19).getDataType());
         assertEquals(Entity.DATA_TYPE.DT_TIME_ARRAY,res.getColumn(20).getDataType());
         assertEquals(Entity.DATA_TYPE.DT_UUID_ARRAY,res.getColumn(21).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_DECIMAL64_ARRAY,res.getColumn(22).getDataType());
+        assertEquals(Entity.DATA_TYPE.DT_DECIMAL32_ARRAY,res.getColumn(23).getDataType());
+
         pool.shutdown();
     }
 
@@ -1424,6 +1449,82 @@ public class ConnectionPoolTest {
         pool.shutdown();
     }
 
+    @Test
+    public void test_pool_execute_decimal_arrayvector() throws Exception {
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456");
+        String script=("\n" +
+                "t = table(1000:0, `col0`col1`col2`col3`col4`col5`col6, [DECIMAL32(0)[],DECIMAL32(1)[],DECIMAL32(3)[],DECIMAL64(0)[],DECIMAL64(1)[],DECIMAL64(4)[],DECIMAL64(8)[]])\n" +
+                "share t as ptt;\n"+
+                "col0=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col1=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col2=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col3=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col4=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col5=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col6=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "t.tableInsert(col0,col1,col2,col3,col4,col5,col6)\n"+
+                "\n" );
+        List<DBTask> tasks = new ArrayList<>();
+        BasicDBTask task = new BasicDBTask(script);
+        tasks.add(task);
+        pool.execute(tasks);
+        pool.waitForThreadCompletion();
+        BasicTable res = (BasicTable) connection.run("ptt");
+        System.out.println(res.getString());
+        assertEquals(7,res.columns());
+        assertEquals(2,res.rows());
+        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(1).getString());
+        assertEquals("[[1.000,3.000,99999.999],[-1.000,0.000,0.123]]",res.getColumn(2).getString());
+        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(3).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
+        assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(5).getString());
+        assertEquals("[[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678]]",res.getColumn(6).getString());
+        System.out.println(res.getColumn(0).getString());
+        pool.shutdown();
+    }
+
+    @Test
+    public void test_pool_execute_decimal_arrayvector_compress_true() throws Exception {
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false,null,"",true,false,false);
+
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456");
+        String script=("\n" +
+                "t = table(1000:0, `col0`col1`col2`col3`col4`col5`col6, [DECIMAL32(0)[],DECIMAL32(1)[],DECIMAL32(3)[],DECIMAL64(0)[],DECIMAL64(1)[],DECIMAL64(4)[],DECIMAL64(8)[]])\n" +
+                "share t as ptt;\n"+
+                "col0=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col1=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col2=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col3=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col4=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col5=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col6=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "t.tableInsert(col0,col1,col2,col3,col4,col5,col6)\n"+
+                "\n" );
+        List<DBTask> tasks = new ArrayList<>();
+        BasicDBTask task = new BasicDBTask(script);
+        tasks.add(task);
+        pool.execute(tasks);
+        pool.waitForThreadCompletion();
+        BasicTable res = (BasicTable) connection.run("ptt");
+        System.out.println(res.getString());
+        assertEquals(7,res.columns());
+        assertEquals(2,res.rows());
+        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(1).getString());
+        assertEquals("[[1.000,3.000,99999.999],[-1.000,0.000,0.123]]",res.getColumn(2).getString());
+        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(3).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
+        assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(5).getString());
+        assertEquals("[[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678]]",res.getColumn(6).getString());
+        System.out.println(res.getColumn(0).getString());
+        pool.shutdown();
+
+    }
 
 }
 
