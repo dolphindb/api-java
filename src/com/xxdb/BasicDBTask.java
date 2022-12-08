@@ -3,6 +3,7 @@ package com.xxdb;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+import com.xxdb.data.BasicStringVector;
 import com.xxdb.data.Entity;
 
 public class BasicDBTask implements DBTask{
@@ -13,10 +14,31 @@ public class BasicDBTask implements DBTask{
 	private String errMsg = null;
 	private boolean successful = false;
 	private Semaphore semaphore = new Semaphore(1);
+	private int timeOut = -1;
 
-	public void waitFor(){
+	public void waitFor(int timeOut){
+		Thread ts = null;
+		if (timeOut >= 0){
+			this.timeOut = timeOut;
+			ts = new Thread(()->{
+				try {
+					Thread.sleep(timeOut);
+					DBConnection connection = new DBConnection();
+					connection.connect(conn.getHostName(), conn.getPort(), conn.getUserID(), conn.getPwd());
+					String sessionId = connection.getSessionID();
+					BasicStringVector bs = (BasicStringVector) connection.run("exec rootJobId from getConsoleJobs() where sessionId = " + sessionId);
+					connection.run("cancelConsoleJob(\"" + bs.getString(bs.rows()-1) + "\")");
+					semaphore.release();
+				}catch (Exception e){
+
+				}
+			});
+			ts.start();
+		}
 		try {
 			semaphore.acquire();
+			if (ts != null)
+				ts.join();
 		}catch (InterruptedException e){
 			System.out.println(e.getMessage());
 			e.printStackTrace();

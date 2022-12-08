@@ -1218,6 +1218,14 @@ public class DBConnection {
         return this.conn_.port_;
     }
 
+    public String getUserID(){
+        return this.conn_.userId_;
+    }
+
+    public String getPwd(){
+        return this.conn_.pwd_;
+    }
+
     public String getSessionID() {
         return this.conn_.sessionID_;
     }

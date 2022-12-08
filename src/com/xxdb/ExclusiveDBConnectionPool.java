@@ -118,18 +118,22 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool{
 			taskLists_.notifyAll();
 		}
 		for (DBTask task : tasks){
-			((BasicDBTask)task).waitFor();
+			((BasicDBTask)task).waitFor(-1);
 			((BasicDBTask)task).finish();
 		}
 	}
 	
 	public void execute(DBTask task){
+		execute(task, -1);
+	}
+
+	public void execute(DBTask task, int timeOut){
 		tasksCount_++;
 		synchronized (taskLists_){
 			taskLists_.add(task);
 			taskLists_.notify();
 		}
-		((BasicDBTask)task).waitFor();
+		((BasicDBTask)task).waitFor(timeOut);
 		((BasicDBTask)task).finish();
 	}
 
