@@ -187,15 +187,12 @@ public class BasicArrayVector extends AbstractVector {
 		
 		int startPosValueVec = index == 0 ? 0 : rowIndices[index - 1];
 		int rows = rowIndices[index] - startPosValueVec;
-		int size = Math.min(3, rows);
-		if(size > 0)
+		if(rows > 0)
 			sb.append(valueVec.getString(startPosValueVec));
-		for(int i=1; i<size; ++i){
+		for(int i=1; i<rows; ++i){
 			sb.append(',');
 			sb.append(valueVec.getString(startPosValueVec + i));
 		}
-		if(size < rows)
-			sb.append(",...");
 		sb.append("]");
 		return sb.toString();
 	}
