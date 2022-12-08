@@ -28,6 +28,7 @@ import static org.junit.Assert.*;
 
 public class DBConnectionTest {
 
+
     private DBConnection conn;
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
@@ -3447,5 +3448,112 @@ public void test_SSL() throws Exception {
         assertEquals(1000,ua.columns());
         System.out.println(ua.getColumn("id15").getString());
     }
+
+
+    @Test
+    public void test_tableInsert_decimal_arrayvector() throws Exception {
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456");
+        connection.run("\n" +
+                "t = table(1000:0, `col0`col1`col2`col3`col4`col5`col6, [DECIMAL32(0)[],DECIMAL32(1)[],DECIMAL32(3)[],DECIMAL64(0)[],DECIMAL64(1)[],DECIMAL64(4)[],DECIMAL64(8)[]])\n" +
+                "share t as ptt;\n"+
+                "col0=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col1=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col2=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col3=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col4=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col5=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col6=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "t.tableInsert(col0,col1,col2,col3,col4,col5,col6)\n"+
+                "\n" );
+        BasicTable arr = (BasicTable)connection.run("t");
+        System.out.println(arr.getString());
+        List<Entity> ags = new ArrayList<>();
+        ags.add(arr);
+        connection.run("tableInsert{t}", ags);
+        BasicTable res = (BasicTable) connection.run("t");
+        System.out.println(res.getString());
+        assertEquals(7,res.columns());
+        assertEquals(4,res.rows());
+        assertEquals("[[1,3,99999],[-1,0,0],[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1],[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(1).getString());
+        assertEquals("[[1.000,3.000,99999.999],[-1.000,0.000,0.123],[1.000,3.000,99999.999],[-1.000,0.000,0.123]]",res.getColumn(2).getString());
+        assertEquals("[[1,3,99999],[-1,0,0],[1,3,99999],[-1,0,0]]",res.getColumn(3).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1],[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
+        assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234],[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(5).getString());
+        assertEquals("[[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678],[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678]]",res.getColumn(6).getString());
+        System.out.println(res.getColumn(0).getString());
+
+    }
+
+    @Test
+    public void test_tableInsert_decimal_arrayvector_compress_true() throws Exception {
+        DBConnection connection = new DBConnection(false, false, true);
+        connection.connect(HOST, PORT, "admin", "123456");
+        connection.run("\n" +
+                "t = table(1000:0, `col0`col1`col2`col3`col4`col5`col6, [DECIMAL32(0)[],DECIMAL32(1)[],DECIMAL32(3)[],DECIMAL64(0)[],DECIMAL64(1)[],DECIMAL64(4)[],DECIMAL64(8)[]])\n" +
+                "share t as ptt;\n"+
+                "col0=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col1=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col2=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col3=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col4=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col5=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col6=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "t.tableInsert(col0,col1,col2,col3,col4,col5,col6)\n"+
+                "\n" );
+        BasicTable arr = (BasicTable)connection.run("t");
+        System.out.println(arr.getString());
+        List<Entity> ags = new ArrayList<>();
+        ags.add(arr);
+        connection.run("tableInsert{t}", ags);
+        BasicTable res = (BasicTable) connection.run("t");
+        System.out.println(res.getString());
+        assertEquals(7,res.columns());
+        assertEquals(4,res.rows());
+        assertEquals("[[1,3,99999],[-1,0,0],[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1],[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(1).getString());
+        assertEquals("[[1.000,3.000,99999.999],[-1.000,0.000,0.123],[1.000,3.000,99999.999],[-1.000,0.000,0.123]]",res.getColumn(2).getString());
+        assertEquals("[[1,3,99999],[-1,0,0],[1,3,99999],[-1,0,0]]",res.getColumn(3).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1],[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
+        assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234],[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(5).getString());
+        assertEquals("[[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678],[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678]]",res.getColumn(6).getString());
+        System.out.println(res.getColumn(0).getString());
+
+    }
+    @Test
+    public void test_insert_into_decimal_arrayvector() throws Exception {
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456");
+        connection.run("\n" +
+                "t = table(1000:0, `col0`col1`col2`col3`col4`col5`col6, [DECIMAL32(0)[],DECIMAL32(1)[],DECIMAL32(3)[],DECIMAL64(0)[],DECIMAL64(1)[],DECIMAL64(4)[],DECIMAL64(8)[]])\n" +
+                "share t as ptt;\n"+
+                "col0=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col1=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col2=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col3=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col4=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col5=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col6=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "insert into ptt values(col0,col1,col2,col3,col4,col5,col6)\n"+
+                "\n" );
+        BasicTable res = (BasicTable) connection.run("t");
+        System.out.println(res.getString());
+        assertEquals(7,res.columns());
+        assertEquals(2,res.rows());
+        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(1).getString());
+        assertEquals("[[1.000,3.000,99999.999],[-1.000,0.000,0.123]]",res.getColumn(2).getString());
+        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(3).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
+        assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(5).getString());
+        assertEquals("[[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678]]",res.getColumn(6).getString());
+
+    }
+    @Test
+    public void test_append_decimal_arrayvector() throws Exception {
+
+    }
+
 
 }

@@ -3782,7 +3782,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         checkData(ex, bt5);
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout = 1200000)
     public void test_insert_dfs_multiple_mutithreadTableWriter_differentDataBase() throws Exception {
 
         StringBuilder sb = new StringBuilder();
@@ -3855,7 +3855,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         checkData(ex, bt3);
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout = 1200000)
     public void test_insert_multiple_mutithreadTableWriter_differentTable_status_isExiting() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("tmp1=table(1:0, `sym`tradeDate`tradePrice`vwap`volume`valueTrade, [SYMBOL,TIMESTAMP, DOUBLE, DOUBLE, INT, DOUBLE])\n;share tmp1 as st1;" +
@@ -5693,6 +5693,34 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(ipv.getString(), ((BasicArrayVector)(bt.getColumn("ipaddr"))).getVectorValue(i).getString());
         }
     }
+    @Test(timeout = 120000)
+    public  void test_insert_arrayVector_decimal_to_partition_table()throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
+                "if(existsDatabase(dbName)){\n" +
+                "\tdropDB(dbName);\n" +
+                "}\n" +
+                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
+                "t = table(1000:0, `int`col0`col1`col2`col3`col4," +
+                "[INT,DECIMAL32(0)[],DECIMAL32(3)[],DECIMAL64(0)[],DECIMAL64(1)[],DECIMAL64(8)[]]);" +
+                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
+        int time=1048;
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
+                1, "int");
+
+        for (short i=0;i<time;i++) {
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal32Vector((new double[]{1.00,1.00,3.0001,99999.99999999999}),0),new BasicDecimal32Vector((new double[]{1.00,1.00,3.0001,99999.99999999999}),3),new BasicDecimal64Vector((new double[]{1.00,1.00,3.0001,99999.99999999999}),4),new BasicDecimal64Vector((new double[]{1.00,1.00,3.0001,99999.99999999999}),4),new BasicDecimal32Vector((new double[]{1.00,1.00,3.0001,99999.99999999999}),8)
+                    );
+            assertEquals("code= info=",pErrorInfo.toString());
+        }
+
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt= (BasicTable) conn.run("select * from pt;");
+
+        assertEquals(time,bt.rows());
+    }
     @Test
     public  void test_MultithreadedTableWriter_Callback_memoryTable_single_thread_true()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
@@ -5921,7 +5949,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
         Map<String,Entity> map = new HashMap<>();
         map.put("testUpload",callback);
         conn2.upload(map);
+        conn1.run("sleep(1000)");
         BasicTable act = (BasicTable) conn2.run("select * from testUpload where issuccess = true order by id");
+        conn1.run("sleep(1000)");
         BasicTable ex = (BasicTable)conn2.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
         assertEquals(ex.rows(), act.rows());
         assertEquals(ex.rows(), act.rows());
@@ -6077,6 +6107,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         map.put("testUpload",callback);
         conn2.upload(map);
         BasicTable act = (BasicTable) conn2.run("select * from testUpload where issuccess = true order by id");
+        conn1.run("sleep(2000)");
         BasicTable ex = (BasicTable)conn2.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
         assertEquals(ex.rows(), act.rows());
         assertEquals(ex.rows(), act.rows());
@@ -6328,7 +6359,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
         Map<String,Entity> map = new HashMap<>();
         map.put("testUpload",callback);
         conn2.upload(map);
+        conn1.run("sleep(1000)");
         BasicTable act = (BasicTable) conn2.run("select * from testUpload where issuccess = true order by id");
+        conn1.run("sleep(1000)");
         BasicTable ex = (BasicTable)conn2.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
         assertEquals(ex.rows(), act.rows());
         assertEquals(ex.rows(), act.rows());
@@ -6434,6 +6467,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         map.put("testUpload",callback);
         conn2.upload(map);
         BasicTable act = (BasicTable) conn2.run("select * from testUpload where issuccess = true order by id");
+        conn1.run("sleep(2000)");
         BasicTable ex = (BasicTable)conn2.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
         assertEquals(ex.rows(), act.rows());
         assertEquals(ex.rows(), act.rows());
@@ -6531,6 +6565,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(ex.rows(), 1000);
         conn.close();
     }
+
 
 }
 

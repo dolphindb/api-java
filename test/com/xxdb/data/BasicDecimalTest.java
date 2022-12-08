@@ -534,7 +534,7 @@ public class BasicDecimalTest {
     @Test
     public void test_BasicDecimal64_method() throws Exception{
         DBConnection connection = new DBConnection(false, false, false);
-        connection.connect("192.168.1.116", 18999, "admin", "123456");
+        connection.connect(HOST, PORT, "admin", "123456");
         BasicDecimal64Vector b64v1 = (BasicDecimal64Vector) connection.run("decimal64(1..10, 4)");
         BasicDecimal64Vector b64v2 = (BasicDecimal64Vector) connection.run("decimal64(1..5, 4)");
         b64v1.combine(b64v2);
