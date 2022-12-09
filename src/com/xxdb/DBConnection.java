@@ -240,9 +240,6 @@ public class DBConnection {
                 }
             }
 
-            if (!asynTask_){
-                compareRequiredAPIVersion();
-            }
             return true;
         }
 
@@ -1263,24 +1260,7 @@ public class DBConnection {
             return null;
         }
      }
-     private void compareRequiredAPIVersion() throws IOException {
-        try {
-            //1.30.20.5
-            //2.00.9
-            Entity ret = conn_.run("getRequiredAPIVersion(`java)",0);
-            if(ret==null){
-                throw new IOException("run getRequiredAPIVersion failed");
-            }
-            //Entity ret = run("getRequiredAPIVersion(`java)");
-            if (localAPIVersion < ((BasicInt)((BasicAnyVector) ret).get(0)).getInt()) {
-                throw new IOException("API version is too low and needs to be upgraded");
-            }
-        }catch (IOException e){
-            if(!e.getMessage().equals("Syntax Error: [line #1] Cannot recognize the token getRequiredAPIVersion")){
-                throw e;
-            }
-        }
-     }
+
     private boolean getServerVersion() throws IOException {
         try {
             Entity ret = conn_.run("version()",0);
