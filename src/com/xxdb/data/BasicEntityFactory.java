@@ -772,6 +772,10 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicInt(val);
 			case DT_LONG:
 				return new BasicLong(val);
+			case DT_FLOAT:
+				return new BasicFloat(val);
+			case DT_DOUBLE:
+				return new BasicDouble(val);
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert byte to " + dataType + ".");
 		}
@@ -789,6 +793,10 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicInt(val);
 			case DT_LONG:
 				return new BasicLong(val);
+			case DT_FLOAT:
+				return new BasicFloat(val);
+			case DT_DOUBLE:
+				return new BasicDouble(val);
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert short to " + dataType + ".");
 		}
@@ -892,6 +900,10 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicDecimal32(val, extraParam);
 			case DT_DECIMAL64:
 				return new BasicDecimal64((long) val, extraParam);
+			case DT_FLOAT:
+				return new BasicFloat(val);
+			case DT_DOUBLE:
+				return new BasicDouble(val);
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert int to " + dataType + ".");
 		}
@@ -928,6 +940,10 @@ public class BasicEntityFactory implements EntityFactory{
 					throw new RuntimeException("Failed to insert data, long cannot be converted because it exceeds the range of " + dataType + ".");
 			case DT_DECIMAL64:
 				return new BasicDecimal64(val, extraParam);
+			case DT_FLOAT:
+				return new BasicFloat(val);
+			case DT_DOUBLE:
+				return new BasicDouble(val);
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert long to " + dataType + ".");
 		}
