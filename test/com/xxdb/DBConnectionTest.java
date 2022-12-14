@@ -3554,6 +3554,13 @@ public void test_SSL() throws Exception {
     public void test_append_decimal_arrayvector() throws Exception {
 
     }
+    @Test
+    public void TestConnectWithoutUserid() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        Thread.sleep(500);
+        assertEquals(true, conn.isConnected());
+    }
 
 
 }
