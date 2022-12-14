@@ -126,7 +126,7 @@ public class MultithreadedTableWriter {
                     BasicBooleanVector bv = new BasicBooleanVector(bArray);
                     callbackList.add(bv);
                     List<String> callbackColNames = new ArrayList<>();
-                    callbackColNames.add("id");
+                    callbackColNames.add("callbackId");
                     callbackColNames.add("isSuccess");
                     callbackHandler_.writeCompletion(new BasicTable(callbackColNames, callbackList));
                 }
@@ -225,7 +225,7 @@ public class MultithreadedTableWriter {
                     BasicBooleanVector bv = new BasicBooleanVector(bArray);
                     callbackList.add(bv);
                     List<String> callbackColNames = new ArrayList<>();
-                    callbackColNames.add("id");
+                    callbackColNames.add("callbackId");
                     callbackColNames.add("isSuccess");
                     callbackHandler_.writeCompletion(new BasicTable(callbackColNames, callbackList));
                 }
@@ -519,6 +519,8 @@ public class MultithreadedTableWriter {
     }
 
     public List<List<Entity>> getUnwrittenData() {
+        if (ifCallback_)
+            throw new RuntimeException("getUnwrittenData is disabled when callback is enabled.");
         List<List<Entity>> unwrittenData = new ArrayList<>();
         for(WriterThread writeThread : threads_){
             synchronized (writeThread.busyLock_) {
