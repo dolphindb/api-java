@@ -69,11 +69,13 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     public BasicDecimal64Vector(double[] data, int scale){
         super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 18)
+            throw new RuntimeException("Scale out of bound (valid range: [0, 9], but get: " + scale + ")");
         scale_ = scale;
         long[] newIntValue = new long[data.length];
         for(int i = 0; i < data.length; i++){
-            BigDecimal pow = new BigDecimal(10);
-            for (long j = 0; j < scale_ - 1; j++) {
+            BigDecimal pow = new BigDecimal(1);
+            for (long j = 0; j < scale_; j++) {
                 pow = pow.multiply(new BigDecimal(10));
             }
             BigDecimal dbvalue = new BigDecimal(Double.toString(data[i]));
@@ -113,6 +115,11 @@ public class BasicDecimal64Vector extends AbstractVector{
     }
 
     @Override
+    public void setExtraParamForType(int scale){
+        this.scale_ = scale;
+    }
+
+    @Override
     public Vector combine(Vector vector) {
         return null;
     }
@@ -146,15 +153,15 @@ public class BasicDecimal64Vector extends AbstractVector{
     public void set(int index, Entity value) throws Exception {
         if (scale_ < 0)
             throw new RuntimeException("Please set scale first.");
-        if(((Scalar)value).isNull()){
+        if(((Scalar)value).isNull())
             values[index] = Long.MIN_VALUE;
-        }else{
+        else{
             double data = ((Scalar)value).getNumber().doubleValue();
             if (data == 0.0)
                 values[index] = 0;
             else {
-                BigDecimal pow = new BigDecimal(10);
-                for (long i = 0; i < scale_ - 1; i++) {
+                BigDecimal pow = new BigDecimal(1);
+                for (long i = 0; i < scale_; i++) {
                     pow = pow.multiply(new BigDecimal(10));
                 }
                 BigDecimal dbvalue = new BigDecimal(Double.toString(data));
@@ -194,8 +201,8 @@ public class BasicDecimal64Vector extends AbstractVector{
         if (value == 0.0)
             values[size] = 0;
         else {
-            BigDecimal pow = new BigDecimal(10);
-            for (long i = 0; i < scale_ - 1; i++) {
+            BigDecimal pow = new BigDecimal(1);
+            for (long i = 0; i < scale_; i++) {
                 pow = pow.multiply(new BigDecimal(10));
             }
             BigDecimal dbvalue = new BigDecimal(Double.toString(value));
@@ -218,8 +225,8 @@ public class BasicDecimal64Vector extends AbstractVector{
         }
         long[] newLongValue = new long[valueList.length];
         for(int i = 0; i < valueList.length; i++){
-            BigDecimal pow = new BigDecimal(10);
-            for (long j = 0; j < scale_ - 1; j++) {
+            BigDecimal pow = new BigDecimal(1);
+            for (long j = 0; j < scale_; j++) {
                 pow = pow.multiply(new BigDecimal(10));
             }
             BigDecimal dbvalue = new BigDecimal(Double.toString(valueList[i]));

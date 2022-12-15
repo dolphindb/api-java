@@ -663,9 +663,12 @@ public class BasicEntityFactory implements EntityFactory{
 		if(dataType.getValue()<64){
 			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
 		}
-		dataType = DATA_TYPE.values()[dataType.getValue()-64];
+		dataType = values()[dataType.getValue()-64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count);
+		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64){
+			((AbstractVector)vector).setExtraParamForType(extraParam);
+		}
 		for(int i = 0; i < count; ++i)
 		{
 			Entity t = createScalar(dataType, val[i], extraParam);

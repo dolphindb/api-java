@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static com.xxdb.data.Entity.DATA_TYPE.*;
+
 public class MultithreadedTableWriter {
     private Logger logger_=Logger.getLogger(getClass().getName());
     public static class ThreadStatus{
@@ -753,14 +755,14 @@ public class MultithreadedTableWriter {
         int cols = colInfos_.length;
         for (int i = 0; i < cols; i++){
             Entity.DATA_TYPE type = colInfos_[i].type_;
-            if (type.getValue() >= 65)
-                tmp.add(new BasicArrayVector(type, 1));
+            if (type.getValue() >= 65){
+                tmp.add(new BasicArrayVector(type, 1, colInfos_[i].extra_));
+            }
             else{
                 Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(type, 0);
-                if (type == Entity.DATA_TYPE.DT_DECIMAL32)
-                    ((BasicDecimal32Vector)value).setScale(colInfos_[i].extra_);
-                else if (type == Entity.DATA_TYPE.DT_DECIMAL64)
-                    ((BasicDecimal64Vector)value).setScale(colInfos_[i].extra_);
+                if (type == DT_DECIMAL32 || type == DT_DECIMAL64){
+                    ((AbstractVector)value).setExtraParamForType(colInfos_[i].extra_);
+                }
                 tmp.add(value);
             }
         }

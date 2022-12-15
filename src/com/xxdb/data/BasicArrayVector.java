@@ -21,12 +21,20 @@ public class BasicArrayVector extends AbstractVector {
 	private int scale_ = -1;
 
 	public BasicArrayVector(DATA_TYPE type, int size){
+		this(type, size, -1);
+	}
+
+	public BasicArrayVector(DATA_TYPE type, int size, int extra){
 		super(DATA_FORM.DF_VECTOR);
 		rowIndices = new int[size];
 		if (type.getValue() == 81 || type.getValue() == 82)
 			throw new RuntimeException("ArrayVector do not support String and Symbol");
 		this.type = DATA_TYPE.valueOf(type.getValue());
 		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(DATA_TYPE.valueOf(type.getValue() - 64), 0);
+		if (extra >= 0){
+			((AbstractVector)valueVec).setExtraParamForType(extra);
+			this.scale_ = extra;
+		}
 		baseUnitLength_ = valueVec.getUnitLength();
 		rowIndicesSize = 0;
 		capacity = rowIndices.length;

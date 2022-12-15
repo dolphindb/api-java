@@ -206,6 +206,10 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		throw new RuntimeException("Not support yet");
 	}
 
+	public void setExtraParamForType(int scale){
+		throw new RuntimeException("Not support yet");
+	}
+
 	@Override
 	public void writeCompressed(ExtendedDataOutput output) throws IOException {
 		int dataType = this.getDataType().getValue();

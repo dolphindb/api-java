@@ -24,19 +24,15 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
 
     public BasicDecimal64(double value, int scale){
         scale_ = scale;
-        if (scale_==0){
-            value_ = (long) value;
-        }else {
-            if (value == 0)
-                value_ = 0;
-            else {
-                BigDecimal pow = new BigDecimal(10);
-                for (long i = 0; i < scale_ - 1; i++) {
-                    pow = pow.multiply(new BigDecimal(10));
-                }
-                BigDecimal dbvalue = new BigDecimal(Double.toString(value));
-                value_ = (dbvalue.multiply(pow)).longValue();
+        if (value == 0)
+            value_ = 0;
+        else {
+            BigDecimal pow = new BigDecimal(1);
+            for (long i = 0; i < scale_; i++) {
+                pow = pow.multiply(new BigDecimal(10));
             }
+            BigDecimal dbvalue = new BigDecimal(Double.toString(value));
+            value_ = (dbvalue.multiply(pow)).longValue();
         }
     }
 
@@ -69,22 +65,24 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
             return "";
         else {
             StringBuilder sb = new StringBuilder();
-            BigDecimal pow = new BigDecimal(10);
-            for (long i = 0; i < scale_ - 1; i++) {
+            BigDecimal pow = new BigDecimal(1);
+            for (long i = 0; i < scale_; i++) {
                 pow = pow.multiply(new BigDecimal(10));
             }
             if (value_ < 0 && (value_ / pow.longValue()) == 0)
                 sb.append("-");
             sb.append(value_ / pow.longValue());
-            int sign = value_ < 0 ? -1 : 1;
-            BigDecimal result = new BigDecimal(value_ % pow.longValue() * sign);
-            sb.append(".");
-            String s = result.toString();
-            int nowLen = sb.length();
-            while (sb.length()-nowLen < scale_ - s.length()){
-                sb.append("0");
+            if (pow.intValue() != 1) {
+                int sign = value_ < 0 ? -1 : 1;
+                BigDecimal result = new BigDecimal(value_ % pow.longValue() * sign);
+                sb.append(".");
+                String s = result.toString();
+                int nowLen = sb.length();
+                while (sb.length() - nowLen < scale_ - s.length()) {
+                    sb.append("0");
+                }
+                sb.append(s);
             }
-            sb.append(s);
             return sb.toString();
         }
     }
@@ -103,11 +101,9 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
     public Number getNumber() throws Exception {
         if (isNull())
             return Long.MIN_VALUE;
-        else if (scale_ == 0){
-            return value_;
-        } else{
-            BigDecimal pow = new BigDecimal(10);
-            for (long i = 0; i < scale_ - 1; i++) {
+        else{
+            BigDecimal pow = new BigDecimal(1);
+            for (long i = 0; i < scale_; i++) {
                 pow = pow.multiply(new BigDecimal(10));
             }
             BigDecimal dbvalue = new BigDecimal(value_);
