@@ -36,6 +36,14 @@ public class BasicDecimal32Vector extends AbstractVector{
         capaticy = values.length;
     }
 
+    BasicDecimal32Vector(int[] dataValue, int scale){
+        super(DATA_FORM.DF_VECTOR);
+        this.scale_ = scale;
+        this.values = dataValue;
+        this.size = values.length;
+        capaticy = values.length;
+    }
+
     public BasicDecimal32Vector(DATA_FORM df, ExtendedDataInput in, int extra) throws IOException{
         super(df);
         int rows = in.readInt();
@@ -121,7 +129,11 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public Vector getSubVector(int[] indices) {
-        return null;
+        int length = indices.length;
+        int[] sub = new int[length];
+        for(int i=0; i<length; ++i)
+            sub[i] = values[indices[i]];
+        return new BasicDecimal32Vector(sub, scale_);
     }
 
     @Override
