@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
@@ -33,6 +34,7 @@ abstract class AbstractClient implements MessageDispatcher {
     protected Map<String, StreamDeserializer> subInfos_ = new HashMap<>();
     protected HashMap<List<String>, List<String>> users = new HashMap<>();
     protected boolean isClose_ = false;
+    protected LinkedBlockingQueue<DBConnection> connList = new LinkedBlockingQueue<>();
 
     class ReconnectItem {
         /**
@@ -319,7 +321,7 @@ abstract class AbstractClient implements MessageDispatcher {
 
     public AbstractClient(int subscribePort) throws SocketException {
         this.listeningPort = subscribePort;
-        Daemon daemon = new Daemon(subscribePort, this);
+        Daemon daemon = new Daemon(subscribePort, this, connList);
         pThread = new Thread(daemon);
         daemon.setRunningThread(pThread);
         pThread.start();
@@ -328,7 +330,7 @@ abstract class AbstractClient implements MessageDispatcher {
     public AbstractClient(String subscribeHost, int subscribePort) throws SocketException {
         this.listeningHost = subscribeHost;
         this.listeningPort = subscribePort;
-        Daemon daemon = new Daemon(subscribePort, this);
+        Daemon daemon = new Daemon(subscribePort, this, connList);
         pThread = new Thread(daemon);
         daemon.setRunningThread(pThread);
         pThread.start();
@@ -422,7 +424,12 @@ abstract class AbstractClient implements MessageDispatcher {
         List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
         List<String> usr = Arrays.asList(userName, passWord);
         users.put(tp, usr);
-        DBConnection dbConn = new DBConnection();
+        DBConnection dbConn;
+        if (listeningPort > 0)
+            dbConn = new DBConnection();
+        else
+            dbConn = new DBConnection(false, false, false, false, false, true);
+
         if (!userName.equals(""))
             dbConn.connect(host, port, userName, passWord);
         else
@@ -464,7 +471,7 @@ abstract class AbstractClient implements MessageDispatcher {
             }
 
             re = dbConn.run("publishTable", params);
-
+            connList.add(dbConn);
             if (re instanceof BasicAnyVector) {
                 BasicStringVector HASiteStrings = (BasicStringVector) (((BasicAnyVector) re).getEntity(1));
                 int HASiteNum = HASiteStrings.rows();
@@ -516,7 +523,8 @@ abstract class AbstractClient implements MessageDispatcher {
         } catch (Exception ex) {
             throw ex;
         } finally {
-            dbConn.close();
+            if (listeningPort > 0)
+                dbConn.close();
         }
         BlockingQueue<List<IMessage>> queue = queueManager.addQueue(topic);
         return queue;

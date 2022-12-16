@@ -37,7 +37,6 @@ public class DBConnection {
     private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.DT_DECIMAL64_ARRAY.getValue();
     private static final int DEFAULT_PRIORITY = 4;
     private static final int DEFAULT_PARALLELISM = 2;
-    private static final int localAPIVersion = 210;
 
     private ReentrantLock mutex_;
     private DBConnectionImpl conn_;
@@ -45,20 +44,15 @@ public class DBConnection {
     private String pwd_;
     private String initialScript_ = null;
     private boolean enableHighAvailability_;
-    private boolean enableSSL_;
-    private boolean asynTask_;
-    private boolean isUrgent_ = false;
     private List<Node> nodes_ = new ArrayList<>();
     private int lastConnNodeIndex_ = 0;
-    private boolean compress_ = false;
     private int connTimeout_ = 0;
-    private String[] highAvailabilitySites_ = null;
-    private boolean python_ = false;
     private boolean closed_ = false;
     private boolean loadBalance_ = true;
     private String runClientId_ = null;
     private long runSeqNo_ = 0;
     private int[] serverVersion_;
+    private boolean isReverseStreaming_ = false;
 
 
     private enum ServerExceptionState {
@@ -149,27 +143,29 @@ public class DBConnection {
         private boolean ifUrgent_ = false;
         private int connTimeout_ = 0;
         private ExtendedDataOutput out_;
-        private ExtendedDataInput in_;
         private boolean remoteLittleEndian_;
         private ReentrantLock lock_;
+        private boolean isReverseStreaming_ = false;
+        private boolean python_ = false;
 
-        private DBConnectionImpl(boolean sslEnable, boolean asynTask, boolean compress, boolean ifUrgent){
+
+        private DBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, boolean isReverseStreaming){
             sessionID_ = "";
             this.sslEnable_ = sslEnable;
             this.asynTask_ = asynTask;
             this.compress_ = compress;
             this.ifUrgent_ = ifUrgent;
+            this.python_ = python;
+            this.isReverseStreaming_ = isReverseStreaming;
             this.lock_ = new ReentrantLock();
         }
 
-        private boolean connect(String hostName, int port, String userId, String password, boolean sslEnable, boolean asynTask, boolean compress) throws IOException{
+        private boolean connect(String hostName, int port, String userId, String password, int connTimeout) throws IOException{
             this.hostName_ = hostName;
             this.port_ = port;
             this.userId_ = userId;
             this.pwd_ = password;
-            this.sslEnable_ = sslEnable;
-            this.asynTask_ = asynTask;
-            this.compress_ = compress;
+            this.connTimeout_ = connTimeout;
             return connect();
         }
 
@@ -229,9 +225,6 @@ public class DBConnection {
             } else
                 remoteLittleEndian_ = true;
 
-            in_ = remoteLittleEndian_ ? new LittleEndianDataInputStream(new BufferedInputStream(socket_.getInputStream())) :
-                    new BigEndianDataInputStream(new BufferedInputStream(socket_.getInputStream()));
-
             if (!userId_.isEmpty() && !pwd_.isEmpty()) {
                 if (asynTask_) {
                     login(userId_, pwd_, false);
@@ -241,6 +234,23 @@ public class DBConnection {
             }
 
             return true;
+        }
+
+        private int generateRequestFlag(boolean clearSessionMemory){
+            int flag = 0;
+            if (this.ifUrgent_)
+                flag += 1;
+            if(this.asynTask_)
+                flag += 4;
+            if(clearSessionMemory)
+                flag += 16;
+            if(this.compress_)
+                flag += 64;
+            if (this.python_)
+                flag += 2048;
+            if (this.isReverseStreaming_)
+                flag += 131072;
+            return flag;
         }
 
         private void login(String userId, String password, boolean enableEncryption) throws IOException {
@@ -315,8 +325,6 @@ public class DBConnection {
                     socket_.setKeepAlive(true);
                     socket_.setTcpNoDelay(true);
                     out_ = new LittleEndianDataOutputStream(new BufferedOutputStream(socket_.getOutputStream()));
-                    in_ = remoteLittleEndian_ ? new LittleEndianDataInputStream(new BufferedInputStream(socket_.getInputStream())) :
-                            new BigEndianDataInputStream(new BufferedInputStream(socket_.getInputStream()));
                 }
             }
 
@@ -558,21 +566,17 @@ public class DBConnection {
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython){
-        this.asynTask_ = asynchronousTask;
-        this.enableSSL_ = useSSL;
-        this.compress_ = compress;
-        this.python_ = usePython;
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, false);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false);
         this.mutex_ = new ReentrantLock();
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent){
-        this.asynTask_ = asynchronousTask;
-        this.enableSSL_ = useSSL;
-        this.compress_ = compress;
-        this.python_ = usePython;
-        this.isUrgent_ = isUrgent;
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, isUrgent);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false);
+        this.mutex_ = new ReentrantLock();
+    }
+
+    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, boolean isReverseStreaming){
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, isReverseStreaming);
         this.mutex_ = new ReentrantLock();
     }
     
@@ -599,21 +603,6 @@ public class DBConnection {
 
     public void setLoadBalance(boolean loadBalance){
         this.loadBalance_ = loadBalance;
-    }
-    
-    private int generateRequestFlag(boolean clearSessionMemory){
-    	int flag = 0;
-        if (isUrgent_)
-            flag += 1;
-    	if(asynTask_)
-    		flag += 4;
-    	if(clearSessionMemory)
-    		flag += 16;
-    	if(compress_)
-    		flag += 64;
-        if (this.python_)
-            flag += 2048;
-    	return flag;
     }
 
     public boolean connect(String hostName, int port) throws IOException {
@@ -685,7 +674,6 @@ public class DBConnection {
             this.pwd_ = password;
             this.initialScript_ = initialScript;
             this.enableHighAvailability_ = enableHighAvailability;
-            this.highAvailabilitySites_ = highAvailabilitySites;
 
             if (enableHighAvailability){
                 nodes_.add(new Node(hostName, port));
@@ -731,11 +719,11 @@ public class DBConnection {
                     }
                 }
 
-                if (bt.getDataForm() != Entity.DATA_FORM.DF_TABLE){
+                if ( bt!=null && bt.getDataForm() != Entity.DATA_FORM.DF_TABLE){
                     throw new IOException("Run getClusterPerf() failed.");
                 }
 
-                if (loadBalance_){
+                if (bt!=null && loadBalance_){
                     BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
                     BasicIntVector colPort = (BasicIntVector) bt.getColumn("port");
                     BasicIntVector colMode = (BasicIntVector) bt.getColumn("mode");
@@ -781,7 +769,7 @@ public class DBConnection {
                         }
                     }
 
-                    if (!pMinNode.isEqual(connectedNode)){
+                    if (pMinNode != null && !pMinNode.isEqual(connectedNode)){
                         System.out.println("Connect to min load node: " + pMinNode.hostName + ":" + pMinNode.port);
                         conn_.close();
                         switchDataNode(pMinNode);
@@ -798,9 +786,7 @@ public class DBConnection {
             }
             InitConnection();
             return true;
-        }catch (IOException e){
-            throw e;
-        }finally {
+        } finally {
             mutex_.unlock();
         }
     }
@@ -855,7 +841,7 @@ public class DBConnection {
         System.out.println("Connect to " + node.hostName + ":" + node.port + ".");
         while (!closed_){
             try {
-                return conn_.connect(node.hostName, node.port, uid_, pwd_, enableSSL_, asynTask_, compress_);
+                return conn_.connect(node.hostName, node.port, uid_, pwd_, connTimeout_);
             }catch (Exception e){
                 if (isConnected()){
                     ExceptionType type = parseException(e.getMessage(), node);
@@ -1230,6 +1216,9 @@ public class DBConnection {
     public InetAddress getLocalAddress() {
         return this.conn_.socket_.getLocalAddress();
     }
+
+    public Socket getSocket(){return this.conn_.socket_;}
+
 
     public boolean isConnected() {
         return this.conn_.socket_ != null && this.conn_.socket_.isConnected();

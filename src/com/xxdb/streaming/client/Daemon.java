@@ -1,11 +1,14 @@
 package com.xxdb.streaming.client;
 
+import com.xxdb.DBConnection;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 
 class Daemon implements Runnable {
     private int listeningPort = 0;
@@ -14,9 +17,12 @@ class Daemon implements Runnable {
     private static final int KEEPALIVE_INTERVAL = 1000;
     private static final int KEEPALIVE_COUNT = 5;
     private Thread runningThread_= null;
-    public Daemon(int port, MessageDispatcher dispatcher) {
+    private LinkedBlockingQueue<DBConnection> connList = new LinkedBlockingQueue<>();
+
+    public Daemon(int port, MessageDispatcher dispatcher, LinkedBlockingQueue<DBConnection> connections) {
         this.listeningPort = port;
         this.dispatcher = dispatcher;
+        this.connList = connections;
     }
 
     public void setRunningThread(Thread runningThread){
@@ -39,7 +45,13 @@ class Daemon implements Runnable {
         HashSet<Socket> threadSet = new HashSet<>();
         while (!runningThread_.isInterrupted()) {
             try {
-                    Socket socket = ssocket.accept();
+                    Socket socket = null;
+                    if (listeningPort > 0)
+                        socket = ssocket.accept();
+                    else{
+                        socket = connList.take().getSocket();
+                    }
+
                     socket.setKeepAlive(true);
 
                     MessageParser listener = new MessageParser(socket, dispatcher);
@@ -49,7 +61,7 @@ class Daemon implements Runnable {
 
                     if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
                         new Thread(new ConnectionDetector(socket)).start();
-                }catch(IOException ex){
+                }catch(Exception ex){
                     try {
                         if(runningThread_.isInterrupted()) {
                             throw new InterruptedException();
