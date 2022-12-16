@@ -123,12 +123,9 @@ public class BasicArrayVector extends AbstractVector {
 		rowIndices = new int[rows];
 		DATA_TYPE valueType = DATA_TYPE.valueOf(type.getValue() - 64);
 		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, cols);
-		if (valueType == DATA_TYPE.DT_DECIMAL32){
+		if (valueType == DATA_TYPE.DT_DECIMAL32 || valueType == DATA_TYPE.DT_DECIMAL64) {
 			this.scale_ = in.readInt();
-			((BasicDecimal32Vector)valueVec).setScale(scale_);
-		}else if (valueType == DATA_TYPE.DT_DECIMAL64){
-			this.scale_ = in.readInt();
-			((BasicDecimal64Vector)valueVec).setScale(scale_);
+			((AbstractVector)valueVec).setExtraParamForType(scale_);
 		}
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		this.baseUnitLength_ = valueVec.getUnitLength();
