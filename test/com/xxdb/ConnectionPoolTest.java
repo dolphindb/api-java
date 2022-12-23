@@ -1525,6 +1525,57 @@ public class ConnectionPoolTest {
         pool.shutdown();
 
     }
-
+    @Test
+    public void test_pool_execute_timeout_10000() throws Exception {
+        ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
+                "admin", "123456", 3, false, true,
+                ipports,"", false, false, false);
+        long start = System.nanoTime();
+        connectionPool.execute(new BasicDBTask("sleep(10000);"), 10000);
+        long end = System.nanoTime();
+        System.out.println((end - start) / 1000000);
+        assertEquals(true,(end - start) / 1000000>10000);
+        connectionPool.waitForThreadCompletion();
+        connectionPool.shutdown();
+    }
+    @Test
+    public void test_pool_execute_timeout_5000() throws Exception {
+        ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
+                "admin", "123456", 3, false, true,
+                ipports,"", false, false, false);
+        long start = System.nanoTime();
+        connectionPool.execute(new BasicDBTask("sleep(10000);"), 5000);
+        long end = System.nanoTime();
+        System.out.println((end - start) / 1000000);
+        assertEquals(true,(end - start) / 1000000<6000);
+        connectionPool.waitForThreadCompletion();
+        connectionPool.shutdown();
+    }
+    @Test
+    public void test_pool_execute_timeout_0() throws Exception {
+        ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
+                "admin", "123456", 3, false, true,
+                ipports,"", false, false, false);
+        long start = System.nanoTime();
+        connectionPool.execute(new BasicDBTask("sleep(10000);"), 0);
+        long end = System.nanoTime();
+        System.out.println((end - start) / 1000000);
+        assertEquals(true,(end - start) / 1000000<100);
+        connectionPool.waitForThreadCompletion();
+        connectionPool.shutdown();
+    }
+    @Test
+    public void test_pool_execute_timeout_negative() throws Exception {
+        ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
+                "admin", "123456", 3, false, true,
+                ipports,"", false, false, false);
+        long start = System.nanoTime();
+        connectionPool.execute(new BasicDBTask("sleep(10000);"), -1);
+        long end = System.nanoTime();
+        System.out.println((end - start) / 1000000);
+        assertEquals(true,(end - start) / 1000000>10001);
+        connectionPool.waitForThreadCompletion();
+        connectionPool.shutdown();
+    }
 }
 
