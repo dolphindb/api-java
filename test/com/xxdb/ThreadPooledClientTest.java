@@ -189,11 +189,11 @@ public class ThreadPooledClientTest {
             int ofst = 0;
             client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
             conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(10000);
+            Thread.sleep(20000);
             BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
             BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
             client.unsubscribe(HOST, PORT, "Trades", "javaStreamingApi");
-            Thread.sleep(2000);
+            Thread.sleep(5000);
             assertEquals(re.rows(), tra.rows());
             for (int i = 0; i < re.rows(); i++) {
                 assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -496,7 +496,7 @@ public class ThreadPooledClientTest {
         client.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        Thread.sleep(50000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades");
@@ -516,7 +516,7 @@ public class ThreadPooledClientTest {
         client.subscribe(HOST, PORT, "Trades",MessageHandler_handler, -1,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        Thread.sleep(30000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         client.unsubscribe(HOST, PORT, "Trades");
@@ -555,14 +555,15 @@ public class ThreadPooledClientTest {
 
     @Test
     public void test_ThreadPooledClient_subPort_thCount() throws Exception {
-        ThreadPooledClient client1 = new ThreadPooledClient(10000,10);
+        ThreadPooledClient client1 = new ThreadPooledClient(10002,10);
         client1.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        Thread.sleep(20000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         client1.unsubscribe(HOST, PORT, "Trades", "subTrades");
+
         assertEquals(20000, re.rows());
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));

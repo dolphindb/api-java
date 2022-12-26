@@ -188,7 +188,7 @@ public class PollingClientTest {
                /* if (msgs==null){
                     continue;
                 }*/
-                 if (msgs.size() > 0) {
+                if (msgs.size() > 0) {
                     BasicInt value = (BasicInt) msgs.get(0).getEntity(0);
                     assertTrue(msgs.size()>=10000);
                 }
@@ -224,7 +224,7 @@ public class PollingClientTest {
                     continue;
                 }
                 else if (msgs.size() > 0) {
-                   // System.out.println(msgs.size());
+                    // System.out.println(msgs.size());
                 }
             }
 
@@ -250,11 +250,11 @@ public class PollingClientTest {
                 } else if (msgs1.size() > 0) {
                     BasicTable t = (BasicTable) conn.run("t");
                     assertEquals(5000, msgs1.size());
-                  for (int k=0;k<msgs1.size();k++){
-                      assertEquals(t.getColumn(0).get(k),msgs1.get(k).getEntity(0));
-                      assertEquals(t.getColumn(1).get(k),msgs1.get(k).getEntity(1));
-                      assertEquals(t.getColumn(2).get(k),msgs1.get(k).getEntity(2));
-                  }
+                    for (int k=0;k<msgs1.size();k++){
+                        assertEquals(t.getColumn(0).get(k),msgs1.get(k).getEntity(0));
+                        assertEquals(t.getColumn(1).get(k),msgs1.get(k).getEntity(1));
+                        assertEquals(t.getColumn(2).get(k),msgs1.get(k).getEntity(2));
+                    }
 
                 }
                 if (msgs2 == null) {
@@ -282,7 +282,7 @@ public class PollingClientTest {
 
     @Test(expected = IOException.class)
     public void test_subscribe_user_error() throws IOException {
-            TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"admin_error","123456");
+        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"admin_error","123456");
     }
 
     @Test(expected = IOException.class)
