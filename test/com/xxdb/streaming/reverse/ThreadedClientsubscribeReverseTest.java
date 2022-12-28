@@ -938,6 +938,7 @@ public class ThreadedClientsubscribeReverseTest {
             fail("no exception thrown");
         }catch (Exception e){
             assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' function: 'publishTable'",e.getMessage());
+            System.out.println(e.getMessage());
         }
 
         client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, false, filter1, true, 100, 5, "test2", "123456");
@@ -1077,7 +1078,7 @@ public class ThreadedClientsubscribeReverseTest {
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout = 200000)
     public void test_func_BatchMessageHandler_batchSize_over_meg_size_small_throttle() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"

@@ -245,8 +245,8 @@ public class PollingClientReverseTest {
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
                 conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
-                msgs1 = poller1.poll(100, 10000);
-                msgs2 = poller2.poll(100, 1000);
+                msgs1 = poller1.poll(200, 10000);
+                msgs2 = poller2.poll(200, 1000);
                 if (msgs1 == null) {
                     continue;
                 } else if (msgs1.size() > 0) {
@@ -483,7 +483,7 @@ public class PollingClientReverseTest {
     public void test_subscribe_offset_reconnect() throws IOException {
         for (int j=0;j<10;j++) {
             TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1",-1,true);
-            PollingClient client1 = new PollingClient(HOST,9069);
+            PollingClient client1 = new PollingClient(HOST,0);
             TopicPoller poller2 = client1.subscribe(HOST, PORT, "Trades1",-1,true);
             ArrayList<IMessage> msgs1;
             ArrayList<IMessage> msgs2;

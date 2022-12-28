@@ -120,12 +120,13 @@ public class BasicDecimal32VectorTest {
         assertEquals("[,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void test_BasicDecimal32Vector_set_int() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
         BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_double_v,4);
         BasicDecimal32 tmp_32 = (BasicDecimal32) conn.run("decimal32(NULL,4)");
         tmp_32_v.set(0,new BasicInt(2));
+        assertEquals("[2.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
     }
 
     @Test
@@ -193,12 +194,14 @@ public class BasicDecimal32VectorTest {
         assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
     }
 
-    @Test(expected = RuntimeException.class)
-    public void test_BasicDecimal32Vector_append_error() throws Exception {
+    @Test
+    public void test_BasicDecimal32Vector_append_scale_notMatch() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
         BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_double_v,4);
         BasicDecimal32 a = new BasicDecimal32(1.11223,2);
         tmp_32_v.Append(a);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1100]",tmp_32_v.getString());
+
     }
 
     @Test
@@ -209,16 +212,18 @@ public class BasicDecimal32VectorTest {
         tmp_32_v.Append(a);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void test_BasicDecimal32Vector_addRange_vector_error() throws Exception {
+    @Test
+    public void test_BasicDecimal32Vector_Append_vector_scale_notMatch() throws Exception {
         BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(0,4);
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
         BasicDecimal32Vector tmp_32_v2 = new BasicDecimal32Vector(tmp_double_v,3);
         tmp_32_v.Append(tmp_32_v2);
+        assertEquals("[0.0000,-123.0040,132.2040,100.0000]",tmp_32_v.getString());
+
     }
 
     @Test
-    public void test_BasicDecimal32Vector_addRange_vector() throws Exception {
+    public void test_BasicDecimal32Vector_Append_vector() throws Exception {
         BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(0,4);
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
         BasicDecimal32Vector tmp_32_v2 = new BasicDecimal32Vector(tmp_double_v,4);
