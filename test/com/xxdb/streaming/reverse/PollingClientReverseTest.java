@@ -377,9 +377,9 @@ public class PollingClientReverseTest {
         }
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st1.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st2.append!(t)");
-        ArrayList<IMessage> msgs1 = poller1.poll(100, 10000);
+        ArrayList<IMessage> msgs1 = poller1.poll(200, 10000);
         assertEquals(10000, msgs1.size());
-        ArrayList<IMessage> msgs2 = poller2.poll(100, 10000);
+        ArrayList<IMessage> msgs2 = poller2.poll(200, 10000);
         assertEquals(10000, msgs1.size());
     }
 
