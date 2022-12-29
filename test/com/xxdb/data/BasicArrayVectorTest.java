@@ -1316,7 +1316,7 @@ public class BasicArrayVectorTest {
             l.add(i,v);
         }
         BasicArrayVector arryDate = new BasicArrayVector(l);
-        assertEquals("[1970.01.02,1970.01.03,1970.01.04,...]",arryDate.getString(17));
+        assertEquals("[1970.01.02,1970.01.03,1970.01.04,1970.01.05,1970.01.06,1970.01.07,1970.01.08,1970.01.09,1970.01.10,1970.01.11,1970.01.12,1970.01.13,1970.01.14,1970.01.15,1970.01.16,1970.01.17,1970.01.18]",arryDate.getString(17));
         ByteBuffer bb = ByteBuffer.allocate(time);
         System.out.println(bb.remaining());
         AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(25,15);

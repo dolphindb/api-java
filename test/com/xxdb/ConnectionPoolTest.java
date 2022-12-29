@@ -1573,7 +1573,25 @@ public class ConnectionPoolTest {
         connectionPool.execute(new BasicDBTask("sleep(10000);"), -1);
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
-        assertEquals(true,(end - start) / 1000000>10001);
+        assertEquals(true,(end - start) / 1000000>10000);
+        connectionPool.waitForThreadCompletion();
+        connectionPool.shutdown();
+    }
+    @Test
+    public void test_pool_execute_timeout_listTask() throws Exception {
+        ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
+                "admin", "123456", 3, false, true,
+                ipports,"", false, false, false);
+        long start = System.nanoTime();
+        List<DBTask> tasks = new ArrayList<>();
+        for (int i = 0; i < 100; i++){
+            BasicDBTask task = new BasicDBTask("sleep(10000);");
+            tasks.add(task);
+        }
+        //connectionPool.execute(tasks,-1);
+        long end = System.nanoTime();
+        System.out.println((end - start) / 1000000);
+        assertEquals(true,(end - start) / 1000000>10000);
         connectionPool.waitForThreadCompletion();
         connectionPool.shutdown();
     }

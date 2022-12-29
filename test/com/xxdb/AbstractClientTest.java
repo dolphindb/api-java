@@ -17,7 +17,7 @@ public class AbstractClientTest {
     //static int PORT=9002;
     @Test
     public void test_AbstractClient_Basic() throws SocketException {
-        PollingClient client = new PollingClient(9006);
+        PollingClient client = new PollingClient(0);
         client.setNeedReconnect("dolphindb/",2);
         long time1 = client.getReconnectTimestamp("dolphindb");
         assertEquals(0,client.getNeedReconnect("OceanBase"));
@@ -31,10 +31,10 @@ public class AbstractClientTest {
 
     @Test
     public void test_AbstractClient() throws IOException {
-        PollingClient client = new PollingClient(9006);
+        PollingClient client = new PollingClient(0);
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        conn.run("st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+        conn.run("try{dropStreamTable('Trades_AbstractClient')}catch(ex){};st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "enableTableShareAndPersistence(table=st2, tableName=`Trades_AbstractClient, asynWrite=true, compress=true, cacheSize=20000, retentionMinutes=180)\t\n");
         client.subscribe(HOST,PORT,"Trades_AbstractClient","subTrades");
         assertTrue(client.isRemoteLittleEndian(HOST));

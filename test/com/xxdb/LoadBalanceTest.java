@@ -144,7 +144,7 @@ public class LoadBalanceTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         conn = new DBConnection();
-        ThreadedClient client = new ThreadedClient("127.0.0.1", 8676);
+        ThreadedClient client = new ThreadedClient("127.0.0.1", 0);
         conn.connect(host_list[0],port_list[0],"admin","123456","",true,ipports);
         conn.run("haTableName='ha_stream'; " +
                 "try{ dropStreamTable(haTableName); }catch(ex){}\n " +
