@@ -28,10 +28,11 @@
 
 Java API需要运行在Java 1.8或以上环境。使用Java API前，引入以下maven 依赖（以1.0.27版本为例）
 ```java
+<!-- https://mvnrepository.com/artifact/com.dolphindb/dolphindb-javaapi -->
 <dependency>
     <groupId>com.dolphindb</groupId>
-    <artifactId>api-java</artifactId>
-    <version>1.0.27</version>
+    <artifactId>dolphindb-javaapi</artifactId>
+    <version>1.30.20.1</version>
 </dependency>
 ```
 Java API遵循面向接口编程的原则。Java API使用接口类Entity来表示DolphinDB返回的所有数据类型。在Entity接口类的基础上，根据DolphinDB的数据类型，Java API提供了7种拓展接口，分别是scalar，vector，matrix，set，dictionary，table和chart。这些接口类都包含在com.xxdb.data包中。
