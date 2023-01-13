@@ -26,7 +26,7 @@
 
 ## 1. Java API 概述
 
-Java API需要运行在Java 1.8或以上环境。使用Java API前，引入以下maven 依赖（以1.0.27版本为例）
+Java API需要运行在Java 1.8或以上环境。使用Java API前，引入以下maven 依赖
 ```java
 <!-- https://mvnrepository.com/artifact/com.dolphindb/dolphindb-javaapi -->
 <dependency>
