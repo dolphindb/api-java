@@ -23,13 +23,15 @@ class MessageParser implements Runnable {
     MessageDispatcher dispatcher;
     String topic;
     HashMap<String, Integer> nameToIndex = null;
+    int listeningPort;
 
     ConcurrentHashMap<String, HashMap<String, Integer>> topicNameToIndex = null;
 
-    public MessageParser(Socket socket, MessageDispatcher dispatcher) {
+    public MessageParser(Socket socket, MessageDispatcher dispatcher, int listeningPort) {
         this.socket = socket;
         this.dispatcher = dispatcher;
         this.topicNameToIndex = new ConcurrentHashMap<>();
+        this.listeningPort = listeningPort;
     }
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
@@ -42,6 +44,10 @@ class MessageParser implements Runnable {
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
         }
         return new String(hexChars);
+    }
+
+    private Boolean isListenMode(){
+        return listeningPort > 0;
     }
 
     public void run() {
@@ -103,7 +109,7 @@ class MessageParser implements Runnable {
                     int colSize = dTable.rows();
                     int rowSize = dTable.getEntity(0).rows();
                     if (rowSize >= 1) {
-                        if (rowSize == 1) {
+                        if (isListenMode() && rowSize == 1) {
                             BasicMessage rec = new BasicMessage(msgid, topic, dTable, topicNameToIndex.get(topic.split(",")[0]));
                             if (subinfos.get(topic) != null)
                                 rec = subinfos.get(topic).parse(rec);

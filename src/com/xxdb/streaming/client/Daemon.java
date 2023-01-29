@@ -54,7 +54,7 @@ class Daemon implements Runnable {
 
                     socket.setKeepAlive(true);
 
-                    MessageParser listener = new MessageParser(socket, dispatcher);
+                    MessageParser listener = new MessageParser(socket, dispatcher, listeningPort);
                     Thread listeningThread = new Thread(listener);
                     threadSet.add(socket);
                     listeningThread.start();
