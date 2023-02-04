@@ -54,15 +54,15 @@ public class BasicDecimal64Vector extends AbstractVector{
             scale_ = extra;
         else
             scale_ = in.readInt();
-        int totalBytes = size * 8;
-        int off = 0;
+        long totalBytes = (long)size * 8;
+        long off = 0;
         boolean little = in.isLittleEndian();
         ByteOrder bo = little ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
         byte[] buf = new byte[4096];
         while (off < totalBytes){
-            int len = Math.min(4096, totalBytes - off);
+            int len = (int)Math.min(4096, totalBytes - off);
             in.readFully(buf, 0, len);
-            int start = off / 8, end = len / 8;
+            int start = (int)(off / 8), end = len / 8;
             ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
             for (int i = 0; i < end; i++){
                 long value = byteBuffer.getLong(i * 8);
@@ -96,11 +96,11 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public void deserialize(int start, int count, ExtendedDataInput in) throws IOException{
-        int totalBytes = count * 8, off = 0;
+        long totalBytes = (long)count * 8, off = 0;
         ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
         byte[] buf = new byte[4096];
         while (off < totalBytes) {
-            int len = Math.min(4096, totalBytes - off);
+            int len = (int)Math.min(4096, totalBytes - off);
             in.readFully(buf, 0, len);
             int end = len / 8;
             ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);

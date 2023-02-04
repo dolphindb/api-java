@@ -31,13 +31,13 @@ public class BasicDurationVector extends AbstractVector{
 		int cols = in.readInt(); 
 		int size = rows * cols * 2;
 		values = new int[size];
-		int totalBytes = size * 4, off = 0;
+		long totalBytes = (long)size * 4, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		byte[] buf = new byte[4096];
 		while (off < totalBytes) {
-			int len = Math.min(4096, totalBytes - off);
+			int len = (int)Math.min(4096, totalBytes - off);
 			in.readFully(buf, 0, len);
-			int start = off / 4, end = len / 4;
+			int start = (int)(off / 4), end = len / 4;
 			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
 			for (int i = 0; i < end; i++)
 				values[i + start] = byteBuffer.getInt(i * 4);

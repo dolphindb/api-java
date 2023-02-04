@@ -81,12 +81,12 @@ public class BasicDoubleMatrix extends AbstractMatrix{
 	protected void readMatrixFromInputStream(int rows, int columns,	ExtendedDataInput in)  throws IOException{
 		int size = rows * columns;
 		values =new double[size];
-		int totalBytes = size * 8, off = 0;
+		long totalBytes = (long)size * 8, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		while (off < totalBytes) {
-			int len = Math.min(BUF_SIZE, totalBytes - off);
+			int len = (int)Math.min(BUF_SIZE, totalBytes - off);
 			in.readFully(buf, 0, len);
-			int start = off / 8, end = len / 8;
+			int start = (int)(off / 8), end = len / 8;
 			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
 			for (int i = 0; i < end; i++)
 				values[i + start] = byteBuffer.getDouble(i * 8);

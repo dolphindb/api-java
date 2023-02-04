@@ -81,12 +81,12 @@ public class BasicShortMatrix extends AbstractMatrix{
 	protected void readMatrixFromInputStream(int rows, int columns,	ExtendedDataInput in)  throws IOException{
 		int size = rows * columns;
 		values =new short[size];
-		int totalBytes = size * 2, off = 0;
+		long totalBytes = (long)size * 2, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		while (off < totalBytes) {
-			int len = Math.min(BUF_SIZE, totalBytes - off);
+			int len = (int)Math.min(BUF_SIZE, totalBytes - off);
 			in.readFully(buf, 0, len);
-			int start = off / 2, end = len / 2;
+			int start = (int)(off / 2), end = len / 2;
 			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
 			for (int i = 0; i < end; i++)
 				values[i + start] = byteBuffer.getShort(i * 2);

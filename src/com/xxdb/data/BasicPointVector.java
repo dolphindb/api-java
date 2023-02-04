@@ -72,14 +72,14 @@ public class BasicPointVector extends AbstractVector{
 		int cols = in.readInt(); 
 		int size = rows * cols;
 		values = new Double2[size];
-		int totalBytes = size * 16, off = 0;
+		long totalBytes = (long)size * 16, off = 0;
 		boolean littleEndian = in.isLittleEndian();
 		ByteOrder bo = littleEndian ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		byte[] buf = new byte[4096];
 		while (off < totalBytes) {
-			int len = Math.min(4096, totalBytes - off);
+			int len = (int)Math.min(4096, totalBytes - off);
 			in.readFully(buf, 0, len);
-			int start = off / 16, end = len / 16;
+			int start = (int)(off / 16), end = len / 16;
 			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
 			for (int i = 0; i < end; i++){
 				double x = byteBuffer.getDouble(i * 16);
@@ -95,11 +95,11 @@ public class BasicPointVector extends AbstractVector{
 	
 	@Override
 	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
-		int totalBytes = count * 16, off = 0;
+		long totalBytes = (long)count * 16, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		byte[] buf = new byte[4096];
 		while (off < totalBytes) {
-			int len = Math.min(4096, totalBytes - off);
+			int len = (int)Math.min(4096, totalBytes - off);
 			in.readFully(buf, 0, len);
 			int end = len / 16;
 			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);

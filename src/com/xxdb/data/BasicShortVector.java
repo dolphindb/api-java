@@ -70,13 +70,13 @@ public class BasicShortVector extends AbstractVector{
 		int cols = in.readInt(); 
 		int size = rows * cols;
 		values = new short[size];
-		int totalBytes = size * 2, off = 0;
+		long totalBytes = (long)size * 2, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		byte[] buf = new byte[4096];
 		while (off < totalBytes) {
-			int len = Math.min(4096, totalBytes - off);
+			int len = (int)Math.min(4096, totalBytes - off);
 			in.readFully(buf, 0, len);
-			int start = off / 2, end = len / 2;
+			int start = (int)(off / 2), end = len / 2;
 			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
 			for (int i = 0; i < end; i++)
 				values[i + start] = byteBuffer.getShort(i * 2);
@@ -89,11 +89,11 @@ public class BasicShortVector extends AbstractVector{
 	
 	@Override
 	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
-		int totalBytes = count * 2, off = 0;
+		long totalBytes = (long)count * 2, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		byte[] buf = new byte[4096];
 		while (off < totalBytes) {
-			int len = Math.min(4096, totalBytes - off);
+			int len = (int)Math.min(4096, totalBytes - off);
 			in.readFully(buf, 0, len);
 			int end = len / 2;
 			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
