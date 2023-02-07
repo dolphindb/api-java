@@ -392,6 +392,8 @@ public class Utils {
 			return DATA_CATEGORY.MIXED;
 		else if(type==DATA_TYPE.DT_VOID)
 			return DATA_CATEGORY.NOTHING;
+		else if(type == DATA_TYPE.DT_DECIMAL32 || type == DATA_TYPE.DT_DECIMAL64 || type == DATA_TYPE.DT_DECIMAL128)
+			return DATA_CATEGORY.DENARY;
 		else
 			return DATA_CATEGORY.SYSTEM;
 	}

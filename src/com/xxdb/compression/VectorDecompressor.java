@@ -19,7 +19,7 @@ public class VectorDecompressor {
 		int compression = in.readByte();
 		int dataType = in.readByte();
 		int unitLength = in.readByte();
-		in.skipBytes(2);
+		short reserved = in.readShort();
 		int extra = 0;
 		extra = in.readInt();
 		int elementCount = in.readInt();
@@ -28,7 +28,7 @@ public class VectorDecompressor {
 		int tmp = extra;
 		if (dataType < DATA_TYPE.DT_BOOL_ARRAY.getValue())
 			extra=1;
-		ExtendedDataInput decompressedIn = DecoderFactory.get(compression).	decompress(in, compressedBytes - 20, unitLength, elementCount, isLittleEndian, extra);
+		ExtendedDataInput decompressedIn = DecoderFactory.get(compression).	decompress(in, compressedBytes - 20, unitLength, elementCount, isLittleEndian, extra, dataType, reserved);
 		DATA_TYPE dt = DATA_TYPE.valueOf(dataType);
 		if (dt == DATA_TYPE.DT_DECIMAL32)
 			return new BasicDecimal32Vector(DATA_FORM.DF_VECTOR, decompressedIn, tmp);

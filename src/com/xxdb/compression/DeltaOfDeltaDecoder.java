@@ -12,10 +12,10 @@ import java.nio.ByteBuffer;
 public class DeltaOfDeltaDecoder extends AbstractDecoder {
 
     @Override
-    public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian, int extra) throws IOException{
+    public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian, int extra, int type, short scale) throws IOException{
     	//TODO: handle the case of unitLength == 0 (String)
       	int offset = 8;
-      	ByteBuffer dest = createColumnVector(elementCount, unitLength, isLittleEndian, 0, extra);
+      	ByteBuffer dest = createColumnVector(elementCount, unitLength, isLittleEndian, 0, extra, type, scale);
     	byte[] out = dest.array();
         int outLength = out.length - offset;
         int count = 0;

@@ -3,6 +3,7 @@ package com.xxdb.compression;
 import java.io.DataInput;
 import java.io.IOException;
 
+import com.xxdb.data.Entity;
 import com.xxdb.io.ExtendedDataInput;
 
 public interface Decoder {
@@ -21,5 +22,5 @@ public interface Decoder {
      * @param unitLength The length of an element in bytes. It is zero if the element is a string object.
      * @return
      */
-    ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian, int extra) throws IOException;
+    ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian, int extra, int type, short scale) throws IOException;
 }

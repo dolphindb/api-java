@@ -1,5 +1,6 @@
 package com.xxdb.compression;
 
+import com.xxdb.data.Entity;
 import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.DdbByteArrayInputStream;
 import com.xxdb.io.ExtendedDataInput;
@@ -17,12 +18,12 @@ public class LZ4Decoder extends AbstractDecoder {
     private LZ4SafeDecompressor decompressor = null;
 
     @Override
-    public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian, int extra) throws IOException{
+    public ExtendedDataInput decompress(DataInput in, int length, int unitLength, int elementCount, boolean isLittleEndian, int extra, int type, short scale) throws IOException{
     	if(decompressor == null){
 	        LZ4Factory factory = LZ4Factory.fastestInstance();
 	        decompressor = factory.safeDecompressor();
     	}
-        byte[] lengthMsg = createLZ4ColumnVector(elementCount, isLittleEndian, extra).array();
+        byte[] lengthMsg = createLZ4ColumnVector(elementCount, isLittleEndian, extra, type, scale).array();
         LinkedList<byte[]> buffers = new LinkedList<>();
         buffers.add(lengthMsg);
         while (length > 0) {
