@@ -15,7 +15,7 @@ public class BasicDecimal32Vector extends AbstractVector{
     private int size;
     private int capaticy;
 
-    BasicDecimal32Vector(int size){
+    public BasicDecimal32Vector(int size){
         this(DATA_FORM.DF_VECTOR, size);
     }
 
@@ -158,8 +158,10 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
-        if (scale_ < 0)
-            throw new RuntimeException("Please set scale first.");
+        if (((Scalar)value).getScale() != scale_ && scale_ >= 0)
+            throw new RuntimeException("Value's scale is not the same as the vector's!");
+        else
+            scale_ = ((Scalar) value).getScale();
         if(((Scalar)value).isNull())
             values[index] = Integer.MIN_VALUE;
         else{
