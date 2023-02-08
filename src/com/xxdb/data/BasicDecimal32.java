@@ -139,4 +139,9 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
         double b = Double.parseDouble(o.getString());
         return Double.compare(a, b);
     }
+
+    public int getInt(){
+        return value_;
+    }
+
 }

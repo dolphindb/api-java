@@ -142,4 +142,8 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
         double b = Double.parseDouble(o.getString());
         return Double.compare(a, b);
     }
+
+    public long getLong(){
+        return value_;
+    }
 }

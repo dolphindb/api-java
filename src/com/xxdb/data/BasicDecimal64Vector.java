@@ -5,6 +5,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
@@ -163,21 +164,24 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
-        if (scale_ < 0)
-            throw new RuntimeException("Please set scale first.");
+        int newScale = ((Scalar) value).getScale();
+        if(scale_ < 0) scale_ = newScale;
         if(((Scalar)value).isNull())
-            values[index] = Long.MIN_VALUE;
+            values[index] = Integer.MIN_VALUE;
         else{
-            double data = ((Scalar)value).getNumber().doubleValue();
-            if (data == 0.0)
-                values[index] = 0;
-            else {
-                BigDecimal pow = new BigDecimal(1);
-                for (long i = 0; i < scale_; i++) {
-                    pow = pow.multiply(new BigDecimal(10));
+            if(scale_ != newScale) {
+                BigInteger newValue = BigInteger.valueOf(((BasicDecimal64) (value)).getLong());
+                BigInteger pow = BigInteger.valueOf(10);
+                if(newScale - scale_ > 0){
+                    pow = pow.pow(newScale - scale_);
+                    newValue = newValue.divide(pow);
+                }else{
+                    pow = pow.pow(scale_ - newScale);
+                    newValue = newValue.multiply(pow);
                 }
-                BigDecimal dbvalue = new BigDecimal(Double.toString(data));
-                values[index] = (dbvalue.multiply(pow)).longValue();
+                values[index] = newValue.intValue();
+            }else{
+                values[index] = ((BasicDecimal64) value).getLong();
             }
         }
     }
