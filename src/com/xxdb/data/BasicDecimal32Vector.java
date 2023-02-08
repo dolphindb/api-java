@@ -258,7 +258,13 @@ public class BasicDecimal32Vector extends AbstractVector{
         if (scale_ < 0){
             throw new RuntimeException("Please set scale first.");
         }
-        addRange(((BasicDecimal32Vector)value).getdataArray());
+        if(((BasicDecimal32Vector)value).getScale() == scale_)
+            addRange(((BasicDecimal32Vector)value).getdataArray());
+        else{
+            for(int i = 0; i < value.rows(); ++i){
+                Append((Scalar)value.get(i));
+            }
+        }
     }
 
     public void setScale(int scale){

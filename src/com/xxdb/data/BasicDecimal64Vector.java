@@ -261,7 +261,13 @@ public class BasicDecimal64Vector extends AbstractVector{
     public void Append(Vector value) throws Exception{
         if (scale_ < 0)
             throw new RuntimeException("Please set scale first.");
-        addRange(((BasicDecimal64Vector)value).getdataArray());
+        if(((BasicDecimal64Vector)value).getScale() == scale_)
+            addRange(((BasicDecimal64Vector)value).getdataArray());
+        else{
+            for(int i = 0; i < value.rows(); ++i){
+                Append((Scalar)value.get(i));
+            }
+        }
     }
 
     public long[] getdataArray(){
