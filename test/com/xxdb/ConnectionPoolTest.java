@@ -1350,8 +1350,8 @@ public class ConnectionPoolTest {
         cols.add(bavcol0);
         List<Vector> bdvcol1 = new ArrayList<Vector>();
         Vector v321=new BasicDecimal32Vector(3,4);
-        v321.set(0,new BasicDecimal32(15645.00,4));
-        v321.set(1,new BasicDecimal32(24635.00001,4));
+        v321.set(0,new BasicDecimal32(15645.00,2));
+        v321.set(1,new BasicDecimal32(24635.00001,3));
         v321.set(2,new BasicDecimal32(24635.00001,4));
         bdvcol1.add(0,v321);
         bdvcol1.add(1,v321);
@@ -1370,9 +1370,9 @@ public class ConnectionPoolTest {
         cols.add(bavcol2);
         List<Vector> bdvcol3 = new ArrayList<Vector>();
         Vector v641=new BasicDecimal64Vector(3,4);
-        v641.set(0,new BasicDecimal64(15645.00,4));
-        v641.set(1,new BasicDecimal64(24635.00001,4));
-        v641.set(2,new BasicDecimal64(24635.00001,4));
+        v641.set(0,new BasicDecimal64(15645.00,2));
+        v641.set(1,new BasicDecimal64(24635.00001,8));
+        v641.set(2,new BasicDecimal64(24635.00001,0));
         bdvcol3.add(0,v641);
         bdvcol3.add(1,v641);
         bdvcol3.add(2,v641);
@@ -1380,7 +1380,7 @@ public class ConnectionPoolTest {
         cols.add(bavcol3);
         List<Vector> bdvcol4 = new ArrayList<Vector>();
         Vector v642=new BasicDecimal64Vector(3,8);
-        v642.set(0,new BasicDecimal64(15645.00,8));
+        v642.set(0,new BasicDecimal64(15645.00,1));
         v642.set(1,new BasicDecimal64(24635.00001,8));
         v642.set(2,new BasicDecimal64(24635.00001,8));
         bdvcol4.add(0,v642);
