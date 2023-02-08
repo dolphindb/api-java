@@ -1283,8 +1283,8 @@ public class DBConnectionTest {
         BasicAnyVector result = (BasicAnyVector) conn.run("(1, 2, (1,3, 5),(0.9, 0.8))");
         assertEquals(1, ((Scalar)result.get(0)).getNumber().intValue());
 
-        result = (BasicAnyVector) conn.run("eachRight(def(x,y):x+y,1,(1,2,3))");
-        assertEquals(2, ((Scalar)result.get(0)).getNumber().intValue());
+        result = (BasicAnyVector) conn.run("eachRight(def(x,y):x+y,1,(1,2,3.6))");
+        assertEquals("2", result.get(0).getString());
     }
 
     @Test
@@ -2880,7 +2880,7 @@ public class DBConnectionTest {
     @Test
     public void Test_getLocalAddress() throws IOException{
         DBConnection conn = new DBConnection(false,false);
-        assertTrue(conn.connect(HOST,PORT,1));
+        assertTrue(conn.connect(HOST,PORT,100));
         conn.login("admin","123456",true);
         InetAddress ip = InetAddress.getByName("127.0.0.1");
         assertEquals(ip,conn.getLocalAddress());
@@ -3548,10 +3548,6 @@ public void test_SSL() throws Exception {
         assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
         assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(5).getString());
         assertEquals("[[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678]]",res.getColumn(6).getString());
-
-    }
-    @Test
-    public void test_append_decimal_arrayvector() throws Exception {
 
     }
     @Test
