@@ -345,11 +345,11 @@ public class BasicDecimalTest {
         BasicTable bt2 = (BasicTable) conn.run("TTable;");
         for (int i =0 ;i<1000;i++) {
             int m = appender.append(bt2);
-            assertEquals(10,m);
+            assertEquals(12,m);
         }
         BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
-        assertEquals(10000,re.getLong());
+        assertEquals(12000,re.getLong());
         pool.shutdown();
     }
     public void checkData(BasicTable exception, BasicTable resTable) {
