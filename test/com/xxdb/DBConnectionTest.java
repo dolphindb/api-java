@@ -264,6 +264,15 @@ public class DBConnectionTest {
             assertTrue(e.getMessage().equals("Imcompatible data type"));
         }
     }
+    @Test
+    public  void testMonthScalar_1() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicMonth data = (BasicMonth)conn.run("month(0)");
+        System.out.println(data.getString());
+        assertEquals("0000.01M",data.getString());
+
+    }
 
     @Test
     public void testTimeScalar() throws Exception {
@@ -3557,6 +3566,4 @@ public void test_SSL() throws Exception {
         Thread.sleep(500);
         assertEquals(true, conn.isConnected());
     }
-
-
 }
