@@ -62,8 +62,14 @@ public class BasicMonth extends BasicInt{
 	public String getString() {
 		if(isNull())
 			return "";
-		else
-			return getMonth().format(DateTimeFormatter.ofPattern("yyyy.MM'M'"));
+		else{
+			YearMonth yearMonth = getMonth();
+			if(yearMonth.getYear() == 0){
+				return ("0000" + getMonth().format(DateTimeFormatter.ofPattern(".MM'M'")));
+			}else{
+				return getMonth().format(DateTimeFormatter.ofPattern("yyyy.MM'M'"));
+			}
+		}
 	}
 	@Override
 	public String getJsonString() {
