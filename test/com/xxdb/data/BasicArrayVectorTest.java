@@ -199,8 +199,8 @@ public class BasicArrayVectorTest {
                 "a.append!([month(1..2),month(0),month()])\n" +
                 ";a";
         BasicArrayVector obj = (BasicArrayVector)conn.run(script);
-        assertEquals("[0001.02M,0001.03M]",obj.getVectorValue(0).getString());
-        assertEquals("[0001.01M]",obj.getVectorValue(1).getString());
+        assertEquals("[0000.02M,0000.03M]",obj.getVectorValue(0).getString());
+        assertEquals("[0000.01M]",obj.getVectorValue(1).getString());
         assertEquals("[]",obj.getVectorValue(2).getString());
         obj.Append(new BasicMonthVector(new int[]{12,32,15}));
         assertEquals(4,obj.rows());

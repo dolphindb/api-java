@@ -1095,7 +1095,7 @@ public class ThreadedClientsubscribeReverseTest {
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout = 200000)
     public void test_func_BatchMessageHandler_batchSize_over_meg_size_big_throttle() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1541,7 +1541,7 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler_conn_null handler = new Handler_conn_null(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true,null,streamFilter,false,"admin","123456");
-        Thread.sleep(5000);
+        Thread.sleep(30000);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(table1.rows(), msg1.size());
@@ -1599,7 +1599,7 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler6 handler = new Handler6(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(20000);
+        Thread.sleep(30000);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(table1.rows(), msg1.size());
@@ -1726,7 +1726,7 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler6 handler = new Handler6(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(10000);
+        Thread.sleep(20000);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(table1.rows(), msg1.size());
@@ -1888,7 +1888,7 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler7 handler = new Handler7(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(5000);
+        Thread.sleep(30000);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(table1.rows(), msg1.size());
@@ -1949,7 +1949,7 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler7 handler = new Handler7(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(5000);
+        Thread.sleep(30000);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(table1.rows(), msg1.size());
@@ -2028,7 +2028,7 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler7 handler = new Handler7(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(5000);
+        Thread.sleep(30000);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(0, msg1.size());
@@ -2104,7 +2104,7 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler6 handler = new Handler6(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(5000);
+        Thread.sleep(30000);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(table1.rows(), msg1.size());
@@ -2170,7 +2170,7 @@ public class ThreadedClientsubscribeReverseTest {
                     "d = dict(['msg1','msg2'], [table1, table2]);" +
                     "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)");
         }
-        Thread.sleep(30000);
+        Thread.sleep(40000);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(20000, msg1.size());

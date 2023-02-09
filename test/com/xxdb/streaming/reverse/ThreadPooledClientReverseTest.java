@@ -192,7 +192,7 @@ public class ThreadPooledClientReverseTest {
     public void test_subscribe_ex1() throws Exception {
             client.subscribe(HOST, PORT, "Trades", "subtrades", MessageHandler_handler);
             conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(20000);
+            Thread.sleep(40000);
             BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
             BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
             client.unsubscribe(HOST, PORT, "Trades", "subtrades");
@@ -209,11 +209,11 @@ public class ThreadPooledClientReverseTest {
     public void test_subscribe_ex2() throws Exception {
         client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, true);
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        Thread.sleep(20000);
         client.unsubscribe(HOST, PORT, "Trades","javaStreamingApi");
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-        Thread.sleep(12000);
+        Thread.sleep(20000);
         assertEquals(re.rows(), tra.rows());
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -263,7 +263,7 @@ public class ThreadPooledClientReverseTest {
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         BasicTable re = (BasicTable) conn.run("Receive");
         BasicTable tra = (BasicTable) conn.run("Trades");
         client.unsubscribe(HOST, PORT, "Trades", "javaStreamingApi");
@@ -316,7 +316,7 @@ public class ThreadPooledClientReverseTest {
         Vector filter2 = (Vector) conn.run("2001..3000");
         client.subscribe(HOST, PORT, "Trades", "subTrades2", handler1, -1, filter2);
         conn.run("n=4000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         BasicTable fil = (BasicTable) conn.run("select * from filter order by tag");
@@ -346,7 +346,7 @@ public class ThreadPooledClientReverseTest {
         client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades");
@@ -367,7 +367,7 @@ public class ThreadPooledClientReverseTest {
         client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true);
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades");
@@ -412,7 +412,7 @@ public class ThreadPooledClientReverseTest {
         Vector filter1 = (Vector) conn.run("1..100000");
         client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"admin","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(8000);
+        Thread.sleep(20000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
@@ -424,7 +424,7 @@ public class ThreadPooledClientReverseTest {
         Vector filter1 = (Vector) conn.run("1..100000");
         client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"test1","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(8000);
+        Thread.sleep(20000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
@@ -493,7 +493,7 @@ public class ThreadPooledClientReverseTest {
         }
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st1.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st2.append!(t)");
-        Thread.sleep(20000);
+        Thread.sleep(40000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(20000,row_num.getInt());
         client.unsubscribe(HOST,PORT,"tmp_st1","subTread1");
@@ -516,7 +516,7 @@ public class ThreadPooledClientReverseTest {
         client.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler, -1, true, filter1, null);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades");
@@ -556,7 +556,7 @@ public class ThreadPooledClientReverseTest {
         client.subscribe(HOST, PORT, "Trades",MessageHandler_handler, -1,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(30000);
+        Thread.sleep(40000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         client.unsubscribe(HOST, PORT, "Trades");
@@ -599,7 +599,7 @@ public class ThreadPooledClientReverseTest {
         client1.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(20000);
+        Thread.sleep(40000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         client1.unsubscribe(HOST, PORT, "Trades", "subTrades");

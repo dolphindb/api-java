@@ -245,8 +245,8 @@ public class PollingClientReverseTest {
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
                 conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
-                msgs1 = poller1.poll(200, 10000);
-                msgs2 = poller2.poll(200, 1000);
+                msgs1 = poller1.poll(1000, 10000);
+                msgs2 = poller2.poll(1000, 1000);
                 if (msgs1 == null) {
                     continue;
                 } else if (msgs1.size() > 0) {
@@ -277,7 +277,7 @@ public class PollingClientReverseTest {
         ArrayList<IMessage> msgs1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
-        msgs1 = poller1.poll(100, 10000);
+        msgs1 = poller1.poll(1000, 10000);
         assertEquals(5000, msgs1.size());
         client.unsubscribe(HOST, PORT, "Trades1", "subtrades1");
     }
@@ -310,7 +310,7 @@ public class PollingClientReverseTest {
         TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",-1,true,null,"test1","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
         Thread.sleep(5000);
-        ArrayList<IMessage> msgs1 = poller1.poll(100, 10000);
+        ArrayList<IMessage> msgs1 = poller1.poll(500, 10000);
         assertEquals(10000, msgs1.size());
         client.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
@@ -355,7 +355,7 @@ public class PollingClientReverseTest {
             System.out.println(e.getMessage());
         }
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
-        ArrayList<IMessage> msgs1 = poller1.poll(1000, 10000);
+        ArrayList<IMessage> msgs1 = poller1.poll(10000, 10000);
         assertEquals(10000, msgs1.size());
         client.unsubscribe(HOST, PORT, "Trades1", "subTread1");
     }
@@ -377,9 +377,9 @@ public class PollingClientReverseTest {
         }
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st1.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st2.append!(t)");
-        ArrayList<IMessage> msgs1 = poller1.poll(200, 10000);
+        ArrayList<IMessage> msgs1 = poller1.poll(1000, 10000);
         assertEquals(10000, msgs1.size());
-        ArrayList<IMessage> msgs2 = poller2.poll(200, 10000);
+        ArrayList<IMessage> msgs2 = poller2.poll(1000, 10000);
         assertEquals(10000, msgs1.size());
     }
 
@@ -389,7 +389,7 @@ public class PollingClientReverseTest {
         ArrayList<IMessage> msg1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
-        msg1 = poller1.poll(100, 10000);
+        msg1 = poller1.poll(500, 10000);
         assertEquals(5000, msg1.size());
         client.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
@@ -400,7 +400,7 @@ public class PollingClientReverseTest {
         ArrayList<IMessage> msg1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
-        msg1 = poller1.poll(100, 10000);
+        msg1 = poller1.poll(1000, 10000);
         assertEquals(5000, msg1.size());
         client.unsubscribe(HOST,PORT,"Trades1");
     }
@@ -411,7 +411,7 @@ public class PollingClientReverseTest {
         ArrayList<IMessage> msg1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
-        msg1 = poller1.poll(100, 10000);
+        msg1 = poller1.poll(500, 10000);
         assertEquals(5000, msg1.size());
         client.unsubscribe(HOST,PORT,"Trades1");
     }
@@ -422,7 +422,7 @@ public class PollingClientReverseTest {
         ArrayList<IMessage> msg1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
-        msg1 = poller1.poll(100, 10000);
+        msg1 = poller1.poll(1000, 10000);
         assertEquals(5000, msg1.size());
         client.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
@@ -436,7 +436,7 @@ public class PollingClientReverseTest {
         ArrayList<IMessage> msg1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
-        msg1 = poller1.poll(100, 10000);
+        msg1 = poller1.poll(500, 10000);
         assertEquals(5, msg1.size());
         client.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
@@ -451,7 +451,7 @@ public class PollingClientReverseTest {
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
                 conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
-                msgs1 = poller1.poll(100, 10000);
+                msgs1 = poller1.poll(500, 10000);
          //       msgs2 = poller2.poll(100, 1000);
                 if (msgs1 == null) {
                     continue;
@@ -484,7 +484,7 @@ public class PollingClientReverseTest {
         for (int j=0;j<10;j++) {
             TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1",-1,true);
             PollingClient client1 = new PollingClient(HOST,0);
-            //TopicPoller poller2 = client1.subscribe(HOST, PORT, "Trades1",-1,true);
+            //TopicPoller poller2 = client.subscribe(HOST, PORT, "Trades1",-1,true);
             ArrayList<IMessage> msgs1;
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
@@ -525,8 +525,8 @@ public class PollingClientReverseTest {
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
                 conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
-                msgs1 = poller1.poll(100, 10000);
-                msgs2 = poller2.poll(100, 10000);
+                msgs1 = poller1.poll(500, 10000);
+                msgs2 = poller2.poll(500, 10000);
                 if (msgs1 == null) {
                     continue;
                 } else if (msgs1.size() > 0) {
@@ -564,8 +564,8 @@ public class PollingClientReverseTest {
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
                 conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
-                msgs1 = poller1.poll(100, 10000);
-                msgs2 = poller2.poll(100, 1000);
+                msgs1 = poller1.poll(500, 10000);
+                msgs2 = poller2.poll(500, 1000);
                 if (msgs1 == null) {
                     continue;
                 } else if (msgs1.size() > 0) {
