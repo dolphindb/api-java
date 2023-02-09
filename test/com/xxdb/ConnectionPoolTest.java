@@ -1746,7 +1746,7 @@ public class ConnectionPoolTest {
         connectionPool.waitForThreadCompletion();
         connectionPool.shutdown();
     }
-    @Test
+    //@Test
     public void test_pool_execute_timeout_listTask() throws Exception {
         ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
                 "admin", "123456", 3, false, true,

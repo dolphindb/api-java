@@ -912,6 +912,7 @@ public class ServerCompressionTest {
         colVectors.add(new BasicDateVector(time));
         colVectors.add(val);
         BasicTable table = new BasicTable(colNames, colVectors);
+        System.out.println(table.getString());
         List<Entity> args = Arrays.asList(table);
         conn.run("t = table(1000:0,`date`val,[DATE,BOOL])" +
                 "share t as st");

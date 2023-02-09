@@ -6712,6 +6712,5 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("[11,22,33,44,55,66.66]", bt.getColumn("double").getString());
         conn.run("undef(`t1,SHARED)");
     }
-
 }
 
