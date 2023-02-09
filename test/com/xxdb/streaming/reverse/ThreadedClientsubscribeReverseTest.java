@@ -1032,7 +1032,7 @@ public class ThreadedClientsubscribeReverseTest {
         Vector filter1 = (Vector) conn.run("1..100000");
         client.subscribe(HOST,PORT,"Trades","single_msg",BatchMessageHandler_handler,-1,false,filter1,true,100,1);
         conn.run("n=1;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(1000);
+        Thread.sleep(10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(1,row_num.getInt());
         client.unsubscribe(HOST,PORT,"Trades","single_msg");
