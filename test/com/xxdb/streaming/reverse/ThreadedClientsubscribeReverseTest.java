@@ -941,14 +941,13 @@ public class ThreadedClientsubscribeReverseTest {
             System.out.println(e.getMessage());
         }
 
-        client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, false, filter1, true, 100, 5, "test2", "123456");
-
         try {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test3", "123456");
             fail("no exception thrown");
         }catch (Exception e){
             assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' function: 'publishTable'",e.getMessage());
         }
+        client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, false, filter1, true, 100, 5, "test2", "123456");
         client.unsubscribe(HOST, PORT, "Trades", "subTread1");
     }
 
@@ -1782,6 +1781,75 @@ public class ThreadedClientsubscribeReverseTest {
         public List<BasicMessage> getMsg2() {
             return msg2;
         }
+    }
+    @Test(timeout = 120000)
+    public void test_StreamDeserializer_dataType_filters_subscribe_haStreamTable() throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "t = table(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "haStreamTable(11,t,`outTables,100000)\t\n";
+//                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "leader_node = getStreamingLeader(11)\n" +
+                "rpc(leader_node,replay,d,`outTables,`timestampv,`timestampv)";
+//        "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)"+
+        conn.run(replayScript);
+        Thread.sleep(5000);
+        System.out.println(conn.run("select count(*) from outTables ").getString());
+        BasicTable table1 = (BasicTable)conn.run("table1");
+        BasicTable table2 = (BasicTable)conn.run("table2");
+        Entity.DATA_TYPE[] array1 = {DT_DATETIME,DT_TIMESTAMP,DT_SYMBOL,DT_DOUBLE,DT_DOUBLE};
+        Entity.DATA_TYPE[] array2 = {DT_DATETIME,DT_TIMESTAMP,DT_SYMBOL,DT_DOUBLE};
+        List<Entity.DATA_TYPE> filter1 = new ArrayList<>(Arrays.asList(array1));
+        List<Entity.DATA_TYPE> filter2 = new ArrayList<>(Arrays.asList(array2));
+        HashMap<String, List<Entity.DATA_TYPE>> filter = new HashMap<>();
+        filter.put("msg1",filter1);
+        filter.put("msg2",filter2);
+
+        StreamDeserializer streamFilter = new StreamDeserializer(filter);
+
+        Handler7 handler = new Handler7(streamFilter);
+        BasicString StreamLeaderTmp = (BasicString)conn.run("getStreamingLeader(11)");
+        String StreamLeader = StreamLeaderTmp.getString();
+        BasicString StreamLeaderHostTmp = (BasicString)conn.run("(exec host from rpc(getControllerAlias(), getClusterPerf) where name=\""+StreamLeader+"\")[0]");
+        String StreamLeaderHost = StreamLeaderHostTmp.getString();
+        BasicInt StreamLeaderPortTmp = (BasicInt)conn.run("(exec port from rpc(getControllerAlias(), getClusterPerf) where name=\""+StreamLeader+"\")[0]");
+        int StreamLeaderPort = StreamLeaderPortTmp.getInt();
+        System.out.println(StreamLeaderHost);
+        System.out.println(String.valueOf(StreamLeaderPort));
+        client.subscribe(StreamLeaderHost, StreamLeaderPort, "outTables", "mutiSchema", handler, 0, true);
+//        DBConnection conn1 = new DBConnection();
+//        conn1.connect(HOST, 18922, "admin", "123456");
+//        conn1.run("streamCampaignForLeader(3)");
+        Thread.sleep(5000);
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Thread.sleep(5000);
+        Assert.assertEquals(table1.rows(), msg1.size());
+        Assert.assertEquals(table2.rows(), msg2.size());
+        for (int i = 0; i < table1.columns(); ++i)
+        {
+            Vector tableCol = table1.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg1.get(j).getEntity(i));
+            }
+        }
+        for (int i = 0; i < table2.columns(); ++i)
+        {
+            Vector tableCol = table2.getColumn(i);
+            for (int j = 0; j < 10000; ++j)
+            {
+                Assert.assertEquals(tableCol.get(j), msg2.get(j).getEntity(i));
+            }
+        }
+        client.unsubscribe(StreamLeaderHost, StreamLeaderPort, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_StreamDeserializer_dataType_filters_subscribe_isomate_table() throws IOException, InterruptedException {

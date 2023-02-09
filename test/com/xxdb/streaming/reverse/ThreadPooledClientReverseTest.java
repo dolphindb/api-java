@@ -1,19 +1,19 @@
 package com.xxdb.streaming.reverse;
 
 import com.xxdb.DBConnection;
-import com.xxdb.data.BasicInt;
-import com.xxdb.data.BasicTable;
-import com.xxdb.data.Scalar;
+import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 import com.xxdb.streaming.client.*;
 import org.junit.*;
 
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import static com.xxdb.data.Entity.DATA_TYPE.*;
+import static com.xxdb.data.Entity.DATA_TYPE.DT_DOUBLE;
 import static org.junit.Assert.*;
 
 public class ThreadPooledClientReverseTest {
@@ -82,7 +82,46 @@ public class ThreadPooledClientReverseTest {
         client.close();
         conn.close();
     }
+    static class Handler7 implements MessageHandler {
+        private StreamDeserializer deserializer_;
+        private List<BasicMessage> msg1 = new ArrayList<>();
+        private List<BasicMessage> msg2 = new ArrayList<>();
+        private static Lock lock = new ReentrantLock();
 
+        public Handler7(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+        public void batchHandler(List<IMessage> msgs) {
+        }
+
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                lock.lock();
+                try{
+                    if (message.getSym().equals("msg1")) {
+                        msg1.add(message);
+                    } else if (message.getSym().equals("msg2")) {
+                        msg2.add(message);
+                    }
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }finally{
+                        lock.unlock();
+                    }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        public List<BasicMessage> getMsg1() {
+            return msg1;
+        }
+
+        public List<BasicMessage> getMsg2() {
+            return msg2;
+        }
+    }
     public static MessageHandler MessageHandler_handler = new MessageHandler() {
         @Override
         public void doEvent(IMessage msg) {
@@ -538,7 +577,7 @@ public class ThreadPooledClientReverseTest {
         client1.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         client1.unsubscribe(HOST, PORT, "Trades", "subTrades");
@@ -591,5 +630,58 @@ public class ThreadPooledClientReverseTest {
         }
         MyThreadPollClient mtpc = new MyThreadPollClient(HOST,10086,10);
         assertFalse(mtpc.doReconnect(null));
+    }
+
+    @Test(timeout = 120000)
+    public void test_StreamDeserializer_dataType_filters_subscribe_haStreamTable() throws IOException, InterruptedException {
+        conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
+                "st11 = NULL");
+        String script = "t = table(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
+                "haStreamTable(11,t,`outTables,100000)\t\n";
+//                "enableTableShareAndPersistence(table=st11, tableName=`outTables, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180, preCache = 0)\t\n";
+        conn.run(script);
+
+        String replayScript = "n = 10000;table1 = table(100:0, `datetimev`timestampv`sym`price1`price2, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE]);" +
+                "table2 = table(100:0, `datetimev`timestampv`sym`price1, [DATETIME, TIMESTAMP, SYMBOL, DOUBLE]);" +
+                "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n), rand(100,n)+rand(1.0, n));" +
+                "tableInsert(table2, 2012.01.01T01:21:23 + 1..n, 2018.12.01T01:21:23.000 + 1..n, take(`a`b`c,n), rand(100,n)+rand(1.0, n));" +
+                "d = dict(['msg1','msg2'], [table1, table2]);" +
+                "leader_node = getStreamingLeader(11)\n" +
+                "rpc(leader_node,replay,d,`outTables,`timestampv,`timestampv)";
+//        "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)"+
+        conn.run(replayScript);
+        Thread.sleep(5000);
+        System.out.println(conn.run("select count(*) from outTables ").getString());
+        BasicTable table1 = (BasicTable)conn.run("table1");
+        BasicTable table2 = (BasicTable)conn.run("table2");
+        Entity.DATA_TYPE[] array1 = {DT_DATETIME,DT_TIMESTAMP,DT_SYMBOL,DT_DOUBLE,DT_DOUBLE};
+        Entity.DATA_TYPE[] array2 = {DT_DATETIME,DT_TIMESTAMP,DT_SYMBOL,DT_DOUBLE};
+        List<Entity.DATA_TYPE> filter1 = new ArrayList<>(Arrays.asList(array1));
+        List<Entity.DATA_TYPE> filter2 = new ArrayList<>(Arrays.asList(array2));
+        HashMap<String, List<Entity.DATA_TYPE>> filter = new HashMap<>();
+        filter.put("msg1",filter1);
+        filter.put("msg2",filter2);
+        StreamDeserializer streamFilter = new StreamDeserializer(filter);
+        Handler7 handler = new Handler7(streamFilter);
+        BasicString StreamLeaderTmp = (BasicString)conn.run("getStreamingLeader(11)");
+        String StreamLeader = StreamLeaderTmp.getString();
+        BasicString StreamLeaderHostTmp = (BasicString)conn.run("(exec host from rpc(getControllerAlias(), getClusterPerf) where name=\""+StreamLeader+"\")[0]");
+        String StreamLeaderHost = StreamLeaderHostTmp.getString();
+        BasicInt StreamLeaderPortTmp = (BasicInt)conn.run("(exec port from rpc(getControllerAlias(), getClusterPerf) where name=\""+StreamLeader+"\")[0]");
+        int StreamLeaderPort = StreamLeaderPortTmp.getInt();
+        System.out.println(StreamLeaderHost);
+        System.out.println(String.valueOf(StreamLeaderPort));
+
+        client.subscribe(StreamLeaderHost, StreamLeaderPort, "outTables", "mutiSchema", handler, 0, true);
+//        DBConnection conn1 = new DBConnection();
+//        conn1.connect(HOST, 18922, "admin", "123456");
+//        conn1.run("streamCampaignForLeader(3)");
+        Thread.sleep(5000);
+        List<BasicMessage> msg1 = handler.getMsg1();
+        List<BasicMessage> msg2 = handler.getMsg2();
+        Thread.sleep(5000);
+        Assert.assertEquals(table1.rows(), msg1.size());
+        Assert.assertEquals(table2.rows(), msg2.size());
+        client.unsubscribe(StreamLeaderHost, StreamLeaderPort, "outTables", "mutiSchema");
     }
 }
