@@ -167,7 +167,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         int newScale = ((Scalar) value).getScale();
         if(scale_ < 0) scale_ = newScale;
         if(((Scalar)value).isNull())
-            values[index] = Integer.MIN_VALUE;
+            values[index] = Long.MIN_VALUE;
         else{
             if(scale_ != newScale) {
                 BigInteger newValue = BigInteger.valueOf(((BasicDecimal64) (value)).getLong());
