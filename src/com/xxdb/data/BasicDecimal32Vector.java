@@ -160,12 +160,21 @@ public class BasicDecimal32Vector extends AbstractVector{
     @Override
     public void set(int index, Entity value) throws Exception {
         int newScale = ((Scalar) value).getScale();
+        DATA_TYPE type = value.getDataType();
         if(scale_ < 0) scale_ = newScale;
         if(((Scalar)value).isNull())
             values[index] = Integer.MIN_VALUE;
         else{
             if(scale_ != newScale) {
-                BigInteger newValue = BigInteger.valueOf(((BasicDecimal32) (value)).getInt());
+                BigInteger newValue;
+                if (type == Entity.DATA_TYPE.DT_LONG) {
+                    newValue = BigInteger.valueOf(((BasicLong)(value)).getLong());
+                } else if (type == Entity.DATA_TYPE.DT_INT) {
+                    newValue = BigInteger.valueOf(((BasicInt)(value)).getInt());
+                } else {
+                    newValue = BigInteger.valueOf(((BasicDecimal64) (value)).getLong());
+                }
+
                 BigInteger pow = BigInteger.valueOf(10);
                 if(newScale - scale_ > 0){
                     pow = pow.pow(newScale - scale_);
