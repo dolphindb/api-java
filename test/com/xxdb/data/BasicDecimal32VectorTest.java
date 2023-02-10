@@ -120,7 +120,7 @@ public class BasicDecimal32VectorTest {
         assertEquals("[,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void test_BasicDecimal32Vector_set_int() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
         BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_double_v,4);
