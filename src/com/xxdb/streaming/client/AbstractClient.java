@@ -36,6 +36,8 @@ abstract class AbstractClient implements MessageDispatcher {
     protected boolean isClose_ = false;
     protected LinkedBlockingQueue<DBConnection> connList = new LinkedBlockingQueue<>();
 
+    private Daemon daemon = null;
+
     class ReconnectItem {
         /**
          * 0: connected and received message schema
@@ -321,19 +323,11 @@ abstract class AbstractClient implements MessageDispatcher {
 
     public AbstractClient(int subscribePort) throws SocketException {
         this.listeningPort = subscribePort;
-        Daemon daemon = new Daemon(subscribePort, this, connList);
-        pThread = new Thread(daemon);
-        daemon.setRunningThread(pThread);
-        pThread.start();
     }
 
     public AbstractClient(String subscribeHost, int subscribePort) throws SocketException {
         this.listeningHost = subscribeHost;
         this.listeningPort = subscribePort;
-        Daemon daemon = new Daemon(subscribePort, this, connList);
-        pThread = new Thread(daemon);
-        daemon.setRunningThread(pThread);
-        pThread.start();
     }
 
     private void addMessageToCache(IMessage msg) {
@@ -419,6 +413,7 @@ abstract class AbstractClient implements MessageDispatcher {
                                                               String tableName, String actionName, MessageHandler handler,
                                                               long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord)
             throws IOException, RuntimeException {
+        checkServerVersion(host, port);
         Entity re;
         String topic = "";
         List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
@@ -597,5 +592,30 @@ abstract class AbstractClient implements MessageDispatcher {
 
     protected void unsubscribeInternal(String host, int port, String tableName) throws IOException {
         unsubscribeInternal(host, port, tableName, DEFAULT_ACTION_NAME);
+    }
+
+    void checkServerVersion(String host, int port) throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(host, port);
+        String version = conn.run("version()").getString();
+
+        String[] _ = version.split(" ")[0].split("\\.");
+        int v0 = Integer.parseInt(_[0]);
+        int v1 = Integer.parseInt(_[1]);
+        int v2 = Integer.parseInt(_[2]);
+
+        if((v0 == 1 && v1 == 30 && v2 >= 21) || (v0 == 2 && v1 == 0 && v2 >= 9)){
+            //server only support reverse connection
+            listeningPort = 0;
+        }else{
+            //server Not support reverse connection
+            if(listeningPort == 0){
+                throw new IOException("The server does not support subscription through reverse connection (connection initiated by the subscriber). Specify a valid port parameter.");
+            }
+        }
+        daemon = new Daemon(this.listeningPort, this, connList);
+        pThread = new Thread(daemon);
+        daemon.setRunningThread(pThread);
+        pThread.start();
     }
 }
