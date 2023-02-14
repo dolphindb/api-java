@@ -172,7 +172,7 @@ public class BasicDecimal32Vector extends AbstractVector{
                 } else if (type == Entity.DATA_TYPE.DT_INT) {
                     newValue = BigInteger.valueOf(((BasicInt)(value)).getInt());
                 } else {
-                    newValue = BigInteger.valueOf(((BasicDecimal64) (value)).getLong());
+                    newValue = BigInteger.valueOf(((BasicDecimal32) (value)).getInt());
                 }
 
                 BigInteger pow = BigInteger.valueOf(10);
