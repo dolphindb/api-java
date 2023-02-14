@@ -525,4 +525,9 @@ public class BasicArrayVector extends AbstractVector {
 			valuesOffect += curRows;
 		}
 	}
+
+	@Override
+	public int columns() {
+		return valueVec.rows();
+	}
 }
