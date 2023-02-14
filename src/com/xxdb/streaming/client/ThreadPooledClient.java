@@ -246,7 +246,8 @@ public class ThreadPooledClient extends AbstractClient {
             queueHandlers = null;
         }
         threadPool.shutdownNow();
-        pThread.interrupt();
+        if(pThread != null)
+            pThread.interrupt();
         isClose_ = true;
     }
 }

@@ -582,7 +582,8 @@ abstract class AbstractClient implements MessageDispatcher {
     }
 
     public void close(){
-        pThread.interrupt();
+        if(pThread != null)
+            pThread.interrupt();
         isClose_ = true;
     }
 
@@ -613,9 +614,15 @@ abstract class AbstractClient implements MessageDispatcher {
                 throw new IOException("The server does not support subscription through reverse connection (connection initiated by the subscriber). Specify a valid port parameter.");
             }
         }
-        daemon = new Daemon(this.listeningPort, this, connList);
-        pThread = new Thread(daemon);
-        daemon.setRunningThread(pThread);
-        pThread.start();
+        if(daemon == null) {
+            synchronized (connList) {
+                if(daemon == null) {
+                    daemon = new Daemon(this.listeningPort, this, connList);
+                    pThread = new Thread(daemon);
+                    daemon.setRunningThread(pThread);
+                    pThread.start();
+                }
+            }
+        }
     }
 }

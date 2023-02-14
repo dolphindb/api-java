@@ -411,7 +411,8 @@ public class ThreadedClient extends AbstractClient {
             }
             handlerLoppers.clear();
         }
-        pThread.interrupt();
+        if(pThread != null)
+            pThread.interrupt();
         isClose_ = true;
     }
 }
