@@ -228,7 +228,7 @@ public class ThreadedClient extends AbstractClient {
             throw new IllegalArgumentException("BatchSize must be greater than zero");
         if(throttle<0)
             throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, true);
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, msgAsTable);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0.0f ? -1.0f : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
