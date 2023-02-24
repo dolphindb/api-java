@@ -31,7 +31,7 @@ public class PollingClient extends AbstractClient {
     protected boolean doReconnect(Site site) {
         try {
             Thread.sleep(1000);
-            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, (MessageHandler) null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
+            BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, (MessageHandler) null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord, site.msgAstable);
             System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
             topicPoller.setQueue(queue);
             return true;
@@ -43,7 +43,11 @@ public class PollingClient extends AbstractClient {
     }
 
     public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, (MessageHandler) null, offset, reconnect, filter, deserializer, false, userName, passWord);
+        return subscribe(host, port, tableName, actionName, offset, reconnect, filter, deserializer, userName, passWord, false);
+    }
+
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord, boolean msgAsTable) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, (MessageHandler) null, offset, reconnect, filter, deserializer, false, userName, passWord, msgAsTable);
         List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
         List<String> usr = Arrays.asList(userName, passWord);
         users.put(tp, usr);

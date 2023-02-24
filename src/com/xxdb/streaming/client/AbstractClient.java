@@ -180,8 +180,10 @@ abstract class AbstractClient implements MessageDispatcher {
         String userName = "";
         String passWord = "";
 
+        boolean msgAstable = false;
+
         Site(String host, int port, String tableName, String actionName,
-             MessageHandler handler, long msgId, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord) {
+             MessageHandler handler, long msgId, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord, boolean msgAstable) {
             this.host = host;
             this.port = port;
             this.tableName = tableName;
@@ -194,6 +196,7 @@ abstract class AbstractClient implements MessageDispatcher {
             this.deserializer = deserializer;
             this.userName = userName;
             this.passWord = passWord;
+            this.msgAstable = msgAstable;
         }
     }
 
@@ -406,12 +409,13 @@ abstract class AbstractClient implements MessageDispatcher {
                                                               String tableName, String actionName, MessageHandler handler,
                                                               long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer, boolean allowExistTopic)
             throws IOException, RuntimeException {
-        return subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, "", "");
+        return subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, "", "", false);
     }
 
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
                                                               String tableName, String actionName, MessageHandler handler,
-                                                              long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord)
+                                                              long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer,
+                                                              boolean allowExistTopic, String userName, String passWord, boolean msgAsTable)
             throws IOException, RuntimeException {
         checkServerVersion(host, port);
         Entity re;
@@ -477,7 +481,7 @@ abstract class AbstractClient implements MessageDispatcher {
                     String HASiteHost = HASiteHostAndPort[0];
                     int HASitePort = new Integer(HASiteHostAndPort[1]);
                     String HASiteAlias = HASiteHostAndPort[2];
-                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord);
+                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable);
                     if (!reconnect){
                         sites[i].closed = true;
                     }
@@ -498,7 +502,7 @@ abstract class AbstractClient implements MessageDispatcher {
                     trueTopicToSites.put(topic, sites);
                 }
             } else {
-                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, deserializer, allowExistTopic, userName, passWord)};
+                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable)};
                 if (!reconnect){
                     sites[0].closed = true;
                 }
@@ -625,4 +629,5 @@ abstract class AbstractClient implements MessageDispatcher {
             }
         }
     }
+    public ConcurrentHashMap<String, AbstractClient.Site[]> getTopicToSites(){return trueTopicToSites;}
 }

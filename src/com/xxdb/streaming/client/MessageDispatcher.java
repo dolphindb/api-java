@@ -3,6 +3,7 @@ package com.xxdb.streaming.client;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 interface MessageDispatcher {
     boolean isRemoteLittleEndian(String host);
@@ -36,6 +37,8 @@ interface MessageDispatcher {
     Set<String> getAllReconnectTopic();
 
     Map<String, StreamDeserializer> getSubInfos();
+
+    ConcurrentHashMap<String, AbstractClient.Site[]> getTopicToSites();
 }
 
 
