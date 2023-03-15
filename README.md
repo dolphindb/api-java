@@ -26,7 +26,7 @@
 
 ## 1. Introduction
 
-DolphinDB Java API requires Java 1.8 or higher environment. Please first declare the following Maven Dependency (version 1.0.27 in this example) in your project.
+DolphinDB Java API requires Java 1.8 or higher environment. Please first declare the following Maven Dependency (version 1.30.20.1 in this example) in your project.
 
 ```java
 <!-- https://mvnrepository.com/artifact/com.dolphindb/dolphindb-javaapi -->
