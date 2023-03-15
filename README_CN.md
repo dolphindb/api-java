@@ -9,8 +9,6 @@
 - [6. 读取数据示例](#6-读取数据示例)
 - [7. 读写DolphinDB数据表](#7-读写dolphindb数据表)
   - [7.1 保存数据到DolphinDB内存表](#71-保存数据到dolphindb内存表)
-    - [7.1.1 使用 `insert into` 保存单条数据](#711-使用-insert-into-保存单条数据)
-    - [7.1.3 使用`tableInsert`函数保存BasicTable对象](#713-使用tableinsert函数保存basictable对象)
   - [7.2 保存数据到分布式表](#72-保存数据到分布式表)
   - [7.3 读取和使用数据表](#73-读取和使用数据表)
   - [7.4 批量异步追加数据](#74-批量异步追加数据)
@@ -25,7 +23,7 @@
 
 ## 1. Java API 概述
 
-Java API需要运行在Java 1.8或以上环境。使用Java API前，引入以下maven 依赖
+Java API需要运行在Java 1.8或以上环境。使用Java API前，引入以下maven依赖（以1.30.20.1为例）
 ```java
 <!-- https://mvnrepository.com/artifact/com.dolphindb/dolphindb-javaapi -->
 <dependency>
