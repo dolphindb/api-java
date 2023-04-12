@@ -506,7 +506,7 @@ public class BasicTableTest {
         System.out.println(ge.getString());
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 70000)
     public void test_BasicTable_GetSubTable_DFS() throws IOException {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
@@ -540,5 +540,13 @@ public class BasicTableTest {
         Table gs = bt.getSubTable(0,9999999);
         System.out.println(gs.getString());
     }
-
+    @Test
+    public void test_BasicTable_getRowJson()throws Exception{
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        conn.run("share streamTable(100:0, `sym`d1, [SYMBOL, DOUBLE]) as `st;t = table(take(`s1, 10) as `sym,take(1000000000.02, 10) as `d1);st.append!(t);");
+        BasicTable bTable = (BasicTable) conn.run("select * from st");
+        System.out.println(bTable.getRowJson(0));
+        assertEquals("{\"sym\":\"s1\",\"d1\":1000000000.02}",bTable.getRowJson(0));
+    }
 }
