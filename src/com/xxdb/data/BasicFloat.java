@@ -73,7 +73,7 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 		else{
 			if (SCALE < 0) {
 				//AJ-279
-				return new DecimalFormat("0.########").format(value);
+				return new DecimalFormat("0.######").format(value);
 				//float absVal = Math.abs(value);
 				//if ((absVal > 0 && absVal <= 0.000001) || absVal >= 1000000.0)
 				//	return new DecimalFormat("0.######E0").format(value);
