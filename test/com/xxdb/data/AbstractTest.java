@@ -715,10 +715,10 @@ public class AbstractTest{
         assertFalse(AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.DT_SYMBOL,2));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void test_BasicAbstractScalar_getScale(){
         AbstractScalar as = new BasicInt(3);
-        as.getScale();
+        assertEquals(0,as.getScale());
     }
 
     @Test(expected = RuntimeException.class)

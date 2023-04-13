@@ -93,9 +93,9 @@ public class BasicDoubleTest {
         BasicDouble bd = new BasicDouble(5.73);
         assertFalse(bd.equals(new BasicBoolean(true)));
         assertNotNull(new BasicDouble(-Double.MAX_VALUE).getNumber());
-        assertEquals("1E-6",new BasicDouble(0.000001).getString());
-        assertEquals("1E6",new BasicDouble(1000000.0).getString());
-        assertEquals("1E6",new BasicDouble(1000000.0).getJsonString());
+        assertEquals("0.000001",new BasicDouble(0.000001).getString());
+        assertEquals("1000000",new BasicDouble(1000000.0).getString());
+        assertEquals("1000000",new BasicDouble(1000000.0).getJsonString());
         assertEquals("Infinity",new BasicDouble(Double.POSITIVE_INFINITY).getString());
     }
 

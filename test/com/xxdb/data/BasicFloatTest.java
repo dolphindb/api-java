@@ -40,8 +40,8 @@ public class BasicFloatTest {
         assertEquals(String.valueOf(Float.NEGATIVE_INFINITY),bf2.getString());
         assertFalse(bf.equals(new GregorianCalendar()));
         BasicFloat bf3 = new BasicFloat((float) 0.000001);
-        assertEquals("1E-6",bf3.getString());
-        assertEquals("1E-6",bf3.getJsonString());
+        assertEquals("0.000001",bf3.getString());
+        assertEquals("0.000001",bf3.getJsonString());
     }
 
     @Test

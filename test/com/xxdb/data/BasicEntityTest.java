@@ -46,4 +46,37 @@ public class BasicEntityTest {
             }
         }));
     }
+//    @Test
+//    public void test_Entity_isNull() throws IOException {
+//        Entity entity = (Entity)new BasicInt(1);
+//        System.out.println("basicInt: " + entity.isNull());
+//        assertEquals(false,entity.isNull());
+//
+//    }
+    @Test
+    public void test_Entity_setNull() throws IOException {
+        Scalar entity = new BasicInt(1);
+        entity.setNull();
+        System.out.println("basicInt: " + entity.isNull());
+        assertEquals(true,entity.isNull());
+    }
+    @Test
+    public void test_Entity_getNumber() throws Exception {
+        Scalar entity = new BasicInt(1);
+        System.out.println("basicInt: " + entity.getNumber());
+        assertEquals(1,entity.getNumber());
+
+    }
+
+    @Test
+    public void test_Entity_getTemporal() throws Exception {
+        Scalar entity = new BasicDate(1);
+        System.out.println("basicInt: " + entity.getTemporal());
+        assertEquals("1970-01-02",entity.getTemporal().toString());
+    }
+    @Test
+    public void test_Entity_hashBucket() throws Exception {
+        Scalar entity = new BasicDate(1);
+        System.out.println("basicInt: " + entity.hashBucket(1));
+    }
 }
