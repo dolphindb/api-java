@@ -140,6 +140,10 @@ public class Utils {
 		return countDTSeconds(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour(), dt.getMinute(), dt.getSecond());
 	}
 
+	private static long countSecondsToLong(LocalDateTime dt){
+		return countDTSecondsToLong(dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth(), dt.getHour(), dt.getMinute(), dt.getSecond());
+	}
+
 	public static int countSeconds(Calendar value){
 		return countSeconds(value.get(Calendar.HOUR_OF_DAY), value.get(Calendar.MINUTE),value.get(Calendar.SECOND));
 	}
@@ -152,6 +156,11 @@ public class Utils {
 
 	public static int countDTSeconds(int year, int month, int day, int hour, int minute, int second){
 		int days = countDays(year, month, day);
+		return days * 86400 + (hour *60 + minute) * 60 + second;
+	}
+
+	private static long countDTSecondsToLong(int year, int month, int day, int hour, int minute, int second){
+		long days = countDays(year, month, day);
 		return days * 86400 + (hour *60 + minute) * 60 + second;
 	}
 	
@@ -209,7 +218,7 @@ public class Utils {
 	}
 	
 	public static long countMilliseconds(LocalDateTime dt){
-		long seconds = countSeconds(dt);
+		long seconds = countSecondsToLong(dt);
 		return seconds * 1000 + dt.getNano() / 1000000;
 	}
 	
