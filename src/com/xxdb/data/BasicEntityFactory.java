@@ -26,6 +26,7 @@ public class BasicEntityFactory implements EntityFactory{
 		factories = new TypeFactory[typeCount];
 		factoriesExt = new TypeFactory[typeCount];
 		factories[Entity.DATA_TYPE.DT_BOOL.getValue()] = new BooleanFactory();
+		factories[Entity.DATA_TYPE.DT_VOID.getValue()] = new VoidFactory();
 		factories[Entity.DATA_TYPE.DT_BYTE.getValue()] = new ByteFactory();
 		factories[Entity.DATA_TYPE.DT_SHORT.getValue()] = new ShortFactory();
 		factories[Entity.DATA_TYPE.DT_INT.getValue()] = new IntFactory();
@@ -245,6 +246,17 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createVectorWithDefaultValue(int size){ return new BasicBooleanVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicBooleanVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicBooleanMatrix(rows, columns);}
+	}
+
+	private class VoidFactory implements TypeFactory {
+		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new Void();}
+		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicVoidVector(Entity.DATA_FORM.DF_VECTOR, in);}
+		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicVoidVector(Entity.DATA_FORM.DF_PAIR, in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for DT_VOID not supported yet."); }
+		public Scalar createScalarWithDefaultValue() { return new Void();}
+		public Vector createVectorWithDefaultValue(int size){ return new BasicVoidVector(size);}
+		public Vector createPairWithDefaultValue(){ return new BasicVoidVector(Entity.DATA_FORM.DF_PAIR, 2);}
+		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for DT_VOID not supported yet."); }
 	}
 	
 	private class ByteFactory implements TypeFactory{
