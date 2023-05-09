@@ -60,6 +60,7 @@ public class BasicEntityFactory implements EntityFactory{
 		factories[Entity.DATA_TYPE.DT_DURATION.getValue()] = new DurationFactory();
 		factories[DT_DECIMAL32.getValue()] = new Decimal32Factory();
 		factories[DT_DECIMAL64.getValue()] = new Decimal64Factory();
+		factories[DT_DECIMAL128.getValue()] = new Decimal128Factory();
 		factoriesExt[Entity.DATA_TYPE.DT_SYMBOL.getValue()] = new ExtendedSymbolFactory();
 	}
 	
@@ -192,6 +193,49 @@ public class BasicEntityFactory implements EntityFactory{
 		public Matrix createMatrixWithDefaultValue(int rows, int columns) {
 			return null;
 		}
+	}
+
+	private class Decimal128Factory implements TypeFactory {
+		@Override
+		public Scalar createScalar(ExtendedDataInput in) throws IOException {
+			return new BasicDecimal128(in);
+		}
+
+		@Override
+		public Vector createVector(ExtendedDataInput in) throws IOException {
+			return new BasicDecimal128Vector(Entity.DATA_FORM.DF_VECTOR, in, -1);
+		}
+
+		@Override
+		public Vector createPair(ExtendedDataInput in) throws IOException {
+			return new BasicDecimal128Vector(Entity.DATA_FORM.DF_PAIR, in, -1);
+		}
+
+		@Override
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException {
+			return null;
+		}
+
+		@Override
+		public Scalar createScalarWithDefaultValue() {
+			return new BasicDecimal128((long) 0,0);
+		}
+
+		@Override
+		public Vector createVectorWithDefaultValue(int size) {
+			return new BasicDecimal128Vector(size);
+		}
+
+		@Override
+		public Vector createPairWithDefaultValue() {
+			return null;
+		}
+
+		@Override
+		public Matrix createMatrixWithDefaultValue(int rows, int columns) {
+			return null;
+		}
+
 	}
 
 	private class Decimal32Factory implements TypeFactory{
