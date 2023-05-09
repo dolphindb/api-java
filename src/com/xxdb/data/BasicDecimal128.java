@@ -11,6 +11,8 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
     private int scale_;
     private BigInteger value_;
 
+    private static final BigDecimal DECIMAL128_MIN_VALUE = new BigDecimal("-170141183460469231731687303715884105728");
+
     public BasicDecimal128(ExtendedDataInput in) throws IOException {
         scale_ = in.readInt();
 
@@ -64,7 +66,7 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
 
     @Override
     public boolean isNull() {
-        return value_ == null;
+        return new BigDecimal(value_).compareTo(DECIMAL128_MIN_VALUE) == 0;
     }
 
     @Override
