@@ -95,8 +95,9 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		out.writeShort(flag);
 		out.writeInt(rows());
 		out.writeInt(columns());
-		if (Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL32_ARRAY ||
-				Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL64_ARRAY)
+		if (Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL32_ARRAY
+				|| Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL64_ARRAY
+				|| Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL128_ARRAY)
 			out.writeInt(getExtraParamForType()); //extra
 		writeVectorToOutputStream(out);
 	}
@@ -194,6 +195,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 			case DT_IPADDR:
 			case DT_COMPLEX:
 			case DT_POINT:
+			case DT_DECIMAL128:
 				unitLength = 16;
 				break;
 			default:
@@ -232,8 +234,8 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		out.put((byte) compressedMethod);
 		out.put((byte) dataType);
 		out.put((byte) unitLength);
-		if (Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL32 || Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL64
-				|| Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL32_ARRAY || Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL64_ARRAY)
+		if (Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL32 || Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL64 || Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL128
+				|| Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL32_ARRAY || Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL64_ARRAY || Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL128_ARRAY)
 			out.put((byte)getExtraParamForType()); //reserved low
 		else
 			out.position(out.position() + 1);

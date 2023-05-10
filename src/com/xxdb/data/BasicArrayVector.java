@@ -47,7 +47,7 @@ public class BasicArrayVector extends AbstractVector {
 		else{
 			this.type = DATA_TYPE.valueOf(value.get(0).getDataType().getValue() + 64);
 			DATA_TYPE valueType = DATA_TYPE.valueOf(value.get(0).getDataType().getValue());
-			if (valueType == DATA_TYPE.DT_DECIMAL32 || valueType == DATA_TYPE.DT_DECIMAL64){
+			if (valueType == DATA_TYPE.DT_DECIMAL32 || valueType == DATA_TYPE.DT_DECIMAL64 || valueType == DATA_TYPE.DT_DECIMAL128){
 				int scale = ((AbstractVector)value.get(0)).getExtraParamForType();
 				for (int i = 0; i < value.size(); i++){
 					int scaleCopy = ((AbstractVector)value.get(i)).getExtraParamForType();
@@ -72,6 +72,8 @@ public class BasicArrayVector extends AbstractVector {
 				((BasicDecimal32Vector)valueVec).setScale(scale_);
 			}else if (valueType == DATA_TYPE.DT_DECIMAL64){
 				((BasicDecimal64Vector)valueVec).setScale(scale_);
+			} else if (valueType == DATA_TYPE.DT_DECIMAL128) {
+				((BasicDecimal128Vector)valueVec).setScale(scale_);
 			}
 			int index = 0;
 			int curRows = 0;
@@ -123,7 +125,7 @@ public class BasicArrayVector extends AbstractVector {
 		rowIndices = new int[rows];
 		DATA_TYPE valueType = DATA_TYPE.valueOf(type.getValue() - 64);
 		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, cols);
-		if (valueType == DATA_TYPE.DT_DECIMAL32 || valueType == DATA_TYPE.DT_DECIMAL64) {
+		if (valueType == DATA_TYPE.DT_DECIMAL32 || valueType == DATA_TYPE.DT_DECIMAL64 || valueType == DATA_TYPE.DT_DECIMAL128) {
 			this.scale_ = in.readInt();
 			((AbstractVector)valueVec).setExtraParamForType(scale_);
 		}
@@ -257,8 +259,12 @@ public class BasicArrayVector extends AbstractVector {
 		Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, rows);
 		if (valueType == DATA_TYPE.DT_DECIMAL32){
 			((BasicDecimal32Vector)value).setScale(scale_);
-		}else if (valueType == DATA_TYPE.DT_DECIMAL64)
-			((BasicDecimal64Vector)value).setScale(scale_);
+		} else if (valueType == DATA_TYPE.DT_DECIMAL64) {
+			((BasicDecimal64Vector) value).setScale(scale_);
+		} else if (valueType == DATA_TYPE.DT_DECIMAL128) {
+			((BasicDecimal128Vector) value).setScale(scale_);
+		}
+
 		if (rows > 0){
 			try {
 				value.set(0, valueVec.get(startPosValueVec));

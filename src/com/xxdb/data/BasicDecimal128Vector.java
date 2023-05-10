@@ -86,7 +86,11 @@ public class BasicDecimal128Vector extends AbstractVector {
     public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
         values = new BigInteger[count];
         for (int i = 0; i < count; i++) {
-            values[i] = new BigInteger(in.readUTF());
+            byte[] buffer = new byte[16];
+            for (int j = buffer.length-1; j >=0; j--) {
+                buffer[j] = in.readByte();
+            }
+            values[i] = new BigInteger(buffer);
         }
         this.size = values.length;
         capacity = values.length;

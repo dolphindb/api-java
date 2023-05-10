@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.time.*;
 import java.util.Calendar;
 import java.util.Date;
@@ -78,7 +79,7 @@ public class BasicEntityFactory implements EntityFactory{
 			return new BasicChunkMeta(in);
 		else if(type == Entity.DATA_TYPE.DT_ANY && (form == Entity.DATA_FORM.DF_VECTOR || form == Entity.DATA_FORM.DF_PAIR))
 			return new BasicAnyVector(in);
-		else if(type.getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && type.getValue() <= DT_DECIMAL64_ARRAY.getValue())
+		else if(type.getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && type.getValue() <= DT_DECIMAL128_ARRAY.getValue())
 			return new BasicArrayVector(type, in);
 		else if(type == Entity.DATA_TYPE.DT_VOID && form == Entity.DATA_FORM.DF_SCALAR){
 			in.readBoolean();
@@ -722,7 +723,7 @@ public class BasicEntityFactory implements EntityFactory{
 		dataType = values()[dataType.getValue()-64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count);
-		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64){
+		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64 || dataType == DT_DECIMAL128){
 			((AbstractVector)vector).setExtraParamForType(extraParam);
 		}
 		for(int i = 0; i < count; ++i)
@@ -903,6 +904,8 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicDecimal32(val, extraParam);
 			case DT_DECIMAL64:
 				return new BasicDecimal64(val, extraParam);
+			case DT_DECIMAL128:
+				return new BasicDecimal128(val, extraParam);
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert float to " + dataType + ".");
 		}
@@ -921,6 +924,8 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicDecimal32(val, extraParam);
 			case DT_DECIMAL64:
 				return new BasicDecimal64(val, extraParam);
+			case DT_DECIMAL128:
+				return new BasicDecimal128(val, extraParam);
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert double to " + dataType + ".");
 		}
@@ -959,6 +964,8 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicDecimal32(val, extraParam);
 			case DT_DECIMAL64:
 				return new BasicDecimal64((long) val, extraParam);
+			case DT_DECIMAL128:
+				return new BasicDecimal128(BigInteger.valueOf(val), extraParam);
 			case DT_FLOAT:
 				return new BasicFloat(val);
 			case DT_DOUBLE:
@@ -999,6 +1006,8 @@ public class BasicEntityFactory implements EntityFactory{
 					throw new RuntimeException("Failed to insert data, long cannot be converted because it exceeds the range of " + dataType + ".");
 			case DT_DECIMAL64:
 				return new BasicDecimal64(val, extraParam);
+			case DT_DECIMAL128:
+				return new BasicDecimal128(val, extraParam);
 			case DT_FLOAT:
 				return new BasicFloat(val);
 			case DT_DOUBLE:

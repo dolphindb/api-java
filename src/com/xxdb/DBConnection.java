@@ -34,7 +34,7 @@ import javax.net.ssl.X509TrustManager;
 
 public class DBConnection {
     private static final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length - 1;
-    private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.DT_DECIMAL64_ARRAY.getValue();
+    private static final int MAX_TYPE_VALUE = Entity.DATA_TYPE.DT_DECIMAL128_ARRAY.getValue();
     private static final int DEFAULT_PRIORITY = 4;
     private static final int DEFAULT_PARALLELISM = 2;
 
