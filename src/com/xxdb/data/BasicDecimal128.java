@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.temporal.Temporal;
+import java.util.Objects;
 
 public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicDecimal128> {
     private int scale_;
@@ -66,6 +67,9 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
 
     @Override
     public boolean isNull() {
+        if (Objects.isNull(value_)) {
+            return true;
+        }
         return new BigDecimal(value_).compareTo(DECIMAL128_MIN_VALUE) == 0;
     }
 
