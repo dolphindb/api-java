@@ -10,7 +10,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
-
+import com.xxdb.comm.SqlStdEnum;
 import com.xxdb.data.*;
 import com.xxdb.data.Void;
 import com.xxdb.io.*;
@@ -128,6 +128,7 @@ public class DBConnection {
         clientId,//8
         seqNo,//9
     }
+
     private class DBConnectionImpl{
         private Socket socket_;
         private String sessionID_;
@@ -147,9 +148,10 @@ public class DBConnection {
         private ReentrantLock lock_;
         private boolean isReverseStreaming_ = false;
         private boolean python_ = false;
+        private SqlStdEnum sqlStd_;
 
 
-        private DBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, boolean isReverseStreaming){
+        private DBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, boolean isReverseStreaming, SqlStdEnum sqlStd){
             sessionID_ = "";
             this.sslEnable_ = sslEnable;
             this.asynTask_ = asynTask;
@@ -157,6 +159,7 @@ public class DBConnection {
             this.ifUrgent_ = ifUrgent;
             this.python_ = python;
             this.isReverseStreaming_ = isReverseStreaming;
+            this.sqlStd_ = sqlStd;
             this.lock_ = new ReentrantLock();
         }
 
@@ -250,6 +253,11 @@ public class DBConnection {
                 flag += 2048;
             if (this.isReverseStreaming_)
                 flag += 131072;
+            if (Objects.nonNull(this.sqlStd_)) {
+                flag += 524288 * sqlStd_.getCode();
+            } else {
+                flag += 524288;
+            }
             return flag;
         }
 
@@ -553,6 +561,10 @@ public class DBConnection {
     	this(false, false, false);
     }
 
+    public DBConnection(SqlStdEnum sqlStd) {
+        this(false, false, false, false, false, false, sqlStd);
+    }
+
     public DBConnection(boolean asynchronousTask) {
     	this(asynchronousTask, false, false);
     }
@@ -566,17 +578,17 @@ public class DBConnection {
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, SqlStdEnum.DolphinDB);
         this.mutex_ = new ReentrantLock();
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, SqlStdEnum.DolphinDB);
         this.mutex_ = new ReentrantLock();
     }
 
-    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, boolean isReverseStreaming){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, isReverseStreaming);
+    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, boolean isReverseStreaming, SqlStdEnum sqlStd){
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, isReverseStreaming, sqlStd);
         this.mutex_ = new ReentrantLock();
     }
     

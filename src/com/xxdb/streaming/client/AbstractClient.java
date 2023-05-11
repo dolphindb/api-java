@@ -9,8 +9,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
-
 import com.xxdb.DBConnection;
+import com.xxdb.comm.SqlStdEnum;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 import com.xxdb.data.Void;
@@ -427,7 +427,7 @@ abstract class AbstractClient implements MessageDispatcher {
         if (listeningPort > 0)
             dbConn = new DBConnection();
         else
-            dbConn = new DBConnection(false, false, false, false, false, true);
+            dbConn = new DBConnection(false, false, false, false, false, true, SqlStdEnum.DolphinDB);
 
         if (!userName.equals(""))
             dbConn.connect(host, port, userName, passWord);
