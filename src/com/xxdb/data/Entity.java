@@ -106,7 +106,7 @@ public interface Entity {
 			return Entity.DATA_CATEGORY.MIXED;
 		else if(type == Entity.DATA_TYPE.DT_VOID)
 			return Entity.DATA_CATEGORY.NOTHING;
-		else if (type == DATA_TYPE.DT_DECIMAL32 || type == DATA_TYPE.DT_DECIMAL64)
+		else if (type == DATA_TYPE.DT_DECIMAL32 || type == DATA_TYPE.DT_DECIMAL64 || type == DATA_TYPE.DT_DECIMAL128)
 			return DATA_CATEGORY.DENARY;
 		else if (type.getValue() >= DATA_TYPE.DT_BOOL_ARRAY.getValue())
 			return DATA_CATEGORY.ARRAY;

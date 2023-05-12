@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 
 public class BasicDecimal128Vector extends AbstractVector {
@@ -84,14 +85,20 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
-        values = new BigInteger[count];
-        for (int i = 0; i < count; i++) {
-            byte[] buffer = new byte[16];
-            for (int j = buffer.length-1; j >=0; j--) {
-                buffer[j] = in.readByte();
-            }
-            values[i] = new BigInteger(buffer);
+        long totalBytes = (long)count * 16, off = 0;
+        ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+        byte[] buf = new byte[4096];
+        while (off < totalBytes) {
+            int len = (int)Math.min(4096, totalBytes - off);
+            in.readFully(buf, 0, len);
+            int end = len / 16;
+            ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+            for (int i = 0; i < end; i++)
+                values[i + start] = BigInteger.valueOf(byteBuffer.getLong(i * 16));
+            off += len;
+            start += end;
         }
+
         this.size = values.length;
         capacity = values.length;
     }
