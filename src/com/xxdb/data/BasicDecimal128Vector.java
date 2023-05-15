@@ -12,6 +12,8 @@ import java.util.Arrays;
 
 public class BasicDecimal128Vector extends AbstractVector {
 
+    private static final BigDecimal DECIMAL128_MIN_VALUE = new BigDecimal("-170141183460469231731687303715884105728");
+
     private int scale_ = -1;
     private BigInteger[] values;
     private int size;
@@ -137,12 +139,12 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public boolean isNull(int index) {
-        return values[index].equals(BigInteger.valueOf(Long.MIN_VALUE));
+        return values[index].equals(DECIMAL128_MIN_VALUE.toBigInteger());
     }
 
     @Override
     public void setNull(int index) {
-        values[index] = BigInteger.valueOf(Long.MIN_VALUE);
+        values[index] = DECIMAL128_MIN_VALUE.toBigInteger();
     }
 
     @Override
