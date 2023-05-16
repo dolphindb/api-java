@@ -26,7 +26,11 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
 
     public BasicDecimal128(BigInteger value, int scale) {
         scale_ = scale;
-        value_ = new BigInteger(value.toByteArray());
+        if (Objects.isNull(value)) {
+            value_ = DECIMAL128_MIN_VALUE.toBigInteger();
+        } else {
+            value_ = new BigInteger(value.toByteArray());
+        }
     }
 
     public BasicDecimal128(double value, int scale) {
@@ -81,10 +85,14 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
     @Override
     public Number getNumber() throws Exception {
         if (isNull()) {
-            return null;
+            return DECIMAL128_MIN_VALUE.toBigInteger();
         } else {
-            BigDecimal bd = new BigDecimal(value_).scaleByPowerOfTen(-scale_);
-            return bd.longValue();
+            BigDecimal bd = new BigDecimal(value_).scaleByPowerOfTen(-scale_).stripTrailingZeros();
+            if (bd.doubleValue() % 1 == 0) {
+                return bd.longValue();
+            } else {
+                return bd.doubleValue();
+            }
         }
     }
 

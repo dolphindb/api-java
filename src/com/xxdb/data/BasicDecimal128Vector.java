@@ -87,20 +87,14 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
-        long totalBytes = (long)count * 16, off = 0;
-        ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
-        byte[] buf = new byte[4096];
-        while (off < totalBytes) {
-            int len = (int)Math.min(4096, totalBytes - off);
-            in.readFully(buf, 0, len);
-            int end = len / 16;
-            ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
-            for (int i = 0; i < end; i++)
-                values[i + start] = BigInteger.valueOf(byteBuffer.getLong(i * 16));
-            off += len;
-            start += end;
+        values = new BigInteger[count];
+        for (int i = 0; i < count; i++) {
+            byte[] buffer = new byte[16];
+            for (int j = buffer.length-1; j >=0; j--) {
+                buffer[j] = in.readByte();
+            }
+            values[i] = new BigInteger(buffer.clone());
         }
-
         this.size = values.length;
         capacity = values.length;
     }
@@ -278,7 +272,7 @@ public class BasicDecimal128Vector extends AbstractVector {
         if (scale_ < 0) {
             throw new RuntimeException("Please set scale first.");
         }
-        if (value instanceof BasicDecimal64Vector && ((BasicDecimal64Vector) value).getScale() == scale_) {
+        if (value instanceof BasicDecimal128Vector && ((BasicDecimal128Vector) value).getScale() == scale_) {
             addRange(((BasicDecimal128Vector) value).getdataArray());
         } else {
             for (int i = 0; i < value.rows(); i++) {
