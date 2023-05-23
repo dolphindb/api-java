@@ -102,7 +102,7 @@ public class BasicDecimal128Vector extends AbstractVector {
             for (int j = buffer.length-1; j >=0; j--) {
                 buffer[j] = in.readByte();
             }
-            values[i] = new BigInteger(buffer.clone());
+            values[start + i] = new BigInteger(buffer.clone());
         }
     }
 
