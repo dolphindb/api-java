@@ -16,7 +16,7 @@ public class BasicDecimal64Vector extends AbstractVector{
     private int size;
     private int capaticy;
 
-    BasicDecimal64Vector(int size){
+    public BasicDecimal64Vector(int size){
         this(DATA_FORM.DF_VECTOR, size);
     }
 
