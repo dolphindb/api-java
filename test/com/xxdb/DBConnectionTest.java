@@ -1,6 +1,7 @@
 package com.xxdb;
 
 import com.alibaba.fastjson.JSONObject;
+import com.xxdb.comm.SqlStdEnum;
 import com.xxdb.data.Vector;
 import com.xxdb.data.*;
 import com.xxdb.io.Double2;
@@ -19,11 +20,16 @@ import java.io.IOException;
 import java.lang.reflect.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.sql.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.*;
+import java.util.Date;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
+import static com.xxdb.comm.SqlStdEnum.*;
 import static org.junit.Assert.*;
 
 public class DBConnectionTest {
@@ -33,12 +39,12 @@ public class DBConnectionTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    static int CONTROLLER_PORT = Integer.parseInt(bundle.getString("CONTROLLER_PORT"));
     static String[] ipports = bundle.getString("SITES").split(",");
 
 
     static String[] host_list= bundle.getString("HOSTS").split(",");
     static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
-    //String[] highAvailabilitySites = {"192.168.0.57:9002","192.168.0.57:9003","192.168.0.57:9004","192.168.0.57:9005"};
 
     public int getConnCount() throws IOException {
         return ((BasicInt) conn.run("(exec connectionNum from rpc(getControllerAlias(),getClusterPerf) where port = getNodePort())[0]")).getInt();
@@ -1537,6 +1543,7 @@ public class DBConnectionTest {
         Entity matrixFloatRes = conn.run("matrixFloatCross + matrixFloat");
         assertEquals(3, matrixFloatRes.rows());
         assertEquals(3, matrixFloatRes.columns());
+        System.out.println(((BasicDoubleMatrix) matrixFloatRes).get(0, 0).getString());
         assertTrue(((BasicDoubleMatrix) matrixFloatRes).get(0, 0).getString().equals("4.43"));
 
         Entity matrixlc = conn.run("cross(+, 1l..6l, -6l..-1l)");
@@ -3565,5 +3572,343 @@ public void test_SSL() throws Exception {
         conn.connect(HOST,PORT);
         Thread.sleep(500);
         assertEquals(true, conn.isConnected());
+    }
+    @Test
+    public void TestConnectEnableHighAvailability_false() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,CONTROLLER_PORT,"admin","123456",null,false);
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,PORT,"admin","123456",null,false);
+        BasicString nodeAliasTmp = (BasicString)conn1.run("getNodeAlias()");
+        String nodeAlias = nodeAliasTmp.getString();
+        try{
+            conn.run("stopDataNode(\""+nodeAlias+"\")");
+        }catch(Exception ex)
+        {}
+        //DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,PORT,"admin","123456",null,false);
+        Thread.sleep(500);
+        String e = null;
+        try{
+            conn1.run("a=1;\n a");
+        }catch(Exception ex)
+        {
+            e = ex.getMessage();
+        }
+        assertNotNull(e);
+        Thread.sleep(1000);
+        try{
+            conn.run("startDataNode(\""+nodeAlias+"\")");
+        }catch(Exception ex)
+        {}
+        Thread.sleep(1000);
+        conn1.connect(HOST,PORT,"admin","123456",null,false);
+        conn1.run("a=1;\n a");
+        assertEquals(true, conn1.isConnected());
+        conn1.close();
+    }
+    @Test
+    public void TestConnectEnableHighAvailability_true() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,CONTROLLER_PORT,"admin","123456",null,false);
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,PORT,"admin","123456",null,true);
+        BasicString nodeAliasTmp = (BasicString)conn1.run("getNodeAlias()");
+        String nodeAlias = nodeAliasTmp.getString();
+        try{
+            conn.run("stopDataNode(\""+nodeAlias+"\")");
+        }catch(Exception ex)
+        {}
+        Thread.sleep(1000);
+        conn1.run("a=1;\n a");
+        //The connection switches to a different node to execute the code
+        try{
+            conn.run("startDataNode(\""+nodeAlias+"\")");
+        }catch(Exception ex)
+        {}
+        Thread.sleep(1000);
+        assertEquals(true, conn1.isConnected());
+    }
+    ///@Test AJ-287
+    public void Test_getConnection_highAvailability_false() throws SQLException, ClassNotFoundException, IOException {
+        String script = "def restart(n)\n" +
+                "{\n" +
+                "try{\n" +
+                "stopDataNode(\""+HOST+":"+PORT+"\");\n" +
+                "}catch(ex)\n"+
+                "{}\n"+
+                "sleep(n);\n"+
+                "try{\n" +
+                "stopDataNode(\""+HOST+":"+PORT+"\");\n" +
+                "}catch(ex)\n"+
+                "{}\n"+
+                "}\n" +
+                "submitJob(\"restart\",\"restart\",restart,1000);";
+        conn = new DBConnection(false, false, false);
+        conn.connect(HOST, CONTROLLER_PORT, "admin", "123456",null,false,null,true);
+        conn.run(script);
+        DBConnection conn1 = new DBConnection(false, false, false);
+        conn1.connect(HOST, PORT, "admin", "123456",null,false,null,true);
+        conn1.close();
+        conn.close();
+    }
+    //@Test
+    public void test_string_length()throws Exception{
+        conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        Entity data = conn.run("select * from data1");
+        //BasicString data=new BasicString("");
+        Map<String, Entity> data1 = new HashMap<>();
+        data1.put("da",data);
+        conn.upload(data1);
+    }
+    //@Test
+    public void test_string_length2()throws Exception{
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+
+        String d = "a";
+        String dd = "";
+        for(int i = 0; i < 262145; i++) {
+            dd += d;
+        }
+        BasicString data = new BasicString(dd);
+        Map<String, Entity> data1 = new HashMap<>();
+        data1.put("da",data);
+        conn.upload(data1);
+    }
+   //@Test
+    public void test_BasicDBTask1223()throws Exception{
+        conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        conn.run("t = table(1:0, [`cint], [INT])");
+        EntityBlockReader t = (EntityBlockReader)conn.run("t", (ProgressListener)null, 4, 2, 8192);
+        conn.run("1");
+    }
+
+
+    @Test
+    public void Test_Connect_SqlStdEnum_DolphinDB() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection(DolphinDB);
+        conn.connect(HOST,PORT);
+        Thread.sleep(500);
+        assertEquals(true, conn.isConnected());
+        BasicDoubleVector ba = (BasicDoubleVector)conn.run("cumavg(1 2 3);");
+        System.out.println(ba.getString());
+        assertEquals("[1,1.5,2]", ba.getString());
+        String e = null;
+        try{
+            BasicDate da = (BasicDate)conn.run("SYSDATE();");
+        }catch(Exception E){
+            e = E.getMessage();
+        }
+        assertNotNull(e);
+        conn.close();
+    }
+    @Test
+    public void Test_Connect_SqlStdEnum_DolphinDB_1() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        Thread.sleep(500);
+        assertEquals(true, conn.isConnected());
+        BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb')");
+        System.out.println(ba.getString());
+        assertEquals("[1,1.5,2]", ba.getString());
+        String e = null;
+        try{
+            BasicDate da = (BasicDate)conn.run("runSQL(\"SYSDATE()\", 'ddb');");
+        }catch(Exception E){
+            e = E.getMessage();
+        }
+        assertNotNull(e);
+        conn.close();
+    }
+    @Test
+    public void Test_Connect_SqlStdEnum_DolphinDB_2() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection(DolphinDB);
+        conn.connect(HOST,PORT);
+        Thread.sleep(500);
+        assertEquals(true, conn.isConnected());
+        BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb')");
+        System.out.println(ba.getString());
+        assertEquals("[1,1.5,2]", ba.getString());
+        BasicDoubleVector ba1 = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'oracle');");
+        System.out.println(ba1.getString());
+        assertEquals("[1,1.5,2]", ba1.getString());
+        String e = null;
+        try{
+            BasicDate da = (BasicDate)conn.run("runSQL(\"SYSDATE()\", 'ddb');");
+        }catch(Exception E){
+            e = E.getMessage();
+        }
+        assertNotNull(e);
+
+        BasicDate da = (BasicDate)conn.run("runSQL(\"SYSDATE()\", 'oracle');");
+        System.out.println(da.getString());
+        Date currentTime = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        String currentTime1 = formatter.format(currentTime);
+        assertEquals(currentTime1.replace("-",""), da.toString().replace(".",""));
+
+        BasicDate da1 = (BasicDate)conn.run("runSQL(\"SYSDATE()\", 'mysql');");
+        System.out.println(da1.getString());
+        Date currentTime2 = new Date();
+        SimpleDateFormat formatter2 = new SimpleDateFormat("yyyy-MM-dd");
+        String currentTime3 = formatter2.format(currentTime2);
+        assertEquals(currentTime3.replace("-",""), da1.toString().replace(".",""));
+
+        BasicStringVector ca = (BasicStringVector)conn.run("runSQL(\"concat(string(1 2 3), string(4 5 6))\", 'oracle');");
+        assertEquals("[14,25,36]", ca.getString());
+        conn.close();
+    }
+    @Test
+    public void Test_Connect_SqlStdEnum_Oracle() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection(Oracle);
+        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT);
+        Thread.sleep(500);
+        assertEquals(true, conn.isConnected());
+        BasicDoubleVector ba = (BasicDoubleVector)conn.run("cumavg(1 2 3);");
+        System.out.println(ba.getString());
+        assertEquals("[1,1.5,2]", ba.getString());
+
+        BasicDate da = (BasicDate)conn.run("SYSDATE();");
+        System.out.println(da.getString());
+        Date currentTime = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        String currentTime1 = formatter.format(currentTime);
+        assertEquals(currentTime1.replace("-",""), da.toString().replace(".",""));
+
+        BasicStringVector ca = (BasicStringVector)conn.run("concat(string(1 2 3), string(4 5 6));");
+        assertEquals("[14,25,36]", ca.getString());
+        conn.close();
+    }
+    @Test
+    public void Test_Connect_SqlStdEnum_Oracle_1() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT);
+        Thread.sleep(500);
+        assertEquals(true, conn.isConnected());
+        BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'oracle');");
+        System.out.println(ba.getString());
+        assertEquals("[1,1.5,2]", ba.getString());
+
+        BasicDate da = (BasicDate)conn.run("runSQL(\"SYSDATE()\", 'oracle');");
+        System.out.println(da.getString());
+        Date currentTime = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        String currentTime1 = formatter.format(currentTime);
+        assertEquals(currentTime1.replace("-",""), da.toString().replace(".",""));
+
+        BasicStringVector ca = (BasicStringVector)conn.run("runSQL(\"concat(string(1 2 3), string(4 5 6))\", 'oracle');");
+        assertEquals("[14,25,36]", ca.getString());
+        conn.close();
+    }
+    @Test
+    public void Test_Connect_SqlStdEnum_Oracle_2() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection(Oracle);
+        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT);
+        Thread.sleep(500);
+        assertEquals(true, conn.isConnected());
+        BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb');");
+        System.out.println(ba.getString());
+        assertEquals("[1,1.5,2]", ba.getString());
+
+        BasicDate da1 = (BasicDate)conn.run("runSQL(\"SYSDATE()\", 'mysql');");
+        System.out.println(da1.getString());
+        Date currentTime2 = new Date();
+        SimpleDateFormat formatter2 = new SimpleDateFormat("yyyy-MM-dd");
+        String currentTime3 = formatter2.format(currentTime2);
+        assertEquals(currentTime3.replace("-",""), da1.toString().replace(".",""));
+
+        BasicStringVector ca = (BasicStringVector)conn.run("runSQL(\"concat(string(1 2 3), string(4 5 6))\", 'oracle');");
+        assertEquals("[14,25,36]", ca.getString());
+        conn.close();
+    }
+    @Test
+    public void Test_Connect_SqlStdEnum_MySQL() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection(MySQL);
+        conn.connect(HOST,PORT);
+        Thread.sleep(500);
+        assertEquals(true, conn.isConnected());
+        BasicDoubleVector ba = (BasicDoubleVector)conn.run("cumavg(1 2 3);");
+        System.out.println(ba.getString());
+        assertEquals("[1,1.5,2]", ba.getString());
+
+        BasicDate da = (BasicDate)conn.run("SYSDATE();");
+        System.out.println(da.getString());
+        Date currentTime = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        String currentTime1 = formatter.format(currentTime);
+        assertEquals(currentTime1.replace("-",""), da.toString().replace(".",""));
+
+        String e = null;
+        try{
+            BasicStringVector ca = (BasicStringVector)conn.run("concat(string(1 2 3), string(4 5 6));");
+        }catch(Exception E){
+            e = E.getMessage();
+        }
+        assertNotNull(e);
+        conn.close();
+    }
+    @Test
+    public void Test_Connect_SqlStdEnum_MySQL_1() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        Thread.sleep(500);
+        assertEquals(true, conn.isConnected());
+        BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'mysql');");
+        System.out.println(ba.getString());
+        assertEquals("[1,1.5,2]", ba.getString());
+
+        BasicDate da = (BasicDate)conn.run("runSQL(\"SYSDATE()\", 'mysql');");
+        System.out.println(da.getString());
+        Date currentTime = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        String currentTime1 = formatter.format(currentTime);
+        assertEquals(currentTime1.replace("-",""), da.toString().replace(".",""));
+
+        String e = null;
+        try{
+            BasicStringVector ca = (BasicStringVector)conn.run("runSQL(\"concat(string(1 2 3), string(4 5 6))\", 'mysql');");
+        }catch(Exception E){
+            e = E.getMessage();
+        }
+        assertNotNull(e);
+        conn.close();
+    }
+    @Test
+    public void Test_Connect_SqlStdEnum_MySQL_2() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection(MySQL);
+        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT);
+        Thread.sleep(500);
+        assertEquals(true, conn.isConnected());
+        BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb');");
+        System.out.println(ba.getString());
+        assertEquals("[1,1.5,2]", ba.getString());
+
+        BasicDate da1 = (BasicDate)conn.run("runSQL(\"SYSDATE()\", 'mysql');");
+        System.out.println(da1.getString());
+        Date currentTime2 = new Date();
+        SimpleDateFormat formatter2 = new SimpleDateFormat("yyyy-MM-dd");
+        String currentTime3 = formatter2.format(currentTime2);
+        assertEquals(currentTime3.replace("-",""), da1.toString().replace(".",""));
+
+        BasicStringVector ca = (BasicStringVector)conn.run("runSQL(\"concat(string(1 2 3), string(4 5 6))\", 'oracle');");
+        assertEquals("[14,25,36]", ca.getString());
+        conn.close();
+    }
+    @Test
+    public void Test_Connect_SqlStdEnum_not_match() throws IOException, InterruptedException {
+        String e = null;
+        try{
+            DBConnection conn = new DBConnection( getByName("fdfd"));
+        }catch(Exception t){
+            e=t.getMessage();
+        }
+        assertEquals(e,"No matching SqlStdEnum constant found for name: fdfd");
     }
 }
