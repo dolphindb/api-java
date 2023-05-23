@@ -254,9 +254,7 @@ public class DBConnection {
             if (this.isReverseStreaming_)
                 flag += 131072;
             if (Objects.nonNull(this.sqlStd_)) {
-                flag += 524288 * sqlStd_.getCode();
-            } else {
-                flag += 524288;
+                flag += sqlStd_.getCode()<<19;
             }
             return flag;
         }
