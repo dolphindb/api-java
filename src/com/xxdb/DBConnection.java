@@ -582,6 +582,12 @@ public class DBConnection {
         this.mutex_ = new ReentrantLock();
     }
 
+
+    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, SqlStdEnum sqlStd){
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, sqlStd);
+        this.mutex_ = new ReentrantLock();
+    }
+
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent){
         this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, SqlStdEnum.DolphinDB);
         this.mutex_ = new ReentrantLock();
