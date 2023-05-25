@@ -760,7 +760,7 @@ public class MultithreadedTableWriter {
             }
             else{
                 Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(type, 0);
-                if (type == DT_DECIMAL32 || type == DT_DECIMAL64){
+                if (type == DT_DECIMAL32 || type == DT_DECIMAL64 || type == DT_DECIMAL128) {
                     ((AbstractVector)value).setExtraParamForType(colInfos_[i].extra_);
                 }
                 tmp.add(value);

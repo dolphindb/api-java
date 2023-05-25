@@ -2,12 +2,10 @@ package com.xxdb.data;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.Arrays;
 
 public class BasicDecimal128Vector extends AbstractVector {
@@ -107,10 +105,56 @@ public class BasicDecimal128Vector extends AbstractVector {
     }
 
     @Override
-    protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
+    public void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
         out.writeInt(scale_);
-        for (BigInteger value : values) {
-            out.writeUTF(value.toString());
+        byte[] newArray = new byte[16 * size];
+        for (int i = 0; i < size; i++ ) {
+            BigInteger value = values[i];
+            byte[] originalArray = value.toByteArray();
+
+            if (((originalArray[0] >> 7) & 1) == 0) {
+                // if first bit is 0, represent non-negative.
+                System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
+            } else {
+                // if first bit is 1, represent negative.
+                System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
+                for (int j = 0; j < 16 - originalArray.length; j++) {
+                    newArray[j] = -1;
+                }
+            }
+        }
+
+        reverseByteArrayEvery8Byte(newArray);
+        out.write(newArray);
+    }
+
+    public static void reverseByteArray(byte[] array) {
+        int left = 0;
+        int right = array.length - 1;
+
+        while (left < right) {
+            byte temp = array[left];
+            array[left] = array[right];
+            array[right] = temp;
+
+            left++;
+            right--;
+        }
+    }
+
+    public static void reverseByteArrayEvery8Byte(byte[] array) {
+        int start = 0;
+        int end = start + 7;
+
+        while (end < array.length) {
+            for (int i = 0; i < 4; i++) {
+                byte temp = array[start + i];
+                array[start + i] = array[end - i];
+                array[end - i] = temp;
+            }
+
+            start += 8;
+            end += 8;
         }
     }
 
@@ -160,7 +204,7 @@ public class BasicDecimal128Vector extends AbstractVector {
         if (scale_ < 0)
             scale_ = newScale;
         if (((Scalar) value).isNull()) {
-            values[index] = null;
+            values[index] = DECIMAL128_MIN_VALUE.toBigInteger();
         } else {
             if (scale_ != newScale) {
                 BigInteger newValue;
@@ -196,9 +240,22 @@ public class BasicDecimal128Vector extends AbstractVector {
     public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
         for (int i = 0; i < count; i++) {
             BigInteger value = values[start + i];
-            byte[] bytes = value.toByteArray();
-            out.writeInt(bytes.length);
-            out.write(bytes);
+            byte[] newArray = new byte[16];
+            byte[] originalArray = value.toByteArray();
+
+            if (((originalArray[0] >> 7) & 1) == 0) {
+                // if first bit is 0, represent non-negative.
+                System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
+            } else {
+                // if first bit is 1, represent negative.
+                System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
+                for (int j = 0; j < 16 - originalArray.length; j++) {
+                    newArray[j] = -1;
+                }
+            }
+
+            reverseByteArray(newArray);
+            out.write(newArray);
         }
     }
 
