@@ -16,12 +16,26 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
 
     public BasicDecimal128(ExtendedDataInput in) throws IOException {
         scale_ = in.readInt();
+        value_ = handleLittleEndianBigEndian(in);
+    }
 
+    private static BigInteger handleLittleEndianBigEndian(ExtendedDataInput in) throws IOException {
         byte[] buffer = new byte[16];
-        for (int i = buffer.length-1; i >=0; i--) {
-            buffer[i] = in.readByte();
+        BigInteger value;
+
+        if (in.isLittleEndian()) {
+            for (int i = buffer.length-1; i >=0; i--) {
+                buffer[i] = in.readByte();
+            }
+            value = new BigInteger(buffer);
+        } else {
+            for (int i = 0; i < buffer.length; i++) {
+                buffer[i] = in.readByte();
+            }
+            value = new BigInteger(buffer);
         }
-        value_ = new BigInteger(buffer);
+
+        return value;
     }
 
     public BasicDecimal128(BigInteger value, int scale) {

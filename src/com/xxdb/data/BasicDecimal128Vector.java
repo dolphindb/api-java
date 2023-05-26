@@ -39,7 +39,9 @@ public class BasicDecimal128Vector extends AbstractVector {
     BasicDecimal128Vector(BigInteger[] dataValue, int scale) {
         super(DATA_FORM.DF_VECTOR);
         this.scale_ = scale;
-        this.values = dataValue;
+        BigInteger[] newArray = new BigInteger[dataValue.length];
+        System.arraycopy(dataValue, 0, newArray, 0, dataValue.length);
+        this.values = newArray;
         this.size = values.length;
         capacity = values.length;
     }
@@ -69,7 +71,7 @@ public class BasicDecimal128Vector extends AbstractVector {
     public BasicDecimal128Vector(double[] data, int scale) {
         super(DATA_FORM.DF_VECTOR);
         if (scale < 0 || scale > 18)
-            throw new RuntimeException("Scale out of bound (valid range: [0, 9], but get: " + scale + ")");
+            throw new RuntimeException("Scale out of bound (valid range: [0, 18], but get: " + scale + ")");
         scale_ = scale;
         BigInteger[] newValues = new BigInteger[data.length];
         for (int i = 0; i < data.length; i++) {
@@ -144,19 +146,20 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     public static void reverseByteArrayEvery8Byte(byte[] array) {
         int start = 0;
-        int end = start + 7;
+        int end = start + 15;
 
         while (end < array.length) {
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 8; i++) {
                 byte temp = array[start + i];
                 array[start + i] = array[end - i];
                 array[end - i] = temp;
             }
 
-            start += 8;
-            end += 8;
+            start += 16;
+            end += 16;
         }
     }
+
 
     @Override
     public void setExtraParamForType(int scale){
@@ -261,7 +264,7 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public int getUnitLength() {
-        return 8;
+        return 16;
     }
 
     public void add(double value) {
@@ -385,19 +388,30 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial,  ByteBuffer out) throws IOException{
-        int unitLength = 16; // Each BigInteger occupies 16 bytes (128 bits)
+
+        int unitLength = 16;
 
         targetNumElement = Math.min((out.remaining() / unitLength), targetNumElement);
         for (int i = 0; i < targetNumElement; ++i) {
-            BigInteger value = values[indexStart + i];
-            byte[] bytes = value.toByteArray();
-            if (bytes.length > unitLength) {
+            byte[] newArray = new byte[16];
+            byte[] originalArray = values[indexStart + i].toByteArray();
+            if (originalArray.length > unitLength) {
                 throw new IOException("BigInteger value exceeds 16 bytes");
             }
-            byte[] paddedBytes = new byte[unitLength];
-            int offsetBytes = unitLength - bytes.length;
-            System.arraycopy(bytes, 0, paddedBytes, offsetBytes, bytes.length);
-            out.put(paddedBytes);
+
+            if (((originalArray[0] >> 7) & 1) == 0) {
+                // if first bit is 0, represent non-negative.
+                System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
+            } else {
+                // if first bit is 1, represent negative.
+                System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
+                for (int j = 0; j < 16 - originalArray.length; j++) {
+                    newArray[j] = -1;
+                }
+            }
+
+            reverseByteArray(newArray);
+            out.put(newArray);
         }
         numElementAndPartial.numElement = targetNumElement;
         numElementAndPartial.partial = 0;
