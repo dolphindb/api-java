@@ -25,6 +25,8 @@ public class BasicDecimal128Vector extends AbstractVector {
         super(DATA_FORM.DF_VECTOR);
         this.scale_ = scale;
         values = new BigInteger[size];
+        Arrays.fill(values, BigInteger.ZERO);
+
         this.size = values.length;
         capacity = values.length;
     }
@@ -57,15 +59,29 @@ public class BasicDecimal128Vector extends AbstractVector {
         else
             scale_ = in.readInt();
         for (int i = 0; i < size; i++) {
-            // values[i] = new BigInteger(in.readUTF());
-            byte[] buffer = new byte[16];
-            for (int j = buffer.length-1; j >=0; j--) {
-                buffer[j] = in.readByte();
-            }
-            values[i] = new BigInteger(buffer);
+            values[i] = handleLittleEndianBigEndian(in);
         }
         this.size = values.length;
         capacity = values.length;
+    }
+
+    private static BigInteger handleLittleEndianBigEndian(ExtendedDataInput in) throws IOException {
+        byte[] buffer = new byte[16];
+        BigInteger value;
+
+        if (in.isLittleEndian()) {
+            for (int i = buffer.length-1; i >=0; i--) {
+                buffer[i] = in.readByte();
+            }
+            value = new BigInteger(buffer);
+        } else {
+            for (int i = 0; i < buffer.length; i++) {
+                buffer[i] = in.readByte();
+            }
+            value = new BigInteger(buffer);
+        }
+
+        return value;
     }
 
     public BasicDecimal128Vector(double[] data, int scale) {
@@ -98,11 +114,7 @@ public class BasicDecimal128Vector extends AbstractVector {
 		}
 
         for (int i = 0; i < count; i++) {
-            byte[] buffer = new byte[16];
-            for (int j = buffer.length-1; j >=0; j--) {
-                buffer[j] = in.readByte();
-            }
-            values[start + i] = new BigInteger(buffer.clone());
+            values[start + i] = handleLittleEndianBigEndian(in);
         }
     }
 
