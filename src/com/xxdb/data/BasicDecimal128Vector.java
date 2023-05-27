@@ -34,6 +34,7 @@ public class BasicDecimal128Vector extends AbstractVector {
     BasicDecimal128Vector(DATA_FORM df, int size) {
         super(df);
         values = new BigInteger[size];
+        Arrays.fill(values, BigInteger.ZERO);
         this.size = values.length;
         capacity = values.length;
     }
@@ -128,7 +129,7 @@ public class BasicDecimal128Vector extends AbstractVector {
 
             if (((originalArray[0] >> 7) & 1) == 0) {
                 // if first bit is 0, represent non-negative.
-                System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
+                System.arraycopy(originalArray, 0, newArray, (16 - originalArray.length) + 16*i, originalArray.length);
             } else {
                 // if first bit is 1, represent negative.
                 System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
