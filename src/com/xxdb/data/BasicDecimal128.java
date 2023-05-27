@@ -48,6 +48,11 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
         }
     }
 
+    public BasicDecimal128(int scale, BigInteger value) {
+        scale_ = scale;
+        value_ = value;
+    }
+
     public BasicDecimal128(double value, int scale) {
         scale_ = scale;
         BigDecimal bd = new BigDecimal(Double.toString(value));

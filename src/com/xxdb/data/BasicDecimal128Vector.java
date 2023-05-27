@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Objects;
 
 public class BasicDecimal128Vector extends AbstractVector {
 
@@ -43,7 +44,14 @@ public class BasicDecimal128Vector extends AbstractVector {
         super(DATA_FORM.DF_VECTOR);
         this.scale_ = scale;
         BigInteger[] newArray = new BigInteger[dataValue.length];
-        System.arraycopy(dataValue, 0, newArray, 0, dataValue.length);
+        for(int i = 0; i < dataValue.length; i++ ) {
+            if (Objects.isNull(dataValue[i])) {
+                newArray[i] = BigInteger.ZERO;
+            } else {
+                BigDecimal bd = new BigDecimal(dataValue[i]);
+                newArray[i] = bd.scaleByPowerOfTen(scale).toBigInteger();
+            }
+        }
         this.values = newArray;
         this.size = values.length;
         capacity = values.length;
@@ -210,7 +218,7 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public Entity get(int index) {
-        return new BasicDecimal128(values[index], scale_);
+        return new BasicDecimal128(scale_, values[index]);
     }
 
     @Override
