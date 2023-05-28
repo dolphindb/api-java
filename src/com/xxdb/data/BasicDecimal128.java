@@ -43,7 +43,8 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
         if (Objects.isNull(value)) {
             value_ = DECIMAL128_MIN_VALUE.toBigInteger();
         } else {
-            value_ = new BigInteger(value.toByteArray());
+            BigDecimal bd = new BigDecimal(value);
+            value_ = bd.scaleByPowerOfTen(scale).toBigInteger();
         }
     }
 

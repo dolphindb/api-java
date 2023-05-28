@@ -48,7 +48,8 @@ public class BasicDecimal128Vector extends AbstractVector {
             if (Objects.isNull(dataValue[i])) {
                 newArray[i] = BigInteger.ZERO;
             } else {
-                newArray[i] = new BigInteger(dataValue[i].toByteArray());
+                BigDecimal bd = new BigDecimal(dataValue[i]);
+                newArray[i] = bd.scaleByPowerOfTen(scale).toBigInteger();
             }
         }
         this.values = newArray;
