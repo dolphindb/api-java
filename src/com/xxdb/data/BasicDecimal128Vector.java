@@ -141,8 +141,9 @@ public class BasicDecimal128Vector extends AbstractVector {
             } else {
                 // if first bit is 1, represent negative.
                 System.arraycopy(originalArray, 0, newArray, (16 - originalArray.length) + 16*i, originalArray.length);
+                int newaindex=i*16;
                 for (int j = 0; j < 16 - originalArray.length; j++) {
-                    newArray[j] = -1;
+                    newArray[j+newaindex] = -1;
                 }
             }
         }
