@@ -1,0 +1,9 @@
+
+com.xxdb
+com.xxdb.comm
+com.xxdb.compression
+com.xxdb.data
+com.xxdb.io
+com.xxdb.multithreadedtablewriter
+com.xxdb.route
+com.xxdb.streaming.client
