@@ -13,6 +13,9 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
     private BigInteger value_;
 
     private static final BigDecimal DECIMAL128_MIN_VALUE = new BigDecimal("-170141183460469231731687303715884105728");
+    private static final BigDecimal DECIMAL128_MAX_VALUE = new BigDecimal("170141183460469231731687303715884105728");
+    public static final BigInteger BIGINT_MIN_VALUE = new BigInteger("-170141183460469231731687303715884105728");
+    public static final BigInteger BIGINT_MAX_VALUE = new BigInteger("170141183460469231731687303715884105728");
 
     public BasicDecimal128(ExtendedDataInput in) throws IOException {
         scale_ = in.readInt();
@@ -21,7 +24,16 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
 
     public BasicDecimal128(String data, int scale){
         BigDecimal bd = new BigDecimal(data);
+        if(bd.compareTo(DECIMAL128_MIN_VALUE)<0||bd.compareTo(DECIMAL128_MAX_VALUE)>0){
+            throw new RuntimeException("Decimal128 overflow "+data);
+        }
         value_ = bd.scaleByPowerOfTen(scale).toBigInteger();
+        while(value_.compareTo(BIGINT_MIN_VALUE)<0){
+            value_=value_.divide(BigInteger.valueOf(10));
+        }
+        while(value_.compareTo(BIGINT_MAX_VALUE)>0){
+            value_=value_.divide(BigInteger.valueOf(10));
+        }
         scale_ = scale;
     }
 

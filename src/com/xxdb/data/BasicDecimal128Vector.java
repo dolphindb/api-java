@@ -133,6 +133,12 @@ public class BasicDecimal128Vector extends AbstractVector {
         byte[] newArray = new byte[16 * size];
         for (int i = 0; i < size; i++ ) {
             BigInteger value = values[i];
+            while(value.compareTo(BasicDecimal128.BIGINT_MIN_VALUE)<0){
+                value=value.divide(BigInteger.valueOf(10));
+            }
+            while(value.compareTo(BasicDecimal128.BIGINT_MAX_VALUE)>0){
+                value=value.divide(BigInteger.valueOf(10));
+            }
             byte[] originalArray = value.toByteArray();
 
             if (((originalArray[0] >> 7) & 1) == 0) {
