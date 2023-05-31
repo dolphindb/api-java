@@ -140,6 +140,9 @@ public class BasicDecimal128Vector extends AbstractVector {
                 value=value.divide(BigInteger.valueOf(10));
             }
             byte[] originalArray = value.toByteArray();
+            if(originalArray.length > 16){
+                throw new RuntimeException("byte length of Decimal128 "+originalArray.length+" exceed 16");
+            }
 
             if (((originalArray[0] >> 7) & 1) == 0) {
                 // if first bit is 0, represent non-negative.
