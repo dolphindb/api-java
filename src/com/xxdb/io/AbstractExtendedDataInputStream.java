@@ -1,19 +1,15 @@
 package com.xxdb.io;
 
-import java.io.DataInputStream;
-import java.io.EOFException;
-import java.io.FilterInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.Charset;
 
-public abstract class AbstractExtendedDataInputStream extends FilterInputStream implements ExtendedDataInput{
+public abstract class AbstractExtendedDataInputStream extends BufferedInputStream implements ExtendedDataInput{
 	private static final Charset UTF8 = Charset.forName("UTF-8");
 	private static final int UTF8_STRING_LIMIT = 65536;
 	private byte[] buf_;
 
 	protected AbstractExtendedDataInputStream(InputStream in) {
-		super(in);
+		super(in, 8192);
 	}
 
     @Override
@@ -66,23 +62,51 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 		return readUTF8((byte)0);
 	}
 
+	private int isHaveBytesEndWith(byte endChar){
+		byte[] streamBuf = this.buf;
+		for(int i = this.pos; i < count; ++i){
+			if(streamBuf[i] == endChar) return i;
+		}
+		return -1;
+	}
+
+	private InputStream getInIfOpen() throws IOException {
+		InputStream input = in;
+		if (input == null)
+			throw new IOException("Stream closed");
+		return input;
+	}
+
+	private void fill() throws IOException {
+		byte[] buffer = buf;
+		pos = 0;
+		count = 0;
+		int n = getInIfOpen().read(buffer, pos, buffer.length - pos);
+		count = n;
+	}
+
 	private String readUTF8(byte terminator) throws IOException{
 		if(buf_ == null)
 			buf_ = new byte[2048];
-		byte ch = readAndCheckByte();
-		int count = 0;
-		while(ch != terminator){
-			if(count == buf_.length){
-				if(count >= UTF8_STRING_LIMIT)
-					throw new IOException("UTF-8 string length exceeds the limit of 65536 bytes");
+		int bufPos = 0;
+		while(true){
+			int terminatorPos = isHaveBytesEndWith(terminator);
+			int dataCount = terminatorPos == -1 ? this.count - this.pos : terminatorPos - this.pos + 1;
+			if(dataCount + bufPos > buf_.length){
 				byte[] tmp = new byte[buf_.length*2];
 				System.arraycopy(buf_, 0, tmp, 0, buf_.length);
 				buf_ = tmp;
 			}
-			buf_[count++] = ch;
-			ch = readAndCheckByte();
+			System.arraycopy(buf, pos, buf_, bufPos, dataCount);
+			bufPos += dataCount;
+			this.pos += dataCount;
+			if(terminatorPos != -1) {
+				bufPos--;
+				break;
+			}
+			fill();
 		}
-		return new String(buf_, 0, count, UTF8);
+		return new String(buf_, 0, bufPos, UTF8);
 	}
 	
 	@Override
@@ -111,7 +135,7 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 	@Override
 	public int readUnsignedByte() throws IOException {
 
-		int b1 = in.read();
+		int b1 = read();
 		if (0 > b1) {
 		    throw new EOFException();
 		}
@@ -123,14 +147,14 @@ public abstract class AbstractExtendedDataInputStream extends FilterInputStream 
 		int actualSkip = 0;
 		int reamainSkip = n - actualSkip;
 		while (reamainSkip > 0){
-			actualSkip = (int) in.skip(reamainSkip);
+			actualSkip = (int) skip(reamainSkip);
 			reamainSkip = reamainSkip - actualSkip;
 		}
 		return actualSkip;
 	}
 	
 	protected byte readAndCheckByte() throws IOException, EOFException {
-		int b1 = in.read();
+		int b1 = read();
 		
 		if (-1 == b1) {
 		    throw new EOFException();
