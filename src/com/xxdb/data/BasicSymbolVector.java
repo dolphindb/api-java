@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.List;
 import com.xxdb.io.ExtendedDataInput;
@@ -73,8 +74,17 @@ public class BasicSymbolVector extends AbstractVector {
 		int size = rows * columns;
 		values = new int[size];
 		base = new SymbolBase(in);
-		for (int i = 0; i < size; ++i){
-			values[i] = in.readInt();
+		int totalBytes = size * 4, off = 0;
+		byte[] buf = new byte[4096];
+		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		while (off < totalBytes) {
+			int len = Math.min(4096, totalBytes - off);
+			in.readFully(buf, 0, len);
+			int start = off / 4, end = len / 4;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+			for (int i = 0; i < end; i++)
+				values[i + start] = byteBuffer.getInt(i * 4);
+			off += len;
 		}
 
 		this.size = values.length;
@@ -88,8 +98,17 @@ public class BasicSymbolVector extends AbstractVector {
 		int size = rows * columns;
 		values = new int[size];
 		base = collection.add(in);
-		for (int i = 0; i < size; ++i){
-			values[i] = in.readInt();
+		int totalBytes = size * 4, off = 0;
+		byte[] buf = new byte[4096];
+		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		while (off < totalBytes) {
+			int len = Math.min(4096, totalBytes - off);
+			in.readFully(buf, 0, len);
+			int start = off / 4, end = len / 4;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
+			for (int i = 0; i < end; i++)
+				values[i + start] = byteBuffer.getInt(i * 4);
+			off += len;
 		}
 
 		this.size = values.length;
