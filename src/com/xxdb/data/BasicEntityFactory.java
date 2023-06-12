@@ -219,7 +219,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 		@Override
 		public Scalar createScalarWithDefaultValue() {
-			return new BasicDecimal128((long) 0,0);
+			return new BasicDecimal128(BigInteger.valueOf(0),0);
 		}
 
 		@Override
@@ -672,7 +672,7 @@ public class BasicEntityFactory implements EntityFactory{
 			return createAnyVector(dataType,(Float[])object, extraParam);
 		}
 		if(object instanceof String) {
-			return createScalar(dataType,(String)object);
+			return createScalar(dataType,(String)object, extraParam);
 		}
 		if(object instanceof String[]) {
 			return createAnyVector(dataType, (String[])object, extraParam);
@@ -861,8 +861,8 @@ public class BasicEntityFactory implements EntityFactory{
 				throw new RuntimeException("Failed to insert data. Cannot convert short to " + dataType + ".");
 		}
 	}
-	private static Scalar createScalar(DATA_TYPE dataType, char[] val) {
-		return createScalar(dataType, new String(val));
+	private static Scalar createScalar(DATA_TYPE dataType, char[] val, int extraParam) {
+		return createScalar(dataType, new String(val), extraParam);
 	}
 	private static boolean isScalarValid(DATA_TYPE scalarType,DATA_TYPE expectedType){
 		if(scalarType==expectedType)
@@ -873,7 +873,7 @@ public class BasicEntityFactory implements EntityFactory{
 		}
 		return false;
 	}
-	private static Scalar createScalar(DATA_TYPE dataType, String val) {
+	private static Scalar createScalar(DATA_TYPE dataType, String val, int extraParam) {
 		switch (dataType) {
 			case DT_INT128: {
 				return BasicInt128.fromString(val);
@@ -890,6 +890,8 @@ public class BasicEntityFactory implements EntityFactory{
 			}
 			case DT_STRING:
 				return new BasicString(val);
+			case DT_DECIMAL128:
+				return new BasicDecimal128(val, extraParam);
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert String to " + dataType + ".");
 		}
@@ -904,8 +906,6 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicDecimal32(val, extraParam);
 			case DT_DECIMAL64:
 				return new BasicDecimal64(val, extraParam);
-			case DT_DECIMAL128:
-				return new BasicDecimal128(val, extraParam);
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert float to " + dataType + ".");
 		}
@@ -924,8 +924,6 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicDecimal32(val, extraParam);
 			case DT_DECIMAL64:
 				return new BasicDecimal64(val, extraParam);
-			case DT_DECIMAL128:
-				return new BasicDecimal128(val, extraParam);
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert double to " + dataType + ".");
 		}
@@ -1006,8 +1004,6 @@ public class BasicEntityFactory implements EntityFactory{
 					throw new RuntimeException("Failed to insert data, long cannot be converted because it exceeds the range of " + dataType + ".");
 			case DT_DECIMAL64:
 				return new BasicDecimal64(val, extraParam);
-			case DT_DECIMAL128:
-				return new BasicDecimal128(val, extraParam);
 			case DT_FLOAT:
 				return new BasicFloat(val);
 			case DT_DOUBLE:

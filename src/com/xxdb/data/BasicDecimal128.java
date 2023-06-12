@@ -9,32 +9,39 @@ import java.time.temporal.Temporal;
 import java.util.Objects;
 
 public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicDecimal128> {
-    private int scale_;
-    private BigInteger value_;
+    private int scale;
+    private BigInteger unscaledValue;
 
     private static final BigDecimal DECIMAL128_MIN_VALUE = new BigDecimal("-170141183460469231731687303715884105728");
     private static final BigDecimal DECIMAL128_MAX_VALUE = new BigDecimal("170141183460469231731687303715884105728");
-    public static final BigInteger BIGINT_MIN_VALUE = new BigInteger("-170141183460469231731687303715884105728");
-    public static final BigInteger BIGINT_MAX_VALUE = new BigInteger("170141183460469231731687303715884105728");
+    private static final BigInteger BIGINT_MIN_VALUE = new BigInteger("-170141183460469231731687303715884105728");
+    private static final BigInteger BIGINT_MAX_VALUE = new BigInteger("170141183460469231731687303715884105728");
 
-    public BasicDecimal128(ExtendedDataInput in) throws IOException {
-        scale_ = in.readInt();
-        value_ = handleLittleEndianBigEndian(in);
+    public BasicDecimal128(String data, int scale) {
+        this(new BigDecimal(data).scaleByPowerOfTen(scale).toBigInteger(), scale);
     }
 
-    public BasicDecimal128(String data, int scale){
-        BigDecimal bd = new BigDecimal(data);
-        if(bd.compareTo(DECIMAL128_MIN_VALUE)<0||bd.compareTo(DECIMAL128_MAX_VALUE)>0){
-            throw new RuntimeException("Decimal128 overflow "+data);
+    public BasicDecimal128(BigInteger unscaledVal, int scale) {
+        BigDecimal bd = new BigDecimal(unscaledVal);
+        if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0) {
+            throw new RuntimeException("Decimal128 overflow " + unscaledVal);
         }
-        value_ = bd.scaleByPowerOfTen(scale).toBigInteger();
-        while(value_.compareTo(BIGINT_MIN_VALUE)<0){
-            value_=value_.divide(BigInteger.valueOf(10));
+
+        unscaledValue = unscaledVal;
+        if (unscaledValue.compareTo(BIGINT_MIN_VALUE) < 0) {
+            throw new RuntimeException("Decimal128 " + unscaledValue + " cannot be less than " + BIGINT_MIN_VALUE);
         }
-        while(value_.compareTo(BIGINT_MAX_VALUE)>0){
-            value_=value_.divide(BigInteger.valueOf(10));
+
+        if (unscaledValue.compareTo(BIGINT_MAX_VALUE) > 0) {
+            throw new RuntimeException("Decimal128 " + unscaledValue + " cannot exceed " + BIGINT_MAX_VALUE);
         }
-        scale_ = scale;
+
+        this.scale = scale;
+    }
+
+    public BasicDecimal128(ExtendedDataInput in) throws IOException {
+        scale = in.readInt();
+        unscaledValue = handleLittleEndianBigEndian(in);
     }
 
     private static BigInteger handleLittleEndianBigEndian(ExtendedDataInput in) throws IOException {
@@ -42,49 +49,29 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
         BigInteger value;
 
         if (in.isLittleEndian()) {
-            for (int i = buffer.length-1; i >=0; i--) {
-                buffer[i] = in.readByte();
-            }
+            in.readFully(buffer);
+            reverseByteArray(buffer);
             value = new BigInteger(buffer);
         } else {
-            for (int i = 0; i < buffer.length; i++) {
-                buffer[i] = in.readByte();
-            }
+            in.readFully(buffer);
             value = new BigInteger(buffer);
         }
 
         return value;
     }
 
-    public BasicDecimal128(BigInteger value, int scale) {
-        scale_ = scale;
-        if (Objects.isNull(value)) {
-            value_ = DECIMAL128_MIN_VALUE.toBigInteger();
-        } else {
-            BigDecimal bd = new BigDecimal(value);
-            value_ = bd.scaleByPowerOfTen(scale).toBigInteger();
-        }
-    }
-
-    public BasicDecimal128(int scale, BigInteger value) {
-        scale_ = scale;
-        value_ = value;
-    }
-
-    public BasicDecimal128(double value, int scale) {
-        scale_ = scale;
-        BigDecimal bd = new BigDecimal(Double.toString(value));
-        value_ = bd.scaleByPowerOfTen(scale).toBigInteger();
-    }
-
     @Override
     protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
-        out.writeInt(scale_);
+        out.writeInt(this.scale);
 
         byte[] newArray = new byte[16];
-        byte[] originalArray = value_.toByteArray();
+        byte[] originalArray = unscaledValue.toByteArray();
 
-        if (((originalArray[0] >> 7) & 1) == 0) {
+        if(originalArray.length == 0 || originalArray.length > 16){
+            throw new RuntimeException("byte length of Decimal128 "+originalArray.length+" cannot be less than 0 or exceed 16.");
+        }
+
+        if (originalArray[0] > 0) {
             // if first bit is 0, represent non-negative.
             System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
         } else {
@@ -95,8 +82,7 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
             }
         }
 
-        reverseByteArray(newArray);
-        out.write(newArray);
+        out.writeBigIntArray(newArray, 0, newArray.length);
     }
 
     public static void reverseByteArray(byte[] array) {
@@ -125,46 +111,42 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
 
     @Override
     public String getString() {
-        if (scale_ == 0 && !isNull()) {
-            return value_.toString();
-        } else if (isNull()) {
+        if (isNull()) {
             return "";
+        } else if (this.scale == 0) {
+            return unscaledValue.toString();
         } else {
-            BigDecimal bd = new BigDecimal(value_).scaleByPowerOfTen(-scale_);
+            BigDecimal bd = new BigDecimal(unscaledValue).scaleByPowerOfTen(-this.scale);
             return bd.toPlainString();
         }
     }
 
     @Override
     public boolean isNull() {
-        if (Objects.isNull(value_)) {
+        if (Objects.isNull(unscaledValue)) {
             return true;
         }
-        return new BigDecimal(value_).compareTo(DECIMAL128_MIN_VALUE) == 0;
+        return new BigDecimal(unscaledValue).compareTo(DECIMAL128_MIN_VALUE) == 0;
     }
 
     @Override
     public void setNull() {
-        value_ = DECIMAL128_MIN_VALUE.toBigInteger();
+        unscaledValue = DECIMAL128_MIN_VALUE.toBigInteger();
     }
 
     @Override
     public Number getNumber() throws Exception {
         if (isNull()) {
-            return DECIMAL128_MIN_VALUE.toBigInteger();
+            return DECIMAL128_MIN_VALUE;
         } else {
-            BigDecimal bd = new BigDecimal(value_).scaleByPowerOfTen(-scale_).stripTrailingZeros();
-            if (bd.doubleValue() % 1 == 0) {
-                return bd.longValue();
-            } else {
-                return bd.doubleValue();
-            }
+            BigDecimal bd = new BigDecimal(unscaledValue).scaleByPowerOfTen(-this.scale).stripTrailingZeros();
+            return bd;
         }
     }
 
     @Override
     public int getScale() {
-        return scale_;
+        return this.scale;
     }
 
     @Override
@@ -174,7 +156,7 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
 
     @Override
     public int hashBucket(int buckets) {
-        return 0;
+        throw new RuntimeException("BasicDecimal128 not support hashBucket yet!");
     }
 
     @Override
@@ -193,7 +175,7 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
         return a.compareTo(b);
     }
 
-    public BigInteger getBigInteger() {
-        return value_;
+    public BigInteger unscaledValue() {
+        return unscaledValue;
     }
 }

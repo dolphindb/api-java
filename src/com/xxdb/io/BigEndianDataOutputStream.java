@@ -134,4 +134,10 @@ public class BigEndianDataOutputStream extends AbstractExtendedDataOutputStream{
 		if (pos > 0)
 			writeLongArray(longBuf, 0, pos);
 	}
+
+	@Override
+	public void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException {
+		out.write(A);
+	}
+
 }

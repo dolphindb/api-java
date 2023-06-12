@@ -6,38 +6,64 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Objects;
 
 public class BasicDecimal128Vector extends AbstractVector {
 
     private static final BigDecimal DECIMAL128_MIN_VALUE = new BigDecimal("-170141183460469231731687303715884105728");
+    private static final BigDecimal DECIMAL128_MAX_VALUE = new BigDecimal("170141183460469231731687303715884105728");
+    private static final BigInteger BIGINT_MIN_VALUE = new BigInteger("-170141183460469231731687303715884105728");
+    private static final BigInteger BIGINT_MAX_VALUE = new BigInteger("170141183460469231731687303715884105728");
 
     private int scale_ = -1;
-    private BigInteger[] values;
+    private BigInteger[] unscaledValues;
     private int size;
     private int capacity;
 
     public BasicDecimal128Vector(int size) {
-        this(DATA_FORM.DF_VECTOR, size);
+        super(DATA_FORM.DF_VECTOR);
+        this.unscaledValues = new BigInteger[size];
+        Arrays.fill(unscaledValues, BigInteger.ZERO);
+        this.size = this.unscaledValues.length;
+        this.capacity = this.unscaledValues.length;
     }
 
     public BasicDecimal128Vector(int size, int scale) {
         super(DATA_FORM.DF_VECTOR);
         this.scale_ = scale;
-        values = new BigInteger[size];
-        Arrays.fill(values, BigInteger.ZERO);
+        this.unscaledValues = new BigInteger[size];
+        Arrays.fill(this.unscaledValues, BigInteger.ZERO);
 
-        this.size = values.length;
-        capacity = values.length;
+        this.size = this.unscaledValues.length;
+        this.capacity = this.unscaledValues.length;
     }
 
-    BasicDecimal128Vector(DATA_FORM df, int size) {
-        super(df);
-        values = new BigInteger[size];
-        Arrays.fill(values, BigInteger.ZERO);
-        this.size = values.length;
-        capacity = values.length;
+    public BasicDecimal128Vector(String[] dataValue, int scale) {
+        super(DATA_FORM.DF_VECTOR);
+        this.scale_ = scale;
+        BigInteger[] newArray = new BigInteger[dataValue.length];
+        for (int i = 0; i < dataValue.length; i++ ) {
+            BigDecimal bd = new BigDecimal(dataValue[i]).scaleByPowerOfTen(scale);
+            BigInteger unscaledValue = bd.toBigInteger();
+
+            if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0) {
+                throw new RuntimeException("Decimal128 overflow " + unscaledValue);
+            }
+
+            newArray[i] = unscaledValue;
+            if (newArray[i].compareTo(BIGINT_MIN_VALUE) < 0) {
+                throw new RuntimeException("Decimal128 below " + newArray[i]);
+            }
+
+            if (newArray[i].compareTo(BIGINT_MAX_VALUE) > 0) {
+                throw new RuntimeException("Decimal128 overflow " + newArray[i]);
+            }
+        }
+        this.unscaledValues = newArray;
+        this.size = this.unscaledValues.length;
+        this.capacity = this.unscaledValues.length;
     }
 
     BasicDecimal128Vector(BigInteger[] dataValue, int scale) {
@@ -48,13 +74,29 @@ public class BasicDecimal128Vector extends AbstractVector {
             if (Objects.isNull(dataValue[i])) {
                 newArray[i] = BigInteger.ZERO;
             } else {
-                BigDecimal bd = new BigDecimal(dataValue[i]);
-                newArray[i] = bd.scaleByPowerOfTen(scale).toBigInteger();
+                checkValRange(newArray[i], dataValue[i]);
             }
         }
-        this.values = newArray;
-        this.size = values.length;
-        capacity = values.length;
+        this.unscaledValues = newArray;
+        this.size = this.unscaledValues.length;
+        this.capacity = this.unscaledValues.length;
+    }
+
+    private void checkValRange(BigInteger unscaledValue, BigInteger unscaledVal) {
+        BigDecimal bd = new BigDecimal(unscaledVal);
+        if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0) {
+            throw new RuntimeException("Decimal128 overflow " + unscaledVal);
+        }
+
+        unscaledValue = unscaledVal;
+
+        if (unscaledValue.compareTo(BIGINT_MIN_VALUE) < 0) {
+            throw new RuntimeException("Decimal128 " + unscaledValue + " cannot be less than " + BIGINT_MIN_VALUE);
+        }
+
+        if (unscaledValue.compareTo(BIGINT_MAX_VALUE) > 0) {
+            throw new RuntimeException("Decimal128 " + unscaledValue + " cannot exceed " + BIGINT_MAX_VALUE);
+        }
     }
 
     public BasicDecimal128Vector(DATA_FORM df, ExtendedDataInput in, int extra) throws IOException {
@@ -62,16 +104,36 @@ public class BasicDecimal128Vector extends AbstractVector {
         int rows = in.readInt();
         int cols = in.readInt();
         int size = rows * cols;
-        values = new BigInteger[size];
+        this.unscaledValues = new BigInteger[size];
         if (extra != -1)
             scale_ = extra;
         else
             scale_ = in.readInt();
-        for (int i = 0; i < size; i++) {
-            values[i] = handleLittleEndianBigEndian(in);
+
+        byte[] buffer = new byte[4096];
+        handleLittleEndianBigEndian(in, this.unscaledValues, buffer, size);
+
+        this.size = this.unscaledValues.length;
+        this.capacity = this.unscaledValues.length;
+    }
+
+    private static void handleLittleEndianBigEndian(ExtendedDataInput in, BigInteger[] unscaledValues, byte[] buffer, int size) throws IOException {
+        int totalBytes = size * 16, off = 0;
+        while (off < totalBytes) {
+            byte[] val = new byte[16];
+            int len = Math.min(4096, totalBytes - off);
+
+            in.readFully(buffer, 0, len);
+            if (in.isLittleEndian())
+                reverseByteArrayEvery8Byte(buffer);
+
+            int start = off / 16, end = len / 16;
+            for (int i = 0; i < end; i++) {
+                System.arraycopy(buffer, i * 16, val, 0, 16);
+                unscaledValues[i + start] = new BigInteger(val);
+            }
+            off += len;
         }
-        this.size = values.length;
-        capacity = values.length;
     }
 
     private static BigInteger handleLittleEndianBigEndian(ExtendedDataInput in) throws IOException {
@@ -79,51 +141,31 @@ public class BasicDecimal128Vector extends AbstractVector {
         BigInteger value;
 
         if (in.isLittleEndian()) {
-            for (int i = buffer.length-1; i >=0; i--) {
-                buffer[i] = in.readByte();
-            }
+            in.readFully(buffer);
+            reverseByteArray(buffer);
             value = new BigInteger(buffer);
         } else {
-            for (int i = 0; i < buffer.length; i++) {
-                buffer[i] = in.readByte();
-            }
+            in.readFully(buffer);
             value = new BigInteger(buffer);
         }
 
         return value;
     }
 
-    public BasicDecimal128Vector(double[] data, int scale) {
-        super(DATA_FORM.DF_VECTOR);
-        if (scale < 0 || scale > 18)
-            throw new RuntimeException("Scale out of bound (valid range: [0, 18], but get: " + scale + ")");
-        scale_ = scale;
-        BigInteger[] newValues = new BigInteger[data.length];
-        for (int i = 0; i < data.length; i++) {
-            BigDecimal pow = BigDecimal.TEN.pow(scale);
-            BigDecimal bdValue = new BigDecimal(data[i]);
-            BigDecimal scaledValue = bdValue.multiply(pow);
-            newValues[i] = scaledValue.toBigInteger();
-        }
-        values = newValues;
-        this.size = values.length;
-        capacity = values.length;
-    }
-
     @Override
     public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
         if (capacity < start + count) {
             BigInteger[] expandedArray = new BigInteger[start + count];
-            System.arraycopy(values, 0, expandedArray, 0, values.length);
-            values = expandedArray;
+            System.arraycopy(this.unscaledValues, 0, expandedArray, 0, this.unscaledValues.length);
+            this.unscaledValues = expandedArray;
 			this.size = start + count;
-            capacity = start + count;
+            this.capacity = start + count;
 		} else if (this.size < start + count) {
 			this.size = start + count;
 		}
 
         for (int i = 0; i < count; i++) {
-            values[start + i] = handleLittleEndianBigEndian(in);
+            this.unscaledValues[start + i] = handleLittleEndianBigEndian(in);
         }
     }
 
@@ -132,19 +174,21 @@ public class BasicDecimal128Vector extends AbstractVector {
         out.writeInt(scale_);
         byte[] newArray = new byte[16 * size];
         for (int i = 0; i < size; i++ ) {
-            BigInteger value = values[i];
-            while(value.compareTo(BasicDecimal128.BIGINT_MIN_VALUE)<0){
-                value=value.divide(BigInteger.valueOf(10));
+            BigInteger unscaledValue = this.unscaledValues[i];
+            if (unscaledValue.compareTo(BIGINT_MIN_VALUE) < 0) {
+                throw new RuntimeException("Decimal128 " + unscaledValue + " cannot be less than " + BIGINT_MIN_VALUE);
             }
-            while(value.compareTo(BasicDecimal128.BIGINT_MAX_VALUE)>0){
-                value=value.divide(BigInteger.valueOf(10));
+            if (unscaledValue.compareTo(BIGINT_MAX_VALUE) > 0) {
+                throw new RuntimeException("Decimal128 " + unscaledValue + " cannot exceed " + BIGINT_MAX_VALUE);
             }
-            byte[] originalArray = value.toByteArray();
+
+            byte[] originalArray = unscaledValue.toByteArray();
+
             if(originalArray.length > 16){
                 throw new RuntimeException("byte length of Decimal128 "+originalArray.length+" exceed 16");
             }
 
-            if (((originalArray[0] >> 7) & 1) == 0) {
+            if (originalArray[0] > 0) {
                 // if first bit is 0, represent non-negative.
                 System.arraycopy(originalArray, 0, newArray, (16 - originalArray.length) + 16*i, originalArray.length);
             } else {
@@ -199,7 +243,7 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public Vector combine(Vector vector) {
-        return null;
+        throw new RuntimeException("BasicDecimal128Vector not support combine yet!");
     }
 
     @Override
@@ -207,7 +251,7 @@ public class BasicDecimal128Vector extends AbstractVector {
         int length = indices.length;
         BigInteger[] sub = new BigInteger[length];
         for (int i = 0; i < length; i++)
-            sub[i] = values[indices[i]];
+            sub[i] = this.unscaledValues[indices[i]];
         return new BasicDecimal128Vector(sub, scale_);
     }
 
@@ -218,17 +262,17 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public boolean isNull(int index) {
-        return values[index].equals(DECIMAL128_MIN_VALUE.toBigInteger());
+        return this.unscaledValues[index].equals(BIGINT_MIN_VALUE);
     }
 
     @Override
     public void setNull(int index) {
-        values[index] = DECIMAL128_MIN_VALUE.toBigInteger();
+        this.unscaledValues[index] = BIGINT_MIN_VALUE;
     }
 
     @Override
     public Entity get(int index) {
-        return new BasicDecimal128(scale_, values[index]);
+        return new BasicDecimal128(this.unscaledValues[index], scale_);
     }
 
     @Override
@@ -236,9 +280,9 @@ public class BasicDecimal128Vector extends AbstractVector {
         int newScale = ((Scalar) value).getScale();
         DATA_TYPE type = value.getDataType();
         if (scale_ < 0)
-            scale_ = newScale;
+            throw new RuntimeException("scale cannot less than 0.");
         if (((Scalar) value).isNull()) {
-            values[index] = DECIMAL128_MIN_VALUE.toBigInteger();
+            this.unscaledValues[index] = DECIMAL128_MIN_VALUE.toBigInteger();
         } else {
             if (scale_ != newScale) {
                 BigInteger newValue;
@@ -247,7 +291,7 @@ public class BasicDecimal128Vector extends AbstractVector {
                 } else if (type == Entity.DATA_TYPE.DT_INT) {
                     newValue = BigInteger.valueOf(((BasicInt) value).getInt());
                 } else {
-                    newValue = ((BasicDecimal128) value).getBigInteger();
+                    newValue = ((BasicDecimal128) value).unscaledValue();
                 }
 
                 BigInteger pow = BigInteger.TEN;
@@ -258,9 +302,9 @@ public class BasicDecimal128Vector extends AbstractVector {
                     pow = pow.pow(scale_ - newScale);
                     newValue = newValue.multiply(pow);
                 }
-                values[index] = newValue;
+                this.unscaledValues[index] = newValue;
             } else {
-                values[index] = ((BasicDecimal128) value).getBigInteger();
+                this.unscaledValues[index] = ((BasicDecimal128) value).unscaledValue();
             }
         }
     }
@@ -272,12 +316,17 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
+        byte[] buffer = new byte[count * 16];
         for (int i = 0; i < count; i++) {
-            BigInteger value = values[start + i];
+            BigInteger unscaledValue = this.unscaledValues[start + i];
             byte[] newArray = new byte[16];
-            byte[] originalArray = value.toByteArray();
+            byte[] originalArray = unscaledValue.toByteArray();
 
-            if (((originalArray[0] >> 7) & 1) == 0) {
+            if(originalArray.length == 0 || originalArray.length > 16){
+                throw new RuntimeException("byte length of Decimal128 "+originalArray.length+" cannot be less than 0 or exceed 16.");
+            }
+
+            if (originalArray[0] > 0) {
                 // if first bit is 0, represent non-negative.
                 System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
             } else {
@@ -288,47 +337,75 @@ public class BasicDecimal128Vector extends AbstractVector {
                 }
             }
 
-            reverseByteArray(newArray);
-            out.write(newArray);
+            boolean isLittleEndian = ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN);
+            if (isLittleEndian) {
+                reverseByteArray(newArray);
+            }
+
+            System.arraycopy(newArray, 0, buffer, i * 16, 16);
+            if (buffer.length == 4096 && (buffer[4081] != 0 || buffer[4095] != 0)) {
+                out.write(buffer);
+                buffer = new byte[count*16];
+            } else if (i == (count - 1)) {
+                out.write(buffer);
+            }
         }
     }
+
+
+//    private static void handleLittleEndianBigEndianWrite(ExtendedDataInput in, BigInteger[] unscaledValues, byte[] buffer, int count) throws IOException {
+//        int totalBytes = count * 16, off = 0;
+//        while (off < totalBytes) {
+//            byte[] val = new byte[16];
+//            int len = Math.min(4096, totalBytes - off);
+//
+//            in.readFully(buffer, 0, len);
+//            if (in.isLittleEndian())
+//                reverseByteArrayEvery8Byte(buffer);
+//
+//            int start = off / 16, end = len / 16;
+//            for (int i = 0; i < end; i++) {
+//                System.arraycopy(buffer, i * 16, val, 0, 16);
+//                unscaledValues[i + start] = new BigInteger(val);
+//            }
+//            off += len;
+//        }
+//    }
 
     @Override
     public int getUnitLength() {
         return 16;
     }
 
-    public void add(double value) {
+    public void add(BigDecimal value) {
         if (scale_ < 0) {
             throw new RuntimeException("Please set scale first.");
         }
-        if (size + 1 > capacity && values.length > 0) {
-            values = Arrays.copyOf(values, values.length * 2);
-        } else if (values.length <= 0) {
-            values = Arrays.copyOf(values, values.length + 1);
+        if (size + 1 > capacity && this.unscaledValues.length > 0) {
+            this.unscaledValues = Arrays.copyOf(this.unscaledValues, this.unscaledValues.length * 2);
+        } else if (this.unscaledValues.length == 0) {
+            this.unscaledValues = Arrays.copyOf(this.unscaledValues, this.unscaledValues.length + 1);
         }
-        capacity = values.length;
-        if (value == 0.0) {
-            values[size] = BigInteger.ZERO;
+        capacity = this.unscaledValues.length;
+        if (value.compareTo(BigDecimal.ZERO) == 0) {
+            this.unscaledValues[size] = BigInteger.ZERO;
         } else {
-            BigDecimal pow = BigDecimal.TEN.pow(scale_);
-            BigDecimal dbValue = BigDecimal.valueOf(value);
-            BigInteger scaledValue = dbValue.multiply(pow).toBigInteger();
-            values[size] = scaledValue;
+            this.unscaledValues[size] = value.toBigInteger();
         }
         size++;
     }
 
     void addRange(BigInteger[] valueList) {
         int newSize = size + valueList.length;
-        if (newSize > capacity && values.length > 0) {
-            values = Arrays.copyOf(values, Math.max(values.length * 2, newSize));
-        } else if (values.length <= 0) {
-            values = Arrays.copyOf(values, valueList.length);
+        if (newSize > capacity && this.unscaledValues.length > 0) {
+            this.unscaledValues = Arrays.copyOf(this.unscaledValues, Math.max(this.unscaledValues.length * 2, newSize));
+        } else if (this.unscaledValues.length == 0) {
+            this.unscaledValues = Arrays.copyOf(this.unscaledValues, valueList.length);
         }
-        System.arraycopy(valueList, 0, values, size, valueList.length);
+
+        System.arraycopy(valueList, 0, this.unscaledValues, size, valueList.length);
         size = newSize;
-        capacity = values.length;
+        capacity = this.unscaledValues.length;
     }
 
     public void addRange(double[] valueList) {
@@ -338,31 +415,27 @@ public class BasicDecimal128Vector extends AbstractVector {
 
         BigInteger[] newValues = new BigInteger[valueList.length];
         for (int i = 0; i < valueList.length; i++) {
-            BigDecimal pow = BigDecimal.ONE;
-            for (int j = 0; j < scale_; j++) {
-                pow = pow.multiply(BigDecimal.TEN);
-            }
             BigDecimal dbValue = BigDecimal.valueOf(valueList[i]);
-            BigInteger scaledValue = dbValue.multiply(pow).toBigInteger();
+            BigInteger scaledValue = dbValue.toBigInteger();
             newValues[i] = scaledValue;
         }
 
         int newSize = size + newValues.length;
-        if (newSize > capacity && values.length > 0) {
-            values = Arrays.copyOf(values, Math.max(values.length * 2, newSize));
-        } else if (values.length <= 0) {
-            values = Arrays.copyOf(values, newValues.length);
+        if (newSize > capacity && this.unscaledValues.length > 0) {
+            this.unscaledValues = Arrays.copyOf(this.unscaledValues, Math.max(this.unscaledValues.length * 2, newSize));
+        } else if (this.unscaledValues.length <= 0) {
+            this.unscaledValues = Arrays.copyOf(this.unscaledValues, newValues.length);
         }
-        System.arraycopy(newValues, 0, values, size, newValues.length);
+        System.arraycopy(newValues, 0, this.unscaledValues, size, newValues.length);
         size = newSize;
-        capacity = values.length;
+        capacity = this.unscaledValues.length;
     }
 
     @Override
     public void Append(Scalar value) throws Exception{
         if (scale_ < 0)
             throw new RuntimeException("Please set scale first.");
-        add(value.getNumber().doubleValue());
+        add(new BigDecimal(value.getNumber().toString()));
     }
 
     @Override
@@ -383,7 +456,7 @@ public class BasicDecimal128Vector extends AbstractVector {
     public BigInteger[] getdataArray() {
         BigInteger[] data = new BigInteger[size];
         for (int i = 0; i < size; i++) {
-            data[i] = values[i];
+            data[i] = this.unscaledValues[i];
         }
 
         return data;
@@ -425,12 +498,12 @@ public class BasicDecimal128Vector extends AbstractVector {
         targetNumElement = Math.min((out.remaining() / unitLength), targetNumElement);
         for (int i = 0; i < targetNumElement; ++i) {
             byte[] newArray = new byte[16];
-            byte[] originalArray = values[indexStart + i].toByteArray();
+            byte[] originalArray = this.unscaledValues[indexStart + i].toByteArray();
             if (originalArray.length > unitLength) {
                 throw new IOException("BigInteger value exceeds 16 bytes");
             }
 
-            if (((originalArray[0] >> 7) & 1) == 0) {
+            if (originalArray[0] > 0) {
                 // if first bit is 0, represent non-negative.
                 System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
             } else {

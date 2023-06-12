@@ -133,4 +133,24 @@ public class LittleEndianDataOutputStream extends AbstractExtendedDataOutputStre
 		if (pos > 0)
 			writeLongArray(longBuf, 0, pos);
 	}
+
+	@Override
+	public void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException {
+		reverseByteArray(A);
+		out.write(A);
+	}
+
+	public static void reverseByteArray(byte[] array) {
+		int left = 0;
+		int right = array.length - 1;
+
+		while (left < right) {
+			byte temp = array[left];
+			array[left] = array[right];
+			array[right] = temp;
+
+			left++;
+			right--;
+		}
+	}
 }

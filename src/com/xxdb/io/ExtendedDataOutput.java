@@ -25,4 +25,5 @@ public interface ExtendedDataOutput extends DataOutput {
 	void writeLong2Array(Long2[] A, int startIdx, int len) throws IOException;
 	void writeDouble2Array(Double2[] A) throws IOException;
 	void writeDouble2Array(Double2[] A, int startIdx, int len) throws IOException;
+	void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException;
 }
