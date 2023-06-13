@@ -395,7 +395,11 @@ public class BasicDecimal128Vector extends AbstractVector {
         size++;
     }
 
-    void addRange(BigInteger[] valueList) {
+    public void add(String value) {
+        add(new BigDecimal(value));
+    }
+
+    public void addRange(BigInteger[] valueList) {
         int newSize = size + valueList.length;
         if (newSize > capacity && this.unscaledValues.length > 0) {
             this.unscaledValues = Arrays.copyOf(this.unscaledValues, Math.max(this.unscaledValues.length * 2, newSize));
@@ -435,7 +439,7 @@ public class BasicDecimal128Vector extends AbstractVector {
     public void Append(Scalar value) throws Exception{
         if (scale_ < 0)
             throw new RuntimeException("Please set scale first.");
-        add(new BigDecimal(value.getNumber().toString()));
+        add(value.getNumber().toString());
     }
 
     @Override
