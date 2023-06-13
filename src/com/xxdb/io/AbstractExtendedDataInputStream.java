@@ -93,7 +93,8 @@ public abstract class AbstractExtendedDataInputStream extends BufferedInputStrea
 			int terminatorPos = isHaveBytesEndWith(terminator);
 			int dataCount = terminatorPos == -1 ? this.count - this.pos : terminatorPos - this.pos + 1;
 			if(dataCount + bufPos > buf_.length){
-				byte[] tmp = new byte[buf_.length*2];
+				int bufferSize = Math.max(dataCount + bufPos, buf_.length * 2);
+				byte[] tmp = new byte[bufferSize];
 				System.arraycopy(buf_, 0, tmp, 0, buf_.length);
 				buf_ = tmp;
 			}
