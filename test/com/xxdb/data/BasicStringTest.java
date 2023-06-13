@@ -755,6 +755,36 @@ public class BasicStringTest {
         bsv.Append(new BasicStringVector(new String[]{"GaussDB","GoldenDB"}));
         assertEquals(size+3,bsv.rows());
     }
+    @Test
+    public void test_BasicStringVector_big_blob_data() throws IOException {
+        BasicStringVector re1 =(BasicStringVector) conn.run("blob([concat(take(`abcd中文123,100000))])");
+        System.out.println(re1.getString());
+        String d = "abcd中文123";
+        String dd = "";
+        for(int i = 0; i < 100000; i++) {
+            dd += d;
+        }
+        BasicString data = new BasicString(dd);
+        assertEquals("["+data.getString()+"]",re1.getString());
+    }
+    @Test
+    public void test_BasicStringVector_big_string_data() throws IOException {
+        BasicStringVector re1 =(BasicStringVector) conn.run("string([concat(take(`abcd中文123,100000))])");
+        System.out.println(re1.getString());
+        String d = "abcd中文123";
+        String dd = "";
+        for(int i = 0; i < 100000; i++) {
+            dd += d;
+        }
+        BasicString data = new BasicString(dd);
+        assertEquals("["+data.getString()+"]",re1.getString());
+    }
+    @Test
+    public void test_BasicStringVector_run_bigdata() throws IOException {
+        BasicStringVector re1 =(BasicStringVector) conn.run("array(STRING,10).append!(string(concat(take(`aaaaaa,80000))))");
+        System.out.println(re1.getString());
+
+    }
 
 
 

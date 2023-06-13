@@ -190,10 +190,17 @@ public class BasicDecimal128VectorTest {
     }
 
     @Test
-    public void test_BasicDecimal128Vector_add() throws Exception {
+    public void test_BasicDecimal128Vector_add_1() throws Exception {
         String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
         BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
         tmp_128_v.add(new BigDecimal("1.1122"));
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1122]",tmp_128_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal128Vector_add_2() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
+        tmp_128_v.add("1.1122");
         assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1122]",tmp_128_v.getString());
     }
 
