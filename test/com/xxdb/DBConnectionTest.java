@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.*;
+import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.*;
@@ -3410,7 +3411,18 @@ public void test_SSL() throws Exception {
         System.out.println(bd64v.rows());
         cols.add(bd64v);
         colNames.add("cdecimal64");
+
+        BasicDecimal128Vector bd128v = new BasicDecimal128Vector(1,4);
+        bd128v.add(new BigDecimal(349));
+        bd128v.Append(new BasicDecimal128("5372",4));
+        bd128v.Append(new BasicDecimal128("2336",4));
+        System.out.println(bd128v.rows());
+        cols.add(bd128v);
+        colNames.add("cdecimal128");
+
         BasicTable bt = new BasicTable(colNames,cols);
+        System.out.println(bt.getColumn("cdecimal128").getString());
+
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         Map<String,Entity> map = new HashMap<>();
@@ -3418,12 +3430,12 @@ public void test_SSL() throws Exception {
         conn.upload(map);
         BasicTable ta = (BasicTable) conn.run("testUpload;");
         assertEquals(4,ta.rows());
-        assertEquals(25,ta.columns());
+        assertEquals(26,ta.columns());
         conn.run("testUpload.clear!()");
         conn.tryUpload(map);
         BasicTable tua = (BasicTable) conn.run("testUpload");
         assertEquals(4,tua.rows());
-        assertEquals(25,tua.columns());
+        assertEquals(26,tua.columns());
         assertEquals(ta.getString(),tua.getString());
         conn.close();
     }
@@ -3464,7 +3476,42 @@ public void test_SSL() throws Exception {
         assertEquals(1000,ua.columns());
         System.out.println(ua.getColumn("id15").getString());
     }
-
+    @Test
+    public void test_upload_WideTable_decimal128() throws Exception {
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        for(int i=0;i<1000;i++){
+            colNames.add("id"+i);
+            Vector v = null;
+            if((i%6) == 0){
+                v = new BasicIntVector(new int[]{i,i+5,i+10,i+15});
+            }else if((i%6) == 1){
+                v = new BasicDateVector(new int[]{i,i+105,i+110,i+115});
+            }else if((i%6) == 2){
+                v = new BasicComplexVector(new Double2[]{new Double2(i+0.1,i+0.2),new Double2(i+100.5,i-0.25),new Double2(i+1.35,i-0.75),new Double2(i+1.65,i-0.5)});
+            }else if((i%6) == 3){
+                v = new BasicDecimal128Vector(4,4);
+                v.set(0,new BasicDecimal128(String.valueOf(i+3),4));
+                v.set(1,new BasicDecimal128(String.valueOf(i+6),4));
+                v.set(2,new BasicDecimal128(String.valueOf(i+9),4));
+                v.set(3,new BasicDecimal128(String.valueOf(i+12),4));
+            }else if((i%6) == 4){
+                v = new BasicNanoTimeVector(new long[]{i+4,i+8,i+12,i+16});
+            }else{
+                v = new BasicByteVector(new byte[]{(byte) ('a'+i%6), (byte) ('e'+i%6), (byte) ('k'+i%6), (byte) ('q'+i%6)});
+            }
+            cols.add(v);
+        }
+        BasicTable bt = new BasicTable(colNames,cols);
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        Map<String,Entity> map = new HashMap<>();
+        map.put("wideTable",bt);
+        conn.upload(map);
+        BasicTable ua = (BasicTable) conn.run("wideTable;");
+        assertEquals(1000,ua.columns());
+        System.out.println(ua.getColumn("id15").getString());
+    }
 
     @Test
     public void test_tableInsert_decimal_arrayvector() throws Exception {
@@ -3503,6 +3550,35 @@ public void test_SSL() throws Exception {
     }
 
     @Test
+    public void test_tableInsert_decimal128_arrayvector() throws Exception {
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456");
+        connection.run("\n" +
+                "t = table(1000:0, `col0`col1`col2`col3, [DECIMAL128(0)[],DECIMAL128(1)[],DECIMAL128(10)[],DECIMAL128(30)[]])\n" +
+                "share t as ptt;\n"+
+                "col0=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col1=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col2=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col3=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "t.tableInsert(col0,col1,col2,col3)\n"+
+                "\n" );
+        BasicTable arr = (BasicTable)connection.run("t");
+        System.out.println(arr.getString());
+        List<Entity> ags = new ArrayList<>();
+        ags.add(arr);
+        connection.run("tableInsert{t}", ags);
+        BasicTable res = (BasicTable) connection.run("t");
+        System.out.println(res.getString());
+        assertEquals(4,res.columns());
+        assertEquals(4,res.rows());
+        assertEquals("[[1,3,99999],[-1,0,0],[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1],[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(1).getString());
+        assertEquals("[[1.0000000000,3.0000100000,99999.9999999999],[-1.0000000000,0.0000000000,0.1234567890],[1.0000000000,3.0000100000,99999.9999999999],[-1.0000000000,0.0000000000,0.1234567890]]",res.getColumn(2).getString());
+        assertEquals("[[1.000000000000000000000000000000,3.000010000000000339718860439552,99999.999999999978416622034208423936],[-1.000000000000000000000000000000,0.000000000000000000000000000000,0.123456788999999991885143736320],[1.000000000000000000000000000000,3.000010000000000339718860439552,99999.999999999978416622034208423936],[-1.000000000000000000000000000000,0.000000000000000000000000000000,0.123456788999999991885143736320]]",res.getColumn(3).getString());
+        System.out.println(res.getColumn(0).getString());
+
+    }
+    @Test
     public void test_tableInsert_decimal_arrayvector_compress_true() throws Exception {
         DBConnection connection = new DBConnection(false, false, true);
         connection.connect(HOST, PORT, "admin", "123456");
@@ -3535,6 +3611,34 @@ public void test_SSL() throws Exception {
         assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234],[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(5).getString());
         assertEquals("[[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678],[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678]]",res.getColumn(6).getString());
         System.out.println(res.getColumn(0).getString());
+    }
+    @Test
+    public void test_tableInsert_decimal128_arrayvector_compress_true() throws Exception {
+        DBConnection connection = new DBConnection(false, false, true);
+        connection.connect(HOST, PORT, "admin", "123456");
+        connection.run("\n" +
+                "t = table(1000:0, `col0`col1`col2`col3, [DECIMAL128(0)[],DECIMAL128(1)[],DECIMAL128(10)[],DECIMAL128(30)[]])\n" +
+                "share t as ptt;\n"+
+                "col0=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col1=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col2=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col3=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "t.tableInsert(col0,col1,col2,col3)\n"+
+                "\n" );
+        BasicTable arr = (BasicTable)connection.run("t");
+        System.out.println(arr.getString());
+        List<Entity> ags = new ArrayList<>();
+        ags.add(arr);
+        connection.run("tableInsert{t}", ags);
+        BasicTable res = (BasicTable) connection.run("t");
+        System.out.println(res.getString());
+        assertEquals(4,res.columns());
+        assertEquals(4,res.rows());
+        assertEquals("[[1,3,99999],[-1,0,0],[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1],[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(1).getString());
+        assertEquals("[[1.0000000000,3.0000100000,99999.9999999999],[-1.0000000000,0.0000000000,0.1234567890],[1.0000000000,3.0000100000,99999.9999999999],[-1.0000000000,0.0000000000,0.1234567890]]",res.getColumn(2).getString());
+        assertEquals("[[1.000000000000000000000000000000,3.000010000000000339718860439552,99999.999999999978416622034208423936],[-1.000000000000000000000000000000,0.000000000000000000000000000000,0.123456788999999991885143736320],[1.000000000000000000000000000000,3.000010000000000339718860439552,99999.999999999978416622034208423936],[-1.000000000000000000000000000000,0.000000000000000000000000000000,0.123456788999999991885143736320]]",res.getColumn(3).getString());
+        System.out.println(res.getColumn(0).getString());
 
     }
     @Test
@@ -3565,6 +3669,26 @@ public void test_SSL() throws Exception {
         assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(5).getString());
         assertEquals("[[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678]]",res.getColumn(6).getString());
 
+    }
+    @Test
+    public void test_insert_into_decimal128_arrayvector() throws Exception {
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456");
+        connection.run("\n" +
+                "t = table(1000:0, `col0`col1`col2, [DECIMAL128(0)[],DECIMAL128(1)[],DECIMAL128(30)[]])\n" +
+                "share t as ptt;\n"+
+                "col0=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col1=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "col2=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n"+
+                "insert into ptt values(col0,col1,col2)\n"+
+                "\n" );
+        BasicTable res = (BasicTable) connection.run("t");
+        System.out.println(res.getString());
+        assertEquals(3,res.columns());
+        assertEquals(2,res.rows());
+        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(1).getString());
+        assertEquals("[[1.000000000000000000000000000000,3.000010000000000339718860439552,99999.999999999978416622034208423936],[-1.000000000000000000000000000000,0.000000000000000000000000000000,0.123456788999999991885143736320]]",res.getColumn(2).getString());
     }
     @Test
     public void TestConnectWithoutUserid() throws IOException, InterruptedException {
@@ -3910,5 +4034,15 @@ public void test_SSL() throws Exception {
             e=t.getMessage();
         }
         assertEquals(e,"No matching SqlStdEnum constant found for name: fdfd");
+    }
+    @Test
+    public void Test_Connect_test() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,18921,"admin","123456");
+        assertEquals(true, conn.isConnected());
+        //conn.run("t =table(10000:0,['股票代码','股票日期','买方报价','卖方报价','时间戳','备注'],[SYMBOL,DATE,DOUBLE,DOUBLE,TIMESTAMP,STRING]);t.append!(table(symbol(take(`GGG`MMS`FABB`APPL, 8000)) as 股票代码, take(2022.10.15..2022.11.15, 8000) as 股票日期, take(1..11, 8000) as 买方报价, take(2..12, 8000) as 卖方报价, take(2022.11.15 06:00:15.149, 8000) as 时间戳,'备注' + string(1..8000) as 备注)); share t as tt1;dbName = \"dfs://test_chinese_table\";db = database(directory=dbName, partitionType=VALUE, partitionScheme=`GGG`MMS`FABB`APPL, engine=\"TSDB\");pt1 = db.createPartitionedTable(table=t, tableName=`pt1, partitionColumns=`股票代码, sortColumns=`股票代码);pt1.append!(t);select * from loadTable(\"dfs://test_chinese_table\",`pt1) ;");
+        conn.run("deleteTable()");
+
+        conn.close();
     }
 }

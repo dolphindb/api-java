@@ -296,6 +296,10 @@ public class BasicByteTest {
             public void writeUTF(String s) throws IOException {
 
             }
+            @Override
+            public  void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException{
+
+            }
         };
         bbm.writeVectorToOutputStream(out);
     }
@@ -526,6 +530,10 @@ public class BasicByteTest {
 
             @Override
             public void writeUTF(String s) throws IOException {
+
+            }
+            @Override
+            public  void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException{
 
             }
         };

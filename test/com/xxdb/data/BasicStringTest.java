@@ -520,6 +520,10 @@ public class BasicStringTest {
             public void writeUTF(String s) throws IOException {
 
             }
+            @Override
+            public  void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException{
+
+            }
         };
         List<String> list = new ArrayList<>();
         list.add("MangoDB");

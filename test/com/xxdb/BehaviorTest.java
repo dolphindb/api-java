@@ -10,7 +10,7 @@ import java.util.*;
 
 public class BehaviorTest {
     private static DBConnection conn= new DBConnection();
-    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    public static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     private static MultithreadedTableWriter multithreadedTableWriter_ = null;

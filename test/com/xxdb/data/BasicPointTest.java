@@ -315,6 +315,10 @@ public class BasicPointTest {
             public void writeUTF(String s) throws IOException {
 
             }
+            @Override
+            public  void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException{
+
+            }
         };
         bp.writeScalarToOutputStream(out);
     }
@@ -637,6 +641,10 @@ public class BasicPointTest {
 
             @Override
             public void writeUTF(String s) throws IOException {
+
+            }
+            @Override
+            public  void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException{
 
             }
         };

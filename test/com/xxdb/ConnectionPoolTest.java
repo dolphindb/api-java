@@ -1106,8 +1106,8 @@ public class ConnectionPoolTest {
                 "    dropDatabase(\"dfs://testArrayVector\")\n" +
                 "}\n" +
                 "db = database(\"dfs://testArrayVector\",RANGE,int(1..100),,\"TSDB\")\n" +
-                "t = table(1000000:0,`cint`char`complex`datehour`datetime`date`double`float`int128`int`ipaddr`long`minute`month`nanotimestamp`nanotime`point`second`short`timestamp`time`uuid`declmal64`decimal32" +
-                ",[INT,CHAR[],COMPLEX[],DATEHOUR[],DATETIME[],DATE[],DOUBLE[],FLOAT[],INT128[],INT[],IPADDR[],LONG[],MINUTE[],MONTH[],NANOTIMESTAMP[],NANOTIME[],POINT[],SECOND[],SHORT[],TIMESTAMP[],TIME[],UUID[],DECIMAL64(4)[],DECIMAL32(3)[]])\n" +
+                "t = table(1000000:0,`cint`char`complex`datehour`datetime`date`double`float`int128`int`ipaddr`long`minute`month`nanotimestamp`nanotime`point`second`short`timestamp`time`uuid`declmal64`decimal32`decimal128" +
+                ",[INT,CHAR[],COMPLEX[],DATEHOUR[],DATETIME[],DATE[],DOUBLE[],FLOAT[],INT128[],INT[],IPADDR[],LONG[],MINUTE[],MONTH[],NANOTIMESTAMP[],NANOTIME[],POINT[],SECOND[],SHORT[],TIMESTAMP[],TIME[],UUID[],DECIMAL64(4)[],DECIMAL32(3)[],DECIMAL128(8)[]])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
         conn.run(script);
         ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
@@ -1137,6 +1137,7 @@ public class ConnectionPoolTest {
         colNames.add("uuid");
         colNames.add("decimal64");
         colNames.add("decimal32");
+        colNames.add("decimal128");
         List<Vector> cols = new ArrayList<>();
         cols.add(new BasicIntVector(new int[]{12,29,31}));
         List<Vector> bbl = new ArrayList<>();
@@ -1285,6 +1286,16 @@ public class ConnectionPoolTest {
         bdv32.add(2,v32);
         BasicArrayVector bdv32a = new BasicArrayVector(bdv32);
         cols.add(bdv32a);
+        List<Vector> bdv128 = new ArrayList<Vector>();
+        Vector v128=new BasicDecimal32Vector(3,8);
+        v128.set(0,new BasicDecimal32(15645.99999999,8));
+        v128.set(1,new BasicDecimal32(24635.00000001,8));
+        v128.set(2,new BasicDecimal32(24635.12345678,8));
+        bdv128.add(0,v128);
+        bdv128.add(1,v128);
+        bdv128.add(2,v128);
+        BasicArrayVector bdv1281 = new BasicArrayVector(bdv128);
+        cols.add(bdv1281);
         BasicTable bt = new BasicTable(colNames,cols);
         int x = appender.append(bt);
         BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
@@ -1313,7 +1324,7 @@ public class ConnectionPoolTest {
         assertEquals(Entity.DATA_TYPE.DT_UUID_ARRAY,res.getColumn(21).getDataType());
         assertEquals(Entity.DATA_TYPE.DT_DECIMAL64_ARRAY,res.getColumn(22).getDataType());
         assertEquals(Entity.DATA_TYPE.DT_DECIMAL32_ARRAY,res.getColumn(23).getDataType());
-
+        assertEquals(Entity.DATA_TYPE.DT_DECIMAL128_ARRAY,res.getColumn(24).getDataType());
         pool.shutdown();
     }
 
@@ -1482,6 +1493,177 @@ public class ConnectionPoolTest {
         assertEquals(v640.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
         assertEquals(v641.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
         assertEquals(v642.getString(), ((BasicArrayVector)(res.getColumn("col4"))).getVectorValue(0).getString());
+
+        pool.shutdown();
+    }
+
+    @Test
+    public void test_PartitionedTableAppender_ArrayVector_decimal128() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testArrayVector\")){\n" +
+                "    dropDatabase(\"dfs://testArrayVector\")\n" +
+                "}\n" +
+                "db = database(\"dfs://testArrayVector\",RANGE,int(1..100),,\"TSDB\")\n" +
+                "t = table(1000000:0,`cint`col0`col1`col2`col3`col4" +
+                ",[INT,DECIMAL128(0)[],DECIMAL128(4)[],DECIMAL128(10)[],DECIMAL128(19)[],DECIMAL128(37)[]])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
+        conn.run(script);
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testArrayVector","pt","cint",pool);
+        List<String> colNames = new ArrayList<>();
+        colNames.add("cint");
+        colNames.add("col0");
+        colNames.add("col1");
+        colNames.add("col2");
+        colNames.add("col3");
+        colNames.add("col4");
+        List<Vector> cols = new ArrayList<>();
+        cols.add(new BasicIntVector(new int[]{12,29,31}));
+        List<Vector> bdvcol0 = new ArrayList<Vector>();
+        Vector v128=new BasicDecimal128Vector(3,0);
+        v128.set(0,new BasicDecimal128("15645.00",0));
+        v128.set(1,new BasicDecimal128("24635.00001",0));
+        v128.set(2,new BasicDecimal128("24635.00001",0));
+        bdvcol0.add(0,v128);
+        bdvcol0.add(1,v128);
+        bdvcol0.add(2,v128);
+        BasicArrayVector bavcol0 = new BasicArrayVector(bdvcol0);
+        cols.add(bavcol0);
+        List<Vector> bdvcol1 = new ArrayList<Vector>();
+        Vector v1281=new BasicDecimal128Vector(3,4);
+        v1281.set(0,new BasicDecimal128("15645.00",2));
+        v1281.set(1,new BasicDecimal128("24635.00001",3));
+        v1281.set(2,new BasicDecimal128("24635.00001",4));
+        bdvcol1.add(0,v1281);
+        bdvcol1.add(1,v1281);
+        bdvcol1.add(2,v1281);
+        BasicArrayVector bavcol1 = new BasicArrayVector(bdvcol1);
+        cols.add(bavcol1);
+        List<Vector> bdvcol2 = new ArrayList<Vector>();
+        Vector v1282=new BasicDecimal128Vector(3,10);
+        v1282.set(0,new BasicDecimal128("15645.00",0));
+        v1282.set(1,new BasicDecimal128("24635.00001",0));
+        v1282.set(2,new BasicDecimal128("24635.00001",0));
+        bdvcol2.add(0,v1282);
+        bdvcol2.add(1,v1282);
+        bdvcol2.add(2,v1282);
+        BasicArrayVector bavcol2 = new BasicArrayVector(bdvcol2);
+        cols.add(bavcol2);
+        List<Vector> bdvcol3 = new ArrayList<Vector>();
+        Vector v1283=new BasicDecimal128Vector(3,19);
+        v1283.set(0,new BasicDecimal128("15645.00",2));
+        v1283.set(1,new BasicDecimal128("24635.00001",8));
+        v1283.set(2,new BasicDecimal128("24635.00001",0));
+        bdvcol3.add(0,v1283);
+        bdvcol3.add(1,v1283);
+        bdvcol3.add(2,v1283);
+        BasicArrayVector bavcol3 = new BasicArrayVector(bdvcol3);
+        cols.add(bavcol3);
+        List<Vector> bdvcol4 = new ArrayList<Vector>();
+        Vector v1284=new BasicDecimal128Vector(3,37);
+        v1284.set(0,new BasicDecimal128("15645.00",37));
+        v1284.set(1,new BasicDecimal128("24635.00001",37));
+        v1284.set(2,new BasicDecimal128("24635.00001",37));
+        bdvcol4.add(0,v1284);
+        bdvcol4.add(1,v1284);
+        bdvcol4.add(2,v1284);
+        BasicArrayVector bavcol4 = new BasicArrayVector(bdvcol4);
+        cols.add(bavcol4);
+
+        BasicTable bt = new BasicTable(colNames,cols);
+        System.out.println(bt.rows());
+        System.out.println(bt.getString());
+        int x = appender.append(bt);
+        conn.run("sleep(500)");
+        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
+        assertEquals(3,res.rows());
+        assertEquals(v128.getString(), ((BasicArrayVector)(res.getColumn("col0"))).getVectorValue(0).getString());
+        assertEquals(v1281.getString(), ((BasicArrayVector)(res.getColumn("col1"))).getVectorValue(0).getString());
+        assertEquals(v1282.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
+        assertEquals(v1282.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
+        assertEquals(v1284.getString(), ((BasicArrayVector)(res.getColumn("col4"))).getVectorValue(0).getString());
+        pool.shutdown();
+    }
+    @Test
+    public void test_PartitionedTableAppender_ArrayVector_decimal128_compress_true() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testArrayVector\")){\n" +
+                "    dropDatabase(\"dfs://testArrayVector\")\n" +
+                "}\n" +
+                "db = database(\"dfs://testArrayVector\",RANGE,int(1..100),,\"TSDB\")\n" +
+                "t = table(1000000:0,`cint`col0`col1`col2`col3`col4" +
+                ",[INT,DECIMAL128(0)[],DECIMAL128(4)[],DECIMAL128(10)[],DECIMAL128(19)[],DECIMAL128(37)[]])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
+        conn.run(script);
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false,null,null,true,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testArrayVector","pt","cint",pool);
+        List<String> colNames = new ArrayList<>();
+        colNames.add("cint");
+        colNames.add("col0");
+        colNames.add("col1");
+        colNames.add("col2");
+        colNames.add("col3");
+        colNames.add("col4");
+        List<Vector> cols = new ArrayList<>();
+        cols.add(new BasicIntVector(new int[]{12,29,31}));
+        List<Vector> bdvcol0 = new ArrayList<Vector>();
+        Vector v128=new BasicDecimal128Vector(3,0);
+        v128.set(0,new BasicDecimal128("15645.00",0));
+        v128.set(1,new BasicDecimal128("24635.00001",0));
+        v128.set(2,new BasicDecimal128("24635.00001",0));
+        bdvcol0.add(0,v128);
+        bdvcol0.add(1,v128);
+        bdvcol0.add(2,v128);
+        BasicArrayVector bavcol0 = new BasicArrayVector(bdvcol0);
+        cols.add(bavcol0);
+        List<Vector> bdvcol1 = new ArrayList<Vector>();
+        Vector v1281=new BasicDecimal128Vector(3,4);
+        v1281.set(0,new BasicDecimal128("15645.00",4));
+        v1281.set(1,new BasicDecimal128("24635.00001",4));
+        v1281.set(2,new BasicDecimal128("24635.00001",4));
+        bdvcol1.add(0,v1281);
+        bdvcol1.add(1,v1281);
+        bdvcol1.add(2,v1281);
+        BasicArrayVector bavcol1 = new BasicArrayVector(bdvcol1);
+        cols.add(bavcol1);
+        List<Vector> bdvcol2 = new ArrayList<Vector>();
+        Vector v1282=new BasicDecimal128Vector(3,10);
+        v1282.set(0,new BasicDecimal128("15645.00",10));
+        v1282.set(1,new BasicDecimal128("24635.00001",10));
+        v1282.set(2,new BasicDecimal128("24635.00001",10));
+        bdvcol2.add(0,v1282);
+        bdvcol2.add(1,v1282);
+        bdvcol2.add(2,v1282);
+        BasicArrayVector bavcol2 = new BasicArrayVector(bdvcol2);
+        cols.add(bavcol2);
+        List<Vector> bdvcol3 = new ArrayList<Vector>();
+        Vector v1283=new BasicDecimal128Vector(3,19);
+        v1283.set(0,new BasicDecimal128("15645.00",19));
+        v1283.set(1,new BasicDecimal128("24635.00001",19));
+        v1283.set(2,new BasicDecimal128("24635.00001",19));
+        bdvcol3.add(0,v1283);
+        bdvcol3.add(1,v1283);
+        bdvcol3.add(2,v1283);
+        BasicArrayVector bavcol3 = new BasicArrayVector(bdvcol3);
+        cols.add(bavcol3);
+        List<Vector> bdvcol4 = new ArrayList<Vector>();
+        Vector v1284=new BasicDecimal128Vector(3,37);
+        v1284.set(0,new BasicDecimal128("15645.00",37));
+        v1284.set(1,new BasicDecimal128("24635.00001",37));
+        v1284.set(2,new BasicDecimal128("24635.00001",37));
+        bdvcol4.add(0,v1284);
+        bdvcol4.add(1,v1284);
+        bdvcol4.add(2,v1284);
+        BasicArrayVector bavcol4 = new BasicArrayVector(bdvcol4);
+        cols.add(bavcol4);
+
+        BasicTable bt = new BasicTable(colNames,cols);
+        int x = appender.append(bt);
+        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
+        assertEquals(3,res.rows());
+        assertEquals(v128.getString(), ((BasicArrayVector)(res.getColumn("col0"))).getVectorValue(0).getString());
+        assertEquals(v1281.getString(), ((BasicArrayVector)(res.getColumn("col1"))).getVectorValue(0).getString());
+        assertEquals(v1282.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
+        assertEquals(v1282.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
+        assertEquals(v1284.getString(), ((BasicArrayVector)(res.getColumn("col4"))).getVectorValue(0).getString());
 
         pool.shutdown();
     }

@@ -951,6 +951,174 @@ public class AutoFitTableUpsertTest {
         assertEquals(v642.getString(), ((BasicArrayVector)(res.getColumn("col4"))).getVectorValue(0).getString());
     }
     @Test
+    public void test_AutoFitTableUpsert_ArrayVector_decimal128() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testArrayVector\")){\n" +
+                "    dropDatabase(\"dfs://testArrayVector\")\n" +
+                "}\n" +
+                "db = database(\"dfs://testArrayVector\",RANGE,int(1..100),,\"TSDB\")\n" +
+                "t = table(1000000:0,`cint`col0`col1`col2`col3`col4" +
+                ",[INT,DECIMAL128(0)[],DECIMAL128(4)[],DECIMAL128(0)[],DECIMAL128(4)[],DECIMAL128(8)[]])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run(script);
+        AutoFitTableUpsert aftu = new AutoFitTableUpsert("dfs://testArrayVector","pt",conn,true,new String[]{"cint"},null);
+
+        List<String> colNames = new ArrayList<>();
+        colNames.add("cint");
+        colNames.add("col0");
+        colNames.add("col1");
+        colNames.add("col2");
+        colNames.add("col3");
+        colNames.add("col4");
+        List<Vector> cols = new ArrayList<>();
+        cols.add(new BasicIntVector(new int[]{12,29,31}));
+        List<Vector> bdvcol0 = new ArrayList<Vector>();
+        Vector v128=new BasicDecimal128Vector(3,0);
+        v128.set(0,new BasicDecimal128("151285.00",0));
+        v128.set(1,new BasicDecimal128("24635.00001",0));
+        v128.set(2,new BasicDecimal128("24635.00001",0));
+        bdvcol0.add(0,v128);
+        bdvcol0.add(1,v128);
+        bdvcol0.add(2,v128);
+        BasicArrayVector bavcol0 = new BasicArrayVector(bdvcol0);
+        cols.add(bavcol0);
+        List<Vector> bdvcol1 = new ArrayList<Vector>();
+        Vector v1281=new BasicDecimal128Vector(3,4);
+        v1281.set(0,new BasicDecimal128("151285.00",4));
+        v1281.set(1,new BasicDecimal128("24635.00001",4));
+        v1281.set(2,new BasicDecimal128("24635.00001",4));
+        bdvcol1.add(0,v1281);
+        bdvcol1.add(1,v1281);
+        bdvcol1.add(2,v1281);
+        BasicArrayVector bavcol1 = new BasicArrayVector(bdvcol1);
+        cols.add(bavcol1);
+        List<Vector> bdvcol2 = new ArrayList<Vector>();
+        Vector v1280=new BasicDecimal128Vector(3,0);
+        v1280.set(0,new BasicDecimal128("151285.00",0));
+        v1280.set(1,new BasicDecimal128("24635.00001",0));
+        v1280.set(2,new BasicDecimal128("24635.00001",0));
+        bdvcol2.add(0,v1280);
+        bdvcol2.add(1,v1280);
+        bdvcol2.add(2,v1280);
+        BasicArrayVector bavcol2 = new BasicArrayVector(bdvcol2);
+        cols.add(bavcol2);
+        List<Vector> bdvcol3 = new ArrayList<Vector>();
+        Vector v1282=new BasicDecimal128Vector(3,4);
+        v1282.set(0,new BasicDecimal128("151285.00",4));
+        v1282.set(1,new BasicDecimal128("24635.00001",4));
+        v1282.set(2,new BasicDecimal128("24635.00001",4));
+        bdvcol3.add(0,v1282);
+        bdvcol3.add(1,v1282);
+        bdvcol3.add(2,v1282);
+        BasicArrayVector bavcol3 = new BasicArrayVector(bdvcol3);
+        cols.add(bavcol3);
+        List<Vector> bdvcol4 = new ArrayList<Vector>();
+        Vector v1283=new BasicDecimal128Vector(3,8);
+        v1283.set(0,new BasicDecimal128("151285.00",8));
+        v1283.set(1,new BasicDecimal128("24635.00001",8));
+        v1283.set(2,new BasicDecimal128("24635.00001",8));
+        bdvcol4.add(0,v1283);
+        bdvcol4.add(1,v1283);
+        bdvcol4.add(2,v1283);
+        BasicArrayVector bavcol4 = new BasicArrayVector(bdvcol4);
+        cols.add(bavcol4);
+
+        BasicTable bt = new BasicTable(colNames,cols);
+        aftu.upsert(bt);
+        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
+        assertEquals(3,res.rows());
+        assertEquals(v128.getString(), ((BasicArrayVector)(res.getColumn("col0"))).getVectorValue(0).getString());
+        assertEquals(v1281.getString(), ((BasicArrayVector)(res.getColumn("col1"))).getVectorValue(0).getString());
+        assertEquals(v1280.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
+        assertEquals(v1282.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
+        assertEquals(v1283.getString(), ((BasicArrayVector)(res.getColumn("col4"))).getVectorValue(0).getString());
+    }
+    @Test
+    public void test_AutoFitTableUpsert_ArrayVector_decimal128_compress_true() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testArrayVector\")){\n" +
+                "    dropDatabase(\"dfs://testArrayVector\")\n" +
+                "}\n" +
+                "db = database(\"dfs://testArrayVector\",RANGE,int(1..100),,\"TSDB\")\n" +
+                "t = table(1000000:0,`cint`col0`col1`col2`col3`col4" +
+                ",[INT,DECIMAL128(0)[],DECIMAL128(4)[],DECIMAL128(0)[],DECIMAL128(4)[],DECIMAL128(8)[]])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
+        conn = new DBConnection(false,false,true);
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run(script);
+        AutoFitTableUpsert aftu = new AutoFitTableUpsert("dfs://testArrayVector","pt",conn,true,new String[]{"cint"},null);
+
+        List<String> colNames = new ArrayList<>();
+        colNames.add("cint");
+        colNames.add("col0");
+        colNames.add("col1");
+        colNames.add("col2");
+        colNames.add("col3");
+        colNames.add("col4");
+        List<Vector> cols = new ArrayList<>();
+        cols.add(new BasicIntVector(new int[]{12,29,31}));
+        List<Vector> bdvcol0 = new ArrayList<Vector>();
+        Vector v128=new BasicDecimal128Vector(3,0);
+        v128.set(0,new BasicDecimal128("151285.00",0));
+        v128.set(1,new BasicDecimal128("24635.00001",0));
+        v128.set(2,new BasicDecimal128("24635.00001",0));
+        bdvcol0.add(0,v128);
+        bdvcol0.add(1,v128);
+        bdvcol0.add(2,v128);
+        BasicArrayVector bavcol0 = new BasicArrayVector(bdvcol0);
+        cols.add(bavcol0);
+        List<Vector> bdvcol1 = new ArrayList<Vector>();
+        Vector v1281=new BasicDecimal128Vector(3,4);
+        v1281.set(0,new BasicDecimal128("151285.00",4));
+        v1281.set(1,new BasicDecimal128("24635.00001",4));
+        v1281.set(2,new BasicDecimal128("24635.00001",4));
+        bdvcol1.add(0,v1281);
+        bdvcol1.add(1,v1281);
+        bdvcol1.add(2,v1281);
+        BasicArrayVector bavcol1 = new BasicArrayVector(bdvcol1);
+        cols.add(bavcol1);
+        List<Vector> bdvcol2 = new ArrayList<Vector>();
+        Vector v1280=new BasicDecimal128Vector(3,0);
+        v1280.set(0,new BasicDecimal128("151285.00",0));
+        v1280.set(1,new BasicDecimal128("24635.00001",0));
+        v1280.set(2,new BasicDecimal128("24635.00001",0));
+        bdvcol2.add(0,v1280);
+        bdvcol2.add(1,v1280);
+        bdvcol2.add(2,v1280);
+        BasicArrayVector bavcol2 = new BasicArrayVector(bdvcol2);
+        cols.add(bavcol2);
+        List<Vector> bdvcol3 = new ArrayList<Vector>();
+        Vector v1284=new BasicDecimal128Vector(3,4);
+        v1284.set(0,new BasicDecimal128("151285.00",4));
+        v1284.set(1,new BasicDecimal128("24635.00001",4));
+        v1284.set(2,new BasicDecimal128("24635.00001",4));
+        bdvcol3.add(0,v1284);
+        bdvcol3.add(1,v1284);
+        bdvcol3.add(2,v1284);
+        BasicArrayVector bavcol3 = new BasicArrayVector(bdvcol3);
+        cols.add(bavcol3);
+        List<Vector> bdvcol4 = new ArrayList<Vector>();
+        Vector v1282=new BasicDecimal128Vector(3,8);
+        v1282.set(0,new BasicDecimal128("151285.00",8));
+        v1282.set(1,new BasicDecimal128("24635.00001",8));
+        v1282.set(2,new BasicDecimal128("24635.00001",8));
+        bdvcol4.add(0,v1282);
+        bdvcol4.add(1,v1282);
+        bdvcol4.add(2,v1282);
+        BasicArrayVector bavcol4 = new BasicArrayVector(bdvcol4);
+        cols.add(bavcol4);
+
+        BasicTable bt = new BasicTable(colNames,cols);
+        aftu.upsert(bt);
+        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
+        assertEquals(3,res.rows());
+        assertEquals(v128.getString(), ((BasicArrayVector)(res.getColumn("col0"))).getVectorValue(0).getString());
+        assertEquals(v1281.getString(), ((BasicArrayVector)(res.getColumn("col1"))).getVectorValue(0).getString());
+        assertEquals(v1280.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
+        assertEquals(v1281.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
+        assertEquals(v1282.getString(), ((BasicArrayVector)(res.getColumn("col4"))).getVectorValue(0).getString());
+    }
+    @Test
     public void test_AutoFitTableUpsert_AlmostAllDataType_indexedTable() throws Exception {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
@@ -975,12 +1143,13 @@ public class AutoFitTableUpsertTest {
                 "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
                 "cdecimal32 = decimal32(12 17 135.2,2)\n" +
                 "cdecimal64 = decimal64(18 24 33.878,4)\n" +
+                "cdecimal128 = decimal128(18 24 33.878,10)\n" +
                 "t = indexedTable(`cint,cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
                 "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
-                "cstring,cdatehour,cdecimal32,cdecimal64);" +
+                "cstring,cdatehour,cdecimal32,cdecimal64,cdecimal128);" +
                 "share t as st;";
         conn.run(script);
-        BasicTable bt = (BasicTable) conn.run("t2 = table(true as cbool,'d' as cchar,86h as cshort,9 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64)\n" +
+        BasicTable bt = (BasicTable) conn.run("t2 = table(true as cbool,'d' as cchar,86h as cshort,9 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64,decimal128(27,10) as cdecimal128)\n" +
                 " t2;");
         AutoFitTableUpsert aftu = new AutoFitTableUpsert("","st",conn,true,null,null);
         aftu.upsert(bt);
@@ -988,6 +1157,8 @@ public class AutoFitTableUpsertTest {
         assertEquals(3,ua.rows());
         assertEquals(0,conn.run("select * from st where cminute = 10:15m").rows());
         assertEquals(1,conn.run("select * from st where cminute = 15:27m").rows());
+        BasicTable ua1 = (BasicTable) conn.run("select cdecimal128 from st where cint = 9");
+        assertEquals("27.0000000000",ua1.getColumn(0).get(0).getString());
         conn.run("undef(`st.SHARED)");
         conn.run("clear!(t)");
     }
