@@ -318,6 +318,10 @@ public class BasicComplexTest {
             public void writeUTF(String s) throws IOException {
 
             }
+            @Override
+            public  void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException{
+
+            }
         };
         bc.writeScalarToOutputStream(out);
     }

@@ -269,6 +269,10 @@ public class BasicDecimal32VectorTest {
         int a = tmp_32_v2.getExtraParamForType();
         assertEquals(4,a);
     }
-
+    @Test
+    public void testBasicDecimal32_run_arrayVector_add() throws IOException {
+        BasicArrayVector re1 =(BasicArrayVector) conn.run("arr = array(DECIMAL32(2)[], 0, 10).append!([[9999999.99, NULL, 1000000.01, NULL, -9999998.99, -1000000.01], [], [00i], [1000000.01]]);arr1=add(arr, 1);arr1;");
+        assertEquals("[[10000000.99,,1000001.01,,-9999997.99,-999999.01],[],[],[1000001.01]]",re1.getString());
+    }
 
 }
