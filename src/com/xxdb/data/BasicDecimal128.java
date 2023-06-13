@@ -71,7 +71,7 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
             throw new RuntimeException("byte length of Decimal128 "+originalArray.length+" cannot be less than 0 or exceed 16.");
         }
 
-        if (originalArray[0] > 0) {
+        if (originalArray[0] >= 0) {
             // if first bit is 0, represent non-negative.
             System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
         } else {

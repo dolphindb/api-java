@@ -188,7 +188,7 @@ public class BasicDecimal128Vector extends AbstractVector {
                 throw new RuntimeException("byte length of Decimal128 "+originalArray.length+" exceed 16");
             }
 
-            if (originalArray[0] > 0) {
+            if (originalArray[0] >= 0) {
                 // if first bit is 0, represent non-negative.
                 System.arraycopy(originalArray, 0, newArray, (16 - originalArray.length) + 16*i, originalArray.length);
             } else {
@@ -326,7 +326,7 @@ public class BasicDecimal128Vector extends AbstractVector {
                 throw new RuntimeException("byte length of Decimal128 "+originalArray.length+" cannot be less than 0 or exceed 16.");
             }
 
-            if (originalArray[0] > 0) {
+            if (originalArray[0] >= 0) {
                 // if first bit is 0, represent non-negative.
                 System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
             } else {
@@ -390,7 +390,7 @@ public class BasicDecimal128Vector extends AbstractVector {
         if (value.compareTo(BigDecimal.ZERO) == 0) {
             this.unscaledValues[size] = BigInteger.ZERO;
         } else {
-            this.unscaledValues[size] = value.toBigInteger();
+            this.unscaledValues[size] = value.scaleByPowerOfTen(this.scale_).toBigInteger();
         }
         size++;
     }
@@ -507,7 +507,7 @@ public class BasicDecimal128Vector extends AbstractVector {
                 throw new IOException("BigInteger value exceeds 16 bytes");
             }
 
-            if (originalArray[0] > 0) {
+            if (originalArray[0] >= 0) {
                 // if first bit is 0, represent non-negative.
                 System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
             } else {
