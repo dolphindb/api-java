@@ -271,6 +271,10 @@ public class BasicSymbolTest {
             public void writeUTF(String s) throws IOException {
 
             }
+            @Override
+            public  void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException{
+
+            }
         };
         SymbolBase base = new SymbolBase(2);
         BasicSymbolVector bsv2 = new BasicSymbolVector(base,4);
@@ -469,6 +473,10 @@ public class BasicSymbolTest {
             public void writeUTF(String s) throws IOException {
 
             }
+            @Override
+            public  void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException{
+
+            }
         };
         BasicSymbolVector bsv = new BasicSymbolVector(3);
         bsv.set(1,new BasicInt(2));
@@ -497,5 +505,11 @@ public class BasicSymbolTest {
             assertTrue(re.getMessage().contains("SymbolVector does not support append a vector"));
         }
         assertEquals(size+1,bsv.rows());
+    }
+
+    @Test
+    public void test_BasicSymbolVector_run_bigdata() throws IOException {
+        BasicSymbolVector re1 =(BasicSymbolVector) conn.run("array(SYMBOL,10).append!(string(concat(take(`aaaaaa,80000))))");
+        System.out.println(re1.getString());
     }
 }
