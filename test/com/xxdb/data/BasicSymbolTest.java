@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import com.xxdb.DBConnection;
 import com.xxdb.io.*;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -17,6 +18,17 @@ public class BasicSymbolTest {
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
 
+    @Before
+    public  void setUp(){
+        conn = new DBConnection();
+        try{
+            if(!conn.connect(HOST,PORT,"admin","123456")){
+                throw new IOException("Failed to connect to 2xdb server");
+            }
+        }catch(IOException ex){
+            ex.printStackTrace();
+        }
+    }
 
     @Test(expected = IOException.class)
     public void test_BasicSymbolEntity() throws IOException {
@@ -509,7 +521,17 @@ public class BasicSymbolTest {
 
     @Test
     public void test_BasicSymbolVector_run_bigdata() throws IOException {
-        BasicSymbolVector re1 =(BasicSymbolVector) conn.run("array(SYMBOL,10).append!(string(concat(take(`aaaaaa,80000))))");
-        System.out.println(re1.getString());
+        BasicSymbolVector re1 =(BasicSymbolVector) conn.run("a=array(SYMBOL,10).append!(string(concat(take(`abcd中文123,100000))));a");
+        System.out.println(re1.get(10).getString());
+        for(int i = 0; i < 10; i++) {
+            assertEquals("",re1.get(i).getString());
+        }
+        String d = "abcd中文123";
+        String dd = "";
+        for(int i = 0; i < 100000; i++) {
+            dd += d;
+        }
+        BasicString data = new BasicString(dd);
+        assertEquals(data.getString(),re1.get(10).getString());
     }
 }
