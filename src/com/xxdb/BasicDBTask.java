@@ -86,7 +86,7 @@ public class BasicDBTask implements DBTask {
 
 	public void waitFor(int timeOut) {
 		try {
-			if (timeOut >= 0) {
+			if (timeOut > 0) {
 				boolean completed = latch.await(timeOut, TimeUnit.MILLISECONDS);
 				if (!completed) {
 					synchronized (this) {

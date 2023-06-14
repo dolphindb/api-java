@@ -33,8 +33,8 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 					if (taskLists_.size() == 0) {
 						try {
 							taskLists_.wait();
-						} catch (Exception e) {
-							e.printStackTrace();
+						} catch (InterruptedException e) {
+							break;
 						}
 					}
 				}
@@ -49,7 +49,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 						task.setDBConnection(conn_);
 						task.call();
 					} catch (InterruptedException e) {
-						 e.printStackTrace();
+						 break;
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -63,7 +63,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 				}
 			}
 			conn_.close();
-			System.out.println("workThread_ shutdown.");
+			System.out.println("ExclusiveDBConnectionPool AsyncWorker terminated peacefully.");
 		}
 	}
 
@@ -121,7 +121,6 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 		}
 		for (DBTask task : tasks) {
 			((BasicDBTask)task).waitFor(-1);
-			((BasicDBTask)task).finish();
 		}
 	}
 	
@@ -136,7 +135,6 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 			taskLists_.notify();
 		}
 		((BasicDBTask)task).waitFor(timeOut);
-		((BasicDBTask)task).finish();
 	}
 
 	public void waitForThreadCompletion() {
