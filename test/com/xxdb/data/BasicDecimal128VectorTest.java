@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ResourceBundle;
 
 import static org.junit.Assert.*;
@@ -222,9 +223,9 @@ public class BasicDecimal128VectorTest {
     @Test
     public void test_BasicDecimal128Vector_addRange() throws Exception {
         BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(0,4);
-        String[] tmp = new String[]{"0.0","-123.00432","132.204234","100.0"};
-        //tmp_128_v.addRange(tmp);
-        //assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_128_v.getString());
+        BigDecimal[] tmp = new BigDecimal[]{BigDecimal.valueOf(0),BigDecimal.valueOf(-123.00432),BigDecimal.valueOf(132.204234),BigDecimal.valueOf(100.0000)};
+        tmp_128_v.addRange(tmp);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_128_v.getString());
     }
 
     @Test
@@ -232,8 +233,8 @@ public class BasicDecimal128VectorTest {
         String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
         BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
         String[] tmp = new String[]{"0.0","-123.00432","132.204234","100.0"};
-        //tmp_128_v.addRange(tmp);
-        //assertEquals("[0.0000,-123.0043,132.2042,100.0000,0.0000,-123.0043,132.2042,100.0000]",tmp_128_v.getString());
+        tmp_128_v.addRange(tmp);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,0.0000,-123.0043,132.2042,100.0000]",tmp_128_v.getString());
     }
 
     @Test
@@ -241,8 +242,8 @@ public class BasicDecimal128VectorTest {
         String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
         BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
         String[] tmp = new String[]{};
-        //tmp_128_v.addRange(tmp);
-        //assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_128_v.getString());
+        tmp_128_v.addRange(tmp);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_128_v.getString());
     }
 
     @Test

@@ -13,10 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -757,6 +754,30 @@ public class BasicStringTest {
         assertEquals(size+3,bsv.rows());
     }
     @Test
+    public void test_BasicString_big_blob_data() throws IOException {
+        BasicString re1 =(BasicString) conn.run("blob(concat(take(`abcd中文123,100000)))");
+        System.out.println(re1.getString());
+        String d = "abcd中文123";
+        String dd = "";
+        for(int i = 0; i < 100000; i++) {
+            dd += d;
+        }
+        BasicString data = new BasicString(dd);
+        assertEquals(data.getString(),re1.getString());
+    }
+    @Test
+    public void test_BasicString_big_string_data() throws IOException {
+        BasicString re1 =(BasicString) conn.run("string(concat(take(`abcd中文123,100000)))");
+        System.out.println(re1.getString());
+        String d = "abcd中文123";
+        String dd = "";
+        for(int i = 0; i < 100000; i++) {
+            dd += d;
+        }
+        BasicString data = new BasicString(dd);
+        assertEquals(data.getString(),re1.getString());
+    }
+    @Test
     public void test_BasicStringVector_big_blob_data() throws IOException {
         BasicStringVector re1 =(BasicStringVector) conn.run("blob([concat(take(`abcd中文123,100000))])");
         System.out.println(re1.getString());
@@ -781,12 +802,73 @@ public class BasicStringTest {
         assertEquals("["+data.getString()+"]",re1.getString());
     }
     @Test
-    public void test_BasicStringVector_run_bigdata() throws IOException {
-        BasicStringVector re1 =(BasicStringVector) conn.run("array(STRING,10).append!(string(concat(take(`aaaaaa,80000))))");
+    public void test_BasicStringVector_big_symbol_data() throws IOException {
+        BasicStringVector re1 =(BasicStringVector) conn.run("symbol([concat(take(`abcd中文123,100000))])");
         System.out.println(re1.getString());
-
+        String d = "abcd中文123";
+        String dd = "";
+        for(int i = 0; i < 100000; i++) {
+            dd += d;
+        }
+        BasicString data = new BasicString(dd);
+        assertEquals("["+data.getString()+"]",re1.getString());
     }
-
-
-
+    @Test
+    public void test_BasicStringVector_run_array_blob_bigdata() throws IOException {
+        BasicStringVector re1 =(BasicStringVector) conn.run("t = array(BLOB,10).append!(blob(concat(take(`abcd中文123,100000))));t");
+        System.out.println(re1.get(10).getString());
+        for(int i = 0; i < 10; i++) {
+            assertEquals("",re1.get(i).getString());
+        }
+        String d = "abcd中文123";
+        String dd = "";
+        for(int i = 0; i < 100000; i++) {
+            dd += d;
+        }
+        BasicString data = new BasicString(dd);
+        assertEquals(data.getString(),re1.get(10).getString());
+    }
+    @Test
+    public void test_BasicStringVector_run_array_bigdata() throws IOException {
+        BasicStringVector re1 =(BasicStringVector) conn.run("a = array(STRING,10).append!(string(concat(take(\"123&#@!^%;d《》中文\",100000))));a");
+        System.out.println(re1.get(10).getString());
+        for(int i = 0; i < 10; i++) {
+            assertEquals("",re1.get(i).getString());
+        }
+        String d = "123&#@!^%;d《》中文";
+        String dd = "";
+        for(int i = 0; i < 100000; i++) {
+            dd += d;
+        }
+        BasicString data = new BasicString(dd);
+        assertEquals(data.getString(),re1.get(10).getString());
+    }
+    @Test
+    public void test_BasicStringVector_run_array_bigdata_1() throws IOException {
+        BasicStringVector re1 =(BasicStringVector) conn.run("t = array(STRING,10).append!(string(concat(take(`abcd中文123,100000))));t");
+        System.out.println(re1.get(10).getString());
+        for(int i = 0; i < 10; i++) {
+            assertEquals("",re1.get(i).getString());
+        }
+        String d = "abcd中文123";
+        String dd = "";
+        for(int i = 0; i < 100000; i++) {
+            dd += d;
+        }
+        BasicString data = new BasicString(dd);
+        assertEquals(data.getString(),re1.get(10).getString());
+    }
+    @Test
+    public void test_BasicStringVector_upload() throws IOException {
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        BasicStringVector stringv =(BasicStringVector) conn.run("t = array(STRING,10).append!(string(concat(take(`abcd中文123,100000))));t");
+        map.put("stringv", stringv);
+        String dd = null;
+        try{
+            conn.upload(map);
+        }catch(Exception e){
+            dd=e.getMessage();
+        }
+        assertEquals("Serialized string length must less than 256k bytes.",dd);
+    }
 }
