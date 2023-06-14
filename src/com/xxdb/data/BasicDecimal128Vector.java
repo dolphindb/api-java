@@ -412,25 +412,35 @@ public class BasicDecimal128Vector extends AbstractVector {
         capacity = this.unscaledValues.length;
     }
 
-    public void addRange(double[] valueList) {
+    public void addRange(String[] valueList) {
+        BigDecimal[] bigDecimalArray = new BigDecimal[valueList.length];
+        for (int i = 0; i < valueList.length; i++) {
+            bigDecimalArray[i] = new BigDecimal(valueList[i]);
+        }
+
+        addRange(bigDecimalArray);
+    }
+
+    public void addRange(BigDecimal[] valueList) {
         if (scale_ < 0) {
             throw new RuntimeException("Please set scale first.");
         }
 
-        BigInteger[] newValues = new BigInteger[valueList.length];
-        for (int i = 0; i < valueList.length; i++) {
-            BigDecimal dbValue = BigDecimal.valueOf(valueList[i]);
-            BigInteger scaledValue = dbValue.toBigInteger();
-            newValues[i] = scaledValue;
-        }
-
-        int newSize = size + newValues.length;
+        int newSize = size + valueList.length;
         if (newSize > capacity && this.unscaledValues.length > 0) {
             this.unscaledValues = Arrays.copyOf(this.unscaledValues, Math.max(this.unscaledValues.length * 2, newSize));
-        } else if (this.unscaledValues.length <= 0) {
-            this.unscaledValues = Arrays.copyOf(this.unscaledValues, newValues.length);
+        } else if (this.unscaledValues.length == 0) {
+            this.unscaledValues = Arrays.copyOf(this.unscaledValues, valueList.length);
         }
-        System.arraycopy(newValues, 0, this.unscaledValues, size, newValues.length);
+
+        for (int i = 0; i < valueList.length; i ++) {
+            if (valueList[i].compareTo(BigDecimal.ZERO) == 0) {
+                this.unscaledValues[size + i] = BigInteger.ZERO;
+            } else {
+                this.unscaledValues[size + i] = valueList[i].scaleByPowerOfTen(this.scale_).toBigInteger();
+            }
+        }
+
         size = newSize;
         capacity = this.unscaledValues.length;
     }

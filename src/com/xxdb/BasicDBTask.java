@@ -1,93 +1,53 @@
 package com.xxdb;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Semaphore;
-
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import com.xxdb.data.BasicStringVector;
 import com.xxdb.data.Entity;
 
-public class BasicDBTask implements DBTask{
+public class BasicDBTask implements DBTask {
 	private String script;
 	private List<Entity> args;
 	private DBConnection conn;
 	private Entity result = null;
 	private String errMsg = null;
-	private boolean successful = false;
-	private Semaphore semaphore = new Semaphore(1);
+	private TaskStatus status = TaskStatus.PENDING;
+	private CountDownLatch latch;
 	private int timeOut = -1;
 
-	public void waitFor(int timeOut){
-		Thread ts = null;
-		if (timeOut >= 0){
-			this.timeOut = timeOut;
-			ts = new Thread(()->{
-				try {
-					Thread.sleep(timeOut);
-					DBConnection connection = new DBConnection();
-					connection.connect(conn.getHostName(), conn.getPort(), conn.getUserID(), conn.getPwd());
-					String sessionId = connection.getSessionID();
-					BasicStringVector bs = (BasicStringVector) connection.run("exec rootJobId from getConsoleJobs() where sessionId = " + sessionId);
-					connection.run("cancelConsoleJob(\"" + bs.getString(bs.rows()-1) + "\")");
-					semaphore.release();
-				}catch (Exception e){
-
-				}
-			});
-			ts.start();
-		}
-		try {
-			semaphore.acquire();
-			if (ts != null)
-				ts.join();
-		}catch (InterruptedException e){
-			System.out.println(e.getMessage());
-			e.printStackTrace();
-		}
-	}
-
-	public void finish(){
-		semaphore.release();
-	}
-
-	public BasicDBTask(String script, List<Entity> args){
+	public BasicDBTask(String script, List<Entity> args) {
 		this.script = script;
 		this.args = args;
-		try {
-			semaphore.acquire();
-		}catch (InterruptedException e){
-			System.out.println(e.getMessage());
-			e.printStackTrace();
-		}
+		latch = new CountDownLatch(1);
 	}
-	
-	public BasicDBTask(String script){
-		this.script = script;
-		this.args = null;
-		try {
-			semaphore.acquire();
-		}catch (InterruptedException e){
-			System.out.println(e.getMessage());
-			e.printStackTrace();
-		}
+
+	public BasicDBTask(String script) {
+		this(script, null);
 	}
-	
+
 	@Override
 	public Entity call() {
-		try{
-			if(args != null)
+		try {
+			if (args != null)
 				result = conn.run(script, args);
 			else
 				result = conn.run(script);
 			errMsg = null;
-			successful = true;
-			return result;
-		}
-		catch(Exception t){
-			successful = false;
+			synchronized (this) {
+				status = TaskStatus.SUCCESS;
+			}
+		} catch (Exception t) {
+			synchronized (this) {
+				status = TaskStatus.FAILED;
+			}
 			result = null;
 			errMsg = t.getMessage();
-			return null;
+		} finally {
+			latch.countDown();
 		}
+		return result;
 	}
 
 	@Override
@@ -97,7 +57,11 @@ public class BasicDBTask implements DBTask{
 
 	@Override
 	public Entity getResult() {
-		return result;
+		if (status != TaskStatus.SUCCESS) {
+			throw new RuntimeException("Current status is: " + status + "!");
+		} else {
+			return result;
+		}
 	}
 
 	@Override
@@ -107,7 +71,7 @@ public class BasicDBTask implements DBTask{
 
 	@Override
 	public boolean isSuccessful() {
-		return successful;
+		return status == TaskStatus.SUCCESS;
 	}
 
 	@Override
@@ -116,11 +80,42 @@ public class BasicDBTask implements DBTask{
 	}
 
 	@Override
-	public boolean isFinished(){
-		if (successful || errMsg.length() > 0){
-			return true;
-		}else {
-			return false;
+	public boolean isFinished() {
+		return status != TaskStatus.PENDING;
+	}
+
+	public void waitFor(int timeOut) {
+		try {
+			if (timeOut >= 0) {
+				boolean completed = latch.await(timeOut, TimeUnit.MILLISECONDS);
+				if (!completed) {
+					synchronized (this) {
+						if (status == TaskStatus.PENDING) {
+							DBConnection connection = new DBConnection();
+							connection.connect(conn.getHostName(), conn.getPort(), conn.getUserID(), conn.getPwd());
+							String sessionId = connection.getSessionID();
+							BasicStringVector bs = (BasicStringVector) connection.run("exec rootJobId from getConsoleJobs() where sessionId = " + sessionId);
+							List<Entity> arguments = new ArrayList<>();
+							arguments.add(bs);
+							connection.run("cancelConsoleJob", arguments);
+						}
+					}
+				}
+			} else {
+				latch.await();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+	}
+
+	public void finish() {
+		latch.countDown();
+	}
+
+	private enum TaskStatus {
+		PENDING,
+		SUCCESS,
+		FAILED
 	}
 }

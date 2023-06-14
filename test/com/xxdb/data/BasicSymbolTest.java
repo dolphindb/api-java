@@ -215,6 +215,11 @@ public class BasicSymbolTest {
             }
 
             @Override
+            public void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException {
+
+            }
+
+            @Override
             public void write(int b) throws IOException {
 
             }
@@ -281,10 +286,6 @@ public class BasicSymbolTest {
 
             @Override
             public void writeUTF(String s) throws IOException {
-
-            }
-            @Override
-            public  void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException{
 
             }
         };
@@ -417,6 +418,11 @@ public class BasicSymbolTest {
             }
 
             @Override
+            public void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException {
+
+            }
+
+            @Override
             public void write(int b) throws IOException {
 
             }
@@ -483,10 +489,6 @@ public class BasicSymbolTest {
 
             @Override
             public void writeUTF(String s) throws IOException {
-
-            }
-            @Override
-            public  void writeBigIntArray(byte[] A, int startIdx, int len) throws IOException{
 
             }
         };
