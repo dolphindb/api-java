@@ -536,4 +536,9 @@ public class BasicSymbolTest {
         BasicString data = new BasicString(dd);
         assertEquals(data.getString(),re1.get(10).getString());
     }
+    @Test
+    public void test_Symbol_getDataType() throws IOException {
+        Entity re1 = conn.run("symbol([concat(take(`aaaaaaaaa,1)),concat(take(`aaaaaaaaa,1)),concat(take(`aaaaaaaaa,1)),concat(take(`aaaaaaaaa,1))])");
+        assertEquals("SYMBOL",re1.getDataType().getName());
+    }
 }
