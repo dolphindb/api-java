@@ -549,4 +549,45 @@ public class BasicTableTest {
         System.out.println(bTable.getRowJson(0));
         assertEquals("{\"sym\":\"s1\",\"d1\":1000000000.02}",bTable.getRowJson(0));
     }
+    @Test
+    public void test_BasicTable_symbol_big_data()throws Exception{
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        String createData = "t1 = table((take(concat(take(`abcd中文123,100000)), 10000000)).string().symbol() as id)";
+        conn.run(createData);
+        long stime = System.currentTimeMillis();
+        BasicTable data =  (BasicTable)conn.run("t1");
+        long etime = System.currentTimeMillis();
+        System.out.print("查询耗时："+(etime-stime)+"ms ");
+        System.out.println(data.rows() +"条");
+    }
+    @Test
+    public void test_BasicTable_symbol()throws Exception{
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect("192.168.0.9", 8849, "admin", "123456");
+        String createData = "t1 = table((take(10111..10211, 10000000)).string().symbol() as id)";
+        conn.run(createData);
+        long stime = System.currentTimeMillis();
+        BasicTable data =  (BasicTable)conn.run("t1");
+        long etime = System.currentTimeMillis();
+        System.out.print("查询耗时："+(etime-stime)+"ms ");
+        System.out.println(data.rows() +"条");
+    }
+    @Test
+    public void test_BasicTable_string()throws Exception{
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect("192.168.1.167", 18921, "admin", "123456");
+        String createData = "t1 = table((take(10000000..20000000, 10000000)).string() as id)";
+        conn.run(createData);
+        long stime = System.currentTimeMillis();
+        EntityBlockReader data =  (EntityBlockReader)conn.run("t1", null, 4, 2, 65536, false);
+        int rows = 0;
+        while(data.hasNext()){
+            BasicTable sub = (BasicTable)data.read();
+            rows += sub.rows();
+        }
+        long etime = System.currentTimeMillis();
+        System.out.print("查询耗时："+(etime-stime)+"ms ");
+        System.out.println(rows +"条");
+    }
 }
