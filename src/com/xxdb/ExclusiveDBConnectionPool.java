@@ -27,7 +27,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 
 		@Override
 		public void run() {
-			while (workThread_.isInterrupted()) {
+			while (!workThread_.isInterrupted()) {
 				DBTask task = null;
 				synchronized (taskLists_) {
 					if (taskLists_.size() == 0) {
