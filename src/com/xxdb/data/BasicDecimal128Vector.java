@@ -74,7 +74,7 @@ public class BasicDecimal128Vector extends AbstractVector {
             if (Objects.isNull(dataValue[i])) {
                 newArray[i] = BigInteger.ZERO;
             } else {
-                checkValRange(newArray[i], dataValue[i]);
+                newArray[i] = checkValRange(dataValue[i]);
             }
         }
         this.unscaledValues = newArray;
@@ -82,21 +82,21 @@ public class BasicDecimal128Vector extends AbstractVector {
         this.capacity = this.unscaledValues.length;
     }
 
-    private void checkValRange(BigInteger unscaledValue, BigInteger unscaledVal) {
+    private BigInteger checkValRange(BigInteger unscaledVal) {
         BigDecimal bd = new BigDecimal(unscaledVal);
         if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0) {
             throw new RuntimeException("Decimal128 overflow " + unscaledVal);
         }
 
-        unscaledValue = unscaledVal;
-
-        if (unscaledValue.compareTo(BIGINT_MIN_VALUE) < 0) {
-            throw new RuntimeException("Decimal128 " + unscaledValue + " cannot be less than " + BIGINT_MIN_VALUE);
+        if (unscaledVal.compareTo(BIGINT_MIN_VALUE) < 0) {
+            throw new RuntimeException("Decimal128 " + unscaledVal + " cannot be less than " + BIGINT_MIN_VALUE);
         }
 
-        if (unscaledValue.compareTo(BIGINT_MAX_VALUE) > 0) {
-            throw new RuntimeException("Decimal128 " + unscaledValue + " cannot exceed " + BIGINT_MAX_VALUE);
+        if (unscaledVal.compareTo(BIGINT_MAX_VALUE) > 0) {
+            throw new RuntimeException("Decimal128 " + unscaledVal + " cannot exceed " + BIGINT_MAX_VALUE);
         }
+
+        return unscaledVal;
     }
 
     public BasicDecimal128Vector(DATA_FORM df, ExtendedDataInput in, int extra) throws IOException {
