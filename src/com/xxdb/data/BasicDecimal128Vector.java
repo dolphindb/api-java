@@ -22,14 +22,6 @@ public class BasicDecimal128Vector extends AbstractVector {
     private int size;
     private int capacity;
 
-    public BasicDecimal128Vector(int size) {
-        super(DATA_FORM.DF_VECTOR);
-        this.unscaledValues = new BigInteger[size];
-        Arrays.fill(unscaledValues, BigInteger.ZERO);
-        this.size = this.unscaledValues.length;
-        this.capacity = this.unscaledValues.length;
-    }
-
     public BasicDecimal128Vector(int size, int scale) {
         super(DATA_FORM.DF_VECTOR);
         this.scale_ = scale;

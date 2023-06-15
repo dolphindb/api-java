@@ -605,7 +605,7 @@ public class MultithreadedTableWriter {
         }
         if(threads_.size() > 1){
             if(isPartionedTable_){
-                Vector pvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colInfos_[partitionColumnIdx_].type_,records.size());
+                Vector pvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colInfos_[partitionColumnIdx_].type_,records.size(), -1);
                 int rowindex=0;
                 try {
                     for (List<Entity> row : records) {
@@ -636,7 +636,7 @@ public class MultithreadedTableWriter {
                 }catch (Exception e){
                 }
             }else{
-                Vector partionvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colInfos_[threadByColIndexForNonPartion_].type_,records.size());
+                Vector partionvector=BasicEntityFactory.instance().createVectorWithDefaultValue(colInfos_[threadByColIndexForNonPartion_].type_,records.size(), -1);
                 int rowindex=0;
                 try{
                     for(List<Entity> row : records) {
@@ -759,7 +759,7 @@ public class MultithreadedTableWriter {
                 tmp.add(new BasicArrayVector(type, 1, colInfos_[i].extra_));
             }
             else{
-                Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(type, 0);
+                Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(type, 0, colInfos_[i].extra_);
                 if (type == DT_DECIMAL32 || type == DT_DECIMAL64 || type == DT_DECIMAL128) {
                     ((AbstractVector)value).setExtraParamForType(colInfos_[i].extra_);
                 }

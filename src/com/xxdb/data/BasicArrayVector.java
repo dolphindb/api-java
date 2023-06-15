@@ -30,7 +30,7 @@ public class BasicArrayVector extends AbstractVector {
 		if (type.getValue() == 81 || type.getValue() == 82)
 			throw new RuntimeException("ArrayVector do not support String and Symbol");
 		this.type = DATA_TYPE.valueOf(type.getValue());
-		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(DATA_TYPE.valueOf(type.getValue() - 64), 0);
+		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(DATA_TYPE.valueOf(type.getValue() - 64), 0, extra);
 		if (extra >= 0){
 			((AbstractVector)valueVec).setExtraParamForType(extra);
 			this.scale_ = extra;
@@ -67,7 +67,7 @@ public class BasicArrayVector extends AbstractVector {
 			int indexPos = 0;
 			int indexCount = value.size();
 			this.rowIndices = new int[indexCount];
-			this.valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, len);
+			this.valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, len, this.scale_);
 			if (valueType == DATA_TYPE.DT_DECIMAL32){
 				((BasicDecimal32Vector)valueVec).setScale(scale_);
 			}else if (valueType == DATA_TYPE.DT_DECIMAL64){
@@ -124,11 +124,13 @@ public class BasicArrayVector extends AbstractVector {
 		int cols = in.readInt();
 		rowIndices = new int[rows];
 		DATA_TYPE valueType = DATA_TYPE.valueOf(type.getValue() - 64);
-		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, cols);
+
 		if (valueType == DATA_TYPE.DT_DECIMAL32 || valueType == DATA_TYPE.DT_DECIMAL64 || valueType == DATA_TYPE.DT_DECIMAL128) {
 			this.scale_ = in.readInt();
-			((AbstractVector)valueVec).setExtraParamForType(scale_);
+			// ((AbstractVector)valueVec).setExtraParamForType(scale_);
 		}
+		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, cols, this.scale_);
+
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		this.baseUnitLength_ = valueVec.getUnitLength();
 		byte[] buf = new byte[4096];
@@ -256,7 +258,7 @@ public class BasicArrayVector extends AbstractVector {
 		int startPosValueVec = index == 0 ? 0 : rowIndices[index - 1];
 		int rows = rowIndices[index] - startPosValueVec;
 		DATA_TYPE valueType = DATA_TYPE.valueOf(type.getValue()-64);
-		Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, rows);
+		Vector value = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, rows, scale_);
 		if (valueType == DATA_TYPE.DT_DECIMAL32){
 			((BasicDecimal32Vector)value).setScale(scale_);
 		} else if (valueType == DATA_TYPE.DT_DECIMAL64) {

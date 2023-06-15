@@ -198,8 +198,8 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 			throw new IOException("Can't streamlize the dictionary with value type " + valueType.name());
 		
 		BasicEntityFactory factory = new BasicEntityFactory();
-		Vector keys = (Vector)factory.createVectorWithDefaultValue(keyType, dict.size());
-		Vector values = (Vector)factory.createVectorWithDefaultValue(valueType, dict.size());
+		Vector keys = (Vector)factory.createVectorWithDefaultValue(keyType, dict.size(), -1);
+		Vector values = (Vector)factory.createVectorWithDefaultValue(valueType, dict.size(), -1);
 		int index = 0;
 		try{
 			for(Map.Entry<Entity, Entity> entry : dict.entrySet()){

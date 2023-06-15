@@ -116,12 +116,12 @@ public class BasicEntityFactory implements EntityFactory{
 	}
 
 	@Override
-	public Vector createVectorWithDefaultValue(Entity.DATA_TYPE type, int size) {
+	public Vector createVectorWithDefaultValue(Entity.DATA_TYPE type, int size, int extra) {
 		int index = type.getValue();
 		if(factories[index] == null)
 			return null;
 		else
-			return factories[index].createVectorWithDefaultValue(size);
+			return factories[index].createVectorWithDefaultValue(size, extra);
 	}
 
 	@Override
@@ -148,7 +148,7 @@ public class BasicEntityFactory implements EntityFactory{
 		Vector createPair(ExtendedDataInput in) throws IOException;
 		Matrix createMatrix(ExtendedDataInput in) throws IOException;
 		Scalar createScalarWithDefaultValue();
-		Vector createVectorWithDefaultValue(int size);
+		Vector createVectorWithDefaultValue(int size, int extra);
 		Vector createPairWithDefaultValue();
 		Matrix createMatrixWithDefaultValue(int rows, int columns);
 	}
@@ -181,7 +181,7 @@ public class BasicEntityFactory implements EntityFactory{
 		}
 
 		@Override
-		public Vector createVectorWithDefaultValue(int size) {
+		public Vector createVectorWithDefaultValue(int size, int extra) {
 			return new BasicDecimal64Vector(size);
 		}
 
@@ -223,8 +223,8 @@ public class BasicEntityFactory implements EntityFactory{
 		}
 
 		@Override
-		public Vector createVectorWithDefaultValue(int size) {
-			return new BasicDecimal128Vector(size);
+		public Vector createVectorWithDefaultValue(int size, int extra) {
+			return new BasicDecimal128Vector(size, extra);
 		}
 
 		@Override
@@ -267,8 +267,8 @@ public class BasicEntityFactory implements EntityFactory{
 		}
 
 		@Override
-		public Vector createVectorWithDefaultValue(int size) {
-			return new BasicDecimal32Vector(size);
+		public Vector createVectorWithDefaultValue(int size, int extra) {
+			return new BasicDecimal32Vector(size, extra);
 		}
 
 		@Override
@@ -288,7 +288,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicBooleanVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicBooleanMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicBoolean(false);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicBooleanVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicBooleanVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicBooleanVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicBooleanMatrix(rows, columns);}
 	}
@@ -299,7 +299,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicVoidVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for DT_VOID not supported yet."); }
 		public Scalar createScalarWithDefaultValue() { return new Void();}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicVoidVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicVoidVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicVoidVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for DT_VOID not supported yet."); }
 	}
@@ -310,7 +310,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicByteVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicByteMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicByte((byte)0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicByteVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicByteVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicByteVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicByteMatrix(rows, columns);}
 	}
@@ -321,7 +321,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicShortVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicShortMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicShort((short)0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicShortVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicShortVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicShortVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicShortMatrix(rows, columns);}
 	}
@@ -332,7 +332,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicIntVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicIntMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicInt(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicIntVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicIntVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicIntVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicIntMatrix(rows, columns);}
 	}
@@ -343,7 +343,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicLongVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicLongMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicLong(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicLongVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicLongVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicLongVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicLongMatrix(rows, columns);}
 	}
@@ -354,7 +354,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicFloatVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicFloatMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicFloat(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicFloatVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicFloatVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicFloatVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicFloatMatrix(rows, columns);}
 	}
@@ -365,7 +365,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicDoubleVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicDoubleMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicDouble(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicDoubleVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicDoubleVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicDoubleVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicDoubleMatrix(rows, columns);}
 	}
@@ -376,7 +376,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicMinuteVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicMinuteMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicMinute(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicMinuteVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicMinuteVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicMinuteVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicMinuteMatrix(rows, columns);}
 	}
@@ -387,7 +387,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicSecondVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicSecondMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicInt(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicSecondVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicSecondVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicSecondVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicSecondMatrix(rows, columns);}
 	}
@@ -398,7 +398,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicTimeVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicTimeMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicTime(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicTimeVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicTimeVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicTimeVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicTimeMatrix(rows, columns);}
 	}
@@ -408,7 +408,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicNanoTimeVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicNanoTimeMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicNanoTime(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicNanoTimeVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicNanoTimeVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicNanoTimeVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicNanoTimeMatrix(rows, columns);}
 	}
@@ -419,7 +419,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicDateVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicDateMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicDate(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicDateVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicDateVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicDateVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicDateMatrix(rows, columns);}
 	}
@@ -430,7 +430,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicDateHourVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicDateHourMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicDateHour(0);}
-		public Vector createVectorWithDefaultValue(int size) { return new BasicDateHourVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra) { return new BasicDateHourVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicDateHourVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicDateHourMatrix(rows, columns);}
 	}
@@ -441,7 +441,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicMonthVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicMonthMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicMonth(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicMonthVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicMonthVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicMonthVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicMonthMatrix(rows, columns);}
 	}
@@ -452,7 +452,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicDateTimeVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicDateTimeMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicDateTime(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicDateTimeVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicDateTimeVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicDateTimeVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicDateTimeMatrix(rows, columns);}
 	}
@@ -463,7 +463,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicTimestampVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicTimestampMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicTimestamp(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicTimestampVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicTimestampVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicTimestampVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicTimestampMatrix(rows, columns);}
 	}
@@ -473,7 +473,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicNanoTimestampVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicNanoTimestampMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicNanoTimestamp(0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicNanoTimestampVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicNanoTimestampVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicNanoTimestampVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicNanoTimestampMatrix(rows, columns);}
 	}
@@ -484,7 +484,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicInt128Vector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for INT128 not supported yet.");}
 		public Scalar createScalarWithDefaultValue() { return new BasicInt128(0, 0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicInt128Vector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicInt128Vector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicInt128Vector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for INT128 not supported yet.");}
 	}
@@ -495,7 +495,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicUuidVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for UUID not supported yet.");}
 		public Scalar createScalarWithDefaultValue() { return new BasicUuid(0, 0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicUuidVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicUuidVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicUuidVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for UUID not supported yet.");}
 	}
@@ -506,7 +506,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicIPAddrVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for IPADDR not supported yet.");}
 		public Scalar createScalarWithDefaultValue() { return new BasicIPAddr(0, 0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicIPAddrVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicIPAddrVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicIPAddrVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for IPADDR not supported yet.");}
 	}
@@ -517,7 +517,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicComplexVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicComplexMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicComplex(0, 0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicComplexVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicComplexVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicComplexVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicComplexMatrix(rows, columns);}
 	}
@@ -528,7 +528,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicPointVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for Point not supported yet.");}
 		public Scalar createScalarWithDefaultValue() { return new BasicPoint(0, 0);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicPointVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicPointVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicPointVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for Point not supported yet.");}
 	}
@@ -539,7 +539,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicDurationVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { throw new RuntimeException("Matrix for Duration not supported yet.");}
 		public Scalar createScalarWithDefaultValue() { return new BasicDuration(DURATION.NS, 0);}
-		public Vector createVectorWithDefaultValue(int size){ throw new RuntimeException("Vector for Duration not supported yet.");}
+		public Vector createVectorWithDefaultValue(int size, int extra){ throw new RuntimeException("Vector for Duration not supported yet.");}
 		public Vector createPairWithDefaultValue(){ return new BasicDurationVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ throw new RuntimeException("Matrix for Duration not supported yet.");}
 	}
@@ -550,7 +550,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in, false, false);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicString("");}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicStringVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicStringVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, 2, false);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicStringMatrix(rows, columns);}
 	}
@@ -561,7 +561,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in, true, false);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicString("");}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, size, true);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, size, true);}
 		public Vector createPairWithDefaultValue(){ return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, 2, true);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicStringMatrix(rows, columns);}
 	}
@@ -572,7 +572,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicSymbolVector(Entity.DATA_FORM.DF_PAIR, in);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicString("");}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicSymbolVector(size);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicSymbolVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, 2, true);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicStringMatrix(rows, columns);}
 	}
@@ -583,7 +583,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in, false, true);}
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in);}
 		public Scalar createScalarWithDefaultValue() { return new BasicString("", true);}
-		public Vector createVectorWithDefaultValue(int size){ return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, size, false,true);}
+		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, size, false,true);}
 		public Vector createPairWithDefaultValue(){ return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, 2, false,true);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicStringMatrix(rows, columns);}
 	}
@@ -620,7 +620,7 @@ public class BasicEntityFactory implements EntityFactory{
 				return scalar;
 			}else {
 				dataType = DATA_TYPE.values()[dataType.getValue()-64];
-				return BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 0);
+				return BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 0, extraParam);
 			}
 		}
 		if(object instanceof Boolean) {
@@ -722,10 +722,10 @@ public class BasicEntityFactory implements EntityFactory{
 		}
 		dataType = values()[dataType.getValue()-64];
 		int count = val.length;
-		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count);
-		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64 || dataType == DT_DECIMAL128){
-			((AbstractVector)vector).setExtraParamForType(extraParam);
-		}
+		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
+//		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64 || dataType == DT_DECIMAL128){
+//			((AbstractVector)vector).setExtraParamForType(extraParam);
+//		}
 		for(int i = 0; i < count; ++i)
 		{
 			Entity t = createScalar(dataType, val[i], extraParam);

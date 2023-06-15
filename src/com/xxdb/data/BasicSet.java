@@ -83,7 +83,7 @@ public class BasicSet extends AbstractEntity implements Set {
 	
 	private Vector keys(int top){
 		int size = Math.min(top, set.size());
-		Vector keys = (Vector)BasicEntityFactory.instance().createVectorWithDefaultValue(keyType, size);
+		Vector keys = (Vector)BasicEntityFactory.instance().createVectorWithDefaultValue(keyType, size, -1);
 		Iterator<Entity> it = set.iterator();
 		int count = 0;
 		try{
