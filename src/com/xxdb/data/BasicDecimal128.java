@@ -156,7 +156,7 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
 
     @Override
     public int hashBucket(int buckets) {
-        throw new RuntimeException("BasicDecimal128 not support hashBucket yet!");
+        return 0;
     }
 
     @Override
