@@ -335,12 +335,7 @@ public class BasicDecimal128Vector extends AbstractVector {
             }
 
             System.arraycopy(newArray, 0, buffer, i * 16, 16);
-            if (buffer.length == 4096 && (buffer[4081] != 0 || buffer[4095] != 0)) {
-                out.write(buffer);
-                buffer = new byte[count*16];
-            } else if (i == (count - 1)) {
-                out.write(buffer);
-            }
+            out.write(buffer);
         }
     }
 
