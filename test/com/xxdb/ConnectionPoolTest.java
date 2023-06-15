@@ -1903,19 +1903,6 @@ public class ConnectionPoolTest {
         connectionPool.shutdown();
     }
     @Test
-    public void test_pool_execute_timeout_0() throws Exception {
-        ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
-                "admin", "123456", 3, false, true,
-                ipports,"", false, false, false);
-        long start = System.nanoTime();
-        connectionPool.execute(new BasicDBTask("sleep(10000);"), 0);
-        long end = System.nanoTime();
-        System.out.println((end - start) / 1000000);
-        assertEquals(true,(end - start) / 1000000<100);
-        connectionPool.waitForThreadCompletion();
-        connectionPool.shutdown();
-    }
-    @Test
     public void test_pool_execute_timeout_negative() throws Exception {
         ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
                 "admin", "123456", 3, false, true,
@@ -1943,6 +1930,80 @@ public class ConnectionPoolTest {
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
         assertEquals(true,(end - start) / 1000000>10000);
+        connectionPool.waitForThreadCompletion();
+        connectionPool.shutdown();
+    }
+    @Test
+    public void test_pool_BasicDBTask_timeout_greater_than_script_runTime() throws Exception {
+        ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
+                "admin", "123456", 3, true, true,
+                ipports,"", false, false, false);
+        long start = System.nanoTime();
+        BasicDBTask bt = new BasicDBTask("t1 = now();\n do {if(t1 + 10 * 1000 < now())\n break} \n while(true);");
+        connectionPool.execute(bt,20000);
+        long end = System.nanoTime();
+        System.out.println((end - start) / 1000000);
+        assertEquals(true,(end - start) / 1000000>10000);
+        assertEquals(true,(end - start) / 1000000<10100);
+        connectionPool.waitForThreadCompletion();
+        connectionPool.shutdown();
+    }
+    @Test
+    public void test_pool_BasicDBTask_timeout_less_than_script_runTime() throws Exception {
+        ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
+                "admin", "123456", 3, true, true,
+                ipports,"", false, false, false);
+        long start = System.nanoTime();
+        BasicDBTask bt = new BasicDBTask("t1 = now();\n do {if(t1 + 10 * 1000 < now())\n break} \n while(true);");
+        connectionPool.execute(bt,5000);
+        long end = System.nanoTime();
+        System.out.println((end - start) / 1000000);
+        assertEquals(true,(end - start) / 1000000>5000);
+        assertEquals(true,(end - start) / 1000000<6100);
+        connectionPool.waitForThreadCompletion();
+        connectionPool.shutdown();
+    }
+    @Test
+    public void test_pool_BasicDBTask_timeout_less_than_script_runTime_0() throws Exception {
+        ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
+                "admin", "123456", 3, true, true,
+                ipports,"", false, false, false);
+        long start = System.nanoTime();
+        BasicDBTask bt = new BasicDBTask("t1 = now();\n do {if(t1 + 10 * 1000 < now())\n break} \n while(true);");
+        connectionPool.execute(bt,0);
+        long end = System.nanoTime();
+        System.out.println((end - start) / 1000000);
+        assertEquals(true,(end - start) / 1000000>10000);
+        assertEquals(true,(end - start) / 1000000<10100);
+        connectionPool.waitForThreadCompletion();
+        connectionPool.shutdown();
+    }
+    @Test
+    public void test_pool_BasicDBTask_timeout_less_than_script_runTime_1() throws Exception {
+        ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
+                "admin", "123456", 3, true, true,
+                ipports,"", false, false, false);
+        long start = System.nanoTime();
+        BasicDBTask bt = new BasicDBTask("t1 = now();\n do {if(t1 + 10 * 1000 < now())\n break} \n while(true);");
+        connectionPool.execute(bt,1);
+        long end = System.nanoTime();
+        System.out.println((end - start) / 1000000);
+        assertEquals(true,(end - start) / 1000000<100);
+        connectionPool.waitForThreadCompletion();
+        connectionPool.shutdown();
+    }
+    @Test
+    public void test_pool_BasicDBTask_timeout_equal_script_runTime() throws Exception {
+        ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
+                "admin", "123456", 3, true, true,
+                ipports,"", false, false, false);
+        long start = System.nanoTime();
+        BasicDBTask bt = new BasicDBTask("t1 = now();\n do {if(t1 + 10 * 1000 < now())\n break} \n while(true);");
+        connectionPool.execute(bt,10000);
+        long end = System.nanoTime();
+        System.out.println((end - start) / 1000000);
+        assertEquals(true,(end - start) / 1000000>10000);
+        assertEquals(true,(end - start) / 1000000<10100);
         connectionPool.waitForThreadCompletion();
         connectionPool.shutdown();
     }
