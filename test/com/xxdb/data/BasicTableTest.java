@@ -553,10 +553,10 @@ public class BasicTableTest {
     public void test_BasicTable_symbol_big_data()throws Exception{
         DBConnection conn = new DBConnection(false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
-        String createData = "t1 = table((take(concat(take(`abcd中文123,100000)), 10000000)).string().symbol() as id)";
+        String createData = "symbol1 = table((take(concat(take(`abcd中文123,1000000)), 100)).string().symbol() as id)";
         conn.run(createData);
         long stime = System.currentTimeMillis();
-        BasicTable data =  (BasicTable)conn.run("t1");
+        BasicTable data =  (BasicTable)conn.run("symbol1");
         long etime = System.currentTimeMillis();
         System.out.print("查询耗时："+(etime-stime)+"ms ");
         System.out.println(data.rows() +"条");

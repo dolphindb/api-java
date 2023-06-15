@@ -831,9 +831,9 @@ public class BasicDecimalTest {
             sym.setInt(i + 3, 4);
         }
         cols.add(sym);
-        BasicDecimal128Vector bdv128 = new BasicDecimal128Vector(12);
+        BasicDecimal128Vector bdv128 = new BasicDecimal128Vector(12,12);
         for (int i =0 ;i<12;i++) {
-            bdv128.set(i,new BasicDecimal128(String.valueOf(i),0));
+            bdv128.set(i,new BasicDecimal128(String.valueOf(i),12));
         }
         cols.add(bdv128);
         Map<String,Entity> map = new HashMap<>();

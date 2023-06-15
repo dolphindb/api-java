@@ -374,8 +374,6 @@ public class BasicDecimal128Test {
     }
     @Test
     public void testBasicDecimal128_compareTo_upload3() throws IOException {
-        BasicDecimal128Vector v=new BasicDecimal128Vector(2);
-        System.out.println(v.getString());
         BasicDecimal128 b=new BasicDecimal128("-1441050.00",0);
         System.out.println(b.getString());
         BasicDecimal128 c=new BasicDecimal128("-1441050.00",2);

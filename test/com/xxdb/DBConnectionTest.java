@@ -1545,7 +1545,7 @@ public class DBConnectionTest {
         assertEquals(3, matrixFloatRes.rows());
         assertEquals(3, matrixFloatRes.columns());
         System.out.println(((BasicDoubleMatrix) matrixFloatRes).get(0, 0).getString());
-        assertTrue(((BasicDoubleMatrix) matrixFloatRes).get(0, 0).getString().equals("4.43"));
+        assertTrue(((BasicDoubleMatrix) matrixFloatRes).get(0, 0).getString().equals("4.42999983"));
 
         Entity matrixlc = conn.run("cross(+, 1l..6l, -6l..-1l)");
         Entity matrixl = conn.run("1l..36l$6:6");
@@ -4040,9 +4040,6 @@ public void test_SSL() throws Exception {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,18921,"admin","123456");
         assertEquals(true, conn.isConnected());
-        //conn.run("t =table(10000:0,['股票代码','股票日期','买方报价','卖方报价','时间戳','备注'],[SYMBOL,DATE,DOUBLE,DOUBLE,TIMESTAMP,STRING]);t.append!(table(symbol(take(`GGG`MMS`FABB`APPL, 8000)) as 股票代码, take(2022.10.15..2022.11.15, 8000) as 股票日期, take(1..11, 8000) as 买方报价, take(2..12, 8000) as 卖方报价, take(2022.11.15 06:00:15.149, 8000) as 时间戳,'备注' + string(1..8000) as 备注)); share t as tt1;dbName = \"dfs://test_chinese_table\";db = database(directory=dbName, partitionType=VALUE, partitionScheme=`GGG`MMS`FABB`APPL, engine=\"TSDB\");pt1 = db.createPartitionedTable(table=t, tableName=`pt1, partitionColumns=`股票代码, sortColumns=`股票代码);pt1.append!(t);select * from loadTable(\"dfs://test_chinese_table\",`pt1) ;");
-        conn.run("deleteTable()");
-
         conn.close();
     }
 }

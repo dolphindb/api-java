@@ -134,7 +134,7 @@ public class BasicDecimal128VectorTest {
     }
     @Test
     public void test_BasicDecimal128Vector_new() throws Exception {
-        BasicDecimal128Vector v=new BasicDecimal128Vector(2);
+        BasicDecimal128Vector v=new BasicDecimal128Vector(2,2);
         System.out.println(v.getString());
         BasicDecimal128 b=new BasicDecimal128("-1441050.00",0);
         System.out.println(b.getString());
@@ -178,14 +178,14 @@ public class BasicDecimal128VectorTest {
 
     @Test
     public void test_BasicDecimal128Vector_set_error_scale() throws Exception {
-        BasicDecimal128Vector bd128v = new BasicDecimal128Vector(2);
+        BasicDecimal128Vector bd128v = new BasicDecimal128Vector(2,2);
         String a = bd128v.getElementClass().getName();
         assertEquals("com.xxdb.data.BasicDecimal128",a);
     }
 
     @Test
     public void test_BasicDecimal128Vector_getUnitLength() throws Exception {
-        BasicDecimal128Vector bd128v = new BasicDecimal128Vector(2);
+        BasicDecimal128Vector bd128v = new BasicDecimal128Vector(2,2);
         int a = bd128v.getUnitLength();
         assertEquals(16,a);
     }

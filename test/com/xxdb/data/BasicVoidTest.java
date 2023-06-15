@@ -269,8 +269,8 @@ public class BasicVoidTest {
     public void test_BasicVoidVector_run() throws Exception {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        conn.run("n = 1000;t1 = table(1..n as id);");
-        BasicTable table = (BasicTable)conn.run("tmp = select *,NULL as value1,NULL as value2,NULL as value3,NULL as value4 from t1;tmp;");
+        conn.run("n = 1000;void1 = table(1..n as id);");
+        BasicTable table = (BasicTable)conn.run("tmp = select *,NULL as value1,NULL as value2,NULL as value3,NULL as value4 from void1;tmp;");
         Assert.assertEquals(1000,table.rows());
         Assert.assertEquals("",((Void)((BasicVoidVector) table.getColumn("value1")).get(0)).getString());
         conn.run("t2 = table(100:0, `id`value1`value2`value3`value4, [INT,INT,DOUBLE,LONG,STRING]);t2.append!(tmp)");
@@ -281,8 +281,8 @@ public class BasicVoidTest {
     public void test_BasicVoidVector_upload() throws Exception {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        conn.run("n = 5;t1 = table(1..n as id);");
-        BasicTable table = (BasicTable)conn.run("tmp = select *,NULL as value1,NULL as value2,NULL as value3,NULL as value4 from t1;tmp;");
+        conn.run("n = 5;void1 = table(1..n as id);");
+        BasicTable table = (BasicTable)conn.run("tmp = select *,NULL as value1,NULL as value2,NULL as value3,NULL as value4 from void1;tmp;");
         Assert.assertEquals(5,table.rows());
         Assert.assertEquals("",((Void)((BasicVoidVector) table.getColumn("value1")).get(0)).getString());
         BasicIntVector idv = (BasicIntVector) table.getColumn("id");
@@ -311,8 +311,8 @@ public class BasicVoidTest {
     public void test_BasicVoidVector_upload_table() throws Exception {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        conn.run("n = 1000;t1 = table(1..n as id);");
-        BasicTable table = (BasicTable)conn.run("tmp = select *,NULL as value1,NULL as value2,NULL as value3,NULL as value4 from t1;tmp;");
+        conn.run("n = 1000;void1 = table(1..n as id);");
+        BasicTable table = (BasicTable)conn.run("tmp = select *,NULL as value1,NULL as value2,NULL as value3,NULL as value4 from void1;tmp;");
         Assert.assertEquals(1000,table.rows());
         Assert.assertEquals("",((Void)((BasicVoidVector) table.getColumn("value1")).get(0)).getString());
         Map<String, Entity> upObj = new HashMap<String, Entity>();
@@ -327,8 +327,8 @@ public class BasicVoidTest {
     public void test_void_tableInsert() throws IOException {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        conn.run("n = 1000;t1 = table(1..n as id);");
-        BasicTable table = (BasicTable)conn.run("tmp = select *,NULL as value1,NULL as value2,NULL as value3,NULL as value4 from t1;tmp;");
+        conn.run("n = 1000;void1 = table(1..n as id);");
+        BasicTable table = (BasicTable)conn.run("tmp = select *,NULL as value1,NULL as value2,NULL as value3,NULL as value4 from void1;tmp;");
         Assert.assertEquals(1000,table.rows());
         List<Entity> args = Arrays.asList(table);
         conn.run("tb = table(100:0, `id`value1`value2`value3`value4, [INT,INT,DOUBLE,LONG,STRING]);");

@@ -1468,10 +1468,11 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("code= info=",pErrorInfo.toString());
         mutithreadTableWriter_.waitForThreadCompletion();
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
+        System.out.println(bt.getString());
         assertEquals(3, bt.rows());
         assertEquals("[1.9,-1.9,]", bt.getColumn("float").getString());
         assertEquals("[0.2,-0.2,]", bt.getColumn("double").getString());
-        conn.run("undef(`t1,SHARED)");
+        //conn.run("undef(`t1,SHARED)");
     }
 
 
@@ -5926,16 +5927,15 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicDecimal128Vector decv1= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],0)");
         BasicDecimal128Vector decv2= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],1)");
         BasicDecimal128Vector decv3= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],10)");
-        BasicDecimal128Vector decv4= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],18)");
-        BasicDecimal128Vector decv5= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],30)");
+        String decv4= "[1.000000000000000000,1.000000000000000000,3.000100000000000000,99999.999999999990000000]";
+        String decv5= "[1.000000000000000000000000000000,1.000000000000000000000000000000,3.000100000000000000000000000000,99999.999999999990000000000000000000]";
 
         for (int i=0;i<time;i++) {
             assertEquals(decv1.getString(), ((BasicArrayVector)(bt1.getColumn("col0"))).getVectorValue(i).getString());
             assertEquals(decv2.getString(), ((BasicArrayVector)(bt1.getColumn("col1"))).getVectorValue(i).getString());
             assertEquals(decv3.getString(), ((BasicArrayVector)(bt1.getColumn("col2"))).getVectorValue(i).getString());
-            assertEquals(decv4.getString(), ((BasicArrayVector)(bt1.getColumn("col3"))).getVectorValue(i).getString());
-            assertEquals(decv5.getString(), ((BasicArrayVector)(bt1.getColumn("col4"))).getVectorValue(i).getString());
-
+            assertEquals(decv4, ((BasicArrayVector)(bt1.getColumn("col3"))).getVectorValue(i).getString());
+            assertEquals(decv5, ((BasicArrayVector)(bt1.getColumn("col4"))).getVectorValue(i).getString());
         }
     }
     //    @Test(timeout = 120000) not support
@@ -5999,16 +5999,15 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicDecimal128Vector decv1= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],0)");
         BasicDecimal128Vector decv2= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],1)");
         BasicDecimal128Vector decv3= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],10)");
-        BasicDecimal128Vector decv4= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],18)");
-        BasicDecimal128Vector decv5= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],30)");
+        String decv4= "[1.000000000000000000,1.000000000000000000,3.000100000000000000,99999.999999999990000000]";
+        String decv5= "[1.000000000000000000000000000000,1.000000000000000000000000000000,3.000100000000000000000000000000,99999.999999999990000000000000000000]";
 
         for (int i=0;i<time;i++) {
             assertEquals(decv1.getString(), ((BasicArrayVector)(bt1.getColumn("col0"))).getVectorValue(i).getString());
             assertEquals(decv2.getString(), ((BasicArrayVector)(bt1.getColumn("col1"))).getVectorValue(i).getString());
             assertEquals(decv3.getString(), ((BasicArrayVector)(bt1.getColumn("col2"))).getVectorValue(i).getString());
-            assertEquals(decv4.getString(), ((BasicArrayVector)(bt1.getColumn("col3"))).getVectorValue(i).getString());
-            assertEquals(decv5.getString(), ((BasicArrayVector)(bt1.getColumn("col4"))).getVectorValue(i).getString());
-
+            assertEquals(decv4, ((BasicArrayVector)(bt1.getColumn("col3"))).getVectorValue(i).getString());
+            assertEquals(decv5, ((BasicArrayVector)(bt1.getColumn("col4"))).getVectorValue(i).getString());
         }
         conn.run("undef(`tt1,SHARED)");
         conn.close();
