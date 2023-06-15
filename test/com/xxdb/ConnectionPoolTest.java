@@ -1560,9 +1560,9 @@ public class ConnectionPoolTest {
         cols.add(bavcol3);
         List<Vector> bdvcol4 = new ArrayList<Vector>();
         Vector v1284=new BasicDecimal128Vector(3,37);
-        v1284.set(0,new BasicDecimal128("15645.00",37));
-        v1284.set(1,new BasicDecimal128("24635.00001",37));
-        v1284.set(2,new BasicDecimal128("24635.00001",37));
+        v1284.set(0,new BasicDecimal128("1.00",37));
+        v1284.set(1,new BasicDecimal128("2.00001",37));
+        v1284.set(2,new BasicDecimal128("2.00001",37));
         bdvcol4.add(0,v1284);
         bdvcol4.add(1,v1284);
         bdvcol4.add(2,v1284);
