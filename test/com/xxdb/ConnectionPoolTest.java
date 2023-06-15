@@ -1579,7 +1579,7 @@ public class ConnectionPoolTest {
         assertEquals(v128.getString(), ((BasicArrayVector)(res.getColumn("col0"))).getVectorValue(0).getString());
         assertEquals(v1281.getString(), ((BasicArrayVector)(res.getColumn("col1"))).getVectorValue(0).getString());
         assertEquals(v1282.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
-        assertEquals(v1282.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
+        assertEquals(v1283.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
         assertEquals(v1284.getString(), ((BasicArrayVector)(res.getColumn("col4"))).getVectorValue(0).getString());
         pool.shutdown();
     }
@@ -1646,9 +1646,9 @@ public class ConnectionPoolTest {
         cols.add(bavcol3);
         List<Vector> bdvcol4 = new ArrayList<Vector>();
         Vector v1284=new BasicDecimal128Vector(3,37);
-        v1284.set(0,new BasicDecimal128("15645.00",37));
-        v1284.set(1,new BasicDecimal128("24635.00001",37));
-        v1284.set(2,new BasicDecimal128("24635.00001",37));
+        v1284.set(0,new BasicDecimal128("1.00",37));
+        v1284.set(1,new BasicDecimal128("0.00001",37));
+        v1284.set(2,new BasicDecimal128("0.0000000000001",37));
         bdvcol4.add(0,v1284);
         bdvcol4.add(1,v1284);
         bdvcol4.add(2,v1284);
@@ -1662,7 +1662,7 @@ public class ConnectionPoolTest {
         assertEquals(v128.getString(), ((BasicArrayVector)(res.getColumn("col0"))).getVectorValue(0).getString());
         assertEquals(v1281.getString(), ((BasicArrayVector)(res.getColumn("col1"))).getVectorValue(0).getString());
         assertEquals(v1282.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
-        assertEquals(v1282.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
+        assertEquals(v1283.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
         assertEquals(v1284.getString(), ((BasicArrayVector)(res.getColumn("col4"))).getVectorValue(0).getString());
 
         pool.shutdown();
@@ -1874,7 +1874,32 @@ public class ConnectionPoolTest {
         assertEquals("[[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678]]",res.getColumn(6).getString());
         System.out.println(res.getColumn(0).getString());
         pool.shutdown();
+    }
+    @Test
+    public void test_pool_execute_decimal128_arrayvector() throws Exception {
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, false, false);
 
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456");
+        String script = ("\n" +
+                "t = table(1000:0, `col0`col1`col2`col3`col4, [DECIMAL128(0)[],DECIMAL128(4)[],DECIMAL128(10)[],DECIMAL128(19)[],DECIMAL128(37)[]])\n" +
+                "share t as ptt;\n" +
+                "col0=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n" +
+                "col1=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n" +
+                "col2=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n" +
+                "col3=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n" +
+                "col4=[[1,3.0000000000000000000000000000001,0.9999999999999999999999999999999999999],[-3.0000000000000000000000000000001,0,0.123456789]]\n" +
+                "t.tableInsert(`col0`col1`col2`col3`col4)\n" +
+                "\n");
+        List<DBTask> tasks = new ArrayList<>();
+        BasicDBTask task = new BasicDBTask(script);
+        tasks.add(task);
+        pool.execute(tasks);
+        pool.waitForThreadCompletion();
+        BasicTable res = (BasicTable) connection.run("ptt");
+        System.out.println(res.getString());
+        assertEquals(5, res.columns());
+        assertEquals(2, res.rows());
     }
     @Test
     public void test_pool_execute_timeout_10000() throws Exception {

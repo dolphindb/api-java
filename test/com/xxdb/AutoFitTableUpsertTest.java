@@ -783,6 +783,175 @@ public class AutoFitTableUpsertTest {
         conn.run("clear!(t)");
     }
     @Test
+    public void test_BasicDecimal128_AutoFitTableUpsert_indexedTable() throws Exception {
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        String script = "t=indexedTable(`sym,1:0,`sym`datetime`col1`col2,[STRING,DATETIME,DECIMAL128(0),DECIMAL128(37)])";
+        conn.run(script);
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        colNames.add("sym");
+        colNames.add("datetime");
+        colNames.add("col1");
+        colNames.add("col2");
+        BasicStringVector bsv = new BasicStringVector(new String[]{"Huya","Tonghuashun","maoyan"});
+        cols.add(bsv);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
+        cols.add(bdtv);
+        BasicDecimal128Vector bd32v = new BasicDecimal128Vector(3,0);
+        bd32v.set(0,new BasicDecimal128("-11.011",0));
+        bd32v.set(1,new BasicDecimal128("19.99",0));
+        bd32v.set(2,new BasicDecimal128("23.0000000000000000000001",0));
+        cols.add(bd32v);
+        System.out.println(bd32v.getString());
+        BasicDecimal128Vector bd64v = new BasicDecimal128Vector(3,37);
+        bd64v.set(0,new BasicDecimal128("-2.0009",37));
+        bd64v.set(1,new BasicDecimal128("4.99999999999999999999999999999999",37));
+        bd64v.set(2,new BasicDecimal128("0.00000000000000000000000000000001",37));
+        cols.add(bd64v);
+        BasicTable bt = new BasicTable(colNames,cols);
+        AutoFitTableUpsert aftu = new AutoFitTableUpsert("","t",conn,true,null,null);
+        aftu.upsert(bt);
+        BasicTable ua = (BasicTable) conn.run("select * from t;");
+        System.out.println(ua.getString());
+        for (int i = 0; i < 3; i++) {
+            assertEquals(bsv.get(i),ua.getColumn("sym").get(i));
+            assertEquals(bdtv.get(i),ua.getColumn("datetime").get(i));
+            assertEquals(bd32v.get(i).getString(),ua.getColumn("col1").get(i).getString());
+            assertEquals(bd64v.get(i).getString(),ua.getColumn("col2").get(i).getString());
+        }
+        conn.run("clear!(t)");
+    }
+
+    @Test
+    public void test_BasicDecimal128_AutoFitTableUpsert_KeyTable() throws Exception {
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        String script = "t=keyedTable(`sym,1:0,`sym`datetime`col1`col2,[STRING,DATETIME,DECIMAL128(0),DECIMAL128(37)])";
+        conn.run(script);
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        colNames.add("sym");
+        colNames.add("datetime");
+        colNames.add("col1");
+        colNames.add("col2");
+        BasicStringVector bsv = new BasicStringVector(new String[]{"Huya","Tonghuashun","maoyan"});
+        cols.add(bsv);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
+        cols.add(bdtv);
+        BasicDecimal128Vector bd32v = new BasicDecimal128Vector(3,0);
+        bd32v.set(0,new BasicDecimal128("1.0001",0));
+        bd32v.set(1,new BasicDecimal128("1.09",0));
+        bd32v.set(2,new BasicDecimal128("-23.22",0));
+        cols.add(bd32v);
+        BasicDecimal128Vector bd64v = new BasicDecimal128Vector(3,37);
+        bd64v.set(0,new BasicDecimal128("-2.0009",37));
+        bd64v.set(1,new BasicDecimal128("4.99999999999999999999999999999999",37));
+        bd64v.set(2,new BasicDecimal128("0.00000000000000000000000000000001",37));
+        cols.add(bd64v);
+        BasicTable bt = new BasicTable(colNames,cols);
+        AutoFitTableUpsert aftu = new AutoFitTableUpsert("","t",conn,true,null,null);
+        aftu.upsert(bt);
+        BasicTable ua = (BasicTable) conn.run("select * from t;");
+        for (int i = 0; i < 3; i++) {
+            assertEquals(bsv.get(i),ua.getColumn("sym").get(i));
+            assertEquals(bdtv.get(i),ua.getColumn("datetime").get(i));
+            assertEquals(bd32v.get(i).getString(),ua.getColumn("col1").get(i).getString());
+            assertEquals(bd64v.get(i).getString(),ua.getColumn("col2").get(i).getString());
+        }
+        conn.run("clear!(t)");
+    }
+
+    @Test
+    public void test_BasicDecimal128_AutoFitTableUpsert_PartitionedTable() throws Exception {
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        String script = "if(existsDatabase(\"dfs://testDecimal\")){" +
+                "dropDatabase(\"dfs://testDecimal\")}" +
+                "db = database(\"dfs://testDecimal\",VALUE,\"Huya\" \"Tonghuashun\" \"maoyan\");" +
+                "t=keyedTable(`sym,1000:0,`sym`datetime`col1`col2,[STRING,DATETIME,DECIMAL128(0),DECIMAL128(37)]);" +
+                "pt = db.createPartitionedTable(t,`pt,`sym);" +
+                "pt.append!(t)";
+        conn.run(script);
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        colNames.add("sym");
+        colNames.add("datetime");
+        colNames.add("col1");
+        colNames.add("col2");
+        BasicStringVector bsv = new BasicStringVector(new String[]{"Huya","Tonghuashun","maoyan"});
+        cols.add(bsv);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
+        cols.add(bdtv);
+        BasicDecimal128Vector bd32v = new BasicDecimal128Vector(3,0);
+        bd32v.set(0,new BasicDecimal128("1.0001",0));
+        bd32v.set(1,new BasicDecimal128("1.09",0));
+        bd32v.set(2,new BasicDecimal128("-23.22",0));
+        cols.add(bd32v);
+        BasicDecimal128Vector bd64v = new BasicDecimal128Vector(3,37);
+        bd64v.set(0,new BasicDecimal128("-2.0009",37));
+        bd64v.set(1,new BasicDecimal128("4.99999999999999999999999999999999",37));
+        bd64v.set(2,new BasicDecimal128("0.00000000000000000000000000000001",37));
+        cols.add(bd64v);
+        BasicTable bt = new BasicTable(colNames,cols);
+        String[] keyCols = new String[]{"sym"};
+        AutoFitTableUpsert aftu = new AutoFitTableUpsert("dfs://testDecimal","pt",conn,true,keyCols,null);
+        aftu.upsert(bt);
+        BasicTable ua = (BasicTable) conn.run("select * from pt;");
+        for (int i = 0; i < 3; i++) {
+            assertEquals(bsv.get(i),ua.getColumn("sym").get(i));
+            assertEquals(bdtv.get(i),ua.getColumn("datetime").get(i));
+            assertEquals(bd32v.get(i).getString(),ua.getColumn("col1").get(i).getString());
+            assertEquals(bd64v.get(i).getString(),ua.getColumn("col2").get(i).getString());
+        }
+        conn.run("clear!(t)");
+    }
+
+    @Test
+    public void test_BasicDecimal128_AutoFitTableUpsert_DimensionTable() throws Exception {
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        String script = "if(existsDatabase(\"dfs://testDecimal\")){" +
+                "dropDatabase(\"dfs://testDecimal\")}" +
+                "db = database(\"dfs://testDecimal\",VALUE,\"Huya\" \"Tonghuashun\" \"maoyan\");" +
+                "t=keyedTable(`sym,1000:0,`sym`datetime`col1`col2,[STRING,DATETIME,DECIMAL128(0),DECIMAL128(37)]);" +
+                "pt = db.createTable(t,`pt);" +
+                "pt.append!(t)";
+        conn.run(script);
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        colNames.add("sym");
+        colNames.add("datetime");
+        colNames.add("col1");
+        colNames.add("col2");
+        BasicStringVector bsv = new BasicStringVector(new String[]{"Huya","Tonghuashun","maoyan"});
+        cols.add(bsv);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
+        cols.add(bdtv);
+        BasicDecimal128Vector bd32v = new BasicDecimal128Vector(3,0);
+        bd32v.set(0,new BasicDecimal128("1.0001",0));
+        bd32v.set(1,new BasicDecimal128("1.09",0));
+        bd32v.set(2,new BasicDecimal128("-23.22",0));
+        cols.add(bd32v);
+        BasicDecimal128Vector bd64v = new BasicDecimal128Vector(3,37);
+        bd64v.set(0,new BasicDecimal128("-2.0009",37));
+        bd64v.set(1,new BasicDecimal128("4.99999999999999999999999999999999",37));
+        bd64v.set(2,new BasicDecimal128("0.00000000000000000000000000000001",37));
+        cols.add(bd64v);
+        BasicTable bt = new BasicTable(colNames,cols);
+        String[] keyCols = new String[]{"sym"};
+        AutoFitTableUpsert aftu = new AutoFitTableUpsert("dfs://testDecimal","pt",conn,true,keyCols,null);
+        aftu.upsert(bt);
+        BasicTable ua = (BasicTable) conn.run("select * from pt;");
+        for (int i = 0; i < 3; i++) {
+            assertEquals(bsv.get(i),ua.getColumn("sym").get(i));
+            assertEquals(bdtv.get(i),ua.getColumn("datetime").get(i));
+            assertEquals(bd32v.get(i).getString(),ua.getColumn("col1").get(i).getString());
+            assertEquals(bd64v.get(i).getString(),ua.getColumn("col2").get(i).getString());
+        }
+        conn.run("clear!(t)");
+    }
+    @Test
     public void test_AutoFitTableUpsert_ArrayVector_decimal() throws Exception {
         String script = "if(existsDatabase(\"dfs://testArrayVector\")){\n" +
                 "    dropDatabase(\"dfs://testArrayVector\")\n" +
@@ -1188,12 +1357,13 @@ public class AutoFitTableUpsertTest {
                 "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
                 "cdecimal32 = decimal32(12 17 135.2,2)\n" +
                 "cdecimal64 = decimal64(18 24 33.878,4)\n" +
+                "cdecimal128 = decimal128(18 24 33.878,10)\n" +
                 "t = keyedTable(`cint,cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
                 "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
-                "cstring,cdatehour,cdecimal32,cdecimal64);" +
+                "cstring,cdatehour,cdecimal32,cdecimal64,cdecimal128);" +
                 "share t as st;";
         conn.run(script);
-        BasicTable bt = (BasicTable) conn.run("t2 = table(true as cbool,'d' as cchar,86h as cshort,9 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64)\n" +
+        BasicTable bt = (BasicTable) conn.run("t2 = table(true as cbool,'d' as cchar,86h as cshort,9 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64,decimal128(27,10) as cdecimal128)\n" +
                 " t2;");
         AutoFitTableUpsert aftu = new AutoFitTableUpsert("","st",conn,true,null,null);
         aftu.upsert(bt);
@@ -1201,6 +1371,8 @@ public class AutoFitTableUpsertTest {
         assertEquals(3,ua.rows());
         assertEquals(0,conn.run("select * from st where cminute = 10:15m").rows());
         assertEquals(1,conn.run("select * from st where cminute = 15:27m").rows());
+        BasicTable ua1 = (BasicTable) conn.run("select cdecimal128 from st where cint = 9");
+        assertEquals("27.0000000000",ua1.getColumn(0).get(0).getString());
         conn.run("undef(`st.SHARED)");
         conn.run("clear!(t)");
     }
@@ -1230,16 +1402,17 @@ public class AutoFitTableUpsertTest {
                 "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
                 "cdecimal32 = decimal32(12 17 135.2,2)\n" +
                 "cdecimal64 = decimal64(18 24 33.878,4)\n" +
+                "cdecimal128 = decimal128(18 24 33.878,10)\n" +
                 "t = table(cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
                 "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
-                "cstring,cdatehour,cdecimal32,cdecimal64);" +
+                "cstring,cdatehour,cdecimal32,cdecimal64,cdecimal128);" +
                 "if(existsDatabase(\"dfs://testDecimal\")){" +
                 "dropDatabase(\"dfs://testDecimal\")}" +
                 "db = database(\"dfs://testDecimal\",VALUE,1..10);" +
                 "pt = db.createPartitionedTable(t,`pt,`cint);" +
                 "pt.append!(t)";
         conn.run(script);
-        BasicTable bt = (BasicTable) conn.run("t2 = table(true as cbool,'d' as cchar,86h as cshort,9 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64)\n" +
+        BasicTable bt = (BasicTable) conn.run("t2 = table(true as cbool,'d' as cchar,86h as cshort,9 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64,decimal128(27,10) as cdecimal128)\n" +
                 " t2;");
         AutoFitTableUpsert aftu = new AutoFitTableUpsert("dfs://testDecimal","pt",conn,true,new String[]{"cint"},null);
         aftu.upsert(bt);
@@ -1247,6 +1420,8 @@ public class AutoFitTableUpsertTest {
         assertEquals(3,ua.rows());
         assertEquals(0,conn.run("select * from pt where cminute = 10:15m").rows());
         assertEquals(1,conn.run("select * from pt where cminute = 15:27m").rows());
+        BasicTable ua1 = (BasicTable) conn.run("select cdecimal128 from pt where cint = 9");
+        assertEquals("27.0000000000",ua1.getColumn(0).get(0).getString());
     }
 
     @Test
@@ -1274,16 +1449,17 @@ public class AutoFitTableUpsertTest {
                 "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
                 "cdecimal32 = decimal32(12 17 135.2,2)\n" +
                 "cdecimal64 = decimal64(18 24 33.878,4)\n" +
+                "cdecimal128 = decimal128(18 24 33.878,10)\n" +
                 "t = table(cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
                 "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
-                "cstring,cdatehour,cdecimal32,cdecimal64);" +
+                "cstring,cdatehour,cdecimal32,cdecimal64,cdecimal128);" +
                 "if(existsDatabase(\"dfs://testDecimal\")){" +
                 "dropDatabase(\"dfs://testDecimal\")}" +
                 "db = database(\"dfs://testDecimal\",VALUE,1..10);" +
                 "pt = db.createTable(t,`pt);" +
                 "pt.append!(t)";
         conn.run(script);
-        BasicTable bt = (BasicTable) conn.run("t2 = table(true as cbool,'d' as cchar,86h as cshort,9 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64)\n" +
+        BasicTable bt = (BasicTable) conn.run("t2 = table(true as cbool,'d' as cchar,86h as cshort,9 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64,decimal128(27,10) as cdecimal128)\n" +
                 " t2;");
         AutoFitTableUpsert aftu = new AutoFitTableUpsert("dfs://testDecimal","pt",conn,true,new String[]{"cint"},null);
         aftu.upsert(bt);
@@ -1291,5 +1467,7 @@ public class AutoFitTableUpsertTest {
         assertEquals(3,ua.rows());
         assertEquals(0,conn.run("select * from pt where cminute = 10:15m").rows());
         assertEquals(1,conn.run("select * from pt where cminute = 15:27m").rows());
+        BasicTable ua1 = (BasicTable) conn.run("select cdecimal128 from pt where cint = 9");
+        assertEquals("27.0000000000",ua1.getColumn(0).get(0).getString());
     }
 }
