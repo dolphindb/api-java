@@ -313,12 +313,13 @@ public class BasicDecimal128Test {
     public void testBasicDecimal128_hashBucket()  {
         BasicDecimal128 Decimal128_5 = new BasicDecimal128( "1.23231", 9);
         String re=null;
-        try{
-            Decimal128_5.hashBucket(1);
-        }catch(Exception e){
-            re=e.getMessage();
-        }
-        assertEquals("BasicDecimal128 not support hashBucket yet!", re);
+        assertEquals(0, Decimal128_5.hashBucket(1));
+//        try{
+//            Decimal128_5.hashBucket(1);
+//        }catch(Exception e){
+//            re=e.getMessage();
+//        }
+//        assertEquals("BasicDecimal128 not support hashBucket yet!", re);
     }
 
     @Test
