@@ -335,8 +335,8 @@ public class BasicDecimal128Vector extends AbstractVector {
             }
 
             System.arraycopy(newArray, 0, buffer, i * 16, 16);
-            out.write(buffer);
         }
+        out.write(buffer);
     }
 
 
@@ -515,7 +515,10 @@ public class BasicDecimal128Vector extends AbstractVector {
                 }
             }
 
-            reverseByteArray(newArray);
+            boolean isLittleEndian = ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN);
+            if (isLittleEndian) {
+                reverseByteArray(newArray);
+            }
             out.put(newArray);
         }
         numElementAndPartial.numElement = targetNumElement;
