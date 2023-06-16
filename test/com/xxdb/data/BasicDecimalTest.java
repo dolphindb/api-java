@@ -898,13 +898,13 @@ public class BasicDecimalTest {
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt = (BasicTable) conn.run("select * from trades order by sym,tradeDate,tradePrice,vwap,volume,valueTrade;");
+        BasicTable bt = (BasicTable) conn.run("select * from trades1 order by sym,tradeDate,tradePrice,vwap,volume,valueTrade;");
         BasicTable ex = (BasicTable) conn.run("select * from t1 order by sym,tradeDate,tradePrice,vwap,volume,valueTrade;");
         checkData(ex,bt);
         assertEquals(Entity.DATA_TYPE.DT_DECIMAL128,bt.getColumn("volume").getDataType());
         assertEquals(Entity.DATA_TYPE.DT_DECIMAL128,bt.getColumn("vol").getDataType());
         conn.run("undef(`t1,SHARED);");
-        conn.run("undef(`trades,SHARED);");
+        conn.run("undef(`trades1,SHARED);");
     }
 
     @Test(timeout = 600000)
