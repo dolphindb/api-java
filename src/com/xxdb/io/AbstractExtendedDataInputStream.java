@@ -82,8 +82,9 @@ public abstract class AbstractExtendedDataInputStream extends BufferedInputStrea
 		pos = 0;
 		count = 0;
 		int n = getInIfOpen().read(buffer, pos, buffer.length - pos);
-		if (n > 0)
-			count = n;
+		if(n == -1)
+			throw new EOFException();
+		count = n;
 	}
 
 	private String readUTF8(byte terminator) throws IOException{
