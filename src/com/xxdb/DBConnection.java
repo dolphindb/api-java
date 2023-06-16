@@ -45,7 +45,7 @@ public class DBConnection {
     private String initialScript_ = null;
     private boolean enableHighAvailability_;
     private List<Node> nodes_ = new ArrayList<>();
-    private int lastConnNodeIndex_ = 0;
+    private Random nodeRandom_ = new Random();
     private int connTimeout_ = 0;
     private boolean closed_ = false;
     private boolean loadBalance_ = true;
@@ -717,7 +717,7 @@ public class DBConnection {
                         }
                     }
                     try {
-                        bt = (BasicTable) conn_.run("rpc(getControllerAlias(), getClusterPerf)",0);
+                        bt = (BasicTable) conn_.run("select host,port,(memoryUsed/1024/1024/1024)/maxMemSize as memLoad,ratio(connectionNum,maxConnections) as connLoad,avgLoad from rpc(getControllerAlias(),getClusterPerf) where mode=0",0);
                         break;
                     }catch (Exception e){
                         System.out.println("ERROR getting other data nodes, exception: " + e.getMessage());
@@ -740,51 +740,47 @@ public class DBConnection {
                 }
 
                 if (bt!=null && loadBalance_){
+                    //ignore very high load nodes, rand one in low load nodes
+                    List<Node> lowLoadNodes=new ArrayList<>();
                     BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
                     BasicIntVector colPort = (BasicIntVector) bt.getColumn("port");
-                    BasicIntVector colMode = (BasicIntVector) bt.getColumn("mode");
-                    BasicIntVector colmaxConnections = (BasicIntVector) bt.getColumn("maxConnections");
-                    BasicIntVector colconnectionNum = (BasicIntVector) bt.getColumn("connectionNum");
-                    BasicIntVector colworkerNum = (BasicIntVector) bt.getColumn("workerNum");
-                    BasicIntVector colexecutorNum = (BasicIntVector) bt.getColumn("executorNum");
-                    double load;
-                    for (int i = 0; i < colMode.rows(); i++){
-                        if (colMode.getInt(i) == 0){
-                            Node nodex = new Node(colHost.getString(i), colPort.getInt(i));
-                            Node pexistNode = null;
-                            if (highAvailabilitySites != null){
-                                for (Node node : nodes_){
-                                    if (node.hostName.equals(nodex.hostName) && node.port == nodex.port){
-                                        pexistNode = node;
-                                        break;
-                                    }
+                    BasicDoubleVector memLoad = (BasicDoubleVector) bt.getColumn("memLoad");
+                    BasicDoubleVector connLoad = (BasicDoubleVector) bt.getColumn("connLoad");
+                    BasicDoubleVector avgLoad = (BasicDoubleVector) bt.getColumn("avgLoad");
+                    for (int i = 0; i < colHost.rows(); i++){
+                        Node nodex = new Node(colHost.getString(i), colPort.getInt(i));
+                        Node pexistNode = null;
+                        if (highAvailabilitySites != null){
+                            for (Node node : nodes_){
+                                if (node.hostName.equals(nodex.hostName) && node.port == nodex.port){
+                                    pexistNode = node;
+                                    break;
                                 }
-                                //node is out of highAvailabilitySites
-                                if (pexistNode == null)
-                                    continue;
                             }
-
-                            if (colconnectionNum.getInt(i) < colmaxConnections.getInt(i)){
-                                load = (colconnectionNum.getInt(i) + colworkerNum.getInt(i) + colexecutorNum.getInt(i)) / 3.0;
-                            }else {
-                                load = Double.MAX_VALUE;
-                            }
-
-                            if (pexistNode != null){
-                                pexistNode.load = load;
-                            }else {
-                                nodes_.add(new Node(colHost.getString(i), colPort.getInt(i), load));
-                            }
+                            //node is out of highAvailabilitySites
+                            if (pexistNode == null)
+                                continue;
+                        }
+                        double load=(memLoad.getDouble(i)+connLoad.getDouble(i)+avgLoad.getDouble(i))/3.0;
+                        if (pexistNode != null){
+                            pexistNode.load = load;
+                        }else {
+                            pexistNode=new Node(colHost.getString(i), colPort.getInt(i), load);
+                            nodes_.add(pexistNode);
+                        }
+                        //low load
+                        if(memLoad.getDouble(i)<0.8&&
+                                connLoad.getDouble(i)<0.9&&
+                                avgLoad.getDouble(i)<0.8){
+                            lowLoadNodes.add(pexistNode);
                         }
                     }
-
-                    Node pMinNode = null;
-                    for (Node one : nodes_){
-                        if (pMinNode == null || pMinNode.load == -1 || pMinNode.load > one.load){
-                            pMinNode = one;
-                        }
+                    Node pMinNode;
+                    if(lowLoadNodes.isEmpty()==false){
+                        pMinNode=lowLoadNodes.get(nodeRandom_.nextInt(lowLoadNodes.size()));
+                    }else{
+                        pMinNode=nodes_.get(nodeRandom_.nextInt(nodes_.size()));
                     }
-
                     if (pMinNode != null && !pMinNode.isEqual(connectedNode)){
                         System.out.println("Connect to min load node: " + pMinNode.hostName + ":" + pMinNode.port);
                         conn_.close();
@@ -823,23 +819,18 @@ public class DBConnection {
     }
 
     public void switchDataNode(Node node) throws IOException{
-        boolean connected = false;
         do {
             if (node.hostName != null && node.hostName.length() > 0){
                 if (connectNode(node)){
-                    connected = true;
                     break;
                 }
             }
             if (nodes_.isEmpty()){
                 throw new RuntimeException("Failed to connect to " + node.hostName + ":" + node.port);
             }
-            for (int i = nodes_.size()-1; i >= 0; i--){
-                lastConnNodeIndex_ = (lastConnNodeIndex_ + 1) % nodes_.size();
-                if (connectNode(nodes_.get(lastConnNodeIndex_))){
-                    connected = true;
-                    break;
-                }
+            int index = nodeRandom_.nextInt(nodes_.size());
+            if (connectNode(nodes_.get(index))){
+                break;
             }
             try {
                 Thread.sleep(1000);
@@ -847,7 +838,7 @@ public class DBConnection {
                 e.printStackTrace();
                 return;
             }
-        }while (!connected && !closed_);
+        }while (!closed_);
         if (initialScript_!=null && initialScript_.length() > 0){
             run(initialScript_);
         }
