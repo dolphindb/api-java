@@ -1878,7 +1878,6 @@ public class ConnectionPoolTest {
     @Test
     public void test_pool_execute_decimal128_arrayvector() throws Exception {
         ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, false, false);
-
         DBConnection connection = new DBConnection(false, false, false);
         connection.connect(HOST, PORT, "admin", "123456");
         String script = ("\n" +
@@ -1889,7 +1888,7 @@ public class ConnectionPoolTest {
                 "col2=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n" +
                 "col3=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n" +
                 "col4=[[1,3.0000000000000000000000000000001,0.9999999999999999999999999999999999999],[-3.0000000000000000000000000000001,0,0.123456789]]\n" +
-                "t.tableInsert(`col0`col1`col2`col3`col4)\n" +
+                "t.tableInsert(col0,col1,col2,col3,col4)\n" +
                 "\n");
         List<DBTask> tasks = new ArrayList<>();
         BasicDBTask task = new BasicDBTask(script);
@@ -1900,6 +1899,41 @@ public class ConnectionPoolTest {
         System.out.println(res.getString());
         assertEquals(5, res.columns());
         assertEquals(2, res.rows());
+        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(1).getString());
+        assertEquals("[[1.0000000000,3.0000100000,99999.9999999999],[-1.0000000000,0.0000000000,0.1234567890]]",res.getColumn(2).getString());
+        assertEquals("[[1.0000000000000000000,3.0000100000000000000,99999.9999999999849005056],[-1.0000000000000000000,0.0000000000000000000,0.1234567890000000000]]",res.getColumn(3).getString());
+        assertEquals("[[1.0000000000000000000000000000000000000,3.0000000000000000000000000000000000000,1.0000000000000000000000000000000000000],[-3.0000000000000000000000000000000000000,0.0000000000000000000000000000000000000,0.1234567889999999866557890289987485696]]",res.getColumn(4).getString());
+    }
+    @Test
+    public void test_pool_execute_decimal128_arrayvector_compress_true() throws Exception {
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, false, false);
+        DBConnection connection = new DBConnection(false, false, true);
+        connection.connect(HOST, PORT, "admin", "123456");
+        String script = ("\n" +
+                "t = table(1000:0, `col0`col1`col2`col3`col4, [DECIMAL128(0)[],DECIMAL128(4)[],DECIMAL128(10)[],DECIMAL128(19)[],DECIMAL128(37)[]])\n" +
+                "share t as ptt;\n" +
+                "col0=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n" +
+                "col1=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n" +
+                "col2=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n" +
+                "col3=[[1,3.00001,99999.99999999999],[-1,0,0.123456789]]\n" +
+                "col4=[[1,3.0000000000000000000000000000001,0.9999999999999999999999999999999999999],[-3.0000000000000000000000000000001,0,0.123456789]]\n" +
+                "t.tableInsert(col0,col1,col2,col3,col4)\n" +
+                "\n");
+        List<DBTask> tasks = new ArrayList<>();
+        BasicDBTask task = new BasicDBTask(script);
+        tasks.add(task);
+        pool.execute(tasks);
+        pool.waitForThreadCompletion();
+        BasicTable res = (BasicTable) connection.run("ptt");
+        System.out.println(res.getString());
+        assertEquals(5, res.columns());
+        assertEquals(2, res.rows());
+        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(1).getString());
+        assertEquals("[[1.0000000000,3.0000100000,99999.9999999999],[-1.0000000000,0.0000000000,0.1234567890]]",res.getColumn(2).getString());
+        assertEquals("[[1.0000000000000000000,3.0000100000000000000,99999.9999999999849005056],[-1.0000000000000000000,0.0000000000000000000,0.1234567890000000000]]",res.getColumn(3).getString());
+        assertEquals("[[1.0000000000000000000000000000000000000,3.0000000000000000000000000000000000000,1.0000000000000000000000000000000000000],[-3.0000000000000000000000000000000000000,0.0000000000000000000000000000000000000,0.1234567889999999866557890289987485696]]",res.getColumn(4).getString());
     }
     @Test
     public void test_pool_execute_timeout_10000() throws Exception {

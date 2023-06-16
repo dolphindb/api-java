@@ -182,7 +182,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 		@Override
 		public Vector createVectorWithDefaultValue(int size, int extra) {
-			return new BasicDecimal64Vector(size);
+			return new BasicDecimal64Vector(size, extra);
 		}
 
 		@Override
