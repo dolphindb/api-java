@@ -553,7 +553,7 @@ public class BasicTableTest {
     public void test_BasicTable_symbol_big_data()throws Exception{
         DBConnection conn = new DBConnection(false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
-        String createData = "symbol1 = table((take(concat(take(`abcd中文123,1000000)), 100)).string().symbol() as id)";
+        String createData = "symbol1 = table((take(concat(take(`abcd中文123,10000000)), 100)).string().symbol() as id)";
         conn.run(createData);
         long stime = System.currentTimeMillis();
         BasicTable data =  (BasicTable)conn.run("symbol1");
@@ -564,7 +564,7 @@ public class BasicTableTest {
     @Test
     public void test_BasicTable_symbol()throws Exception{
         DBConnection conn = new DBConnection(false, false, false);
-        conn.connect("192.168.0.9", 8849, "admin", "123456");
+        conn.connect(HOST, PORT, "admin", "123456");
         String createData = "t1 = table((take(10111..10211, 10000000)).string().symbol() as id)";
         conn.run(createData);
         long stime = System.currentTimeMillis();
@@ -576,7 +576,7 @@ public class BasicTableTest {
     @Test
     public void test_BasicTable_string()throws Exception{
         DBConnection conn = new DBConnection(false, false, false);
-        conn.connect("192.168.1.167", 18921, "admin", "123456");
+        conn.connect(HOST, PORT, "admin", "123456");
         String createData = "t1 = table((take(10000000..20000000, 10000000)).string() as id)";
         conn.run(createData);
         long stime = System.currentTimeMillis();

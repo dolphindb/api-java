@@ -1427,7 +1427,7 @@ public class DBConnectionTest {
         Map<String, Entity> map = new HashMap<String, Entity>();
         BasicBooleanVector boolv = (BasicBooleanVector) conn.run("rand(1b 0b true false,10)");
         BasicByteVector bytev = (BasicByteVector) conn.run("rand('d' '1' '@',10)");
-        BasicStringVector stringv = (BasicStringVector) conn.run("rand(`IBM`MSFT`GOOG`BIDU,10)");
+        BasicStringVector stringv = (BasicStringVector) conn.run("take(`IBM`MSFT`GOOG`BIDU,10)");
         BasicIntVector intv = (BasicIntVector) conn.run("rand(1..10,10000)");
         BasicDoubleVector doublev = (BasicDoubleVector) conn.run("take(10.0,10)");
         BasicFloatVector floatV = (BasicFloatVector) conn.run("take(10.0f,10)");
