@@ -10,6 +10,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Pattern;
 import com.xxdb.comm.SqlStdEnum;
 import com.xxdb.data.*;
 import com.xxdb.data.Void;
@@ -64,7 +65,8 @@ public class DBConnection {
         ET_UNKNOW(1),
         ET_NEWLEADER(2),
         ET_NODENOTAVAIL(3),
-        ET_NOINITIALIZED(4);
+        ET_NOINITIALIZED(4),
+        ET_NOTLEADER(5);
 
         public int value;
         ExceptionType(int value){
@@ -880,9 +882,14 @@ public class DBConnection {
         if (index != -1){
             index = msg.indexOf(">");
             String ipport = msg.substring(index + 1);
-            parseIpPort(ipport, node);
-            System.out.println("New leader is " + node.hostName + ":" + node.port);
-            return ExceptionType.ET_NEWLEADER;
+            if (!Pattern.matches("\\d+", ipport)) {
+                System.out.println("The control node you are accessing is not the leader node of the highly available (raft) cluster.");
+                return ExceptionType.ET_NOTLEADER;
+            } else {
+                parseIpPort(ipport, node);
+                System.out.println("New leader is " + node.hostName + ":" + node.port);
+                return ExceptionType.ET_NEWLEADER;
+            }
         }else if ((index = msg.indexOf("<DataNodeNotAvail>")) != -1){
             index = msg.indexOf(">");
             String ipport = msg.substring(index + 1);
