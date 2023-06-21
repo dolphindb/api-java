@@ -784,7 +784,7 @@ public class DBConnection {
                         pMinNode=nodes_.get(nodeRandom_.nextInt(nodes_.size()));
                     }
                     if (pMinNode != null && !pMinNode.isEqual(connectedNode)){
-                        System.out.println("Connect to min load node: " + pMinNode.hostName + ":" + pMinNode.port);
+                        System.out.println("Switch to node: " + pMinNode.hostName + ":" + pMinNode.port);
                         conn_.close();
                         switchDataNode(pMinNode);
                     }
