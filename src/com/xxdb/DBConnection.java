@@ -114,8 +114,17 @@ public class DBConnection {
             this.load = -1.0;
         }
 
-        public boolean isEqual(Node node){
-            return hostName.equals(node.hostName) == true && port == node.port;
+        @Override
+        public boolean equals(Object o){
+            if(o instanceof Node) {
+                Node node = (Node) o;
+                int diff = hostName.compareTo(node.hostName);
+                if (diff != 0)
+                    return false;
+                return port == node.port;
+            }else{
+                return false;
+            }
         }
     }
 
@@ -698,7 +707,9 @@ public class DBConnection {
                 if (highAvailabilitySites != null){
                     for (String site : highAvailabilitySites) {
                         Node node = new Node(site);
-                        nodes_.add(node);
+                        if(nodes_.contains(node)==false) {
+                            nodes_.add(node);
+                        }
                     }
                 }
                 Node connectedNode = new Node();
@@ -719,7 +730,7 @@ public class DBConnection {
                         }
                     }
                     try {
-                        bt = (BasicTable) conn_.run("select host,port,(memoryUsed/1024/1024/1024)/maxMemSize as memLoad,ratio(connectionNum,maxConnections) as connLoad,avgLoad from rpc(getControllerAlias(),getClusterPerf) where mode=0",0);
+                        bt = (BasicTable) conn_.run("select host,port,(memoryUsed/1024.0/1024.0/1024.0)/maxMemSize as memLoad,ratio(connectionNum,maxConnections) as connLoad,avgLoad from rpc(getControllerAlias(),getClusterPerf) where mode=0",0);
                         break;
                     }catch (Exception e){
                         System.out.println("ERROR getting other data nodes, exception: " + e.getMessage());
@@ -754,7 +765,7 @@ public class DBConnection {
                         Node pexistNode = null;
                         if (highAvailabilitySites != null){
                             for (Node node : nodes_){
-                                if (node.hostName.equals(nodex.hostName) && node.port == nodex.port){
+                                if ((node.hostName.equals(nodex.hostName) || nodex.hostName.equals("localhost")) && node.port == nodex.port){
                                     pexistNode = node;
                                     break;
                                 }
@@ -783,7 +794,7 @@ public class DBConnection {
                     }else{
                         pMinNode=nodes_.get(nodeRandom_.nextInt(nodes_.size()));
                     }
-                    if (pMinNode != null && !pMinNode.isEqual(connectedNode)){
+                    if (pMinNode != null && pMinNode.equals(connectedNode)==false){
                         System.out.println("Switch to node: " + pMinNode.hostName + ":" + pMinNode.port);
                         conn_.close();
                         switchDataNode(pMinNode);
