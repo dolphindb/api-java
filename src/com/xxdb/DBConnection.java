@@ -118,7 +118,7 @@ public class DBConnection {
         public boolean equals(Object o){
             if(o instanceof Node) {
                 Node node = (Node) o;
-                if(node.hostName==null)
+                if(node.hostName==null||hostName==null)
                     return false;
                 int diff = hostName.compareTo(node.hostName);
                 if (diff != 0)
