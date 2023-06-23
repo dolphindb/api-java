@@ -878,6 +878,11 @@ public class DBConnection {
     }
 
     public ExceptionType parseException(String msg, Node node){
+        if(msg==null){
+            node.hostName = "";
+            node.port = 0;
+            return ExceptionType.ET_UNKNOW;
+        }
         int index = msg.indexOf("<NotLeader>");
         if (index != -1){
             index = msg.indexOf(">");
