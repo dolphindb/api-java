@@ -118,6 +118,8 @@ public class DBConnection {
         public boolean equals(Object o){
             if(o instanceof Node) {
                 Node node = (Node) o;
+                if(node.hostName==null)
+                    return false;
                 int diff = hostName.compareTo(node.hostName);
                 if (diff != 0)
                     return false;
@@ -747,6 +749,8 @@ public class DBConnection {
                         }
                     }
                 }
+                if(closed_)
+                    return false;
 
                 if ( bt!=null && bt.getDataForm() != Entity.DATA_FORM.DF_TABLE){
                     throw new IOException("Run getClusterPerf() failed.");
