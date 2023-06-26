@@ -49,7 +49,7 @@ DBConnection类提供如下主要方法：
 
 | 方法名        | 详情          |
 |:------------- |:-------------|
-|DBConnection([asynchronousTask, useSSL, compress, usePython])|构造对象|
+|DBConnection([asynchronousTask, useSSL, compress, usePython, sqlStd])|构造对象|
 |connect(host, port, [username, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect])|将会话连接到DolphinDB服务器|
 |login(username,password,enableEncryption)|登陆服务器|
 |run(script)|将脚本在DolphinDB服务器运行|
@@ -57,6 +57,14 @@ DBConnection类提供如下主要方法：
 |upload(variableObjectMap)|将本地数据对象上传到DolphinDB服务器|
 |isBusy()|判断当前会话是否正忙|
 |close()|关闭当前会话。若当前会话不再使用，会自动被释放，但存在释放延时，可以调用 `close()` 立即关闭会话。否则可能出现因连接数过多，导致其它会话无法连接服务器的问题。|
+
+DBConnection 构造方法新增参数 *sqlStd*，是一个枚举类型，用于指定传入 SQL 脚本的解析语法。自1.30.22.1版本起支持三种解析语法：DolphinDB、Oracle、MySQL，其中默认为 DolphinDB 解析。用户通过输入枚举类型 **SqlStdEnum** 选择语法。
+
+代码示例：
+
+```java
+DBConnection conn = new DBConnection(false, false, false, false, false, true, SqlStdEnum.DolphinDB);
+```
 
 Java API 的实际用例参见[example目录](./example)。
 
