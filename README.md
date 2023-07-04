@@ -1051,8 +1051,9 @@ Data Types
 
 Data forms
 
-| Set 	| - 	| BasicSet 	| BasicSet bs = new BasicSet(Entity.DATA_TYPE.DT_INT,4); 	| set 	| x=set([5,5,3,4]);<br>x; 	|
+|  	|  	|  	|  	|  	|  	|
 |---	|---	|---	|---	|---	|---	|
+| Set 	| - 	| BasicSet 	| BasicSet bs = new BasicSet(Entity.DATA_TYPE.DT_INT,4); 	| set 	| x=set([5,5,3,4]);<br>x; 	|
 | - 	| - 	| BasicDictionary 	| BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_STRING, Entity.DATA_TYPE.DT_DATETIME,2); 	| DICTIONARY 	| x=1 2 3 1;<br>y=2.3 4.6 5.3 6.4;<br>z=dict(x, y); 	|
 
 The majority of DolphinDB data types can be constructed from corresponding Java data types. For examples, INT in DolphinDB from 'new BasicInt(4)', DOUBLE in DolphinDB from 'new BasicDouble(1.23)'. The following DolphinDB data types, however, need to be constructed in different ways:
