@@ -1,30 +1,31 @@
 # JAVA API 使用说明
 
 本教程主要介绍以下内容：
-- [1. Java API 概述](#1-java-api-概述)
-- [2. 建立DolphinDB连接](#2-建立dolphindb连接)
-  - [2.1 DBConnection](#21-dbconnection)
-  - [2.2 ExclusiveDBConnectionPool](#22-exclusivedbconnectionpool)
-- [3.运行DolphinDB脚本](#3运行dolphindb脚本)
-- [4. 运行DolphinDB函数](#4-运行dolphindb函数)
-- [5. 上传本地对象到DolphinDB服务器](#5-上传本地对象到dolphindb服务器)
-- [6. 读取数据示例](#6-读取数据示例)
-- [7. 读写DolphinDB数据表](#7-读写dolphindb数据表)
-  - [7.1 保存数据到DolphinDB内存表](#71-保存数据到dolphindb内存表)
-    - [7.1.1 使用 `insert into` 保存单条数据](#711-使用-insert-into-保存单条数据)
-    - [7.1.3 使用`tableInsert`函数保存BasicTable对象](#713-使用tableinsert函数保存basictable对象)
-  - [7.2 保存数据到分布式表](#72-保存数据到分布式表)
-  - [7.3 读取和使用数据表](#73-读取和使用数据表)
-  - [7.4 批量异步追加数据](#74-批量异步追加数据)
-  - [7.5 更新并写入DolphinDB的数据表](#75-更新并写入dolphindb的数据表)
-- [8. Java原生类型转换为DolphinDB数据类型](#8-java原生类型转换为dolphindb数据类型)
-- [9. Java流数据API](#9-java流数据api)
-  - [9.1 接口说明](#91-接口说明)
-  - [9.2 示例代码](#92-示例代码)
-  - [9.3 断线重连](#93-断线重连)
-  - [9.4 启用filter](#94-启用filter)
-  - [9.5 订阅异构流表](#95-订阅异构流表)
-  - [9.6 取消订阅](#96-取消订阅)
+- [JAVA API 使用说明](#java-api-使用说明)
+  - [1. Java API 概述](#1-java-api-概述)
+  - [2. 建立DolphinDB连接](#2-建立dolphindb连接)
+    - [2.1 DBConnection](#21-dbconnection)
+    - [2.2 ExclusiveDBConnectionPool](#22-exclusivedbconnectionpool)
+  - [3.运行DolphinDB脚本](#3运行dolphindb脚本)
+  - [4. 运行DolphinDB函数](#4-运行dolphindb函数)
+  - [5. 上传本地对象到DolphinDB服务器](#5-上传本地对象到dolphindb服务器)
+  - [6. 读取数据示例](#6-读取数据示例)
+  - [7. 读写DolphinDB数据表](#7-读写dolphindb数据表)
+    - [7.1 保存数据到DolphinDB内存表](#71-保存数据到dolphindb内存表)
+      - [7.1.1 使用 `insert into` 保存单条数据](#711-使用-insert-into-保存单条数据)
+      - [7.1.3 使用`tableInsert`函数保存BasicTable对象](#713-使用tableinsert函数保存basictable对象)
+    - [7.2 保存数据到分布式表](#72-保存数据到分布式表)
+    - [7.3 读取和使用数据表](#73-读取和使用数据表)
+    - [7.4 批量异步追加数据](#74-批量异步追加数据)
+    - [7.5 更新并写入DolphinDB的数据表](#75-更新并写入dolphindb的数据表)
+  - [8. Java原生类型转换为DolphinDB数据类型](#8-java原生类型转换为dolphindb数据类型)
+  - [9. Java流数据API](#9-java流数据api)
+    - [9.1 接口说明](#91-接口说明)
+    - [9.2 示例代码](#92-示例代码)
+    - [9.3 断线重连](#93-断线重连)
+    - [9.4 启用filter](#94-启用filter)
+    - [9.5 订阅异构流表](#95-订阅异构流表)
+    - [9.6 取消订阅](#96-取消订阅)
 
 ## 1. Java API 概述
 
@@ -54,7 +55,7 @@ DBConnection类提供如下主要方法：
 
 | 方法名        | 详情          |
 |:------------- |:-------------|
-|DBConnection([asynchronousTask, useSSL, compress, usePython])|构造对象|
+|DBConnection([asynchronousTask, useSSL, compress, usePython, sqlStd])|构造对象|
 |connect(host, port, [username, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect])|将会话连接到DolphinDB服务器|
 |login(username,password,enableEncryption)|登陆服务器|
 |run(script)|将脚本在DolphinDB服务器运行|
@@ -62,6 +63,14 @@ DBConnection类提供如下主要方法：
 |upload(variableObjectMap)|将本地数据对象上传到DolphinDB服务器|
 |isBusy()|判断当前会话是否正忙|
 |close()|关闭当前会话。若当前会话不再使用，会自动被释放，但存在释放延时，可以调用 `close()` 立即关闭会话。否则可能出现因连接数过多，导致其它会话无法连接服务器的问题。|
+
+DBConnection 构造方法新增参数 *sqlStd*，是一个枚举类型，用于指定传入 SQL 脚本的解析语法。自1.30.22.1版本起支持三种解析语法：DolphinDB、Oracle、MySQL，其中默认为 DolphinDB 解析。用户通过输入枚举类型 **SqlStdEnum** 选择语法。
+
+代码示例：
+
+```java
+DBConnection conn = new DBConnection(false, false, false, false, false, true, SqlStdEnum.DolphinDB);
+```
 
 Java API 的实际用例参见[example目录](./example)。
 

@@ -52,7 +52,7 @@ The most important object provided by DolphinDB Java API is `DBConnection`. It a
 
 | Method Name                                                  | Details                                  |
 | :----------------------------------------------------------- | :--------------------------------------- |
-| DBConnection([asynchronousTask, useSSL, compress, usePython]) | Construct an object                      |
+| DBConnection([asynchronousTask, useSSL, compress, usePython, sqlStd]) | Construct an object                      |
 | connect(host, port, [username, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect]) | Connect the session to DolphinDB server  |
 | login(username,password,enableEncryption)                    | Log in to DolphinDB server               |
 | run(script)                                                  | Run script on DolphinDB server           |
@@ -61,10 +61,17 @@ The most important object provided by DolphinDB Java API is `DBConnection`. It a
 | isBusy()                                                     | Check if the current session is busy     |
 | close()                                                      | Close the current session                |
 
+The parameter _sqlStd_ of the constructor method `DBConnection` is an enumeration type, specifying the syntax to parse input SQL scripts. Since version 1.30.22.1, three parsing syntaxes are supported: DolphinDB (default), Oracle, and MySQL. You can select the syntax by inputting the `SqlStdEnum` enumeration type.
+
+Example:
+
+```java
+DBConnection conn = new DBConnection(false, false, false, false, false, true, SqlStdEnum.DolphinDB);
+```
+
 Note: If the current session is no longer in use, Java API will automatically close the connection after a while. You can close the session by calling `close()` to release the connection. Otherwise, other sessions may be unable to connect to the server due to too many connections.
 
 For a detailed example, you can refer to the [example directory](./example).
-
 
 ## 2. Establish DolphinDB Connection
 
@@ -1002,6 +1009,52 @@ Output:
 ## 8. Data Type Conversion
 
 Java API provides objects that correspond to DolphinDB data types. They are usually named as Basic+ <DataType>, such as BasicInt, BasicDate, etc.
+
+Data Types
+
+| Java Primitive Data Type 	| Example 	| Java API Data Type 	| Example 	| DolphinDB Data Type 	| Example 	|
+|---	|---	|---	|---	|---	|---	|
+| Boolean 	| Boolean var = true; 	| BasicBoolean 	| BasicBoolean basicBoolean = new BasicBoolean(true); 	| BOOL 	| 1b, 0b, true, false 	|
+| Byte 	| byte number = 10; 	| BasicByte 	| BasicByte basicByte = new BasicByte((byte) 13); 	| CHAR 	| ‘a’, 97c 	|
+| LocalDate 	| LocalDate specificDate = LocalDate.of(2023, 6, 30); 	| BasicDate 	| BasicDate basicDate = new BasicDate(LocalDate.of(2021, 12, 9)); 	| DATE 	| 2023.06.13 	|
+| Calendar 	| // create a Calendar object with specified date and time<br>Calendar specificCalendar = Calendar.getInstance();<br>specificCalendar.set(2023, Calendar.JUNE, 30, 12, 0, 0); 	| BasicDate 	| BasicDate basicDate = new BasicDate(specificCalendar); 	| DATE 	| 2023.06.13 	|
+|   	| same as above 	| BasicDateHour 	| Calendar calendar = Calendar.getInstance();<br>calendar.set(2022,0,31,2,2,2);<br>BasicDateHour date = new BasicDateHour(calendar); 	| DATEHOUR 	| 2012.06.13T13 	|
+|   	| same as above 	| BasicDateTime 	| BasicDateTime basicDateTime = new BasicDateTime(new GregorianCalendar()); 	| DATETIME 	| 2012.06.13 13:30:10 or 2012.06.13T13:30:10 	|
+|   	| same as above 	| BasicMinute 	| BasicMinute basicMinute = new BasicMinute(new GregorianCalendar()); 	| MINUTE 	| 13:30m 	|
+|   	| same as above 	| BasicTime 	| BasicTime basicTime = new BasicTime(new GregorianCalendar()); 	| TIME 	| 13:30:10.008 	|
+|   	| same as above 	| BasicTimestamp 	| BasicTimestamp basicTimestamp = new BasicTimestamp(new GregorianCalendar()); 	| TIMESTAMP 	| 2012.06.13 13:30:10.008 or 2012.06.13T13:30:10.008 	|
+| LocalDateTime 	| LocalDateTime currentDateTime = LocalDateTime.now(); 	| BasicDateHour 	| BasicDateHour basicDateHour = new BasicDateHour(LocalDateTime.now()); 	| DATEHOUR 	| 2012.06.13T13 	|
+|   	| same as above 	| BasicDateTime 	| BasicDateTime basicDateTime = new BasicDateTime(LocalDateTime.of(2000, 2, 2, 3, 2, 3, 2)); 	| DATETIME 	| 2012.06.13 13:30:10 or 2012.06.13T13:30:10 	|
+|   	| same as above 	| BasicMinute 	| BasicMinute basicMinute = new BasicMinute(LocalTime.of(11, 40, 53)); 	| MINUTE 	| 13:30m 	|
+|   	| same as above 	| BasicNanoTime 	| BasicNanoTime basicNanoTime = new BasicNanoTime(LocalDateTime.of(2000, 2, 2, 3, 2, 3, 2)); 	| NANOTIME 	| 13:30:10.008007006 	|
+|   	| same as above 	| BasicNanoTimestamp 	| BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123456789)); 	| NANOTIMESTAMP 	| 2012.06.13 13:30:10.008007006 or 2012.06.13T13:30:10.008007006 	|
+|   	| same as above 	| BasicTimestamp 	| BasicTimestamp basicTimestamp = new BasicTimestamp(LocalDateTime.of(2000, 2, 2, 3, 2, 3, 2)); 	| TIMESTAMP 	| 2012.06.13 13:30:10.008 or 2012.06.13T13:30:10.008 	|
+| BigDecimal 	| BigDecimal decimal = new BigDecimal("3.1415926899");<br>BigDecimal afterSetScale = decimal.setScale(9, RoundingMode.FLOOR); 	| BasicDecimal32 	| BasicDecimal32 basicDecimal32 = new BasicDecimal32(15645.00, 0); 	| DECIMAL32(S) 	| 3.1415926$DECIMAL32(3) 	|
+| BigDecimal 	| BigDecimal decimal = new BigDecimal("3.1234567891234567891");BigDecimal afterSetScale = decimal.setScale(18, RoundingMode.FLOOR); 	| BasicDecimal64 	| BasicDecimal64 decimal64 = new BasicDecimal64(15645.00, 0); 	| DECIMAL64(S) 	| 3.1415926$DECIMAL64(3), , 3.141P 	|
+| BigDecimal 	| BigDecimal decimal = new BigDecimal("3.123456789123456789123456789123456789123");BigDecimal afterSetScale = decimal.setScale(38, RoundingMode.FLOOR); 	| BasicDecimal128 	| BasicDecimal128 basicDecimal128 = new BasicDecimal128("15645.00", 2); 	| DECIMAL128(S) 	|   	|
+| Double 	| Double number = Double.valueOf(3.14); 	| BasicDouble 	| BasicDouble basicDouble = new BasicDouble(15.48); 	| DOUBLE 	| 15.48 	|
+| - 	| - 	| BasicDuration 	| BasicDuration basicDuration = new BasicDuration(Entity.DURATION.SECOND, 1); 	| DURATION 	| 1s, 3M, 5y, 200ms 	|
+| Float 	| Float number = Float.valueOf(3.14f) 	| BasicFloat 	| BasicFloat basicFloat = new BasicFloat(2.1f); 	| FLOAT 	| 2.1f 	|
+| Integer 	| Integer number = 1; 	| BasicInt 	| BasicInt basicInt = new BasicInt(1); 	| INT 	| 1 	|
+| - 	| - 	| BasicInt128 	| BasicInt128 basicInt128 = BasicInt128.fromString("e1671797c52e15f763380b45e841ec32"); 	| INT128 	| e1671797c52e15f763380b45e841ec32 	|
+| - 	| - 	| BasicIPAddr 	| BasicIPAddr basicIPAddr = BasicIPAddr.fromString("192.168.1.13"); 	| IPADDR 	| 192.168.1.13 	|
+| Long 	| Long number = 123456789L; 	| BasicLong 	| BasicLong basicLong = new BasicLong(367); 	| LONG 	| 367l 	|
+| YearMonth 	| YearMonth yearMonth = YearMonth.of(2023, 6); 	| BasicMonth 	| BasicMonth basicMonth = new BasicMonth(YearMonth.of(2022, 7)); 	| MONTH 	| 2012.06M 	|
+| LocalTime 	| LocalTime specificTime = LocalTime.of(10, 30, 0);  	| BasicNanoTime 	| BasicNanoTime basicNanoTime = new BasicNanoTime(LocalTime.of(1, 1, 1, 1323433)); 	| NANOTIME 	| 13:30:10.008007006 	|
+|   	| same as above 	| BasicSecond 	| BasicSecond basicSecond = new BasicSecond(LocalTime.of(2, 2, 2)); 	| SECOND 	| 13:30:10 	|
+|   	| same as above 	| BasicTime 	| BasicTime basicTime = new BasicTime(LocalTime.of(13, 7, 55)); 	| TIME 	| 13:30:10.008 	|
+| - 	| - 	| BasicPoint 	| BasicPoint basicPoint = new BasicPoint(6.4, 9.2); 	| POINT 	| (117.60972, 24.118418) 	|
+| short 	| short number = 100;  	| BasicShort 	| BasicShort basicShort = new BasicShort((short) 21); 	| SHORT 	| 122h 	|
+| String 	| String s = “abcd“; 	| BasicString 	| BasicString basicString = new BasicString("colDefs"); 	| STRING 	| “Hello” or ‘Hello’ or `Hello 	|
+| - 	| - 	| BasicString 	| BasicString basicString = new BasicString("Jmeter", true); 	| BLOB 	| - 	|
+| UUID 	| UUID uuid = UUID.randomUUID(); 	| BasicUuid 	| BasicUuid.fromString(“5d212a78-cc48-e3b1-4235-b4d91473ee87“) 	| UUID 	| 5d212a78-cc48-e3b1-4235-b4d91473ee87 	|
+
+Data forms
+
+|  	|  	|  	|  	|  	|  	|
+|---	|---	|---	|---	|---	|---	|
+| Set 	| - 	| BasicSet 	| BasicSet bs = new BasicSet(Entity.DATA_TYPE.DT_INT,4); 	| set 	| x=set([5,5,3,4]);<br>x; 	|
+| - 	| - 	| BasicDictionary 	| BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_STRING, Entity.DATA_TYPE.DT_DATETIME,2); 	| DICTIONARY 	| x=1 2 3 1;<br>y=2.3 4.6 5.3 6.4;<br>z=dict(x, y); 	|
 
 The majority of DolphinDB data types can be constructed from corresponding Java data types. For examples, INT in DolphinDB from 'new BasicInt(4)', DOUBLE in DolphinDB from 'new BasicDouble(1.23)'. The following DolphinDB data types, however, need to be constructed in different ways:
 
