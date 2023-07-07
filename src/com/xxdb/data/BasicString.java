@@ -110,6 +110,14 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 		throw new Exception("Imcompatible data type");
 	}
 
+	public String toString() {
+		try {
+			return this.getNumber().toString();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	@Override
 	public Temporal getTemporal() throws Exception {
 		throw new Exception("Imcompatible data type");

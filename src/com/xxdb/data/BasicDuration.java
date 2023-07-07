@@ -44,6 +44,10 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 		return value;
 	}
 
+	public int intValue() throws Exception {
+		return this.getNumber().intValue();
+	}
+
 	@Override
 	public Temporal getTemporal() throws Exception {
 		throw new Exception("Imcompatible data type");

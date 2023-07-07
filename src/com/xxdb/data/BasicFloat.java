@@ -59,6 +59,10 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 			return value;
 	}
 
+	public float floatValue() throws Exception {
+		return this.getNumber().floatValue();
+	}
+
 	@Override
 	public Temporal getTemporal() throws Exception {
 		throw new Exception("Imcompatible data type");

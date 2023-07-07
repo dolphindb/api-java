@@ -54,6 +54,10 @@ public class BasicLong extends AbstractScalar implements Comparable<BasicLong>{
 			return value;
 	}
 
+	public long longValue() throws Exception {
+		return this.getNumber().longValue();
+	}
+
 	@Override
 	public Temporal getTemporal() throws Exception {
 		throw new Exception("Imcompatible data type");

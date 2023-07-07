@@ -144,6 +144,14 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
         }
     }
 
+    public String toString() {
+        try {
+            return this.getNumber().toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public int getScale() {
         return this.scale;

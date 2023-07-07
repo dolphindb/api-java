@@ -55,6 +55,10 @@ public class BasicByte extends AbstractScalar implements Comparable<BasicByte>{
 			return value;
 	}
 
+	public byte byteValue() throws Exception {
+		return this.getNumber().byteValue();
+	}
+
 	@Override
 	public Temporal getTemporal() throws Exception {
 		throw new Exception("Imcompatible data type");

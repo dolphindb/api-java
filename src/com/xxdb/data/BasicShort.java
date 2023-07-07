@@ -54,6 +54,10 @@ public class BasicShort extends AbstractScalar implements Comparable<BasicShort>
 			return value;
 	}
 
+	public short shortValue() throws Exception {
+		return this.getNumber().shortValue();
+	}
+
 	@Override
 	public Temporal getTemporal() throws Exception {
 		throw new Exception("Imcompatible data type");
