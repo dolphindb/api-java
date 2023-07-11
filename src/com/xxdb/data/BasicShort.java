@@ -54,7 +54,7 @@ public class BasicShort extends AbstractScalar implements Comparable<BasicShort>
 			return value;
 	}
 
-	public short shortValue() throws Exception {
+	public short intValue() throws Exception {
 		return this.getNumber().shortValue();
 	}
 

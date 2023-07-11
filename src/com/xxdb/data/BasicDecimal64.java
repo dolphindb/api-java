@@ -115,10 +115,6 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
         }
     }
 
-    public double doubleValue() throws Exception {
-        return this.getNumber().doubleValue();
-    }
-
     @Override
     public int getScale(){
         return scale_;
