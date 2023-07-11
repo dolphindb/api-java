@@ -59,8 +59,12 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 			return value;
 	}
 
-	public double doubleValue() throws Exception {
-		return this.getNumber().doubleValue();
+	public Double doubleValue() throws Exception {
+		if (isNull()) {
+			return null;
+		} else {
+			return this.getNumber().doubleValue();
+		}
 	}
 
 	@Override

@@ -59,8 +59,12 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 			return value;
 	}
 
-	public float floatValue() throws Exception {
-		return this.getNumber().floatValue();
+	public Float floatValue() throws Exception {
+		if (isNull()) {
+			return null;
+		} else {
+			return this.getNumber().floatValue();
+		}
 	}
 
 	@Override

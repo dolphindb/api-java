@@ -54,8 +54,12 @@ public class BasicInt extends AbstractScalar implements Comparable<BasicInt>{
 			return value;
 	}
 
-	public int intValue() throws Exception {
-		return this.getNumber().intValue();
+	public Integer intValue() throws Exception {
+		if (isNull()) {
+			return null;
+		} else {
+			return this.getNumber().intValue();
+		}
 	}
 
 	@Override
