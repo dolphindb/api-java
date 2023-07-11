@@ -55,8 +55,8 @@ public class BasicByte extends AbstractScalar implements Comparable<BasicByte>{
 			return value;
 	}
 
-	public byte byteValue() throws Exception {
-		return this.getNumber().byteValue();
+	public char charValue() throws Exception {
+		return (char) this.getNumber().byteValue();
 	}
 
 	@Override

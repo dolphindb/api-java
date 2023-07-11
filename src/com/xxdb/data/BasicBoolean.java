@@ -58,8 +58,8 @@ public class BasicBoolean extends AbstractScalar implements Comparable<BasicBool
 			return value;
 	}
 
-	public byte byteValue() throws Exception {
-		return this.getNumber().byteValue();
+	public boolean booleanValue() throws Exception {
+		return this.getNumber().byteValue() == 1;
 	}
 
 	@Override
