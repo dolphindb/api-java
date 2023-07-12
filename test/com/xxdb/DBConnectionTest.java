@@ -1,6 +1,6 @@
 package com.xxdb;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.comm.SqlStdEnum;
 import com.xxdb.data.Vector;
 import com.xxdb.data.*;
@@ -3775,6 +3775,27 @@ public void test_SSL() throws Exception {
         conn1.connect(HOST, PORT, "admin", "123456",null,false,null,true);
         conn1.close();
         conn.close();
+    }
+
+    @Test
+    public void TestConnectEnableHighAvailability_true_1() throws IOException, InterruptedException {
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,PORT,"admin","123456",null,true);
+//        BasicString nodeAliasTmp = (BasicString)conn1.run("getNodeAlias()");
+//        String nodeAlias = nodeAliasTmp.getString();
+//        try{
+//            conn.run("stopDataNode(\""+nodeAlias+"\")");
+//        }catch(Exception ex)
+//        {}
+//        Thread.sleep(1000);
+//        conn1.run("a=1;\n a");
+//        //The connection switches to a different node to execute the code
+//        try{
+//            conn.run("startDataNode(\""+nodeAlias+"\")");
+//        }catch(Exception ex)
+//        {}
+//        Thread.sleep(1000);
+//        assertEquals(true, conn1.isConnected());
     }
     //@Test
     public void test_string_length()throws Exception{
