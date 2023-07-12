@@ -63,7 +63,7 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 		if (isNull()) {
 			return null;
 		} else {
-			return this.getNumber().floatValue();
+			return value;
 		}
 	}
 

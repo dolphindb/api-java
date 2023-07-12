@@ -63,7 +63,7 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 		if (isNull()) {
 			return null;
 		} else {
-			return this.getNumber().doubleValue();
+			return value;
 		}
 	}
 

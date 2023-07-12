@@ -58,7 +58,7 @@ public class BasicInt extends AbstractScalar implements Comparable<BasicInt>{
 		if (isNull()) {
 			return null;
 		} else {
-			return this.getNumber().intValue();
+			return value;
 		}
 	}
 

@@ -58,7 +58,7 @@ public class BasicLong extends AbstractScalar implements Comparable<BasicLong>{
 		if (isNull()) {
 			return null;
 		} else {
-			return this.getNumber().longValue();
+			return value;
 		}
 	}
 
