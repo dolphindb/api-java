@@ -170,4 +170,12 @@ public class BasicIntTest {
         assertEquals(size+4,biv.size);
         assertEquals(capacity*2+3,biv.capaticy);
     }
+    @Test
+    public void test_intValue() throws Exception {
+        BasicInt bb = new BasicInt(1234);
+        bb.setNull();
+        assertEquals(null,bb.intValue());
+        BasicInt bb1 = new BasicInt(1234);
+        assertEquals("1234",bb1.intValue().toString());
+    }
 }

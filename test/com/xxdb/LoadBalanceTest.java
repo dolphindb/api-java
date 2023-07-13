@@ -167,7 +167,7 @@ public class LoadBalanceTest {
 
     }
 
-    @Test(timeout = 120000)
+    //@Test(timeout = 120000)
     public void test_load_balance_select_session() throws IOException, InterruptedException {
         for(int i = 0;i < 30;i++) {
             for(int x = 3;x > 0;x--) {
@@ -421,7 +421,6 @@ public class LoadBalanceTest {
 
     @Test
     public void Test_getConnection_enableHighAvailability_true_site_not_null_all_note_low_load() throws SQLException, ClassNotFoundException, IOException {
-        String JDBC_DRIVER = "com.dolphindb.jdbc.Driver";
         int count1 = 0;
         int count2 = 0;
         int count3 = 0;

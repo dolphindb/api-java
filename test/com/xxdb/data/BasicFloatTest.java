@@ -131,4 +131,12 @@ public class BasicFloatTest {
         bfv.Append(new BasicFloatVector(new float[]{(float) 3.992, (float) 9.705, (float) 4.441}));
         assertEquals(size+5,bfv.rows());
     }
+    @Test
+    public void test_floatValue() throws Exception {
+        BasicFloat bb = new BasicFloat((float) 9.705);
+        bb.setNull();
+        assertEquals(null,bb.floatValue());
+        BasicFloat bb1 = new BasicFloat((float) 9.705);
+        assertEquals("9.705",bb1.floatValue().toString());
+    }
 }

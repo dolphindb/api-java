@@ -171,4 +171,12 @@ public class BasicLongTest {
         assertEquals(size+4,blv.size);
         assertEquals(capacity*2+3,blv.capaticy);
     }
+    @Test
+    public void test_longValue() throws Exception {
+        BasicLong bb = new BasicLong(860L);
+        bb.setNull();
+        assertEquals(null,bb.longValue());
+        BasicLong bb1 = new BasicLong(860L);
+        assertEquals("860",bb1.longValue().toString());
+    }
 }

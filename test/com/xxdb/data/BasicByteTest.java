@@ -9,10 +9,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -557,5 +554,12 @@ public class BasicByteTest {
         assertEquals(size+2,bbv.rows());
         bbv.Append(new BasicByteVector(new byte[]{'t','i','m','i','n','g'}));
         assertEquals(size+8,bbv.rows());
+    }
+    @Test
+    public void test_byteValue() throws Exception {
+        BasicByte bb = new BasicByte(Byte.MIN_VALUE);
+        assertEquals(null,bb.byteValue());
+        BasicByte bb1 = new BasicByte((byte) 117);
+        assertEquals(true,bb1.byteValue().equals((byte) 117));
     }
 }

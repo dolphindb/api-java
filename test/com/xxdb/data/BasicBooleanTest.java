@@ -171,4 +171,13 @@ public class BasicBooleanTest {
         }catch (Exception e){
         }
     }
+    @Test
+    public void test_booleanValue() throws Exception {
+        BasicBoolean bb = new BasicBoolean(Byte.MIN_VALUE);
+        assertEquals(null,bb.booleanValue());
+        BasicBoolean bb1 = new BasicBoolean(true);
+        assertEquals(true,bb1.booleanValue());
+        BasicBoolean bb2 = new BasicBoolean(false);
+        assertEquals(false,bb2.booleanValue());
+    }
 }

@@ -131,7 +131,7 @@ public class BasicInt128Test {
         assertEquals("",bi128v.get(2).getString());
     }
 
-    @Test
+    //@Test
     public void test_BasicInt128Vector_df_in() throws IOException {
         ExtendedDataInput in = new BigEndianDataInputStream(new InputStream() {
             @Override

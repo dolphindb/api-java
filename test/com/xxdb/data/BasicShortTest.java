@@ -174,4 +174,12 @@ public class BasicShortTest {
         bsv.Append(new BasicShortVector(new short[]{16,23,11}));
         assertEquals(size+4,bsv.rows());
     }
+    @Test
+    public void test_shortValue() throws Exception {
+        BasicShort bb = new BasicShort((short) 88);
+        bb.setNull();
+        assertEquals(null,bb.shortValue());
+        BasicShort bb1 = new BasicShort((short) 88);
+        assertEquals("88",bb1.shortValue().toString());
+    }
 }

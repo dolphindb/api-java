@@ -110,6 +110,13 @@ public class BasicDoubleTest {
         assertEquals(size+3,bdv.rows());
         assertEquals(2.798,bdv.getDouble(5),0);
     }
-
+    @Test
+    public void test_doubleValue() throws Exception {
+        BasicDouble bb = new BasicDouble(1.243);
+        bb.setNull();
+        assertEquals(null,bb.doubleValue());
+        BasicDouble bb1 = new BasicDouble(1.243);
+        assertEquals("1.243",bb1.doubleValue().toString());
+    }
 
 }

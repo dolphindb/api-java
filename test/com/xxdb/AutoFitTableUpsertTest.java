@@ -257,7 +257,7 @@ public class AutoFitTableUpsertTest {
         assertEquals(50080100,ua.rows());
     }
 
-    @Test
+    @Test(timeout=120000)
     public void test_tableUpsert_DD_bigData() throws Exception {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
