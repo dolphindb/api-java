@@ -152,14 +152,14 @@ public class LoadBalanceTest {
         conn.run("haTableName='ha_stream'; " +
                 "try{ dropStreamTable(haTableName); }catch(ex){}\n " +
                 "t = table(1:0, `timestamp`sym`qty`price,[TIMESTAMP,SYMBOL,INT,DOUBLE]);" +
-                "haStreamTable(3,t,haTableName,1000000);");
+                "haStreamTable(11,t,haTableName,1000000);");
         conn.run("n = 100000;t1 = table(100:0, `timestampv`sym`qty`price1, [TIMESTAMP, SYMBOL,INT, DOUBLE]);\n" +
                 "share t1 as table1;\n" +
                 "tableInsert(table1, 2012.01.01T01:21:23 + 1..n, take(`a`b`c,n), rand(100,n),rand(1.0, n));\n" +
-                "leader_node = getStreamingLeader(3)\n" +
+                "leader_node = getStreamingLeader(11)\n" +
                 "rpc(leader_node,replay,table1,`ha_stream,`timestampv,`timestampv)");
         //conn.run("select * from ha_stream");
-        conn.run("leader_node = getStreamingLeader(3)\n" +
+        conn.run("leader_node = getStreamingLeader(11)\n" +
                 "re = select host,port from rpc(getControllerAlias(),getClusterPerf) where name = leader_node\n");
         BasicString leader_host = (BasicString) conn.run("re.host[0]");
         BasicInt leader_port = (BasicInt) conn.run("re.port[0]");
