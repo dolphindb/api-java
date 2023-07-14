@@ -195,7 +195,7 @@ public class LoadBalanceTest {
             assertEquals(port_list[0], now_ports.toArray()[i]);
         }
     }
-    //@Test
+    //@Test(timeout = 60000)
     public void Test_getConnection_enableHighAvailability_true_memory_high_load() throws SQLException, ClassNotFoundException, IOException {
         int count1 = 0;
         int count2 = 0;
@@ -209,16 +209,16 @@ public class LoadBalanceTest {
                 String now_host = conn.getHostName();
                 Integer now_port = conn.getPort();
                 switch (now_port) {
-                    case 18921:
+                    case 23762:
                         count1++;
                         break;
-                    case 18922:
+                    case 23763:
                         count2++;
                         break;
-                    case 18923:
+                    case 23764:
                         count3++;
                         break;
-                    case 18924:
+                    case 23765:
                         count4++;
                         break;
                 }
@@ -231,7 +231,7 @@ public class LoadBalanceTest {
         System.out.println(count4);
     }
 
-    //@Test
+    //@Test(timeout = 60000)
     public void Test_getConnection_enableHighAvailability_true_all_note_memory_high_load_1() throws SQLException, ClassNotFoundException, IOException {
         int count1 = 0;
         int count2 = 0;
@@ -245,16 +245,16 @@ public class LoadBalanceTest {
                 String now_host = conn.getHostName();
                 Integer now_port = conn.getPort();
                 switch (now_port) {
-                    case 18921:
+                    case 23762:
                         count1++;
                         break;
-                    case 18922:
+                    case 23763:
                         count2++;
                         break;
-                    case 18923:
+                    case 23764:
                         count3++;
                         break;
-                    case 18924:
+                    case 23765:
                         count4++;
                         break;
                 }
@@ -266,7 +266,7 @@ public class LoadBalanceTest {
         System.out.println(count3);
         System.out.println(count4);
     }
-    //@Test
+    //@Test(timeout = 60000)
     public void Test_getConnection_enableHighAvailability_true_conn_high_load() throws SQLException, ClassNotFoundException, IOException {
         int count1 = 0;
         int count2 = 0;
@@ -280,16 +280,16 @@ public class LoadBalanceTest {
                 String now_host = conn.getHostName();
                 Integer now_port = conn.getPort();
                 switch (now_port) {
-                    case 18921:
+                    case 23762:
                         count1++;
                         break;
-                    case 18922:
+                    case 23763:
                         count2++;
                         break;
-                    case 18923:
+                    case 23764:
                         count3++;
                         break;
-                    case 18924:
+                    case 23765:
                         count4++;
                         break;
                 }
@@ -302,7 +302,7 @@ public class LoadBalanceTest {
         System.out.println(count4);
     }
 
-    //@Test
+    //@Test(timeout = 60000)
     public void Test_getConnection_enableHighAvailability_true_all_note_conn_high_load_1() throws SQLException, ClassNotFoundException, IOException {
         int count1 = 0;
         int count2 = 0;
@@ -316,16 +316,16 @@ public class LoadBalanceTest {
                 String now_host = conn.getHostName();
                 Integer now_port = conn.getPort();
                 switch (now_port) {
-                    case 18921:
+                    case 23762:
                         count1++;
                         break;
-                    case 18922:
+                    case 23763:
                         count2++;
                         break;
-                    case 18923:
+                    case 23764:
                         count3++;
                         break;
-                    case 18924:
+                    case 23765:
                         count4++;
                         break;
                 }
@@ -337,7 +337,7 @@ public class LoadBalanceTest {
         System.out.println(count3);
         System.out.println(count4);
     }
-    @Test
+    @Test(timeout = 120000)
     public void Test_getConnection_enableHighAvailability_false_1() throws SQLException, ClassNotFoundException, IOException {
         int count1 = 0;
         int count2 = 0;
@@ -351,16 +351,16 @@ public class LoadBalanceTest {
                 String now_host = conn.getHostName();
                 Integer now_port = conn.getPort();
                 switch (now_port) {
-                    case 18921:
+                    case 23762:
                         count1++;
                         break;
-                    case 18922:
+                    case 23763:
                         count2++;
                         break;
-                    case 18923:
+                    case 23764:
                         count3++;
                         break;
-                    case 18924:
+                    case 23765:
                         count4++;
                         break;
                 }
@@ -378,7 +378,7 @@ public class LoadBalanceTest {
         org.junit.Assert.assertEquals(true, count4==0);
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void Test_getConnection_enableHighAvailability_true_site_null_all_note_low_load() throws SQLException, ClassNotFoundException, IOException {
         int count1 = 0;
         int count2 = 0;
@@ -392,16 +392,16 @@ public class LoadBalanceTest {
                 String now_host = conn.getHostName();
                 Integer now_port = conn.getPort();
                 switch (now_port) {
-                    case 18921:
+                    case 23762:
                         count1++;
                         break;
-                    case 18922:
+                    case 23763:
                         count2++;
                         break;
-                    case 18923:
+                    case 23764:
                         count3++;
                         break;
-                    case 18924:
+                    case 23765:
                         count4++;
                         break;
                 }
@@ -419,7 +419,7 @@ public class LoadBalanceTest {
     }
 
 
-    @Test
+    @Test(timeout = 120000)
     public void Test_getConnection_enableHighAvailability_true_site_not_null_all_note_low_load() throws SQLException, ClassNotFoundException, IOException {
         int count1 = 0;
         int count2 = 0;
@@ -433,16 +433,16 @@ public class LoadBalanceTest {
                 String now_host = conn.getHostName();
                 Integer now_port = conn.getPort();
                 switch (now_port) {
-                    case 18921:
+                    case 23762:
                         count1++;
                         break;
-                    case 18922:
+                    case 23763:
                         count2++;
                         break;
-                    case 18923:
+                    case 23764:
                         count3++;
                         break;
-                    case 18924:
+                    case 23765:
                         count4++;
                         break;
                 }
@@ -462,7 +462,7 @@ public class LoadBalanceTest {
 
     }
 
-    //@Test
+    //@Test(timeout = 120000)
     public void Test_getConnection_enableHighAvailability_true_6() throws SQLException, ClassNotFoundException, IOException {
         String JDBC_DRIVER = "com.dolphindb.jdbc.Driver";
         int count1 = 0;
@@ -525,7 +525,7 @@ public class LoadBalanceTest {
 
     }
 
-    //@Test
+    //@Test(timeout = 120000)
 //    public void Test_getConnection_enableHighAvailability_true_7() throws SQLException, ClassNotFoundException, IOException {
 //        String JDBC_DRIVER = "com.dolphindb.jdbc.Driver";
 //        int count1 = 0;

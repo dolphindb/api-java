@@ -1,5 +1,5 @@
-package com.xxdb;
-
+package com.xxdb.streaming.stream;
+import com.xxdb.DBConnection;
 import com.xxdb.data.Vector;
 import com.xxdb.data.*;
 import com.xxdb.streaming.client.*;
@@ -813,6 +813,7 @@ public class ThreadedClientsubscribeTest {
         client.unsubscribe(HOST, PORT, "Trades", "subTrades1");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades2");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades3");
+        conn.run("sleep(5000)");
         }
     }
 
@@ -2105,5 +2106,4 @@ public class ThreadedClientsubscribeTest {
         Assert.assertEquals(20000, msg2.size());
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
-
 }

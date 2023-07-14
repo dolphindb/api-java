@@ -15,24 +15,17 @@
   }
   insert into trades values(timev, symv, take(-1, 1), pricev, exchv,x)
 */
-package com.xxdb;
-
+package com.xxdb.streaming.stream;
+import com.xxdb.DBConnection;
 import com.xxdb.data.*;
-import com.xxdb.streaming.client.BasicMessage;
-import com.xxdb.streaming.client.IMessage;
-import com.xxdb.streaming.client.PollingClient;
-import com.xxdb.streaming.client.TopicPoller;
+import com.xxdb.data.Vector;
+import com.xxdb.streaming.client.*;
 import org.junit.*;
-
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-
 import static org.junit.Assert.*;
 
 public class PollingClientTest {
@@ -654,5 +647,42 @@ public class PollingClientTest {
         MyPollingClient mpl = new MyPollingClient(HOST,10086);
         assertFalse(mpl.doReconnect(null));
     }
+    @Test
+    public void test_subscribe_msgAsTable_true() throws IOException {
+        //public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer
+        //deserializer, String userName, String passWord, boolean msgAsTable) throws IOException {
 
+        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",0,true,null,null,"","",true);
+        ArrayList<IMessage> msg1;
+        List<String> colNames =  Arrays.asList("tag","ts","data");
+        List<Vector> colData = Arrays.asList(new BasicIntVector(0),new BasicTimestampVector(0),new BasicDoubleVector(0));
+        BasicTable bt = new BasicTable(colNames,colData);
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades.append!(t)");
+        msg1 = poller1.poll(1000, 10000);
+        System.out.println(bt.rows());
+        assertEquals(5000, msg1.size());
+        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+    }
+    @Test
+    public void test_subscribe_msgAsTable_false() throws IOException {
+        //public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer
+        //deserializer, String userName, String passWord, boolean msgAsTable) throws IOException {
+
+        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",0,true,null,null,"","",false);
+        ArrayList<IMessage> msg1;
+        List<String> colNames =  Arrays.asList("tag","ts","data");
+        List<Vector> colData = Arrays.asList(new BasicIntVector(0),new BasicTimestampVector(0),new BasicDoubleVector(0));
+        BasicTable bt = new BasicTable(colNames,colData);
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades.append!(t)");
+        msg1 = poller1.poll(1000, 10000);
+        System.out.println(bt.rows());
+        assertEquals(5000, msg1.size());
+        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+    }
+    @Test
+    public void test_subscribe_msgAsTable_true_allDataType() throws IOException {
+
+    }
 }

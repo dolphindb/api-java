@@ -117,7 +117,7 @@ public class BasicArrayVectorTest {
         }
         obj.Append(new BasicFloatVector(new float[]{(float) 17.92, (float) 16.62, (float) 15.66, (float) 9.07}));
         assertEquals(20001,obj.rows());
-        assertEquals("[17.92,16.620001,15.66,9.07]",obj.getVectorValue(20000).getString());
+        assertEquals("[17.92000008,16.62000084,15.65999985,9.06999969]",obj.getVectorValue(20000).getString());
         assertEquals(Entity.DATA_TYPE.DT_FLOAT_ARRAY,obj.getDataType());
         conn.close();
 

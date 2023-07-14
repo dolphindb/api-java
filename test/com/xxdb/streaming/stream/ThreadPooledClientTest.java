@@ -1,5 +1,6 @@
-package com.xxdb;
+package com.xxdb.streaming.stream;
 
+import com.xxdb.DBConnection;
 import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicTable;
 import com.xxdb.data.Scalar;

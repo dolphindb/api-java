@@ -503,7 +503,7 @@ public class BasicSymbolTest {
         System.out.println(Arrays.toString(bb.array()));
     }
 
-    @Test
+    @Test(timeout=12000)
     public void test_BasicSymbolVector_Append(){
         List<String> list = new ArrayList<>();
         list.add("GaussDB");
@@ -521,7 +521,7 @@ public class BasicSymbolTest {
         assertEquals(size+1,bsv.rows());
     }
 
-    @Test
+    @Test(timeout=120000)
     public void test_BasicSymbolVector_run_bigdata() throws IOException {
         BasicSymbolVector re1 =(BasicSymbolVector) conn.run("a=array(SYMBOL,10).append!(string(concat(take(`abcd中文123,100000))));a");
         System.out.println(re1.get(10).getString());
@@ -536,7 +536,7 @@ public class BasicSymbolTest {
         BasicString data = new BasicString(dd);
         assertEquals(data.getString(),re1.get(10).getString());
     }
-    @Test
+    @Test(timeout=120000)
     public void test_Symbol_getDataType() throws IOException {
         Entity re1 = conn.run("symbol([concat(take(`aaaaaaaaa,1)),concat(take(`aaaaaaaaa,1)),concat(take(`aaaaaaaaa,1)),concat(take(`aaaaaaaaa,1))])");
         assertEquals("SYMBOL",re1.getDataType().getName());

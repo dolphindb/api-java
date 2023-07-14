@@ -383,7 +383,7 @@ public class PollingClientReverseTest {
         assertEquals(10000, msgs1.size());
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_offset() throws IOException {
         TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",0);
         ArrayList<IMessage> msg1;
@@ -394,7 +394,7 @@ public class PollingClientReverseTest {
         client.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_defaultActionName_offset() throws IOException {
         TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1",-1);
         ArrayList<IMessage> msg1;
@@ -405,7 +405,7 @@ public class PollingClientReverseTest {
         client.unsubscribe(HOST,PORT,"Trades1");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_TableName() throws IOException {
         TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1");
         ArrayList<IMessage> msg1;
@@ -416,7 +416,7 @@ public class PollingClientReverseTest {
         client.unsubscribe(HOST,PORT,"Trades1");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_tableName_ActionName() throws IOException {
         TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1");
         ArrayList<IMessage> msg1;
@@ -427,7 +427,7 @@ public class PollingClientReverseTest {
         client.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_tableName_ActionName_offset_filter() throws IOException {
         conn.run("setStreamTableFilterColumn(Trades1,`tag);" +
                 "filter=1 2 3 4 5");
@@ -479,7 +479,7 @@ public class PollingClientReverseTest {
 
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_offset_reconnect() throws IOException {
         for (int j=0;j<10;j++) {
             TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1",-1,true);
@@ -516,7 +516,7 @@ public class PollingClientReverseTest {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_tableName_actionName_offset_reconnect() throws IOException {
         for (int j=0;j<10;j++) {
             TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1","subTrades1",-1,true);
@@ -553,7 +553,7 @@ public class PollingClientReverseTest {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_subscribe_tableName_actionName_reconnect() throws IOException {
         TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1","subTrades1",true);
         PollingClient client1 = new PollingClient(HOST,0);
@@ -596,7 +596,7 @@ public class PollingClientReverseTest {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_TopicPoller_take() throws Exception {
         List<IMessage> list = new ArrayList<>();
         HashMap<String,Integer> map = new HashMap<>();
@@ -646,7 +646,7 @@ public class PollingClientReverseTest {
         assertEquals(5000, msg1.size());
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void test_PollingClient_doReconnect() throws SocketException {
         class MyPollingClient extends PollingClient{
 

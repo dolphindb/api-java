@@ -86,7 +86,7 @@ public class BasicFloatTest {
         assertEquals(bfv.get(0),new BasicFloat((float)0.79));
         bfv.setFloat(2, (float) 15.45);
         bfv.setNull(3);
-        assertEquals("[15.45,8.85,,0.79]",bfv.getSubVector(new int[]{2,1,3,0}).getString());
+        assertEquals("[15.44999981,8.85000038,,0.79000002]",bfv.getSubVector(new int[]{2,1,3,0}).getString());
         assertEquals(Entity.DATA_CATEGORY.FLOATING,bfv.getDataCategory());
         assertEquals(BasicFloat.class,bfv.getElementClass());
     }

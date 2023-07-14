@@ -1446,7 +1446,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         mutithreadTableWriter_.waitForThreadCompletion();
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
         assertEquals(3, bt.rows());
-        assertEquals("[1.9,-1.9,]", bt.getColumn("float").getString());
+        assertEquals("[1.89999998,-1.89999998,]", bt.getColumn("float").getString());
         assertEquals("[0.2,-0.2,]", bt.getColumn("double").getString());
         conn.run("undef(`t1,SHARED)");
     }
@@ -1470,7 +1470,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
         System.out.println(bt.getString());
         assertEquals(3, bt.rows());
-        assertEquals("[1.9,-1.9,]", bt.getColumn("float").getString());
+        assertEquals("[1.89999998,-1.89999998,]", bt.getColumn("float").getString());
         assertEquals("[0.2,-0.2,]", bt.getColumn("double").getString());
         //conn.run("undef(`t1,SHARED)");
     }
@@ -6874,7 +6874,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
         assertEquals(6, bt.rows());
         System.out.println(bt.getString());
-        assertEquals("[1,2,3,4,5.55,6.66]", bt.getColumn("float").getString());
+        assertEquals("[1,2,3,4,5.55000019,6.65999985]", bt.getColumn("float").getString());
         assertEquals("[11,22,33,44,55,66.66]", bt.getColumn("double").getString());
         conn.run("undef(`t1,SHARED)");
     }
