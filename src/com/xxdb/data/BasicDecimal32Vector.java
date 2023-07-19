@@ -37,6 +37,25 @@ public class BasicDecimal32Vector extends AbstractVector{
         capaticy = values.length;
     }
 
+    public BasicDecimal32Vector(String[] data, int scale) {
+        super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 9) {
+            throw new RuntimeException("Scale out of bound (valid range: [0, 9], but get: " + scale + ")");
+        }
+        scale_ = scale;
+
+        int length = data.length;
+        values = new int[length];
+        BigDecimal pow = BigDecimal.TEN.pow(scale_);
+        for (int i = 0; i < length; i++) {
+            BigDecimal bd = new BigDecimal(data[i]);
+            values[i] = bd.multiply(pow).intValue();
+        }
+
+        size = length;
+        capaticy = length;
+    }
+
     BasicDecimal32Vector(int[] dataValue, int scale){
         super(DATA_FORM.DF_VECTOR);
         this.scale_ = scale;
@@ -76,6 +95,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         capaticy = values.length;
     }
 
+    @Deprecated
     public BasicDecimal32Vector(double[] data, int scale){
         super(DATA_FORM.DF_VECTOR);
         if (scale < 0 || scale > 18)

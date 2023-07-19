@@ -34,7 +34,11 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     public BasicDecimal128Vector(String[] dataValue, int scale) {
         super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 38) {
+            throw new RuntimeException("Scale out of bound (valid range: [0, 38], but get: " + scale + ")");
+        }
         this.scale_ = scale;
+
         BigInteger[] newArray = new BigInteger[dataValue.length];
         for (int i = 0; i < dataValue.length; i++ ) {
             BigDecimal bd = new BigDecimal(dataValue[i]).scaleByPowerOfTen(scale);

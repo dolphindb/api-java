@@ -22,6 +22,10 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
     }
 
     public BasicDecimal128(BigInteger unscaledVal, int scale) {
+        if (scale < 0 || scale > 38) {
+            throw new RuntimeException("Scale out of bound (valid range: [0, 38], but get: " + scale + ")");
+        }
+
         BigDecimal bd = new BigDecimal(unscaledVal);
         if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0) {
             throw new RuntimeException("Decimal128 overflow " + unscaledVal);

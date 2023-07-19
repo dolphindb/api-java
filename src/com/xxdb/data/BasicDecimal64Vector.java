@@ -45,6 +45,25 @@ public class BasicDecimal64Vector extends AbstractVector{
         capaticy = values.length;
     }
 
+    public BasicDecimal64Vector(String[] data, int scale) {
+        super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 18) {
+            throw new RuntimeException("Scale out of bound (valid range: [0, 18], but get: " + scale + ")");
+        }
+        scale_ = scale;
+
+        int length = data.length;
+        values = new long[length];
+        BigDecimal pow = BigDecimal.TEN.pow(scale_);
+        for (int i = 0; i < length; i++) {
+            BigDecimal bd = new BigDecimal(data[i]);
+            values[i] = bd.multiply(pow).longValue();
+        }
+
+        size = length;
+        capaticy = length;
+    }
+
     public BasicDecimal64Vector(DATA_FORM df, ExtendedDataInput in, int extra) throws IOException{
         super(df);
         int rows = in.readInt();
@@ -76,6 +95,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         capaticy = values.length;
     }
 
+    @Deprecated
     public BasicDecimal64Vector(double[] data, int scale){
         super(DATA_FORM.DF_VECTOR);
         if (scale < 0 || scale > 18)

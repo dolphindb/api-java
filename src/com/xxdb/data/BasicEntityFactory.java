@@ -1,15 +1,15 @@
 package com.xxdb.data;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.time.*;
-import java.util.Calendar;
-import java.util.Date;
-
 import com.xxdb.data.Entity.DATA_TYPE;
 import com.xxdb.data.Entity.DURATION;
 import com.xxdb.io.ExtendedDataInput;
-
+import java.io.IOException;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Calendar;
+import java.util.Date;
 
 import static com.xxdb.data.Entity.DATA_TYPE.*;
 
@@ -903,9 +903,9 @@ public class BasicEntityFactory implements EntityFactory{
 			case DT_DOUBLE:
 				return new BasicDouble(val);
 			case DT_DECIMAL32:
-				return new BasicDecimal32(val, extraParam);
+				return new BasicDecimal32(Float.toString(val), extraParam);
 			case DT_DECIMAL64:
-				return new BasicDecimal64(val, extraParam);
+				return new BasicDecimal64(Float.toString(val), extraParam);
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert float to " + dataType + ".");
 		}
@@ -921,9 +921,9 @@ public class BasicEntityFactory implements EntityFactory{
 			case DT_DOUBLE:
 				return new BasicDouble(val);
 			case DT_DECIMAL32:
-				return new BasicDecimal32(val, extraParam);
+				return new BasicDecimal32(Double.toString(val), extraParam);
 			case DT_DECIMAL64:
-				return new BasicDecimal64(val, extraParam);
+				return new BasicDecimal64(Double.toString(val), extraParam);
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert double to " + dataType + ".");
 		}
@@ -999,7 +999,7 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicTimestamp(val);
 			case DT_DECIMAL32:
 				if(val >= Integer.MIN_VALUE && val <= Integer.MAX_VALUE)
-					return new BasicDecimal32(val, extraParam);
+					return new BasicDecimal32(Long.toString(val), extraParam);
 				else
 					throw new RuntimeException("Failed to insert data, long cannot be converted because it exceeds the range of " + dataType + ".");
 			case DT_DECIMAL64:

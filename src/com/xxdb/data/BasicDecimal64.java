@@ -22,6 +22,23 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
         value_ = value * (long) Math.pow(10, scale_);
     }
 
+    public BasicDecimal64(String value, int scale) {
+        if (scale < 0 || scale > 18) {
+            throw new RuntimeException("Scale out of bound (valid range: [0, 18], but get: " + scale + ")");
+        }
+        scale_ = scale;
+
+        if ("0".equals(value)) {
+            value_ = 0L;
+        } else {
+            BigDecimal bd = new BigDecimal(value);
+            BigDecimal pow = BigDecimal.TEN.pow(scale_);
+            BigDecimal multipliedValue = bd.multiply(pow);
+            value_ = multipliedValue.longValue();
+        }
+    }
+
+    @Deprecated
     public BasicDecimal64(double value, int scale){
         scale_ = scale;
         if (value == 0)
