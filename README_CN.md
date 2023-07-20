@@ -1,25 +1,31 @@
+# JAVA API 使用说明
+
 本教程主要介绍以下内容：
-- [1. Java API 概述](#1-java-api-概述)
-- [2. 建立DolphinDB连接](#2-建立dolphindb连接)
-  - [2.1 DBConnection](#21-dbconnection)
-  - [2.2 ExclusiveDBConnectionPool](#22-exclusivedbconnectionpool)
-- [3.运行DolphinDB脚本](#3运行dolphindb脚本)
-- [4. 运行DolphinDB函数](#4-运行dolphindb函数)
-- [5. 上传本地对象到DolphinDB服务器](#5-上传本地对象到dolphindb服务器)
-- [6. 读取数据示例](#6-读取数据示例)
-- [7. 读写DolphinDB数据表](#7-读写dolphindb数据表)
-  - [7.1 保存数据到DolphinDB内存表](#71-保存数据到dolphindb内存表)
-  - [7.2 保存数据到分布式表](#72-保存数据到分布式表)
-  - [7.3 读取和使用数据表](#73-读取和使用数据表)
-  - [7.4 批量异步追加数据](#74-批量异步追加数据)
-- [8. Java原生类型转换为DolphinDB数据类型](#8-java原生类型转换为dolphindb数据类型)
-- [9. Java流数据API](#9-java流数据api)
-  - [9.1 接口说明](#91-接口说明)
-  - [9.2 示例代码](#92-示例代码)
-  - [9.3 断线重连](#93-断线重连)
-  - [9.4 启用filter](#94-启用filter)
-  - [9.5 订阅异构流表](#95-订阅异构流表)
-  - [9.6 取消订阅](#96-取消订阅)
+- [JAVA API 使用说明](#java-api-使用说明)
+  - [1. Java API 概述](#1-java-api-概述)
+  - [2. 建立DolphinDB连接](#2-建立dolphindb连接)
+    - [2.1 DBConnection](#21-dbconnection)
+    - [2.2 ExclusiveDBConnectionPool](#22-exclusivedbconnectionpool)
+  - [3.运行DolphinDB脚本](#3运行dolphindb脚本)
+  - [4. 运行DolphinDB函数](#4-运行dolphindb函数)
+  - [5. 上传本地对象到DolphinDB服务器](#5-上传本地对象到dolphindb服务器)
+  - [6. 读取数据示例](#6-读取数据示例)
+  - [7. 读写DolphinDB数据表](#7-读写dolphindb数据表)
+    - [7.1 保存数据到DolphinDB内存表](#71-保存数据到dolphindb内存表)
+      - [7.1.1 使用 `insert into` 保存单条数据](#711-使用-insert-into-保存单条数据)
+      - [7.1.3 使用`tableInsert`函数保存BasicTable对象](#713-使用tableinsert函数保存basictable对象)
+    - [7.2 保存数据到分布式表](#72-保存数据到分布式表)
+    - [7.3 读取和使用数据表](#73-读取和使用数据表)
+    - [7.4 批量异步追加数据](#74-批量异步追加数据)
+    - [7.5 更新并写入DolphinDB的数据表](#75-更新并写入dolphindb的数据表)
+  - [8. Java原生类型转换为DolphinDB数据类型](#8-java原生类型转换为dolphindb数据类型)
+  - [9. Java流数据API](#9-java流数据api)
+    - [9.1 接口说明](#91-接口说明)
+    - [9.2 示例代码](#92-示例代码)
+    - [9.3 断线重连](#93-断线重连)
+    - [9.4 启用filter](#94-启用filter)
+    - [9.5 订阅异构流表](#95-订阅异构流表)
+    - [9.6 取消订阅](#96-取消订阅)
 
 ## 1. Java API 概述
 
@@ -80,7 +86,7 @@ DBConnection conn = new DBConnection();
 boolean success = conn.connect("localhost", 8848);
 ```
 
-声明connection变量的时候，有三个可选参数：useSSL（支持SSL），asynchronousTask（支持一部分）。这两个参数默认值为false。 目前只支持linux, 稳定版>=1.10.17,最新版>=1.20.6。
+声明connection变量的时候，有三个可选参数：asynchronousTask（支持异步），compress（支持开启压缩），useSSL（支持SSL）。以上三个参数默认值为false。 目前只支持linux, 稳定版>=1.10.17,最新版>=1.20.6。
 
 下面例子是，建立支持SSL而非支持异步的connection，要求数据进行压缩。服务器端应该添加参数enableHTTPS=true(单节点部署，需要添加到dolphindb.cfg;集群部署需要添加到cluster.cfg)。
 
@@ -101,6 +107,17 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 
 若未使用用户名及密码连接成功，则脚本在Guest权限下运行。后续运行中若需要提升权限，可以使用 conn.login('admin','123456',true) 登录获取权限。
 
+若需要开启 API 高可用，则须设置 highAvailability=true。1.30.22.1及之前版本的 API 将随机选择一个可用节点进行连接；用户也可以通过 highAvailabilitySites 指定可连接的节点组，此时 API 将从 highAvailabilitySites 中随机选择可用节点进行连接。示例如下：
+
+```java
+sites=["192.168.1.2:24120", "192.168.1.3:24120", "192.168.1.4:24120"]
+boolean success = conn.connect("192.168.1.2", 24120, "admin", "123456", highAvailability=true, highAvailabilitySites=sites);
+```
+
+1.30.22.2 版本起，API 将优先选择低负载节点，判断标准为：内存占用小于80%、连接数小于90% 且节点负载小于80%。即在开启高可用后，API 将优先随机选择一个低负载节点进行连接，若没有低负载节点，则将随机连接一个可用节点。若用户通过 highAvailabilitySites 指定了可连接的节点组，此时 API 将仍优先从highAvailabilitySites 中随机连接一个低负载节点，若无，则随机选择一个highAvailabilitySites 中的可用节点。
+
+注意：若 API 断开重连，将按照上述规则重新连接节点。
+
 当需要在应用程序里定义和使用自定义函数时，可以使用 initialScript 参数传入函数定义脚本。这样做的好处是：一、无需每次运行`run`函数的时候重复定义这些函数。二、API提供自动重连机制，断线之后重连时会产生新的会话。如果 initialScript 参数不为空，API会在新的会话中自动执行初始化脚本重新注册函数。在一些网络不是很稳定但是应用程序需要持续运行的场景里，这个参数会非常有用。
 ```java
 boolean success = conn.connect("localhost", 8848, "admin", "123456", "");
@@ -110,7 +127,7 @@ ExclusiveDBConnectionPool可以复用多个DBConnection。可以直接使用Excl
 
 | 方法名        | 详情          |
 |:------------- |:-------------|
-|ExclusiveDBConnectionPoolExclusiveDBConnectionPool(string host, int port, string uid,string pwd, int count, bool loadBalance,bool enableHighAvailability, string[] highAvailabilitySites = null, string initialScript, bool compress = false, bool useSSL = false, bool usePython = false)|构造函数，参数count为连接数，loadBalance为true会连接不同的节点|
+|ExclusiveDBConnectionPool(string host, int port, string uid,string pwd, int count, bool loadBalance,bool enableHighAvailability, string[] highAvailabilitySites = null, string initialScript, bool compress = false, bool useSSL = false, bool usePython = false)|构造函数，参数count为连接数，loadBalance为true会连接不同的节点|
 |execute(IDBTask task)|执行任务|
 |execute(List<IDBTask> tasks)|执行批量任务|
 |getConnectionCount()|获取连接数|
@@ -669,7 +686,7 @@ MultithreadedTableWriter(String hostName, int port, String userId, String passwo
         boolean enableHighAvailability, String[] highAvailabilitySites,
         int batchSize, float throttle,
         int threadCount, String partitionCol,
-        int[] compressTypes)
+        int[] compressTypes, Mode mode, String[] pModeOption, Callback callbackHandler)
 ```
 
 参数说明：
@@ -683,7 +700,7 @@ MultithreadedTableWriter(String hostName, int port, String userId, String passwo
 * highAvailabilitySites 数组类型，表示所有可用节点的 ip:port 构成的 String数组。
 * batchSize 整数，表示批处理的消息的数量。如果该参数值为 1，表示客户端写入数据后就立即发送给服务器；
   如果该参数大于 1，表示数据量达到 batchSize 时，客户端才会将数据发送给服务器。
-* throttle 大于0的浮点数，单位为秒。若客户端有数据写入，但数据量不足 batchSize，则等待 throttle的时间再发送数据。
+* throttle 大于0的浮点数，单位为秒。若客户端有数据写入，但数据量不足 batchSize，则等待 throttle 的时间再发送数据。
 * threadCount 整数，表示创建的工作线程数量，如果值为 1，表示单线程。对于维度表，其值必须为 1。
 * partitionCol 字符串类型，默认为空，仅在 threadCount 大于1时起效。对于分区表，必须指定为分区字段名；
   如果是流表，必须指定为表的字段名；对于维度表，该参数不起效。
@@ -691,6 +708,11 @@ MultithreadedTableWriter(String hostName, int port, String userId, String passwo
   包括：
    * Vector.COMPRESS_LZ4：LZ4压缩
    * Vector.COMPRESS_DELTA：DELTAOFDELTA 压缩
+* mode 写入模式，用于指定 MultithreadedTableWriter 对象写入数据的方式，包括两种：
+   * Mode.M_Append：表示以 [tableInsert](https://www.dolphindb.cn/cn/help/FunctionsandCommands/FunctionReferences/t/tableInsert.html) 的方式向追加数据。
+   * Mode.M_Upsert：表示以 [upsert!](https://www.dolphindb.cn/cn/help/FunctionsandCommands/FunctionReferences/u/upsert!.html) 方式更新（或追加）数据。
+* pModeOption：字符串数组，表示不同模式下的扩展选项，目前，仅当 mode 指定为 Mode.M_Upsert 时有效，表示由 upsert! 可选参数组成的字符串数组。
+* callbackHandler：回调类，默认为空，表示不使用回调。开启回调后，将继承回调接口 Callback 并重载回调方法，将回调的接口对象传入 MultithreadedTableWriter。
 
 以下是MultithreadedTableWriter对象包含的函数方法介绍：
 
@@ -704,7 +726,7 @@ ErrorCodeInfo insert(Object... args)
 当 errorCode 不为 "" 时，表示 MTW 写入失败，此时，errorInfo 会显示失败的详细信息。 之后的版本
 中会对错误信息进行详细说明，给出错误信息的代码、错误原因及解决办法。 另外，ErrorCodeInfo 类提供了 
 hasError() 和 succeed() 方法用于获取数据插入的结果。hasError() 返回 True，则表示存在错误，否则表示无错误。succeed() 返回 True，则表示插入成功，
-否则表示插入失败。
+否则表示插入失败。如果构造 MultithreadedTableWriter 时开启了回调，则每次调用 insert 时，需要在每行数据前面增加一列 string 类型的数据作为每行的标识符（id），此 id 列仅用于回调时返回给用户，不会写入表中。
 
 参数说明：
 
@@ -876,11 +898,53 @@ System.out.println(((BasicLong)conn.run("exec count(*) from pt")).getLong());
 
 由上例可以看出，MTW 内部使用多线程完成数据转换和写入任务。但在 MTW 外部，API 客户端同样支持以多线程方式将数据写入 MTW，且保证了多线程安全。
 
-#### 7.4.2 MultithreadedTableWriter返回异常的几种形式 <!-- omit in toc -->
+#### 7.4.2 MultithreadedTableWriter 回调的使用 <!-- omit in toc -->
 
-MultithreadedTableWriter 类调用 insert 方法插入数据时发生异常：
+`MultithreadedTableWriter` 在开启回调后，用户会在回调的方法中获取到一个 BasicTable 类型的回调表，该表由两列构成：
+第一列（String类型），存放的是调用 `MultithreadedTableWriter.insert` 时增加的每一行的 id；第二列（布尔值），表示每一行写入成功与否，true 表示写入成功，false 表示写入失败。
 
-在调用 MultithreadedTableWriter 的 insert 方法时，若插入数据的类型与表对应列的类型不匹配，则 MultithreadedTableWriter 会立刻返回错误信息并打印出堆栈。
+-继承 Callback 接口并重载 writeCompletion 方法用于获取回调数据
+
+示例：
+
+```java
+Callback callbackHandler = new Callback(){
+    public void writeCompletion(Table callbackTable){
+        List<String> failedIdList = new ArrayList<>();
+        BasicStringVector idVec = (BasicStringVector) callbackTable.getColumn(0);
+        BasicBooleanVector successVec = (BasicBooleanVector) callbackTable.getColumn(1);
+        for (int i = 0; i < successVec.rows(); i++){
+            if (!successVec.getBoolean(i)){
+                failedIdList.add(idVec.getString(i));
+            }
+        }
+    }
+};
+```
+
+-构造 `MultithreadedTableWriter` 对象并传入回调对象
+
+示例：
+
+```java
+MultithreadedTableWriter mtw = new MultithreadedTableWriter(host, port, userName, password, dbName, tbName, useSSL,
+        enableHighAvailability, null, 10000, 1, 1, "price", callbackHandler);
+```
+
+-调用 `MultithreadedTableWriter` 的 `insert` 方法并在第一列中为每一行写入 id
+
+```java
+String theme = "theme1";
+for (int id = 0; id < 1000000; id++){
+    mtw.insert(theme + id, code, price); //theme+id 为每一行对应的 id，将在回调时返回
+}
+```
+
+#### 7.4.3 MultithreadedTableWriter返回异常的几种形式 <!-- omit in toc -->
+
+`MultithreadedTableWriter` 类调用 `insert` 方法插入数据时发生异常：
+
+在调用 `MultithreadedTableWriter` 的 `insert` 方法时，若插入数据的类型与表对应列的类型不匹配，则 `MultithreadedTableWriter` 会立刻返回错误信息并打印出堆栈。
 
 示例：
 
@@ -922,7 +986,7 @@ if (!ret.errorInfo.equals(""))
 """
 ```
 
-在调用 MultithreadedTableWriter 的 insert 方法时，若 insert 插入数据的列数和表的列数不匹配，MultithreadedTableWriter 会立刻返回错误信息。
+在调用 `MultithreadedTableWriter` 的 `insert` 方法时，若 `insert` 插入数据的列数和表的列数不匹配，`MultithreadedTableWriter` 会立刻返回错误信息。
 
 示例：
 
@@ -959,8 +1023,8 @@ if (!ret.errorInfo.equals(""))
 """
 ```
 
-如果 MultithreadedTableWriter 在运行时连接断开，则所有工作线程被终止。继续通过 MultithreadedTableWriter 向服务器写数据时，会因为工作线程终止而抛出异常，且数据不会被写入。此时，
-可通过调用 MultithreadedTableWriter 的 getUnwrittenData 获取未插入的数据，并重新插入。
+如果 `MultithreadedTableWriter` 在运行时连接断开，则所有工作线程被终止。继续通过 `MultithreadedTableWriter` 向服务器写数据时，会因为工作线程终止而抛出异常，且数据不会被写入。此时，
+可通过调用 `MultithreadedTableWriter` 的 `getUnwrittenData` 获取未插入的数据，并重新插入。
 
 示例：
 
@@ -1008,9 +1072,117 @@ finally
 """
 ```
 
+### 7.5 更新并写入DolphinDB的数据表
+
+DolphinDB Java API 提供 `AutoFitTableUpsert` 类对象来更新并写入 DolphinDB 的表。`AutoFitTableUpsert` 同 `MultithreadedTableWriter` 指定 mode 为 Mode.M_Upsert 时更新表数据的功能一样，区别在于 `AutoFitTableUpsert` 为单线程写入，而 `MultithreadedTableWriter` 为多线程写入。
+
+-AutoFitTableUpsert的主要方法如下：
+
+-构造方法：
+
+```java
+AutoFitTableUpsert(String dbUrl, String tableName, DBConnection connection, boolean ignoreNull, String[] pkeyColNames, String[] psortColumns)
+```
+
+参数说明：
+
+* dbUrl 字符串，表示分布式数据库地址。内存表时该参数为空。
+* tableName 字符串，表示分布式表或内存表的表名。
+* connection DBConnection 对象，用于连接 server 并 upsert 数据
+* ignoreNull 布尔值，表示 [upsert!](https://www.dolphindb.cn/cn/help/FunctionsandCommands/FunctionReferences/u/upsert!.html) 的一个参数，其含义为若 upsert! 的新数据表中某元素为 NULL 值，是否对目标表中的相应数据进行更新。
+* pkeyColNames 字符串数组，表示 upsert! 的一个参数，用于指定 DFS 表（目标表）的键值列。
+* psortColumns 字符串数组，表示 upsert! 的一个参数，设置该参数，更新的分区内的所有数据会根据指定的列进行排序。排序在每个分区内部进行，不会跨分区排序。
+
+-写入并更新数据的方法：
+
+```java
+int upsert(BasicTable table)
+```
+
+函数说明：
+
+将一个 BasicTable 对象更新到目标表中，返回一个 int 类型，表示更新了多少行数据。
+
+`AutoFitTableUpsert` 使用示例如下：
+
+```java
+DBConnection conn = new DBConnection(false, false, false);
+conn.connect("192.168.1.116", 18999, "admin", "123456");
+String dbName ="dfs://upsertTable";
+String tableName = "pt";
+String script = "dbName = \"dfs://upsertTable\"\n"+
+"if(exists(dbName)){\n"+
+"\tdropDatabase(dbName)\t\n"+
+"}\n"+
+"db  = database(dbName, RANGE,1 10000,,'TSDB')\n"+
+"t = table(1000:0, `id`value,[ INT, INT[]])\n"+
+"pt = db.createPartitionedTable(t,`pt,`id,,`id)";
+conn.run(script);
+
+BasicIntVector v1 = new BasicIntVector(3);
+v1.setInt(0, 1);
+v1.setInt(1, 100);
+v1.setInt(2, 9999);
+
+BasicArrayVector ba = new BasicArrayVector(Entity.DATA_TYPE.DT_INT_ARRAY, 1);
+ba.Append(v1);
+ba.Append(v1);
+ba.Append(v1);
+
+List<String> colNames = new ArrayList<>();
+colNames.add("id");
+colNames.add("value");
+List<Vector> cols = new ArrayList<>();
+cols.add(v1);
+cols.add(ba);
+BasicTable bt = new BasicTable(colNames, cols);
+String[] keyColName = new String[]{"id"};
+AutoFitTableUpsert aftu = new AutoFitTableUpsert(dbName, tableName, conn, false, keyColName, null);
+aftu.upsert(bt);
+BasicTable res = (BasicTable) conn.run("select * from pt;");
+System.out.println(res.getString());
+```
+
 ## 8. Java原生类型转换为DolphinDB数据类型
 
 Java API提供了一组以Basic+\<DataType\>方式命名的类，分别对应DolphinDB的数据类型，比如BasicInt类，BasicDate类等等。
+
+| Java 原生类型 | Java 原生类型示例数据                                                                                                                                 | Java Api 类型      | Java Api 类型示例数据                                                                                                        | DolphinDB 类型 | DolphinDB 示例数据                                             |
+|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------|------------------------------------------------------------------------------------------------------------------------------|----------------|----------------------------------------------------------------|
+| Boolean       | Boolean var = true;                                                                                                                                   | BasicBoolean       | BasicBoolean basicBoolean = new BasicBoolean(true);                                                                          | BOOL           | 1b, 0b, true, false                                            |
+| Byte          | byte number = 10;                                                                                                                                     | BasicByte          | BasicByte basicByte = new BasicByte((byte) 13);                                                                              | CHAR           | ‘a’, 97c                                                       |
+| LocalDate     | LocalDate specificDate = LocalDate.of(2023, 6, 30);                                                                                                   | BasicDate          | BasicDate basicDate = new BasicDate(LocalDate.of(2021, 12, 9));                                                              | DATE           | 2023.06.13                                                     |
+| Calendar      | // 创建指定日期和时间的 Calendar 对象 Calendar specificCalendar = Calendar.getInstance(); specificCalendar.set(2023, Calendar.JUNE, 30, 12, 0, 0);    | BasicDate          | BasicDate basicDate = new BasicDate(specificCalendar);                                                                       | DATE           | 2023.06.13                                                     |
+|               | 同上                                                                                                                                                  | BasicDateHour      | Calendar calendar = Calendar.getInstance(); calendar.set(2022,0,31,2,2,2); BasicDateHour date = new BasicDateHour(calendar); | DATEHOUR       | 2012.06.13T13                                                  |
+|               | 同上                                                                                                                                                  | BasicDateTime      | BasicDateTime basicDateTime = new BasicDateTime(new GregorianCalendar());                                                    | DATETIME       | 2012.06.13 13:30:10 or 2012.06.13T13:30:10                     |
+|               | 同上                                                                                                                                                  | BasicMinute        | BasicMinute basicMinute = new BasicMinute(new GregorianCalendar());                                                          | MINUTE         | 13:30m                                                         |
+|               | 同上                                                                                                                                                  | BasicTime          | BasicTime basicTime = new BasicTime(new GregorianCalendar());                                                                | TIME           | 13:30:10.008                                                   |
+|               | 同上                                                                                                                                                  | BasicTimestamp     | BasicTimestamp basicTimestamp = new BasicTimestamp(new GregorianCalendar());                                                 | TIMESTAMP      | 2012.06.13 13:30:10.008 or 2012.06.13T13:30:10.008             |
+| LocalDateTime | LocalDateTime currentDateTime = LocalDateTime.now();                                                                                                  | BasicDateHour      | BasicDateHour basicDateHour = new BasicDateHour(LocalDateTime.now());                                                        | DATEHOUR       | 2012.06.13T13                                                  |
+|               | 同上                                                                                                                                                  | BasicDateTime      | BasicDateTime basicDateTime = new BasicDateTime(LocalDateTime.of(2000, 2, 2, 3, 2, 3, 2));                                   | DATETIME       | 2012.06.13 13:30:10 or 2012.06.13T13:30:10                     |
+|               | 同上                                                                                                                                                  | BasicMinute        | BasicMinute basicMinute = new BasicMinute(LocalTime.of(11, 40, 53));                                                         | MINUTE         | 13:30m                                                         |
+|               | 同上                                                                                                                                                  | BasicNanoTime      | BasicNanoTime basicNanoTime = new BasicNanoTime(LocalDateTime.of(2000, 2, 2, 3, 2, 3, 2));                                   | NANOTIME       | 13:30:10.008007006                                             |
+|               | 同上                                                                                                                                                  | BasicNanoTimestamp | BasicNanoTimestamp bnts = new BasicNanoTimestamp(LocalDateTime.of(2018,11,12,8,1,1,123456789));                              | NANOTIMESTAMP  | 2012.06.13 13:30:10.008007006 or 2012.06.13T13:30:10.008007006 |
+|               | 同上                                                                                                                                                  | BasicTimestamp     | BasicTimestamp basicTimestamp = new BasicTimestamp(LocalDateTime.of(2000, 2, 2, 3, 2, 3, 2));                                | TIMESTAMP      | 2012.06.13 13:30:10.008 or 2012.06.13T13:30:10.008             |
+| BigDecimal    | BigDecimal decimal = new BigDecimal("3.1415926899"); BigDecimal afterSetScale = decimal.setScale(9, RoundingMode.FLOOR);                              | BasicDecimal32     | BasicDecimal32 basicDecimal32 = new BasicDecimal32(15645.00, 0);                                                             | DECIMAL32(S)   | 3.1415926$DECIMAL32(3)                                         |
+| BigDecimal    | BigDecimal decimal = new BigDecimal("3.1234567891234567891");BigDecimal afterSetScale = decimal.setScale(18, RoundingMode.FLOOR);                     | BasicDecimal64     | BasicDecimal64 decimal64 = new BasicDecimal64(15645.00, 0);                                                                  | DECIMAL64(S)   | 3.1415926$DECIMAL64(3), , 3.141P                               |
+| BigDecimal    | BigDecimal decimal = new BigDecimal("3.123456789123456789123456789123456789123");BigDecimal afterSetScale = decimal.setScale(38, RoundingMode.FLOOR); | BasicDecimal128    | BasicDecimal128 basicDecimal128 = new BasicDecimal128("15645.00", 2);                                                        | DECIMAL128(S)  |                                                                |
+| Double        | Double number = Double.valueOf(3.14);                                                                                                                 | BasicDouble        | BasicDouble basicDouble = new BasicDouble(15.48);                                                                            | DOUBLE         | 15.48                                                          |
+| -             | -                                                                                                                                                     | BasicDuration      | BasicDuration basicDuration = new BasicDuration(Entity.DURATION.SECOND, 1);                                                  | DURATION       | 1s, 3M, 5y, 200ms                                              |
+| Float         | Float number = Float.valueOf(3.14f)                                                                                                                   | BasicFloat         | BasicFloat basicFloat = new BasicFloat(2.1f);                                                                                | FLOAT          | 2.1f                                                           |
+| Integer       | Integer number = 1;                                                                                                                                   | BasicInt           | BasicInt basicInt = new BasicInt(1);                                                                                         | INT            | 1                                                              |
+| -             | -                                                                                                                                                     | BasicInt128        | BasicInt128 basicInt128 = BasicInt128.fromString("e1671797c52e15f763380b45e841ec32");                                        | INT128         | e1671797c52e15f763380b45e841ec32                               |
+| -             | -                                                                                                                                                     | BasicIPAddr        | BasicIPAddr basicIPAddr = BasicIPAddr.fromString("192.168.1.13");                                                            | IPADDR         | 192.168.1.13                                                   |
+| Long          | Long number = 123456789L;                                                                                                                             | BasicLong          | BasicLong basicLong = new BasicLong(367);                                                                                    | LONG           | 367l                                                           |
+| YearMonth     | YearMonth yearMonth = YearMonth.of(2023, 6);                                                                                                          | BasicMonth         | BasicMonth basicMonth = new BasicMonth(YearMonth.of(2022, 7));                                                               | MONTH          | 2012.06M                                                       |
+| LocalTime     | LocalTime specificTime = LocalTime.of(10, 30, 0);                                                                                                     | BasicNanoTime      | BasicNanoTime basicNanoTime = new BasicNanoTime(LocalTime.of(1, 1, 1, 1323433));                                             | NANOTIME       | 13:30:10.008007006                                             |
+|               | 同上                                                                                                                                                  | BasicSecond        | BasicSecond basicSecond = new BasicSecond(LocalTime.of(2, 2, 2));                                                            | SECOND         | 13:30:10                                                       |
+|               | 同上                                                                                                                                                  | BasicTime          | BasicTime basicTime = new BasicTime(LocalTime.of(13, 7, 55));                                                                | TIME           | 13:30:10.008                                                   |
+| -             | -                                                                                                                                                     | BasicPoint         | BasicPoint basicPoint = new BasicPoint(6.4, 9.2);                                                                            | POINT          | (117.60972, 24.118418)                                         |
+| short         | short number = 100;                                                                                                                                   | BasicShort         | BasicShort basicShort = new BasicShort((short) 21);                                                                          | SHORT          | 122h                                                           |
+| String        | String s = “abcd“;                                                                                                                                    | BasicString        | BasicString basicString = new BasicString("colDefs");                                                                        | STRING         | “Hello” or ‘Hello’ or `Hello                                   |
+| -             | -                                                                                                                                                     | BasicString        | BasicString basicString = new BasicString("Jmeter", true);                                                                   | BLOB           | -                                                              |
+| UUID          | UUID uuid = UUID.randomUUID();                                                                                                                        | BasicUuid          | BasicUuid.fromString(“5d212a78-cc48-e3b1-4235-b4d91473ee87“)                                                                 | UUID           | 5d212a78-cc48-e3b1-4235-b4d91473ee87                           |
 
 大部分DolphinDB数据类型可以由对应的Java数据类型构建，例如new BasicInt(4)对应integer，new BasicDouble(1.23)对应double，等等。但是也有一些DolphinDB数据类型，并不能由上述方法构建：
 
@@ -1184,7 +1356,7 @@ TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, actionNa
 DolphinDB server 自 1.30.17 及 2.00.5 版本开始，支持通过 [replay](https://www.dolphindb.cn/cn/help/FunctionsandCommands/FunctionReferences/r/replay.html) 函数将多个结构不同的流数据表，回放（序列化）到一个流表里，这个流表被称为异构流表。Java API 自 1.30.19 版本开始，新增 `StreamDeserializer` 类，用于构造异构流表反序列化器，以实现对异构流表的订阅和反序列化操作。
 
 Java API 通过 `StreamDeserializer` 类来构造异构流表反序列化器，语法如下：
-1. 通过指定表的schema进行构造，包含以下两种方式，指定表的schema信息或指定表的各列类型 ：
+1. 通过指定表的schema进行构造，包含以下两种方式，指定表的schema信息或指定表的各列类型：
 
 指定表的schema信息：
 ```java
