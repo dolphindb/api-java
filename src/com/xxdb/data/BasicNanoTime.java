@@ -16,7 +16,7 @@ import java.time.temporal.Temporal;
 public class BasicNanoTime extends BasicLong{
 
 	public BasicNanoTime(LocalDateTime value){
-		super(Utils.countNanoseconds(value));
+		super(Utils.countNanoseconds(value.toLocalTime()));
 	}
 
 	public BasicNanoTime(LocalTime value){
