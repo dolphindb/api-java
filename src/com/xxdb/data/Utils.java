@@ -307,7 +307,7 @@ public class Utils {
 	}
 
 	public static long countNanoseconds(LocalDateTime time) {
-		return (long)countMilliseconds(time.getHour(), time.getMinute(), time.getSecond(), 0) * 1000000 + time.getNano();
+		return (long)countMilliseconds(time.getYear(), time.getMonthValue(), time.getDayOfMonth(), time.getHour(), time.getMinute(), time.getSecond(), 0) * 1000000 + time.getNano();
 	}
 
 	public static LocalTime parseTime(int milliseconds){
