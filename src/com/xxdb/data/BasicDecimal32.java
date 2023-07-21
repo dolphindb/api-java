@@ -33,7 +33,11 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
             BigDecimal bd = new BigDecimal(value);
             BigDecimal pow = BigDecimal.TEN.pow(scale_);
             BigDecimal multipliedValue = bd.multiply(pow);
-            value_ = multipliedValue.intValue();
+            if (multipliedValue.intValue() != multipliedValue.longValue()) {
+                throw new RuntimeException("Decimal math overflow!");
+            } else {
+                value_ = multipliedValue.intValue();
+            }
         }
     }
 
@@ -48,7 +52,12 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
                 pow = pow.multiply(new BigDecimal(10));
             }
             BigDecimal dbvalue = new BigDecimal(Double.toString(value));
-            value_ = (dbvalue.multiply(pow)).intValue();
+            BigDecimal multipliedValue = dbvalue.multiply(pow);
+            if (multipliedValue.intValue() != multipliedValue.longValue()) {
+                throw new RuntimeException("Decimal math overflow!");
+            } else {
+                value_ = multipliedValue.intValue();
+            }
         }
     }
 
