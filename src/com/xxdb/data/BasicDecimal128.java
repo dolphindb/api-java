@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
@@ -153,6 +154,7 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
         return this.scale;
     }
 
+    @JsonIgnore
     @Override
     public Temporal getTemporal() throws Exception {
         throw new Exception("Incompatible data type");

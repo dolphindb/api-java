@@ -3,7 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.Temporal;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -105,11 +105,13 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 		else
 			return Entity.DATA_TYPE.DT_BLOB;
 	}
-	
+
+	@JsonIgnore
 	public Number getNumber() throws Exception{
 		throw new Exception("Imcompatible data type");
 	}
 
+	@JsonIgnore
 	@Override
 	public Temporal getTemporal() throws Exception {
 		throw new Exception("Imcompatible data type");
@@ -316,5 +318,11 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 		else
 			return value.compareTo(o.value);
 
+	}
+
+	@JsonIgnore
+	@Override
+	public int getScale() {
+		return super.getScale();
 	}
 }

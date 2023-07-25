@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -187,5 +187,11 @@ public class BasicDurationVector extends AbstractVector{
 		numElementAndPartial.numElement = targetNumElement;
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 4;
+	}
+
+	@JsonIgnore
+	@Override
+	public int getExtraParamForType() {
+		return super.getExtraParamForType();
 	}
 }

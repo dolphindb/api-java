@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.temporal.Temporal;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.Double2;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
@@ -39,11 +40,13 @@ public class BasicPoint extends AbstractScalar{
 		return value.y;
 	}
 
+	@JsonIgnore
 	@Override
 	public Number getNumber() throws Exception {
 		throw new Exception("Imcompatible data type");
 	}
 
+	@JsonIgnore
 	@Override
 	public Temporal getTemporal() throws Exception {
 		throw new Exception("Imcompatible data type");
@@ -99,5 +102,11 @@ public class BasicPoint extends AbstractScalar{
 	@Override
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
 		out.writeDouble2(value);
+	}
+
+	@JsonIgnore
+	@Override
+	public int getScale() {
+		return super.getScale();
 	}
 }

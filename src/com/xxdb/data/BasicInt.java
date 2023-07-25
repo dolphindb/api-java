@@ -2,7 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.temporal.Temporal;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -62,6 +62,7 @@ public class BasicInt extends AbstractScalar implements Comparable<BasicInt>{
 		}
 	}
 
+	@JsonIgnore
 	@Override
 	public Temporal getTemporal() throws Exception {
 		throw new Exception("Imcompatible data type");
