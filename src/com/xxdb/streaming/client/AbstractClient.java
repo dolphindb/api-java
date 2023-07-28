@@ -290,15 +290,14 @@ abstract class AbstractClient implements MessageDispatcher {
             conn.connect(site.host, site.port);
 
             try {
+                List<Entity> params = new ArrayList<>();
+                String actionName = site.actionName;
+                String tableName = site.tableName;
+                params.add(new BasicString(actionName));
+                params.add(new BasicString(tableName));
+
                 BasicString version = (BasicString) conn.run("version()");
                 int verNum = getVersionNumber(version.getString());
-
-                String localIP = this.listeningHost;
-                if(localIP.equals(""))
-                    localIP = conn.getLocalAddress().getHostAddress();
-                List<Entity> params = new ArrayList<>();
-                params.add(new BasicString(localIP));
-                params.add(new BasicInt(listeningPort));
                 if (verNum >= 995)
                     params.add(new BasicBoolean(true));
                 conn.run("activeClosePublishConnection", params);
