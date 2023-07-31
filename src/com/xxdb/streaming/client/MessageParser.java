@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
+import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.ExtendedDataInput;
@@ -20,6 +20,7 @@ class MessageParser implements Runnable {
 
     BufferedInputStream bis = null;
     Socket socket = null;
+    DBConnectionAndSocket dBConnectionAndSocket;
     MessageDispatcher dispatcher;
     String topic;
     HashMap<String, Integer> nameToIndex = null;
@@ -27,8 +28,8 @@ class MessageParser implements Runnable {
 
     ConcurrentHashMap<String, HashMap<String, Integer>> topicNameToIndex = null;
 
-    public MessageParser(Socket socket, MessageDispatcher dispatcher, int listeningPort) {
-        this.socket = socket;
+    public MessageParser(DBConnectionAndSocket dBConnectionAndSocket, MessageDispatcher dispatcher, int listeningPort) {
+        this.dBConnectionAndSocket = dBConnectionAndSocket;
         this.dispatcher = dispatcher;
         this.topicNameToIndex = new ConcurrentHashMap<>();
         this.listeningPort = listeningPort;
@@ -53,13 +54,36 @@ class MessageParser implements Runnable {
     public void run() {
         Map<String, StreamDeserializer> subinfos = dispatcher.getSubInfos();
         ConcurrentHashMap<String, AbstractClient.Site[]> topicToSites = dispatcher.getTopicToSites();
-        Socket socket = this.socket;
+        Socket socket = null;
         try {
-            if (bis == null) bis = new BufferedInputStream(socket.getInputStream());
+            DBConnection conn;
             ExtendedDataInput in = null;
+            Boolean isReverseStreaming;
 
-            while (true) {
-                if (in == null) {
+            if (this.dBConnectionAndSocket == null ) {
+                throw new Exception("dBConnectionAndSocket is null!");
+            } else
+            {
+                if (this.dBConnectionAndSocket.socket != null)
+                {
+                    if (this.dBConnectionAndSocket.conn != null)
+                        throw new Exception("Either conn or socket must be null!");
+                    socket = this.dBConnectionAndSocket.socket;
+                    bis = new BufferedInputStream(socket.getInputStream());
+                    isReverseStreaming = false;
+                } else if (this.dBConnectionAndSocket.conn != null) {
+                    conn = this.dBConnectionAndSocket.conn;
+                    in = conn.getDataInputStream();
+                    socket = conn.getSocket();
+                    isReverseStreaming = true;
+                } else {
+                    throw new Exception("Both conn and socket is null!");
+                }
+            }
+
+
+            while (!dispatcher.isClose()) {
+                if (!isReverseStreaming) {
                     Boolean isLittle = bis.read() != 0;
                     if (isLittle == true)
                         in = new LittleEndianDataInputStream(bis);
@@ -141,9 +165,9 @@ class MessageParser implements Runnable {
                         }
                     }
                     dispatcher.setMsgId(topic, msgid);
-                }else{
+                } else {
                         System.out.println("message body has an invalid format. Vector or table is expected");
-                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -156,6 +180,20 @@ class MessageParser implements Runnable {
         } catch (Throwable t) {
             t.printStackTrace();
             dispatcher.setNeedReconnect(topic, 1);
+        } finally {
+            try {
+                if (socket != null) {
+                    socket.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
+
+    public static class DBConnectionAndSocket {
+        public DBConnection conn;
+        public Socket socket;
+    }
+
 }

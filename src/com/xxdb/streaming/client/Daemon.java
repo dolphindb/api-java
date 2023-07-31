@@ -1,7 +1,7 @@
 package com.xxdb.streaming.client;
 
 import com.xxdb.DBConnection;
-
+import com.xxdb.io.ExtendedDataInput;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -45,32 +45,39 @@ class Daemon implements Runnable {
         HashSet<Socket> threadSet = new HashSet<>();
         while (!runningThread_.isInterrupted()) {
             try {
-                    Socket socket = null;
-                    if (listeningPort > 0)
-                        socket = ssocket.accept();
-                    else{
-                        socket = connList.take().getSocket();
-                    }
-
-                    socket.setKeepAlive(true);
-
-                    MessageParser listener = new MessageParser(socket, dispatcher, listeningPort);
-                    Thread listeningThread = new Thread(listener);
-                    threadSet.add(socket);
-                    listeningThread.start();
-
-                    if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
-                        new Thread(new ConnectionDetector(socket)).start();
-                }catch(Exception ex){
-                    try {
-                        if(runningThread_.isInterrupted()) {
-                            throw new InterruptedException();
-                        }
-                        Thread.sleep(100);
-                    } catch (InterruptedException iEx) {
-                        break;
-                    }
+                Socket socket = null;
+                ExtendedDataInput in;
+                MessageParser.DBConnectionAndSocket dBConnectionAndSocket = new MessageParser.DBConnectionAndSocket();
+                if (listeningPort > 0) {
+                    socket = ssocket.accept();
+                    dBConnectionAndSocket.socket = socket;
+                    dBConnectionAndSocket.conn = null;
+                } else {
+                    DBConnection conn = connList.take();
+                    socket = conn.getSocket();
+                    dBConnectionAndSocket.socket = null;
+                    dBConnectionAndSocket.conn =conn;
                 }
+
+                socket.setKeepAlive(true);
+
+                MessageParser listener = new MessageParser(dBConnectionAndSocket, dispatcher, listeningPort);
+                Thread listeningThread = new Thread(listener);
+                threadSet.add(socket);
+                listeningThread.start();
+
+                if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
+                    new Thread(new ConnectionDetector(socket)).start();
+            }catch(Exception ex){
+                try {
+                    if(runningThread_.isInterrupted()) {
+                        throw new InterruptedException();
+                    }
+                    Thread.sleep(100);
+                } catch (InterruptedException iEx) {
+                    break;
+                }
+            }
         }
         try {
             assert ssocket != null;

@@ -10,6 +10,8 @@ interface MessageDispatcher {
 
     boolean isClosed(String topic);
 
+    boolean isClose();
+
     void dispatch(IMessage message);
 
     void batchDispatch(List<IMessage> message);
