@@ -27,9 +27,6 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
         if (Utils.isEmpty(value)) {
             throw new RuntimeException("value is empty!");
         }
-        if (!Utils.isNumeric(value)) {
-            throw new RuntimeException("value is not numeric!");
-        }
 
         if (scale < 0 || scale > 9) {
             throw new RuntimeException("Scale out of bound (valid range: [0, 9], but get: " + scale + ")");
