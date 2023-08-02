@@ -72,9 +72,34 @@ public class BasicDecimal32VectorTest {
     }
 
     @Test
+    public void test_BasicDecimal32Vector_create_string() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal32Vector_create_string_scale_0() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,0);
+        assertEquals("[0,-123,132,100]",tmp_32_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal32Vector_create_string_scale_8() throws Exception {
+        String[] tmp_string_v = {"0.0","-1.00000001","1.00000001","9.99999999","-9.99999999"};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,8);
+        assertEquals("[0.00000000,-1.00000001,1.00000001,9.99999999,-9.99999999]",tmp_32_v.getString());
+    }
+
+    @Test
     public void test_BasicDecimal32Vector_create_Decimal32Vector_null() throws Exception {
         double[] tmp_double_v = {};
         BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_double_v,4);
+        assertEquals("[]",tmp_32_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal32Vector_create_string_null() throws Exception {
+        String[] tmp_string_v = {};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
         assertEquals("[]",tmp_32_v.getString());
     }
 
@@ -87,8 +112,8 @@ public class BasicDecimal32VectorTest {
 
     @Test
     public void test_BasicDecimal32Vector_setNUll() throws Exception {
-        double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_double_v,4);
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
         tmp_32_v.setNull(2);
         assertEquals("[0.0000,-123.0043,,100.0000]",tmp_32_v.getString());
         assertEquals(true,tmp_32_v.isNull(2));
@@ -150,6 +175,15 @@ public class BasicDecimal32VectorTest {
         tmp_32_v.add(1.11223);
         assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1122]",tmp_32_v.getString());
     }
+    @Test
+    public void test_BasicDecimal32Vector_add_string() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
+        tmp_32_v.add("1.11223");
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1122]",tmp_32_v.getString());
+        tmp_32_v.add("0.0");
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1122,0.0000]",tmp_32_v.getString());
+    }
 
     @Test
     public void test_BasicDecimal32Vector_add_0() throws Exception {
@@ -194,13 +228,34 @@ public class BasicDecimal32VectorTest {
     }
 
     @Test
+    public void test_BasicDecimal32Vector_addRange_string_1() throws Exception {
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(0,4);
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        tmp_32_v.addRange(tmp_string_v);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal32Vector_addRange_string_2() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
+        tmp_32_v.addRange(tmp_string_v);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal32Vector_addRange_string_null() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
+        String[] tmp_string1_v = {};
+        tmp_32_v.addRange(tmp_string1_v);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+    }
+    @Test
     public void test_BasicDecimal32Vector_append_scale_notMatch() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
         BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_double_v,4);
         BasicDecimal32 a = new BasicDecimal32(1.11223,2);
         tmp_32_v.Append(a);
         assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1100]",tmp_32_v.getString());
-
     }
 
     @Test
@@ -226,6 +281,38 @@ public class BasicDecimal32VectorTest {
         BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(0,4);
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
         BasicDecimal32Vector tmp_32_v2 = new BasicDecimal32Vector(tmp_double_v,4);
+        tmp_32_v.Append(tmp_32_v2);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal32Vector_append_string_scale_notMatch() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
+        BasicDecimal32 a = new BasicDecimal32("1.11223",2);
+        tmp_32_v.Append(a);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1100]",tmp_32_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal32Vector_append_string() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
+        BasicDecimal32 a = new BasicDecimal32("1.11223",4);
+        tmp_32_v.Append(a);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1122]",tmp_32_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal32Vector_Append_string_vector_scale_notMatch() throws Exception {
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(0,4);
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v2 = new BasicDecimal32Vector(tmp_string_v,3);
+        tmp_32_v.Append(tmp_32_v2);
+        assertEquals("[0.0000,-123.0040,132.2040,100.0000]",tmp_32_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal32Vector_Append_string_vector() throws Exception {
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(0,4);
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v2 = new BasicDecimal32Vector(tmp_string_v,4);
         tmp_32_v.Append(tmp_32_v2);
         assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
     }

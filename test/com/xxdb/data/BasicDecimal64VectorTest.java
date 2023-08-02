@@ -65,17 +65,40 @@ public class BasicDecimal64VectorTest {
     }
 
     @Test
-    public void test_BasicDecimal64Vector_create_Decimal32Vector() throws Exception {
+    public void test_BasicDecimal64Vector_create_Decimal64Vector() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
-        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
     }
-
     @Test
-    public void test_BasicDecimal64Vector_create_Decimal32Vector_null() throws Exception {
+    public void test_BasicDecimal64Vector_create_string() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,4);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal64Vector_create_string_scale_0() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,0);
+        assertEquals("[0,-123,132,100]",tmp_64_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal64Vector_create_string_scale_17() throws Exception {
+        String[] tmp_string_v = {"0.0","-1.00000000000000001","1.00000000000000001","9.99999999999999999","-9.99999999999999999"};
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,17);
+        assertEquals("[0.00000000000000000,-1.00000000000000001,1.00000000000000001,9.99999999999999999,-9.99999999999999999]",tmp_64_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal64Vector_create_Decimal64Vector_null() throws Exception {
         double[] tmp_double_v = {};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
-        assertEquals("[]",tmp_32_v.getString());
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
+        assertEquals("[]",tmp_64_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal64Vector_create_string_null() throws Exception {
+        String[] tmp_string_v = {};
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,4);
+        assertEquals("[]",tmp_64_v.getString());
     }
 
     @Test
@@ -88,46 +111,52 @@ public class BasicDecimal64VectorTest {
     @Test
     public void test_BasicDecimal64Vector_setNUll() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
-        tmp_32_v.setNull(2);
-        assertEquals("[0.0000,-123.0043,,100.0000]",tmp_32_v.getString());
-        assertEquals(true,tmp_32_v.isNull(2));
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
+        tmp_64_v.setNull(2);
+        assertEquals("[0.0000,-123.0043,,100.0000]",tmp_64_v.getString());
+        assertEquals(true,tmp_64_v.isNull(2));
     }
 
     @Test
     public void test_BasicDecimal64Vector_get() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
         BasicDecimal64 ex = new BasicDecimal64(-123.00432,4);
-        assertEquals(ex.getString(),tmp_32_v.get(1).getString());
+        assertEquals(ex.getString(),tmp_64_v.get(1).getString());
     }
 
     @Test
     public void test_BasicDecimal64Vector_set() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
         BasicDecimal64 tmp_32 = new BasicDecimal64(3.032,4);
-        tmp_32_v.set(0,tmp_32);
-        assertEquals("[3.0320,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+        tmp_64_v.set(0,tmp_32);
+        assertEquals("[3.0320,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
     }
 
     @Test
     public void test_BasicDecimal64Vector_set_null() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
         BasicDecimal64 tmp_32 = (BasicDecimal64) conn.run("decimal64(NULL,4)");
-        tmp_32_v.set(0,tmp_32);
-        assertEquals("[,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+        tmp_64_v.set(0,tmp_32);
+        assertEquals("[,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
     }
 
     @Test
     public void test_BasicDecimal64Vector_set_int() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
-        tmp_32_v.set(0,new BasicInt(2));
-        assertEquals("[2.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
+        tmp_64_v.set(0,new BasicInt(2));
+        assertEquals("[2.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
     }
-
+    @Test
+    public void test_BasicDecimal64Vector_set_string() throws Exception {
+        double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
+        tmp_64_v.set(0,new BasicString("2"));
+        assertEquals("[2.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
+    }
     @Test
     public void test_BasicDecimal64Vector_set_error_scale() throws Exception {
         BasicDecimal64Vector bd32v = new BasicDecimal64Vector(2);
@@ -146,124 +175,184 @@ public class BasicDecimal64VectorTest {
     @Test
     public void test_BasicDecimal64Vector_add() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
-        tmp_32_v.add(1.11223);
-        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1122]",tmp_32_v.getString());
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
+        tmp_64_v.add(1.11223);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1122]",tmp_64_v.getString());
     }
 
     @Test
     public void test_BasicDecimal64Vector_add_0() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
-        tmp_32_v.add(0.0);
-        assertEquals("[0.0000,-123.0043,132.2042,100.0000,0.0000]",tmp_32_v.getString());
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
+        tmp_64_v.add(0.0);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,0.0000]",tmp_64_v.getString());
     }
-
+    @Test
+    public void test_BasicDecimal64Vector_add_string() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,4);
+        tmp_64_v.add("1.11223");
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1122]",tmp_64_v.getString());
+        tmp_64_v.add("0.0");
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1122,0.0000]",tmp_64_v.getString());
+    }
     @Test
     public void test_BasicDecimal64Vector_zero_size_add() throws Exception {
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(0,4);
-        tmp_32_v.add(12.42);
-        assertEquals("[12.4200]",tmp_32_v.getString());
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(0,4);
+        tmp_64_v.add(12.42);
+        assertEquals("[12.4200]",tmp_64_v.getString());
     }
 
     @Test
     public void test_BasicDecimal64Vector_addRange() throws Exception {
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(0,4);
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(0,4);
         double[] tmp = new double[]{0.0,-123.00432,132.204234,100.0};
-        tmp_32_v.addRange(tmp);
-        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+        tmp_64_v.addRange(tmp);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
     }
 
     @Test
     public void test_BasicDecimal64Vector_addRange2() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
         double[] tmp = new double[]{0.0,-123.00432,132.204234,100.0};
-        tmp_32_v.addRange(tmp);
-        assertEquals("[0.0000,-123.0043,132.2042,100.0000,0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+        tmp_64_v.addRange(tmp);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,0.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
     }
 
     @Test
     public void test_BasicDecimal64Vector_addRange_null() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
         double[] tmp = new double[]{};
-        tmp_32_v.addRange(tmp);
-        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+        tmp_64_v.addRange(tmp);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
     }
-
+    @Test
+    public void test_BasicDecimal64Vector_addRange_string_1() throws Exception {
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(0,4);
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        tmp_64_v.addRange(tmp_string_v);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal64Vector_addRange_string_2() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,4);
+        tmp_64_v.addRange(tmp_string_v);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,0.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal64Vector_addRange_string_null() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,4);
+        String[] tmp_string1_v = {};
+        tmp_64_v.addRange(tmp_string1_v);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
+    }
     @Test
     public void test_BasicDecimal64Vector_append_error() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
         BasicDecimal64 a = new BasicDecimal64(1.11223,2);
-        tmp_32_v.Append(a);
-        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1100]",tmp_32_v.getString());
+        tmp_64_v.Append(a);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1100]",tmp_64_v.getString());
     }
 
     @Test
     public void test_BasicDecimal64Vector_append() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(tmp_double_v,4);
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
         BasicDecimal64 a = new BasicDecimal64(1.11223,4);
-        tmp_32_v.Append(a);
+        tmp_64_v.Append(a);
     }
 
     @Test
     public void test_BasicDecimal64Vector_append_vector_scale_notMatch() throws Exception {
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(0,4);
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(0,4);
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v2 = new BasicDecimal64Vector(tmp_double_v,3);
-        tmp_32_v.Append(tmp_32_v2);
-        assertEquals("[0.0000,-123.0040,132.2040,100.0000]",tmp_32_v.getString());
+        BasicDecimal64Vector tmp_64_v2 = new BasicDecimal64Vector(tmp_double_v,3);
+        tmp_64_v.Append(tmp_64_v2);
+        assertEquals("[0.0000,-123.0040,132.2040,100.0000]",tmp_64_v.getString());
     }
 
     @Test
     public void test_BasicDecimal64Vector_append_vector() throws Exception {
-        BasicDecimal64Vector tmp_32_v = new BasicDecimal64Vector(0,4);
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(0,4);
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v2 = new BasicDecimal64Vector(tmp_double_v,4);
-        tmp_32_v.Append(tmp_32_v2);
-        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+        BasicDecimal64Vector tmp_64_v2 = new BasicDecimal64Vector(tmp_double_v,4);
+        tmp_64_v.Append(tmp_64_v2);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
     }
-
+    @Test
+    public void test_BasicDecimal64Vector_append_string_scale_notMatch() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,4);
+        BasicDecimal64 a = new BasicDecimal64("1.11223",2);
+        tmp_64_v.Append(a);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1100]",tmp_64_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal64Vector_append_string() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,4);
+        BasicDecimal64 a = new BasicDecimal64("1.11223",4);
+        tmp_64_v.Append(a);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,1.1122]",tmp_64_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal64Vector_Append_string_vector_scale_notMatch() throws Exception {
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(0,4);
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal64Vector tmp_64_v2 = new BasicDecimal64Vector(tmp_string_v,3);
+        tmp_64_v.Append(tmp_64_v2);
+        assertEquals("[0.0000,-123.0040,132.2040,100.0000]",tmp_64_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal64Vector_Append_string_vector() throws Exception {
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(0,4);
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal64Vector tmp_64_v2 = new BasicDecimal64Vector(tmp_string_v,4);
+        tmp_64_v.Append(tmp_64_v2);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
+    }
     @Test
     public void test_BasicDecimal64Vector_getScale() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v2 = new BasicDecimal64Vector(tmp_double_v,4);
-        int a = tmp_32_v2.getScale();
+        BasicDecimal64Vector tmp_64_v2 = new BasicDecimal64Vector(tmp_double_v,4);
+        int a = tmp_64_v2.getScale();
         assertEquals(4,a);
     }
 
     @Test
     public void test_BasicDecimal64Vector_getdataArray() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v2 = new BasicDecimal64Vector(tmp_double_v,4);
-        Entity.DATA_CATEGORY a = tmp_32_v2.getDataCategory();
+        BasicDecimal64Vector tmp_64_v2 = new BasicDecimal64Vector(tmp_double_v,4);
+        Entity.DATA_CATEGORY a = tmp_64_v2.getDataCategory();
         assertEquals("DENARY",a.toString());
     }
 
     @Test
     public void test_BasicDecimal64Vector_getDataType() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v2 = new BasicDecimal64Vector(tmp_double_v,4);
-        Entity.DATA_TYPE a = tmp_32_v2.getDataType();
+        BasicDecimal64Vector tmp_64_v2 = new BasicDecimal64Vector(tmp_double_v,4);
+        Entity.DATA_TYPE a = tmp_64_v2.getDataType();
         assertEquals("DT_DECIMAL64",a.toString());
     }
 
     @Test
     public void test_BasicDecimal64Vector_rows() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v2 = new BasicDecimal64Vector(tmp_double_v,4);
-        int a = tmp_32_v2.rows();
+        BasicDecimal64Vector tmp_64_v2 = new BasicDecimal64Vector(tmp_double_v,4);
+        int a = tmp_64_v2.rows();
         assertEquals(4,a);
     }
 
     @Test
     public void test_BasicDecimal64Vector_getExtraParamForType() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
-        BasicDecimal64Vector tmp_32_v2 = new BasicDecimal64Vector(tmp_double_v,4);
-        int a = tmp_32_v2.getExtraParamForType();
+        BasicDecimal64Vector tmp_64_v2 = new BasicDecimal64Vector(tmp_double_v,4);
+        int a = tmp_64_v2.getExtraParamForType();
         assertEquals(4,a);
     }
     @Test

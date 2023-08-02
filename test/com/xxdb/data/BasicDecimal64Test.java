@@ -48,6 +48,82 @@ public class BasicDecimal64Test {
         BasicDecimal64 Decimal64 = new BasicDecimal64(121.23, 6);
         assertEquals("121.230000",Decimal64.getString());
     }
+    @Test
+    public void testBasicDecimal64_value_string_1(){
+        BasicDecimal64 Decimal64 = new BasicDecimal64("",4);
+        assertEquals("",Decimal64.getString());
+    }
+    @Test
+    public void testBasicDecimal64_value_string_2(){
+        BasicDecimal64 Decimal64 = new BasicDecimal64("0",4);
+        assertEquals("0.0000",Decimal64.getString());
+    }
+    @Test
+    public void testBasicDecimal64_value_string_scale_negative(){
+        BasicDecimal64 Decimal64 = new BasicDecimal64("999999999999999999",0);
+        assertEquals("999999999999999999",Decimal64.getString());
+        BasicDecimal64 Decimal64_1 = new BasicDecimal64("-999999999999999999",0);
+        assertEquals("-999999999999999999",Decimal64_1.getString());
+    }
+    @Test
+    public void testBasicDecimal64_value_string_scale_0(){
+        String ex = null;
+        try{
+            BasicDecimal64 Decimal64 = new BasicDecimal64("1232",-1);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale out of bound (valid range: [0, 18], but get: -1)",ex);
+    }
+    @Test
+    public void testBasicDecimal64_value_string_scale_4(){
+        BasicDecimal64 Decimal64 = new BasicDecimal64("0.000001",4);
+        assertEquals("0.0000",Decimal64.getString());
+        BasicDecimal64 Decimal64_1 = new BasicDecimal64("-0.000001",4);
+        assertEquals("0.0000",Decimal64_1.getString());
+    }
+    @Test
+    public void testBasicDecimal64_value_string_scale_18(){
+        BasicDecimal64 Decimal64 = new BasicDecimal64("0.000000000000000001",18);
+        assertEquals("0.000000000000000001",Decimal64.getString());
+        BasicDecimal64 Decimal64_1 = new BasicDecimal64("-0.000000000000000001",18);
+        assertEquals("-0.000000000000000001",Decimal64_1.getString());
+        BasicDecimal64 Decimal64_2 = new BasicDecimal64("0.999999999999999999",18);
+        System.out.println(Decimal64_2.getString());
+        assertEquals("0.999999999999999999",Decimal64_2.getString());
+        BasicDecimal64 Decimal64_3 = new BasicDecimal64("-0.999999999999999999",18);
+        assertEquals("-0.999999999999999999",Decimal64_3.getString());
+    }
+    @Test
+    public void testBasicDecimal64_value_string_scale_18_overflow(){
+        String re = null;
+        try{
+            BasicDecimal64 Decimal64_2 = new BasicDecimal64("9.9999999999999999999",18);
+        }
+        catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(re,"Decimal math overflow!");
+
+        String re1 = null;
+        try{
+            BasicDecimal64 Decimal64_3 = new BasicDecimal64("-9.9999999999999999999",18);
+        }
+        catch(Exception e){
+            re1 = e.getMessage();
+        }
+        assertEquals(re1,"Decimal math overflow!");
+    }
+    @Test
+    public void testBasicDecimal64_value_string_scale_19(){
+        String ex = null;
+        try{
+            BasicDecimal64 Decimal64 = new BasicDecimal64("1232",19);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale out of bound (valid range: [0, 18], but get: 19)",ex);
+    }
 
     @Test
     public void testBasicDecimal64_scale_0() throws Exception {
@@ -125,7 +201,11 @@ public class BasicDecimal64Test {
         BasicDecimal64 Decimal64_6 = new BasicDecimal64(1.23231, 0);
         assertEquals("1",Decimal64_6.getString());
     }
-
+    @Test
+    public void testBasicDecimal64_getString12(){
+        BasicDecimal64 Decimal64_6 = new BasicDecimal64("1.23231", 0);
+        assertEquals("1",Decimal64_6.getString());
+    }
     @Test
     public void testBasicDecimal64_getNumber1() throws Exception {
         BasicDecimal64 Decimal64_a = new BasicDecimal64((long)103, 6);
@@ -191,7 +271,11 @@ public class BasicDecimal64Test {
         BasicDecimal64 Decimal64_6 = new BasicDecimal64( 1.23231, 18);
         assertEquals(1.23231, Decimal64_6.getNumber().doubleValue(),5);
     }
-
+    @Test
+    public void testBasicDecimal64_getNumber14() throws Exception {
+        BasicDecimal64 Decimal64_6 = new BasicDecimal64( "1.23231", 18);
+        assertEquals(1.23231, Decimal64_6.getNumber().doubleValue(),5);
+    }
     @Test
     public void testBasicDecimal64_run() throws Exception {
         BasicDecimal64 re1 =(BasicDecimal64) conn.run("decimal64('1.003',4)");
@@ -263,7 +347,11 @@ public class BasicDecimal64Test {
         BasicDecimal64 Decimal64_5 = new BasicDecimal64( 1.23, 4);
         assertEquals("1.2300", Decimal64_5.getJsonString());
     }
-
+    @Test
+    public void testBasicDecimal64_getJsonString_1()  {
+        BasicDecimal64 Decimal64_5 = new BasicDecimal64( "1.23", 4);
+        assertEquals("1.2300", Decimal64_5.getJsonString());
+    }
     @Test
     public void testBasicDecimal64_compareTo_1()  {
         BasicDecimal64 re1 = new BasicDecimal64( 122.23, 4);

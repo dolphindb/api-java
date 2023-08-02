@@ -46,6 +46,77 @@ public class BasicDecimal32Test {
         BasicDecimal32 Decimal32 = new BasicDecimal32((float) 1.23, 6);
         assertEquals("1.230000",Decimal32.getString());
     }
+    @Test
+    public void testBasicDecimal32_value_string_1(){
+        BasicDecimal32 Decimal32 = new BasicDecimal32("",4);
+        assertEquals("",Decimal32.getString());
+    }
+    @Test
+    public void testBasicDecimal32_value_string_2(){
+        BasicDecimal32 Decimal32 = new BasicDecimal32("0",4);
+        assertEquals("0.0000",Decimal32.getString());
+    }
+    @Test
+    public void testBasicDecimal32_value_string_scale_negative(){
+        String ex = null;
+        try{
+            BasicDecimal32 Decimal32 = new BasicDecimal32("1232",-1);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale out of bound (valid range: [0, 9], but get: -1)",ex);
+    }
+    @Test
+    public void testBasicDecimal32_value_string_scale_0(){
+        BasicDecimal32 Decimal32 = new BasicDecimal32("999999999",0);
+        assertEquals("999999999",Decimal32.getString());
+        BasicDecimal32 Decimal32_1 = new BasicDecimal32("-999999999",0);
+        assertEquals("-999999999",Decimal32_1.getString());
+    }
+    @Test
+    public void testBasicDecimal32_value_string_scale_4(){
+        BasicDecimal32 Decimal32 = new BasicDecimal32("0.000001",4);
+        assertEquals("0.0000",Decimal32.getString());
+        BasicDecimal32 Decimal32_1 = new BasicDecimal32("-0.000001",4);
+        assertEquals("0.0000",Decimal32_1.getString());
+    }
+    @Test
+    public void testBasicDecimal32_value_string_scale_9(){
+        BasicDecimal32 Decimal32 = new BasicDecimal32("0.000000001",9);
+        assertEquals("0.000000001",Decimal32.getString());
+        BasicDecimal32 Decimal32_1 = new BasicDecimal32("-0.000000001",9);
+        assertEquals("-0.000000001",Decimal32_1.getString());
+    }
+    @Test
+    public void testBasicDecimal32_value_string_scale_9_overflow(){
+        String re = null;
+        try{
+            BasicDecimal32 Decimal32_2 = new BasicDecimal32("9.99999999",9);
+        }
+        catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(re,"Decimal math overflow!");
+
+        String re1 = null;
+        try{
+            BasicDecimal32 Decimal32_3 = new BasicDecimal32("-9.99999999",9);
+        }
+        catch(Exception e){
+            re1 = e.getMessage();
+        }
+        assertEquals(re1,"Decimal math overflow!");
+    }
+    @Test
+    public void testBasicDecimal32_value_string_scale_10(){
+        String ex = null;
+        try{
+            BasicDecimal32 Decimal32 = new BasicDecimal32("1232",10);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale out of bound (valid range: [0, 9], but get: 10)",ex);
+    }
 
     @Test
     public void testBasicDecimal32_scale_0() throws Exception {
@@ -63,8 +134,15 @@ public class BasicDecimal32Test {
 
     @Test
     public void testBasicDecimal32_scale_10() throws Exception {
-        BasicDecimal32 decimal32 = new BasicDecimal32(2.11,10);
-        assertNotEquals(2.11,decimal32.getNumber());
+        String re = null;
+        try{
+            BasicDecimal32 decimal32 = new BasicDecimal32(2.11,10);
+        }
+        catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(re,"Decimal math overflow!");
+
     }
 
     @Test
@@ -123,7 +201,11 @@ public class BasicDecimal32Test {
         BasicDecimal32 Decimal32_6 = new BasicDecimal32((float) 1.23231, 0);
         assertEquals("1",Decimal32_6.getString());
     }
-
+    @Test
+    public void testBasicDecimal32_getString12(){
+        BasicDecimal32 Decimal32_6 = new BasicDecimal32( "1.23231", 0);
+        assertEquals("1",Decimal32_6.getString());
+    }
     @Test
     public void testBasicDecimal32_getNumber1() throws Exception {
         BasicDecimal32 Decimal32_a = new BasicDecimal32(103, 6);
@@ -188,6 +270,11 @@ public class BasicDecimal32Test {
     @Test
     public void testBasicDecimal32_getNumber13() throws Exception {
         BasicDecimal32 Decimal32_6 = new BasicDecimal32((float) 1.23231, 9);
+        assertEquals(1.23231, Decimal32_6.getNumber().doubleValue(),5);
+    }
+    @Test
+    public void testBasicDecimal32_getNumber14() throws Exception {
+        BasicDecimal32 Decimal32_6 = new BasicDecimal32("1.23231", 9);
         assertEquals(1.23231, Decimal32_6.getNumber().doubleValue(),5);
     }
 
@@ -266,7 +353,11 @@ public class BasicDecimal32Test {
         BasicDecimal32 Decimal32_5 = new BasicDecimal32((float) 1.23, 4);
         assertEquals("1.2300", Decimal32_5.getJsonString());
     }
-
+    @Test
+    public void testBasicDecimal32_getJsonString_1()  {
+        BasicDecimal32 Decimal32_5 = new BasicDecimal32("1.23", 4);
+        assertEquals("1.2300", Decimal32_5.getJsonString());
+    }
     @Test
     public void testBasicDecimal32_compareTo_1()  {
         BasicDecimal32 re1 = new BasicDecimal32((float) 2.23, 4);
