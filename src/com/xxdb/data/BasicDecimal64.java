@@ -28,6 +28,11 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
     }
 
     public BasicDecimal64(String value, int scale) {
+        value = value.trim();
+        if (Utils.isEmpty(value)) {
+            throw new RuntimeException("value is empty!");
+        }
+
         if (scale < 0 || scale > 18) {
             throw new RuntimeException("Scale out of bound (valid range: [0, 18], but get: " + scale + ")");
         }
