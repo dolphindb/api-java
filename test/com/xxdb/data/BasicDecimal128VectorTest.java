@@ -133,6 +133,20 @@ public class BasicDecimal128VectorTest {
         assertEquals(true,tmp_128_v.isNull(2));
     }
     @Test
+    public void test_BasicDecimal128Vector_set_string() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
+        tmp_128_v.set(0,new BasicDecimal128("2",2));
+        assertEquals("[2.0000,-123.0043,132.2042,100.0000]",tmp_128_v.getString());
+        String ex = null;
+        try{
+            tmp_128_v.set(0,new BasicString("2"));
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("value type is not BasicDecimal128!",ex);
+    }
+    @Test
     public void test_BasicDecimal128Vector_new() throws Exception {
         BasicDecimal128Vector v=new BasicDecimal128Vector(2,2);
         System.out.println(v.getString());
