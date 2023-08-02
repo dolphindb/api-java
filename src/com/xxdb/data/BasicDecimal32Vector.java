@@ -14,7 +14,7 @@ public class BasicDecimal32Vector extends AbstractVector{
     private int scale_ = -1;
     private int[] values;
     private int size;
-    private int capaticy;
+    private int capacity;
 
     public BasicDecimal32Vector(int size){
         this(DATA_FORM.DF_VECTOR, size);
@@ -26,7 +26,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         values = new int[size];
 
         this.size = values.length;
-        capaticy = values.length;
+        capacity = values.length;
     }
 
     BasicDecimal32Vector(DATA_FORM df, int size){
@@ -34,7 +34,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         values = new int[size];
 
         this.size = values.length;
-        capaticy = values.length;
+        capacity = values.length;
     }
 
     public BasicDecimal32Vector(String[] data, int scale) {
@@ -53,7 +53,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         }
 
         size = length;
-        capaticy = length;
+        capacity = length;
     }
 
     BasicDecimal32Vector(int[] dataValue, int scale){
@@ -61,7 +61,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         this.scale_ = scale;
         this.values = dataValue;
         this.size = values.length;
-        capaticy = values.length;
+        capacity = values.length;
     }
 
     public BasicDecimal32Vector(DATA_FORM df, ExtendedDataInput in, int extra) throws IOException{
@@ -92,7 +92,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         }
 
         this.size = values.length;
-        capaticy = values.length;
+        capacity = values.length;
     }
 
     @Deprecated
@@ -112,7 +112,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         }
         values = newIntValue;
         this.size = values.length;
-        capaticy = values.length;
+        capacity = values.length;
     }
 
     @Override
@@ -132,7 +132,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         }
 
         this.size = values.length;
-        capaticy = values.length;
+        capacity = values.length;
     }
 
     @Override
@@ -227,16 +227,40 @@ public class BasicDecimal32Vector extends AbstractVector{
         return 4;
     }
 
-    public void add(double value) {
+    public void add(String value) {
         if (scale_ < 0){
             throw new RuntimeException("Please set scale first.");
         }
-        if (size + 1 > capaticy && values.length > 0){
+        if (size + 1 > capacity && values.length > 0){
             values = Arrays.copyOf(values, values.length * 2);
         }else if (values.length <= 0){
             values = Arrays.copyOf(values, values.length + 1);
         }
-        capaticy = values.length;
+        capacity = values.length;
+        if (value.equals("0.0"))
+            values[size] = 0;
+        else {
+            BigDecimal pow = new BigDecimal(1);
+            for (long i = 0; i < scale_; i++) {
+                pow = pow.multiply(new BigDecimal(10));
+            }
+            BigDecimal dbvalue = new BigDecimal(value);
+            values[size] = (dbvalue.multiply(pow)).intValue();
+        }
+        size++;
+    }
+
+    @Deprecated
+    public void add(double value) {
+        if (scale_ < 0){
+            throw new RuntimeException("Please set scale first.");
+        }
+        if (size + 1 > capacity && values.length > 0){
+            values = Arrays.copyOf(values, values.length * 2);
+        }else if (values.length <= 0){
+            values = Arrays.copyOf(values, values.length + 1);
+        }
+        capacity = values.length;
         if (value == 0.0)
             values[size] = 0;
         else {
@@ -254,7 +278,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         values = Arrays.copyOf(values, valueList.length + values.length);
         System.arraycopy(valueList, 0, values, size, valueList.length);
         size += valueList.length;
-        capaticy = values.length;
+        capacity = values.length;
     }
 
     public void addRange(double[] valueList) {
@@ -273,7 +297,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         values = Arrays.copyOf(values, newIntValue.length + values.length);
         System.arraycopy(newIntValue, 0, values, size, newIntValue.length);
         size += newIntValue.length;
-        capaticy = values.length;
+        capacity = values.length;
     }
 
     @Override

@@ -232,7 +232,30 @@ public class BasicDecimal64Vector extends AbstractVector{
         return 8;
     }
 
+    public void add(String value) {
+        if (scale_ < 0){
+            throw new RuntimeException("Please set scale first.");
+        }
+        if (size + 1 > capaticy && values.length > 0){
+            values = Arrays.copyOf(values, values.length * 2);
+        }else if (values.length <= 0){
+            values = Arrays.copyOf(values, values.length + 1);
+        }
+        capaticy = values.length;
+        if (value.equals("0.0"))
+            values[size] = 0;
+        else {
+            BigDecimal pow = new BigDecimal(1);
+            for (long i = 0; i < scale_; i++) {
+                pow = pow.multiply(new BigDecimal(10));
+            }
+            BigDecimal dbvalue = new BigDecimal(value);
+            values[size] = (dbvalue.multiply(pow)).longValue();
+        }
+        size++;
+    }
 
+    @Deprecated
     public void add(double value) {
         if (scale_ < 0){
             throw new RuntimeException("Please set scale first.");
