@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Objects;
+import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL128;
 
 public class BasicDecimal128Vector extends AbstractVector {
 
@@ -273,6 +274,10 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public void set(int index, Entity value) throws Exception {
+        if (value.getDataType() != DT_DECIMAL128) {
+            throw new RuntimeException("value type is not BasicDecimal128!");
+        }
+
         int newScale = ((Scalar) value).getScale();
         DATA_TYPE type = value.getDataType();
         if (scale_ < 0)

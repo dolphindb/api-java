@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL32;
 
 public class BasicDecimal32Vector extends AbstractVector{
     private int scale_ = -1;
@@ -179,6 +180,10 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
+        if (value.getDataType() != DT_DECIMAL32) {
+            throw new RuntimeException("value type is not BasicDecimal32!");
+        }
+
         int newScale = ((Scalar) value).getScale();
         DATA_TYPE type = value.getDataType();
         if(scale_ < 0) scale_ = newScale;
