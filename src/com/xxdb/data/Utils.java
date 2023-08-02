@@ -226,7 +226,7 @@ public class Utils {
 		return countDTSeconds(year, month, day, hour, minute, second) * 1000L + millisecond;
 	}
 	public static long countDTNanoseconds(LocalDateTime dt) {
-		long seconds = countSeconds(dt);
+		long seconds = countSecondsToLong(dt);
 		return seconds * 1000000000l + dt.getNano();
 	}
 
