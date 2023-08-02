@@ -281,6 +281,26 @@ public class BasicDecimal32Vector extends AbstractVector{
         capacity = values.length;
     }
 
+    public void addRange(String[] valueList) {
+        if (scale_ < 0){
+            throw new RuntimeException("Please set scale first.");
+        }
+        int[] newIntValue = new int[valueList.length];
+        for(int i = 0; i < valueList.length; i++){
+            BigDecimal pow = new BigDecimal(1);
+            for (long j = 0; j < scale_; j++) {
+                pow = pow.multiply(new BigDecimal(10));
+            }
+            BigDecimal dbvalue = new BigDecimal(valueList[i]);
+            newIntValue[i] = (dbvalue.multiply(pow)).intValue();
+        }
+        values = Arrays.copyOf(values, newIntValue.length + values.length);
+        System.arraycopy(newIntValue, 0, values, size, newIntValue.length);
+        size += newIntValue.length;
+        capacity = values.length;
+    }
+
+    @Deprecated
     public void addRange(double[] valueList) {
         if (scale_ < 0){
             throw new RuntimeException("Please set scale first.");
