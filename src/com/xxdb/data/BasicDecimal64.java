@@ -6,12 +6,16 @@ import com.xxdb.io.ExtendedDataOutput;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.temporal.Temporal;
 
 
 public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDecimal64>{
     private int scale_=0;
     private long value_;
+
+    private static final BigDecimal DECIMAL64_MIN_VALUE = new BigDecimal("-9223372036854775808");
+    private static final BigDecimal DECIMAL64_MAX_VALUE = new BigDecimal("9223372036854775807");
 
     public BasicDecimal64(ExtendedDataInput in) throws IOException{
         scale_ = in.readInt();
@@ -32,10 +36,13 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
         if ("0".equals(value)) {
             value_ = 0L;
         } else {
-            BigDecimal bd = new BigDecimal(value);
-            BigDecimal pow = BigDecimal.TEN.pow(scale_);
-            BigDecimal multipliedValue = bd.multiply(pow);
-            value_ = multipliedValue.longValue();
+            BigInteger unscaledVal = new BigDecimal(value).scaleByPowerOfTen(scale).toBigInteger();
+            BigDecimal bd = new BigDecimal(unscaledVal);
+            if (bd.compareTo(DECIMAL64_MIN_VALUE) < 0  || bd.compareTo(DECIMAL64_MAX_VALUE) > 0) {
+                throw new RuntimeException("Decimal math overflow: " + value);
+            } else {
+                value_ = bd.longValue();
+            }
         }
     }
 

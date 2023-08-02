@@ -29,7 +29,7 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
 
         BigDecimal bd = new BigDecimal(unscaledVal);
         if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0) {
-            throw new RuntimeException("Decimal128 overflow " + unscaledVal);
+            throw new RuntimeException("Decimal128 overflow " + new BigDecimal(unscaledVal).scaleByPowerOfTen(-scale));
         }
 
         unscaledValue = unscaledVal;
