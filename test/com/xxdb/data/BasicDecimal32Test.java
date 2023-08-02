@@ -1,11 +1,13 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -48,8 +50,13 @@ public class BasicDecimal32Test {
     }
     @Test
     public void testBasicDecimal32_value_string_1(){
-        BasicDecimal32 Decimal32 = new BasicDecimal32("",4);
-        assertEquals("",Decimal32.getString());
+        String re = null;
+        try{
+            BasicDecimal32 Decimal32 = new BasicDecimal32("",4);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("value is empty!",re);
     }
     @Test
     public void testBasicDecimal32_value_string_2(){

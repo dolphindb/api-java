@@ -50,8 +50,13 @@ public class BasicDecimal64Test {
     }
     @Test
     public void testBasicDecimal64_value_string_1(){
-        BasicDecimal64 Decimal64 = new BasicDecimal64("",4);
-        assertEquals("",Decimal64.getString());
+        String re = null;
+        try{
+            BasicDecimal64 Decimal64 = new BasicDecimal64("",4);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("value is empty!",re);
     }
     @Test
     public void testBasicDecimal64_value_string_2(){
