@@ -3,8 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.EventListener;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.compression.EncoderFactory;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
@@ -204,6 +203,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		return unitLength;
 	}
 
+	@JsonIgnore
 	public int getExtraParamForType(){
 		throw new RuntimeException("Not support yet");
 	}

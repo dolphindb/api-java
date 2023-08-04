@@ -66,7 +66,6 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 			return blobValue;
 		else
 			throw new RuntimeException("The value must be a string scalar. ");
-
 	}
 	
 	protected void setString(String value){

@@ -30,7 +30,12 @@ public class BasicBoolean extends AbstractScalar implements Comparable<BasicBool
 	public boolean getBoolean(){
 		return value != 0;
 	}
-	
+
+	public byte getValue() {
+		return value;
+	}
+
+	@JsonIgnore
 	@Override
 	public boolean isNull() {
 		return  value == Byte.MIN_VALUE;

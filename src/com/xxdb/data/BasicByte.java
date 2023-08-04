@@ -118,4 +118,10 @@ public class BasicByte extends AbstractScalar implements Comparable<BasicByte>{
 	public int compareTo(BasicByte o) {
 		return Byte.compare(value, o.value);
 	}
+
+	@JsonIgnore
+	@Override
+	public int getScale() {
+		return super.getScale();
+	}
 }

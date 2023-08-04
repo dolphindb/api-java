@@ -99,4 +99,10 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 		else
 			return value == ((BasicDuration)o).value && unit == ((BasicDuration)o).unit;
 	}
+
+	@JsonIgnore
+	@Override
+	public int getScale(){
+		return super.getScale();
+	}
 }

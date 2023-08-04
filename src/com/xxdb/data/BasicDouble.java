@@ -136,4 +136,10 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 	public int compareTo(BasicDouble o) {
 		return Double.compare(value, o.value);
 	}
+
+	@JsonIgnore
+	@Override
+	public int getScale(){
+		return super.getScale();
+	}
 }

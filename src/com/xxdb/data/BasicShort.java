@@ -114,4 +114,10 @@ public class BasicShort extends AbstractScalar implements Comparable<BasicShort>
 	public int compareTo(BasicShort o) {
 		return Short.compare(value, o.value);
 	}
+
+	@JsonIgnore
+	@Override
+	public int getScale() {
+		return super.getScale();
+	}
 }
