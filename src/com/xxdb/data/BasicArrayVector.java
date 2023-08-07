@@ -6,7 +6,7 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -319,6 +319,7 @@ public class BasicArrayVector extends AbstractVector {
 		return rowIndicesSize;
 	}
 
+	@JsonIgnore
 	@Override
 	public int getUnitLength(){
 		throw new RuntimeException("BasicArrayVector.getUnitLength() not supported.");

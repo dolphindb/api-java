@@ -2,7 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -101,6 +101,7 @@ public class BasicAnyVector extends AbstractVector{
 		return values.length;
 	}
 
+	@JsonIgnore
 	@Override
 	public int getUnitLength(){
 		throw new RuntimeException("BasicAnyVector.getUnitLength not supported.");
