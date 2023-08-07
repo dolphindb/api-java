@@ -61,13 +61,18 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 		return value;
 	}
 
+	@JsonIgnore
 	public byte[] getBytes(){
 		if (isBlob)
 			return blobValue;
 		else
 			throw new RuntimeException("The value must be a string scalar. ");
 	}
-	
+
+	public byte[] getBlobValue() {
+		return blobValue;
+	}
+
 	protected void setString(String value){
 		if (isBlob)
 			this.blobValue = value.getBytes(StandardCharsets.UTF_8);
