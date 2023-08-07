@@ -45,7 +45,7 @@ public class BasicSet extends AbstractEntity implements Set {
 		if(keyType == DATA_TYPE.DT_VOID || keyType == DATA_TYPE.DT_SYMBOL || keyType.getValue() >= DATA_TYPE.DT_FUNCTIONDEF.getValue())
 			throw new IllegalArgumentException("Invalid keyType: " + keyType.name());
 		this.keyType = keyType;
-		set = new HashSet<Entity>();
+		set = new HashSet<Entity>(capacity);
 	}
 	
 	public BasicSet(DATA_TYPE keyType){
