@@ -1,7 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 
 /**
@@ -32,6 +32,7 @@ public class BasicChart extends BasicDictionary implements Chart{
 		return DATA_FORM.DF_CHART;
 	}
 
+	@JsonIgnore
 	@Override
 	public CHART_TYPE getChartType() throws Exception{
 		Entity chartType = get(KEY_CHARTTYPE);
