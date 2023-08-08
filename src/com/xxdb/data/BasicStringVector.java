@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 import com.xxdb.route.BitConverter;
@@ -338,6 +338,7 @@ public class BasicStringVector extends AbstractVector{
 		}
 	}
 
+	@JsonIgnore
 	public String[] getdataArray() {
 		String[] data = new String[size];
 		System.arraycopy(values, 0, data, 0, size);

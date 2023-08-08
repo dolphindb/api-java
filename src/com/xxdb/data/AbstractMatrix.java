@@ -1,7 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -104,7 +104,8 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 			throw new IllegalArgumentException("the column label size doesn't equal to the column number of the matrix.");
 		columnLabels = vector;
 	}
-	
+
+	@JsonIgnore
 	public String getString(){
 		int rows = Math.min(Utils.DISPLAY_ROWS,rows());
 		int limitColMaxWidth=25;
