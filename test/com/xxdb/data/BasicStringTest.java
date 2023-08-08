@@ -892,7 +892,7 @@ public class BasicStringTest {
         BasicStringMatrix bsm = new BasicStringMatrix(2,2);
         String re = JSONObject.toJSONString(bsm);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_STRING\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicString\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"table\":false,\"vector\":false}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_SYMBOL\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicString\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"table\":false,\"vector\":false}", re);
     }
     @Test
     public void test_BasicString_BLOB_toJSONString() throws Exception {
