@@ -5,28 +5,24 @@ import com.xxdb.data.*;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
-public class tableAppender {
+public class AutoFitTableAppender {
     enum APPEND_ACTION {fitColumnType}
     String dbUrl_;
     String tableName_;
     boolean async_;
     DBConnection con_;
     APPEND_ACTION _action;
-    tableAppender(String dbUrl, String tableName, DBConnection conn) {
+    public AutoFitTableAppender(String dbUrl, String tableName, DBConnection conn) {
         this.dbUrl_ = dbUrl;
         this.tableName_ = tableName;
         this.con_ = conn;
         this._action = APPEND_ACTION.fitColumnType;
     }
 
-    tableAppender(String dbUrl, String tableName, DBConnection conn, APPEND_ACTION action) {
+    public AutoFitTableAppender(String dbUrl, String tableName, DBConnection conn, APPEND_ACTION action) {
         this.dbUrl_ = dbUrl;
         this.tableName_ = tableName;
         this.con_ = conn;

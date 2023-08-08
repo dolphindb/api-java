@@ -2,7 +2,7 @@ package com.xxdb;
 
 import com.xxdb.data.*;
 import com.xxdb.route.AutoFitTableUpsert;
-import com.xxdb.route.tableAppender;
+import com.xxdb.route.AutoFitTableAppender;
 import org.junit.Test;
 
 import java.io.IOException;
