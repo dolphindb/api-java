@@ -1,8 +1,8 @@
 package com.xxdb.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -355,6 +355,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         return scale_;
     }
 
+    @JsonIgnore
     public int[] getdataArray(){
         int[] data = new int[size];
         System.arraycopy(values, 0, data, 0, size);
