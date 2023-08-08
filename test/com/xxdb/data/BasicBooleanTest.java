@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.io.Double2;
 import com.xxdb.io.ExtendedDataOutput;
 import com.xxdb.io.Long2;
@@ -179,5 +180,19 @@ public class BasicBooleanTest {
         assertEquals(true,bb1.booleanValue());
         BasicBoolean bb2 = new BasicBoolean(false);
         assertEquals(false,bb2.booleanValue());
+    }
+    @Test
+    public void test_BasicBoolean_toJsonString() throws Exception {
+        BasicBoolean bb1 = new BasicBoolean(true);
+        String re = JSONObject.toJSONString(bb1);
+        System.out.println(re);
+        assertEquals("{\"boolean\":true,\"chart\":false,\"chunk\":false,\"dataCategory\":\"LOGICAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_BOOL\",\"dictionary\":false,\"jsonString\":\"true\",\"matrix\":false,\"number\":1,\"pair\":false,\"scalar\":true,\"string\":\"true\",\"table\":false,\"value\":1,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicBoolean_toJsonString_null() throws Exception {
+        BasicBoolean bb = new BasicBoolean(Byte.MIN_VALUE);
+        String re = JSONObject.toJSONString(bb);
+        System.out.println(re);
+        assertEquals("{\"boolean\":true,\"chart\":false,\"chunk\":false,\"dataCategory\":\"LOGICAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_BOOL\",\"dictionary\":false,\"jsonString\":\"null\",\"matrix\":false,\"number\":-128,\"pair\":false,\"scalar\":true,\"string\":\"\",\"table\":false,\"value\":-128,\"vector\":false}", re);
     }
 }

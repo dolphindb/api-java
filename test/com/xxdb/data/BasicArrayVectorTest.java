@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.*;
 import org.junit.Test;
@@ -1483,5 +1484,11 @@ public class BasicArrayVectorTest {
         BasicArrayVector bav = new BasicArrayVector(new int[]{1,2,3,4},new BasicIntVector(new int[]{2,4,6,8}));
         bav.addRange(new Object[]{new BasicInt(9),new BasicInt(17)});
     }
-
+    @Test
+    public void test_BasicArrayVector_toJsonString(){
+        BasicArrayVector bav = new BasicArrayVector(new int[]{1,2,3,4},new BasicIntVector(new int[]{2,4,6,8}));
+        String re = JSONObject.toJSONString(bav);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"ARRAY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_INT_ARRAY\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.Entity\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[[2],[4],[6],[8]]\",\"table\":false,\"vector\":true}", re);
+    }
 }

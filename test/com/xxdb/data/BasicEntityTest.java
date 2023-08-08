@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.io.BigEndianDataOutputStream;
 import com.xxdb.io.ExtendedDataOutput;
 import org.junit.Assert;
@@ -78,5 +79,12 @@ public class BasicEntityTest {
     public void test_Entity_hashBucket() throws Exception {
         Scalar entity = new BasicDate(1);
         System.out.println("basicInt: " + entity.hashBucket(1));
+    }
+    @Test
+    public void test_Entity_toJSONString() throws Exception {
+        Scalar entity = new BasicInt(1);
+        String re = JSONObject.toJSONString(entity);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_INT\",\"dictionary\":false,\"int\":1,\"jsonString\":\"1\",\"matrix\":false,\"null\":false,\"number\":1,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"1\",\"table\":false,\"vector\":false}", re);
     }
 }

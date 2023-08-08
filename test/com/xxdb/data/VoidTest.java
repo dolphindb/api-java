@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import org.junit.Test;
 import static org.junit.Assert.*;
 public class VoidTest {
@@ -26,5 +27,12 @@ public class VoidTest {
     public void test_void_getTemporal() throws Exception {
         Void v = new Void();
         v.getTemporal();
+    }
+    @Test
+    public void test_void_toJSONString(){
+        Void v = new Void();
+        String re = JSONObject.toJSONString(v);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"NOTHING\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_VOID\",\"dictionary\":false,\"jsonString\":\"\",\"matrix\":false,\"null\":true,\"pair\":false,\"scalar\":true,\"string\":\"\",\"table\":false,\"vector\":false}", re);
     }
 }

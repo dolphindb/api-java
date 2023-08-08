@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.*;
 import org.junit.Test;
@@ -304,7 +305,21 @@ public class BasicAnyVectorTest {
         assertEquals("2022.08.01",bav.get(11).getString());
         bav.add(new BasicInt(33));
     }
-
+    @Test
+    public void test_BasicAnyVector_toJsonString() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        Entity[] arr = new Entity[12];
+        for (int i = 0; i < 10; i++) {
+            arr[i] = conn.run(""+i);
+        }
+        arr[10] = conn.run("11.11");
+        arr[11] = conn.run("true");
+        BasicAnyVector bav = new BasicAnyVector(arr,false);
+        String re = JSONObject.toJSONString(bav);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"MIXED\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_ANY\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.Entity\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"(0,1,2,3,4,5,6,7,8,9,...)\",\"table\":false,\"vector\":true}", re);
+    }
 
 
 }

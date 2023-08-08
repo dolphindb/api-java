@@ -1,11 +1,13 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.ResourceBundle;
 
 import static org.junit.Assert.*;
@@ -332,11 +334,18 @@ public class BasicDecimal64VectorTest {
     }
 
     @Test
-    public void test_BasicDecimal64Vector_getdataArray() throws Exception {
+    public void test_BasicDecimal64Vector_getDataCategory() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
         BasicDecimal64Vector tmp_64_v2 = new BasicDecimal64Vector(tmp_double_v,4);
         Entity.DATA_CATEGORY a = tmp_64_v2.getDataCategory();
         assertEquals("DENARY",a.toString());
+    }
+    @Test
+    public void test_BasicDecimal64Vector_getdataArray() throws Exception {
+        double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
+        BasicDecimal32Vector tmp_32_v2 = new BasicDecimal32Vector(tmp_double_v,4);
+        int[] a = tmp_32_v2.getdataArray();
+        assertEquals("[0, -1230043, 1322042, 1000000]", Arrays.toString(a));
     }
 
     @Test
@@ -363,9 +372,23 @@ public class BasicDecimal64VectorTest {
         assertEquals(4,a);
     }
     @Test
-    public void testBasicDecimal64_run_arrayVector_add() throws IOException {
+    public void testBasicDecimal64Vector_run_arrayVector_add() throws IOException {
         BasicArrayVector re1 =(BasicArrayVector) conn.run("arr = array(DECIMAL64(2)[], 0, 10).append!([[92233720368547758, NULL, 100000000000000, NULL, -92233720368547758, -100000000000000], [], [00i], [92233720368547758]]);arr1=add(arr, 1);arr1;");
         assertEquals("[[92233720368547759.00,,100000000000001.00,,-92233720368547757.00,-99999999999999.00],[],[],[92233720368547759.00]]",re1.getString());
     }
-
+    @Test
+    public void testBasicDecimal64Vector_toJsonString() throws IOException {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal64Vector re1 = new BasicDecimal64Vector(tmp_string_v,4);
+        String re = JSONObject.toJSONString(re1);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DECIMAL64\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDecimal64\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"scale\":4,\"string\":\"[0.0000,-123.0043,132.2042,100.0000]\",\"table\":false,\"unitLength\":8,\"vector\":true}", re);
+    }
+    @Test
+    public void testBasicDecimal64Vector_toJsonString_null() throws IOException {
+        BasicDecimal64Vector re1 = new BasicDecimal64Vector(2,2);
+        String re = JSONObject.toJSONString(re1);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DECIMAL64\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDecimal64\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"scale\":2,\"string\":\"[0.00,0.00]\",\"table\":false,\"unitLength\":8,\"vector\":true}", re);
+    }
 }

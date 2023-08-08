@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.*;
 import org.junit.Before;
@@ -540,5 +541,15 @@ public class BasicSymbolTest {
     public void test_Symbol_getDataType() throws IOException {
         Entity re1 = conn.run("symbol([concat(take(`aaaaaaaaa,1)),concat(take(`aaaaaaaaa,1)),concat(take(`aaaaaaaaa,1)),concat(take(`aaaaaaaaa,1))])");
         assertEquals("SYMBOL",re1.getDataType().getName());
+    }
+    @Test
+    public void test_BasicSymbolVector_toJSONString() throws Exception {
+        List<String> list = new ArrayList<>();
+        list.add("GaussDB");
+        list.add("GoldenDB");
+        BasicSymbolVector bsv = new BasicSymbolVector(list);
+        String re = JSONObject.toJSONString(bsv);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_SYMBOL\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicString\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[GaussDB,GoldenDB]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
     }
 }

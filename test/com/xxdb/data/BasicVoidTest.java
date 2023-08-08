@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.io.*;
@@ -365,5 +366,15 @@ public class BasicVoidTest {
 //       Assert.assertEquals("",(((BasicIntVector) table1.getColumn("value1")).get(0)).getString());
 //        conn.run("undef(`tb1)");
 //    }
+    @Test
+    public void test_BasicVoidVector_toJSONString() throws Exception {
+    conn = new DBConnection();
+    conn.connect(HOST,PORT,"admin","123456");
+    Entity aa = (BasicInt)conn.run("1");
+    BasicVoidVector v = new BasicVoidVector(6);
+    String re = JSONObject.toJSONString(v);
+    System.out.println(re);
+    assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"NOTHING\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_VOID\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.Void\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[,,,,,]\",\"table\":false,\"unitLength\":1,\"vector\":true}", re);
+    }
 }
 

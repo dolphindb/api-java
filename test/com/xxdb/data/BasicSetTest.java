@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.Double2;
 import com.xxdb.io.ExtendedDataInput;
@@ -251,5 +252,15 @@ public class BasicSetTest {
         };
         BasicSet bs = new BasicSet(Entity.DATA_TYPE.DT_TIMESTAMP,in);
     }
-
+    @Test
+    public void test_BasicSet_toJSONString(){
+        BasicSet bs = new BasicSet(Entity.DATA_TYPE.DT_INT,4);
+        assertTrue(bs.add(new BasicInt(2)));
+        assertTrue(bs.add(new BasicInt(3)));
+        assertTrue(bs.add(new BasicInt(4)));
+        assertTrue(bs.add(new BasicInt(5)));
+        String re = JSONObject.toJSONString(bs);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_SET\",\"dataType\":\"DT_INT\",\"dictionary\":false,\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[2,3,4,5]\",\"table\":false,\"vector\":false}", re);
+    }
 }

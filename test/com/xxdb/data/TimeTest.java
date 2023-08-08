@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import org.junit.Test;
 
@@ -1110,6 +1111,259 @@ public class TimeTest{
         assertEquals(capacity*2,bdtv.capaticy);
         assertEquals(size+2,bdtv.size);
         System.out.println(bdtv.getString());
+    }
+    @Test
+    public void test_BasicDate_toJSONString() throws Exception {
+        LocalDate dt = LocalDate.of(2022,1,31);
+        BasicDate date = new BasicDate(dt);
+        String re = JSONObject.toJSONString(date);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DATE\",\"date\":\"2022-01-31\",\"dictionary\":false,\"int\":19023,\"jsonString\":\"\\\"2022.01.31\\\"\",\"matrix\":false,\"null\":false,\"number\":19023,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"2022.01.31\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicMonth_toJSONString() throws Exception {
+        BasicMonth mo = new BasicMonth(2022, Month.JULY);
+        String re = JSONObject.toJSONString(mo);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_MONTH\",\"dictionary\":false,\"int\":24270,\"jsonString\":\"\\\"2022.07M\\\"\",\"matrix\":false,\"month\":{\"leapYear\":false,\"month\":\"JULY\",\"monthValue\":7,\"year\":2022},\"null\":false,\"number\":24270,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"2022.07M\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicTime_toJSONString() throws Exception {
+        BasicTime date = new BasicTime(53000);
+        String re = JSONObject.toJSONString(date);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_TIME\",\"dictionary\":false,\"int\":53000,\"jsonString\":\"\\\"00:00:53.000\\\"\",\"matrix\":false,\"null\":false,\"number\":53000,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"00:00:53.000\",\"table\":false,\"time\":\"00:00:53\",\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicMinute_toJSONString() throws Exception {
+        BasicMinute date = new BasicMinute(100);
+        String re = JSONObject.toJSONString(date);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_MINUTE\",\"dictionary\":false,\"int\":100,\"jsonString\":\"\\\"01:40m\\\"\",\"matrix\":false,\"minute\":\"01:40:00\",\"null\":false,\"number\":100,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"01:40m\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicSecond_toJSONString() throws Exception {
+        BasicSecond date = new BasicSecond(60);
+        String re = JSONObject.toJSONString(date);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_SECOND\",\"dictionary\":false,\"int\":60,\"jsonString\":\"\\\"00:01:00\\\"\",\"matrix\":false,\"null\":false,\"number\":60,\"pair\":false,\"scalar\":true,\"scale\":0,\"second\":\"00:01:00\",\"string\":\"00:01:00\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicDateTime_toJSONString() throws Exception {
+        BasicDateTime date = new BasicDateTime(100);
+        String re = JSONObject.toJSONString(date);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DATETIME\",\"dateTime\":\"1970-01-01 00:01:40\",\"dictionary\":false,\"int\":100,\"jsonString\":\"\\\"1970.01.01T00:01:40\\\"\",\"matrix\":false,\"null\":false,\"number\":100,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"1970.01.01T00:01:40\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicTimestamp_toJSONString() throws Exception {
+        BasicTimestamp date = new BasicTimestamp(100);
+        String re = JSONObject.toJSONString(date);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_TIMESTAMP\",\"dictionary\":false,\"jsonString\":\"\\\"1970.01.01T00:00:00.100\\\"\",\"long\":100,\"matrix\":false,\"null\":false,\"number\":100,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"1970.01.01T00:00:00.100\",\"table\":false,\"timestamp\":\"1970-01-01 00:00:00.100\",\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicNanoTime_toJSONString() throws Exception {
+        BasicNanoTime date = new BasicNanoTime(100);
+        String re = JSONObject.toJSONString(date);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_NANOTIME\",\"dictionary\":false,\"jsonString\":\"\\\"00:00:00.000000100\\\"\",\"long\":100,\"matrix\":false,\"nanoTime\":\"00:00:00.000000100\",\"null\":false,\"number\":100,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"00:00:00.000000100\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicNanoTimeStamp_toJSONString() throws Exception {
+        BasicNanoTimestamp date = new BasicNanoTimestamp(100);
+        String re = JSONObject.toJSONString(date);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_NANOTIMESTAMP\",\"dictionary\":false,\"jsonString\":\"\\\"1970.01.01T00:00:00.000000100\\\"\",\"long\":100,\"matrix\":false,\"nanoTimestamp\":\"1970-01-01 00:00:00.000000100\",\"null\":false,\"number\":100,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"1970.01.01T00:00:00.000000100\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicDateHour_toJSONString() throws Exception {
+        BasicDateHour date = new BasicDateHour(100);
+        String re = JSONObject.toJSONString(date);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DATEHOUR\",\"dateHour\":\"1970-01-05 04:00:00\",\"dictionary\":false,\"int\":100,\"jsonString\":\"\\\"1970.01.05T04\\\"\",\"matrix\":false,\"null\":false,\"number\":100,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"1970.01.05T04\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicDateVector_toJSONString() throws Exception {
+        List<Integer> list = Arrays.asList(1,2,3);
+        BasicDateVector v = new BasicDateVector(list);
+        String re = JSONObject.toJSONString(v);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DATE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDate\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[1970.01.02,1970.01.03,1970.01.04]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicMonthVector_toJSONString() throws Exception {
+        List<Integer> list = Arrays.asList(1,2,3);
+        BasicMonthVector v = new BasicMonthVector(list);
+        String re = JSONObject.toJSONString(v);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_MONTH\",\"dictionary\":false,\"elementClass\":\"java.time.YearMonth\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[0000.02M,0000.03M,0000.04M]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicTimeVector_toJSONString() throws Exception {
+        List<Integer> list = Arrays.asList(1,2,3);
+        BasicTimeVector v = new BasicTimeVector(list);
+        String re = JSONObject.toJSONString(v);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_TIME\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicTime\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[00:00:00.001,00:00:00.002,00:00:00.003]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicMinuteVector_toJSONString() throws Exception {
+        List<Integer> list = Arrays.asList(1,2,3);
+        BasicMinuteVector v = new BasicMinuteVector(list);
+        String re = JSONObject.toJSONString(v);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_MINUTE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicMinute\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[00:01m,00:02m,00:03m]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicSecondVector_toJSONString() throws Exception {
+        List<Integer> list = Arrays.asList(1,2,3);
+        BasicSecondVector v = new BasicSecondVector(list);
+        String re = JSONObject.toJSONString(v);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_SECOND\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicSecond\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[00:00:01,00:00:02,00:00:03]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicDateTimeVector_toJSONString() throws Exception {
+        List<Integer> list = Arrays.asList(1,2,3);
+        BasicDateTimeVector v = new BasicDateTimeVector(list);
+        String re = JSONObject.toJSONString(v);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DATETIME\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDateTime\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[1970.01.01T00:00:01,1970.01.01T00:00:02,1970.01.01T00:00:03]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicTimestampVector_toJSONString() throws Exception {
+        List<Long> list = Arrays.asList(1L,2L,3L);
+        BasicTimestampVector v = new BasicTimestampVector(list);
+        String re = JSONObject.toJSONString(v);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_TIMESTAMP\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicTimestamp\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[1970.01.01T00:00:00.001,1970.01.01T00:00:00.002,1970.01.01T00:00:00.003]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicNanoTimeVector_toJSONString() throws Exception {
+        List<Long> list = Arrays.asList(1L,2L,3L);
+        BasicNanoTimeVector v = new BasicNanoTimeVector(list);
+        String re = JSONObject.toJSONString(v);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_NANOTIME\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicNanoTime\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[00:00:00.000000001,00:00:00.000000002,00:00:00.000000003]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicNanoTimeStampVector_toJSONString() throws Exception {
+        List<Long> list = Arrays.asList(1L,2L,3L);
+        BasicNanoTimestampVector v = new BasicNanoTimestampVector(list);
+        String re = JSONObject.toJSONString(v);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_NANOTIMESTAMP\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicNanoTimestamp\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[1970.01.01T00:00:00.000000001,1970.01.01T00:00:00.000000002,1970.01.01T00:00:00.000000003]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicDateHourVector_toJSONString() throws Exception {
+        List<Integer> list = Arrays.asList(1,2,3);
+        BasicDateHourVector v = new BasicDateHourVector(list);
+        String re = JSONObject.toJSONString(v);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DATEHOUR\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDateHour\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[1970.01.01T01,1970.01.01T02,1970.01.01T03]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicDateMatrix_toJSONString() throws Exception {
+        List<int[]> listofArrays = new ArrayList<>(2);
+        listofArrays.add(new int[]{2861,7963});
+        listofArrays.add(new int[]{4565,2467});
+        BasicDateMatrix bdhm2 = new BasicDateMatrix(2,2,listofArrays);
+        String re = JSONObject.toJSONString(bdhm2);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_DATE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDate\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0         #1        \\n1977.11.01 1982.07.02\\n1991.10.21 1976.10.03\\n\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicMonthMatrix_toJSONString() throws Exception {
+        List<int[]> listofArrays = new ArrayList<>(2);
+        listofArrays.add(new int[]{2861,7963});
+        listofArrays.add(new int[]{4565,2467});
+        BasicMonthMatrix bdhm2 = new BasicMonthMatrix(2,2,listofArrays);
+        String re = JSONObject.toJSONString(bdhm2);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_MONTH\",\"dictionary\":false,\"elementClass\":\"java.time.YearMonth\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0       #1      \\n0238.06M 0380.06M\\n0663.08M 0205.08M\\n\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicTimeMatrix_toJSONString() throws Exception {
+        List<int[]> listofArrays = new ArrayList<>(2);
+        listofArrays.add(new int[]{2861,7963});
+        listofArrays.add(new int[]{4565,2467});
+        BasicTimeMatrix bdhm2 = new BasicTimeMatrix(2,2,listofArrays);
+        String re = JSONObject.toJSONString(bdhm2);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_TIME\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicTime\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0           #1          \\n00:00:02.861 00:00:04.565\\n00:00:07.963 00:00:02.467\\n\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicMinuteMatrix_toJSONString() throws Exception {
+        List<int[]> listofArrays = new ArrayList<>(2);
+        listofArrays.add(new int[]{1,2});
+        listofArrays.add(new int[]{3,4});
+        BasicMinuteMatrix bdhm2 = new BasicMinuteMatrix(2,2,listofArrays);
+        String re = JSONObject.toJSONString(bdhm2);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_MINUTE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicMinute\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0     #1    \\n00:01m 00:03m\\n00:02m 00:04m\\n\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicSecondMatrix_toJSONString() throws Exception {
+        List<int[]> listofArrays = new ArrayList<>(2);
+        listofArrays.add(new int[]{1,2});
+        listofArrays.add(new int[]{3,4});
+        BasicSecondMatrix bdhm2 = new BasicSecondMatrix(2,2,listofArrays);
+        String re = JSONObject.toJSONString(bdhm2);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_SECOND\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicSecond\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0       #1      \\n00:00:01 00:00:03\\n00:00:02 00:00:04\\n\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicDateTimeMatrix_toJSONString() throws Exception {
+        List<int[]> listofArrays = new ArrayList<>(2);
+        listofArrays.add(new int[]{1,2});
+        listofArrays.add(new int[]{3,4});
+        BasicDateTimeMatrix bdhm2 = new BasicDateTimeMatrix(2,2,listofArrays);
+        String re = JSONObject.toJSONString(bdhm2);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_DATETIME\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDateTime\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0                  #1                 \\n1970.01.01T00:00:01 1970.01.01T00:00:03\\n1970.01.01T00:00:02 1970.01.01T00:00:04\\n\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicTimestampMatrix_toJSONString() throws Exception {
+        List<long[]> listofArrays = new ArrayList<>(2);
+        listofArrays.add(new long[]{1,2});
+        listofArrays.add(new long[]{3,4});
+        BasicTimestampMatrix bdhm2 = new BasicTimestampMatrix(2,2,listofArrays);
+        String re = JSONObject.toJSONString(bdhm2);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_TIMESTAMP\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicTimestamp\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0                      #1                     \\n1970.01.01T00:00:00.001 1970.01.01T00:00:00.003\\n1970.01.01T00:00:00.002 1970.01.01T00:00:00.004\\n\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicNanoTimeMatrix_toJSONString() throws Exception {
+        List<long[]> listofArrays = new ArrayList<>(2);
+        listofArrays.add(new long[]{1,2});
+        listofArrays.add(new long[]{3,4});
+        BasicNanoTimeMatrix bdhm2 = new BasicNanoTimeMatrix(2,2,listofArrays);
+        String re = JSONObject.toJSONString(bdhm2);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_NANOTIME\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicNanoTime\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0                 #1                \\n00:00:00.000000001 00:00:00.000000003\\n00:00:00.000000002 00:00:00.000000004\\n\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicNanoTimeStampMatrix_toJSONString() throws Exception {
+        List<long[]> listofArrays = new ArrayList<>(2);
+        listofArrays.add(new long[]{1,2});
+        listofArrays.add(new long[]{3,4});
+        BasicNanoTimestampMatrix bdhm2 = new BasicNanoTimestampMatrix(2,2,listofArrays);
+        System.out.println(bdhm2.getString());
+
+        String re = JSONObject.toJSONString(bdhm2);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_NANOTIMESTAMP\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicNanoTimestamp\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0                        #1                       \\n1970.01.01T00:00:00.000...1970.01.01T00:00:00.00...\\n1970.01.01T00:00:00.000...1970.01.01T00:00:00.00...\\n\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicDateHourMatrix_toJSONString() throws Exception {
+        List<int[]> listofArrays = new ArrayList<>(2);
+        listofArrays.add(new int[]{1,2});
+        listofArrays.add(new int[]{3,4});
+        BasicDateHourMatrix bdhm2 = new BasicDateHourMatrix(2,2,listofArrays);
+        String re = JSONObject.toJSONString(bdhm2);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_DATEHOUR\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDateHour\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0            #1           \\n1970.01.01T01 1970.01.01T03\\n1970.01.01T02 1970.01.01T04\\n\",\"table\":false,\"vector\":false}", re);
     }
 }
 

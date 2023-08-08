@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.Double2;
 import com.xxdb.io.ExtendedDataInput;
@@ -26,11 +27,10 @@ public class BasicChartTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void test_BasicChart_getdata(){
+    public void test_BasicChart_getdata()  {
         BasicChart bc = new BasicChart(5);
         bc.getData();
     }
-
     @Test
     public void test_BasicChart_get_NULL() throws Exception {
         BasicChart bc = new BasicChart();
@@ -42,6 +42,11 @@ public class BasicChartTest {
         assertNull(bc.getExtraParameter(CHART_PARAMETER_TYPE.multiYAxes));
         assertEquals(Entity.DATA_FORM.DF_CHART,bc.getDataForm());
     }
-
+    @Test
+    public void test_BasicChart_toJSONString() throws Exception {
+        BasicChart bc = new BasicChart(1);
+        String re = JSONObject.toJSONString(bc);
+        System.out.println(re);
+    }
 
 }

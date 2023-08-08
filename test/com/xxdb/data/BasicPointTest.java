@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.*;
 import org.junit.Test;
@@ -719,5 +720,19 @@ public class BasicPointTest {
         assertEquals(size+3,bpv.size);
         assertEquals(capacity+3,bpv.capaticy);
 
+    }
+    @Test
+    public void test_BasicPoint_toJSONString() throws Exception {
+        BasicPoint bp = new BasicPoint(1,1);
+        String re = JSONObject.toJSONString(bp);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_POINT\",\"dictionary\":false,\"double2\":{\"null\":false,\"x\":1.0,\"y\":1.0},\"jsonString\":\"\\\"(1.0, 1.0)\\\"\",\"matrix\":false,\"null\":false,\"pair\":false,\"scalar\":true,\"string\":\"(1.0, 1.0)\",\"table\":false,\"vector\":false,\"x\":1.0,\"y\":1.0}", re);
+    }
+    @Test
+    public void test_BasicPointVector_toJSONString() throws Exception {
+        BasicPointVector bpv = new BasicPointVector(new Double2[]{});
+        String re = JSONObject.toJSONString(bpv);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_POINT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicPoint\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
     }
 }
