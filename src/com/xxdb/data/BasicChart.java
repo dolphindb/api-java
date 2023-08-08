@@ -41,6 +41,7 @@ public class BasicChart extends BasicDictionary implements Chart{
 		return CHART_TYPE.values()[((Scalar)chartType).getNumber().intValue()];
 	}
 
+	@JsonIgnore
 	@Override
 	public Matrix getData() {
 		Entity data = get(KEY_DATA);
