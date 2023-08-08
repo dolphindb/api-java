@@ -416,5 +416,19 @@ public class BasicDecimal32Test {
         BasicBoolean res = (BasicBoolean) conn.run("a == decimal32(NULL,3)");
         assertEquals(true, res.getBoolean());
     }
-
+    @Test
+    public void testBasicDecimal32_toJsonString() throws IOException {
+        BasicDecimal32 re1 = new BasicDecimal32("12341.23", 3);
+        String re = JSONObject.toJSONString(re1);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DECIMAL32\",\"dictionary\":false,\"int\":12341230,\"jsonString\":\"12341.230\",\"matrix\":false,\"null\":false,\"number\":12341.23,\"pair\":false,\"scalar\":true,\"scale\":3,\"string\":\"12341.230\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void testBasicDecimal32_toJsonString_null() throws IOException {
+        BasicDecimal32 re1 = new BasicDecimal32("12341.23", 3);
+        re1.setNull();
+        String re = JSONObject.toJSONString(re1);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DECIMAL32\",\"dictionary\":false,\"int\":-2147483648,\"jsonString\":\"null\",\"matrix\":false,\"null\":true,\"number\":-2147483648,\"pair\":false,\"scalar\":true,\"scale\":3,\"string\":\"\",\"table\":false,\"vector\":false}", re);
+    }
 }

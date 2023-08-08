@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -118,5 +119,30 @@ public class BasicDoubleTest {
         BasicDouble bb1 = new BasicDouble(1.243);
         assertEquals("1.243",bb1.doubleValue().toString());
     }
-
+    @Test
+    public void test_BasicDouble_toJSONString() throws Exception {
+        BasicDouble bd = new BasicDouble(5.73);
+        String re = JSONObject.toJSONString(bd);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"FLOATING\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DOUBLE\",\"dictionary\":false,\"double\":5.73,\"jsonString\":\"5.73\",\"matrix\":false,\"null\":false,\"number\":5.73,\"pair\":false,\"scalar\":true,\"string\":\"5.73\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicDoubleVector_toJSONString() throws Exception {
+        double[] arr = new double[]{6.20,6.28,7.26};
+        BasicDoubleVector bdv = new BasicDoubleVector(arr,false);
+        String re = JSONObject.toJSONString(bdv);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[6.2,6.28,7.26],\"dataCategory\":\"FLOATING\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DOUBLE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDouble\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[6.2,6.28,7.26]\",\"table\":false,\"unitLength\":8,\"vector\":true}", re);
+    }
+    @Test
+    public void testBasicDoubleMatrix_toJSONString(){
+        BasicDoubleMatrix bdm = new BasicDoubleMatrix(2,2);
+        bdm.setDouble(0,0,2.4);
+        bdm.setDouble(0,1,5.2);
+        bdm.setDouble(1,0,2.7);
+        bdm.setDouble(1,1,3.8);
+        String re = JSONObject.toJSONString(bdm);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"FLOATING\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_DOUBLE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDouble\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0  #1 \\n2.4 5.2\\n2.7 3.8\\n\",\"table\":false,\"vector\":false}", re);
+    }
 }

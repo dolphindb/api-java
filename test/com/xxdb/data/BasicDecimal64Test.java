@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import org.junit.After;
 import org.junit.Before;
@@ -427,5 +428,19 @@ public class BasicDecimal64Test {
         BasicDecimal64Vector re1 =(BasicDecimal64Vector) conn.run("decimal64([int(),NULL,NULL],6)");
         assertEquals("[,,]",re1.getString());
     }
-
+    @Test
+    public void testBasicDecimal64_toJsonString() throws IOException {
+        BasicDecimal64 re1 = new BasicDecimal64("12341.23", 3);
+        String re = JSONObject.toJSONString(re1);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DECIMAL64\",\"dictionary\":false,\"jsonString\":\"12341.230\",\"long\":12341230,\"matrix\":false,\"null\":false,\"number\":12341.23,\"pair\":false,\"scalar\":true,\"scale\":3,\"string\":\"12341.230\",\"table\":false,\"vector\":false}",re);
+    }
+    @Test
+    public void testBasicDecimal64_toJsonString_null() throws IOException {
+        BasicDecimal64 re1 = new BasicDecimal64("12341.23", 3);
+        re1.setNull();
+        String re = JSONObject.toJSONString(re1);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DECIMAL64\",\"dictionary\":false,\"jsonString\":\"null\",\"long\":-9223372036854775808,\"matrix\":false,\"null\":true,\"number\":-9223372036854775808,\"pair\":false,\"scalar\":true,\"scale\":3,\"string\":\"\",\"table\":false,\"vector\":false}",re);
+    }
 }

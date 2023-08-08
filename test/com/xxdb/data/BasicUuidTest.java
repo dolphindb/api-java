@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.Long2;
 import org.junit.After;
@@ -116,5 +117,19 @@ public class BasicUuidTest {
         buv.Append(new BasicUuidVector(new Long2[]{new Long2(46,29),new Long2(28,12)}));
         assertEquals(capacity*4+2,buv.capaticy);
         assertEquals(size+4,buv.size);
+    }
+    @Test
+    public void test_BasicUuid_toJSONString() throws Exception {
+        BasicUuid buv = new BasicUuid(1,2);
+        String re = JSONObject.toJSONString(buv);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_UUID\",\"dictionary\":false,\"jsonString\":\"\\\"00000000-0000-0001-0000-000000000002\\\"\",\"leastSignicantBits\":2,\"long2\":{\"high\":1,\"low\":2,\"null\":false},\"matrix\":false,\"mostSignicantBits\":1,\"null\":false,\"pair\":false,\"scalar\":true,\"string\":\"00000000-0000-0001-0000-000000000002\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicUuidVector_toJSONString() throws Exception {
+        BasicUuidVector buv = new BasicUuidVector(Entity.DATA_FORM.DF_VECTOR,2);
+        String re = JSONObject.toJSONString(buv);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[{\"high\":0,\"low\":0,\"null\":true},{\"high\":0,\"low\":0,\"null\":true}],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_UUID\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicUuid\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[,]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
     }
 }

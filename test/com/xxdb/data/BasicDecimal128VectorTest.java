@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import org.junit.After;
 import org.junit.Before;
@@ -360,7 +361,7 @@ public class BasicDecimal128VectorTest {
     }
     @Test
     public void testBasicDecimal128_run_bigvector1() throws IOException {
-        BasicArrayVector re1 =(BasicArrayVector) conn.run("bigarray(DECIMAL64(2)[], 0, 3000000).append!(take([[92233720368547758, NULL, 100000000000000, NULL, -92233720368547758, -100000000000000], [], [00i], [92233720368547758]], 30000)) * 10");
+        BasicArrayVector re1 =(BasicArrayVector) conn.run("bigarray(Decimal128(2)[], 0, 3000000).append!(take([[92233720368547758, NULL, 100000000000000, NULL, -92233720368547758, -100000000000000], [], [00i], [92233720368547758]], 30000)) * 10");
         System.out.println(re1.getString());
         assertEquals("[[922337203685477580.00,,1000000000000000.00,,-922337203685477580.00,-1000000000000000.00],[],[],[922337203685477580.00],[922337203685477580.00,,1000000000000000.00,,-922337203685477580.00,-1000000000000000.00],[],[],[922337203685477580.00],[922337203685477580.00,,1000000000000000.00,,-922337203685477580.00,-1000000000000000.00],[],...]",re1.getString());
     }
@@ -376,5 +377,20 @@ public class BasicDecimal128VectorTest {
     public void testBasicDecimal128_run_arrayVector_add() throws IOException {
         BasicArrayVector re1 =(BasicArrayVector) conn.run("arr = array(DECIMAL128(2)[], 0, 10).append!([[92233720368547758, NULL, 100000000000000, NULL, -92233720368547758, -100000000000000], [], [00i], [92233720368547758]]);arr1=add(arr, 1);arr1;");
         assertEquals("[[92233720368547759.00,,100000000000001.00,,-92233720368547757.00,-99999999999999.00],[],[],[92233720368547759.00]]",re1.getString());
+    }
+    @Test
+    public void testBasicDecimal128Vector_toJsonString() throws IOException {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal128Vector re1 = new BasicDecimal128Vector(tmp_string_v,4);
+        String re = JSONObject.toJSONString(re1);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DECIMAL128\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDecimal128\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"scale\":4,\"string\":\"[0.0000,-123.0043,132.2042,100.0000]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
+    }
+    @Test
+    public void testBasicDecimal128Vector_toJsonString_null() throws IOException {
+        BasicDecimal128Vector re1 = new BasicDecimal128Vector(2,2);
+        String re = JSONObject.toJSONString(re1);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DECIMAL128\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDecimal128\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"scale\":2,\"string\":\"[0.00,0.00]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
     }
 }

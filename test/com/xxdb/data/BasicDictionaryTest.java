@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.*;
 import org.junit.Test;
@@ -182,4 +183,15 @@ public class BasicDictionaryTest {
         };
         BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_TIME,in);
     }
+    @Test
+    public void test_BasicDictionary_toJSONString() throws IOException {
+        BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_STRING, Entity.DATA_TYPE.DT_DATETIME,2);
+        BasicString bs1 = new BasicString("MSFT");
+        BasicDateTime bdt1 = new BasicDateTime(LocalDateTime.of(2022,8,10,17,36));
+        assertTrue(bd.put(bs1,bdt1));
+        String re = JSONObject.toJSONString(bd);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_DICTIONARY\",\"dataType\":\"DT_DATETIME\",\"dictionary\":true,\"keyDataType\":\"DT_STRING\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"{MSFT}->{2022.08.10T17:36:00}\",\"table\":false,\"vector\":false}", re);
+    }
+
 }

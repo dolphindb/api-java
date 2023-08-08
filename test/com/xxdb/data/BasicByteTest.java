@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.*;
 import org.junit.After;
@@ -561,5 +562,34 @@ public class BasicByteTest {
         assertEquals(null,bb.byteValue());
         BasicByte bb1 = new BasicByte((byte) 117);
         assertEquals(true,bb1.byteValue().equals((byte) 117));
+    }
+    @Test
+    public void test_BasicByte_toJsonString() throws Exception {
+        BasicByte bb1 = new BasicByte((byte) 117);
+        String re = JSONObject.toJSONString(bb1);
+        System.out.println(re);
+        assertEquals("{\"byte\":117,\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_BYTE\",\"dictionary\":false,\"jsonString\":\"'u'\",\"matrix\":false,\"null\":false,\"number\":117,\"pair\":false,\"scalar\":true,\"string\":\"'u'\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicByte_toJsonString_null() throws Exception {
+        BasicByte bb = new BasicByte(Byte.MIN_VALUE);
+        String re = JSONObject.toJSONString(bb);
+        System.out.println(re);
+        assertEquals("{\"byte\":-128,\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_BYTE\",\"dictionary\":false,\"jsonString\":\"null\",\"matrix\":false,\"null\":true,\"number\":-128,\"pair\":false,\"scalar\":true,\"string\":\"\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicByteMatrix_toJsonString(){
+        BasicByteMatrix bbm = new BasicByteMatrix(2,2);
+        bbm.setInt(0,0, (byte)24);
+        String re = JSONObject.toJSONString(bbm);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_BYTE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicByte\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0 #1\\n24 0 \\n0  0 \\n\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicByteVector_toJsonString(){
+        BasicByteVector bbv = new BasicByteVector(new byte[]{'d','o','l','p','h','i','n'});
+        String re = JSONObject.toJSONString(bbv);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[100,111,108,112,104,105,110],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_BYTE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicByte\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"['d','o','l','p','h','i','n']\",\"table\":false,\"unitLength\":1,\"vector\":true}", re);
     }
 }

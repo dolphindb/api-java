@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.ExtendedDataInput;
@@ -236,5 +237,19 @@ public class BasicInt128Test {
         bi128v.Append(new BasicInt128Vector(new Long2[]{new Long2(3L,0L),new Long2(59L,17L)}));
         assertEquals(size+3,bi128v.size);
         assertEquals(capacity*2+2,bi128v.capaticy);
+    }
+    @Test
+    public void test_BasicInt128_toJSONString(){
+        BasicInt128 bi128 = new BasicInt128(75L,10L);
+        String re = JSONObject.toJSONString(bi128);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_INT128\",\"dictionary\":false,\"jsonString\":\"\\\"000000000000004b000000000000000a\\\"\",\"leastSignicantBits\":10,\"long2\":{\"high\":75,\"low\":10,\"null\":false},\"matrix\":false,\"mostSignicantBits\":75,\"null\":false,\"pair\":false,\"scalar\":true,\"string\":\"000000000000004b000000000000000a\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicInt128Vector_toJSONString(){
+        BasicInt128Vector bi128v = new BasicInt128Vector(new Long2[]{new Long2(17L,6L),new Long2(29L,2L)});
+        String re = JSONObject.toJSONString(bi128v);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[{\"high\":17,\"low\":6,\"null\":false},{\"high\":29,\"low\":2,\"null\":false}],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_INT128\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicInt128\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[00000000000000110000000000000006,000000000000001d0000000000000002]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
     }
 }

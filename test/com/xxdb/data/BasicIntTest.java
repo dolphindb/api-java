@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import org.junit.After;
 import org.junit.Assert;
@@ -178,4 +179,30 @@ public class BasicIntTest {
         BasicInt bb1 = new BasicInt(1234);
         assertEquals("1234",bb1.intValue().toString());
     }
+    @Test
+    public void test_BasicInt_toJSONString() throws Exception {
+        BasicInt bi = new BasicInt(Integer.MIN_VALUE);
+        String re = JSONObject.toJSONString(bi);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_INT\",\"dictionary\":false,\"int\":-2147483648,\"jsonString\":\"null\",\"matrix\":false,\"null\":true,\"number\":-2147483648,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicIntVector_toJSONString() throws Exception {
+        BasicIntVector biv = new BasicIntVector(new int[]{5,11,23});
+        String re = JSONObject.toJSONString(biv);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[5,11,23],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_INT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicInt\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[5,11,23]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicIntMatrix_toJSONString() throws Exception {
+        List<int[]> list = new ArrayList<>();
+        list.add(new int[]{1,4,5});
+        list.add(new int[]{Integer.MIN_VALUE,0,Integer.MAX_VALUE});
+        list.add(new int[]{5,2,1});
+        BasicIntMatrix bim = new BasicIntMatrix(3,3,list);
+        String re = JSONObject.toJSONString(bim);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_INT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicInt\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0 #1         #2\\n1             5 \\n4  0          2 \\n5  2147483647 1 \\n\",\"table\":false,\"vector\":false}", re);
+    }
+
 }

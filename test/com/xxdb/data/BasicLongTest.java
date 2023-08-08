@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import org.junit.After;
 import org.junit.Assert;
@@ -178,5 +179,26 @@ public class BasicLongTest {
         assertEquals(null,bb.longValue());
         BasicLong bb1 = new BasicLong(860L);
         assertEquals("860",bb1.longValue().toString());
+    }
+    @Test
+    public void test_BasicLong_toJSONString() throws Exception {
+        BasicLong bl = new BasicLong(9000L);
+        String re = JSONObject.toJSONString(bl);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_LONG\",\"dictionary\":false,\"jsonString\":\"9000\",\"long\":9000,\"matrix\":false,\"null\":false,\"number\":9000,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"9000\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicLongVector_toJSONString() throws Exception {
+        BasicLongVector blv = new BasicLongVector(new long[]{600,615,617});
+        String re = JSONObject.toJSONString(blv);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[600,615,617],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_LONG\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicLong\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[600,615,617]\",\"table\":false,\"unitLength\":16,\"vector\":true}\n", re);
+    }
+    @Test
+    public void test_BasicLongMatrix_toJSONString() throws Exception {
+        BasicLongMatrix blm = new BasicLongMatrix(2,2);
+        String re = JSONObject.toJSONString(blm);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_LONG\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicLong\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0 #1\\n0  0 \\n0  0 \\n\",\"table\":false,\"vector\":false}", re);
     }
 }

@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.*;
 import org.junit.After;
@@ -870,5 +871,40 @@ public class BasicStringTest {
             dd=e.getMessage();
         }
         assertEquals("Serialized string length must less than 256k bytes.",dd);
+    }
+    @Test
+    public void test_BasicString_toJSONString() throws Exception {
+        BasicString bs = new BasicString("stringggggsere123");
+        String re = JSONObject.toJSONString(bs);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_STRING\",\"dictionary\":false,\"jsonString\":\"\\\"stringggggsere123\\\"\",\"matrix\":false,\"null\":false,\"pair\":false,\"scalar\":true,\"string\":\"stringggggsere123\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicStringVector_toJSONString() throws Exception {
+        String[] array = new String[]{"Dolphindb","MongoDB","GaussDB","GoldenDB"};
+        BasicStringVector bsv = new BasicStringVector(array,false,true);
+        String re = JSONObject.toJSONString(bsv);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[\"Dolphindb\",\"MongoDB\",\"GaussDB\",\"GoldenDB\"],\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_STRING\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicString\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[Dolphindb,MongoDB,GaussDB,GoldenDB]\",\"table\":false,\"unitLength\":1,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicStringMatrix_toJSONString() throws Exception {
+        BasicStringMatrix bsm = new BasicStringMatrix(2,2);
+        String re = JSONObject.toJSONString(bsm);
+        System.out.println(re);
+    }
+    @Test
+    public void test_BasicString_BLOB_toJSONString() throws Exception {
+        BasicString bs = new BasicString("s123",true);
+        String re = JSONObject.toJSONString(bs);
+        System.out.println(re);
+        assertEquals("{\"blobValue\":[115,49,50,51],\"chart\":false,\"chunk\":false,\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_BLOB\",\"dictionary\":false,\"jsonString\":\"\\\"s123\\\"\",\"matrix\":false,\"null\":false,\"pair\":false,\"scalar\":true,\"string\":\"s123\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicStringVector_BLOB_toJSONString() throws Exception {
+        String[] array = new String[]{"Dolphindb","MongoDB","GaussDB","GoldenDB"};
+        BasicStringVector bsv = new BasicStringVector(array,true,true);
+        String re = JSONObject.toJSONString(bsv);
+        System.out.println(re);
     }
 }

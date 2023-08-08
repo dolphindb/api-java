@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.Double2;
 import com.xxdb.io.Long2;
@@ -117,7 +118,7 @@ public class BasicTableTest {
         cols.add(btimestampv);
         //cnanotime
         long[] vnanotime = new long[]{Utils.countNanoseconds(LocalTime.of(9,30,05,123456789)),Utils.countNanoseconds(LocalTime.of(16,30,05,987654321))};
-        BasicNanoTimeVector bnanotimev = new BasicNanoTimeVector(vnanotime);
+        Vector bnanotimev = new BasicNanoTimeVector(vnanotime);
         cols.add(bnanotimev);
         //cnanotimestamp
         long[] vnanotimestamp = new long[]{Utils.countDTNanoseconds(LocalDateTime.of(2018,11,12,9,30,05,123456789)),Utils.countNanoseconds(LocalDateTime.of(2018,11,13,16,30,05,987654321))};
@@ -589,5 +590,16 @@ public class BasicTableTest {
         long etime = System.currentTimeMillis();
         System.out.print("查询耗时："+(etime-stime)+"ms ");
         System.out.println(rows +"条");
+    }
+    @Test
+    public void test_BasicTable_toJSONString()throws Exception{
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        conn.run("share streamTable(100:0, `sym`d1, [SYMBOL, DOUBLE]) as `st;t = table(take(`s1, 10) as `sym,take(1000000000.02, 10) as `d1);st.append!(t);");
+        BasicTable bTable = (BasicTable) conn.run("select * from st");
+        String re = JSONObject.toJSONString(bTable);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"MIXED\",\"dataForm\":\"DF_TABLE\",\"dataType\":\"DT_DICTIONARY\",\"dictionary\":false,\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"sym d1           \\n--- -------------\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\n\",\"table\":true,\"vector\":false}", re);
+
     }
 }

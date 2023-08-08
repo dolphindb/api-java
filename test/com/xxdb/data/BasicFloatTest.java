@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.DBConnectionTest;
 import org.junit.After;
@@ -138,5 +139,27 @@ public class BasicFloatTest {
         assertEquals(null,bb.floatValue());
         BasicFloat bb1 = new BasicFloat((float) 9.705);
         assertEquals("9.705",bb1.floatValue().toString());
+    }
+    @Test
+    public void test_BasicFloat_toJSONString() throws Exception {
+        BasicFloat bf = new BasicFloat((float) 0.000001);
+        String re = JSONObject.toJSONString(bf);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"FLOATING\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_FLOAT\",\"dictionary\":false,\"float\":1.0E-6,\"jsonString\":\"0.000001\",\"matrix\":false,\"null\":false,\"number\":1.0E-6,\"pair\":false,\"scalar\":true,\"string\":\"0.000001\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicFloatVector_toJSONString() throws Exception {
+        float[] arr = new float[]{(float) 47.47, (float) 52.38, (float) 66.45, (float) 71.89};
+        BasicFloatVector bfv = new BasicFloatVector(arr,false);
+        String re = JSONObject.toJSONString(bfv);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[47.47,52.38,66.45,71.89],\"dataCategory\":\"FLOATING\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_FLOAT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicFloat\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[47.47000122,52.38000107,66.44999695,71.88999939]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicFloatMatrix_toJSONString() throws Exception {
+        BasicFloatMatrix bfm = new BasicFloatMatrix(3,1);
+        String re = JSONObject.toJSONString(bfm);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"FLOATING\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_FLOAT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicFloat\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0\\n0 \\n0 \\n0 \\n\",\"table\":false,\"vector\":false}", re);
     }
 }

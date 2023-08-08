@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.Long2;
 import org.junit.After;
@@ -163,5 +164,21 @@ public class BasicIPAddrTest {
         assertEquals(size+4,bipv.rows());
     }
 
-
+    @Test
+    public void test_BasicIPAddr_toJSONString() throws Exception {
+        BasicIPAddr bi = new BasicIPAddr(1300L,800L);
+        String re = JSONObject.toJSONString(bi);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_IPADDR\",\"dictionary\":false,\"jsonString\":\"\\\"0::514:0:0:0:320\\\"\",\"leastSignicantBits\":800,\"long2\":{\"high\":1300,\"low\":800,\"null\":false},\"matrix\":false,\"mostSignicantBits\":1300,\"null\":false,\"pair\":false,\"scalar\":true,\"string\":\"0::514:0:0:0:320\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicIPAddrVector_toJSONString() throws Exception {
+        List<Long2> list = new ArrayList<>();
+        list.add(new Long2(473849509537L,2234859305L));
+        list.add(new Long2(55887799882L,110044556L));
+        BasicIPAddrVector biav = new BasicIPAddrVector(list);
+        String re = JSONObject.toJSONString(biav);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[{\"high\":473849509537,\"low\":2234859305,\"null\":false},{\"high\":55887799882,\"low\":110044556,\"null\":false}],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_IPADDR\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicIPAddr\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[0:6e:53a1:b6a1::8535:3f29,0:d:32c:264a::68f:258c]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
+    }
 }
