@@ -892,6 +892,7 @@ public class BasicStringTest {
         BasicStringMatrix bsm = new BasicStringMatrix(2,2);
         String re = JSONObject.toJSONString(bsm);
         System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_SYMBOL\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicString\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"table\":false,\"vector\":false}", re);
     }
     @Test
     public void test_BasicString_BLOB_toJSONString() throws Exception {
@@ -906,5 +907,6 @@ public class BasicStringTest {
         BasicStringVector bsv = new BasicStringVector(array,true,true);
         String re = JSONObject.toJSONString(bsv);
         System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataByteArray\":[[68,111,108,112,104,105,110,100,98],[77,111,110,103,111,68,66],[71,97,117,115,115,68,66],[71,111,108,100,101,110,68,66]],\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_BLOB\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicString\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[Dolphindb,MongoDB,GaussDB,GoldenDB]\",\"table\":false,\"unitLength\":1,\"vector\":true}", re);
     }
 }

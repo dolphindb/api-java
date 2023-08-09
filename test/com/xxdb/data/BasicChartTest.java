@@ -47,6 +47,7 @@ public class BasicChartTest {
         BasicChart bc = new BasicChart(1);
         String re = JSONObject.toJSONString(bc);
         System.out.println(re);
+        assertEquals("{\"XAxisName\":\"\",\"YAxisName\":\"\",\"chart\":true,\"chunk\":false,\"dataCategory\":\"MIXED\",\"dataForm\":\"DF_CHART\",\"dataType\":\"DT_ANY\",\"dictionary\":false,\"keyDataType\":\"DT_STRING\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"\",\"table\":false,\"title\":\"\",\"vector\":false}", re);
     }
 
 }
