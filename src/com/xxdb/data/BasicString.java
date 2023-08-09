@@ -86,7 +86,6 @@ public class BasicString extends AbstractScalar implements Comparable<BasicStrin
 			return blobValue.length == 0;
 		else
 			return value.length() == 0;
-
 	}
 	
 	@Override

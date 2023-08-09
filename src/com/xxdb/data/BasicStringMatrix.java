@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -43,7 +44,13 @@ public class BasicStringMatrix extends AbstractMatrix{
 	public void setString(int row, int column, String value){
 		values[getIndex(row, column)] = value;
 	}
-	
+
+	@JsonIgnore
+	@Override
+	public String getString() {
+		return super.getString();
+	}
+
 	public String getString(int row, int column){
 		return values[getIndex(row, column)];
 	}

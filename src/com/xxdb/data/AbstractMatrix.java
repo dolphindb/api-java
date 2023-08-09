@@ -105,7 +105,6 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 		columnLabels = vector;
 	}
 
-	@JsonIgnore
 	public String getString(){
 		int rows = Math.min(Utils.DISPLAY_ROWS,rows());
 		int limitColMaxWidth=25;
