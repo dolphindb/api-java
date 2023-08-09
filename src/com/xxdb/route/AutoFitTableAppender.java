@@ -15,6 +15,7 @@ public class AutoFitTableAppender {
     boolean async_;
     DBConnection con_;
     APPEND_ACTION _action;
+
     public AutoFitTableAppender(String dbUrl, String tableName, DBConnection conn) {
         this.dbUrl_ = dbUrl;
         this.tableName_ = tableName;

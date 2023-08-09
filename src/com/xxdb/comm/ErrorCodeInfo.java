@@ -1,6 +1,10 @@
 package com.xxdb.comm;
 
 public class ErrorCodeInfo {
+
+    public String errorCode;
+    public String errorInfo;
+
     public enum Code {
         EC_None(0),
         EC_InvalidObject(1),
@@ -17,6 +21,7 @@ public class ErrorCodeInfo {
             this.value = value;
         }
     };
+
     public ErrorCodeInfo(){
         set(0,"");
     }
@@ -69,6 +74,4 @@ public class ErrorCodeInfo {
         }else
             return "";
     }
-    public String errorCode;
-    public String errorInfo;
 }
