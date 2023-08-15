@@ -188,7 +188,7 @@ public class BasicLongVector extends AbstractVector{
 
 	@Override
 	public void Append(Scalar value) throws Exception{
-		add(value.getNumber().intValue());
+		add(value.getNumber().longValue());
 	}
 
 	@Override
