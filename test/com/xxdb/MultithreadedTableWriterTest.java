@@ -1426,7 +1426,26 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("[0,0]", bt.getColumn("short").getString());
         conn.run("undef(`t1,SHARED)");
     }
-
+    @Test(timeout = 120000)
+    public void test_insert_long_1() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = streamTable(1000:0, `char`int`long`short`id," +
+                "[CHAR,INT,LONG,SHORT,INT]);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false, null, 1, 1,
+                1, "id");
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( (long)1, (long)1, (long)0, (long)0, (long)-1);
+        pErrorInfo=mutithreadTableWriter_.insert( null, (long)1, 9223372036854775807L, (long)0, (long)1);
+        pErrorInfo=mutithreadTableWriter_.insert( null, (long)1, -9223372036854775807L, (long)0, (long)1);
+        assertEquals("code= info=",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt = (BasicTable) conn.run("select * from t1;");
+        assertEquals(3, bt.rows());
+        assertEquals("[0,9223372036854775807,-9223372036854775807]", bt.getColumn("long").getString());
+        conn.run("undef(`t1,SHARED)");
+    }
 
     @Test(timeout = 120000)
     public void test_insert_float() throws Exception {
