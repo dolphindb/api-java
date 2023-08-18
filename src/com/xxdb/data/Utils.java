@@ -341,12 +341,19 @@ public class Utils {
 	public static int countMinutes(int hour, int minute){
 		return hour * 60 + minute;
 	}
-	
-	public static LocalTime parseMinute(int minutes){
-		int hours = (minutes / 60) % 24;
-		return LocalTime.of(hours, minutes % 60);
+
+	public static LocalTime parseMinute(int minutes) {
+		int hours = minutes / 60;
+		int remainingMinutes = minutes % 60;
+
+		if (minutes < 0) {
+			hours = (hours - 1 + 24) % 24;
+			remainingMinutes = 60 - Math.abs(remainingMinutes);
+		}
+
+		return LocalTime.of(hours, remainingMinutes);
 	}
-	
+
 	public static int murmur32(final byte[] data, final int len, final int seed) {
 
 	    int h = len;
