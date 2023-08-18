@@ -152,7 +152,14 @@ public class BasicDecimal32VectorTest {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
         BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_double_v,4);
         BasicDecimal32 tmp_32 = (BasicDecimal32) conn.run("decimal32(NULL,4)");
-        tmp_32_v.set(0,new BasicInt(2));
+        String RE = null;
+        try{
+            tmp_32_v.set(0,new BasicInt(2));
+        }catch(Exception E){
+            RE = E.getMessage();
+        }
+        assertEquals("value type is not BasicDecimal32!",RE);
+
     }
     @Test
     public void test_BasicDecimal32Vector_set_string() throws Exception {

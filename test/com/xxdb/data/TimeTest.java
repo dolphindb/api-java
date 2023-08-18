@@ -910,6 +910,7 @@ public class TimeTest{
         long[] array = new long[]{23641343568000L,23995876902000L,24104786790000L,12013435579000L,Long.MIN_VALUE};
         BasicNanoTimestampVector btv = new BasicNanoTimestampVector(array,true);
         assertNull(btv.getNanoTimestamp(4));
+        System.out.println(btv.getNanoTimestamp(4));
         bnts = btv;
         assertEquals(Entity.DATA_CATEGORY.TEMPORAL,bnts.getDataCategory());
         assertEquals("[1970.01.01T03:20:13.435579000,1970.01.01T06:34:01.343568000," +
