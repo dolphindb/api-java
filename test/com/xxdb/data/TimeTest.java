@@ -669,6 +669,22 @@ public class TimeTest{
         assertEquals("2099.07.29T11:07:00.000000000",nt2.getString());
     }
     @Test
+    public void test_BasicMinute() throws Exception {
+        BasicMinute nt = new BasicMinute(-5);
+        System.out.println(nt.getString());
+        assertEquals("23:55m",nt.getString());
+        BasicMinute nt1 = new BasicMinute(0);
+        System.out.println(nt1.getString());
+        assertEquals("00:00m",nt1.getString());
+        BasicMinute nt2 = new BasicMinute(10);
+        System.out.println(nt2.getString());
+        assertEquals("00:10m",nt2.getString());
+        BasicMinute nt3 = new BasicMinute(100);
+        System.out.println(nt3.getString());
+        assertEquals("01:40m",nt3.getString());
+
+    }
+    @Test
     public void test_countNanoseconds() throws Exception {
         BasicNanoTimestamp nt = new BasicNanoTimestamp(LocalDateTime.of(2000,7,29,11,07));
         System.out.println(nt.getString());
