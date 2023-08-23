@@ -42,6 +42,8 @@ public class ThreadPooledClientTest {
     public void setUp() throws IOException {
         try {
             String script0 = "login(`admin,`123456);" +
+                    "try{undef(`Trades, SHARED);}catch(ex){};"+
+                    "try{undef(`Receive, SHARED);}catch(ex){};"+
                     "try{dropStreamTable('Trades')}catch(ex){};"+
                     "try{dropStreamTable('Receive')}catch(ex){};";
             conn.run(script0);

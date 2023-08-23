@@ -421,7 +421,7 @@ public class BasicDecimal128Test {
         BasicDecimal128 re1 = new BasicDecimal128("12341.23", 3);
         String re = JSONObject.toJSONString(re1);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DECIMAL128\",\"dictionary\":false,\"jsonString\":\"12341.230\",\"matrix\":false,\"null\":false,\"number\":12341.23,\"pair\":false,\"scalar\":true,\"scale\":3,\"string\":\"12341.230\",\"table\":false,\"vector\":false}\n", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DECIMAL128\",\"dictionary\":false,\"jsonString\":\"12341.230\",\"matrix\":false,\"null\":false,\"number\":12341.23,\"pair\":false,\"scalar\":true,\"scale\":3,\"string\":\"12341.230\",\"table\":false,\"vector\":false}", re);
 
     }
     @Test

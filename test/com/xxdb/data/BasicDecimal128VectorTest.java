@@ -187,8 +187,13 @@ public class BasicDecimal128VectorTest {
     public void test_BasicDecimal128Vector_set_int() throws Exception {
         String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
         BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
-        tmp_128_v.set(0,new BasicInt(2));
-        assertEquals("[2.0000,-123.0043,132.2042,100.0000]",tmp_128_v.getString());
+        String RE = null;
+        try{
+            tmp_128_v.set(0,new BasicInt(2));
+        }catch(Exception E){
+            RE = E.getMessage();
+        }
+        assertEquals("value type is not BasicDecimal64!",RE);
     }
 
     @Test
@@ -361,7 +366,7 @@ public class BasicDecimal128VectorTest {
     }
     @Test
     public void testBasicDecimal128_run_bigvector1() throws IOException {
-        BasicArrayVector re1 =(BasicArrayVector) conn.run("bigarray(Decimal128(2)[], 0, 3000000).append!(take([[92233720368547758, NULL, 100000000000000, NULL, -92233720368547758, -100000000000000], [], [00i], [92233720368547758]], 30000)) * 10");
+        BasicArrayVector re1 =(BasicArrayVector) conn.run("bigarray(DECIMAL128(2)[], 0, 3000000).append!(take([[92233720368547758, NULL, 100000000000000, NULL, -92233720368547758, -100000000000000], [], [00i], [92233720368547758]], 30000)) * 10");
         System.out.println(re1.getString());
         assertEquals("[[922337203685477580.00,,1000000000000000.00,,-922337203685477580.00,-1000000000000000.00],[],[],[922337203685477580.00],[922337203685477580.00,,1000000000000000.00,,-922337203685477580.00,-1000000000000000.00],[],[],[922337203685477580.00],[922337203685477580.00,,1000000000000000.00,,-922337203685477580.00,-1000000000000000.00],[],...]",re1.getString());
     }

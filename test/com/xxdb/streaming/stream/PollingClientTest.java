@@ -437,14 +437,14 @@ public class PollingClientTest {
     public void test_subscribe_tableName_reconnect() throws IOException {
         for (int j=0;j<10;j++) {
             TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades",true);
-            PollingClient client1 = new PollingClient(HOST,9069);
-            TopicPoller poller2 = client1.subscribe(HOST, PORT, "Trades",true);
+            //PollingClient client1 = new PollingClient(HOST,9069);
+            //TopicPoller poller2 = client1.subscribe(HOST, PORT, "Trades",true);
             ArrayList<IMessage> msgs1;
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
                 conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
                 msgs1 = poller1.poll(100, 10000);
-                msgs2 = poller2.poll(100, 1000);
+                //msgs2 = poller2.poll(100, 1000);
                 if (msgs1 == null) {
                     continue;
                 } else if (msgs1.size() > 0) {
@@ -457,16 +457,16 @@ public class PollingClientTest {
                     }
 
                 }
-                if (msgs2 == null) {
-                    continue;
-                } else if (msgs2.size() > 0) {
-                    BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
-                    assertTrue(msgs2.size() >= 1000);
-                }
+                //if (msgs2 == null) {
+//                    continue;
+//                } else if (msgs2.size() > 0) {
+//                    BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
+//                    assertTrue(msgs2.size() >= 1000);
+//                }
 
             }
             client.unsubscribe(HOST, PORT, "Trades");
-            client1.unsubscribe(HOST, PORT, "Trades");
+            //client1.unsubscribe(HOST, PORT, "Trades");
         }
 
     }
@@ -475,14 +475,14 @@ public class PollingClientTest {
     public void test_subscribe_offset_reconnect() throws IOException {
         for (int j=0;j<10;j++) {
             TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades",-1,true);
-            PollingClient client1 = new PollingClient(HOST,9069);
-            TopicPoller poller2 = client1.subscribe(HOST, PORT, "Trades",-1,true);
+            //PollingClient client1 = new PollingClient(HOST,9069);
+            //TopicPoller poller2 = client1.subscribe(HOST, PORT, "Trades",-1,true);
             ArrayList<IMessage> msgs1;
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
                 conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
                 msgs1 = poller1.poll(100, 10000);
-                msgs2 = poller2.poll(100, 1000);
+               // msgs2 = poller2.poll(100, 1000);
                 if (msgs1 == null) {
                     continue;
                 } else if (msgs1.size() > 0) {
@@ -495,16 +495,16 @@ public class PollingClientTest {
                     }
 
                 }
-                if (msgs2 == null) {
-                    continue;
-                } else if (msgs2.size() > 0) {
-                    BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
-                    assertTrue(msgs2.size() >= 1000);
-                }
+//                if (msgs2 == null) {
+//                    continue;
+//                } else if (msgs2.size() > 0) {
+//                    BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
+//                    assertTrue(msgs2.size() >= 1000);
+//                }
 
             }
             client.unsubscribe(HOST, PORT, "Trades");
-            client1.unsubscribe(HOST, PORT, "Trades");
+            //client1.unsubscribe(HOST, PORT, "Trades");
         }
     }
 

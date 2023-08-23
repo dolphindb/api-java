@@ -4583,16 +4583,16 @@ public  class MultithreadedTableWriterTest implements Runnable {
     @Test(timeout = 120000)
     public void test_mtw_concurrentWrite_getFailedData() throws Exception {
         conn.run("login(`admin,`123456)\n" +
-                "dbName = \"dfs://test_mtw_concurrentWrite_getFailedData\"\n" +
+                "dbName = \"dfs://test_mtw_concurrentWrite_getFailedData1\"\n" +
                 "if(existsDatabase(dbName)){\n" +
                 "\tdropDB(dbName)\n" +
                 "}\n" +
                 "db = database(dbName,RANGE,0 10 20 30)\n" +
                 "t = table(10:0,`id`price`val,[INT,DOUBLE,INT])\n" +
                 "pt = db.createPartitionedTable(t,`pt,`id)");
-        MultithreadedTableWriter mtw_getFailedData1 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_mtw_concurrentWrite_getFailedData", "pt",
+        MultithreadedTableWriter mtw_getFailedData1 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_mtw_concurrentWrite_getFailedData1", "pt",
                 false, false, null, 1000, 0.001f, 10, "id");
-        MultithreadedTableWriter mtw_getFailedData2 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_mtw_concurrentWrite_getFailedData", "pt",
+        MultithreadedTableWriter mtw_getFailedData2 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_mtw_concurrentWrite_getFailedData1", "pt",
                 false, false, null, 1000, 0.001f, 10, "id");
 
         for(int i = 0;i <2000;i++) {

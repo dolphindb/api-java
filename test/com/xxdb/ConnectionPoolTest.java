@@ -1288,9 +1288,9 @@ public class ConnectionPoolTest {
         cols.add(bdv32a);
         List<Vector> bdv128 = new ArrayList<Vector>();
         Vector v128=new BasicDecimal32Vector(3,8);
-        v128.set(0,new BasicDecimal32(15645.99999999,8));
-        v128.set(1,new BasicDecimal32(24635.00000001,8));
-        v128.set(2,new BasicDecimal32(24635.12345678,8));
+        v128.set(0,new BasicDecimal32(0.99999999,8));
+        v128.set(1,new BasicDecimal32(0.00000001,8));
+        v128.set(2,new BasicDecimal32(0.12345678,8));
         bdv128.add(0,v128);
         bdv128.add(1,v128);
         bdv128.add(2,v128);

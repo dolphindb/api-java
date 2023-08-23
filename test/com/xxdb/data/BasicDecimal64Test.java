@@ -109,7 +109,7 @@ public class BasicDecimal64Test {
         catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals(re,"Decimal math overflow!");
+        assertEquals(re,"Decimal math overflow: 9.9999999999999999999");
 
         String re1 = null;
         try{
@@ -118,7 +118,7 @@ public class BasicDecimal64Test {
         catch(Exception e){
             re1 = e.getMessage();
         }
-        assertEquals(re1,"Decimal math overflow!");
+        assertEquals("Decimal math overflow: -9.9999999999999999999",re1);
     }
     @Test
     public void testBasicDecimal64_value_string_scale_19(){

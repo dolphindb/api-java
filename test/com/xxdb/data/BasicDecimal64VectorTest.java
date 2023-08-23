@@ -149,8 +149,13 @@ public class BasicDecimal64VectorTest {
     public void test_BasicDecimal64Vector_set_int() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
         BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,4);
-        tmp_64_v.set(0,new BasicInt(2));
-        assertEquals("[2.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
+        String RE = null;
+        try{
+            tmp_64_v.set(0,new BasicInt(2));
+        }catch(Exception E){
+            RE = E.getMessage();
+        }
+        assertEquals("value type is not BasicDecimal64!",RE);
     }
     @Test
     public void test_BasicDecimal64Vector_set_string() throws Exception {

@@ -885,7 +885,7 @@ public class BasicStringTest {
         BasicStringVector bsv = new BasicStringVector(array,false,true);
         String re = JSONObject.toJSONString(bsv);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[\"Dolphindb\",\"MongoDB\",\"GaussDB\",\"GoldenDB\"],\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_STRING\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicString\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[Dolphindb,MongoDB,GaussDB,GoldenDB]\",\"table\":false,\"unitLength\":1,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_STRING\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicString\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[Dolphindb,MongoDB,GaussDB,GoldenDB]\",\"table\":false,\"unitLength\":1,\"vector\":true}", re);
     }
     @Test
     public void test_BasicStringMatrix_toJSONString() throws Exception {
