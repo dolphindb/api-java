@@ -3,7 +3,6 @@ package com.xxdb.data;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.temporal.Temporal;
