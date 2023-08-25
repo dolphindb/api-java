@@ -80,6 +80,12 @@ public  class MultithreadedTableWriterTest implements Runnable {
     @After
     public void close() throws IOException {
 //        dropAllDB();
+        String script = "obj =  exec name from objs(true) where shared=true;\n" +
+                "for(s in obj)\n" +
+                "{\n" +
+                "undef (s, SHARED);\n" +
+                "}";
+        conn.run(script);
         conn.close();
     }
 
@@ -386,7 +392,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
     }
 
-    @Test//(expected = Exception.class)
+    @Test(timeout = 120000)
     public void test_MultithreadedTableWriter_batchsize_0() throws Exception {
         StringBuilder sb = new StringBuilder();
         String dbName = "dfs://test_MultithreadedTableWriter_pt";
@@ -407,7 +413,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
     }
 
-    @Test//(expected = Exception.class)
+    @Test(timeout = 120000)
     public void test_MultithreadedTableWriter_throttle_Negtive() throws Exception {
         StringBuilder sb = new StringBuilder();
         String dbName = "dfs://test_MultithreadedTableWriter_pt";
@@ -429,7 +435,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
     }
 
 
-    @Test//(expected = Exception.class)
+    @Test(timeout = 120000)
     public void test_MultithreadedTableWriter_threadcount_0() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
@@ -445,7 +451,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test//(expected = Exception.class)
+    @Test(timeout = 120000)
     public void test_MultithreadedTableWriter_threadcount_Negtive() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
@@ -461,7 +467,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test//(expected = Exception.class)
+    @Test(timeout = 120000)
     public void test_MultithreadedTableWriter_partitioncol_null() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`date,[INT,DATE]);" +
@@ -477,7 +483,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test//(expected = Exception.class)
+    @Test(timeout = 120000)
     public void test_MultithreadedTableWriter_partcolname_wrong() throws Exception {
         StringBuilder sb = new StringBuilder();
         String dbName = "dfs://test_MultithreadedTableWriter_pt";
@@ -4641,7 +4647,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(10000,writedData1.getInt()+failedData1.size()+unwrittenData1.size());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_tableUpsert_DP_updateFirst() throws Exception {
         String script = "if(existsDatabase(\"dfs://upsert\")) {\n" +
                 "dropDatabase(\"dfs://upsert\")\n" +
@@ -4671,7 +4677,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(1,conn.run("select * from pt where price = 10.5").rows());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DP_objNull() throws Exception {
         String script = "if(existsDatabase(\"dfs://valuedemo\")){\n" +
                 "    dropDatabase(\"dfs://valuedemo\")\n" +
@@ -4695,7 +4701,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertNotEquals("11",ua.getColumn(3).get(4).getString());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DP_ignoreNull() throws Exception {
         String script = "if(existsDatabase(\"dfs://valuedemo\")) {\n" +
                 "dropDatabase(\"dfs://valuedemo\")\n" +
@@ -4721,7 +4727,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(1,ua2.rows());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DP_sortColName() throws Exception {
         String script = "if(existsDatabase(\"dfs://upsert\")) {\n" +
                 "dropDatabase(\"dfs://upsert\")\n" +
@@ -4747,7 +4753,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("2021.12.11",bt.getColumn(1).get(2).getString());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DP_unsortColNames() throws Exception {
         String script = "if(existsDatabase(\"dfs://upsert\")) {\n" +
                 "dropDatabase(\"dfs://upsert\")\n" +
@@ -4773,7 +4779,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("2021.12.10",bt.getColumn(1).get(2).getString());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DP_bigData() throws Exception {
         String script = "if(existsDatabase(\"dfs://valuedemo\")) {\n" +
                 "dropDatabase(\"dfs://valuedemo\")\n" +
@@ -4793,7 +4799,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(5008100,ua.rows());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DP_nomatchCols() throws Exception {
         String script = "if(existsDatabase(\"dfs://valuedemo\")) {\n" +
                 "dropDatabase(\"dfs://valuedemo\")\n" +
@@ -4812,7 +4818,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(100,ua.rows());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DD_updateFirst() throws Exception {
         String script = "if(existsDatabase(\"dfs://upsert\")) {\n" +
                 "dropDatabase(\"dfs://upsert\")\n" +
@@ -4842,7 +4848,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(1,conn.run("select * from pt where price = 10.5").rows());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DD_objNull() throws Exception {
         String script = "if(existsDatabase(\"dfs://valuedemo\")){\n" +
                 "    dropDatabase(\"dfs://valuedemo\")\n" +
@@ -4866,7 +4872,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertNotEquals("11",ua.getColumn(3).get(4).getString());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DD_ignoreNull() throws Exception {
         String script = "if(existsDatabase(\"dfs://valuedemo\")) {\n" +
                 "dropDatabase(\"dfs://valuedemo\")\n" +
@@ -4892,7 +4898,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(1,ua2.rows());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DD_sortColName() throws Exception {
         String script = "if(existsDatabase(\"dfs://upsert\")) {\n" +
                 "dropDatabase(\"dfs://upsert\")\n" +
@@ -4918,7 +4924,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("2021.12.11",bt.getColumn(1).get(7).getString());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DD_unSortColNames() throws Exception {
         String script = "if(existsDatabase(\"dfs://upsert\")) {\n" +
                 "dropDatabase(\"dfs://upsert\")\n" +
@@ -4944,7 +4950,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("2021.12.11",bt.getColumn(1).get(7).getString());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DD_bigData() throws Exception {
         String script = "if(existsDatabase(\"dfs://valuedemo\")) {\n" +
                 "dropDatabase(\"dfs://valuedemo\")\n" +
@@ -4964,7 +4970,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(5008100,ua.rows());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DD_nomatchCols() throws Exception {
         String script = "if(existsDatabase(\"dfs://valuedemo\")) {\n" +
                 "dropDatabase(\"dfs://valuedemo\")\n" +
@@ -4984,7 +4990,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(100,ua.rows());
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_KeyedTable_updateSame() throws Exception {
         String script = "sym= \"A\" \"B\" \"C\"\n" +
                 "date=take(2021.01.06, 3)\n" +
@@ -5008,7 +5014,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("clear!(t);");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_KeyedTable_sortColNames() throws Exception {
         String script = "sym= \"A\" \"B\" \"C\"\n" +
                 "date=take(2021.01.06, 3)\n" +
@@ -5031,7 +5037,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("clear!(t);");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_KeyedTable_NomatchClos() throws Exception {
         String script = "sym= \"A\" \"B\" \"C\"\n" +
                 "date=take(2021.01.06, 3)\n" +
@@ -5054,7 +5060,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("clear!(t);");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_indexedTable_updateSame() throws Exception {
         String script = "sym=\"A\" \"B\" \"C\" \"D\" \"E\"\n" +
                 "id=5 4 3 2 1\n" +
@@ -5079,7 +5085,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("clear!(t);");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_indexedTable_SortColName() throws Exception {
         String script = "sym=\"A\" \"B\" \"C\" \"D\" \"E\"\n" +
                 "id=5 4 3 2 1\n" +
@@ -5103,7 +5109,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("clear!(t);");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_indexedTable_AlmostAllDatatype() throws Exception {
         String script = "cbool = true false false;\n" +
                 "cchar = 'a' 'b' 'c';\n" +
@@ -5152,7 +5158,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("clear!(t);");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_KeyedTable_AlmostAllDatatype() throws Exception {
         String script = "cbool = true false false;\n" +
                 "cchar = 'a' 'b' 'c';\n" +
@@ -5201,7 +5207,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("clear!(t);");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_PartitionedTable_AlmostAllDatatype() throws Exception {
         String script = "cbool = true false false;\n" +
                 "cchar = 'a' 'b' 'c';\n" +
@@ -5253,7 +5259,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("clear!(t);");
     }
 
-    @Test
+    @Test(timeout = 120000)
     public void test_mtw_upsert_DimensionTable_AlmostAllDatatype() throws Exception {
         String script = "cbool = true false false;\n" +
                 "cchar = 'a' 'b' 'c';\n" +
@@ -6031,7 +6037,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("undef(`tt1,SHARED)");
         conn.close();
     }
-    @Test
+    @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_memoryTable_single_thread_true()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -6068,7 +6074,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     }
 
-    @Test
+    @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_memoryTable_single_thread_false()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -6118,7 +6124,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
         conn1.close();
     }
-    @Test
+    @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_multiple_thread_true()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -6186,7 +6192,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
         conn.close();
     }
-    @Test
+    @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_multiple_thread_false()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -6275,7 +6281,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.close();
         conn2.close();
     }
-    @Test
+    @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_single_thread_true()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -6343,7 +6349,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
         conn.close();
     }
-    @Test
+    @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_single_thread_false()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -6432,7 +6438,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn2.close();
     }
 
-    @Test
+    @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_multiple_thread_true_bigData()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -6502,7 +6508,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
         conn.close();
     }
-    @Test
+    @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_multiple_thread_false_bigData()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -6595,7 +6601,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn2.close();
     }
 
-    @Test
+    @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_single_thread_false_insertUnwrittenData()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -6800,7 +6806,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 //        conn.close();
 //        conn2.close();
 //    }
-    @Test
+    @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_batchSize_greater_than_Number_of_inserts_no_waitForThreadCompletion()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -6836,7 +6842,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(ex.rows(), 1000);
         conn.close();
     }
-    @Test
+    @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_batchSize_greater_than_Number_of_inserts_waitForThreadCompletion()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
