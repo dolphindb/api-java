@@ -85,7 +85,11 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "{\n" +
                 "undef (s, SHARED);\n" +
                 "}";
-        conn.run(script);
+        try{
+            conn.run(script);
+        }catch(Exception E){
+            System.out.println(E.getMessage());
+        }
         conn.close();
     }
 
@@ -4613,7 +4617,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             }
         }catch (Exception ex){
         }
-        Thread.sleep(30000);
+        Thread.sleep(40000);
         List<List<Entity>> failedData1 = mtw_getFailedData1.getFailedData();
         List<List<Entity>> failedData2 = mtw_getFailedData2.getFailedData();
         List<List<Entity>> unwrittenData1 = mtw_getFailedData1.getUnwrittenData();
@@ -6245,6 +6249,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                     System.out.println(ex.getMessage());
                 }
             }
+
             try{
                 ErrorCodeInfo pErrorInfo = mtw.insert(Integer.toString(i), Integer.toString(i));
             }

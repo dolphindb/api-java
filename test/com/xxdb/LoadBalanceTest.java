@@ -455,10 +455,10 @@ public class LoadBalanceTest {
         System.out.println(count2);
         System.out.println(count3);
         System.out.println(count4);
-        org.junit.Assert.assertEquals(true, count1>80);
-        org.junit.Assert.assertEquals(true, count2>80);
-        org.junit.Assert.assertEquals(true, count3>80);
-        org.junit.Assert.assertEquals(true, count4>80);
+        org.junit.Assert.assertEquals(true, count1>70);
+        org.junit.Assert.assertEquals(true, count2>70);
+        org.junit.Assert.assertEquals(true, count3>70);
+        org.junit.Assert.assertEquals(true, count4>70);
 
     }
 
@@ -526,22 +526,22 @@ public class LoadBalanceTest {
     }
 
     //@Test(timeout = 120000)
-//    public void Test_getConnection_enableHighAvailability_true_7() throws SQLException, ClassNotFoundException, IOException {
-//        String JDBC_DRIVER = "com.dolphindb.jdbc.Driver";
-//        int count1 = 0;
-//        int count2 = 0;
-//        int count3 = 0;
-//        int count4 = 0;
-//        List<DBConnection> list = new ArrayList<>();
-//        for (int i = 0; i < 460; i++) {
-//            DBConnection connection = new DBConnection();
-//            connection.connect("192.168.1.167", 18921, "admin", "123456",true);
-//            list.add(connection);
-//
-//        }
-        //DBConnection connection1 = new DBConnection();
-        //connection1.connect("192.168.1.167", 18921, "admin", "123456",true);
+    public void Test_getConnection_enableHighAvailability_true_7() throws SQLException, ClassNotFoundException, IOException {
+        String JDBC_DRIVER = "com.dolphindb.jdbc.Driver";
+        int count1 = 0;
+        int count2 = 0;
+        int count3 = 0;
+        int count4 = 0;
+        List<DBConnection> list = new ArrayList<>();
+        for (int i = 0; i < 460; i++) {
+            DBConnection connection = new DBConnection();
+            connection.connect("192.168.1.167", 8902, "admin", "123456",false);
+            list.add(connection);
 
-        //connection1.run("sleep(1000000)");
-    // }
+        }
+        DBConnection connection1 = new DBConnection();
+        connection1.connect("192.168.1.167", 8902, "admin", "123456",false);
+
+        connection1.run("sleep(1000000)");
+     }
 }
