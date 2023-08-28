@@ -41,7 +41,7 @@ public class BasicDecimal32Vector extends AbstractVector{
     public BasicDecimal32Vector(String[] data, int scale) {
         super(DATA_FORM.DF_VECTOR);
         if (scale < 0 || scale > 9) {
-            throw new RuntimeException("Scale out of bound (valid range: [0, 9], but get: " + scale + ")");
+            throw new RuntimeException("Scale " + scale + "is out of bounds, it must be in [0,9].");
         }
         scale_ = scale;
 
@@ -50,7 +50,9 @@ public class BasicDecimal32Vector extends AbstractVector{
         BigDecimal pow = BigDecimal.TEN.pow(scale_);
         for (int i = 0; i < length; i++) {
             BigDecimal bd = new BigDecimal(data[i]);
-            values[i] = bd.multiply(pow).intValue();
+            if (bd.multiply(pow).intValue() > Integer.MIN_VALUE && bd.multiply(pow).intValue() < Integer.MAX_VALUE) {
+                values[i] = bd.multiply(pow).intValue();
+            }
         }
 
         size = length;
@@ -180,7 +182,7 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
-        if (value.getDataType() != DT_DECIMAL32) {
+        if (!value.isScalar() && value.getDataType() != DT_DECIMAL32) {
             throw new RuntimeException("value type is not BasicDecimal32!");
         }
 
@@ -236,21 +238,21 @@ public class BasicDecimal32Vector extends AbstractVector{
         if (scale_ < 0){
             throw new RuntimeException("Please set scale first.");
         }
-        if (size + 1 > capacity && values.length > 0){
+
+        if (size + 1 > capacity && values.length > 0) {
             values = Arrays.copyOf(values, values.length * 2);
-        }else if (values.length <= 0){
-            values = Arrays.copyOf(values, values.length + 1);
+        } else if (values.length <= 0){
+            values = new int[1];
         }
+
         capacity = values.length;
         if (value.equals("0.0"))
             values[size] = 0;
         else {
-            BigDecimal pow = new BigDecimal(1);
-            for (long i = 0; i < scale_; i++) {
-                pow = pow.multiply(new BigDecimal(10));
-            }
-            BigDecimal dbvalue = new BigDecimal(value);
-            values[size] = (dbvalue.multiply(pow)).intValue();
+            BigDecimal pow = BigDecimal.TEN.pow(scale_);
+            BigDecimal bd = new BigDecimal(value);
+            if (checkDecimal32Range(bd.multiply(pow).intValue()))
+                values[size] = bd.multiply(pow).intValue();
         }
         size++;
     }
@@ -291,13 +293,12 @@ public class BasicDecimal32Vector extends AbstractVector{
             throw new RuntimeException("Please set scale first.");
         }
         int[] newIntValue = new int[valueList.length];
+        BigDecimal pow = BigDecimal.TEN.pow(scale_);
         for(int i = 0; i < valueList.length; i++){
-            BigDecimal pow = new BigDecimal(1);
-            for (long j = 0; j < scale_; j++) {
-                pow = pow.multiply(new BigDecimal(10));
-            }
-            BigDecimal dbvalue = new BigDecimal(valueList[i]);
-            newIntValue[i] = (dbvalue.multiply(pow)).intValue();
+            BigDecimal bd = new BigDecimal(valueList[i]);
+            if (checkDecimal32Range(bd.multiply(pow).intValue()))
+                newIntValue[i] = bd.multiply(pow).intValue();
+
         }
         values = Arrays.copyOf(values, newIntValue.length + values.length);
         System.arraycopy(newIntValue, 0, values, size, newIntValue.length);
@@ -397,5 +398,9 @@ public class BasicDecimal32Vector extends AbstractVector{
         numElementAndPartial.numElement = targetNumElement;
         numElementAndPartial.partial = 0;
         return targetNumElement * 4;
+    }
+
+    private boolean checkDecimal32Range(int value) {
+        return value > Integer.MIN_VALUE && value < Integer.MAX_VALUE;
     }
 }

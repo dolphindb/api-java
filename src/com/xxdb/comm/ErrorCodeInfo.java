@@ -2,8 +2,8 @@ package com.xxdb.comm;
 
 public class ErrorCodeInfo {
 
-    public String errorCode;
-    public String errorInfo;
+    private String errorCode;
+    private String errorInfo;
 
     public enum Code {
         EC_None(0),
@@ -40,6 +40,23 @@ public class ErrorCodeInfo {
     public void set(int code, String info){
         set(formatApiCode(code), info);
     }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public String getErrorInfo() {
+        return errorInfo;
+    }
+
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public void setErrorInfo(String errorInfo) {
+        this.errorInfo = errorInfo;
+    }
+
     @Override
     public String toString(){
         StringBuilder sb=new StringBuilder();

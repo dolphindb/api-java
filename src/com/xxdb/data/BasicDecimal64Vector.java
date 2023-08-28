@@ -17,6 +17,9 @@ public class BasicDecimal64Vector extends AbstractVector{
     private int size;
     private int capaticy;
 
+    private static final BigDecimal DECIMAL64_MIN_VALUE = new BigDecimal("-9223372036854775808");
+    private static final BigDecimal DECIMAL64_MAX_VALUE = new BigDecimal("9223372036854775807");
+
     public BasicDecimal64Vector(int size){
         this(DATA_FORM.DF_VECTOR, size);
     }
@@ -58,7 +61,8 @@ public class BasicDecimal64Vector extends AbstractVector{
         BigDecimal pow = BigDecimal.TEN.pow(scale_);
         for (int i = 0; i < length; i++) {
             BigDecimal bd = new BigDecimal(data[i]);
-            values[i] = bd.multiply(pow).longValue();
+            if (checkDecimal64Range(bd))
+                values[i] = bd.multiply(pow).longValue();
         }
 
         size = length;
@@ -185,7 +189,7 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
-        if (value.getDataType() != DT_DECIMAL64) {
+        if (!value.isScalar() && value.getDataType() != DT_DECIMAL64) {
             throw new RuntimeException("value type is not BasicDecimal64!");
         }
 
@@ -241,21 +245,20 @@ public class BasicDecimal64Vector extends AbstractVector{
         if (scale_ < 0){
             throw new RuntimeException("Please set scale first.");
         }
-        if (size + 1 > capaticy && values.length > 0){
+        if (size + 1 > capaticy && values.length > 0) {
             values = Arrays.copyOf(values, values.length * 2);
-        }else if (values.length <= 0){
-            values = Arrays.copyOf(values, values.length + 1);
+        } else if (values.length <= 0) {
+            values = new long[1];
         }
+
         capaticy = values.length;
         if (value.equals("0.0"))
             values[size] = 0;
         else {
-            BigDecimal pow = new BigDecimal(1);
-            for (long i = 0; i < scale_; i++) {
-                pow = pow.multiply(new BigDecimal(10));
-            }
-            BigDecimal dbvalue = new BigDecimal(value);
-            values[size] = (dbvalue.multiply(pow)).longValue();
+            BigDecimal pow = BigDecimal.TEN.pow(scale_);
+            BigDecimal bd = new BigDecimal(value);
+            if (checkDecimal64Range(bd))
+                values[size] = bd.multiply(pow).longValue();
         }
         size++;
     }
@@ -297,13 +300,11 @@ public class BasicDecimal64Vector extends AbstractVector{
             throw new RuntimeException("Please set scale first.");
         }
         long[] newLongValue = new long[valueList.length];
-        for(int i = 0; i < valueList.length; i++){
-            BigDecimal pow = new BigDecimal(1);
-            for (long j = 0; j < scale_; j++) {
-                pow = pow.multiply(new BigDecimal(10));
-            }
-            BigDecimal dbvalue = new BigDecimal(valueList[i]);
-            newLongValue[i] = (dbvalue.multiply(pow)).longValue();
+        BigDecimal pow = BigDecimal.TEN.pow(scale_);
+        for (int i = 0; i < valueList.length; i++) {
+            BigDecimal bd = new BigDecimal(valueList[i]);
+            if (checkDecimal64Range(bd))
+                newLongValue[i] = bd.multiply(pow).longValue();
         }
         values = Arrays.copyOf(values, newLongValue.length + values.length);
         System.arraycopy(newLongValue, 0, values, size, newLongValue.length);
@@ -396,5 +397,9 @@ public class BasicDecimal64Vector extends AbstractVector{
         numElementAndPartial.numElement = targetNumElement;
         numElementAndPartial.partial = 0;
         return targetNumElement * 8;
+    }
+
+    private boolean checkDecimal64Range(BigDecimal value) {
+        return value.compareTo(DECIMAL64_MIN_VALUE) > 0 && value.compareTo(DECIMAL64_MAX_VALUE) < 0;
     }
 }

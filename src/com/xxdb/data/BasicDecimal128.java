@@ -24,7 +24,7 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
 
     public BasicDecimal128(BigInteger unscaledVal, int scale) {
         if (scale < 0 || scale > 38) {
-            throw new RuntimeException("Scale out of bound (valid range: [0, 38], but get: " + scale + ")");
+            throw new RuntimeException("Scale " + scale + "is out of bounds, it must be in [0,38].");
         }
 
         BigDecimal bd = new BigDecimal(unscaledVal);

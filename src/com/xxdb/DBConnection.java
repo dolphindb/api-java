@@ -435,17 +435,17 @@ public class DBConnection {
             if (asynTask_)
                 return null;
 
-            in_= remoteLittleEndian_ ? new LittleEndianDataInputStream(new BufferedInputStream(socket_.getInputStream())) :
+            ExtendedDataInput in = remoteLittleEndian_ ? new LittleEndianDataInputStream(new BufferedInputStream(socket_.getInputStream())) :
                     new BigEndianDataInputStream(new BufferedInputStream(socket_.getInputStream()));
             String header = null;
             try {
-                header = in_.readLine();
+                header = in.readLine();
                 while (header.equals("MSG")) {
                     //read intermediate message to indicate the progress
-                    String msg = in_.readString();
+                    String msg = in.readString();
                     if (listener != null)
                         listener.progress(msg);
-                    header = in_.readLine();
+                    header = in.readLine();
                 }
             }catch (IOException ex){
                 isConnected_ = false;
@@ -464,7 +464,7 @@ public class DBConnection {
             int numObject = Integer.parseInt(headers[1]);
 
             try {
-                header = in_.readLine();
+                header = in.readLine();
             }catch (IOException ex){
                 isConnected_ = false;
                 socket_ = null;
@@ -484,7 +484,7 @@ public class DBConnection {
 
             short flag;
             try {
-                flag = in_.readShort();
+                flag = in.readShort();
                 int form = flag >> 8;
                 int type = flag & 0xff;
                 boolean extended = type >= 128;
@@ -501,10 +501,10 @@ public class DBConnection {
 
 
                 if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
-                    return new EntityBlockReader(in_);
+                    return new EntityBlockReader(in);
                 }
                 EntityFactory factory = BasicEntityFactory.instance();
-                return factory.createEntity(df, dt, in_, extended);
+                return factory.createEntity(df, dt, in, extended);
             }catch (IOException ex){
                 isConnected_ = false;
                 socket_ = null;

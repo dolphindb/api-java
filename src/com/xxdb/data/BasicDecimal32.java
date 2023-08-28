@@ -28,7 +28,7 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
         }
 
         if (scale < 0 || scale > 9) {
-            throw new RuntimeException("Scale out of bound (valid range: [0, 9], but get: " + scale + ")");
+            throw new RuntimeException("Scale " + scale + "is out of bounds, it must be in [0,9].");
         }
         scale_ = scale;
 

@@ -57,7 +57,7 @@ public class BehaviorTest {
         multithreadedTableWriter_.waitForThreadCompletion();
         MultithreadedTableWriter.Status writeStatus = new MultithreadedTableWriter.Status();
         writeStatus = multithreadedTableWriter_.getStatus();
-        if (!writeStatus.errorInfo.equals(""))
+        if (!writeStatus.getErrorInfo().equals(""))
         {
             //写入时发生错误
             System.out.println("error in writing !");
@@ -85,13 +85,13 @@ public class BehaviorTest {
             //插入1行类型错误数据，MTW立刻发现
             //MTW立刻返回错误信息
             ret = multithreadedTableWriter_.insert(new Date(2022, 3, 23), 222, random.nextInt() % 10000);
-            if (!ret.errorInfo.equals(""))
+            if (!ret.getErrorInfo().equals(""))
                 System.out.println("insert wrong format data: {2}\n" + ret.toString());
 
             //插入1行数据，列数不匹配，MTW立刻发现
             //MTW立刻返回错误信息
             ret = multithreadedTableWriter_.insert(new Date(2022, 3, 23), random.nextInt() % 10000);
-            if (!ret.errorInfo.equals(""))
+            if (!ret.getErrorInfo().equals(""))
                 System.out.println("insert wrong format data: {3}\n" + ret.toString());
 
 
@@ -117,7 +117,7 @@ public class BehaviorTest {
         multithreadedTableWriter_.waitForThreadCompletion();
         MultithreadedTableWriter.Status status1 = new MultithreadedTableWriter.Status();
         status1 = multithreadedTableWriter_.getStatus();
-        if (writeStatus.errorCode != "A0")
+        if (writeStatus.getErrorCode() != "A0")
             //写入发生错误
             System.out.println("writeStatus: {4}\n" + status1.toString());
         System.out.println(((BasicLong)conn.run("exec count(*) from pt")).getLong());

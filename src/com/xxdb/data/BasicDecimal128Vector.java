@@ -37,7 +37,7 @@ public class BasicDecimal128Vector extends AbstractVector {
     public BasicDecimal128Vector(String[] dataValue, int scale) {
         super(DATA_FORM.DF_VECTOR);
         if (scale < 0 || scale > 38) {
-            throw new RuntimeException("Scale out of bound (valid range: [0, 38], but get: " + scale + ")");
+            throw new RuntimeException("Scale " + scale + "is out of bounds, it must be in [0,38].");
         }
         this.scale_ = scale;
 
@@ -275,8 +275,8 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public void set(int index, Entity value) throws Exception {
-        if (value.getDataType() != DT_DECIMAL128) {
-            throw new RuntimeException("value type is not BasicDecimal128!");
+        if (!value.isScalar() || value.getDataType() != DT_DECIMAL128) {
+            throw new RuntimeException("The value type is not BasicDecimal128!");
         }
 
         int newScale = ((Scalar) value).getScale();

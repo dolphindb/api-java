@@ -55,8 +55,8 @@ public class MultithreadedTableWriter {
 
         public String toString(){
             StringBuilder sb = new StringBuilder();
-            sb.append("errorCode     : " + errorCode + "\n");
-            sb.append("errorInfo     : " + errorInfo + "\n");
+            sb.append("errorCode     : " + getErrorCode() + "\n");
+            sb.append("errorInfo     : " + getErrorInfo() + "\n");
             sb.append("isExiting     : " + isExiting + "\n");
             sb.append("sentRows      : " + sentRows + "\n");
             sb.append("unsentRows    : " + unsentRows + "\n");
@@ -569,8 +569,8 @@ public class MultithreadedTableWriter {
 
     public Status getStatus(){
         Status status = new Status();
-        status.errorCode = errorCodeInfo_.errorCode;
-        status.errorInfo = errorCodeInfo_.errorInfo;
+        status.setErrorCode(errorCodeInfo_.getErrorCode());
+        status.setErrorInfo(errorCodeInfo_.getErrorInfo());
         status.sendFailedRows=status.sentRows=status.unsentRows=0;
         status.isExiting=isExiting();
         for(WriterThread writeThread : threads_){

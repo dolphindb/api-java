@@ -33,7 +33,7 @@ public class DataWriter implements Runnable{
 				e.printStackTrace();
 			}
 			ErrorCodeInfo insert = mtw.insert(subData.get(i).toArray());
-			if (!insert.errorInfo.equals(""))
+			if (!insert.getErrorInfo().equals(""))
 				System.out.println(insert);
 		}
 	}
