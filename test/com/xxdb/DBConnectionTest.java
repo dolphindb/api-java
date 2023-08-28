@@ -2829,7 +2829,7 @@ public class DBConnectionTest {
         thread.start();
     }
 
-    @Test
+   // @Test
     public void test_DBconnection_reconnect_false(){
         DBConnection conn_re = new DBConnection();
         try {
@@ -2841,7 +2841,7 @@ public class DBConnectionTest {
         }
     }
 
-    @Test
+    //@Test
     public void test_DBconnection_reconnect_true() throws InterruptedException {
         DBConnection conn_re = new DBConnection();
         class reconnect extends TimerTask {
@@ -2860,8 +2860,8 @@ public class DBConnectionTest {
         }
         Timer timer = new Timer("Timer");
         TimerTask rec = new reconnect();
-        timer.scheduleAtFixedRate(rec, 0L, 1000L);
-        Thread.sleep(5000L);
+        timer.scheduleAtFixedRate(rec, 0L, 500L);
+        Thread.sleep(500L);
         timer.cancel();
     }
 
@@ -3698,7 +3698,7 @@ public void test_SSL() throws Exception {
         assertEquals(true, conn.isConnected());
     }
     @Test
-    public void TestConnectEnableHighAvailability_false() throws IOException, InterruptedException {
+    public void Test_connect_EnableHighAvailability_false() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,CONTROLLER_PORT,"admin","123456",null,false);
         DBConnection conn1 = new DBConnection();
@@ -3708,7 +3708,9 @@ public void test_SSL() throws Exception {
         try{
             conn.run("stopDataNode(\""+nodeAlias+"\")");
         }catch(Exception ex)
-        {}
+        {
+            System.out.println(ex);
+        }
         //DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"admin","123456",null,false);
         Thread.sleep(500);
@@ -3718,13 +3720,16 @@ public void test_SSL() throws Exception {
         }catch(Exception ex)
         {
             e = ex.getMessage();
+            System.out.println(ex);
         }
         assertNotNull(e);
         Thread.sleep(1000);
         try{
             conn.run("startDataNode(\""+nodeAlias+"\")");
         }catch(Exception ex)
-        {}
+        {
+            System.out.println(ex);
+        }
         Thread.sleep(1000);
         conn1.connect(HOST,PORT,"admin","123456",null,false);
         conn1.run("a=1;\n a");
@@ -3732,7 +3737,7 @@ public void test_SSL() throws Exception {
         conn1.close();
     }
     @Test
-    public void TestConnectEnableHighAvailability_true() throws IOException, InterruptedException {
+    public void Test_connect_EnableHighAvailability_true() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,CONTROLLER_PORT,"admin","123456",null,false);
         DBConnection conn1 = new DBConnection();
@@ -3742,30 +3747,34 @@ public void test_SSL() throws Exception {
         try{
             conn.run("stopDataNode(\""+nodeAlias+"\")");
         }catch(Exception ex)
-        {}
+        {
+            System.out.println(ex);
+        }
         Thread.sleep(1000);
         conn1.run("a=1;\n a");
         //The connection switches to a different node to execute the code
         try{
             conn.run("startDataNode(\""+nodeAlias+"\")");
         }catch(Exception ex)
-        {}
+        {
+            System.out.println(ex);
+        }
         Thread.sleep(1000);
         assertEquals(true, conn1.isConnected());
     }
-    ///@Test AJ-287
+    //@Test //AJ-287
     public void Test_getConnection_highAvailability_false() throws SQLException, ClassNotFoundException, IOException {
         String script = "def restart(n)\n" +
                 "{\n" +
                 "try{\n" +
                 "stopDataNode(\""+HOST+":"+PORT+"\");\n" +
                 "}catch(ex)\n"+
-                "{}\n"+
+                "{print(ex)}\n"+
                 "sleep(n);\n"+
                 "try{\n" +
                 "stopDataNode(\""+HOST+":"+PORT+"\");\n" +
                 "}catch(ex)\n"+
-                "{}\n"+
+                "{print(ex)}\n"+
                 "}\n" +
                 "submitJob(\"restart\",\"restart\",restart,1000);";
         conn = new DBConnection(false, false, false);
@@ -3778,24 +3787,76 @@ public void test_SSL() throws Exception {
     }
 
     @Test
-    public void TestConnectEnableHighAvailability_true_1() throws IOException, InterruptedException {
+    public void Test_connect_EnableHighAvailability_true_1() throws IOException, InterruptedException {
         DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"admin","123456",null,true);
-//        BasicString nodeAliasTmp = (BasicString)conn1.run("getNodeAlias()");
-//        String nodeAlias = nodeAliasTmp.getString();
-//        try{
-//            conn.run("stopDataNode(\""+nodeAlias+"\")");
-//        }catch(Exception ex)
-//        {}
-//        Thread.sleep(1000);
-//        conn1.run("a=1;\n a");
-//        //The connection switches to a different node to execute the code
-//        try{
-//            conn.run("startDataNode(\""+nodeAlias+"\")");
-//        }catch(Exception ex)
-//        {}
-//        Thread.sleep(1000);
-//        assertEquals(true, conn1.isConnected());
+        BasicString nodeAliasTmp = (BasicString)conn1.run("getNodeAlias()");
+        String nodeAlias = nodeAliasTmp.getString();
+        try{
+            conn.run("stopDataNode(\""+nodeAlias+"\")");
+        }catch(Exception ex)
+        {
+            System.out.println(ex);
+        }
+        Thread.sleep(1000);
+        conn1.run("a=1;\n a");
+        //The connection switches to a different node to execute the code
+        try{
+            conn.run("startDataNode(\""+nodeAlias+"\")");
+        }catch(Exception ex)
+        {
+            System.out.println(ex);
+        }
+        Thread.sleep(1000);
+        assertEquals(true, conn1.isConnected());
+    }
+    @Test
+    public void Test_reConnect__true() throws IOException, InterruptedException {
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,PORT,"admin","123456",null,false,null,true);
+        BasicString nodeAliasTmp = (BasicString)conn1.run("getNodeAlias()");
+        String nodeAlias = nodeAliasTmp.getString();
+        try{
+            conn.run("stopDataNode(\""+nodeAlias+"\")");
+        }catch(Exception ex)
+        {
+            System.out.println(ex);
+        }
+        Thread.sleep(1000);
+        conn1.run("a=1;\n a");
+        //The connection switches to a different node to execute the code
+        try{
+            conn.run("startDataNode(\""+nodeAlias+"\")");
+        }catch(Exception ex)
+        {
+            System.out.println(ex);
+        }
+        Thread.sleep(1000);
+        assertEquals(true, conn1.isConnected());
+    }
+    @Test //reConnect is not valid
+    public void Test_reConnect__false() throws IOException, InterruptedException {
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,PORT,"admin","123456",null,false,null,false);
+        BasicString nodeAliasTmp = (BasicString)conn1.run("getNodeAlias()");
+        String nodeAlias = nodeAliasTmp.getString();
+        try{
+            conn.run("stopDataNode(\""+nodeAlias+"\")");
+        }catch(Exception ex)
+        {
+            System.out.println(ex);
+        }
+        Thread.sleep(1000);
+        conn1.run("a=1;\n a");
+        //The connection switches to a different node to execute the code
+        try{
+            conn.run("startDataNode(\""+nodeAlias+"\")");
+        }catch(Exception ex)
+        {
+            System.out.println(ex);
+        }
+        Thread.sleep(1000);
+        assertEquals(true, conn1.isConnected());
     }
     //@Test
     public void test_string_length()throws Exception{

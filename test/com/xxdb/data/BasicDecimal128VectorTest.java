@@ -193,7 +193,7 @@ public class BasicDecimal128VectorTest {
         }catch(Exception E){
             RE = E.getMessage();
         }
-        assertEquals("value type is not BasicDecimal64!",RE);
+        assertEquals("value type is not BasicDecimal128!",RE);
     }
 
     @Test
