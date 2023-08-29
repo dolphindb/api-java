@@ -52,7 +52,7 @@ public class BasicDecimal64Vector extends AbstractVector{
     public BasicDecimal64Vector(String[] data, int scale) {
         super(DATA_FORM.DF_VECTOR);
         if (scale < 0 || scale > 18) {
-            throw new RuntimeException("Scale out of bound (valid range: [0, 18], but get: " + scale + ")");
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,18].");
         }
         scale_ = scale;
 

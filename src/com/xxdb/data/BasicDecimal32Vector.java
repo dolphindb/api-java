@@ -41,7 +41,7 @@ public class BasicDecimal32Vector extends AbstractVector{
     public BasicDecimal32Vector(String[] data, int scale) {
         super(DATA_FORM.DF_VECTOR);
         if (scale < 0 || scale > 9) {
-            throw new RuntimeException("Scale " + scale + "is out of bounds, it must be in [0,9].");
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,9].");
         }
         scale_ = scale;
 
