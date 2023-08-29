@@ -1365,7 +1365,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout = 60000)
     public void test_insert_short() throws Exception {
 
         StringBuilder sb = new StringBuilder();
@@ -1936,7 +1936,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("undef(`t1,SHARED)");
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout = 60000)
     public  void test_insert_arrayVector_char()throws Exception {
 
         StringBuilder sb = new StringBuilder();

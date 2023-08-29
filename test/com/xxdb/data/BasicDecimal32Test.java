@@ -71,7 +71,7 @@ public class BasicDecimal32Test {
         }catch(Exception E){
             ex=E.getMessage();
         }
-        assertEquals("Scale out of bound (valid range: [0, 9], but get: -1)",ex);
+        assertEquals("Scale -1 is out of bounds, it must be in [0,9].",ex);
     }
     @Test
     public void testBasicDecimal32_value_string_scale_0(){
@@ -122,7 +122,7 @@ public class BasicDecimal32Test {
         }catch(Exception E){
             ex=E.getMessage();
         }
-        assertEquals("Scale out of bound (valid range: [0, 9], but get: 10)",ex);
+        assertEquals("Scale 10 is out of bounds, it must be in [0,9].",ex);
     }
 
     @Test

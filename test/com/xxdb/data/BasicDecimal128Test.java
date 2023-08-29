@@ -110,7 +110,16 @@ public class BasicDecimal128Test {
         BasicDecimal128 Decimal1284 = new BasicDecimal128("0",37);
         assertEquals("0.0000000000000000000000000000000000000",Decimal1284.getString());
     }
-
+    @Test
+    public void testBasicDecimal128_scale_39() throws Exception {
+        String ex = null;
+        try{
+            BasicDecimal128 Decimal128 = new BasicDecimal128("9.9999999999999999999999999999999999999",39);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale 39 is out of bounds, it must be in [0,38].",ex);
+    }
     @Test
     public void testBasicDecimal128_getString1() {
         BasicDecimal128 Decimal128_a = new BasicDecimal128("103", 6);
