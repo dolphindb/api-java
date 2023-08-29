@@ -182,7 +182,7 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
-        if (!value.isScalar() && value.getDataType() != DT_DECIMAL32) {
+        if (!value.getDataForm().equals(DATA_FORM.DF_SCALAR) || value.getDataType() != DT_DECIMAL32) {
             throw new RuntimeException("value type is not BasicDecimal32!");
         }
 

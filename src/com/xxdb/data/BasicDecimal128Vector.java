@@ -275,7 +275,7 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public void set(int index, Entity value) throws Exception {
-        if (!value.isScalar() || value.getDataType() != DT_DECIMAL128) {
+        if (!value.getDataForm().equals(DATA_FORM.DF_SCALAR) || value.getDataType() != DT_DECIMAL128) {
             throw new RuntimeException("The value type is not BasicDecimal128!");
         }
 

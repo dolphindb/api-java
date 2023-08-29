@@ -189,7 +189,7 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
-        if (!value.isScalar() && value.getDataType() != DT_DECIMAL64) {
+        if (!value.getDataForm().equals(DATA_FORM.DF_SCALAR) || value.getDataType() != DT_DECIMAL64) {
             throw new RuntimeException("value type is not BasicDecimal64!");
         }
 
