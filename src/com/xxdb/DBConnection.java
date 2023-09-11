@@ -984,9 +984,9 @@ public class DBConnection {
         }
     }
 
-    public void login(String userID, String password, boolean enableEncryption)throws IOException{
-        conn_.login(userID, password, enableEncryption);
-        uid_ = userID;
+    public void login(String userId, String password, boolean enableEncryption)throws IOException{
+        conn_.login(userId, password, enableEncryption);
+        uid_ = userId;
         pwd_ = password;
     }
 
