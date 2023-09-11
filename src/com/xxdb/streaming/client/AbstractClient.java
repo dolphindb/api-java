@@ -426,7 +426,7 @@ abstract class AbstractClient implements MessageDispatcher {
         if (listeningPort > 0)
             dbConn = new DBConnection();
         else
-            dbConn = new DBConnection(false, false, false, false, false, true, SqlStdEnum.DolphinDB);
+            dbConn = DBConnection.internalCreateEnableReverseStreamingDBConnection(false, false, false, false, false, SqlStdEnum.DolphinDB);
 
         if (!userName.equals(""))
             dbConn.connect(host, port, userName, passWord);

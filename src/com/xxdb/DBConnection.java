@@ -177,6 +177,18 @@ public class DBConnection {
             this.lock_ = new ReentrantLock();
         }
 
+        private DBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, SqlStdEnum sqlStd){
+            sessionID_ = "";
+            this.sslEnable_ = sslEnable;
+            this.asynTask_ = asynTask;
+            this.compress_ = compress;
+            this.ifUrgent_ = ifUrgent;
+            this.python_ = python;
+            this.isReverseStreaming_ = false;
+            this.sqlStd_ = sqlStd;
+            this.lock_ = new ReentrantLock();
+        }
+
         private boolean connect(String hostName, int port, String userId, String password, int connTimeout) throws IOException{
             this.hostName_ = hostName;
             this.port_ = port;
@@ -572,12 +584,16 @@ public class DBConnection {
         }
     }
 
+    private DBConnectionImpl createEnableReverseStreamingDBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, SqlStdEnum sqlStd) {
+        return new DBConnectionImpl(asynTask, sslEnable, compress, python, ifUrgent, true, sqlStd);
+    }
+
     public DBConnection() {
     	this(false, false, false);
     }
 
     public DBConnection(SqlStdEnum sqlStd) {
-        this(false, false, false, false, false, false, sqlStd);
+        this(false, false, false, false, false, sqlStd);
     }
 
     public DBConnection(boolean asynchronousTask) {
@@ -593,24 +609,38 @@ public class DBConnection {
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, SqlStdEnum.DolphinDB);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, SqlStdEnum.DolphinDB);
         this.mutex_ = new ReentrantLock();
     }
 
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, SqlStdEnum sqlStd){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, sqlStd);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, sqlStd);
         this.mutex_ = new ReentrantLock();
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, SqlStdEnum.DolphinDB);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, SqlStdEnum.DolphinDB);
         this.mutex_ = new ReentrantLock();
     }
 
+    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, SqlStdEnum sqlStd){
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, sqlStd);
+        this.mutex_ = new ReentrantLock();
+    }
+
+    @Deprecated
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, boolean isReverseStreaming, SqlStdEnum sqlStd){
         this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, isReverseStreaming, sqlStd);
         this.mutex_ = new ReentrantLock();
+    }
+
+    public static DBConnection internalCreateEnableReverseStreamingDBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, SqlStdEnum sqlStd) {
+        DBConnection dbConnection = new DBConnection();
+        dbConnection.conn_ = dbConnection.createEnableReverseStreamingDBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, sqlStd);
+        dbConnection.mutex_ = new ReentrantLock();
+
+        return dbConnection;
     }
     
     public boolean isBusy() {
