@@ -11,6 +11,7 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Objects;
 import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL128;
+import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL64;
 
 public class BasicDecimal128Vector extends AbstractVector {
 
@@ -393,7 +394,10 @@ public class BasicDecimal128Vector extends AbstractVector {
     }
 
     public void add(String value) {
-        add(new BigDecimal(value));
+        if(value.equals(""))
+            add(DECIMAL128_MIN_VALUE.scaleByPowerOfTen(-this.scale_));
+        else
+            add(new BigDecimal(value));
     }
 
     public void addRange(BigInteger[] valueList) {
@@ -446,7 +450,11 @@ public class BasicDecimal128Vector extends AbstractVector {
     public void Append(Scalar value) throws Exception{
         if (scale_ < 0)
             throw new RuntimeException("Please set scale first.");
-        add(value.getNumber().toString());
+        if(value.getDataType() == DT_DECIMAL128) {
+            add(value.getString());
+        }
+        else
+            add(value.getNumber().toString());
     }
 
     @Override

@@ -248,6 +248,8 @@ public class BasicDecimal32Vector extends AbstractVector{
         capacity = values.length;
         if (value.equals("0.0"))
             values[size] = 0;
+        else if(value.equals(""))
+            values[size] = Integer.MIN_VALUE;
         else {
             BigDecimal pow = BigDecimal.TEN.pow(scale_);
             BigDecimal bd = new BigDecimal(value);
@@ -331,7 +333,11 @@ public class BasicDecimal32Vector extends AbstractVector{
         if (scale_ < 0){
             throw new RuntimeException("Please set scale first.");
         }
-        add(value.getNumber().doubleValue());
+        if(value.getDataType() == DT_DECIMAL32) {
+            add(value.getString());
+        }
+        else
+            add(value.getNumber().doubleValue());
     }
 
     @Override

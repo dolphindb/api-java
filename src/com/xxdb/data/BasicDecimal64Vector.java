@@ -9,6 +9,8 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+
+import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL32;
 import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL64;
 
 public class BasicDecimal64Vector extends AbstractVector{
@@ -254,6 +256,8 @@ public class BasicDecimal64Vector extends AbstractVector{
         capaticy = values.length;
         if (value.equals("0.0"))
             values[size] = 0;
+        else if(value.equals(""))
+            values[size] = Long.MIN_VALUE;
         else {
             BigDecimal pow = BigDecimal.TEN.pow(scale_);
             BigDecimal bd = new BigDecimal(value);
@@ -336,7 +340,11 @@ public class BasicDecimal64Vector extends AbstractVector{
     public void Append(Scalar value) throws Exception{
         if (scale_ < 0)
             throw new RuntimeException("Please set scale first.");
-        add(value.getNumber().doubleValue());
+        if(value.getDataType() == DT_DECIMAL64) {
+            add(value.getString());
+        }
+        else
+            add(value.getNumber().doubleValue());
     }
 
     @Override

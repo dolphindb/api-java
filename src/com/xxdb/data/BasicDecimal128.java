@@ -136,7 +136,7 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
 
     @Override
     public void setNull() {
-        unscaledValue = DECIMAL128_MIN_VALUE.toBigInteger();
+        unscaledValue = BIGINT_MIN_VALUE;
     }
 
     @Override
