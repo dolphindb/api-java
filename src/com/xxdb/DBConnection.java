@@ -1269,7 +1269,7 @@ public class DBConnection {
         return this.conn_.port_;
     }
 
-    public String getUserID(){
+    public String getUserId(){
         return this.conn_.userId_;
     }
 

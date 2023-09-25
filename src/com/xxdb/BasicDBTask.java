@@ -92,7 +92,7 @@ public class BasicDBTask implements DBTask {
 					synchronized (this) {
 						if (status == TaskStatus.PENDING) {
 							DBConnection connection = new DBConnection();
-							connection.connect(conn.getHostName(), conn.getPort(), conn.getUserID(), conn.getPwd());
+							connection.connect(conn.getHostName(), conn.getPort(), conn.getUserId(), conn.getPwd());
 							String sessionId = connection.getSessionID();
 							BasicStringVector bs = (BasicStringVector) connection.run("exec rootJobId from getConsoleJobs() where sessionId = " + sessionId);
 							List<Entity> arguments = new ArrayList<>();

@@ -608,7 +608,7 @@ abstract class AbstractClient implements MessageDispatcher {
         int v1 = Integer.parseInt(_[1]);
         int v2 = Integer.parseInt(_[2]);
 
-        if((v0 == 2 && v1 == 0 && v2 >= 9) || (v0 == 2 && v1 == 10)){
+        if((v0 == 2 && v1 == 0 && v2 >= 9) || (v0 == 2 && v1 == 10) || (v0 == 3 && v1 == 0 && v2 >= 0)){
             //server only support reverse connection
             listeningPort = 0;
         }else{
