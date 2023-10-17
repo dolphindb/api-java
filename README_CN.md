@@ -227,7 +227,7 @@ conn.run("script");
 
 除了运行脚本之外，run命令还可以直接在远程DolphinDB服务器上执行DolphinDB内置或用户自定义函数。若`run`方法只有一个参数，则该参数为脚本；若`run`方法有两个参数，则第一个参数为DolphinDB中的函数名，第二个参数是该函数的参数。
 
-注意：输入 *function* 参数时请保证前后无多余空格，且确保对应函数存在，否则在执行`DBConnection.run(String function, List<Entity> arguments)`时会出现以下报错：
+注意：输入 *function* 参数时请保证前后无多余空格，且确保对应函数存在。否则在执行`DBConnection.run(String function, List<Entity> arguments)`时会出现以下报错：
 
 ```java
 Server response: 'Can't recognize function name functionA ' function: 'functionA '
