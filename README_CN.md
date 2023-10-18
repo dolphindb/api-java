@@ -227,6 +227,12 @@ conn.run("script");
 
 除了运行脚本之外，run命令还可以直接在远程DolphinDB服务器上执行DolphinDB内置或用户自定义函数。若`run`方法只有一个参数，则该参数为脚本；若`run`方法有两个参数，则第一个参数为DolphinDB中的函数名，第二个参数是该函数的参数。
 
+注意：输入 *function* 参数时请保证前后无多余空格，且确保对应函数存在。否则在执行`DBConnection.run(String function, List<Entity> arguments)`时会出现以下报错：
+
+```java
+Server response: 'Can't recognize function name functionA ' function: 'functionA '
+```
+
 下面的示例展示Java程序调用DolphinDB内置的`add`函数。`add`函数有两个参数x和y。参数的所在位置不同，也会导致调用方式的不同。可能有以下三种情况：
 
 * 所有参数都在DolphinDB server端
@@ -1187,7 +1193,7 @@ Java API提供了一组以Basic+\<DataType\>方式命名的类，分别对应Dol
 大部分DolphinDB数据类型可以由对应的Java数据类型构建，例如new BasicInt(4)对应integer，new BasicDouble(1.23)对应double，等等。但是也有一些DolphinDB数据类型，并不能由上述方法构建：
 
 - CHAR类型：DolphinDB中的CHAR类型保存为一个byte，所以在Java API中用BasicByte类型来构造CHAR，例如new BasicByte((byte)'c')。
-- SYMBOL类型：DolphinDB中的SYMBOL类型将字符串存储为整形，可以提高对字符串数据存储和查询的效率，但是Java中并没有这种类型，所以Java API不提供BasicSymbol这种对象，直接用BasicString来处理即可。
+- SYMBOL类型：DolphinDB 中的 SYMBOL 类型是将字符串存储为整型，这可以提高存储和查询字符串数据的效率。由于 SYMBOL 类型是对字符串数组进行优化，而没有对单个字符串进行优化；同时当字符串数组中存在多个重复字符串时会存在性能优化的问题。因此，Java API 不直接提供 BasicSymbol 这种对象，而是用 BasicString 进行处理。对于 Vector 类型，Java API 自 1.30.17.1 版本起提供 BasicSymbolVector 类型。注意，在下载数据时，建议您使用 AbstractVector 及其 `getString` 方法访问下载的 SYMBOL 类型数据，请勿强制类型转换到 BasicSymbolVector 或 BasicStringVector。
 - 时间类型：DolphinDB的时间类型是以整形或者长整形来描述的，DolphinDB提供date, month, time, minute, second, datetime, timestamp, nanotime和nanotimestamp九种类型的时间类型，最高精度可以到纳秒级。具体的描述可以参考[DolphinDB时序类型和转换](https://www.dolphindb.cn/cn/help/DataManipulation/TemporalObjects/TemporalTypeandConversion.html)。由于Java也提供了LocalDate, LocalTime, LocalDateTime, YearMonth等数据类型，所以Java API在Utils类里提供了所有Java时间类型与int或long之间的转换函数。
 
 以下脚本展示Java API中DolphinDB时间类型与Java原生时间类型之间的对应关系：
