@@ -206,7 +206,7 @@ public class BasicSymbolVector extends AbstractVector {
 
 	@Override
 	public void setNull(int index) {
-		values[index] = 0;
+		setString(index,"");
 	}
 
 	@Override
