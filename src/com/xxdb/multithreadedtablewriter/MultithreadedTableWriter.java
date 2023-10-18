@@ -357,6 +357,7 @@ public class MultithreadedTableWriter {
         init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
                 batchSize, throttle,threadCount,partitionCol,compressTypes, Mode.M_Append, null, callbackHandler);
     }
+
     private void init(String hostName, int port, String userId, String password,
                       String dbName, String tableName, boolean useSSL,
                       boolean enableHighAvailability, String[] highAvailabilitySites,
