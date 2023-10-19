@@ -629,11 +629,17 @@ public class BasicEntityFactory implements EntityFactory{
 		if(object instanceof Boolean[]){
 			return createAnyVector(dataType, (Boolean[])object, extraParam);
 		}
+		if(object instanceof boolean[]){
+			return createAnyVector(dataType, (boolean[])object, extraParam);
+		}
 		if(object instanceof Byte) {
 			return createScalar(dataType, (byte) object);
 		}
 		if(object instanceof Byte[]) {
 			return createAnyVector(dataType, (Byte[])object, extraParam);
+		}
+		if(object instanceof byte[]) {
+			return createAnyVector(dataType, (byte[])object, extraParam);
 		}
 		if(object instanceof Character){
 			return createScalar(dataType, (char) object);
@@ -641,11 +647,17 @@ public class BasicEntityFactory implements EntityFactory{
 		if(object instanceof Character[]){
 			return createAnyVector(dataType, (Character[])object, extraParam);
 		}
+		if(object instanceof char[]){
+			return createAnyVector(dataType, (char[])object, extraParam);
+		}
 		if(object instanceof Short){
 			return createScalar(dataType, (short) object);
 		}
 		if(object instanceof Short[]) {
 			return createAnyVector(dataType, (Short[]) object, extraParam);
+		}
+		if(object instanceof short[]) {
+			return createAnyVector(dataType, (short[]) object, extraParam);
 		}
 		if(object instanceof Integer) {
 			return createScalar(dataType, (int) object, extraParam);
@@ -653,11 +665,17 @@ public class BasicEntityFactory implements EntityFactory{
 		if(object instanceof Integer[]){
 			return createAnyVector(dataType, (Integer[])object, extraParam);
 		}
+		if(object instanceof int[]){
+			return createAnyVector(dataType, (int[])object, extraParam);
+		}
 		if(object instanceof Long) {
 			return createScalar(dataType, (long) object, extraParam);
 		}
 		if(object instanceof Long[]) {
 			return createAnyVector(dataType,(Long[])object, extraParam);
+		}
+		if(object instanceof long[]) {
+			return createAnyVector(dataType,(long[])object, extraParam);
 		}
 		if(object instanceof Double) {
 			return createScalar(dataType, (double) object, extraParam);
@@ -665,11 +683,17 @@ public class BasicEntityFactory implements EntityFactory{
 		if(object instanceof Double[]) {
 			return createAnyVector(dataType,(Double[])object, extraParam);
 		}
+		if(object instanceof double[]) {
+			return createAnyVector(dataType,(double[])object, extraParam);
+		}
 		if(object instanceof Float) {
 			return createScalar(dataType, (float) object, extraParam);
 		}
 		if(object instanceof Float[]) {
 			return createAnyVector(dataType,(Float[])object, extraParam);
+		}
+		if(object instanceof float[]) {
+			return createAnyVector(dataType,(float[])object, extraParam);
 		}
 		if(object instanceof String) {
 			return createScalar(dataType,(String)object, extraParam);
@@ -717,6 +741,137 @@ public class BasicEntityFactory implements EntityFactory{
 	}
 
 	private static <T> Vector createAnyVector(DATA_TYPE dataType, T[] val, int extraParam) throws Exception{
+		if(dataType.getValue()<64){
+			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
+		}
+		dataType = values()[dataType.getValue()-64];
+		int count = val.length;
+		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
+//		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64 || dataType == DT_DECIMAL128){
+//			((AbstractVector)vector).setExtraParamForType(extraParam);
+//		}
+		for(int i = 0; i < count; ++i)
+		{
+			Entity t = createScalar(dataType, val[i], extraParam);
+			vector.set(i, (Scalar) t);
+		}
+		return vector;
+	}
+
+	private static <T> Vector createAnyVector(DATA_TYPE dataType, float[] val, int extraParam) throws Exception{
+		if(dataType.getValue()<64){
+			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
+		}
+		dataType = values()[dataType.getValue()-64];
+		int count = val.length;
+		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
+		for(int i = 0; i < count; ++i)
+		{
+			Entity t = createScalar(dataType, val[i], extraParam);
+			vector.set(i, (Scalar) t);
+		}
+		return vector;
+	}
+	private static <T> Vector createAnyVector(DATA_TYPE dataType, double[] val, int extraParam) throws Exception{
+		if(dataType.getValue()<64){
+			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
+		}
+		dataType = values()[dataType.getValue()-64];
+		int count = val.length;
+		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
+		for(int i = 0; i < count; ++i)
+		{
+			Entity t = createScalar(dataType, val[i], extraParam);
+			vector.set(i, (Scalar) t);
+		}
+		return vector;
+	}
+	private static <T> Vector createAnyVector(DATA_TYPE dataType, int[] val, int extraParam) throws Exception{
+		if(dataType.getValue()<64){
+			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
+		}
+		dataType = values()[dataType.getValue()-64];
+		int count = val.length;
+		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
+//		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64 || dataType == DT_DECIMAL128){
+//			((AbstractVector)vector).setExtraParamForType(extraParam);
+//		}
+		for(int i = 0; i < count; ++i)
+		{
+			Entity t = createScalar(dataType, val[i], extraParam);
+			vector.set(i, (Scalar) t);
+		}
+		return vector;
+	}
+	private static <T> Vector createAnyVector(DATA_TYPE dataType, short[] val, int extraParam) throws Exception{
+		if(dataType.getValue()<64){
+			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
+		}
+		dataType = values()[dataType.getValue()-64];
+		int count = val.length;
+		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
+//		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64 || dataType == DT_DECIMAL128){
+//			((AbstractVector)vector).setExtraParamForType(extraParam);
+//		}
+		for(int i = 0; i < count; ++i)
+		{
+			Entity t = createScalar(dataType, val[i]);
+			vector.set(i, (Scalar) t);
+		}
+		return vector;
+	}
+	private static <T> Vector createAnyVector(DATA_TYPE dataType, byte[] val, int extraParam) throws Exception{
+		if(dataType.getValue()<64){
+			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
+		}
+		dataType = values()[dataType.getValue()-64];
+		int count = val.length;
+		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
+//		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64 || dataType == DT_DECIMAL128){
+//			((AbstractVector)vector).setExtraParamForType(extraParam);
+//		}
+		for(int i = 0; i < count; ++i)
+		{
+			Entity t = createScalar(dataType, val[i]);
+			vector.set(i, (Scalar) t);
+		}
+		return vector;
+	}
+	private static <T> Vector createAnyVector(DATA_TYPE dataType, char[] val, int extraParam) throws Exception{
+		if(dataType.getValue()<64){
+			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
+		}
+		dataType = values()[dataType.getValue()-64];
+		int count = val.length;
+		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
+//		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64 || dataType == DT_DECIMAL128){
+//			((AbstractVector)vector).setExtraParamForType(extraParam);
+//		}
+		for(int i = 0; i < count; ++i)
+		{
+			Entity t = createScalar(dataType, val[i]);
+			vector.set(i, (Scalar) t);
+		}
+		return vector;
+	}
+	private static <T> Vector createAnyVector(DATA_TYPE dataType, boolean[] val, int extraParam) throws Exception{
+		if(dataType.getValue()<64){
+			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
+		}
+		dataType = values()[dataType.getValue()-64];
+		int count = val.length;
+		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
+//		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64 || dataType == DT_DECIMAL128){
+//			((AbstractVector)vector).setExtraParamForType(extraParam);
+//		}
+		for(int i = 0; i < count; ++i)
+		{
+			Entity t = createScalar(dataType, val[i]);
+			vector.set(i, (Scalar) t);
+		}
+		return vector;
+	}
+    private static <T> Vector createAnyVector(DATA_TYPE dataType, long[] val, int extraParam) throws Exception{
 		if(dataType.getValue()<64){
 			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
 		}
