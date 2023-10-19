@@ -37,6 +37,10 @@ public class ThreadPooledClient extends AbstractClient {
         this("", DEFAULT_PORT, CORES);
     }
 
+    public ThreadPooledClient(int threadCount) throws SocketException {
+        this("", 0, threadCount);
+    }
+
     public ThreadPooledClient(int subscribePort, int threadCount) throws SocketException {
         this("", subscribePort, threadCount);
     }

@@ -340,7 +340,7 @@ public class BasicArrayVector extends AbstractVector {
 			int indexCount = rowIndicesSize;
 			int prev = indexCount == 0? 0 : rowIndices[indexCount - 1];
 			if (rowIndicesSize + 1 > capacity){
-				rowIndices = Arrays.copyOf(rowIndices, rowIndices.length * 2);
+				rowIndices = Arrays.copyOf(rowIndices, Math.max(2, rowIndices.length * 2));
 				capacity = rowIndices.length;
 			}
 			if (value.rows() != 0){

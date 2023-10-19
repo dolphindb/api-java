@@ -19,6 +19,10 @@ public class PollingClient extends AbstractClient {
     TopicPoller topicPoller = null;
     private HashMap<List<String>, List<String>> users = new HashMap<>();
 
+    public PollingClient() throws SocketException {
+        super(0);
+    }
+
     public PollingClient(int subscribePort) throws SocketException {
         super(subscribePort);
     }
