@@ -619,7 +619,7 @@ public class BasicEntityFactory implements EntityFactory{
 				scalar.setNull();
 				return scalar;
 			}else {
-				dataType = DATA_TYPE.values()[dataType.getValue()-64];
+				dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 				return BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 0, extraParam);
 			}
 		}
@@ -740,18 +740,18 @@ public class BasicEntityFactory implements EntityFactory{
 		throw new RuntimeException("Failed to insert data. invalid data type for "+dataType + ".");
 	}
 
-    private static boolean vectorAndTypeIsRight(DATA_TYPE dataType,DATA_TYPE comparedDataType){
-        if(dataType.getValue()<64){
+    private static boolean vectorAndTypeIsRight(DATA_TYPE dataType, DATA_TYPE comparedDataType){
+        if(dataType.getValue() < 64){
             throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
         }
         return dataType.equals(comparedDataType);
     }
 
 	private static <T> Vector createAnyVector(DATA_TYPE dataType, T[] val, int extraParam) throws Exception{
-		if(dataType.getValue()<64){
+		if(dataType.getValue() < 64){
 			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
 		}
-		dataType = values()[dataType.getValue()-64];
+		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 //		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64 || dataType == DT_DECIMAL128){
@@ -769,7 +769,7 @@ public class BasicEntityFactory implements EntityFactory{
 		if (vectorAndTypeIsRight(dataType, DT_FLOAT_ARRAY)){
 			return new BasicFloatVector(val);
 		}
-		dataType = values()[dataType.getValue()-64];
+		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 		for(int i = 0; i < count; ++i)
@@ -783,7 +783,7 @@ public class BasicEntityFactory implements EntityFactory{
 		if (vectorAndTypeIsRight(dataType, DT_DOUBLE_ARRAY)){
 			return new BasicDoubleVector(val);
 		}
-		dataType = values()[dataType.getValue()-64];
+		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 		for(int i = 0; i < count; ++i)
@@ -797,7 +797,7 @@ public class BasicEntityFactory implements EntityFactory{
 		if (vectorAndTypeIsRight(dataType, DT_INT_ARRAY)) {
 			return new BasicIntVector(val);
 		}
-		dataType = values()[dataType.getValue()-64];
+		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 
@@ -812,7 +812,7 @@ public class BasicEntityFactory implements EntityFactory{
 		if (vectorAndTypeIsRight(dataType, DT_SHORT_ARRAY)) {
 			return new BasicShortVector(val);
 		}
-		dataType = values()[dataType.getValue()-64];
+		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 
@@ -827,7 +827,7 @@ public class BasicEntityFactory implements EntityFactory{
 		if (vectorAndTypeIsRight(dataType, DT_BYTE_ARRAY)){
 			return new BasicByteVector(val);
 		}
-		dataType = values()[dataType.getValue()-64];
+		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 
@@ -842,7 +842,7 @@ public class BasicEntityFactory implements EntityFactory{
 		if(dataType.getValue()<64){
 			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
 		}
-		dataType = values()[dataType.getValue()-64];
+		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 
@@ -857,7 +857,7 @@ public class BasicEntityFactory implements EntityFactory{
 		if (vectorAndTypeIsRight(dataType, DT_BOOL_ARRAY)) {
 			return new BasicBooleanVector((val));
 		}
-		dataType = values()[dataType.getValue()-64];
+		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 
@@ -872,7 +872,7 @@ public class BasicEntityFactory implements EntityFactory{
 		if (vectorAndTypeIsRight(dataType, DT_LONG_ARRAY)){
 			return new BasicLongVector(val);
 		}
-		dataType = values()[dataType.getValue()-64];
+		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 		for(int i = 0; i < count; ++i)
