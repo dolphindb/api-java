@@ -72,9 +72,22 @@ public class Utils {
 		return year * 12 + month -1;
 	}
 
-	
+
 	public static YearMonth parseMonth(int value){
-		return YearMonth.of(value/12, value % 12 +1);
+		int year = value / 12;
+		int month = value % 12 + 1;
+		if (value < 0){
+			Calendar c = Calendar.getInstance();
+			int curYear = c.get(Calendar.YEAR);
+			int curMonth = c.get(Calendar.MONTH) + 1;
+			month = curMonth - Math.abs(month);
+			year = curYear - (Math.abs(year % curYear));
+			if (month <= 0 ){
+				month = 12 - Math.abs(month);
+				year--;
+			}
+		}
+		return YearMonth.of(year, month);
 	}
 	
 	public static int countDays(LocalDate date){
