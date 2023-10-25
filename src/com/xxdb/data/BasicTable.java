@@ -359,6 +359,8 @@ public class BasicTable extends AbstractEntity implements Table{
 
 	@Override
 	public void addColumn(String colName, Vector col) {
+		if (names_.contains(colName))
+			throw new RuntimeException("The table already contains column '" + colName + "'.");
 		names_.add(colName);
 		name2index_.put(colName, name2index_.size());
 		columns_.add(col);
