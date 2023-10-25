@@ -12,5 +12,6 @@ public interface Table extends Entity{
 	String getColumnName(int index);
 	Table getSubTable(int[] indices);
 	void addColumn(String colName, Vector col);
+	void replaceColumn(String colName, Vector col);
 	void setColumnCompressTypes(int[] colCompresses);
 }

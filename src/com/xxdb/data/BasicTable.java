@@ -365,4 +365,16 @@ public class BasicTable extends AbstractEntity implements Table{
 		name2index_.put(colName, name2index_.size());
 		columns_.add(col);
 	}
+
+	@Override
+	public void replaceColumn(String colName, Vector col) {
+		if (names_.contains(colName)) {
+			int index = names_.indexOf(colName);
+			columns_.set(index, col);
+		} else {
+			names_.add(colName);
+			columns_.add(col);
+			name2index_.put(colName, name2index_.size());
+		}
+	}
 }
