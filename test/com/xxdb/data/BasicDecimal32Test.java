@@ -88,6 +88,13 @@ public class BasicDecimal32Test {
         assertEquals("0.0000",Decimal32_1.getString());
     }
     @Test
+    public void testBasicDecimal32_value_string_scale_8(){
+        BasicDecimal32 Decimal32 = new BasicDecimal32("0.999999999",8);
+        assertEquals("0.99999999",Decimal32.getString());
+        BasicDecimal32 Decimal32_1 = new BasicDecimal32("-0.999999999",8);
+        assertEquals("-0.99999999",Decimal32_1.getString());
+    }
+    @Test
     public void testBasicDecimal32_value_string_scale_9(){
         BasicDecimal32 Decimal32 = new BasicDecimal32("0.000000001",9);
         assertEquals("0.000000001",Decimal32.getString());

@@ -128,7 +128,7 @@ public class BasicDecimal64Test {
         }catch(Exception E){
             ex=E.getMessage();
         }
-        assertEquals("Scale out of bound (valid range: [0, 18], but get: 19)",ex);
+        assertEquals("Scale 19 is out of bounds, it must be in [0,18].",ex);
     }
 
     @Test

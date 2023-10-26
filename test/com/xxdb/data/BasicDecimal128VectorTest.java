@@ -300,7 +300,15 @@ public class BasicDecimal128VectorTest {
         tmp_128_v.Append(tmp_128_v2);
         assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_128_v.getString());
     }
-
+    @Test
+    public void test_BasicDecimal128Vector_append_null() throws Exception {
+        BasicDecimal128 basicDecimal128 = new BasicDecimal128(String.valueOf(0),0);
+        basicDecimal128.setNull();
+        BasicDecimal128Vector basicDecimal128Vector = new BasicDecimal128Vector(0,0);
+        basicDecimal128Vector.Append(basicDecimal128);
+        System.out.println(((Scalar)(basicDecimal128Vector.get(0))).isNull());
+        org.junit.Assert.assertEquals(true,((Scalar)(basicDecimal128Vector.get(0))).isNull());
+    }
     @Test
     public void test_BasicDecimal128Vector_getScale() throws Exception {
         String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};

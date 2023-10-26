@@ -280,7 +280,15 @@ public class BasicDecimal64VectorTest {
         BasicDecimal64 a = new BasicDecimal64(1.11223,4);
         tmp_64_v.Append(a);
     }
-
+    @Test
+    public void test_BasicDecimal64Vector_append_null() throws Exception {
+        BasicDecimal64 basicDecimal64 = new BasicDecimal64(0L,0);
+        basicDecimal64.setNull();
+        BasicDecimal64Vector basicDecimal64Vector = new BasicDecimal64Vector(0,0);
+        basicDecimal64Vector.Append(basicDecimal64);
+        System.out.println(((Scalar)(basicDecimal64Vector.get(0))).isNull());
+        org.junit.Assert.assertEquals(true,((Scalar)(basicDecimal64Vector.get(0))).isNull());
+    }
     @Test
     public void test_BasicDecimal64Vector_append_vector_scale_notMatch() throws Exception {
         BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(0,4);

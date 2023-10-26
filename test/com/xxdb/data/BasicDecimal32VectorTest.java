@@ -288,6 +288,15 @@ public class BasicDecimal32VectorTest {
         BasicDecimal32 a = new BasicDecimal32(1.11223,4);
         tmp_32_v.Append(a);
     }
+    @Test
+    public void test_BasicDecimal32Vector_append_null() throws Exception {
+        BasicDecimal32 basicDecimal32 = new BasicDecimal32(0,0);
+        basicDecimal32.setNull();
+        BasicDecimal32Vector basicDecimal32Vector = new BasicDecimal32Vector(0,0);
+        basicDecimal32Vector.Append(basicDecimal32);
+        System.out.println(((Scalar)(basicDecimal32Vector.get(0))).isNull());
+        org.junit.Assert.assertEquals(true,((Scalar)(basicDecimal32Vector.get(0))).isNull());
+    }
 
     @Test
     public void test_BasicDecimal32Vector_Append_vector_scale_notMatch() throws Exception {
