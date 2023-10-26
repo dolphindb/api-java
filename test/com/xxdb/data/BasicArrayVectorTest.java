@@ -145,7 +145,6 @@ public class BasicArrayVectorTest {
         conn.close();
 
     }
-
     @Test
     public void TestBasic_bool_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
@@ -513,7 +512,6 @@ public class BasicArrayVectorTest {
         assertEquals("[true,false]",obj.getVectorValue(0).getString());
         assertEquals("[true,false]",obj.getVectorValue(1).getString());
           conn.close();
-
     }
 
     @Test
@@ -1460,6 +1458,281 @@ public class BasicArrayVectorTest {
         bav.Append(new BasicByteVector(new byte[]{37,62,55}));
         assertEquals(4,bav.rows());
         assertEquals("['%','>','7']",bav.getVectorValue(3).getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicIntVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(INT[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_INT_ARRAY,bav.getDataType());
+        bav.Append(new BasicIntVector(new int[0]));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicBoolVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(BOOL[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_BOOL_ARRAY,bav.getDataType());
+        bav.Append(new BasicBooleanVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicByteVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(CHAR[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_BYTE_ARRAY,bav.getDataType());
+        bav.Append(new BasicByteVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicShortVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(SHORT[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_SHORT_ARRAY,bav.getDataType());
+        bav.Append(new BasicShortVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicLongVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(LONG[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_LONG_ARRAY,bav.getDataType());
+        bav.Append(new BasicLongVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicDateVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DATE[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_DATE_ARRAY,bav.getDataType());
+        bav.Append(new BasicDateVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicMonthVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(MONTH[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_MONTH_ARRAY,bav.getDataType());
+        bav.Append(new BasicMonthVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicTimeVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(TIME[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_TIME_ARRAY,bav.getDataType());
+        bav.Append(new BasicTimeVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicMinuteVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(MINUTE[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_MINUTE_ARRAY,bav.getDataType());
+        bav.Append(new BasicMinuteVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicSecondVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(SECOND[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_SECOND_ARRAY,bav.getDataType());
+        bav.Append(new BasicSecondVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicDateTimeVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DATETIME[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_DATETIME_ARRAY,bav.getDataType());
+        bav.Append(new BasicDateTimeVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicTimestampVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(TIMESTAMP[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_TIMESTAMP_ARRAY,bav.getDataType());
+        bav.Append(new BasicTimestampVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicNanoTimeVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(NANOTIME[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_NANOTIME_ARRAY,bav.getDataType());
+        bav.Append(new BasicNanoTimeVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicNanoTimestampVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(NANOTIMESTAMP[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_NANOTIMESTAMP_ARRAY,bav.getDataType());
+        bav.Append(new BasicNanoTimestampVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicFloatVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(FLOAT[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_FLOAT_ARRAY,bav.getDataType());
+        bav.Append(new BasicFloatVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicDoubleVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DOUBLE[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_DOUBLE_ARRAY,bav.getDataType());
+        bav.Append(new BasicDoubleVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicUuidVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(UUID[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_UUID_ARRAY,bav.getDataType());
+        bav.Append(new BasicUuidVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicDateHourVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DATEHOUR[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_DATEHOUR_ARRAY,bav.getDataType());
+        bav.Append(new BasicDateHourVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicIPAddrVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(IPADDR[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_IPADDR_ARRAY,bav.getDataType());
+        bav.Append(new BasicIPAddrVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[0.0.0.0]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicInt128Vector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(INT128[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_INT128_ARRAY,bav.getDataType());
+        bav.Append(new BasicInt128Vector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicComplexVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(COMPLEX[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_COMPLEX_ARRAY,bav.getDataType());
+        bav.Append(new BasicComplexVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicPointVector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(POINT[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_POINT_ARRAY,bav.getDataType());
+        bav.Append(new BasicPointVector(0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[(,)]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicDecimal32Vector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DECIMAL32(4)[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_DECIMAL32_ARRAY,bav.getDataType());
+        bav.Append(new BasicDecimal32Vector(0,0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicDecimal64Vector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DECIMAL64(7)[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_DECIMAL64_ARRAY,bav.getDataType());
+        bav.Append(new BasicDecimal64Vector(0,0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
+    }
+    @Test
+    public void test_BasicArrayVector_Append_BasicDecimal128Vector_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT);
+        BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DECIMAL128(10)[], 0);x;");
+        int size = bav.rows();
+        assertEquals(Entity.DATA_TYPE.DT_DECIMAL128_ARRAY,bav.getDataType());
+        bav.Append(new BasicDecimal128Vector(0,0));
+        assertEquals(size+1,bav.rows());
+        assertEquals("[[]]",bav.getString());
     }
 
     @Test(expected = RuntimeException.class)
