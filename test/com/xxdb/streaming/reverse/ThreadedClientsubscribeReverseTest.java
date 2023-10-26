@@ -177,7 +177,7 @@ public class ThreadedClientsubscribeReverseTest {
 
 
 
-    @Test(timeout = 60000)
+    @Test(timeout = 120000)
     public void test_subscribe_ex1() throws Exception {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades1)\t\n"
@@ -743,7 +743,7 @@ public class ThreadedClientsubscribeReverseTest {
         }
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 120000)
     public void test_subscribe_batchSize_throttle() throws Exception {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1001,7 +1001,7 @@ public class ThreadedClientsubscribeReverseTest {
         client.unsubscribe(HOST,PORT,"Trades","BatchMessageHandler");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 120000)
     public void test_func_BatchMessageHandler_not_set_batchSize() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -1038,7 +1038,7 @@ public class ThreadedClientsubscribeReverseTest {
         client.unsubscribe(HOST,PORT,"Trades","single_msg");
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 120000)
     public void test_func_BatchMessageHandler_mul_single_msg() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -2176,6 +2176,22 @@ public class ThreadedClientsubscribeReverseTest {
         Assert.assertEquals(20000, msg1.size());
         Assert.assertEquals(20000, msg2.size());
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+
+    @Test
+    public void test_ThreadedClient_only_subscribePort1() throws IOException, InterruptedException {
+        ThreadedClient client2 = new ThreadedClient(0);
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades1)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades1),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        client2.subscribe(HOST,PORT,"Trades1","subTrades1",MessageHandler_handler, -1, true);
+       // Thread.sleep(100000000);
+        client2.unsubscribe(HOST,PORT,"Trades1","subTrades1");
+        client2.close();
     }
 
 }

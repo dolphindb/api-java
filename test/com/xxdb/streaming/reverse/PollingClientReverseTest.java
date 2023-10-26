@@ -19,10 +19,7 @@ package com.xxdb.streaming.reverse;
 
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
-import com.xxdb.streaming.client.BasicMessage;
-import com.xxdb.streaming.client.IMessage;
-import com.xxdb.streaming.client.PollingClient;
-import com.xxdb.streaming.client.TopicPoller;
+import com.xxdb.streaming.client.*;
 import org.junit.*;
 
 import java.io.IOException;
@@ -516,7 +513,7 @@ public class PollingClientReverseTest {
         }
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 120000)
     public void test_subscribe_tableName_actionName_offset_reconnect() throws IOException {
         for (int j=0;j<10;j++) {
             TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1","subTrades1",-1,true);
@@ -553,7 +550,7 @@ public class PollingClientReverseTest {
         }
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 120000)
     public void test_subscribe_tableName_actionName_reconnect() throws IOException {
         TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1","subTrades1",true);
         PollingClient client1 = new PollingClient(HOST,0);

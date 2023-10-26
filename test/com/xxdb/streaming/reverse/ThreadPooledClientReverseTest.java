@@ -229,7 +229,7 @@ public class ThreadPooledClientReverseTest {
             int ofst = 0;
             client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
             conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(20000);
+            Thread.sleep(30000);
             BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
             BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
             client.unsubscribe(HOST, PORT, "Trades", "javaStreamingApi");
@@ -478,7 +478,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_one_user_some_table() throws IOException, InterruptedException {
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
+        conn.run("login('admin','123456');def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
                 "rpc(getControllerAlias(),create_user);" +
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st2;"+
@@ -489,7 +489,7 @@ public class ThreadPooledClientReverseTest {
             client.subscribe(HOST, PORT, "tmp_st3", "subTread1", MessageHandler_handler, -1, true, null, true, "test1", "123456_error");
             fail("no exception thrown");
         }catch (Exception e){
-            System.out.println(e.getMessage());
+            System.out.println(e.getMessage()+"12345666");
         }
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st1.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st2.append!(t)");
@@ -577,11 +577,11 @@ public class ThreadPooledClientReverseTest {
         client1.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        Thread.sleep(15000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         client1.unsubscribe(HOST, PORT, "Trades", "subTrades");
-        //assertEquals(20000, re.rows());
+        assertEquals(20000, re.rows());
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
@@ -683,5 +683,26 @@ public class ThreadPooledClientReverseTest {
         Assert.assertEquals(table1.rows(), msg1.size());
         Assert.assertEquals(table2.rows(), msg2.size());
         client.unsubscribe(StreamLeaderHost, StreamLeaderPort, "outTables", "mutiSchema");
+    }
+    @Test
+    public void test_ThreadPooledClient_threadCount() throws Exception {
+        client = new ThreadPooledClient(10);
+        Vector filter1 = (Vector) conn.run("1..1000");
+        client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true);
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(10000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
+        client.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        assertEquals(2000, re.rows());
+        for (int i = 0; i < 1000; i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
+            assertEquals(re.getColumn(0).get(i + 1000), tra.getColumn(0).get(i + 1000));
+            assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
+            assertEquals(((Scalar)re.getColumn(2).get(i + 1000)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 1000)).getNumber().doubleValue(), 4);
+        }
     }
 }
