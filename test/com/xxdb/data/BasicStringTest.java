@@ -909,4 +909,28 @@ public class BasicStringTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataByteArray\":[[68,111,108,112,104,105,110,100,98],[77,111,110,103,111,68,66],[71,97,117,115,115,68,66],[71,111,108,100,101,110,68,66]],\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_BLOB\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicString\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[Dolphindb,MongoDB,GaussDB,GoldenDB]\",\"table\":false,\"unitLength\":1,\"vector\":true}", re);
     }
+    @Test
+    public void test_BasicStringVector_setNull() throws Exception {
+        BasicStringVector bsv = new BasicStringVector(1);
+        bsv.setNull(0);
+        System.out.println(bsv.getString());
+        assertEquals("[]",bsv.getString());
+    }
+    @Test
+    public void test_BasicStringVector_setNull_tableInsert() throws IOException {
+        conn.run("t = table(1:0,[`col1],[STRING]);share t as test_null\n");
+        List<String> colNames = Arrays.asList("col1");
+        List<Vector> cols = new ArrayList<>();
+        BasicStringVector stringVector = new BasicStringVector(1);
+        stringVector.setNull(0);
+        cols.add(stringVector);
+        List<String> allColNames = new ArrayList<String>();
+        allColNames.addAll(colNames);
+        BasicTable table = new BasicTable(allColNames, cols);
+        List<Entity> list = new ArrayList<>(1);
+        list.add(table);
+        conn.run("tableInsert{test_null}", list);
+        BasicTable re = (BasicTable)conn.run("select * from test_null");
+        assertEquals(1,re.rows());
+    }
 }
