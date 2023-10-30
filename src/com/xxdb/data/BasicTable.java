@@ -120,7 +120,22 @@ public class BasicTable extends AbstractEntity implements Table{
 		}
     }
 
-    }
+	/**
+	 * replace a specific colName.
+	 * @param originalColName
+	 * @param newColName
+	 */
+	public void replaceColName(String originalColName, String newColName) {
+		if (Utils.isEmpty(originalColName))
+			throw new RuntimeException("colName cannot be null.");
+
+		if (this.colNames.contains(originalColName)) {
+			int index = colNames.indexOf(originalColName);
+			colNames.set(index, newColName);
+		} else {
+			throw new RuntimeException("colName '" + originalColName +"' does not exist in table.");
+		}
+	}
     
     public void setColumns (final List<Vector> cols) {
     	columns.clear();
