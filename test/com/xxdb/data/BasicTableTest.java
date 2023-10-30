@@ -9,6 +9,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -602,4 +603,914 @@ public class BasicTableTest {
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"MIXED\",\"dataForm\":\"DF_TABLE\",\"dataType\":\"DT_DICTIONARY\",\"dictionary\":false,\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"sym d1           \\n--- -------------\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\ns1  1000000000.02\\n\",\"table\":true,\"vector\":false}", re);
 
     }
+    @Test
+    public void Test_BasicTable_addColumn_same_col() throws Exception {
+        BasicTable bt = createBasicTable();
+        String re = null;
+        byte[] vbool = new byte[]{1,0,0};
+        BasicBooleanVector bbv = new BasicBooleanVector(vbool);
+        try{
+            bt.addColumn("cbool",bbv);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The table already contains column 'cbool'.",re);
+    }
+    @Test
+    public void Test_BasicTable_addColumn_colName_null() throws Exception {
+        BasicTable bt = createBasicTable();
+        String re = null;
+        byte[] vbool = new byte[]{1,0,0};
+        BasicBooleanVector bbv = new BasicBooleanVector(vbool);
+        try{
+            bt.addColumn(null,bbv);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' or 'col' in table cannot be null.",re);
+    }
+    @Test
+    public void Test_BasicTable_addColumn_col_null() throws Exception {
+        BasicTable bt = createBasicTable();
+        String re = null;
+        try{
+            bt.addColumn("cbool1",null);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' or 'col' in table cannot be null.",re);
+    }
+    @Test
+    public void Test_BasicTable_addColumn_dataLength_not_match() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicBooleanVector bbv = new BasicBooleanVector(1);
+        bbv.setNull(0);
+        bbv.add((byte) 1);
+//        bbv.add((byte) 0);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,true,]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_BOOL() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicBooleanVector bbv = new BasicBooleanVector(1);
+        bbv.setNull(0);
+        bbv.add((byte) 1);
+        bbv.add((byte) 0);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,true,false]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_CHAR() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicByteVector bbv = new BasicByteVector(1);
+        bbv.setNull(0);
+        bbv.add((byte) 1);
+        bbv.add((byte) 0);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,1,0]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_SHORT() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicShortVector bbv = new BasicShortVector(1);
+        bbv.setNull(0);
+        bbv.add((short) 32767);
+        bbv.add((short) -32767);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,32767,-32767]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_INT() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicIntVector bbv = new BasicIntVector(1);
+        bbv.setNull(0);
+        bbv.add(12323);
+        bbv.add(-99990);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,12323,-99990]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_LONG() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicLongVector bbv = new BasicLongVector(1);
+        bbv.setNull(0);
+        bbv.add((long) 1343223234);
+        bbv.add((long) -987233223);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,1343223234,-987233223]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DATE() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDateVector bbv = new BasicDateVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(-2);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,1970.01.02,1969.12.30]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_MONTH() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicMonthVector bbv = new BasicMonthVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(0);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,0000.02M,0000.01M]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_TIME() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicTimeVector bbv = new BasicTimeVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(2);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,00:00:00.001,00:00:00.002]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_MINUTE() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicMinuteVector bbv = new BasicMinuteVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(0);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,00:01m,00:00m]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_SECOND() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicSecondVector bbv = new BasicSecondVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(0);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,00:00:01,00:00:00]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DATETIME() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDateTimeVector bbv = new BasicDateTimeVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(-1);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,1970.01.01T00:00:01,1969.12.31T23:59:59]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_TIMESTAMP() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicTimestampVector bbv = new BasicTimestampVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(-1);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,1970.01.01T00:00:00.001,1969.12.31T23:59:59.999]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_NANOTIME() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicNanoTimeVector bbv = new BasicNanoTimeVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(0);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,00:00:00.000000001,00:00:00.000000000]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_NANOTIMESTAMP() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicNanoTimestampVector bbv = new BasicNanoTimestampVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(-1);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,1970.01.01T00:00:00.000000001,1969.12.31T23:59:59.999999999]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_FLOAT() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicFloatVector bbv = new BasicFloatVector(1);
+        bbv.setNull(0);
+        bbv.add((float) 166666.676);
+        bbv.add((float) -3434343.787);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,166666.671875,-3434343.75]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DOUBLE() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDoubleVector bbv = new BasicDoubleVector(1);
+        bbv.setNull(0);
+        bbv.add((double) 166666.676);
+        bbv.add((double) -3434343.787);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,166666.676,-3434343.787]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_SYMBOL() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        String[] vsymbol = new String[]{"GOOG","MS",""};
+        BasicSymbolVector bbv = new BasicSymbolVector(Arrays.asList(vsymbol));
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[GOOG,MS,]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_STRING() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        String[] vs= new String[]{"GOOG","MS",""};
+        BasicStringVector bbv = new BasicStringVector(vs);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[GOOG,MS,]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_UUID() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicUuidVector bbv = new BasicUuidVector(1);
+        bbv.setNull(0);
+        bbv.add(new Long2((long)1,(long)2));
+        bbv.add(new Long2((long)-1,(long)-2));
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,00000000-0000-0001-0000-000000000002,ffffffff-ffff-ffff-ffff-fffffffffffe]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DATEHOUR() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDateHourVector bbv = new BasicDateHourVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(0);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,1970.01.01T01,1970.01.01T00]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_IPADDR() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicIPAddrVector bbv = new BasicIPAddrVector(1);
+        bbv.setNull(0);
+        bbv.add(new Long2((long)1,(long)2));
+        bbv.add(new Long2((long)-1,(long)-2));
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[0.0.0.0,0::1:0:0:0:2,ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_INT128() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicInt128Vector bbv = new BasicInt128Vector(1);
+        bbv.setNull(0);
+        bbv.add(new Long2((long)1,(long)2));
+        bbv.add(new Long2((long)-1,(long)-2));
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,00000000000000010000000000000002,fffffffffffffffffffffffffffffffe]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_BLOB() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        String[] vs= new String[]{"GOOG","MS",""};
+        BasicStringVector bbv = new BasicStringVector(vs,true);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[GOOG,MS,]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_COMPLEX() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicComplexVector bbv = new BasicComplexVector(1);
+        bbv.setNull(0);
+        bbv.add(new Double2((double)1,(double)2));
+        bbv.add(new Double2((double)-1.87,(double)-2.99));
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,1.0+2.0i,-1.87-2.99i]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_POINT() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicPointVector bbv = new BasicPointVector(1);
+        bbv.setNull(0);
+        bbv.add(new Double2((double)1,(double)2));
+        bbv.add(new Double2((double)-1.87,(double)-2.99));
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[(,),(1.0, 2.0),(-1.87, -2.99)]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DECIMAL32() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDecimal32Vector bbv = new BasicDecimal32Vector(1,5);
+        bbv.setNull(0);
+        bbv.add("1.33333331");
+        bbv.add("-1.300000031");
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,1.33333,-1.30000]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DECIMAL64() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDecimal64Vector bbv = new BasicDecimal64Vector(1,10);
+        bbv.setNull(0);
+        bbv.add("1.33333331");
+        bbv.add("-1.300000031");
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,1.3333333100,-1.3000000310]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DECIMAL128() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDecimal128Vector bbv = new BasicDecimal128Vector(1,18);
+        bbv.setNull(0);
+        bbv.add("9999999999.39999999999999999991");
+        bbv.add("-99999999999999.9999999000000000000031");
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,9999999999.399999999999999999,-99999999999999.999999900000000000]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_BOOL_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicBooleanVector bbv = new BasicBooleanVector(1);
+        bbv.setNull(0);
+        bbv.add((byte) 1);
+        bbv.add((byte) 0);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[true,false]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_CHAR_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicByteVector bbv = new BasicByteVector(1);
+        bbv.setNull(0);
+        bbv.add((byte) 1);
+        bbv.add((byte) 0);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[1,0]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_SHORT_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicShortVector bbv = new BasicShortVector(1);
+        bbv.setNull(0);
+        bbv.add((short) 32767);
+        bbv.add((short) -32767);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[32767,-32767]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_INT_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicIntVector bbv = new BasicIntVector(1);
+        bbv.setNull(0);
+        bbv.add(12323);
+        bbv.add(-99990);
+        System.out.println(bbv.getString());
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        assertEquals("[[],[12323,-99990]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_LONG_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicLongVector bbv = new BasicLongVector(1);
+        bbv.setNull(0);
+        bbv.add((long) 1343223234);
+        bbv.add((long) -987233223);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[1343223234,-987233223]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DATE_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDateVector bbv = new BasicDateVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(-2);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[1970.01.02,1969.12.30]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_MONTH_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicMonthVector bbv = new BasicMonthVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(0);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[0000.02M,0000.01M]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_TIME_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicTimeVector bbv = new BasicTimeVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(2);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[00:00:00.001,00:00:00.002]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_MINUTE_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicMinuteVector bbv = new BasicMinuteVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(0);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[00:01m,00:00m]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_SECOND_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicSecondVector bbv = new BasicSecondVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(0);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[00:00:01,00:00:00]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DATETIME_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDateTimeVector bbv = new BasicDateTimeVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(-1);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[1970.01.01T00:00:01,1969.12.31T23:59:59]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_TIMESTAMP_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicTimestampVector bbv = new BasicTimestampVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(-1);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[1970.01.01T00:00:00.001,1969.12.31T23:59:59.999]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_NANOTIME_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicNanoTimeVector bbv = new BasicNanoTimeVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(0);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[00:00:00.000000001,00:00:00.000000000]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_NANOTIMESTAMP_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicNanoTimestampVector bbv = new BasicNanoTimestampVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(-1);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[1970.01.01T00:00:00.000000001,1969.12.31T23:59:59.999999999]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_FLOAT_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicFloatVector bbv = new BasicFloatVector(1);
+        bbv.setNull(0);
+        bbv.add((float) 166666.676);
+        bbv.add((float) -3434343.787);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[166666.671875,-3434343.75]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DOUBLE_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDoubleVector bbv = new BasicDoubleVector(1);
+        bbv.setNull(0);
+        bbv.add((double) 166666.676);
+        bbv.add((double) -3434343.787);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[166666.676,-3434343.787]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_SYMBOL_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        String[] vsymbol = new String[]{"GOOG","MS",""};
+        BasicSymbolVector bbv = new BasicSymbolVector(Arrays.asList(vsymbol));
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[GOOG],[MS,]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_STRING_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        String[] vs= new String[]{"GOOG","MS",""};
+        BasicStringVector bbv = new BasicStringVector(vs);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[GOOG],[MS,]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_UUID_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicUuidVector bbv = new BasicUuidVector(1);
+        bbv.setNull(0);
+        bbv.add(new Long2((long)1,(long)2));
+        bbv.add(new Long2((long)-1,(long)-2));
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[00000000-0000-0001-0000-000000000002,ffffffff-ffff-ffff-ffff-fffffffffffe]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DATEHOUR_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDateHourVector bbv = new BasicDateHourVector(1);
+        bbv.setNull(0);
+        bbv.add(1);
+        bbv.add(0);
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[1970.01.01T01,1970.01.01T00]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_IPADDR_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicIPAddrVector bbv = new BasicIPAddrVector(1);
+        bbv.setNull(0);
+        bbv.add(new Long2((long)1,(long)2));
+        bbv.add(new Long2((long)-1,(long)-2));
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[0.0.0.0],[0::1:0:0:0:2,ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_INT128_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicInt128Vector bbv = new BasicInt128Vector(1);
+        bbv.setNull(0);
+        bbv.add(new Long2((long)1,(long)2));
+        bbv.add(new Long2((long)-1,(long)-2));
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[00000000000000010000000000000002,fffffffffffffffffffffffffffffffe]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_COMPLEX_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicComplexVector bbv = new BasicComplexVector(1);
+        bbv.setNull(0);
+        bbv.add(new Double2((double)1,(double)2));
+        bbv.add(new Double2((double)-1.87,(double)-2.99));
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[1.0+2.0i,-1.87-2.99i]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_POINT_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicPointVector bbv = new BasicPointVector(1);
+        bbv.setNull(0);
+        bbv.add(new Double2((double)1,(double)2));
+        bbv.add(new Double2((double)-1.87,(double)-2.99));
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[(,)],[(1.0, 2.0),(-1.87, -2.99)]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DECIMAL32_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDecimal32Vector bbv = new BasicDecimal32Vector(1,5);
+        bbv.setNull(0);
+        bbv.add("1.33333331");
+        bbv.add("-1.300000031");
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[1.33333,-1.30000]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DECIMAL64_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDecimal64Vector bbv = new BasicDecimal64Vector(1,10);
+        bbv.setNull(0);
+        bbv.add("1.33333331");
+        bbv.add("-1.300000031");
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[1.3333333100,-1.3000000310]]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_DECIMAL128_array() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2  as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicDecimal128Vector bbv = new BasicDecimal128Vector(1,18);
+        bbv.setNull(0);
+        bbv.add("9999999999.39999999999999999991");
+        bbv.add("-99999999999999.9999999000000000000031");
+        BasicArrayVector bdav = new BasicArrayVector(new int[]{1,3},bbv);
+        System.out.println(bdav.getString());
+        bt.addColumn("col1", bdav);
+        System.out.println(bt.getString());
+        assertEquals("[[],[9999999999.399999999999999999,-99999999999999.999999900000000000]]",bt.getColumn(1).getString());
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
