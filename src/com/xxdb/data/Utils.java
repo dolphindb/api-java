@@ -2,12 +2,7 @@ package com.xxdb.data;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.YearMonth;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -74,20 +69,10 @@ public class Utils {
 
 
 	public static YearMonth parseMonth(int value){
-		int year = value / 12;
-		int month = value % 12 + 1;
 		if (value < 0){
-			Calendar c = Calendar.getInstance();
-			int curYear = c.get(Calendar.YEAR);
-			int curMonth = c.get(Calendar.MONTH) + 1;
-			month = curMonth - Math.abs(month);
-			year = curYear - (Math.abs(year % curYear));
-			if (month <= 0 ){
-				month = 12 - Math.abs(month);
-				year--;
-			}
+			throw new DateTimeException(String.format("number %d is invalid, it must be non-negative integer",value));
 		}
-		return YearMonth.of(year, month);
+		return YearMonth.of(value/12, value % 12 + 1);
 	}
 	
 	public static int countDays(LocalDate date){
