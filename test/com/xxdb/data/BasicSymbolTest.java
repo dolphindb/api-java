@@ -552,4 +552,28 @@ public class BasicSymbolTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_SYMBOL\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicString\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[GaussDB,GoldenDB]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
     }
+    @Test
+    public void test_BasicSymbolVector_setNull() throws Exception {
+        BasicSymbolVector bsv = new BasicSymbolVector(1);
+        bsv.setNull(0);
+        System.out.println(bsv.getString());
+        assertEquals("[]",bsv.getString());
+    }
+    @Test
+    public void test_BasicSymbolVector_setNull_tableInsert() throws IOException {
+        conn.run("t = table(1:0,[`col1],[STRING]);share t as test_null\n");
+        List<String> colNames = Arrays.asList("col1");
+        List<Vector> cols = new ArrayList<>();
+        BasicSymbolVector symbolVector = new BasicSymbolVector(1);
+        symbolVector.setNull(0);
+        cols.add(symbolVector);
+        List<String> allColNames = new ArrayList<String>();
+        allColNames.addAll(colNames);
+        BasicTable table = new BasicTable(allColNames, cols);
+        List<Entity> list = new ArrayList<>(1);
+        list.add(table);
+        conn.run("tableInsert{test_null}", list);
+        BasicTable re = (BasicTable)conn.run("select * from test_null");
+        assertEquals(1,re.rows());
+    }
 }
