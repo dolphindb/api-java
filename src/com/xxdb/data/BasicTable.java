@@ -381,6 +381,9 @@ public class BasicTable extends AbstractEntity implements Table{
 		if (Objects.isNull(colName) || Objects.isNull(col))
 			throw new RuntimeException("The param 'colName' or 'col' in table cannot be null.");
 
+		if (colName.isEmpty())
+			throw new RuntimeException("The param 'colName' cannot be empty.");
+
 		if (colNames.contains(colName))
 			throw new RuntimeException("The table already contains column '" + colName + "'.");
 
