@@ -445,6 +445,9 @@ public class TimeTest{
     public void test_Special_time_timestamp(){
         LocalDateTime dt = LocalDateTime.of(2022,1,31,2,2,2,4000000);
         BasicTimestamp date = new BasicTimestamp(dt);
+        LocalDateTime dt1 = LocalDateTime.of(2023,9,18,14,51,24,000);
+        BasicTimestamp date1 = new BasicTimestamp(dt1);
+        System.out.println(date1.getLong());
         String [] lt=dt.toString().split("\\-");
         assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
         dt = LocalDateTime.of(2022,2,28,2,2,2,4000000);
@@ -682,6 +685,16 @@ public class TimeTest{
         BasicMinute nt3 = new BasicMinute(100);
         System.out.println(nt3.getString());
         assertEquals("01:40m",nt3.getString());
+    }
+    @Test
+    public void test_BasicMonth_negative() throws Exception {
+        String re = null;
+        try{
+            BasicMonth nt1 = new BasicMonth(-5);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("number -5 is invalid, it must be non-negative integer",re);
 
     }
     @Test

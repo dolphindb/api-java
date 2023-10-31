@@ -1910,13 +1910,11 @@ public  class MultithreadedTableWriterTest implements Runnable {
     }
 
     @Test(timeout = 120000)
-    public  void test_insert_arrayVector_int()throws Exception {
-
+    public  void test_insert_arrayVector_int_Integer()throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
                 "[INT,INT[]]);" +
                 "share t as t1;");
-
         conn.run(sb.toString());
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "", "t1", false, false,null,1, 1,
@@ -1935,9 +1933,33 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
         conn.run("undef(`t1,SHARED)");
     }
+    @Test(timeout = 120000)
+    public  void test_insert_arrayVector_int_int()throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `int`arrayv," +
+                "[INT,INT[]]);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false,null,1, 1,
+                1, "int");
+        for (int i=0;i<10;i++) {
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new int[]{1, i});
+            assertEquals("code= info=",pErrorInfo.toString());
+        }
+        mutithreadTableWriter_.waitForThreadCompletion();
+        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
+        BasicTable bt= (BasicTable) conn.run("select * from t1;");
+        assertEquals(10,bt.rows());
+        for (int i=0;i<10;i++) {
+            assertEquals(1, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
+            assertEquals(i, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
+        }
+        conn.run("undef(`t1,SHARED)");
+    }
 
     @Test(timeout = 60000)
-    public  void test_insert_arrayVector_char()throws Exception {
+    public  void test_insert_arrayVector_char_Byte()throws Exception {
 
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
@@ -1961,9 +1983,33 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
         conn.run("undef(`t1,SHARED)");
     }
+    @Test(timeout = 60000)
+    public  void test_insert_arrayVector_char_byte()throws Exception {
 
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `int`arrayv," +
+                "[INT,CHAR[]]);" +
+                "share t as t1;");
+
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false,null,1, 1,
+                1, "int");
+        for (int i=0;i<10;i++) {
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new byte[]{'a','3'});
+            assertEquals("code= info=",pErrorInfo.toString());
+        }
+        mutithreadTableWriter_.waitForThreadCompletion();
+        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
+        BasicTable bt= (BasicTable) conn.run("select * from t1;");
+        assertEquals(10,bt.rows());
+        for (int i=0;i<10;i++) {
+            assertEquals("['a','3']", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).getString());
+        }
+        conn.run("undef(`t1,SHARED)");
+    }
     @Test(timeout = 120000)
-    public  void test_insert_arrayVector_bool()throws Exception {
+    public  void test_insert_arrayVector_bool_Boolean()throws Exception {
 
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
@@ -1987,9 +2033,34 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals("false", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1).getString());
         }
     }
+    @Test(timeout = 120000)
+    public  void test_insert_arrayVector_bool_bool()throws Exception {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `int`arrayv," +
+                "[INT,BOOL[]]);" +
+                "share t as t1;");
+
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false,null,1, 1,
+                1, "int");
+        for (int i=0;i<10;i++) {
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new boolean[]{true,false});
+            assertEquals("code= info=",pErrorInfo.toString());
+        }
+        mutithreadTableWriter_.waitForThreadCompletion();
+        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
+        BasicTable bt= (BasicTable) conn.run("select * from t1;");
+        assertEquals(10,bt.rows());
+        for (int i=0;i<10;i++) {
+            assertEquals("true",((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0).getString());
+            assertEquals("false", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1).getString());
+        }
+    }
 
     @Test(timeout = 120000)
-    public  void test_insert_arrayVector_long()throws Exception {
+    public  void test_insert_arrayVector_long_Long()throws Exception {
 
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
@@ -2013,9 +2084,34 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(Long.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
         }
     }
+    @Test(timeout = 120000)
+    public  void test_insert_arrayVector_long_long()throws Exception {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `int`arrayv," +
+                "[INT,LONG[]]);" +
+                "share t as t1;");
+        int time=1024;
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false,null,1, 1,
+                1, "arrayv");
+        for (int i=0;i<time;i++) {
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new long[]{1l, (long)i});
+            assertEquals("code= info=",pErrorInfo.toString());
+        }
+        mutithreadTableWriter_.waitForThreadCompletion();
+        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
+        BasicTable bt= (BasicTable) conn.run("select * from t1;");
+        assertEquals(time,bt.rows());
+        for (int i=0;i<time;i++) {
+            assertEquals(1l, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
+            assertEquals(Long.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
+        }
+    }
 
     @Test(timeout = 120000)
-    public  void test_insert_arrayVector_short()throws Exception {
+    public  void test_insert_arrayVector_short_Short()throws Exception {
 
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
@@ -2038,9 +2134,32 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(Short.valueOf(""+i+""), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
         }
     }
-
     @Test(timeout = 120000)
-    public  void test_insert_arrayVector_float()throws Exception {
+    public  void test_insert_arrayVector_short_short()throws Exception {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `int`arrayv," +
+                "[INT,SHORT[]]);" +
+                "share t as t1;");
+        int time=10240;
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false,null,1, 1,
+                1, "arrayv");
+        for (short i=0;i<time;i++) {
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new short[]{1,i});
+            assertEquals("code= info=",pErrorInfo.toString());
+        }
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt= (BasicTable) conn.run("select * from t1;");
+        assertEquals(time,bt.rows());
+        for (int i=0;i<time;i++) {
+            assertEquals(Short.valueOf("1"), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
+            assertEquals(Short.valueOf(""+i+""), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
+        }
+    }
+    @Test(timeout = 120000)
+    public  void test_insert_arrayVector_float_Float()throws Exception {
 
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
@@ -2063,9 +2182,32 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(Float.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
         }
     }
+    @Test(timeout = 120000)
+    public  void test_insert_arrayVector_float_float()throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `int`arrayv," +
+                "[INT,FLOAT[]]);" +
+                "share t as t1;");
+        int time=10240;
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false,null,1, 1,
+                1, "arrayv");
+        for (short i=0;i<time;i++) {
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new float[]{0.0f,(float)i});
+            assertEquals("code= info=",pErrorInfo.toString());
+        }
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt= (BasicTable) conn.run("select * from t1;");
+        assertEquals(time,bt.rows());
+        for (int i=0;i<time;i++) {
+            assertEquals(0.0f, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
+            assertEquals(Float.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
+        }
+    }
 
     @Test(timeout = 120000)
-    public  void test_insert_arrayVector_double()throws Exception {
+    public  void test_insert_arrayVector_double_Double()throws Exception {
 
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(1000:0, `int`arrayv," +
@@ -2078,6 +2220,30 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 1, "arrayv");
         for (short i=0;i<time;i++) {
             ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new Double[]{Double.valueOf(0),Double.valueOf(i-10)});
+            assertEquals("code= info=",pErrorInfo.toString());
+        }
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt= (BasicTable) conn.run("select * from t1;");
+        assertEquals(time,bt.rows());
+        for (int i=0;i<time;i++) {
+            assertEquals(Double.valueOf(0), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
+            assertEquals(Double.valueOf(i-10), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
+        }
+    }
+    @Test(timeout = 120000)
+    public  void test_insert_arrayVector_double_double()throws Exception {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `int`arrayv," +
+                "[INT,DOUBLE[]]);" +
+                "share t as t1;");
+        int time=10240;
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false,null,1, 1,
+                1, "arrayv");
+        for (short i=0;i<time;i++) {
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new double[]{(double)0,(double)(i-10)});
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
