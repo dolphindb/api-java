@@ -633,18 +633,15 @@ public class BasicTableTest {
     }
     @Test
     public void Test_BasicTable_addColumn_dataLength_not_match() throws Exception {
-        DBConnection conn = new DBConnection(false, false, false);
-        conn.connect(HOST, PORT, "admin", "123456");
-        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
-        System.out.println(bt.getString());
+        BasicTable bt = createBasicTable();
         BasicBooleanVector bbv = new BasicBooleanVector(1);
-        bbv.setNull(0);
-        bbv.add((byte) 1);
-//        bbv.add((byte) 0);
-        System.out.println(bbv.getString());
-        bt.addColumn("col1", bbv);
-        System.out.println(bt.getString());
-        assertEquals("[,true,]",bt.getColumn(1).getString());
+        String re = null;
+        try{
+            bt.addColumn("col1", bbv);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The length of column col1  must be the same as the first column length: 2.",re);
     }
     @Test
     public void Test_BasicTable_addColumn_BOOL() throws Exception {
