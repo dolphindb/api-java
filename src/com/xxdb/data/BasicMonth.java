@@ -3,6 +3,7 @@ package com.xxdb.data;
 import com.xxdb.io.ExtendedDataInput;
 
 import java.io.IOException;
+import java.time.DateTimeException;
 import java.time.Month;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +20,8 @@ public class BasicMonth extends BasicInt{
 
 	public BasicMonth(int year, Month month){
 		super(year * 12 + month.getValue()-1);
+		if (getInt() < 0)
+			throw new DateTimeException(String.format("year %d is invalid, it must be non-negative integer", year));
 	}
 	public BasicMonth(Calendar calendar){
 		super((calendar.get(Calendar.YEAR)) * 12 + calendar.get(Calendar.MONTH));
@@ -33,6 +36,8 @@ public class BasicMonth extends BasicInt{
 	
 	protected BasicMonth(int value){
 		super(value);
+		if (getInt() < 0)
+			throw new DateTimeException(String.format("number %d is invalid, it must be non-negative integer", getInt()));
 	}
 
 
