@@ -62,10 +62,8 @@ class MessageParser implements Runnable {
 
             if (this.dBConnectionAndSocket == null ) {
                 throw new Exception("dBConnectionAndSocket is null!");
-            } else
-            {
-                if (this.dBConnectionAndSocket.socket != null)
-                {
+            } else {
+                if (this.dBConnectionAndSocket.socket != null) {
                     if (this.dBConnectionAndSocket.conn != null)
                         throw new Exception("Either conn or socket must be null!");
                     socket = this.dBConnectionAndSocket.socket;
