@@ -621,6 +621,25 @@ public class BasicTableTest {
         assertEquals("The param 'colName' or 'col' in table cannot be null.",re);
     }
     @Test
+    public void Test_BasicTable_addColumn_colName_null_1() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicBooleanVector bbv = new BasicBooleanVector(1);
+        bbv.setNull(0);
+        bbv.add((byte) 1);
+        bbv.add((byte) 0);
+        System.out.println(bbv.getString());
+        String re = null;
+        try{
+            bt.addColumn("", bbv);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' cannot be empty.",re);
+    }
+    @Test
     public void Test_BasicTable_addColumn_col_null() throws Exception {
         BasicTable bt = createBasicTable();
         String re = null;
@@ -642,6 +661,35 @@ public class BasicTableTest {
             re = e.getMessage();
         }
         assertEquals("The length of column col1  must be the same as the first column length: 2.",re);
+    }
+    @Test
+    public void Test_BasicTable_addColumn_table_null() throws Exception {
+        DBConnection conn = new DBConnection(false, false, true);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1:0,[`int1] ,[INT]);select * from t");
+        System.out.println(bt.getString());
+        BasicBooleanVector bbv = new BasicBooleanVector(0);
+        System.out.println(bbv.getString());
+        bt.addColumn("112121212212567881", bbv);
+        bt.addColumn("中文test_121212123224234SHFSDHDFD `zzz@$%^&*()_+：“-=[]{}", bbv);
+        bt.addColumn("count", bbv);
+        bt.addColumn("addColumn", bbv);
+        System.out.println(bt.getString());
+        assertEquals("112121212212567881",bt.getColumnName(1));
+        assertEquals("中文test_121212123224234SHFSDHDFD `zzz@$%^&*()_+：“-=[]{}",bt.getColumnName(2));
+        assertEquals("count",bt.getColumnName(3));
+        assertEquals("addColumn",bt.getColumnName(4));
+    }
+    @Test
+    public void Test_BasicTable_addColumn_bigData() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1..100000000 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicIntVector bbv =  (BasicIntVector)conn.run("tt = table(2..100000001 as int1);exec * from tt");
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[2,3,4,5,6,7,8,9,10,11,...]",bt.getColumn(1).getString());
     }
     @Test
     public void Test_BasicTable_addColumn_BOOL() throws Exception {
@@ -981,6 +1029,25 @@ public class BasicTableTest {
         bt.addColumn("col1", bbv);
         System.out.println(bt.getString());
         assertEquals("[GOOG,MS,]",bt.getColumn(1).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_BLOB_bigData() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 as int1);select * from t");
+        System.out.println(bt.getString());
+
+        BasicStringVector bbv = (BasicStringVector)conn.run("blob([concat(take(`abcd中文123,100000))])");
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        String d = "abcd中文123";
+        String dd = "";
+        for(int i = 0; i < 100000; i++) {
+            dd += d;
+        }
+        BasicString data = new BasicString(dd);
+        assertEquals("["+data.getString()+"]",bt.getColumn(1).getString());
     }
     @Test
     public void Test_BasicTable_addColumn_COMPLEX() throws Exception {
