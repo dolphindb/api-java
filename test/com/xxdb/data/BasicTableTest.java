@@ -1070,6 +1070,19 @@ public class BasicTableTest {
         assertEquals("[,9999999999.399999999999999999,-99999999999999.999999900000000000]",bt.getColumn(1).getString());
     }
     @Test
+    public void Test_BasicTable_addColumn_void() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        System.out.println(bt.getString());
+        BasicVoidVector bbv = new BasicVoidVector(3);
+        bbv.setNull(0);
+        System.out.println(bbv.getString());
+        bt.addColumn("col1", bbv);
+        System.out.println(bt.getString());
+        assertEquals("[,,]",bt.getColumn(1).getString());
+    }
+    @Test
     public void Test_BasicTable_addColumn_BOOL_array() throws Exception {
         DBConnection conn = new DBConnection(false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -1497,20 +1510,4 @@ public class BasicTableTest {
         System.out.println(bt.getString());
         assertEquals("[[],[9999999999.399999999999999999,-99999999999999.999999900000000000]]",bt.getColumn(1).getString());
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
