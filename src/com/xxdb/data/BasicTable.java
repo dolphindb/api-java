@@ -395,13 +395,18 @@ public class BasicTable extends AbstractEntity implements Table{
 
 	@Override
 	public void replaceColumn(String colName, Vector col) {
-		if (colNames.contains(colName)) {
-			int index = colNames.indexOf(colName);
-			columns.set(index, col);
-		} else {
-			colNames.add(colName);
-			columns.add(col);
-			colNamesIndex.put(colName, colNamesIndex.size());
-		}
+		if (Objects.isNull(colName) || Objects.isNull(col))
+			throw new RuntimeException("The param 'colName' or 'col' in table cannot be null.");
+
+		if (!colNames.contains(colName))
+			throw new RuntimeException("The column '" + colName + "' to be replaced doesn't exist in the table.");
+
+		if (this.colRows != 0 && col.rows() != this.colRows)
+			throw new RuntimeException("The length of column " + colName + "  must be the same as the first column length: " + this.colRows +".");
+
+		colNames.add(colName);
+		colNamesIndex.put(colName, colNamesIndex.size());
+		columns.add(col);
+		this.colRows = col.rows();
 	}
 }
