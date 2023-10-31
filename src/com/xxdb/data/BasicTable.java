@@ -129,7 +129,7 @@ public class BasicTable extends AbstractEntity implements Table{
 	 * @param newColName
 	 */
 	public void replaceColName(String originalColName, String newColName) {
-		if (Objects.isNull(newColName) || Utils.isEmpty(newColName))
+		if (Utils.isEmpty(originalColName) || Utils.isEmpty(newColName))
 			throw new RuntimeException("The param 'newColName' cannot be null or empty.");
 
 		if (this.colNames.contains(newColName))
