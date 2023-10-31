@@ -2506,5 +2506,104 @@ public class BasicTableTest {
         assertEquals("DT_DECIMAL128_ARRAY",bt.getColumn(0).getDataType().toString());
         assertEquals("[[],[9999999999.399999999999999999,-99999999999999.999999900000000000]]",bt.getColumn(0).getString());
     }
-
+    @Test
+    public void Test_BasicTable_replaceColName_originalName_null() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        String re = null;
+        try{
+            bt.replaceColName(null,"int123");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param originalColName 'null' does not exist in table.",re);
+    }
+    @Test
+    public void Test_BasicTable_replaceColName_originalName_null_1() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        String re = null;
+        try{
+            bt.replaceColName("","int123");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param originalColName '' does not exist in table.",re);
+    }
+    @Test
+    public void Test_BasicTable_replaceColName_originalName_not_exist() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        String re = null;
+        try{
+            bt.replaceColName("int123","int123");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param originalColName 'int123' does not exist in table.",re);
+    }
+    @Test
+    public void Test_BasicTable_replaceColName_newColName_null() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        String re = null;
+        try{
+            bt.replaceColName("int1","");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'newColName' cannot be null or empty.",re);
+    }
+    @Test
+    public void Test_BasicTable_replaceColName_newColName_null_1() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        String re = null;
+        try{
+            bt.replaceColName("int1",null);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'newColName' cannot be null or empty.",re);
+    }
+    @Test
+    public void Test_BasicTable_replaceColName_newColName_same() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        bt.replaceColName("int1","int1");
+        assertEquals("int1",bt.getColumnName(0));
+    }
+    @Test
+    public void Test_BasicTable_replaceColName_newColName_exist() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1,`aa`dd`ff as string1);select * from t");
+        String re = null;
+        try{
+            bt.replaceColName("int1","string1");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The newColName 'string1' already exists in table. Column names cannot be duplicated.",re);
+    }
+    @Test
+    public void Test_BasicTable_replaceColName_newColName() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1,`aa`dd`ff as string1);select * from t");
+        bt.replaceColName("int1","string123456789900");
+        assertEquals("string123456789900",bt.getColumnName(0));
+        bt.replaceColName("string123456789900","1212345678909876555555555");
+        assertEquals("1212345678909876555555555",bt.getColumnName(0));
+        bt.replaceColName("1212345678909876555555555","值收到回复核实对方回复收到回复哈代发");
+        assertEquals("值收到回复核实对方回复收到回复哈代发",bt.getColumnName(0));
+        bt.replaceColName("值收到回复核实对方回复收到回复哈代发","q!@#$%^&*()_+-={}[]:;'.,/`12345ddfsfSSSx测试");
+        assertEquals("q!@#$%^&*()_+-={}[]:;'.,/`12345ddfsfSSSx测试",bt.getColumnName(0));
+    }
 }
