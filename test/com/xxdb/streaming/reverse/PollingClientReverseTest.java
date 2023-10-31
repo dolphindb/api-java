@@ -659,5 +659,18 @@ public class PollingClientReverseTest {
         MyPollingClient mpl = new MyPollingClient(HOST,10086);
         assertFalse(mpl.doReconnect(null));
     }
+    @Test
+    public void test_PollingClient_no_parameter() throws IOException {
+        client = new PollingClient();
+        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",true);
+        ArrayList<IMessage> msg1;
+        conn.run("n=1;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades1.append!(t)");
+        msg1 = poller1.poll(100);
+        assertEquals(1, msg1.size());
+        BasicTable bt = (BasicTable) conn.run("getStreamingStat().pubTables;");
+        System.out.println(bt.getString());
+        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+    }
 
 }
