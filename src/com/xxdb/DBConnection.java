@@ -177,18 +177,6 @@ public class DBConnection {
             this.lock_ = new ReentrantLock();
         }
 
-        private DBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, SqlStdEnum sqlStd){
-            sessionID_ = "";
-            this.sslEnable_ = sslEnable;
-            this.asynTask_ = asynTask;
-            this.compress_ = compress;
-            this.ifUrgent_ = ifUrgent;
-            this.python_ = python;
-            this.isReverseStreaming_ = false;
-            this.sqlStd_ = sqlStd;
-            this.lock_ = new ReentrantLock();
-        }
-
         private boolean connect(String hostName, int port, String userId, String password, int connTimeout) throws IOException{
             this.hostName_ = hostName;
             this.port_ = port;
@@ -609,23 +597,23 @@ public class DBConnection {
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, SqlStdEnum.DolphinDB);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, SqlStdEnum.DolphinDB);
         this.mutex_ = new ReentrantLock();
     }
 
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, SqlStdEnum sqlStd){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, sqlStd);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, sqlStd);
         this.mutex_ = new ReentrantLock();
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, SqlStdEnum.DolphinDB);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, SqlStdEnum.DolphinDB);
         this.mutex_ = new ReentrantLock();
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, SqlStdEnum sqlStd){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, sqlStd);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, sqlStd);
         this.mutex_ = new ReentrantLock();
     }
 
