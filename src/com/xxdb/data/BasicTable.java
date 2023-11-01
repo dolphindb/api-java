@@ -410,9 +410,7 @@ public class BasicTable extends AbstractEntity implements Table{
 		if (this.colRows != 0 && col.rows() != this.colRows)
 			throw new RuntimeException("The length of column " + colName + "  must be the same as the first column length: " + this.colRows +".");
 
-		colNames.add(colName);
-		colNamesIndex.put(colName, colNamesIndex.size());
-		columns.add(col);
-		this.colRows = col.rows();
+		int index = colNames.indexOf(colName);
+		columns.set(index, col);
 	}
 }
