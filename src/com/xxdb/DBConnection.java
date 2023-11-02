@@ -177,18 +177,6 @@ public class DBConnection {
             this.lock_ = new ReentrantLock();
         }
 
-        private DBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, SqlStdEnum sqlStd){
-            sessionID_ = "";
-            this.sslEnable_ = sslEnable;
-            this.asynTask_ = asynTask;
-            this.compress_ = compress;
-            this.ifUrgent_ = ifUrgent;
-            this.python_ = python;
-            this.isReverseStreaming_ = false;
-            this.sqlStd_ = sqlStd;
-            this.lock_ = new ReentrantLock();
-        }
-
         private boolean connect(String hostName, int port, String userId, String password, int connTimeout) throws IOException{
             this.hostName_ = hostName;
             this.port_ = port;
@@ -244,6 +232,8 @@ public class DBConnection {
                 close();
                 return false;
             }
+
+            String msg = in_.readLine();
 
             isConnected_ = true;
 
@@ -447,17 +437,15 @@ public class DBConnection {
             if (asynTask_)
                 return null;
 
-            ExtendedDataInput in = remoteLittleEndian_ ? new LittleEndianDataInputStream(new BufferedInputStream(socket_.getInputStream())) :
-                    new BigEndianDataInputStream(new BufferedInputStream(socket_.getInputStream()));
             String header = null;
             try {
-                header = in.readLine();
+                header = in_.readLine();
                 while (header.equals("MSG")) {
                     //read intermediate message to indicate the progress
-                    String msg = in.readString();
+                    String msg = in_.readString();
                     if (listener != null)
                         listener.progress(msg);
-                    header = in.readLine();
+                    header = in_.readLine();
                 }
             }catch (IOException ex){
                 isConnected_ = false;
@@ -476,7 +464,7 @@ public class DBConnection {
             int numObject = Integer.parseInt(headers[1]);
 
             try {
-                header = in.readLine();
+                header = in_.readLine();
             }catch (IOException ex){
                 isConnected_ = false;
                 socket_ = null;
@@ -496,7 +484,7 @@ public class DBConnection {
 
             short flag;
             try {
-                flag = in.readShort();
+                flag = in_.readShort();
                 int form = flag >> 8;
                 int type = flag & 0xff;
                 boolean extended = type >= 128;
@@ -513,10 +501,10 @@ public class DBConnection {
 
 
                 if(fetchSize>0 && df == Entity.DATA_FORM.DF_VECTOR && dt == Entity.DATA_TYPE.DT_ANY){
-                    return new EntityBlockReader(in);
+                    return new EntityBlockReader(in_);
                 }
                 EntityFactory factory = BasicEntityFactory.instance();
-                return factory.createEntity(df, dt, in, extended);
+                return factory.createEntity(df, dt, in_, extended);
             }catch (IOException ex){
                 isConnected_ = false;
                 socket_ = null;
@@ -609,23 +597,23 @@ public class DBConnection {
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, SqlStdEnum.DolphinDB);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, SqlStdEnum.DolphinDB);
         this.mutex_ = new ReentrantLock();
     }
 
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, SqlStdEnum sqlStd){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, sqlStd);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, sqlStd);
         this.mutex_ = new ReentrantLock();
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, SqlStdEnum.DolphinDB);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, SqlStdEnum.DolphinDB);
         this.mutex_ = new ReentrantLock();
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, SqlStdEnum sqlStd){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, sqlStd);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, sqlStd);
         this.mutex_ = new ReentrantLock();
     }
 

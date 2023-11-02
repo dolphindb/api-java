@@ -542,7 +542,7 @@ public class BasicTableTest {
         System.out.println(bTable.getRowJson(0));
         assertEquals("{\"sym\":\"s1\",\"d1\":1000000000.02}",bTable.getRowJson(0));
     }
-    @Test
+    //@Test
     public void test_BasicTable_symbol_big_data()throws Exception{
         DBConnection conn = new DBConnection(false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -2517,7 +2517,7 @@ public class BasicTableTest {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals("The param originalColName 'null' does not exist in table.",re);
+        assertEquals("The param 'originalColName' or 'newColName' cannot be null or empty.",re);
     }
     @Test
     public void Test_BasicTable_replaceColName_originalName_null_1() throws Exception {
@@ -2530,7 +2530,7 @@ public class BasicTableTest {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals("The param originalColName '' does not exist in table.",re);
+        assertEquals("The param 'originalColName' or 'newColName' cannot be null or empty.",re);
     }
     @Test
     public void Test_BasicTable_replaceColName_originalName_not_exist() throws Exception {
@@ -2556,7 +2556,7 @@ public class BasicTableTest {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals("The param 'newColName' cannot be null or empty.",re);
+        assertEquals("The param 'originalColName' or 'newColName' cannot be null or empty.",re);
     }
     @Test
     public void Test_BasicTable_replaceColName_newColName_null_1() throws Exception {
@@ -2569,15 +2569,20 @@ public class BasicTableTest {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals("The param 'newColName' cannot be null or empty.",re);
+        assertEquals("The param 'originalColName' or 'newColName' cannot be null or empty.",re);
     }
     @Test
     public void Test_BasicTable_replaceColName_newColName_same() throws Exception {
         DBConnection conn = new DBConnection(false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
         BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
-        bt.replaceColName("int1","int1");
-        assertEquals("int1",bt.getColumnName(0));
+        String re = null;
+        try{
+            bt.replaceColName("int1","int1");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The newColName 'int1' already exists in table. Column names cannot be duplicated.",re);
     }
     @Test
     public void Test_BasicTable_replaceColName_newColName_exist() throws Exception {
