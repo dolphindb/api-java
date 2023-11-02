@@ -2576,8 +2576,13 @@ public class BasicTableTest {
         DBConnection conn = new DBConnection(false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
         BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
-        bt.replaceColName("int1","int1");
-        assertEquals("int1",bt.getColumnName(0));
+        String re = null;
+        try{
+            bt.replaceColName("int1","int1");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The newColName 'int1' already exists in table. Column names cannot be duplicated.",re);
     }
     @Test
     public void Test_BasicTable_replaceColName_newColName_exist() throws Exception {
