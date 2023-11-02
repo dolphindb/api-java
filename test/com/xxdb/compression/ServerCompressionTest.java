@@ -731,7 +731,7 @@ public class ServerCompressionTest {
         for (int i = 0; i < 100000; i++) {
             date[i] = baseDate - i;
             timestamp[i] = basicTimestamp -i;
-            month[i]=basicMonth - i;
+            month[i]=basicMonth + i;
             nanotimestamp[i]=basicNanoTimestamp-i;
             datetime[i]=basicDateTime-i;
         }
@@ -752,7 +752,7 @@ public class ServerCompressionTest {
         //include null
         int n=500000;
         BasicDateVector datev = (BasicDateVector) conn.run("1970.01.01 -(1.."+n+") join take(date(),"+n+")");
-        BasicMonthVector monthv = (BasicMonthVector) conn.run("1970.01M -(1.."+n+") join take(month(),"+n+")");
+        BasicMonthVector monthv = (BasicMonthVector) conn.run("1970.01M +(1.."+n+") join take(month(),"+n+")");
         BasicTimestampVector timestampv = (BasicTimestampVector) conn.run("1970.01.01 00:00:00.000 -(1.."+n+") join take(timestamp(),"+n+")");
         BasicNanoTimestampVector nanotimestampv = (BasicNanoTimestampVector) conn.run("nanotimestamp(0) -rand(1.."+n+" ,"+n+") join take(nanotimestamp(),"+n+")");
         BasicDateTimeVector datetimev = (BasicDateTimeVector) conn.run("1970.01.01 00:00:00 - rand(1.."+n+" ,"+n+") join take(datetime(),"+n+")");
