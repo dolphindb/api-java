@@ -20,7 +20,7 @@ public class BasicMonth extends BasicInt{
 
 	public BasicMonth(int year, Month month){
 		super(year * 12 + month.getValue()-1);
-		if (getInt() < 0)
+		if (getInt() < 0 && !isNull())
 			throw new DateTimeException(String.format("year %d is invalid, it must be non-negative integer", year));
 	}
 	public BasicMonth(Calendar calendar){
@@ -36,7 +36,7 @@ public class BasicMonth extends BasicInt{
 	
 	protected BasicMonth(int value){
 		super(value);
-		if (getInt() < 0)
+		if (getInt() < 0 && !isNull())
 			throw new DateTimeException(String.format("number %d is invalid, it must be non-negative integer", getInt()));
 	}
 

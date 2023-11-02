@@ -1,6 +1,7 @@
 package com.xxdb.data;
 
 import java.io.IOException;
+import java.time.DateTimeException;
 import java.time.YearMonth;
 import java.util.List;
 
@@ -18,17 +19,41 @@ public class BasicMonthVector extends BasicIntVector{
 	public BasicMonthVector(int size){
 		super(DATA_FORM.DF_VECTOR, size);
 	}
-	
-	public BasicMonthVector(List<Integer> list){
-		super(list);
+
+	public BasicMonthVector(List<Integer> list) {
+		super(DATA_FORM.DF_VECTOR);
+		if (list != null) {
+			values = new int[list.size()];
+			for (int i = 0; i < list.size(); ++i) {
+				if (list.get(i) != null) {
+					if (list.get(i) < 0 && !list.get(i).equals(Integer.MIN_VALUE))
+						throw new DateTimeException("Arrays cannot contain negative numbers");
+					else
+						values[i] = list.get(i);
+				} else {
+					values[i] = Integer.MIN_VALUE;
+				}
+			}
+		}
+		size = values.length;
+		capaticy = values.length;
 	}
-	
-	public BasicMonthVector(int[] array){
-		super(array);
+
+	public BasicMonthVector(int[] array) {
+		this(array, true);
 	}
-	
-	protected BasicMonthVector(int[] array, boolean copy){
-		super(array, copy);
+
+	protected BasicMonthVector(int[] array, boolean copy) {
+		super(DATA_FORM.DF_VECTOR);
+		for (int j : array) {
+			if (j < 0 && j != Integer.MIN_VALUE) throw new DateTimeException("Arrays cannot contain negative numbers");
+		}
+		if (copy)
+			values = array.clone();
+		else
+			values = array;
+		size = values.length;
+		capaticy = values.length;
 	}
 	
 	protected BasicMonthVector(DATA_FORM df, int size){
