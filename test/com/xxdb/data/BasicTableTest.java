@@ -2530,7 +2530,7 @@ public class BasicTableTest {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals("The param originalColName '' does not exist in table.",re);
+        assertEquals("The param 'originalColName' or 'newColName' cannot be null or empty.",re);
     }
     @Test
     public void Test_BasicTable_replaceColName_originalName_not_exist() throws Exception {
@@ -2556,7 +2556,7 @@ public class BasicTableTest {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals("The param 'newColName' cannot be null or empty.",re);
+        assertEquals("The param 'originalColName' or 'newColName' cannot be null or empty.",re);
     }
     @Test
     public void Test_BasicTable_replaceColName_newColName_null_1() throws Exception {
@@ -2569,7 +2569,7 @@ public class BasicTableTest {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals("The param 'newColName' cannot be null or empty.",re);
+        assertEquals("The param 'originalColName' or 'newColName' cannot be null or empty.",re);
     }
     @Test
     public void Test_BasicTable_replaceColName_newColName_same() throws Exception {
