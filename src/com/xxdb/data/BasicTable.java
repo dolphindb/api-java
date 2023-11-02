@@ -130,9 +130,9 @@ public class BasicTable extends AbstractEntity implements Table{
 	 */
 	public void replaceColName(String originalColName, String newColName) {
 		if (Utils.isEmpty(originalColName) || Utils.isEmpty(newColName))
-			throw new RuntimeException("The param 'newColName' cannot be null or empty.");
+			throw new RuntimeException("The param 'originalColName' or 'newColName' cannot be null or empty.");
 
-		if (!this.colNames.contains(originalColName) && this.colNames.contains(newColName))
+		if (this.colNames.contains(newColName))
 			throw new RuntimeException("The newColName '" + newColName +"' already exists in table. Column names cannot be duplicated.");
 
 		if (this.colNames.contains(originalColName)) {
