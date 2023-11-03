@@ -69,9 +69,6 @@ public class Utils {
 
 
 	public static YearMonth parseMonth(int value){
-		if (value < 0){
-			throw new DateTimeException(String.format("number %d is invalid, it must be non-negative integer",value));
-		}
 		return YearMonth.of(value/12, value % 12 + 1);
 	}
 	
