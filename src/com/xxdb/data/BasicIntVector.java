@@ -54,10 +54,6 @@ public class BasicIntVector extends AbstractVector{
 		this.size = values.length;
 		capaticy = values.length;
 	}
-
-	protected BasicIntVector(DATA_FORM df) {
-		super(df);
-	}
 	
 	protected BasicIntVector(DATA_FORM df, int size){
 		super(df);
