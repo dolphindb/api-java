@@ -17,7 +17,6 @@ public class BasicTable extends AbstractEntity implements Table{
 	private List<String> colNames = new ArrayList<String>();
 	private Map<String, Integer> colNamesIndex = new HashMap<String, Integer>();
 	private int[] colCompresses = null;
-	private int colRows;
 
 	public BasicTable(ExtendedDataInput in) throws IOException{
 		int rows = in.readInt();
@@ -61,7 +60,6 @@ public class BasicTable extends AbstractEntity implements Table{
 			}
 			if(vector.rows() != rows && vector.rows()!= 1)
 				throw new IOException("The number of rows for column " + colNames.get(i) + " is not consistent with other columns");
-			this.colRows = rows;
 			columns.add(vector);
 		}
 		if(collection != null)
@@ -73,10 +71,10 @@ public class BasicTable extends AbstractEntity implements Table{
 			throw new Error("The length of column name and column data is unequal.");
 		}
 
-		this.colRows = cols.get(0).rows();
+		int rowsCount = cols.get(0).rows();
 		for (int i=0;i<cols.size();i++) {
 			Vector v = cols.get(i);
-			if(v.rows() != this.colRows)
+			if(v.rows() != rowsCount)
 				throw new Error("The length of column " + colNames.get(i) + "  must be the same as the first column length.");
 		}
         this.setColName(colNames);
@@ -171,7 +169,7 @@ public class BasicTable extends AbstractEntity implements Table{
 		if(columns()<=0)
 			return 0;
 		else
-			return this.colRows;
+			return columns.get(0).rows();
 	}
 
 	@Override
@@ -390,13 +388,12 @@ public class BasicTable extends AbstractEntity implements Table{
 		if (colNames.contains(colName))
 			throw new RuntimeException("The table already contains column '" + colName + "'.");
 
-		if (this.colRows != 0 && col.rows() != this.colRows)
-			throw new RuntimeException("The length of column " + colName + "  must be the same as the first column length: " + this.colRows +".");
+		if (Objects.nonNull(this.columns) && Objects.nonNull(this.columns.get(0)) && this.getColumn(0).rows() != col.rows())
+			throw new RuntimeException("The length of column " + colName + "  must be the same as the first column length: " + this.getColumn(0).rows() +".");
 
 		colNames.add(colName);
 		colNamesIndex.put(colName, colNamesIndex.size());
 		columns.add(col);
-		this.colRows = col.rows();
 	}
 
 	@Override
@@ -407,8 +404,8 @@ public class BasicTable extends AbstractEntity implements Table{
 		if (!colNames.contains(colName))
 			throw new RuntimeException("The column '" + colName + "' to be replaced doesn't exist in the table.");
 
-		if (this.colRows != 0 && col.rows() != this.colRows)
-			throw new RuntimeException("The length of column " + colName + "  must be the same as the first column length: " + this.colRows +".");
+		if (Objects.nonNull(this.columns) && Objects.nonNull(this.columns.get(0)) && this.getColumn(0).rows() != col.rows())
+			throw new RuntimeException("The length of column " + colName + "  must be the same as the first column length: " + this.getColumn(0).rows() +".");
 
 		int index = colNames.indexOf(colName);
 		columns.set(index, col);
