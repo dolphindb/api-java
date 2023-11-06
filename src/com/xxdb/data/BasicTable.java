@@ -120,26 +120,6 @@ public class BasicTable extends AbstractEntity implements Table{
 			colNamesIndex.put(name, colNamesIndex.size());
 		}
     }
-
-	/**
-	 * replace a specific colName.
-	 * @param originalColName
-	 * @param newColName
-	 */
-	public void replaceColName(String originalColName, String newColName) {
-		if (Utils.isEmpty(originalColName) || Utils.isEmpty(newColName))
-			throw new RuntimeException("The param 'originalColName' or 'newColName' cannot be null or empty.");
-
-		if (this.colNames.contains(newColName))
-			throw new RuntimeException("The newColName '" + newColName +"' already exists in table. Column names cannot be duplicated.");
-
-		if (this.colNames.contains(originalColName)) {
-			int index = colNames.indexOf(originalColName);
-			colNames.set(index, newColName);
-		} else {
-			throw new RuntimeException("The param originalColName '" + originalColName +"' does not exist in table.");
-		}
-	}
     
     public void setColumns (final List<Vector> cols) {
     	columns.clear();
@@ -396,6 +376,31 @@ public class BasicTable extends AbstractEntity implements Table{
 		columns.add(col);
 	}
 
+	/**
+	 * replace a specific colName.
+	 * @param originalColName
+	 * @param newColName
+	 */
+	public void replaceColName(String originalColName, String newColName) {
+		if (Utils.isEmpty(originalColName) || Utils.isEmpty(newColName))
+			throw new RuntimeException("The param 'originalColName' or 'newColName' cannot be null or empty.");
+
+		if (this.colNames.contains(newColName))
+			throw new RuntimeException("The newColName '" + newColName +"' already exists in table. Column names cannot be duplicated.");
+
+		if (this.colNames.contains(originalColName)) {
+			int index = colNames.indexOf(originalColName);
+			colNames.set(index, newColName);
+		} else {
+			throw new RuntimeException("The param originalColName '" + originalColName +"' does not exist in table.");
+		}
+	}
+
+	/**
+	 * Replace modifies the specified column.
+	 * @param colName
+	 * @param col
+	 */
 	@Override
 	public void replaceColumn(String colName, Vector col) {
 		if (Objects.isNull(colName) || Objects.isNull(col))

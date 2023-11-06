@@ -325,7 +325,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Vector createPairWithDefaultValue(){ return new BasicShortVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicShortMatrix(rows, columns);}
 	}
-	
+
 	private class IntFactory implements TypeFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicInt(in);}
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicIntVector(Entity.DATA_FORM.DF_VECTOR, in);}
@@ -623,238 +623,206 @@ public class BasicEntityFactory implements EntityFactory{
 				return BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 0, extraParam);
 			}
 		}
-		if(object instanceof Boolean) {
+
+		if (object instanceof Boolean)
 			return createScalar(dataType, (boolean) object);
-		}
-		if(object instanceof Boolean[]){
-			return createAnyVector(dataType, (Boolean[])object, extraParam);
-		}
-		if(object instanceof boolean[]){
-			return createAnyVector(dataType, (boolean[])object, extraParam);
-		}
-		if(object instanceof Byte) {
+		if (object instanceof Boolean[])
+			return createAnyVector(dataType, (Boolean[]) object, extraParam);
+		if (object instanceof boolean[])
+			return createAnyVector(dataType, (boolean[]) object, extraParam);
+		if (object instanceof Byte)
 			return createScalar(dataType, (byte) object);
-		}
-		if(object instanceof Byte[]) {
-			return createAnyVector(dataType, (Byte[])object, extraParam);
-		}
-		if(object instanceof byte[]) {
-			return createAnyVector(dataType, (byte[])object, extraParam);
-		}
-		if(object instanceof Character){
+		if (object instanceof Byte[])
+			return createAnyVector(dataType, (Byte[]) object, extraParam);
+		if (object instanceof byte[])
+			return createAnyVector(dataType, (byte[]) object, extraParam);
+		if (object instanceof Character)
 			return createScalar(dataType, (char) object);
-		}
-		if(object instanceof Character[]){
-			return createAnyVector(dataType, (Character[])object, extraParam);
-		}
-		if(object instanceof char[]){
-			return createAnyVector(dataType, (char[])object, extraParam);
-		}
-		if(object instanceof Short){
+		if (object instanceof Character[])
+			return createAnyVector(dataType, (Character[]) object, extraParam);
+		if (object instanceof char[])
+			return createAnyVector(dataType, (char[]) object, extraParam);
+		if (object instanceof Short)
 			return createScalar(dataType, (short) object);
-		}
-		if(object instanceof Short[]) {
+		if (object instanceof Short[])
 			return createAnyVector(dataType, (Short[]) object, extraParam);
-		}
-		if(object instanceof short[]) {
-            return createAnyVector(dataType,(short[])object,extraParam);
-		}
-		if(object instanceof Integer) {
+		if (object instanceof short[])
+            return createAnyVector(dataType, (short[]) object,extraParam);
+		if (object instanceof Integer)
 			return createScalar(dataType, (int) object, extraParam);
-		}
-		if(object instanceof Integer[]){
-			return createAnyVector(dataType, (Integer[])object, extraParam);
-		}
-		if(object instanceof int[]){
-            return createAnyVector(dataType, (int[])object, extraParam);
-		}
-		if(object instanceof Long) {
+		if (object instanceof Integer[])
+			return createAnyVector(dataType, (Integer[]) object, extraParam);
+		if (object instanceof int[])
+            return createAnyVector(dataType, (int[]) object, extraParam);
+		if (object instanceof Long)
 			return createScalar(dataType, (long) object, extraParam);
-		}
-		if(object instanceof Long[]) {
-			return createAnyVector(dataType,(Long[])object, extraParam);
-		}
-		if(object instanceof long[]) {
-			return createAnyVector(dataType,(long[])object, extraParam);
-		}
-		if(object instanceof Double) {
+		if (object instanceof Long[])
+			return createAnyVector(dataType, (Long[]) object, extraParam);
+		if (object instanceof long[])
+			return createAnyVector(dataType, (long[]) object, extraParam);
+		if (object instanceof Double)
 			return createScalar(dataType, (double) object, extraParam);
-		}
-		if(object instanceof Double[]) {
-			return createAnyVector(dataType,(Double[])object, extraParam);
-		}
-		if(object instanceof double[]) {
-			return createAnyVector(dataType,(double[])object, extraParam);
-		}
-		if(object instanceof Float) {
+		if (object instanceof Double[])
+			return createAnyVector(dataType, (Double[]) object, extraParam);
+		if (object instanceof double[])
+			return createAnyVector(dataType, (double[]) object, extraParam);
+		if (object instanceof Float)
 			return createScalar(dataType, (float) object, extraParam);
-		}
-		if(object instanceof Float[]) {
-			return createAnyVector(dataType,(Float[])object, extraParam);
-		}
-		if(object instanceof float[]) {
-			return createAnyVector(dataType,(float[])object, extraParam);
-		}
-		if(object instanceof String) {
-			return createScalar(dataType,(String)object, extraParam);
-		}
-		if(object instanceof String[]) {
-			return createAnyVector(dataType, (String[])object, extraParam);
-		}
-		if(object instanceof LocalTime){
-			return createScalar(dataType, (LocalTime)object);
-		}
-		if(object instanceof LocalTime[]) {
-			return createAnyVector(dataType,(LocalTime[])object, extraParam);
-		}
-		if(object instanceof LocalDate){
-			return createScalar(dataType, (LocalDate)object);
-		}
-		if(object instanceof LocalDate[]) {
-			return createAnyVector(dataType,(LocalDate[])object, extraParam);
-		}
-		if(object instanceof LocalDateTime){
-			return createScalar(dataType, (LocalDateTime)object);
-		}
-		if(object instanceof LocalDateTime[]) {
-			return createAnyVector(dataType,(LocalDateTime[])object, extraParam);
-		}
-		if(object instanceof Date){
-			return createScalar(dataType, (Date)object);
-		}
-		if(object instanceof Date[]) {
-			return createAnyVector(dataType,(Date[])object, extraParam);
-		}
-		if(object instanceof Calendar){
-			return createScalar(dataType, (Calendar)object);
-		}
-		if(object instanceof Calendar[]) {
-			return createAnyVector(dataType,(Calendar[])object, extraParam);
-		}
-		if(object instanceof Entity){
-			return createScalar(dataType,(Entity)object);
-		}
-		if(object instanceof Entity[]) {
-			return createAnyVector(dataType,(Entity[])object, extraParam);
-		}
+		if (object instanceof Float[])
+			return createAnyVector(dataType, (Float[]) object, extraParam);
+		if (object instanceof float[])
+			return createAnyVector(dataType, (float[]) object, extraParam);
+		if (object instanceof String)
+			return createScalar(dataType, (String) object, extraParam);
+		if (object instanceof String[])
+			return createAnyVector(dataType, (String[]) object, extraParam);
+		if (object instanceof LocalTime)
+			return createScalar(dataType, (LocalTime) object);
+		if (object instanceof LocalTime[])
+			return createAnyVector(dataType, (LocalTime[]) object, extraParam);
+		if (object instanceof LocalDate)
+			return createScalar(dataType, (LocalDate) object);
+		if (object instanceof LocalDate[])
+			return createAnyVector(dataType, (LocalDate[]) object, extraParam);
+		if (object instanceof LocalDateTime)
+			return createScalar(dataType, (LocalDateTime) object);
+		if (object instanceof LocalDateTime[])
+			return createAnyVector(dataType, (LocalDateTime[]) object, extraParam);
+		if (object instanceof Date)
+			return createScalar(dataType, (Date) object);
+		if (object instanceof Date[])
+			return createAnyVector(dataType, (Date[]) object, extraParam);
+		if (object instanceof Calendar)
+			return createScalar(dataType, (Calendar) object);
+		if (object instanceof Calendar[])
+			return createAnyVector(dataType, (Calendar[]) object, extraParam);
+		if (object instanceof Entity)
+			return createScalar(dataType, (Entity) object);
+		if (object instanceof Entity[])
+			return createAnyVector(dataType, (Entity[]) object, extraParam);
+
 		throw new RuntimeException("Failed to insert data. invalid data type for "+dataType + ".");
 	}
 
-    private static boolean vectorAndTypeIsRight(DATA_TYPE dataType, DATA_TYPE comparedDataType){
-        if(dataType.getValue() < 64){
+    private static boolean checkVectorDataTypeIsRight(DATA_TYPE dataType, DATA_TYPE comparedDataType){
+        if (dataType.getValue() < 64)
             throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
-        }
+
         return dataType.equals(comparedDataType);
     }
 
 	private static <T> Vector createAnyVector(DATA_TYPE dataType, T[] val, int extraParam) throws Exception{
-		if(dataType.getValue() < 64){
+		if (dataType.getValue() < 64)
 			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
-		}
+
 		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
-//		if (dataType == DT_DECIMAL32 || dataType == DT_DECIMAL64 || dataType == DT_DECIMAL128){
-//			((AbstractVector)vector).setExtraParamForType(extraParam);
-//		}
-		for(int i = 0; i < count; ++i)
-		{
+
+		for (int i = 0; i < count; ++i) {
 			Entity t = createScalar(dataType, val[i], extraParam);
 			vector.set(i, (Scalar) t);
 		}
+
 		return vector;
 	}
 
 	private static Vector createAnyVector(DATA_TYPE dataType, float[] val, int extraParam) throws Exception{
-		if (vectorAndTypeIsRight(dataType, DT_FLOAT_ARRAY)){
+		if (checkVectorDataTypeIsRight(dataType, DT_FLOAT_ARRAY))
 			return new BasicFloatVector(val);
-		}
+
 		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
-		for(int i = 0; i < count; ++i)
-		{
+		for (int i = 0; i < count; ++i) {
 			Scalar t = createScalar(dataType, val[i], extraParam);
 			vector.set(i, t);
 		}
+
 		return vector;
 	}
+
 	private static Vector createAnyVector(DATA_TYPE dataType, double[] val, int extraParam) throws Exception{
-		if (vectorAndTypeIsRight(dataType, DT_DOUBLE_ARRAY)){
+		if (checkVectorDataTypeIsRight(dataType, DT_DOUBLE_ARRAY))
 			return new BasicDoubleVector(val);
-		}
+
 		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
-		for(int i = 0; i < count; ++i)
-		{
+		for (int i = 0; i < count; ++i) {
 			Scalar t = createScalar(dataType, val[i], extraParam);
 			vector.set(i, t);
 		}
+
 		return vector;
 	}
+
 	private static Vector createAnyVector(DATA_TYPE dataType, int[] val, int extraParam) throws Exception{
-		if (vectorAndTypeIsRight(dataType, DT_INT_ARRAY)) {
+		if (checkVectorDataTypeIsRight(dataType, DT_INT_ARRAY))
 			return new BasicIntVector(val);
-		}
+
 		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 
-		for(int i = 0; i < count; ++i)
-		{
+		for (int i = 0; i < count; ++i) {
 			Scalar t = createScalar(dataType, val[i], extraParam);
 			vector.set(i, t);
 		}
+
 		return vector;
 	}
+
 	private static Vector createAnyVector(DATA_TYPE dataType, short[] val, int extraParam) throws Exception{
-		if (vectorAndTypeIsRight(dataType, DT_SHORT_ARRAY)) {
+		if (checkVectorDataTypeIsRight(dataType, DT_SHORT_ARRAY))
 			return new BasicShortVector(val);
-		}
+
 		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 
-		for(int i = 0; i < count; ++i)
-		{
+		for (int i = 0; i < count; ++i) {
 			Scalar t = createScalar(dataType, val[i]);
 			vector.set(i, t);
 		}
+
 		return vector;
 	}
+
 	private static Vector createAnyVector(DATA_TYPE dataType, byte[] val, int extraParam) throws Exception{
-		if (vectorAndTypeIsRight(dataType, DT_BYTE_ARRAY)){
+		if (checkVectorDataTypeIsRight(dataType, DT_BYTE_ARRAY))
 			return new BasicByteVector(val);
-		}
+
 		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 
-		for(int i = 0; i < count; ++i)
-		{
+		for (int i = 0; i < count; ++i) {
 			Scalar t = createScalar(dataType, val[i]);
 			vector.set(i, t);
 		}
+
 		return vector;
 	}
+
 	private static Vector createAnyVector(DATA_TYPE dataType, char[] val, int extraParam) throws Exception{
-		if(dataType.getValue()<64){
+		if (dataType.getValue()<64)
 			throw new RuntimeException("Failed to insert data, only arrayVector support data vector for "+dataType + ".");
-		}
+
 		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
 
-		for(int i = 0; i < count; ++i)
-		{
+		for(int i = 0; i < count; ++i) {
 			Scalar t = createScalar(dataType, val[i]);
 			vector.set(i, t);
 		}
+
 		return vector;
 	}
+
 	private static Vector createAnyVector(DATA_TYPE dataType, boolean[] val, int extraParam) throws Exception{
-		if (vectorAndTypeIsRight(dataType, DT_BOOL_ARRAY)) {
+		if (checkVectorDataTypeIsRight(dataType, DT_BOOL_ARRAY)) {
 			return new BasicBooleanVector((val));
 		}
 		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
@@ -868,18 +836,19 @@ public class BasicEntityFactory implements EntityFactory{
 		}
 		return vector;
 	}
+
     private static Vector createAnyVector(DATA_TYPE dataType, long[] val, int extraParam) throws Exception{
-		if (vectorAndTypeIsRight(dataType, DT_LONG_ARRAY)){
+		if (checkVectorDataTypeIsRight(dataType, DT_LONG_ARRAY))
 			return new BasicLongVector(val);
-		}
+
 		dataType = Entity.DATA_TYPE.values()[dataType.getValue() - 64];
 		int count = val.length;
 		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, count, extraParam);
-		for(int i = 0; i < count; ++i)
-		{
+		for (int i = 0; i < count; ++i) {
 			Scalar t = createScalar(dataType, val[i], extraParam);
 			vector.set(i, t);
 		}
+
 		return vector;
 	}
 
@@ -893,6 +862,7 @@ public class BasicEntityFactory implements EntityFactory{
 				throw new RuntimeException("Failed to insert data. Cannot convert LocalDate to " + dataType + ".");
 		}
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, LocalDateTime val) {
 		switch (dataType) {
 			case DT_DATETIME:
@@ -909,6 +879,7 @@ public class BasicEntityFactory implements EntityFactory{
 				throw new RuntimeException("Failed to insert data. Cannot convert LocalDateTime to " + dataType + ".");
 		}
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, LocalTime val) {
 		switch (dataType) {
 			case DT_TIME:
@@ -923,11 +894,13 @@ public class BasicEntityFactory implements EntityFactory{
 				throw new RuntimeException("Failed to insert data. Cannot convert LocalTime to " + dataType + ".");
 		}
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, Date val) {
 		Calendar calendar=Calendar.getInstance();
 		calendar.setTime(val);
 		return createScalar(dataType, calendar);
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, Calendar val) {
 		switch (dataType) {
 			case DT_DATE:
@@ -950,6 +923,7 @@ public class BasicEntityFactory implements EntityFactory{
 				throw new RuntimeException("Failed to insert data. Cannot convert Calendar to " + dataType + ".");
 		}
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, Entity val) {
 		if(val.isScalar()&&val.getDataType()==dataType || dataType == DT_SYMBOL) {
 			return (Scalar) val;
@@ -957,6 +931,7 @@ public class BasicEntityFactory implements EntityFactory{
 			throw new RuntimeException("Failed to insert data. Cannot convert Entity to " + dataType + ".");
 		}
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, boolean val) {
 		switch (dataType) {
 			case DT_BOOL:
@@ -965,12 +940,14 @@ public class BasicEntityFactory implements EntityFactory{
 				throw new RuntimeException("Failed to insert data. Cannot convert boolean to " + dataType + ".");
 		}
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, char val) {
 		if (val >= Byte.MIN_VALUE && val <= Byte.MAX_VALUE)
 			return createScalar(dataType,(byte)val);
 		else
 			throw new RuntimeException("Failed to insert data, char cannot be converted because it exceeds the range of " + dataType + ".");
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, byte val) {
 		switch (dataType) {
 			case DT_BYTE:
@@ -989,6 +966,7 @@ public class BasicEntityFactory implements EntityFactory{
 				throw new RuntimeException("Failed to insert data. Cannot convert byte to " + dataType + ".");
 		}
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, short val) {
 		switch (dataType) {
 			case DT_BYTE:
@@ -1010,9 +988,11 @@ public class BasicEntityFactory implements EntityFactory{
 				throw new RuntimeException("Failed to insert data. Cannot convert short to " + dataType + ".");
 		}
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, char[] val, int extraParam) {
 		return createScalar(dataType, new String(val), extraParam);
 	}
+
 	private static boolean isScalarValid(DATA_TYPE scalarType,DATA_TYPE expectedType){
 		if(scalarType==expectedType)
 			return true;
@@ -1022,6 +1002,7 @@ public class BasicEntityFactory implements EntityFactory{
 		}
 		return false;
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, String val, int extraParam) {
 		switch (dataType) {
 			case DT_INT128: {
@@ -1045,6 +1026,7 @@ public class BasicEntityFactory implements EntityFactory{
 				throw new RuntimeException("Failed to insert data. Cannot convert String to " + dataType + ".");
 		}
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, float val, int extraParam) {
 		switch (dataType) {
 			case DT_FLOAT:
@@ -1059,6 +1041,7 @@ public class BasicEntityFactory implements EntityFactory{
 				throw new RuntimeException("Failed to insert data. Cannot convert float to " + dataType + ".");
 		}
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, double val, int extraParam) {
 		switch (dataType) {
 			case DT_FLOAT:
@@ -1077,6 +1060,7 @@ public class BasicEntityFactory implements EntityFactory{
 				throw new RuntimeException("Failed to insert data. Cannot convert double to " + dataType + ".");
 		}
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, int val, int extraParam) {
 		switch (dataType) {
 			case DT_BYTE:
@@ -1121,6 +1105,7 @@ public class BasicEntityFactory implements EntityFactory{
 				throw new RuntimeException("Failed to insert data. Cannot convert int to " + dataType + ".");
 		}
 	}
+
 	private static Scalar createScalar(DATA_TYPE dataType, long val, int extraParam){
 		switch (dataType) {
 			case DT_BYTE:
