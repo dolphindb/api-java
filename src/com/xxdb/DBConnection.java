@@ -617,6 +617,16 @@ public class DBConnection {
         this.mutex_ = new ReentrantLock();
     }
 
+    /**
+     * This method has been deprecated since 'Java API 1.30.22.4' and will be disabled in the next version: 'Java API 1.30.22.4'.
+     * @param asynchronousTask
+     * @param useSSL
+     * @param compress
+     * @param usePython
+     * @param isUrgent
+     * @param isReverseStreaming
+     * @param sqlStd
+     */
     @Deprecated
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, boolean isReverseStreaming, SqlStdEnum sqlStd){
         this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, isReverseStreaming, sqlStd);
@@ -624,11 +634,7 @@ public class DBConnection {
     }
 
     public static DBConnection internalCreateEnableReverseStreamingDBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, SqlStdEnum sqlStd) {
-        DBConnection dbConnection = new DBConnection();
-        dbConnection.conn_ = dbConnection.createEnableReverseStreamingDBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, sqlStd);
-        dbConnection.mutex_ = new ReentrantLock();
-
-        return dbConnection;
+        return new DBConnection(asynchronousTask, useSSL, compress, usePython, isUrgent, true, sqlStd);
     }
     
     public boolean isBusy() {

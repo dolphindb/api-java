@@ -334,10 +334,7 @@ public class BasicDecimal32Vector extends AbstractVector{
             throw new RuntimeException("Please set scale first.");
         }
 
-        if(value.getDataType() == DT_DECIMAL32)
-            add(value.getString());
-        else
-            add(value.getNumber().doubleValue());
+        add(value.getString());
     }
 
     @Override

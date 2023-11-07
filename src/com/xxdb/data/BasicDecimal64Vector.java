@@ -339,10 +339,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         if (scale_ < 0)
             throw new RuntimeException("Please set scale first.");
 
-        if(value.getDataType() == DT_DECIMAL64)
-            add(value.getString());
-        else
-            add(value.getNumber().doubleValue());
+        add(value.getString());
     }
 
     @Override

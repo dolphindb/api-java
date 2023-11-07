@@ -451,10 +451,7 @@ public class BasicDecimal128Vector extends AbstractVector {
         if (scale_ < 0)
             throw new RuntimeException("Please set scale first.");
 
-        if(value.getDataType() == DT_DECIMAL128)
-            add(value.getString());
-        else
-            add(value.getNumber().toString());
+        add(value.getString());
     }
 
     @Override
