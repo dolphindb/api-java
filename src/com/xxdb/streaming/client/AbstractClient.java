@@ -600,33 +600,39 @@ abstract class AbstractClient implements MessageDispatcher {
 
     void checkServerVersion(String host, int port) throws IOException {
         DBConnection conn = new DBConnection();
-        conn.connect(host, port);
-        String version = conn.run("version()").getString();
+        try {
+            conn.connect(host, port);
+            String version = conn.run("version()").getString();
 
-        String[] _ = version.split(" ")[0].split("\\.");
-        int v0 = Integer.parseInt(_[0]);
-        int v1 = Integer.parseInt(_[1]);
-        int v2 = Integer.parseInt(_[2]);
+            String[] _ = version.split(" ")[0].split("\\.");
+            int v0 = Integer.parseInt(_[0]);
+            int v1 = Integer.parseInt(_[1]);
+            int v2 = Integer.parseInt(_[2]);
 
-        if((v0 == 2 && v1 == 0 && v2 >= 9) || (v0 == 2 && v1 == 10) || (v0 == 3 && v1 == 0 && v2 >= 0)){
-            //server only support reverse connection
-            listeningPort = 0;
-        }else{
-            //server Not support reverse connection
-            if(listeningPort == 0){
-                throw new IOException("The server does not support subscription through reverse connection (connection initiated by the subscriber). Specify a valid port parameter.");
+            if ((v0 == 2 && v1 == 0 && v2 >= 9) || (v0 == 2 && v1 == 10) || (v0 == 3 && v1 == 0 && v2 >= 0)) {
+                //server only support reverse connection
+                this.listeningPort = 0;
+            } else {
+                //server Not support reverse connection
+                if (this.listeningPort == 0)
+                    throw new IOException("The server does not support subscription through reverse connection (connection initiated by the subscriber). Specify a valid port parameter.");
             }
-        }
-        if(daemon == null) {
-            synchronized (connList) {
-                if(daemon == null) {
-                    daemon = new Daemon(this.listeningPort, this, connList);
-                    pThread = new Thread(daemon);
-                    daemon.setRunningThread(pThread);
-                    pThread.start();
+            if(daemon == null) {
+                synchronized (connList) {
+                    if(daemon == null) {
+                        daemon = new Daemon(this.listeningPort, this, connList);
+                        pThread = new Thread(daemon);
+                        daemon.setRunningThread(pThread);
+                        pThread.start();
+                    }
                 }
             }
+        } finally {
+            conn.close();
         }
     }
-    public ConcurrentHashMap<String, AbstractClient.Site[]> getTopicToSites(){return trueTopicToSites;}
+
+    public ConcurrentHashMap<String, AbstractClient.Site[]> getTopicToSites() {
+        return trueTopicToSites;
+    }
 }
