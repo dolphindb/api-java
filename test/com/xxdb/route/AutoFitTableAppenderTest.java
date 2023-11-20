@@ -96,9 +96,7 @@ public class AutoFitTableAppenderTest {
         appender.append(insert);
         Entity assertRet= conn.run("exec count(*) from loadTable(\"dfs://tableAppenderTest\", \"testAppend\")");
         String ret=assertRet.getString();
-
         Assert.assertEquals(String.valueOf(size), assertRet.getString());
-
     }
     @Test
     public void TestDateTimeToDATE() throws IOException {
@@ -1916,6 +1914,26 @@ public class AutoFitTableAppenderTest {
         conn.run("undef(`st, SHARED)");
         }
     @Test
+    public void Test_AutoFitTableAppender_keyedTable_allDateType_1() throws IOException {
+        String script = "n=100;\n";
+        script += "intv = 1..100;\n";
+        script += "uuidv = rand(rand(uuid(), 10) join take(uuid(), 4), n);\n";
+        script += "ippaddrv = rand(rand(ipaddr(), 1000) join take(ipaddr(), 4), n)\n";
+        script += "int128v = rand(rand(int128(), 1000) join take(int128(), 4), n);\n";
+        script += "complexv = rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n);\n";
+        script += "pointv = rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n);\n";
+        script += "t = keyedTable(`intv,intv,uuidv,ippaddrv,int128v,complexv,pointv)\n";
+        script += "t1 = keyedTable(`intv,100:0,`intv`uuidv`ippaddrv`int128v`complexv`pointv,[INT,UUID,IPADDR,INT128,COMPLEX,POINT])\n";
+        conn.run(script);
+        BasicTable bt = (BasicTable)conn.run("select * from t");
+        AutoFitTableAppender aftu = new AutoFitTableAppender("", "t1", conn);
+        aftu.append(bt);
+        BasicTable ua = (BasicTable)conn.run("select * from t1;");
+        Assert.assertEquals(100, ua.rows());
+        BasicTable act = (BasicTable)conn.run("select * from t");
+        compareBasicTable(bt, act);
+    }
+    @Test
     public void Test_AutoFitTableAppender_memoryTable_allDateType() throws IOException {
         String script = null;
         script = "cbool = true false false;\n";
@@ -1953,6 +1971,26 @@ public class AutoFitTableAppenderTest {
         BasicTable act = (BasicTable)conn.run("select * from st where cint = 10;");
         compareBasicTable(bt, act);
         conn.run("undef(`st, SHARED)");
+    }
+    @Test
+    public void Test_AutoFitTableAppender_memoryTable_allDateType_1() throws IOException {
+        String script = "n=100;\n";
+        script += "intv = 1..100;\n";
+        script += "uuidv = rand(rand(uuid(), 10) join take(uuid(), 4), n);\n";
+        script += "ippaddrv = rand(rand(ipaddr(), 1000) join take(ipaddr(), 4), n)\n";
+        script += "int128v = rand(rand(int128(), 1000) join take(int128(), 4), n);\n";
+        script += "complexv = rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n);\n";
+        script += "pointv = rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n);\n";
+        script += "t = table(intv,uuidv,ippaddrv,int128v,complexv,pointv)\n";
+        script += "t1 = table(100:0,`intv`uuidv`ippaddrv`int128v`complexv`pointv,[INT,UUID,IPADDR,INT128,COMPLEX,POINT])\n";
+        conn.run(script);
+        BasicTable bt = (BasicTable)conn.run("select * from t");
+        AutoFitTableAppender aftu = new AutoFitTableAppender("", "t1", conn);
+        aftu.append(bt);
+        BasicTable ua = (BasicTable)conn.run("select * from t1;");
+        Assert.assertEquals(100, ua.rows());
+        BasicTable act = (BasicTable)conn.run("select * from t");
+        compareBasicTable(bt, act);
     }
     @Test
     public void Test_AutoFitTableAppender_DfsTable_allDateType() throws IOException {
@@ -1998,6 +2036,32 @@ public class AutoFitTableAppenderTest {
         compareBasicTable(bt, act);
     }
     @Test
+    public void Test_AutoFitTableAppender_DfsTable_allDateType_1() throws IOException {
+        String script = "n=100;\n";
+        script += "intv = 1..100;\n";
+        script += "uuidv = rand(rand(uuid(), 10) join take(uuid(), 4), n);\n";
+        script += "ippaddrv = rand(rand(ipaddr(), 1000) join take(ipaddr(), 4), n)\n";
+        script += "int128v = rand(rand(int128(), 1000) join take(int128(), 4), n);\n";
+        script += "complexv = rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n);\n";
+        script += "pointv = rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n);\n";
+        script += "t = table(intv,uuidv,ippaddrv,int128v,complexv,pointv)\n";
+        script += "dbPath = \"dfs://tableAppenderTest\"\n" ;
+        script += "if(existsDatabase(dbPath))\n";
+        script += "dropDatabase(dbPath)\n";
+        script += "db=database(dbPath,VALUE, 1..10,engine='TSDB')\n";
+        script += "pt = db.createPartitionedTable(t,`pt,`intv,,`intv)\n";
+        script += "pt1 = db.createPartitionedTable(t,`pt1,`intv,,`intv)\n";
+        script += "pt.append!(t)";
+        conn.run(script);
+        BasicTable bt = (BasicTable)conn.run("select * from t");
+        AutoFitTableAppender aftu = new AutoFitTableAppender("dfs://tableAppenderTest", "pt1", conn);
+        aftu.append(bt);
+        BasicTable ua = (BasicTable)conn.run("select * from loadTable(\"dfs://tableAppenderTest\",`pt1);");
+        Assert.assertEquals(100, ua.rows());
+        BasicTable act = (BasicTable)conn.run("select * from loadTable(\"dfs://tableAppenderTest\",`pt) ");
+        compareBasicTable(bt, act);
+    }
+    @Test
     public void Test_AutoFitTableAppender_DimensionTable_allDateType() throws IOException {
         String script = null;
         script = "cbool = true false false;\n";
@@ -2038,6 +2102,32 @@ public class AutoFitTableAppenderTest {
         BasicTable ua = (BasicTable)conn.run("select * from loadTable(\"dfs://tableAppenderTest\",`pt);");
         Assert.assertEquals(4, ua.rows());
         BasicTable act = (BasicTable)conn.run("select * from loadTable(\"dfs://tableAppenderTest\",`pt) where cint = 10;");
+        compareBasicTable(bt, act);
+    }
+    @Test
+    public void Test_AutoFitTableAppender_DimensionTable_allDateType_1() throws IOException {
+        String script = "n=100;\n";
+        script += "intv = 1..100;\n";
+        script += "uuidv = rand(rand(uuid(), 10) join take(uuid(), 4), n);\n";
+        script += "ippaddrv = rand(rand(ipaddr(), 1000) join take(ipaddr(), 4), n)\n";
+        script += "int128v = rand(rand(int128(), 1000) join take(int128(), 4), n);\n";
+        script += "complexv = rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n);\n";
+        script += "pointv = rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n);\n";
+        script += "t = table(intv,uuidv,ippaddrv,int128v,complexv,pointv)\n";
+        script += "dbPath = \"dfs://tableAppenderTest\"\n" ;
+        script += "if(existsDatabase(dbPath))\n";
+        script += "dropDatabase(dbPath)\n";
+        script += "db=database(dbPath,VALUE, 1..10,engine='TSDB')\n";
+        script += "pt = db.createTable(t,`pt,,`intv)\n";
+        script += "pt1 = db.createTable(t,`pt1,,`intv)\n";
+        script += "pt.append!(t)";
+        conn.run(script);
+        BasicTable bt = (BasicTable)conn.run("select * from t");
+        AutoFitTableAppender aftu = new AutoFitTableAppender("dfs://tableAppenderTest", "pt1", conn);
+        aftu.append(bt);
+        BasicTable ua = (BasicTable)conn.run("select * from loadTable(\"dfs://tableAppenderTest\",`pt1);");
+        Assert.assertEquals(100, ua.rows());
+        BasicTable act = (BasicTable)conn.run("select * from loadTable(\"dfs://tableAppenderTest\",`pt) ");
         compareBasicTable(bt, act);
     }
 }

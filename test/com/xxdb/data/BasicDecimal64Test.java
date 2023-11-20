@@ -79,7 +79,7 @@ public class BasicDecimal64Test {
         }catch(Exception E){
             ex=E.getMessage();
         }
-        assertEquals("Scale out of bound (valid range: [0, 18], but get: -1)",ex);
+        assertEquals("Scale -1 is out of bounds, it must be in [0,18].",ex);
     }
     @Test
     public void testBasicDecimal64_value_string_scale_4(){

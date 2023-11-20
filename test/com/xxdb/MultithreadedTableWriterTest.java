@@ -6588,7 +6588,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         catch(IOException ex) {
             System.out.println(ex.getMessage());
         }
-        conn1.run("sleep(1000)");
+        conn1.run("sleep(5000)");
         DBConnection conn2= new DBConnection(false, false, false, true);
         conn2.connect(HOST, PORT, "admin", "123456");
         conn1.run("sleep(1000)");
