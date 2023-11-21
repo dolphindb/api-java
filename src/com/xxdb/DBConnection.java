@@ -1011,7 +1011,7 @@ public class DBConnection {
     }
 
     public Entity run(String script, String tableName) throws IOException{
-        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, tableName);
+        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, tableName, true);
     }
 
     public Entity run(String script) throws IOException {
@@ -1069,20 +1069,25 @@ public class DBConnection {
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory) throws IOException{
-        return run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, "");
+        return run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, "", true);
     }
 
-    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory, String tableName) throws IOException{
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory, String tableName, boolean enableSeqNo) throws IOException{
         mutex_.lock();
         try {
             if (!nodes_.isEmpty()) {
-                long curSeqNo = newSeqNo();
+                long currentSeqNo;
+                if (enableSeqNo)
+                    currentSeqNo = newSeqNo();
+                else
+                    currentSeqNo = 0;
+
                 while (!closed_) {
                     try {
-                        return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, curSeqNo);
+                        return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, currentSeqNo);
                     } catch (IOException e) {
-                        if(curSeqNo>0)
-                            curSeqNo = -curSeqNo;
+                        if (currentSeqNo > 0)
+                            currentSeqNo = -currentSeqNo;
                         Node node = new Node();
                         if (connected()) {
                             ExceptionType type = parseException(e.getMessage(), node);
@@ -1118,7 +1123,7 @@ public class DBConnection {
         if (!mutex_.tryLock())
             return null;
         try {
-            return run(function, arguments, priority, parallelism, fetchSize );
+            return run(function, arguments, priority, parallelism, fetchSize, true);
         } finally {
             mutex_.unlock();
         }
@@ -1133,7 +1138,7 @@ public class DBConnection {
     }
 
     public Entity run(String function, List<Entity> arguments, int priority, int parallelism) throws IOException {
-        return run(function, arguments, priority, parallelism, 0);
+        return run(function, arguments, priority, parallelism, 0, true);
     }
     private long newSeqNo(){
         mutex_.lock();
@@ -1146,17 +1151,22 @@ public class DBConnection {
         return res;
     }
 
-    public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize) throws IOException {
+    public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize, boolean enableSeqNo) throws IOException {
         mutex_.lock();
         try {
-            if (!nodes_.isEmpty()){
-                long seqNo = newSeqNo();
-                while (!closed_){
+            if (!nodes_.isEmpty()) {
+                long currentSeqNo;
+                if (enableSeqNo)
+                    currentSeqNo = newSeqNo();
+                else
+                    currentSeqNo = 0;
+
+                while (!closed_) {
                     try {
-                        return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false,seqNo);
-                    }catch (IOException e){
-                        if(seqNo > 0)
-                            seqNo = -seqNo;
+                        return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false, currentSeqNo);
+                    } catch (IOException e) {
+                        if (currentSeqNo > 0)
+                            currentSeqNo = -currentSeqNo;
                         Node node = new Node();
                         if (connected()){
                             ExceptionType type = parseException(e.getMessage(), node);
@@ -1171,10 +1181,10 @@ public class DBConnection {
                     }
                 }
                 return null;
-            }else {
+            } else {
                 return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false, 0);
             }
-        }finally {
+        } finally {
             mutex_.unlock();
         }
     }
