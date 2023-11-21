@@ -925,11 +925,10 @@ public class BasicEntityFactory implements EntityFactory{
 	}
 
 	private static Scalar createScalar(DATA_TYPE dataType, Entity val) {
-		if(val.isScalar()&&val.getDataType()==dataType || dataType == DT_SYMBOL) {
+		if (Utils.getCategory(dataType) == Entity.DATA_CATEGORY.LITERAL && Utils.getCategory(val.getDataType()) == Entity.DATA_CATEGORY.LITERAL)
 			return (Scalar) val;
-		}else{
+		else
 			throw new RuntimeException("Failed to insert data. Cannot convert Entity to " + dataType + ".");
-		}
 	}
 
 	private static Scalar createScalar(DATA_TYPE dataType, boolean val) {
