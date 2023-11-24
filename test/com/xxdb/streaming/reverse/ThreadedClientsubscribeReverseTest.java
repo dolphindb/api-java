@@ -137,6 +137,67 @@ public class ThreadedClientsubscribeReverseTest {
             Thread.sleep(100);
         }
     }
+    public static void PrepareStreamTable(String dataType) throws IOException {
+        String script = "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType+"[]]) as Trades;\n"+
+                "permno = take(1..1000,1000); \n"+
+                "dateType_INT =  array(INT[]).append!(cut(take(-100..100 join NULL, 1000*10), 10)); \n"+
+                "dateType_BOOL =  array(BOOL[]).append!(cut(take([true, false, NULL], 1000*10), 10)); \n"+
+                "dateType_CHAR =  array(CHAR[]).append!(cut(take(char(-10..10 join NULL), 1000*10), 10)); \n"+
+                "dateType_SHORT =  array(SHORT[]).append!(cut(take(short(-100..100 join NULL), 1000*10), 10)); \n"+
+                "dateType_LONG =  array(LONG[]).append!(cut(take(long(-100..100 join NULL), 1000*10), 10)); \n"+"" +
+                "dateType_DOUBLE =  array(DOUBLE[]).append!(cut(take(-100..100 join NULL, 1000*10) + 0.254, 10)); \n"+
+                "dateType_FLOAT =  array(FLOAT[]).append!(cut(take(-100..100 join NULL, 1000*10) + 0.254f, 10)); \n"+
+                "dateType_DATE =  array(DATE[]).append!(cut(take(2012.01.01..2012.02.29, 1000*10), 10)); \n"+
+                "dateType_MONTH =   array(MONTH[]).append!(cut(take(2012.01M..2013.12M, 1000*10), 10)); \n"+
+                "dateType_TIME =  array(TIME[]).append!(cut(take(09:00:00.000 + 0..99 * 1000, 1000*10), 10)); \n"+
+                "dateType_MINUTE =  array(MINUTE[]).append!(cut(take(09:00m..15:59m, 1000*10), 10)); \n"+
+                "dateType_SECOND =  array(SECOND[]).append!(cut(take(09:00:00 + 0..999, 1000*10), 10)); \n"+
+                "dateType_DATETIME =  array(DATETIME[]).append!(cut(take(2012.01.01T09:00:00 + 0..999, 1000*10), 10)); \n"+
+                "dateType_TIMESTAMP =  array(TIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000 + 0..999 * 1000, 1000*10), 10)); \n"+
+                "dateType_NANOTIME =  array(NANOTIME[]).append!(cut(take(09:00:00.000000000 + 0..999 * 1000000000, 1000*10), 10)); \n"+
+                "dateType_NANOTIMESTAMP =  array(NANOTIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000000000 + 0..999 * 1000000000, 1000*10), 10)); \n"+
+                "dateType_UUID =  array(UUID[]).append!(cut(take(uuid([\"5d212a78-cc48-e3b1-4235-b4d91473ee87\", \"5d212a78-cc48-e3b1-4235-b4d91473ee88\", \"5d212a78-cc48-e3b1-4235-b4d91473ee89\", \"\"]), 1000*10), 10)); \n"+
+                "dateType_DATEHOUR =  array(DATEHOUR[]).append!(cut(take(datehour(1..10 join NULL), 1000*10), 10)); \n"+
+                "dateType_IPADDR =  array(IPADDR[]).append!(cut(take(ipaddr([\"192.168.100.10\", \"192.168.100.11\", \"192.168.100.14\", \"\"]), 1000*10), 10)); \n"+
+                "dateType_INT128 =  array(INT128[]).append!(cut(take(int128([\"e1671797c52e15f763380b45e841ec32\", \"e1671797c52e15f763380b45e841ec33\", \"e1671797c52e15f763380b45e841ec35\", \"\"]), 1000*10), 10)); \n"+
+                "dateType_COMPLEX =   array(COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, 1000*10), 10));; \n"+
+                "dateType_POINT =  array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, 1000*10), 10)); \n"+
+                "share table(permno,dateType_"+dataType +") as pub_t\n"+
+                "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType +"[]]) as sub1;\n";
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST, PORT,"admin","123456");
+        conn1.run(script);
+    }
+    public static void PrepareStreamTableDecimal(String dataType, int scale) throws IOException {
+        String script = "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType+"("+scale+")[]]) as Trades;\n"+
+                "permno = take(1..1000,1000); \n"+
+                "dateType_DECIMAL32 =   array(DECIMAL64(4)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000*10) + 0.254, 3), 10)); \n"+
+                "dateType_DECIMAL64 =   array(DECIMAL64(4)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000*10) + 0.254, 3), 10)); \n"+
+                "dateType_DECIMAL128 =   array(DECIMAL128(8)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000*10) + 0.254, 3), 10)); \n"+
+                "share table(permno,dateType_"+dataType +") as pub_t\n"+
+                "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType +"("+scale+")[]]) as sub1;\n";
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST, PORT,"admin","123456");
+        conn1.run(script);
+    }
+    public static void checkResult() throws IOException, InterruptedException {
+        for (int i = 0; i < 10; i++)
+        {
+            BasicInt tmpNum = (BasicInt)conn.run("exec count(*) from sub1");
+            if (tmpNum.getInt()==(1000))
+            {
+                break;
+            }
+            Thread.sleep(2000);
+        }
+        BasicTable except = (BasicTable)conn.run("select * from  Trades");
+        BasicTable res = (BasicTable)conn.run("select * from  sub1");
+        assertEquals(except.rows(), res.rows());
+        for (int i = 0; i < except.columns(); i++) {
+            System.out.println("col" + res.getColumnName(i));
+            assertEquals(except.getColumn(i).getString(), res.getColumn(i).getString());
+        }
+    }
     @Test
     public void test_ThreadedClient_HOST_error() throws IOException {
         ThreadedClient client2 = new ThreadedClient("host_error",10022);
@@ -2193,5 +2254,389 @@ public class ThreadedClientsubscribeReverseTest {
         client2.unsubscribe(HOST,PORT,"Trades1","subTrades1");
         client2.close();
     }
-
+    public static MessageHandler Handler_array = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                msg.getEntity(0);
+                String script = String.format("insert into sub1 values( %s,%s)", msg.getEntity(0).getString(), msg.getEntity(1).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' '));
+                //System.out.println(script);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_INT() throws IOException, InterruptedException {
+        PrepareStreamTable("INT");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_BOOL() throws IOException, InterruptedException {
+        PrepareStreamTable("BOOL");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_CHAR() throws IOException, InterruptedException {
+        PrepareStreamTable("CHAR");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_SHORT() throws IOException, InterruptedException {
+        PrepareStreamTable("SHORT");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_LONG() throws IOException, InterruptedException {
+        PrepareStreamTable("LONG");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_DOUBLE() throws IOException, InterruptedException {
+        PrepareStreamTable("DOUBLE");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_FLOAT() throws IOException, InterruptedException {
+        PrepareStreamTable("FLOAT");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_DATE() throws IOException, InterruptedException {
+        PrepareStreamTable("DATE");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_MONTH() throws IOException, InterruptedException {
+        PrepareStreamTable("MONTH");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_TIME() throws IOException, InterruptedException {
+        PrepareStreamTable("TIME");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_MINUTE() throws IOException, InterruptedException {
+        PrepareStreamTable("MINUTE");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_SECOND() throws IOException, InterruptedException {
+        PrepareStreamTable("SECOND");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_DATETIME() throws IOException, InterruptedException {
+        PrepareStreamTable("DATETIME");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_NANOTIME() throws IOException, InterruptedException {
+        PrepareStreamTable("NANOTIME");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_NANOTIMESTAMP() throws IOException, InterruptedException {
+        PrepareStreamTable("NANOTIMESTAMP");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    public static MessageHandler Handler_array_UUID = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                msg.getEntity(0);
+                String script = String.format("insert into sub1 values( %s,[uuid(%s)])", msg.getEntity(0).getString(), msg.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL"));
+                System.out.println(script);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_UUID() throws IOException, InterruptedException {
+        PrepareStreamTable("UUID");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array_UUID, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    public static MessageHandler Handler_array_DATEHOUR = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                msg.getEntity(0);
+                String script = String.format("insert into sub1 values( %s,[datehour(%s)])", msg.getEntity(0).getString(), msg.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL"));
+                System.out.println(script);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_DATEHOUR() throws IOException, InterruptedException {
+        PrepareStreamTable("DATEHOUR");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array_DATEHOUR, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    public static MessageHandler Handler_array_IPADDR = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                msg.getEntity(0);
+                String script = String.format("insert into sub1 values( %s,[ipaddr(%s)])", msg.getEntity(0).getString(), msg.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL"));
+                System.out.println(script);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_IPADDR() throws IOException, InterruptedException {
+        PrepareStreamTable("IPADDR");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array_IPADDR, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    public static MessageHandler Handler_array_INT128 = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                msg.getEntity(0);
+                String script = String.format("insert into sub1 values( %s,[int128(%s)])", msg.getEntity(0).getString(), msg.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL"));
+                System.out.println(script);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_INT128() throws IOException, InterruptedException {
+        PrepareStreamTable("INT128");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array_INT128, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    public static MessageHandler Handler_array_COMPLEX = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                String complex1 = msg.getEntity(1).getString().replaceAll(",,", ",NULL+NULL,").replaceAll("\\[,", "[NULL+NULL,").replaceAll(",]", ",NULL+NULL]");
+                System.out.println(complex1);
+                complex1 = complex1.substring(1, complex1.length() - 1);
+                String[] complex2 = complex1.split(",");
+                String complex3 = null;
+                StringBuilder re1 = new StringBuilder();
+                StringBuilder re2 = new StringBuilder();
+                for(int i=0;i<complex2.length;i++){
+                    complex3 = complex2[i];
+                    String[] complex4 = complex3.split("\\+");
+                    re1.append(complex4[0]);
+                    re1.append(' ');
+                    re2.append(complex4[1]);
+                    re2.append(' ');
+                }
+                complex1 = re1+","+re2;
+                complex1 = complex1.replaceAll("i","");
+                String script = String.format("insert into sub1 values( %s,[complex(%s)])", msg.getEntity(0).getString(), complex1);
+                //System.out.println(script);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_COMPLEX() throws IOException, InterruptedException {
+        PrepareStreamTable("COMPLEX");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array_COMPLEX, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    public static MessageHandler Handler_array_POINT = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                String complex1 = msg.getEntity(1).getString().replaceAll("\\(,\\)", "\\(NULL,NULL\\)");
+                complex1 = complex1.substring(1, complex1.length() - 1);
+                String[] complex2 = complex1.split("\\),\\(");
+                String complex3 = null;
+                StringBuilder re1 = new StringBuilder();
+                StringBuilder re2 = new StringBuilder();
+                for(int i=0;i<complex2.length;i++){
+                    complex3 = complex2[i];
+                    String[] complex4 = complex3.split(",");
+                    re1.append(complex4[0]);
+                    re1.append(' ');
+                    re2.append(complex4[1]);
+                    re2.append(' ');
+                }
+                complex1 = re1+","+re2;
+                complex1 = complex1.replaceAll("\\(","").replaceAll("\\)","");
+                String script = String.format("insert into sub1 values( %s,[point(%s)])", msg.getEntity(0).getString(), complex1);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_POINT() throws IOException, InterruptedException {
+        PrepareStreamTable("POINT");
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array_POINT, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_DECIMAL32() throws IOException, InterruptedException {
+        PrepareStreamTableDecimal("DECIMAL32",3);
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_TDECIMAL64() throws IOException, InterruptedException {
+        PrepareStreamTableDecimal("DECIMAL64",4);
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadClient_subscribe_arrayVector_DECIMAL128() throws IOException, InterruptedException {
+        PrepareStreamTableDecimal("DECIMAL128",7);
+        ThreadedClient client = new ThreadedClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
 }
