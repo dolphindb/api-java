@@ -1527,7 +1527,31 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("[dsfgv,]", bt.getColumn("blob").getString());
         conn.run("undef(`t1,SHARED)");
     }
+    @Test(timeout = 120000)
+    public  void test_insert_blob_to_string()throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = streamTable(1000:0, `int`blob," +
+                "[INT,STRING]);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false,null,1, 1,
+                1, "int");
 
+        String blob=conn.run("n=10;t = table(1..n as id, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,n) as name, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,n) as name1);"+
+                "t.toStdJson()").getString();
+        BasicString blob1 = new BasicString(blob,true);
+        for (int i=0;i<1025;i++) {
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, blob1);
+            assertEquals("code= info=",pErrorInfo.toString());
+        }
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt= (BasicTable) conn.run("select * from t1;");
+        assertEquals(1025,bt.rows());
+        for (int i=0;i<1025;i++) {
+            assertEquals(blob, bt.getColumn("blob").get(i).getString());
+        }
+    }
     @Test(timeout = 120000)
     public void test_insert_digital_0() throws Exception {
 
@@ -2400,7 +2424,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
     }
     @Test(timeout = 120000)
-    public  void test_insert_blob_1()throws Exception {
+    public  void test_insert_string_to_blob()throws Exception {
 
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `int`blob," +
