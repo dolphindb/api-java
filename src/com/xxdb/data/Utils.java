@@ -395,7 +395,7 @@ public class Utils {
 			return DATA_CATEGORY.LOGICAL;
 		else if(type==DATA_TYPE.DT_DOUBLE || type==DATA_TYPE.DT_FLOAT)
 			return DATA_CATEGORY.FLOATING;
-		else if(type==DATA_TYPE.DT_STRING || type==DATA_TYPE.DT_SYMBOL)
+		else if(type==DATA_TYPE.DT_STRING || type==DATA_TYPE.DT_SYMBOL || type == DATA_TYPE.DT_BLOB)
 			return DATA_CATEGORY.LITERAL;
 		else if(type==DATA_TYPE.DT_INT128 || type==DATA_TYPE.DT_UUID || type==DATA_TYPE.DT_IPADDR)
 			return DATA_CATEGORY.BINARY;
