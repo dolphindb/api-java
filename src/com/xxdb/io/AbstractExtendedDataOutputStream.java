@@ -65,37 +65,12 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 
 	@Override
 	public void writeUTF(String value) throws IOException {
-		int len = value.length();
-		int i = 0;
-		int pos = 0;
-		boolean lengthWritten = false;
-		if (buf == null)
-			buf = new byte[BUF_SIZE];
-		do {
-			while (i < len && pos < buf.length - 3){
-				char c = value.charAt(i++);
-				if (c >= '\u0001' && c <= '\u007f')
-					buf[pos++] = (byte) c;
-				else if (c == '\u0000' || (c >= '\u0080' && c <= '\u07ff')){
-					buf[pos++] = (byte) (0xc0 | (0x1f & (c >> 6)));
-					buf[pos++] = (byte) (0x80 | (0x3f & c));
-				}
-				else{
-					buf[pos++] = (byte) (0xe0 | (0x0f & (c >> 12)));
-					buf[pos++] = (byte) (0x80 | (0x3f & (c >> 6)));
-					buf[pos++] = (byte) (0x80 | (0x3f & c));
-				}
-			}
-			if (! lengthWritten){
-				if (i == len)
-					writeShort(pos);
-				else
-					writeShort(getUTFlength(value, i, pos));
-				lengthWritten = true;
-			}
-			write(buf, 0, pos);
-			pos = 0;
-		}while (i < len);
+		byte[] valueBytes = value.getBytes(StandardCharsets.UTF_8);
+		byte[] newValueBytes = getResolveZeroByteArray(valueBytes);
+
+		writeShort(newValueBytes.length);
+		write(newValueBytes, 0, newValueBytes.length);
+		write(0);
 	}
 
 	@Override
@@ -105,38 +80,19 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 			throw new RuntimeException("Serialized string length must " +
 					"less than 256k bytes.");
 		}
-		int i = 0;
-		int pos = 0;
-		if (buf == null)
-			buf = new byte[BUF_SIZE];
-		do {
-			while (i < len && pos < buf.length - 4){
-				char c = value.charAt(i++);
-				if (c >= '\u0001' && c <= '\u007f')
-					buf[pos++] = (byte) c;
-				else if (c == '\u0000' || (c >= '\u0080' && c <= '\u07ff')){
-					buf[pos++] = (byte) (0xc0 | (0x1f & (c >> 6)));
-					buf[pos++] = (byte) (0x80 | (0x3f & c));
-				}
-				else{
-					buf[pos++] = (byte) (0xe0 | (0x0f & (c >> 12)));
-					buf[pos++] = (byte) (0x80 | (0x3f & (c >> 6)));
-					buf[pos++] = (byte) (0x80 | (0x3f & c));
-				}
-			}
-			if(i >= len)
-				buf[pos++] = 0;
-			write(buf, 0, pos);
-			pos = 0;
-		}while (i < len);
+
+		byte[] valueBytes = value.getBytes(StandardCharsets.UTF_8);
+		byte[] newValueBytes = getResolveZeroByteArray(valueBytes);
+		write(newValueBytes, 0, newValueBytes.length);
+		write(0);
 	}
-	
+
 	@Override
 	public void writeBlob(byte[] value) throws IOException {
 		writeInt(value.length);
 		write(value);
 	}
-	
+
 	public static int getUTFlength(String value, int start, int sum) throws IOException {
 		int len = value.length();
 		for (int i = start; i < len; ++i){
@@ -217,39 +173,14 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 
 	@Override
 	public void writeStringArray(String[] A, int startIdx, int len) throws IOException {
-		if (buf == null)
-			buf = new byte[BUF_SIZE];
 		int end = startIdx + len;
-		int pos = 0;
 		for (int j = startIdx; j < end; ++j) {
 			String value = A[j];
-			int valueLen = value.length();
-			int i = 0;
-			do {
-				while (i < valueLen && pos < buf.length - 4){
-					char c = value.charAt(i++);
-					if (c >= '\u0001' && c <= '\u007f')
-						buf[pos++] = (byte) c;
-					else if (c == '\u0000' || (c >= '\u0080' && c <= '\u07ff')){
-						buf[pos++] = (byte) (0xc0 | (0x1f & (c >> 6)));
-						buf[pos++] = (byte) (0x80 | (0x3f & c));
-					}
-					else{
-						buf[pos++] = (byte) (0xe0 | (0x0f & (c >> 12)));
-						buf[pos++] = (byte) (0x80 | (0x3f & (c >> 6)));
-						buf[pos++] = (byte) (0x80 | (0x3f & c));
-					}
-				}
-				if(i >= valueLen)
-					buf[pos++] = 0;
-				if (pos + 4 >= buf.length) {
-					write(buf, 0, pos);
-					pos = 0;
-				}
-			}while (i < valueLen);
+			byte[] valueBytes = value.getBytes(StandardCharsets.UTF_8);
+			byte[] newValueBytes = getResolveZeroByteArray(valueBytes);
+			write(newValueBytes, 0, newValueBytes.length);
+			write(0);
 		}
-		if (pos > 0)
-			write(buf, 0, pos);
 	}
 	
 	@Override
@@ -279,6 +210,32 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 	@Override
 	public void writeDouble2Array(Double2[] A) throws IOException {
 		writeDouble2Array(A, 0, A.length);
+	}
+
+	public static byte[] getResolveZeroByteArray(byte[] originalArray) {
+
+		int indexOfZero = -1;
+
+		// Find the index of the first occurrence of 0.
+		for (int i = 0; i < originalArray.length; i++) {
+			if (originalArray[i] == 0) {
+				indexOfZero = i;
+				break;
+			}
+		}
+
+		byte[] newArray;
+		if (indexOfZero != -1) {
+			// Create a new array containing only the elements before 0.
+			System.out.println("The input String contains '\0', it will be dropped start from '\0' to last.");
+			newArray = new byte[indexOfZero];
+			System.arraycopy(originalArray, 0, newArray, 0, indexOfZero);
+		} else {
+			// If 0 is not found, the new array is the same as the original array.
+			newArray = originalArray;
+		}
+
+		return newArray;
 	}
 	
 }
