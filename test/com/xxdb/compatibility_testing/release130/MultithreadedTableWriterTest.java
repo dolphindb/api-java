@@ -1,5 +1,6 @@
-package com.xxdb;
+package com.xxdb.compatibility_testing.release130;
 
+import com.xxdb.DBConnection;
 import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.Vector;
 import com.xxdb.data.*;
@@ -1253,6 +1254,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
 //        }
         conn.run("undef(`t1,SHARED)");
     }
+
+
     @Test(timeout = 120000)
     public  void test_insert_UUID_delta()throws Exception {
         
@@ -1527,31 +1530,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("[dsfgv,]", bt.getColumn("blob").getString());
         conn.run("undef(`t1,SHARED)");
     }
-    @Test(timeout = 120000)
-    public  void test_insert_blob_to_string()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = streamTable(1000:0, `int`blob," +
-                "[INT,STRING]);" +
-                "share t as t1;");
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "int");
 
-        String blob=conn.run("n=10;t = table(1..n as id, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,n) as name, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,n) as name1);"+
-                "t.toStdJson()").getString();
-        BasicString blob1 = new BasicString(blob,true);
-        for (int i=0;i<1025;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, blob1);
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(1025,bt.rows());
-        for (int i=0;i<1025;i++) {
-            assertEquals(blob, bt.getColumn("blob").get(i).getString());
-        }
-    }
     @Test(timeout = 120000)
     public void test_insert_digital_0() throws Exception {
 
@@ -2423,32 +2402,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(blob, bt.getColumn("blob").get(i).getString());
         }
     }
-    @Test(timeout = 120000)
-    public  void test_insert_string_to_blob()throws Exception {
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = streamTable(1000:0, `int`blob," +
-                "[INT,BLOB]);" +
-                "share t as t1;");
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "int");
-
-        String blob=conn.run("n=10;t = table(1..n as id, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,n) as name, take(`aaaaadsfasdfaa`bbbbasdfasbbbbbb`cccasdfasdfasfcccccccccc,n) as name1);"+
-                "t.toStdJson()").getString();
-        BasicString blob1 = new BasicString(blob,true);
-        for (int i=0;i<1025;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, blob1);
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(1025,bt.rows());
-        for (int i=0;i<1025;i++) {
-            assertEquals(blob, bt.getColumn("blob").get(i).getString());
-        }
-    }
     @Test(timeout = 120000)
     public  void test_insert_wrongtype2()throws Exception {
         
@@ -5346,12 +5300,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "cstring = \"hello\" \"hi\" \"here\";\n" +
                 "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n" +
                 "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
-                "cdecimal32 = decimal32(12 17 135.2,2)\n" +
-                "cdecimal64 = decimal64(18 24 33.878,4)\n" +
-                "cdecimal128 = decimal128(18 24 33.878,18)\n" +
                 "t = indexedTable(`cint,cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
                 "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
-                "cstring,cdatehour,cdecimal32,cdecimal64,cdecimal128);" +
+                "cstring,cdatehour);" +
                 "share t as st;";
         conn.run(script);
         MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","","st",
@@ -5361,15 +5312,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 new BasicMonth(2012,Month.AUGUST),new BasicTime(LocalTime.of(13,7,55)),new BasicMinute(LocalTime.of(11,40,53)),
                 new BasicSecond(895),new BasicDateTime(LocalDateTime.MIN),new BasicTimestamp(LocalDateTime.MAX),new BasicNanoTime(LocalTime.of(22,14,58,43847)),
                 new BasicNanoTimestamp(LocalDateTime.of(2013,11,4,13,34,49,424246)),new BasicFloat((float) 12.71),new BasicDouble(0.783),
-                new BasicString("MongoDB"),new BasicDateHour(LocalDateTime.now()),new BasicDecimal32(98,2),new BasicDecimal64(188.68,4),new BasicDecimal128("188.68",18));
+                new BasicString("MongoDB"),new BasicDateHour(LocalDateTime.now()));
         mtw.waitForThreadCompletion();
         BasicTable ua = (BasicTable) conn.run("select * from st;");
         assertEquals(3,ua.rows());
         System.out.println(ua.getString());
         assertEquals(0,conn.run("select * from st where cminute=08:12m").rows());
         assertEquals(1,conn.run("select * from st where cminute=11:40m").rows());
-        assertEquals("188.6800", ((BasicDecimal64Vector)(ua.getColumn("cdecimal64"))).get(1).getString());
-        assertEquals("188.680000000000000000", ((BasicDecimal128Vector)(ua.getColumn("cdecimal128"))).get(1).getString());
         conn.run("undef(`st,SHARED);");
         conn.run("clear!(t);");
     }
@@ -5394,13 +5343,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "cdouble = 5.7 7.2 3.9;\n" +
                 "cstring = \"hello\" \"hi\" \"here\";\n" +
                 "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n" +
-                "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
-                "cdecimal32 = decimal32(12 17 135.2,2)\n" +
-                "cdecimal64 = decimal64(18 24 33.878,4)\n" +
-                "cdecimal128 = decimal128(18 24 33.878,18)\n" +
                 "t = keyedTable(`cint,cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
                 "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
-                "cstring,cdatehour,cdecimal32,cdecimal64,cdecimal128);" +
+                "cstring,cdatehour);" +
                 "share t as st;";
         conn.run(script);
         MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","","st",
@@ -5410,15 +5355,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 new BasicMonth(2012,Month.AUGUST),new BasicTime(LocalTime.of(13,7,55)),new BasicMinute(LocalTime.of(11,40,53)),
                 new BasicSecond(895),new BasicDateTime(LocalDateTime.MIN),new BasicTimestamp(LocalDateTime.MAX),new BasicNanoTime(LocalTime.of(22,14,58,43847)),
                 new BasicNanoTimestamp(LocalDateTime.of(2013,11,4,13,34,49,424246)),new BasicFloat((float) 12.71),new BasicDouble(0.783),
-                new BasicString("MongoDB"),new BasicDateHour(LocalDateTime.now()),new BasicDecimal32(98,2),new BasicDecimal64(188.68,4),new BasicDecimal128("188.68",18));
+                new BasicString("MongoDB"),new BasicDateHour(LocalDateTime.now()));
         mtw.waitForThreadCompletion();
         BasicTable ua = (BasicTable) conn.run("select * from st;");
         assertEquals(3,ua.rows());
         System.out.println(ua.getString());
         assertEquals(0,conn.run("select * from st where cminute=08:12m").rows());
         assertEquals(1,conn.run("select * from st where cminute=11:40m").rows());
-        assertEquals("188.6800", ((BasicDecimal64Vector)(ua.getColumn("cdecimal64"))).get(1).getString());
-        assertEquals("188.680000000000000000", ((BasicDecimal128Vector)(ua.getColumn("cdecimal128"))).get(1).getString());
         conn.run("undef(`st,SHARED);");
         conn.run("clear!(t);");
     }
@@ -5444,34 +5387,30 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "cstring = \"hello\" \"hi\" \"here\";\n" +
                 "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n" +
                 "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
-                "cdecimal32 = decimal32(12 17 135.2,2)\n" +
-                "cdecimal64 = decimal64(18 24 33.878,4)\n" +
-                "cdecimal128 = decimal128(18 24 33.878,18)\n" +
+
                 "t = table(cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
                 "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
-                "cstring,cdatehour,cdecimal32,cdecimal64,cdecimal128);" +
-                "if(existsDatabase(\"dfs://testDecimal\")){" +
-                "dropDatabase(\"dfs://testDecimal\")}" +
-                "db = database(\"dfs://testDecimal\",VALUE,1..10);" +
+                "cstring,cdatehour);" +
+                "if(existsDatabase(\"dfs://testmtw\")){" +
+                "dropDatabase(\"dfs://testmtw\")}" +
+                "db = database(\"dfs://testmtw\",VALUE,1..10);" +
                 "pt = db.createPartitionedTable(t,`pt,`cint);" +
                 "pt.append!(t)";
         conn.run(script);
-        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://testDecimal","pt",
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://testmtw","pt",
                 false,false,null,1000,1,20,"cint",null,
                 MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`cint"});
         mtw.insert(new BasicBoolean(true),new BasicByte((byte) 'D'),new BasicShort((short) 21),new BasicInt(4),new BasicLong(55),new BasicDate(LocalDate.now()),
                 new BasicMonth(2012,Month.AUGUST),new BasicTime(LocalTime.of(13,7,55)),new BasicMinute(LocalTime.of(11,40,53)),
                 new BasicSecond(895),new BasicDateTime(LocalDateTime.MIN),new BasicTimestamp(LocalDateTime.MAX),new BasicNanoTime(LocalTime.of(22,14,58,43847)),
                 new BasicNanoTimestamp(LocalDateTime.of(2013,11,4,13,34,49,424246)),new BasicFloat((float) 12.71),new BasicDouble(0.783),
-                new BasicString("MongoDB"),new BasicDateHour(LocalDateTime.now()),new BasicDecimal32(98,2),new BasicDecimal64(188.68,4),new BasicDecimal128("188.68",18));
+                new BasicString("MongoDB"),new BasicDateHour(LocalDateTime.now()));
         mtw.waitForThreadCompletion();
         BasicTable ua = (BasicTable) conn.run("select * from pt;");
         assertEquals(3,ua.rows());
         System.out.println(ua.getString());
         assertEquals(0,conn.run("select * from pt where cminute=08:12m").rows());
         assertEquals(1,conn.run("select * from pt where cminute=11:40m").rows());
-        assertEquals("188.6800", ((BasicDecimal64Vector)(ua.getColumn("cdecimal64"))).get(1).getString());
-        assertEquals("188.680000000000000000", ((BasicDecimal128Vector)(ua.getColumn("cdecimal128"))).get(1).getString());
         conn.run("clear!(t);");
     }
 
@@ -5496,34 +5435,29 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "cstring = \"hello\" \"hi\" \"here\";\n" +
                 "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n" +
                 "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
-                "cdecimal32 = decimal32(12 17 135.2,2)\n" +
-                "cdecimal64 = decimal64(18 24 33.878,4)\n" +
-                "cdecimal128 = decimal128(18 24 33.878,18)\n" +
                 "t = table(cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
                 "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
-                "cstring,cdatehour,cdecimal32,cdecimal64,cdecimal128);" +
-                "if(existsDatabase(\"dfs://testDecimal\")){" +
-                "dropDatabase(\"dfs://testDecimal\")}" +
-                "db = database(\"dfs://testDecimal\",VALUE,1..10);" +
+                "cstring,cdatehour);" +
+                "if(existsDatabase(\"dfs://testmtw\")){" +
+                "dropDatabase(\"dfs://testmtw\")}" +
+                "db = database(\"dfs://testmtw\",VALUE,1..10);" +
                 "pt = db.createTable(t,`pt);" +
                 "pt.append!(t)";
         conn.run(script);
-        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://testDecimal","pt",
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST,PORT,"admin","123456","dfs://testmtw","pt",
                 false,false,null,1000,1,1,"cint",null,
                 MultithreadedTableWriter.Mode.M_Upsert,new String[]{"ignoreNull=true","keyColNames=`cint"});
         mtw.insert(new BasicBoolean(true),new BasicByte((byte) 'D'),new BasicShort((short) 21),new BasicInt(4),new BasicLong(55),new BasicDate(LocalDate.now()),
                 new BasicMonth(2012,Month.AUGUST),new BasicTime(LocalTime.of(13,7,55)),new BasicMinute(LocalTime.of(11,40,53)),
                 new BasicSecond(895),new BasicDateTime(LocalDateTime.MIN),new BasicTimestamp(LocalDateTime.MAX),new BasicNanoTime(LocalTime.of(22,14,58,43847)),
                 new BasicNanoTimestamp(LocalDateTime.of(2013,11,4,13,34,49,424246)),new BasicFloat((float) 12.71),new BasicDouble(0.783),
-                new BasicString("MongoDB"),new BasicDateHour(LocalDateTime.now()),new BasicDecimal32(98,2),new BasicDecimal64(188.68,4),new BasicDecimal128("188.68",18));
+                new BasicString("MongoDB"),new BasicDateHour(LocalDateTime.now()));
         mtw.waitForThreadCompletion();
         BasicTable ua = (BasicTable) conn.run("select * from pt;");
         assertEquals(3,ua.rows());
         System.out.println(ua.getString());
         assertEquals(0,conn.run("select * from pt where cminute=08:12m").rows());
         assertEquals(1,conn.run("select * from pt where cminute=11:40m").rows());
-        assertEquals("188.6800", ((BasicDecimal64Vector)(ua.getColumn("cdecimal64"))).get(1).getString());
-        assertEquals("188.680000000000000000", ((BasicDecimal128Vector)(ua.getColumn("cdecimal128"))).get(1).getString());
         conn.run("clear!(t);");
     }
 
@@ -5539,719 +5473,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
                     1, "int",new int[]{Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4});
         System.out.println(mutithreadTableWriter_.getStatus().toString());
         conn.run("undef(`t1,SHARED)");
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_empty_arrayVector_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`arrayv,[INT,INT[]]);\n" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-        for (int i=0;i<1000;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new Integer[]{});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        for (int i=0;i<1000;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,null);
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(2000,bt.rows());
-        for (int i=0;i<2000;i++) {
-            assertEquals("[]", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).getString());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public void test_insert_arrayVector_different_length_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`arrayv`arrayv1`arrayv2," +
-                "[INT,INT[],BOOL[],BOOL[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-
-        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new Integer[]{1},new Boolean[]{true,null,false},new Boolean[]{true});
-        pErrorInfo=mutithreadTableWriter_.insert( 1,new Integer[]{},new Boolean[]{true,null,false},new Boolean[]{true});
-        pErrorInfo=mutithreadTableWriter_.insert( 1,new Integer[]{1,2},new Boolean[]{true,null,false},new Boolean[]{true});
-        pErrorInfo=mutithreadTableWriter_.insert( 1,new Integer[]{1,null,1},new Boolean[]{true,null,false},new Boolean[]{true});
-        assertEquals("code= info=",pErrorInfo.toString());
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(4,bt.rows());
-        assertEquals("[1]", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(0).getString());
-        assertEquals("[]", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(1).getString());
-        assertEquals("[1,2]", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(2).getString());
-        assertEquals("[1,,1]", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(3).getString());
-        for (int i=0;i<4;i++) {
-            assertEquals("[true,,false]", ((BasicArrayVector)bt.getColumn("arrayv1")).getVectorValue(i).getString());
-            assertEquals("[true]", ((BasicArrayVector)bt.getColumn("arrayv2")).getVectorValue(i).getString());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_int_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`arrayv," +
-                "[INT,INT[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-        for (int i=0;i<10;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new Integer[]{1, i});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(10,bt.rows());
-        for (int i=0;i<10;i++) {
-            assertEquals(1, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(i, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_char_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`arrayv," +
-                "[INT,CHAR[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-        for (int i=0;i<10;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new Byte[]{'a','3'});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(10,bt.rows());
-        for (int i=0;i<10;i++) {
-            assertEquals("['a','3']", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).getString());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_bool_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`arrayv," +
-                "[INT,BOOL[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-        for (int i=0;i<10;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new Boolean[]{true,false});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(10,bt.rows());
-        for (int i=0;i<10;i++) {
-            assertEquals("true",((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0).getString());
-            assertEquals("false", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1).getString());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_long_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`arrayv," +
-                "[INT,LONG[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=1024;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-        for (int i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new Long[]{1l, Long.valueOf(i)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(1l, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(Long.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_short_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`arrayv," +
-                "[INT,SHORT[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=210;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new Short[]{1,i});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(Short.valueOf("1"), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(Short.valueOf(""+i+""), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_float_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`arrayv," +
-                "[INT,FLOAT[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=10240;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new Float[]{0.0f,Float.valueOf(i)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(0.0f, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(Float.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_double_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`arrayv," +
-                "[INT,DOUBLE[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=10240;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new Double[]{Double.valueOf(0),Double.valueOf(i-10)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(Double.valueOf(0), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(Double.valueOf(i-10), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_date_month_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`arrayv1`arrayv2," +
-                "[INT,DATE[],MONTH[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=10240;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new LocalDate[]{LocalDate.of(1,1,1)},
-                    new LocalDate[]{LocalDate.of(2021,1,1)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(LocalDate.of(1,1,1), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv1")).getVectorValue(i).get(0)).getTemporal());
-            assertEquals("2021.01M", ((BasicArrayVector)bt.getColumn("arrayv2")).getVectorValue(i).get(0).getString());
-        }
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_time_minute_second_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`time`minute`second," +
-                "[INT,TIME[],MINUTE[],SECOND[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=1024;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(
-                    1,
-                    new LocalTime[]{LocalTime.of(1,1,1,342)},
-                    new LocalTime[]{LocalTime.of(1,1,1,342)},
-                    new LocalTime[]{LocalTime.of(1,1,1,1)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals("01:01:01.000", ((BasicArrayVector)bt.getColumn("time")).getVectorValue(i).get(0).getString());
-            assertEquals("01:01m", ((BasicArrayVector)bt.getColumn("minute")).getVectorValue(i).get(0).getString());
-            assertEquals("01:01:01", ((BasicArrayVector)bt.getColumn("second")).getVectorValue(i).get(0).getString());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_datetime_timestamp_nanotime_nanotimstamp_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`datetime`timestamp`nanotime`nanotimstamp," +
-                "[INT,DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=1048;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(
-                    1,
-                    new LocalDateTime[]{LocalDateTime.of(2022,2,1,1,1,2,45364654+i),LocalDateTime.of(2022,2,1,1,1,2,45364654+i)},
-                    new LocalDateTime[]{LocalDateTime.of(2022,2,1,1,1,2,45364654+i)},
-                    new LocalTime[]{LocalTime.of(1,1,1,45364654+i),LocalTime.of(1,1,1,45364654+i),LocalTime.of(1,1,1,45364654+i)},
-                    new LocalDateTime[]{LocalDateTime.of(2022,2,1,1,1,2,45364654+i),
-                            LocalDateTime.of(2022,2,1,1,1,2,45364654+i)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-
-        // System.out.println(LocalDateTime.of(2022,2,1,1,1,2,033));
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(time,bt.rows());
-        System.out.println(((Scalar)((BasicArrayVector)bt.getColumn("timestamp")).getVectorValue(0).get(0)).getTemporal());
-
-        for (int i=0;i<time;i++) {
-            assertEquals(LocalDateTime.of(2022,2,1,1,1,2), ((Scalar)((BasicArrayVector)bt.getColumn("datetime")).getVectorValue(i).get(0)).getTemporal());
-            assertEquals(LocalDateTime.of(2022,2,1,1,1,2,45000000), ((Scalar)((BasicArrayVector)bt.getColumn("timestamp")).getVectorValue(i).get(0)).getTemporal());
-            assertEquals(LocalTime.of(1,1,1,45364654+i), ((Scalar)((BasicArrayVector)bt.getColumn("nanotime")).getVectorValue(i).get(0)).getTemporal());
-            assertEquals(LocalDateTime.of(2022,2,1,1,1,2,45364654+i), ((Scalar)((BasicArrayVector)bt.getColumn("nanotimstamp")).getVectorValue(i).get(0)).getTemporal());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_otherType_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`uuid`int128`ipaddr," +
-                "[INT,UUID[],INT128[],IPADDR[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=1048;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-        BasicUuidVector bv= (BasicUuidVector) conn.run("uuid(['5d212a78-cc48-e3b1-4235-b4d91473ee87',,'5d212a78-cc48-e3b1-4235-b4d91473ee87'])");
-        BasicInt128Vector iv= (BasicInt128Vector) conn.run("int128(['e1671797c52e15f763380b45e841ec32',,'e1671797c52e15f763380b45e841ec32'])");
-        BasicIPAddrVector ipv= (BasicIPAddrVector) conn.run("ipaddr(['192.168.1.13',,'192.168.1.13'])");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new String[]{"5d212a78-cc48-e3b1-4235-b4d91473ee87",null,"5d212a78-cc48-e3b1-4235-b4d91473ee87"},new String[]{"e1671797c52e15f763380b45e841ec32",null,"e1671797c52e15f763380b45e841ec32"}
-                    ,new String[]{"192.168.1.13",null,"192.168.1.13"});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-
-        // System.out.println(LocalDateTime.of(2022,2,1,1,1,2,033));
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from pt;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(bv.getString(), ((BasicArrayVector)(bt.getColumn("uuid"))).getVectorValue(i).getString());
-            assertEquals(iv.getString(), ((BasicArrayVector)(bt.getColumn("int128"))).getVectorValue(i).getString());
-            assertEquals(ipv.getString(), ((BasicArrayVector)(bt.getColumn("ipaddr"))).getVectorValue(i).getString());
-        }
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_decimal_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`col0`col1`col2`col3`col4," +
-                "[INT,DECIMAL32(0)[],DECIMAL32(3)[],DECIMAL64(0)[],DECIMAL64(4)[],DECIMAL64(8)[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=1048;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-
-        for (int i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal32[]{new BasicDecimal32(1,0),new BasicDecimal32(1.00,0),new BasicDecimal32(3.0001,0),new BasicDecimal32(99999.99999999999,0)},new BasicDecimal32[]{new BasicDecimal32(1,3),new BasicDecimal32(1.00,3),new BasicDecimal32(3.0001,3),new BasicDecimal32(99999.99999999999,3)},new BasicDecimal64[]{new BasicDecimal64(1,0),new BasicDecimal64(1.00,0),new BasicDecimal64(3.0001,0),new BasicDecimal64(99999.99999999999,0)},new BasicDecimal64[]{new BasicDecimal64(1,4),new BasicDecimal64(1.00,4),new BasicDecimal64(3.0001,4),new BasicDecimal64(99999.99999999999,4)},new BasicDecimal64[]{new BasicDecimal64(1,8),new BasicDecimal64(1.00,8),new BasicDecimal64(3.0001,8),new BasicDecimal64(99999.99999999999,8)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt1= (BasicTable)conn.run("select * from loadTable(\"dfs://test_arrayVector_in_partition_table\",`pt);");
-        assertEquals(time,bt1.rows());
-        BasicDecimal32Vector decv1= (BasicDecimal32Vector) conn.run("decimal32([1,1.00,3.0001,99999.99999999999],0)");
-        BasicDecimal32Vector decv2= (BasicDecimal32Vector) conn.run("decimal32([1,1.00,3.0001,99999.99999999999],3)");
-        BasicDecimal64Vector decv3= (BasicDecimal64Vector) conn.run("decimal64([1,1.00,3.0001,99999.99999999999],0)");
-        BasicDecimal64Vector decv4= (BasicDecimal64Vector) conn.run("decimal64([1,1.00,3.0001,99999.99999999999],4)");
-        BasicDecimal64Vector decv5= (BasicDecimal64Vector) conn.run("decimal64([1,1.00,3.0001,99999.99999999999],8)");
-
-        for (int i=0;i<time;i++) {
-            assertEquals(decv1.getString(), ((BasicArrayVector)(bt1.getColumn("col0"))).getVectorValue(i).getString());
-            assertEquals(decv2.getString(), ((BasicArrayVector)(bt1.getColumn("col1"))).getVectorValue(i).getString());
-            assertEquals(decv3.getString(), ((BasicArrayVector)(bt1.getColumn("col2"))).getVectorValue(i).getString());
-            assertEquals(decv4.getString(), ((BasicArrayVector)(bt1.getColumn("col3"))).getVectorValue(i).getString());
-            assertEquals(decv5.getString(), ((BasicArrayVector)(bt1.getColumn("col4"))).getVectorValue(i).getString());
-
-        }
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_decimal_to_partition_table_compress_lz4()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`col0`col1`col2`col3`col4," +
-                "[INT,DECIMAL32(0)[],DECIMAL32(3)[],DECIMAL64(0)[],DECIMAL64(4)[],DECIMAL64(8)[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=1048;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int",new int[]{Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4});
-
-        for (int i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal32[]{new BasicDecimal32(1,0),new BasicDecimal32(1.00,0),new BasicDecimal32(3.0001,0),new BasicDecimal32(99999.99999999999,0)},new BasicDecimal32[]{new BasicDecimal32(1,3),new BasicDecimal32(1.00,3),new BasicDecimal32(3.0001,3),new BasicDecimal32(99999.99999999999,3)},new BasicDecimal64[]{new BasicDecimal64(1,0),new BasicDecimal64(1.00,0),new BasicDecimal64(3.0001,0),new BasicDecimal64(99999.99999999999,0)},new BasicDecimal64[]{new BasicDecimal64(1,4),new BasicDecimal64(1.00,4),new BasicDecimal64(3.0001,4),new BasicDecimal64(99999.99999999999,4)},new BasicDecimal64[]{new BasicDecimal64(1,8),new BasicDecimal64(1.00,8),new BasicDecimal64(3.0001,8),new BasicDecimal64(99999.99999999999,8)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt1= (BasicTable)conn.run("select * from loadTable(\"dfs://test_arrayVector_in_partition_table\",`pt);");
-        assertEquals(time,bt1.rows());
-        BasicDecimal32Vector decv1= (BasicDecimal32Vector) conn.run("decimal32([1,1.00,3.0001,99999.99999999999],0)");
-        BasicDecimal32Vector decv2= (BasicDecimal32Vector) conn.run("decimal32([1,1.00,3.0001,99999.99999999999],3)");
-        BasicDecimal64Vector decv3= (BasicDecimal64Vector) conn.run("decimal64([1,1.00,3.0001,99999.99999999999],0)");
-        BasicDecimal64Vector decv4= (BasicDecimal64Vector) conn.run("decimal64([1,1.00,3.0001,99999.99999999999],4)");
-        BasicDecimal64Vector decv5= (BasicDecimal64Vector) conn.run("decimal64([1,1.00,3.0001,99999.99999999999],8)");
-
-        for (int i=0;i<time;i++) {
-            assertEquals(decv1.getString(), ((BasicArrayVector)(bt1.getColumn("col0"))).getVectorValue(i).getString());
-            assertEquals(decv2.getString(), ((BasicArrayVector)(bt1.getColumn("col1"))).getVectorValue(i).getString());
-            assertEquals(decv3.getString(), ((BasicArrayVector)(bt1.getColumn("col2"))).getVectorValue(i).getString());
-            assertEquals(decv4.getString(), ((BasicArrayVector)(bt1.getColumn("col3"))).getVectorValue(i).getString());
-            assertEquals(decv5.getString(), ((BasicArrayVector)(bt1.getColumn("col4"))).getVectorValue(i).getString());
-
-        }
-    }
-//    @Test(timeout = 120000) not support
-    public  void test_insert_arrayVector_decimal_to_partition_table_compress_delta()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`col0`col1`col2`col3`col4," +
-                "[INT,DECIMAL32(0)[],DECIMAL32(3)[],DECIMAL64(0)[],DECIMAL64(1)[],DECIMAL64(8)[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=1048;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
-
-        for (int i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal32[]{new BasicDecimal32(1,0),new BasicDecimal32(1.00,0),new BasicDecimal32(3.0001,0),new BasicDecimal32(99999.99999999999,0)},new BasicDecimal32[]{new BasicDecimal32(1,3),new BasicDecimal32(1.00,3),new BasicDecimal32(3.0001,3),new BasicDecimal32(99999.99999999999,3)},new BasicDecimal64[]{new BasicDecimal64(1,0),new BasicDecimal64(1.00,0),new BasicDecimal64(3.0001,0),new BasicDecimal64(99999.99999999999,0)},new BasicDecimal64[]{new BasicDecimal64(1,4),new BasicDecimal64(1.00,4),new BasicDecimal64(3.0001,4),new BasicDecimal64(99999.99999999999,4)},new BasicDecimal64[]{new BasicDecimal64(1,8),new BasicDecimal64(1.00,8),new BasicDecimal64(3.0001,8),new BasicDecimal64(99999.99999999999,8)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt1= (BasicTable)conn.run("select * from loadTable(\"dfs://test_arrayVector_in_partition_table\",`pt);");
-        assertEquals(time,bt1.rows());
-        BasicDecimal32Vector decv1= (BasicDecimal32Vector) conn.run("decimal32([1,1.00,3.0001,99999.99999999999],0)");
-        BasicDecimal32Vector decv2= (BasicDecimal32Vector) conn.run("decimal32([1,1.00,3.0001,99999.99999999999],3)");
-        BasicDecimal64Vector decv3= (BasicDecimal64Vector) conn.run("decimal64([1,1.00,3.0001,99999.99999999999],0)");
-        BasicDecimal64Vector decv4= (BasicDecimal64Vector) conn.run("decimal64([1,1.00,3.0001,99999.99999999999],4)");
-        BasicDecimal64Vector decv5= (BasicDecimal64Vector) conn.run("decimal64([1,1.00,3.0001,99999.99999999999],8)");
-
-        for (int i=0;i<time;i++) {
-            assertEquals(decv1.getString(), ((BasicArrayVector)(bt1.getColumn("col0"))).getVectorValue(i).getString());
-            assertEquals(decv2.getString(), ((BasicArrayVector)(bt1.getColumn("col1"))).getVectorValue(i).getString());
-            assertEquals(decv3.getString(), ((BasicArrayVector)(bt1.getColumn("col2"))).getVectorValue(i).getString());
-            assertEquals(decv4.getString(), ((BasicArrayVector)(bt1.getColumn("col3"))).getVectorValue(i).getString());
-            assertEquals(decv5.getString(), ((BasicArrayVector)(bt1.getColumn("col4"))).getVectorValue(i).getString());
-
-        }
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_decimal_to_memory_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append(
-                "share table(1000:0, `int`col0`col1`col2`col3`col4," +
-                "[INT,DECIMAL32(0)[],DECIMAL32(3)[],DECIMAL64(0)[],DECIMAL64(4)[],DECIMAL64(8)[]]) as tt1 ;" );
-        int time=1048;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "tt1", false, false,null,1, 1,
-                1, "int");
-
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal32[]{new BasicDecimal32(1,0),new BasicDecimal32(1.00,0),new BasicDecimal32(3.0001,0),new BasicDecimal32(99999.99999999999,0)},new BasicDecimal32[]{new BasicDecimal32(1,3),new BasicDecimal32(1.00,3),new BasicDecimal32(3.0001,3),new BasicDecimal32(99999.99999999999,3)},new BasicDecimal64[]{new BasicDecimal64(1,0),new BasicDecimal64(1.00,0),new BasicDecimal64(3.0001,0),new BasicDecimal64(99999.99999999999,0)},new BasicDecimal64[]{new BasicDecimal64(1,4),new BasicDecimal64(1.00,4),new BasicDecimal64(3.0001,4),new BasicDecimal64(99999.99999999999,4)},new BasicDecimal64[]{new BasicDecimal64(1,8),new BasicDecimal64(1.00,8),new BasicDecimal64(3.0001,8),new BasicDecimal64(99999.99999999999,8)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt1= (BasicTable)conn.run("select * from tt1;");
-        assertEquals(time,bt1.rows());
-        BasicDecimal32Vector decv1= (BasicDecimal32Vector) conn.run("decimal32([1,1.00,3.0001,99999.99999999999],0)");
-        BasicDecimal32Vector decv2= (BasicDecimal32Vector) conn.run("decimal32([1,1.00,3.0001,99999.99999999999],3)");
-        BasicDecimal64Vector decv3= (BasicDecimal64Vector) conn.run("decimal64([1,1.00,3.0001,99999.99999999999],0)");
-        BasicDecimal64Vector decv4= (BasicDecimal64Vector) conn.run("decimal64([1,1.00,3.0001,99999.99999999999],4)");
-        BasicDecimal64Vector decv5= (BasicDecimal64Vector) conn.run("decimal64([1,1.00,3.0001,99999.99999999999],8)");
-
-        for (int i=0;i<time;i++) {
-            assertEquals(decv1.getString(), ((BasicArrayVector)(bt1.getColumn("col0"))).getVectorValue(i).getString());
-            assertEquals(decv2.getString(), ((BasicArrayVector)(bt1.getColumn("col1"))).getVectorValue(i).getString());
-            assertEquals(decv3.getString(), ((BasicArrayVector)(bt1.getColumn("col2"))).getVectorValue(i).getString());
-            assertEquals(decv4.getString(), ((BasicArrayVector)(bt1.getColumn("col3"))).getVectorValue(i).getString());
-            assertEquals(decv5.getString(), ((BasicArrayVector)(bt1.getColumn("col4"))).getVectorValue(i).getString());
-
-        }
-        conn.run("undef(`tt1,SHARED)");
-        conn.close();
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_decimal128_to_partition_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`col0`col1`col2`col3`col4," +
-                "[INT,DECIMAL128(0)[],DECIMAL128(1)[],DECIMAL128(10)[],DECIMAL128(18)[],DECIMAL128(30)[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=1048;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int");
-
-        for (int i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal128[]{new BasicDecimal128("1",0),new BasicDecimal128("1.00",0),new BasicDecimal128("3.0001",0),new BasicDecimal128("99999.99999999999",0)},new BasicDecimal128[]{new BasicDecimal128("1",1),new BasicDecimal128("1.00",1),new BasicDecimal128("3.0001",1),new BasicDecimal128("99999.99999999999",1)},new BasicDecimal128[]{new BasicDecimal128("1",10),new BasicDecimal128("1.00",10),new BasicDecimal128("3.0001",10),new BasicDecimal128("99999.99999999999",10)},new BasicDecimal128[]{new BasicDecimal128("1",18),new BasicDecimal128("1.00",18),new BasicDecimal128("3.0001",18),new BasicDecimal128("99999.99999999999",18)},new BasicDecimal128[]{new BasicDecimal128("1",30),new BasicDecimal128("1.00",30),new BasicDecimal128("3.0001",30),new BasicDecimal128("99999.99999999999",30)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt1= (BasicTable)conn.run("select * from loadTable(\"dfs://test_arrayVector_in_partition_table\",`pt);");
-        assertEquals(time,bt1.rows());
-        System.out.println(bt1.getColumn("col3").getString());
-        BasicDecimal128Vector decv1= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],0)");
-        BasicDecimal128Vector decv2= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],1)");
-        BasicDecimal128Vector decv3= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],10)");
-        String decv4= "[1.000000000000000000,1.000000000000000000,3.000100000000000000,99999.999999999990000000]";
-        String decv5= "[1.000000000000000000000000000000,1.000000000000000000000000000000,3.000100000000000000000000000000,99999.999999999990000000000000000000]";
-
-        for (int i=0;i<time;i++) {
-            assertEquals(decv1.getString(), ((BasicArrayVector)(bt1.getColumn("col0"))).getVectorValue(i).getString());
-            assertEquals(decv2.getString(), ((BasicArrayVector)(bt1.getColumn("col1"))).getVectorValue(i).getString());
-            assertEquals(decv3.getString(), ((BasicArrayVector)(bt1.getColumn("col2"))).getVectorValue(i).getString());
-            assertEquals(decv4, ((BasicArrayVector)(bt1.getColumn("col3"))).getVectorValue(i).getString());
-            assertEquals(decv5, ((BasicArrayVector)(bt1.getColumn("col4"))).getVectorValue(i).getString());
-
-        }
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_decimal128_to_partition_table_compress_lz4()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`col0`col1`col2`col3`col4," +
-                "[INT,DECIMAL128(0)[],DECIMAL128(1)[],DECIMAL128(10)[],DECIMAL128(18)[],DECIMAL128(30)[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=1048;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int",new int[]{Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4});
-
-        for (int i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),0),new BasicDecimal128(String.valueOf(1.00),0),new BasicDecimal128(String.valueOf(3.0001),0),new BasicDecimal128(String.valueOf(99999.99999999999),0)},new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),1),new BasicDecimal128(String.valueOf(1.00),1),new BasicDecimal128(String.valueOf(3.0001),1),new BasicDecimal128(String.valueOf(99999.99999999999),1)},new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),10),new BasicDecimal128(String.valueOf(1.00),10),new BasicDecimal128(String.valueOf(3.0001),10),new BasicDecimal128(String.valueOf(99999.99999999999),10)},new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),18),new BasicDecimal128(String.valueOf(1.00),18),new BasicDecimal128(String.valueOf(3.0001),18),new BasicDecimal128(String.valueOf(99999.99999999999),18)},new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),30),new BasicDecimal128(String.valueOf(1.00),30),new BasicDecimal128(String.valueOf(3.0001),30),new BasicDecimal128(String.valueOf(99999.99999999999),30)});
-
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt1= (BasicTable)conn.run("select * from loadTable(\"dfs://test_arrayVector_in_partition_table\",`pt);");
-        assertEquals(time,bt1.rows());
-        BasicDecimal128Vector decv1= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],0)");
-        BasicDecimal128Vector decv2= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],1)");
-        BasicDecimal128Vector decv3= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],10)");
-        String decv4= "[1.000000000000000000,1.000000000000000000,3.000100000000000000,99999.999999999990000000]";
-        String decv5= "[1.000000000000000000000000000000,1.000000000000000000000000000000,3.000100000000000000000000000000,99999.999999999990000000000000000000]";
-
-        for (int i=0;i<time;i++) {
-            assertEquals(decv1.getString(), ((BasicArrayVector)(bt1.getColumn("col0"))).getVectorValue(i).getString());
-            assertEquals(decv2.getString(), ((BasicArrayVector)(bt1.getColumn("col1"))).getVectorValue(i).getString());
-            assertEquals(decv3.getString(), ((BasicArrayVector)(bt1.getColumn("col2"))).getVectorValue(i).getString());
-            assertEquals(decv4, ((BasicArrayVector)(bt1.getColumn("col3"))).getVectorValue(i).getString());
-            assertEquals(decv5, ((BasicArrayVector)(bt1.getColumn("col4"))).getVectorValue(i).getString());
-        }
-    }
-    //    @Test(timeout = 120000) not support
-    public  void test_insert_arrayVector_decimal128_to_partition_table_compress_delta()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_arrayVector_in_partition_table';\n" +
-                "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
-                "}\n" +
-                "db = database(dbName,RANGE,0 5 10 15 20,,'TSDB')\n"+
-                "t = table(1000:0, `int`col0`col1`col2`col3`col4," +
-                "[INT,DECIMAL128(0)[],DECIMAL128(1)[],DECIMAL128(10)[],DECIMAL128(18)[],DECIMAL128(30)[]]);" +
-                "pt = db.createPartitionedTable(t,`pt,`int,,`int);");
-        int time=1048;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://test_arrayVector_in_partition_table", "pt", false, false,null,1, 1,
-                1, "int",new int[]{Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA,Vector.COMPRESS_DELTA});
-
-        for (int i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),0),new BasicDecimal128(String.valueOf(1.00),0),new BasicDecimal128(String.valueOf(3.0001),0),new BasicDecimal128(String.valueOf(99999.99999999999),0)},new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),1),new BasicDecimal128(String.valueOf(1.00),1),new BasicDecimal128(String.valueOf(3.0001),1),new BasicDecimal128(String.valueOf(99999.99999999999),1)},new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),10),new BasicDecimal128(String.valueOf(1.00),10),new BasicDecimal128(String.valueOf(3.0001),10),new BasicDecimal128(String.valueOf(99999.99999999999),10)},new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),18),new BasicDecimal128(String.valueOf(1.00),18),new BasicDecimal128(String.valueOf(3.0001),18),new BasicDecimal128(String.valueOf(99999.99999999999),18)},new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),30),new BasicDecimal128(String.valueOf(1.00),30),new BasicDecimal128(String.valueOf(3.0001),30),new BasicDecimal128(String.valueOf(99999.99999999999),30)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt1= (BasicTable)conn.run("select * from loadTable(\"dfs://test_arrayVector_in_partition_table\",`pt);");
-        assertEquals(time,bt1.rows());
-        BasicDecimal128Vector decv1= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],0)");
-        BasicDecimal128Vector decv2= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],1)");
-        BasicDecimal128Vector decv3= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],10)");
-        BasicDecimal128Vector decv4= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],18)");
-        BasicDecimal128Vector decv5= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],30)");
-
-        for (int i=0;i<time;i++) {
-            assertEquals(decv1.getString(), ((BasicArrayVector)(bt1.getColumn("col0"))).getVectorValue(i).getString());
-            assertEquals(decv2.getString(), ((BasicArrayVector)(bt1.getColumn("col1"))).getVectorValue(i).getString());
-            assertEquals(decv3.getString(), ((BasicArrayVector)(bt1.getColumn("col2"))).getVectorValue(i).getString());
-            assertEquals(decv4.getString(), ((BasicArrayVector)(bt1.getColumn("col3"))).getVectorValue(i).getString());
-            assertEquals(decv5.getString(), ((BasicArrayVector)(bt1.getColumn("col4"))).getVectorValue(i).getString());
-
-        }
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_decimal128_to_memory_table()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append(
-                "share table(1000:0, `int`col0`col1`col2`col3`col4," +
-                        "[INT,DECIMAL128(0)[],DECIMAL128(1)[],DECIMAL128(10)[],DECIMAL128(18)[],DECIMAL128(30)[]]) as tt1 ;" );
-        int time=1048;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "tt1", false, false,null,1, 1,
-                1, "int");
-
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),0),new BasicDecimal128(String.valueOf(1.00),0),new BasicDecimal128(String.valueOf(3.0001),0),new BasicDecimal128(String.valueOf(99999.99999999999),0)},new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),1),new BasicDecimal128(String.valueOf(1.00),1),new BasicDecimal128(String.valueOf(3.0001),1),new BasicDecimal128(String.valueOf(99999.99999999999),1)},new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),10),new BasicDecimal128(String.valueOf(1.00),10),new BasicDecimal128(String.valueOf(3.0001),10),new BasicDecimal128(String.valueOf(99999.99999999999),10)},new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),18),new BasicDecimal128(String.valueOf(1.00),18),new BasicDecimal128(String.valueOf(3.0001),18),new BasicDecimal128(String.valueOf(99999.99999999999),18)},new BasicDecimal128[]{new BasicDecimal128(String.valueOf(1),30),new BasicDecimal128(String.valueOf(1.00),30),new BasicDecimal128(String.valueOf(3.0001),30),new BasicDecimal128(String.valueOf(99999.99999999999),30)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt1= (BasicTable)conn.run("select * from tt1;");
-        assertEquals(time,bt1.rows());
-        BasicDecimal128Vector decv1= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],0)");
-        BasicDecimal128Vector decv2= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],1)");
-        BasicDecimal128Vector decv3= (BasicDecimal128Vector) conn.run("decimal128([1,1.00,3.0001,99999.99999999999],10)");
-        String decv4= "[1.000000000000000000,1.000000000000000000,3.000100000000000000,99999.999999999990000000]";
-        String decv5= "[1.000000000000000000000000000000,1.000000000000000000000000000000,3.000100000000000000000000000000,99999.999999999990000000000000000000]";
-
-        for (int i=0;i<time;i++) {
-            assertEquals(decv1.getString(), ((BasicArrayVector)(bt1.getColumn("col0"))).getVectorValue(i).getString());
-            assertEquals(decv2.getString(), ((BasicArrayVector)(bt1.getColumn("col1"))).getVectorValue(i).getString());
-            assertEquals(decv3.getString(), ((BasicArrayVector)(bt1.getColumn("col2"))).getVectorValue(i).getString());
-            assertEquals(decv4, ((BasicArrayVector)(bt1.getColumn("col3"))).getVectorValue(i).getString());
-            assertEquals(decv5, ((BasicArrayVector)(bt1.getColumn("col4"))).getVectorValue(i).getString());
-        }
-        conn.run("undef(`tt1,SHARED)");
-        conn.close();
     }
     @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_memoryTable_single_thread_true()throws Exception {

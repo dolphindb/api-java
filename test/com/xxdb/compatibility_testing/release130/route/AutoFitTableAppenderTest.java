@@ -1,7 +1,8 @@
-package com.xxdb.route;
+package com.xxdb.compatibility_testing.release130.route;
 
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
+import com.xxdb.route.AutoFitTableAppender;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -1020,401 +1021,6 @@ public class AutoFitTableAppenderTest {
 
         }
     }
-
-    @Test
-    public void testBasicDecimal() throws Exception {
-        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3,4);
-        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(3,2);
-        bd32v.set(0,new BasicDecimal32(31,4));
-        bd32v.set(1,new BasicDecimal32(22,4));
-        bd32v.set(2,new BasicDecimal32(17,4));
-        bd64v.set(0,new BasicDecimal64(45,2));
-        bd64v.set(1,new BasicDecimal64(9,2));
-        bd64v.set(2,new BasicDecimal64(11,2));
-        List<String> colNames = new ArrayList<>();
-        List<Vector> cols = new ArrayList<>();
-        colNames.add("id");
-        colNames.add("a");
-        colNames.add("b");
-        BasicIntVector biv = new BasicIntVector(new int[]{1,2,3});
-        cols.add(biv);
-        cols.add(bd32v);
-        cols.add(bd64v);
-        BasicTable bt = new BasicTable(colNames,cols);
-        conn.run("\n" +
-                "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://tableAppenderTest\"\n" +
-                "if(existsDatabase(dbPath))\n" +
-                "dropDatabase(dbPath)\n" +
-                "t = table(1000:0,`id`a`b,[INT,DECIMAL32(2),DECIMAL64(4)])\n" +
-                "db=database(dbPath,HASH, [INT,10])\n" +
-                "pt = db.createPartitionedTable(t,`pt,`id)");
-        AutoFitTableAppender appender=new AutoFitTableAppender("dfs://tableAppenderTest","pt",conn);
-        appender.append(bt);
-        BasicTable aa = (BasicTable) conn.run("select * from pt");
-        Assert.assertEquals(Entity.DATA_TYPE.DT_DECIMAL32,aa.getColumn("a").getDataType());
-        Assert.assertEquals(Entity.DATA_TYPE.DT_DECIMAL64,aa.getColumn("b").getDataType());
-        BasicDecimal32 bd32 = (BasicDecimal32) aa.getColumn("a").get(1);
-        Assert.assertEquals(2,bd32.getScale());
-        BasicDecimal64 bd64 = (BasicDecimal64) aa.getColumn("b").get(1);
-        Assert.assertEquals(4,bd64.getScale());
-    }
-    @Test
-    public void test_BasicDecimal128_AutoFitTableAppender_indexedTable() throws Exception {
-        conn = new DBConnection();
-        conn.connect(HOST,PORT,"admin","123456");
-        String script = "t=indexedTable(`sym,1:0,`sym`datetime`col1`col2,[STRING,DATETIME,DECIMAL128(0),DECIMAL128(37)])";
-        conn.run(script);
-        List<String> colNames = new ArrayList<>();
-        List<Vector> cols = new ArrayList<>();
-        colNames.add("sym");
-        colNames.add("datetime");
-        colNames.add("col1");
-        colNames.add("col2");
-        BasicStringVector bsv = new BasicStringVector(new String[]{"Huya","Tonghuashun","maoyan"});
-        cols.add(bsv);
-        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{17,989,9000});
-        cols.add(bdtv);
-        BasicDecimal128Vector bd32v = new BasicDecimal128Vector(3,0);
-        bd32v.set(0,new BasicDecimal128("-11.011",0));
-        bd32v.set(1,new BasicDecimal128("19.99",0));
-        bd32v.set(2,new BasicDecimal128("23.0000000000000000000001",0));
-        cols.add(bd32v);
-        System.out.println(bd32v.getString());
-        BasicDecimal128Vector bd64v = new BasicDecimal128Vector(3,37);
-        bd64v.set(0,new BasicDecimal128("-2.0009",37));
-        bd64v.set(1,new BasicDecimal128("4.99999999999999999999999999999999",37));
-        bd64v.set(2,new BasicDecimal128("0.00000000000000000000000000000001",37));
-        cols.add(bd64v);
-        BasicTable bt = new BasicTable(colNames,cols);
-        AutoFitTableAppender aftu = new AutoFitTableAppender("","t",conn);
-        aftu.append(bt);
-        BasicTable ua = (BasicTable) conn.run("select * from t;");
-        System.out.println(ua.getString());
-        for (int i = 0; i < 3; i++) {
-            assertEquals(bsv.get(i),ua.getColumn("sym").get(i));
-            assertEquals(bdtv.get(i),ua.getColumn("datetime").get(i));
-            assertEquals(bd32v.get(i).getString(),ua.getColumn("col1").get(i).getString());
-            assertEquals(bd64v.get(i).getString(),ua.getColumn("col2").get(i).getString());
-        }
-        conn.run("clear!(t)");
-    }
-    @Test
-    public void test_AutoFitTableAppender_ArrayVector_decimal() throws Exception {
-        String script = "if(existsDatabase(\"dfs://testArrayVector\")){\n" +
-                "    dropDatabase(\"dfs://testArrayVector\")\n" +
-                "}\n" +
-                "db = database(\"dfs://testArrayVector\",RANGE,int(1..100),,\"TSDB\")\n" +
-                "t = table(1000000:0,`cint`col0`col1`col2`col3`col4" +
-                ",[INT,DECIMAL32(0)[],DECIMAL32(4)[],DECIMAL64(0)[],DECIMAL64(4)[],DECIMAL64(8)[]])\n" +
-                "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
-        conn.run(script);
-        AutoFitTableAppender appender=new AutoFitTableAppender("dfs://testArrayVector","pt",conn);
-
-        List<String> colNames = new ArrayList<>();
-        colNames.add("cint");
-        colNames.add("col0");
-        colNames.add("col1");
-        colNames.add("col2");
-        colNames.add("col3");
-        colNames.add("col4");
-        List<Vector> cols = new ArrayList<>();
-        cols.add(new BasicIntVector(new int[]{12,29,31}));
-        List<Vector> bdvcol0 = new ArrayList<Vector>();
-        Vector v32=new BasicDecimal32Vector(3,0);
-        v32.set(0,new BasicDecimal32(15645.00,0));
-        v32.set(1,new BasicDecimal32(24635.00001,0));
-        v32.set(2,new BasicDecimal32(24635.00001,0));
-        bdvcol0.add(0,v32);
-        bdvcol0.add(1,v32);
-        bdvcol0.add(2,v32);
-        BasicArrayVector bavcol0 = new BasicArrayVector(bdvcol0);
-        cols.add(bavcol0);
-        List<Vector> bdvcol1 = new ArrayList<Vector>();
-        Vector v321=new BasicDecimal32Vector(3,4);
-        v321.set(0,new BasicDecimal32(15645.00,4));
-        v321.set(1,new BasicDecimal32(24635.00001,4));
-        v321.set(2,new BasicDecimal32(24635.00001,4));
-        bdvcol1.add(0,v321);
-        bdvcol1.add(1,v321);
-        bdvcol1.add(2,v321);
-        BasicArrayVector bavcol1 = new BasicArrayVector(bdvcol1);
-        cols.add(bavcol1);
-        List<Vector> bdvcol2 = new ArrayList<Vector>();
-        Vector v640=new BasicDecimal64Vector(3,0);
-        v640.set(0,new BasicDecimal64(15645.00,0));
-        v640.set(1,new BasicDecimal64(24635.00001,0));
-        v640.set(2,new BasicDecimal64(24635.00001,0));
-        bdvcol2.add(0,v640);
-        bdvcol2.add(1,v640);
-        bdvcol2.add(2,v640);
-        BasicArrayVector bavcol2 = new BasicArrayVector(bdvcol2);
-        cols.add(bavcol2);
-        List<Vector> bdvcol3 = new ArrayList<Vector>();
-        Vector v641=new BasicDecimal64Vector(3,4);
-        v641.set(0,new BasicDecimal64(15645.00,4));
-        v641.set(1,new BasicDecimal64(24635.00001,4));
-        v641.set(2,new BasicDecimal64(24635.00001,4));
-        bdvcol3.add(0,v641);
-        bdvcol3.add(1,v641);
-        bdvcol3.add(2,v641);
-        BasicArrayVector bavcol3 = new BasicArrayVector(bdvcol3);
-        cols.add(bavcol3);
-        List<Vector> bdvcol4 = new ArrayList<Vector>();
-        Vector v642=new BasicDecimal64Vector(3,8);
-        v642.set(0,new BasicDecimal64(15645.00,8));
-        v642.set(1,new BasicDecimal64(24635.00001,8));
-        v642.set(2,new BasicDecimal64(24635.00001,8));
-        bdvcol4.add(0,v642);
-        bdvcol4.add(1,v642);
-        bdvcol4.add(2,v642);
-        BasicArrayVector bavcol4 = new BasicArrayVector(bdvcol4);
-        cols.add(bavcol4);
-
-        BasicTable bt = new BasicTable(colNames,cols);
-        appender.append(bt);
-        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
-        assertEquals(3,res.rows());
-        assertEquals(v32.getString(), ((BasicArrayVector)(res.getColumn("col0"))).getVectorValue(0).getString());
-        assertEquals(v321.getString(), ((BasicArrayVector)(res.getColumn("col1"))).getVectorValue(0).getString());
-        assertEquals(v640.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
-        assertEquals(v641.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
-        assertEquals(v642.getString(), ((BasicArrayVector)(res.getColumn("col4"))).getVectorValue(0).getString());
-    }
-    @Test
-    public void test_AutoFitTableAppender_ArrayVector_decimal128() throws Exception {
-        String script = "if(existsDatabase(\"dfs://testArrayVector\")){\n" +
-                "    dropDatabase(\"dfs://testArrayVector\")\n" +
-                "}\n" +
-                "db = database(\"dfs://testArrayVector\",RANGE,int(1..100),,\"TSDB\")\n" +
-                "t = table(1000000:0,`cint`col0`col1`col2" +
-                ",[INT,DECIMAL128(0)[],DECIMAL128(10)[],DECIMAL128(37)[]])\n" +
-                "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
-        conn.run(script);
-        AutoFitTableAppender appender=new AutoFitTableAppender("dfs://testArrayVector","pt",conn);
-
-        List<String> colNames = new ArrayList<>();
-        colNames.add("cint");
-        colNames.add("col0");
-        colNames.add("col1");
-        colNames.add("col2");
-        List<Vector> cols = new ArrayList<>();
-        cols.add(new BasicIntVector(new int[]{12,29,31}));
-        List<Vector> bdvcol0 = new ArrayList<Vector>();
-        Vector v32=new BasicDecimal128Vector(3,0);
-        v32.set(0,new BasicDecimal128("15645.00",0));
-        v32.set(1,new BasicDecimal128("24635.00001",0));
-        v32.set(2,new BasicDecimal128("24635.00001",0));
-        bdvcol0.add(0,v32);
-        bdvcol0.add(1,v32);
-        bdvcol0.add(2,v32);
-        BasicArrayVector bavcol0 = new BasicArrayVector(bdvcol0);
-        cols.add(bavcol0);
-        List<Vector> bdvcol1 = new ArrayList<Vector>();
-        Vector v321=new BasicDecimal128Vector(3,10);
-        v321.set(0,new BasicDecimal128("15645.00",10));
-        v321.set(1,new BasicDecimal128("24635.00001",10));
-        v321.set(2,new BasicDecimal128("24635.00001",10));
-        bdvcol1.add(0,v321);
-        bdvcol1.add(1,v321);
-        bdvcol1.add(2,v321);
-        BasicArrayVector bavcol1 = new BasicArrayVector(bdvcol1);
-        cols.add(bavcol1);
-        List<Vector> bdvcol2 = new ArrayList<Vector>();
-        Vector v640=new BasicDecimal128Vector(3,37);
-        v640.set(0,new BasicDecimal128("1.00",37));
-        v640.set(1,new BasicDecimal128("1.00001",37));
-        v640.set(2,new BasicDecimal128("0.00001",37));
-        bdvcol2.add(0,v640);
-        bdvcol2.add(1,v640);
-        bdvcol2.add(2,v640);
-        BasicArrayVector bavcol2 = new BasicArrayVector(bdvcol2);
-        cols.add(bavcol2);
-        BasicTable bt = new BasicTable(colNames,cols);
-        appender.append(bt);
-        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
-        assertEquals(3,res.rows());
-        assertEquals(v32.getString(), ((BasicArrayVector)(res.getColumn("col0"))).getVectorValue(0).getString());
-        assertEquals(v321.getString(), ((BasicArrayVector)(res.getColumn("col1"))).getVectorValue(0).getString());
-        assertEquals(v640.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
-    }
-    @Test
-    public void test_AutoFitTableAppender_ArrayVector_decimal_compress_true() throws Exception {
-
-        String script = "if(existsDatabase(\"dfs://testArrayVector\")){\n" +
-                "    dropDatabase(\"dfs://testArrayVector\")\n" +
-                "}\n" +
-                "db = database(\"dfs://testArrayVector\",RANGE,int(1..100),,\"TSDB\")\n" +
-                "t = table(1000000:0,`cint`col0`col1`col2`col3`col4" +
-                ",[INT,DECIMAL32(0)[],DECIMAL32(4)[],DECIMAL64(0)[],DECIMAL64(4)[],DECIMAL64(8)[]])\n" +
-                "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
-        DBConnection connection = new DBConnection(false, false, true);
-        connection.connect(HOST, PORT, "admin", "123456");
-        conn.run(script);
-        AutoFitTableAppender appender=new AutoFitTableAppender("dfs://testArrayVector","pt",conn);
-
-        List<String> colNames = new ArrayList<>();
-        colNames.add("cint");
-        colNames.add("col0");
-        colNames.add("col1");
-        colNames.add("col2");
-        colNames.add("col3");
-        colNames.add("col4");
-        List<Vector> cols = new ArrayList<>();
-        cols.add(new BasicIntVector(new int[]{12,29,31}));
-        List<Vector> bdvcol0 = new ArrayList<Vector>();
-        Vector v32=new BasicDecimal32Vector(3,0);
-        v32.set(0,new BasicDecimal32(15645.00,0));
-        v32.set(1,new BasicDecimal32(24635.00001,0));
-        v32.set(2,new BasicDecimal32(24635.00001,0));
-        bdvcol0.add(0,v32);
-        bdvcol0.add(1,v32);
-        bdvcol0.add(2,v32);
-        BasicArrayVector bavcol0 = new BasicArrayVector(bdvcol0);
-        cols.add(bavcol0);
-        List<Vector> bdvcol1 = new ArrayList<Vector>();
-        Vector v321=new BasicDecimal32Vector(3,4);
-        v321.set(0,new BasicDecimal32(15645.00,4));
-        v321.set(1,new BasicDecimal32(24635.00001,4));
-        v321.set(2,new BasicDecimal32(24635.00001,4));
-        bdvcol1.add(0,v321);
-        bdvcol1.add(1,v321);
-        bdvcol1.add(2,v321);
-        BasicArrayVector bavcol1 = new BasicArrayVector(bdvcol1);
-        cols.add(bavcol1);
-        List<Vector> bdvcol2 = new ArrayList<Vector>();
-        Vector v640=new BasicDecimal64Vector(3,0);
-        v640.set(0,new BasicDecimal64(15645.00,0));
-        v640.set(1,new BasicDecimal64(24635.00001,0));
-        v640.set(2,new BasicDecimal64(24635.00001,0));
-        bdvcol2.add(0,v640);
-        bdvcol2.add(1,v640);
-        bdvcol2.add(2,v640);
-        BasicArrayVector bavcol2 = new BasicArrayVector(bdvcol2);
-        cols.add(bavcol2);
-        List<Vector> bdvcol3 = new ArrayList<Vector>();
-        Vector v641=new BasicDecimal64Vector(3,4);
-        v641.set(0,new BasicDecimal64(15645.00,4));
-        v641.set(1,new BasicDecimal64(24635.00001,4));
-        v641.set(2,new BasicDecimal64(24635.00001,4));
-        bdvcol3.add(0,v641);
-        bdvcol3.add(1,v641);
-        bdvcol3.add(2,v641);
-        BasicArrayVector bavcol3 = new BasicArrayVector(bdvcol3);
-        cols.add(bavcol3);
-        List<Vector> bdvcol4 = new ArrayList<Vector>();
-        Vector v642=new BasicDecimal64Vector(3,8);
-        v642.set(0,new BasicDecimal64(15645.00,8));
-        v642.set(1,new BasicDecimal64(24635.00001,8));
-        v642.set(2,new BasicDecimal64(24635.00001,8));
-        bdvcol4.add(0,v642);
-        bdvcol4.add(1,v642);
-        bdvcol4.add(2,v642);
-        BasicArrayVector bavcol4 = new BasicArrayVector(bdvcol4);
-        cols.add(bavcol4);
-
-        BasicTable bt = new BasicTable(colNames,cols);
-        appender.append(bt);
-        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
-        assertEquals(3,res.rows());
-        assertEquals(v32.getString(), ((BasicArrayVector)(res.getColumn("col0"))).getVectorValue(0).getString());
-        assertEquals(v321.getString(), ((BasicArrayVector)(res.getColumn("col1"))).getVectorValue(0).getString());
-        assertEquals(v640.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
-        assertEquals(v641.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
-        assertEquals(v642.getString(), ((BasicArrayVector)(res.getColumn("col4"))).getVectorValue(0).getString());
-    }
-    @Test
-    public void test_AutoFitTableAppender_ArrayVector_decimal128_compress_true() throws Exception {
-        String script = "if(existsDatabase(\"dfs://testArrayVector\")){\n" +
-                "    dropDatabase(\"dfs://testArrayVector\")\n" +
-                "}\n" +
-                "db = database(\"dfs://testArrayVector\",RANGE,int(1..100),,\"TSDB\")\n" +
-                "t = table(1000000:0,`cint`col0`col1`col2" +
-                ",[INT,DECIMAL128(0)[],DECIMAL128(10)[],DECIMAL128(37)[]])\n" +
-                "pt = db.createPartitionedTable(t,`pt,`cint,,`cint)";
-        DBConnection connection = new DBConnection(false, false, true);
-        connection.connect(HOST, PORT, "admin", "123456");
-        conn.run(script);
-        AutoFitTableAppender appender=new AutoFitTableAppender("dfs://testArrayVector","pt",conn);
-
-        List<String> colNames = new ArrayList<>();
-        colNames.add("cint");
-        colNames.add("col0");
-        colNames.add("col1");
-        colNames.add("col2");
-        List<Vector> cols = new ArrayList<>();
-        cols.add(new BasicIntVector(new int[]{12,29,31}));
-        List<Vector> bdvcol0 = new ArrayList<Vector>();
-        Vector v32=new BasicDecimal128Vector(3,0);
-        v32.set(0,new BasicDecimal128("15645.00",0));
-        v32.set(1,new BasicDecimal128("24635.00001",0));
-        v32.set(2,new BasicDecimal128("24635.00001",0));
-        bdvcol0.add(0,v32);
-        bdvcol0.add(1,v32);
-        bdvcol0.add(2,v32);
-        BasicArrayVector bavcol0 = new BasicArrayVector(bdvcol0);
-        cols.add(bavcol0);
-        List<Vector> bdvcol1 = new ArrayList<Vector>();
-        Vector v321=new BasicDecimal128Vector(3,10);
-        v321.set(0,new BasicDecimal128("15645.00",10));
-        v321.set(1,new BasicDecimal128("24635.00001",10));
-        v321.set(2,new BasicDecimal128("24635.00001",10));
-        bdvcol1.add(0,v321);
-        bdvcol1.add(1,v321);
-        bdvcol1.add(2,v321);
-        BasicArrayVector bavcol1 = new BasicArrayVector(bdvcol1);
-        cols.add(bavcol1);
-        List<Vector> bdvcol2 = new ArrayList<Vector>();
-        Vector v640=new BasicDecimal128Vector(3,37);
-        v640.set(0,new BasicDecimal128("1.00",37));
-        v640.set(1,new BasicDecimal128("1.00001",37));
-        v640.set(2,new BasicDecimal128("0.00001",37));
-        bdvcol2.add(0,v640);
-        bdvcol2.add(1,v640);
-        bdvcol2.add(2,v640);
-        BasicArrayVector bavcol2 = new BasicArrayVector(bdvcol2);
-        cols.add(bavcol2);
-        BasicTable bt = new BasicTable(colNames,cols);
-        appender.append(bt);
-        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
-        assertEquals(3,res.rows());
-        assertEquals(v32.getString(), ((BasicArrayVector)(res.getColumn("col0"))).getVectorValue(0).getString());
-        assertEquals(v321.getString(), ((BasicArrayVector)(res.getColumn("col1"))).getVectorValue(0).getString());
-        assertEquals(v640.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
-    }
-    @Test
-    public void testgetDTString() throws IOException{
-        DBConnection connection = new DBConnection();
-        connection.connect(HOST, PORT, "admin", "123456");
-        conn.run("\n" +
-                "login(`admin,`123456)\n" +
-                "dbPath = \"dfs://tableAppenderTest\"\n" +
-                "if(existsDatabase(dbPath))\n" +
-                "dropDatabase(dbPath)\n" +
-                "t = table(1000:0,`id`Mon,[INT,MONTH])\n" +
-                "db=database(dbPath,HASH, [INT,10])\n" +
-                "pt = db.createPartitionedTable(t,`TestMon,`id)");
-        AutoFitTableAppender tableAppender = new AutoFitTableAppender("dfs://tableAppenderTest", "pt", connection, com.xxdb.route.AutoFitTableAppender.APPEND_ACTION.fitColumnType);
-        Entity.DATA_TYPE[] data_types = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_ANY, Entity.DATA_TYPE.DT_BLOB,
-                Entity.DATA_TYPE.DT_BOOL, Entity.DATA_TYPE.DT_BYTE, Entity.DATA_TYPE.DT_CODE, Entity.DATA_TYPE.DT_COMPRESS,
-                Entity.DATA_TYPE.DT_DATASOURCE, Entity.DATA_TYPE.DT_DATE, Entity.DATA_TYPE.DT_DATEHOUR, Entity.DATA_TYPE.DT_DATEMINUTE,
-                Entity.DATA_TYPE.DT_DATETIME, Entity.DATA_TYPE.DT_DICTIONARY, Entity.DATA_TYPE.DT_DOUBLE, Entity.DATA_TYPE.DT_FLOAT,
-        Entity.DATA_TYPE.DT_FUNCTIONDEF, Entity.DATA_TYPE.DT_HANDLE, Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_INT128,
-        Entity.DATA_TYPE.DT_IPADDR, Entity.DATA_TYPE.DT_LONG, Entity.DATA_TYPE.DT_MINUTE, Entity.DATA_TYPE.DT_MONTH, Entity.DATA_TYPE.DT_NANOTIME,
-        Entity.DATA_TYPE.DT_NANOTIMESTAMP, Entity.DATA_TYPE.DT_OBJECT, Entity.DATA_TYPE.DT_STRING, Entity.DATA_TYPE.DT_RESOURCE, Entity.DATA_TYPE.DT_SECOND,
-        Entity.DATA_TYPE.DT_SHORT, Entity.DATA_TYPE.DT_SYMBOL, Entity.DATA_TYPE.DT_TIME, Entity.DATA_TYPE.DT_TIMESTAMP, Entity.DATA_TYPE.DT_UUID,
-                Entity.DATA_TYPE.DT_VOID, Entity.DATA_TYPE.DT_BOOL_ARRAY};
-
-        String[] data_type_string = new String[]{"ANY", "BLOB", "BOOL", "BYTE", "CODE", "COMPRESSED", "DATASOURCE", "DATE", "DATEHOUR", "DATEMINUTE",
-                "DATETIME", "DICTIONARY", "DOUBLE", "FLOAT", "FUNCTIONDEF", "HANDLE", "INT", "INT128", "IPADDR", "LONG", "MINUTE", "MONTH", "NANOTIME", "NANOTIMESTAMP",
-                "OBJECT", "STRING", "RESOURCE", "SECOND", "SHORT", "SYMBOL", "TIME", "TIMESTAMP", "UUID", "VOID", "Unrecognized type"};
-
-        for (int i = 0; i < data_types.length; i++){
-            String s = tableAppender.getDTString(data_types[i]);
-            assertEquals(data_type_string[i], s);
-        }
-    }
-
     @Test
     public void TestMon() throws IOException {
         int size=10;
@@ -1896,15 +1502,12 @@ public class AutoFitTableAppenderTest {
         script += "cstring = \"hello\" \"hi\" \"here\";\n";
         script += "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n";
         script += "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n";
-        script += "cdecimal32 = decimal32(12 17 135.2,2)\n";
-        script += "cdecimal64 = decimal64(18 24 33.878,4)\n";
-        script += "cdecimal128 = decimal128(18 24 33.878,10)\n";
         script += "t = keyedTable(`cint,cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute,";
         script += "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble,";
-        script += "cstring,cdatehour,cblob,cdecimal32,cdecimal64,cdecimal128);";
+        script += "cstring,cdatehour,cblob);";
         script += "share t as st;";
         conn.run(script);
-        BasicTable bt = (BasicTable)conn.run("table(true as cbool,'d' as cchar,86h as cshort,10 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,blob(\"dolphindb\")as cblob,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64,decimal128(27,10) as cdecimal128)");
+        BasicTable bt = (BasicTable)conn.run("table(true as cbool,'d' as cchar,86h as cshort,10 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,blob(\"dolphindb\")as cblob)");
         AutoFitTableAppender aftu = new AutoFitTableAppender("", "st", conn);
         aftu.append(bt);
         BasicTable ua = (BasicTable)conn.run("select * from st;");
@@ -1955,15 +1558,12 @@ public class AutoFitTableAppenderTest {
         script += "cstring = \"hello\" \"hi\" \"here\";\n";
         script += "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n";
         script += "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n";
-        script += "cdecimal32 = decimal32(12 17 135.2,2)\n";
-        script += "cdecimal64 = decimal64(18 24 33.878,4)\n";
-        script += "cdecimal128 = decimal128(18 24 33.878,10)\n";
         script += "t = table(cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute,";
         script += "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble,";
-        script += "cstring,cdatehour,cblob,cdecimal32,cdecimal64,cdecimal128);";
+        script += "cstring,cdatehour);";
         script += "share t as st;";
         conn.run(script);
-        BasicTable bt = (BasicTable)conn.run("table(true as cbool,'d' as cchar,86h as cshort,10 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,blob(\"dolphindb\")as cblob,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64,decimal128(27,10) as cdecimal128)");
+        BasicTable bt = (BasicTable)conn.run("table(true as cbool,'d' as cchar,86h as cshort,10 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour)");
         AutoFitTableAppender aftu = new AutoFitTableAppender("", "st", conn);
         aftu.append(bt);
         BasicTable ua = (BasicTable)conn.run("select * from st;");
@@ -2014,12 +1614,9 @@ public class AutoFitTableAppenderTest {
         script += "cstring = \"hello\" \"hi\" \"here\";\n";
         script += "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n";
         script += "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n";
-        script += "cdecimal32 = decimal32(12 17 135.2,2)\n";
-        script += "cdecimal64 = decimal64(18 24 33.878,4)\n";
-        script += "cdecimal128 = decimal128(18 24 33.878,10)\n";
         script += "t = table(cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute,";
         script += "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble,";
-        script += "cstring,cdatehour,cblob,cdecimal32,cdecimal64,cdecimal128);";
+        script += "cstring,cdatehour);";
         script += "dbPath = \"dfs://tableAppenderTest\"\n" ;
         script += "if(existsDatabase(dbPath))\n";
         script += "dropDatabase(dbPath)\n";
@@ -2027,7 +1624,7 @@ public class AutoFitTableAppenderTest {
         script += "pt = db.createPartitionedTable(t,`pt,`cint,,`cint`cdate)\n";
         script += "pt.append!(t)";
         conn.run(script);
-        BasicTable bt = (BasicTable)conn.run("table(true as cbool,'d' as cchar,86h as cshort,10 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,blob(\"dolphindb\")as cblob,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64,decimal128(27,10) as cdecimal128)");
+        BasicTable bt = (BasicTable)conn.run("table(true as cbool,'d' as cchar,86h as cshort,10 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour)");
         AutoFitTableAppender aftu = new AutoFitTableAppender("dfs://tableAppenderTest", "pt", conn);
         aftu.append(bt);
         BasicTable ua = (BasicTable)conn.run("select * from loadTable(\"dfs://tableAppenderTest\",`pt);");
@@ -2083,12 +1680,9 @@ public class AutoFitTableAppenderTest {
         script += "cstring = \"hello\" \"hi\" \"here\";\n";
         script += "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n";
         script += "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n";
-        script += "cdecimal32 = decimal32(12 17 135.2,2)\n";
-        script += "cdecimal64 = decimal64(18 24 33.878,4)\n";
-        script += "cdecimal128 = decimal128(18 24 33.878,10)\n";
         script += "t = table(cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute,";
         script += "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble,";
-        script += "cstring,cdatehour,cblob,cdecimal32,cdecimal64,cdecimal128);";
+        script += "cstring,cdatehour);";
         script += "dbPath = \"dfs://tableAppenderTest\"\n" ;
         script += "if(existsDatabase(dbPath))\n";
         script += "dropDatabase(dbPath)\n";
@@ -2096,7 +1690,7 @@ public class AutoFitTableAppenderTest {
         script += "pt = db.createTable(t,`pt,,`cint)\n";
         script += "pt.append!(t)";
         conn.run(script);
-        BasicTable bt = (BasicTable)conn.run("table(true as cbool,'d' as cchar,86h as cshort,10 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,blob(\"dolphindb\")as cblob,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64,decimal128(27,10) as cdecimal128)");
+        BasicTable bt = (BasicTable)conn.run("table(true as cbool,'d' as cchar,86h as cshort,10 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour)");
         AutoFitTableAppender aftu = new AutoFitTableAppender("dfs://tableAppenderTest", "pt", conn);
         aftu.append(bt);
         BasicTable ua = (BasicTable)conn.run("select * from loadTable(\"dfs://tableAppenderTest\",`pt);");

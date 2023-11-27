@@ -24,9 +24,36 @@ public class ThreadPooledClientReverseTest {
     //static int PORT = 9002;
 
     private static ThreadPooledClient client;
-
+    public void clear_env() throws IOException {
+        conn.run("a = getStreamingStat().pubTables\n" +
+                "for(i in a){\n" +
+                "\tstopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)\n" +
+                "}");
+        conn.run("def getAllShare(){\n" +
+                "\treturn select name from objs(true) where shared=1\n" +
+                "\t}\n" +
+                "\n" +
+                "def clearShare(){\n" +
+                "\tlogin(`admin,`123456)\n" +
+                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
+                "\tfor(i in allShare){\n" +
+                "\t\ttry{\n" +
+                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
+                "\t\t\t}catch(ex1){}\n" +
+                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
+                "\t}\n" +
+                "\ttry{\n" +
+                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
+                "\t}catch(ex1){}\n" +
+                "}\n" +
+                "clearShare()");
+    }
     @BeforeClass
-    public static void login() {
+    public static void setUp() throws IOException {
+
+    }
+    @Before
+    public void clear() throws IOException {
         conn = new DBConnection();
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
@@ -36,33 +63,29 @@ public class ThreadPooledClientReverseTest {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-    }
-
-    @Before
-    public void setUp() throws IOException {
-        try {
-            String script0 = "login(`admin,`123456);" +
-                    "try{dropStreamTable('Trades')}catch(ex){};"+
-                    "try{dropStreamTable('Receive')}catch(ex){};";
-            conn.run(script0);
-            String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-                    "enableTableShareAndPersistence(table=st1, tableName=`Trades, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n"
-                    + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
-            conn.run(script1);
-            String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-                    "enableTableShareAndPersistence(table=st2, tableName=`Receive, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n";
-            conn.run(script2);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        try{client.unsubscribe(HOST, PORT, "Trades1");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades2");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades1");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades1", "javaStreamingApi");}catch (Exception ex){}
+        clear_env();
     }
 
     @After
-    public void drop() throws IOException {
+    public void after() throws IOException, InterruptedException {
         save_batch_size.clear();
         try{client.unsubscribe(HOST,PORT,"Trades","subTread1");}catch (Exception e){}
         try{client.unsubscribe(HOST,PORT,"Trades","subTread2");}catch (Exception e){}
         try{client.unsubscribe(HOST,PORT,"Trades","subTread3");}catch (Exception e){}
+        try{client.unsubscribe(HOST,PORT,"Trades","subTrades1");}catch (Exception e){}
+        try{client.unsubscribe(HOST,PORT,"Trades","subTrades2");}catch (Exception e){}
+        try{client.unsubscribe(HOST,PORT,"Trades","subTrades3");}catch (Exception e){}
+        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
+        clear_env();
         try {
             conn.run("login(`admin,`123456);" +
                     "try{dropStreamTable('Trades')}catch(ex){};"+
@@ -74,13 +97,145 @@ public class ThreadPooledClientReverseTest {
                     "loop(deleteGroup,grouplist)");
         } catch (Exception e) {
         }
-
+        client.close();
+        conn.close();
     }
 
     @AfterClass
-    public static void after() throws IOException {
-        client.close();
-        conn.close();
+    public static void clear_conn() {
+    }
+//    @BeforeClass
+//    public static void login() {
+//        conn = new DBConnection();
+//        try {
+//            if (!conn.connect(HOST, PORT, "admin", "123456")) {
+//                throw new IOException("Failed to connect to dolphindb server");
+//            }
+//            client = new ThreadPooledClient(HOST, 0,10);
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//    }
+//    @Before
+//    public void setUp() throws IOException {
+//        try {
+//            String script0 = "login(`admin,`123456);" +
+//                    "try{dropStreamTable('Trades')}catch(ex){};"+
+//                    "try{dropStreamTable('Receive')}catch(ex){};";
+//            conn.run(script0);
+//            String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+//                    "enableTableShareAndPersistence(table=st1, tableName=`Trades, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n"
+//                    + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+//            conn.run(script1);
+//            String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+//                    "enableTableShareAndPersistence(table=st2, tableName=`Receive, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n";
+//            conn.run(script2);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
+//    @After
+//    public void drop() throws IOException {
+//        save_batch_size.clear();
+//        try{client.unsubscribe(HOST,PORT,"Trades","subTread1");}catch (Exception e){}
+//        try{client.unsubscribe(HOST,PORT,"Trades","subTread2");}catch (Exception e){}
+//        try{client.unsubscribe(HOST,PORT,"Trades","subTread3");}catch (Exception e){}
+//        try {
+//            conn.run("login(`admin,`123456);" +
+//                    "try{dropStreamTable('Trades')}catch(ex){};"+
+//                    "try{dropStreamTable('Receive')}catch(ex){};"+
+//                    "try{deleteUser(`test1)}catch(ex){};" +
+//                    "userlist=getUserList();" +
+//                    "grouplist=getGroupList();" +
+//                    "loop(deleteUser,userlist);" +
+//                    "loop(deleteGroup,grouplist)");
+//        } catch (Exception e) {
+//        }
+//
+//    }
+//
+//    @AfterClass
+//    public static void after() throws IOException {
+//        client.close();
+//        conn.close();
+//    }
+public static void PrepareStreamTable() throws IOException {
+    try {
+        String script0 = "login(`admin,`123456);" +
+                "try{dropStreamTable('Trades')}catch(ex){};"+
+                "try{dropStreamTable('Receive')}catch(ex){};";
+        conn.run(script0);
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st1, tableName=`Trades, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "enableTableShareAndPersistence(table=st2, tableName=`Receive, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n";
+        conn.run(script2);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+public static void PrepareStreamTable_array(String dataType) throws IOException {
+    String script = "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType+"[]]) as Trades;\n"+
+            "permno = take(1..1000,1000); \n"+
+            "dateType_INT =  array(INT[]).append!(cut(take(-100..100 join NULL, 1000*10), 10)); \n"+
+            "dateType_BOOL =  array(BOOL[]).append!(cut(take([true, false, NULL], 1000*10), 10)); \n"+
+            "dateType_CHAR =  array(CHAR[]).append!(cut(take(char(-10..10 join NULL), 1000*10), 10)); \n"+
+            "dateType_SHORT =  array(SHORT[]).append!(cut(take(short(-100..100 join NULL), 1000*10), 10)); \n"+
+            "dateType_LONG =  array(LONG[]).append!(cut(take(long(-100..100 join NULL), 1000*10), 10)); \n"+"" +
+            "dateType_DOUBLE =  array(DOUBLE[]).append!(cut(take(-100..100 join NULL, 1000*10) + 0.254, 10)); \n"+
+            "dateType_FLOAT =  array(FLOAT[]).append!(cut(take(-100..100 join NULL, 1000*10) + 0.254f, 10)); \n"+
+            "dateType_DATE =  array(DATE[]).append!(cut(take(2012.01.01..2012.02.29, 1000*10), 10)); \n"+
+            "dateType_MONTH =   array(MONTH[]).append!(cut(take(2012.01M..2013.12M, 1000*10), 10)); \n"+
+            "dateType_TIME =  array(TIME[]).append!(cut(take(09:00:00.000 + 0..99 * 1000, 1000*10), 10)); \n"+
+            "dateType_MINUTE =  array(MINUTE[]).append!(cut(take(09:00m..15:59m, 1000*10), 10)); \n"+
+            "dateType_SECOND =  array(SECOND[]).append!(cut(take(09:00:00 + 0..999, 1000*10), 10)); \n"+
+            "dateType_DATETIME =  array(DATETIME[]).append!(cut(take(2012.01.01T09:00:00 + 0..999, 1000*10), 10)); \n"+
+            "dateType_TIMESTAMP =  array(TIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000 + 0..999 * 1000, 1000*10), 10)); \n"+
+            "dateType_NANOTIME =  array(NANOTIME[]).append!(cut(take(09:00:00.000000000 + 0..999 * 1000000000, 1000*10), 10)); \n"+
+            "dateType_NANOTIMESTAMP =  array(NANOTIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000000000 + 0..999 * 1000000000, 1000*10), 10)); \n"+
+            "dateType_UUID =  array(UUID[]).append!(cut(take(uuid([\"5d212a78-cc48-e3b1-4235-b4d91473ee87\", \"5d212a78-cc48-e3b1-4235-b4d91473ee88\", \"5d212a78-cc48-e3b1-4235-b4d91473ee89\", \"\"]), 1000*10), 10)); \n"+
+            "dateType_DATEHOUR =  array(DATEHOUR[]).append!(cut(take(datehour(1..10 join NULL), 1000*10), 10)); \n"+
+            "dateType_IPADDR =  array(IPADDR[]).append!(cut(take(ipaddr([\"192.168.100.10\", \"192.168.100.11\", \"192.168.100.14\", \"\"]), 1000*10), 10)); \n"+
+            "dateType_INT128 =  array(INT128[]).append!(cut(take(int128([\"e1671797c52e15f763380b45e841ec32\", \"e1671797c52e15f763380b45e841ec33\", \"e1671797c52e15f763380b45e841ec35\", \"\"]), 1000*10), 10)); \n"+
+            "dateType_COMPLEX =   array(COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, 1000*10), 10));; \n"+
+            "dateType_POINT =  array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, 1000*10), 10)); \n"+
+            "share table(permno,dateType_"+dataType +") as pub_t\n"+
+            "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType +"[]]) as sub1;\n";
+    DBConnection conn1 = new DBConnection();
+    conn1.connect(HOST, PORT,"admin","123456");
+    conn1.run(script);
+}
+    public static void PrepareStreamTableDecimal_array(String dataType, int scale) throws IOException {
+        String script = "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType+"("+scale+")[]]) as Trades;\n"+
+                "permno = take(1..1000,1000); \n"+
+                "dateType_DECIMAL32 =   array(DECIMAL64(4)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000*10) + 0.254, 3), 10)); \n"+
+                "dateType_DECIMAL64 =   array(DECIMAL64(4)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000*10) + 0.254, 3), 10)); \n"+
+                "dateType_DECIMAL128 =   array(DECIMAL128(8)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000*10) + 0.254, 3), 10)); \n"+
+                "share table(permno,dateType_"+dataType +") as pub_t\n"+
+                "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType +"("+scale+")[]]) as sub1;\n";
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST, PORT,"admin","123456");
+        conn1.run(script);
+    }
+    public static void checkResult() throws IOException, InterruptedException {
+        for (int i = 0; i < 10; i++)
+        {
+            BasicInt tmpNum = (BasicInt)conn.run("exec count(*) from sub1");
+            if (tmpNum.getInt()==(1000))
+            {
+                break;
+            }
+            Thread.sleep(2000);
+        }
+        BasicTable except = (BasicTable)conn.run("select * from  Trades order by permno");
+        BasicTable res = (BasicTable)conn.run("select * from  sub1 order by permno");
+        assertEquals(except.rows(), res.rows());
+        for (int i = 0; i < except.columns(); i++) {
+            System.out.println("col" + res.getColumnName(i));
+            assertEquals(except.getColumn(i).getString(), res.getColumn(i).getString());
+        }
     }
     static class Handler7 implements MessageHandler {
         private StreamDeserializer deserializer_;
@@ -160,53 +315,60 @@ public class ThreadPooledClientReverseTest {
         }
     };
     @Test
-    public void test_ThreadedClient_HOST_host_error() throws IOException, InterruptedException {
-        ThreadedClient client2 = new ThreadedClient("host_error",10022);
+    public void test_ThreadPooledClient_host_error() throws IOException, InterruptedException {
+        ThreadPooledClient client2 = new ThreadPooledClient("host_error",10022,10);
         client2.close();
     }
 
     @Test
-    public void test_ThreadedClient_HOST_port_error() throws IOException {
-        ThreadedClient client2 = new ThreadedClient("host_error",0);
+    public void test_ThreadPooledClient_port_error() throws IOException {
+        ThreadPooledClient client2 = new ThreadPooledClient(121,10);
         client2.close();
     }
 
     @Test
-    public void test_ThreadedClient_HOST_subport() throws IOException {
-        ThreadedClient client2 = new ThreadedClient(HOST,10022);
-        client2.close();
-    }
-    @Test
-    public void test_ThreadedClient_null() throws IOException {
-        ThreadedClient client2 = new ThreadedClient();
+    public void test_ThreadPooledClient_HOST_subport() throws IOException {
+        ThreadPooledClient client2 = new ThreadPooledClient(HOST,10022,10);
         client2.close();
     }
 
     @Test
-    public void test_ThreadedClient_only_subscribePort() throws IOException {
-        ThreadedClient client2 = new ThreadedClient(10012);
+    public void test_ThreadPooledClient_only_subscribePort() throws IOException {
+        ThreadPooledClient client2 = new ThreadPooledClient(10012);
+        client2.close();
+    }
+    @Test(expected = Exception.class)
+    public void test_ThreadPooledClient_threadCount_not_true() throws IOException {
+        ThreadPooledClient client2 = new ThreadPooledClient(-1);
+        client2.close();
+    }
+    @Test
+    public void test_ThreadPooledClient_threadCount_0() throws IOException {
+        ThreadPooledClient client2 = new ThreadPooledClient(1000);
         client2.close();
     }
 
     @Test
     public void test_subscribe_ex1() throws Exception {
-            client.subscribe(HOST, PORT, "Trades", "subtrades", MessageHandler_handler);
-            conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(40000);
-            BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
-            BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-            client.unsubscribe(HOST, PORT, "Trades", "subtrades");
-            conn.run("dropStreamTable('Trades');dropStreamTable('Receive')");
-            assertEquals(re.rows(), tra.rows());
-            for (int i = 0; i < re.rows(); i++) {
-                assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
-                assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-                assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
-            }
+        PrepareStreamTable();
+        client.subscribe(HOST, PORT, "Trades", "subtrades", MessageHandler_handler);
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(40000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
+        client.unsubscribe(HOST, PORT, "Trades", "subtrades");
+        conn.run("dropStreamTable('Trades');dropStreamTable('Receive')");
+        assertEquals(re.rows(), tra.rows());
+        for (int i = 0; i < re.rows(); i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
+        }
 
     }
     @Test
     public void test_subscribe_ex2() throws Exception {
+        PrepareStreamTable();
         client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, true);
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(20000);
@@ -225,7 +387,8 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_ofst0() throws Exception {
-            conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        PrepareStreamTable();
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
             int ofst = 0;
             client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
             conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -244,6 +407,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test(expected = IOException.class)
     public void test_subscribe_ofst_negative2() throws IOException {
+        PrepareStreamTable();
         int ofst = -2;
         client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
         try {
@@ -256,6 +420,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_ofst_negative1() throws IOException, InterruptedException {
+        PrepareStreamTable();
         int ofst = -1;
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(2000);
@@ -272,6 +437,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_ofst_morethan0() throws Exception {
+        PrepareStreamTable();
         int ofst = 10;
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(2000);
@@ -288,6 +454,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test(expected = IOException.class)
     public void test_subscribe_ofst_morethan_tablecount() throws IOException {
+        PrepareStreamTable();
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         int ofst = 1000;
         client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
@@ -295,6 +462,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_filter() throws Exception {
+        PrepareStreamTable();
         String script2 = "tmp3 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "enableTableShareAndPersistence(table=tmp3, tableName=`filter, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n";
         conn.run(script2);
@@ -342,6 +510,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_batchSize_throttle() throws Exception {
+        PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
         client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -363,6 +532,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_batchSize_throttle2() throws Exception {
+        PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
         client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true);
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -381,6 +551,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_unsubscribe_resubscribe() throws Exception {
+        PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
         for (int i=0;i<10;i++){
             client.subscribe(HOST, PORT, "Trades", "subTrades1", MessageHandler_handler, -1, true, filter1, true);
@@ -397,18 +568,21 @@ public class ThreadPooledClientReverseTest {
 
     @Test(expected = IOException.class)
     public void test_subscribe_user_error() throws IOException {
+        PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
         client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"admin_error","123456");
     }
 
     @Test(expected = IOException.class)
     public void test_subscribe_password_error() throws IOException {
+        PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
         client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"admin","error_password");
     }
 
     @Test
     public void test_subscribe_admin() throws IOException, InterruptedException {
+        PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..100000");
         client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"admin","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -419,6 +593,7 @@ public class ThreadPooledClientReverseTest {
     }
     @Test
     public void test_subscribe_other_user() throws IOException, InterruptedException {
+        PrepareStreamTable();
         conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
                 "rpc(getControllerAlias(),create_user);");
         Vector filter1 = (Vector) conn.run("1..100000");
@@ -431,7 +606,8 @@ public class ThreadPooledClientReverseTest {
     }
 
     @Test
-    public void test_subscribe_other_user_unallow() throws IOException, InterruptedException {
+    public void test_subscribe_other_user_unallow() throws IOException {
+        PrepareStreamTable();
         conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
                 "rpc(getControllerAlias(),create_user);" +
                 "colNames =`id`timestamp`sym`qty`price;" +
@@ -449,7 +625,8 @@ public class ThreadPooledClientReverseTest {
     }
 
     @Test
-    public void test_subscribe_other_some_user() throws IOException, InterruptedException {
+    public void test_subscribe_other_some_user() throws IOException {
+        PrepareStreamTable();
         conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};try{deleteUser(`test2)}catch(ex){};try{deleteUser(`test3)}catch(ex){};createUser(`test1, '123456');createUser(`test2, '123456');createUser(`test3, '123456');};"+
                 "rpc(getControllerAlias(),create_user);" +
                 "colNames =`id`timestamp`sym`qty`price;" +
@@ -478,6 +655,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_one_user_some_table() throws IOException, InterruptedException {
+        PrepareStreamTable();
         conn.run("login('admin','123456');def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
                 "rpc(getControllerAlias(),create_user);" +
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
@@ -502,6 +680,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_tn_handler() throws IOException, InterruptedException {
+        PrepareStreamTable();
         client.subscribe(HOST,PORT,"Trades",MessageHandler_handler);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(8000);
@@ -512,6 +691,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_tn_an_hd_offset_reconnect_filter_de() throws Exception {
+        PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
         client.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler, -1, true, filter1, null);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -533,6 +713,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_tn_an_handler_reconnect() throws Exception {
+        PrepareStreamTable();
         client.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -553,6 +734,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_subscribe_tn_handler_ofst_reconnect() throws Exception {
+        PrepareStreamTable();
         client.subscribe(HOST, PORT, "Trades",MessageHandler_handler, -1,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -573,6 +755,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_ThreadPooledClient_null() throws Exception {
+        PrepareStreamTable();
         ThreadPooledClient client1 = new ThreadPooledClient();
         client1.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -595,6 +778,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test
     public void test_ThreadPooledClient_subPort_thCount() throws Exception {
+        PrepareStreamTable();
         ThreadPooledClient client1 = new ThreadPooledClient(0,1);
         client1.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -634,6 +818,7 @@ public class ThreadPooledClientReverseTest {
 
     @Test(timeout = 120000)
     public void test_StreamDeserializer_dataType_filters_subscribe_haStreamTable() throws IOException, InterruptedException {
+        PrepareStreamTable();
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "t = table(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -686,6 +871,7 @@ public class ThreadPooledClientReverseTest {
     }
     @Test
     public void test_ThreadPooledClient_threadCount() throws Exception {
+        PrepareStreamTable();
         client = new ThreadPooledClient(10);
         Vector filter1 = (Vector) conn.run("1..1000");
         client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true);
@@ -705,4 +891,390 @@ public class ThreadPooledClientReverseTest {
             assertEquals(((Scalar)re.getColumn(2).get(i + 1000)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 1000)).getNumber().doubleValue(), 4);
         }
     }
+    public static MessageHandler Handler_array = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                msg.getEntity(0);
+                String script = String.format("insert into sub1 values( %s,%s)", msg.getEntity(0).getString(), msg.getEntity(1).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' '));
+                //System.out.println(script);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_INT() throws IOException, InterruptedException {
+        PrepareStreamTable_array("INT");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_BOOL() throws IOException, InterruptedException {
+        PrepareStreamTable_array("BOOL");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_CHAR() throws IOException, InterruptedException {
+        PrepareStreamTable_array("CHAR");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_SHORT() throws IOException, InterruptedException {
+        PrepareStreamTable_array("SHORT");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_LONG() throws IOException, InterruptedException {
+        PrepareStreamTable_array("LONG");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_DOUBLE() throws IOException, InterruptedException {
+        PrepareStreamTable_array("DOUBLE");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_FLOAT() throws IOException, InterruptedException {
+        PrepareStreamTable_array("FLOAT");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_DATE() throws IOException, InterruptedException {
+        PrepareStreamTable_array("DATE");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_MONTH() throws IOException, InterruptedException {
+        PrepareStreamTable_array("MONTH");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_TIME() throws IOException, InterruptedException {
+        PrepareStreamTable_array("TIME");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_MINUTE() throws IOException, InterruptedException {
+        PrepareStreamTable_array("MINUTE");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_SECOND() throws IOException, InterruptedException {
+        PrepareStreamTable_array("SECOND");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_DATETIME() throws IOException, InterruptedException {
+        PrepareStreamTable_array("DATETIME");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_NANOTIME() throws IOException, InterruptedException {
+        PrepareStreamTable_array("NANOTIME");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_NANOTIMESTAMP() throws IOException, InterruptedException {
+        PrepareStreamTable_array("NANOTIMESTAMP");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    public static MessageHandler Handler_array_UUID = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                msg.getEntity(0);
+                String script = String.format("insert into sub1 values( %s,[uuid(%s)])", msg.getEntity(0).getString(), msg.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL"));
+                System.out.println(script);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_UUID() throws IOException, InterruptedException {
+        PrepareStreamTable_array("UUID");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array_UUID, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    public static MessageHandler Handler_array_DATEHOUR = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                msg.getEntity(0);
+                String script = String.format("insert into sub1 values( %s,[datehour(%s)])", msg.getEntity(0).getString(), msg.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL"));
+                System.out.println(script);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_DATEHOUR() throws IOException, InterruptedException {
+        PrepareStreamTable_array("DATEHOUR");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array_DATEHOUR, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    public static MessageHandler Handler_array_IPADDR = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                msg.getEntity(0);
+                String script = String.format("insert into sub1 values( %s,[ipaddr(%s)])", msg.getEntity(0).getString(), msg.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL"));
+                System.out.println(script);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_IPADDR() throws IOException, InterruptedException {
+        PrepareStreamTable_array("IPADDR");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array_IPADDR, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    public static MessageHandler Handler_array_INT128 = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                msg.getEntity(0);
+                String script = String.format("insert into sub1 values( %s,[int128(%s)])", msg.getEntity(0).getString(), msg.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL"));
+                System.out.println(script);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_INT128() throws IOException, InterruptedException {
+        PrepareStreamTable_array("INT128");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array_INT128, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    public static MessageHandler Handler_array_COMPLEX = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                String complex1 = msg.getEntity(1).getString().replaceAll(",,", ",NULL+NULL,").replaceAll("\\[,", "[NULL+NULL,").replaceAll(",]", ",NULL+NULL]");
+                //System.out.println(complex1);
+                complex1 = complex1.substring(1, complex1.length() - 1);
+                String[] complex2 = complex1.split(",");
+                String complex3 = null;
+                StringBuilder re1 = new StringBuilder();
+                StringBuilder re2 = new StringBuilder();
+                for(int i=0;i<complex2.length;i++){
+                    complex3 = complex2[i];
+                    String[] complex4 = complex3.split("\\+");
+                    re1.append(complex4[0]);
+                    re1.append(' ');
+                    re2.append(complex4[1]);
+                    re2.append(' ');
+                }
+                complex1 = re1+","+re2;
+                complex1 = complex1.replaceAll("i","");
+                String script = String.format("insert into sub1 values( %s,[complex(%s)])", msg.getEntity(0).getString(), complex1);
+                //System.out.println(script);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_COMPLEX() throws IOException, InterruptedException {
+        PrepareStreamTable_array("COMPLEX");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array_COMPLEX, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    public static MessageHandler Handler_array_POINT = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                String complex1 = msg.getEntity(1).getString().replaceAll("\\(,\\)", "\\(NULL,NULL\\)");
+                complex1 = complex1.substring(1, complex1.length() - 1);
+                String[] complex2 = complex1.split("\\),\\(");
+                String complex3 = null;
+                StringBuilder re1 = new StringBuilder();
+                StringBuilder re2 = new StringBuilder();
+                for(int i=0;i<complex2.length;i++){
+                    complex3 = complex2[i];
+                    String[] complex4 = complex3.split(",");
+                    re1.append(complex4[0]);
+                    re1.append(' ');
+                    re2.append(complex4[1]);
+                    re2.append(' ');
+                }
+                complex1 = re1+","+re2;
+                complex1 = complex1.replaceAll("\\(","").replaceAll("\\)","");
+                String script = String.format("insert into sub1 values( %s,[point(%s)])", msg.getEntity(0).getString(), complex1);
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_POINT() throws IOException, InterruptedException {
+        PrepareStreamTable_array("POINT");
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array_POINT, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_DECIMAL32() throws IOException, InterruptedException {
+        PrepareStreamTableDecimal_array("DECIMAL32",3);
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_TDECIMAL64() throws IOException, InterruptedException {
+        PrepareStreamTableDecimal_array("DECIMAL64",4);
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_arrayVector_DECIMAL128() throws IOException, InterruptedException {
+        PrepareStreamTableDecimal_array("DECIMAL128",7);
+        ThreadPooledClient client = new ThreadPooledClient(10);
+        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        String script2 = "Trades.append!(pub_t);";
+        conn.run(script2);
+        //write 1000 rows after subscribe
+        checkResult();
+        client.unsubscribe(HOST, PORT, "Trades");
+    }
+
 }
