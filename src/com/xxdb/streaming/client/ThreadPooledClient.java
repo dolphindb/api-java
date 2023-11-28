@@ -47,6 +47,9 @@ public class ThreadPooledClient extends AbstractClient {
 
     public ThreadPooledClient(String subscribeHost, int subscribePort, int threadCount) throws SocketException {
         super(subscribeHost, subscribePort);
+        if (threadCount <= 0)
+            throw new RuntimeException("The 'threadCount' parameter cannot be less than or equal to zero.");
+
         threadPool = Executors.newFixedThreadPool(threadCount);
         new Thread() {
             private LinkedList<IMessage> backlog = new LinkedList<>();
