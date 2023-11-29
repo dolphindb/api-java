@@ -532,9 +532,9 @@ public class BasicStringVector extends AbstractVector{
 			System.arraycopy(values, 0, data, 0, size);
 			for (String val : data)
 			{
-				if(val.length() >= 262144) {
+				if(val.length() >= 65536) {
 					throw new RuntimeException("Serialized string length must" +
-							" less than 256k bytes.");
+							" less than 64k bytes.");
 				}
 				byte[] tmp = val.getBytes(StandardCharsets.UTF_8);
 				while(tmp.length + 1 + buffer.position() > buffer.limit()) {
@@ -571,9 +571,9 @@ public class BasicStringVector extends AbstractVector{
 		}
 		else {
 			while (len < bufSize && count < elementCount && start + count < total) {
-				if(values[start + count].length() >= 262144) {
+				if(values[start + count].length() >= 65536) {
 					throw new RuntimeException("Serialized string length must" +
-							" less than 256k bytes.");
+							" less than 64k bytes.");
 				}
 				String str = values[start + count];
 				int strLen = str.length();
@@ -609,9 +609,9 @@ public class BasicStringVector extends AbstractVector{
 				out.put(data);
 				readByte += Integer.BYTES + data.length;
 			} else {
-				if(values[indexStart + i].length() >= 262144) {
+				if(values[indexStart + i].length() >= 65536) {
 					throw new RuntimeException("Serialized string length must" +
-							" less than 256k bytes.");
+							" less than 64k bytes.");
 				}
 				byte[] data = values[indexStart + i].getBytes(Charset.defaultCharset());
 				if (Byte.BYTES + data.length > out.remaining())

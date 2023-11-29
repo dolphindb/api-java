@@ -76,9 +76,9 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 	@Override
 	public void writeString(String value) throws IOException{
 		int len = value.length();
-		if(len >= 262144) {
+		if(len >= 65536) {
 			throw new RuntimeException("Serialized string length must " +
-					"less than 256k bytes.");
+					"less than 64k bytes.");
 		}
 
 		byte[] valueBytes = value.getBytes(StandardCharsets.UTF_8);
