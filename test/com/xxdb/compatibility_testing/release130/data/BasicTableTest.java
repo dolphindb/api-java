@@ -546,23 +546,23 @@ public class BasicTableTest {
         System.out.print("查询耗时："+(etime-stime)+"ms ");
         System.out.println(data.rows() +"条");
     }
-    @Test
-    public void test_BasicTable_string()throws Exception{
-        DBConnection conn = new DBConnection(false, false, false);
-        conn.connect(HOST, PORT, "admin", "123456");
-        String createData = "t1 = table((take(10000000..20000000, 10000000)).string() as id)";
-        conn.run(createData);
-        long stime = System.currentTimeMillis();
-        EntityBlockReader data =  (EntityBlockReader)conn.run("t1", null, 4, 2, 65536, false);
-        int rows = 0;
-        while(data.hasNext()){
-            BasicTable sub = (BasicTable)data.read();
-            rows += sub.rows();
-        }
-        long etime = System.currentTimeMillis();
-        System.out.print("查询耗时："+(etime-stime)+"ms ");
-        System.out.println(rows +"条");
-    }
+//    @Test
+//    public void test_BasicTable_string()throws Exception{
+//        DBConnection conn = new DBConnection(false, false, false);
+//        conn.connect(HOST, PORT, "admin", "123456");
+//        String createData = "t1 = table((take(10000000..20000000, 10000000)).string() as id)";
+//        conn.run(createData);
+//        long stime = System.currentTimeMillis();
+//        EntityBlockReader data =  (EntityBlockReader)conn.run("t1", null, 4, 2, 65536, false);
+//        int rows = 0;
+//        while(data.hasNext()){
+//            BasicTable sub = (BasicTable)data.read();
+//            rows += sub.rows();
+//        }
+//        long etime = System.currentTimeMillis();
+//        System.out.print("查询耗时："+(etime-stime)+"ms ");
+//        System.out.println(rows +"条");
+//    }
     @Test
     public void test_BasicTable_toJSONString()throws Exception{
         DBConnection conn = new DBConnection(false, false, false);

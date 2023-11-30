@@ -24,8 +24,8 @@ public class BasicDecimalTest {
     private Logger logger_ = Logger.getLogger(getClass().getName());
     private static DBConnection conn;
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
-    static String HOST = bundle.getString("HOST");
-    static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    public static String HOST = bundle.getString("HOST");
+    public static int PORT = Integer.parseInt(bundle.getString("PORT"));
     public static Integer insertTime = 5000;
     public static ErrorCodeInfo pErrorInfo =new ErrorCodeInfo();;
 

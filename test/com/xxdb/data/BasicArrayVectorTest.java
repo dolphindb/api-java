@@ -18,7 +18,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class BasicArrayVectorTest {
-    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    public static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
 

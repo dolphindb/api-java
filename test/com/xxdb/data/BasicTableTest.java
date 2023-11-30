@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.Double2;
 import com.xxdb.io.Long2;
+import com.xxdb.io.ProgressListener;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -573,7 +574,7 @@ public class BasicTableTest {
         String createData = "t1 = table((take(10000000..20000000, 10000000)).string() as id)";
         conn.run(createData);
         long stime = System.currentTimeMillis();
-        EntityBlockReader data =  (EntityBlockReader)conn.run("t1", null, 4, 2, 65536, false);
+        EntityBlockReader data =  (EntityBlockReader)conn.run("t1", (ProgressListener) null, 4, 2, 65536, false);
         int rows = 0;
         while(data.hasNext()){
             BasicTable sub = (BasicTable)data.read();

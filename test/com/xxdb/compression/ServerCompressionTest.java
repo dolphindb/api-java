@@ -1511,6 +1511,80 @@ public class ServerCompressionTest {
         newT = (BasicTable) conn.run("select * from st");
         compareBasicTable_has_decimal(table, newT);
     }
+    @Test(expected = RuntimeException.class)
+    public void testCompressDecimal128delta() throws Exception {
+        int n=5000000;
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[n*2];
+        int baseTime = Utils.countDays(2000,1,1);
+        for (int i = 0; i < n*2; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        List<Vector> colVectors = new ArrayList<>();
+        BasicDateVector dateVector = new BasicDateVector(time);
+        dateVector.setCompressedMethod(1);
+        colVectors.add(dateVector);
+        conn.run("n=5000000*2;\n" +
+                "a = decimal128(rand(1000,n)\\10,8)");
+        BasicDecimal128Vector valVector = (BasicDecimal128Vector) conn.run("a");
+        valVector.setCompressedMethod(2);
+        colVectors.add(valVector);
+
+        BasicTable table = new BasicTable(colNames, colVectors);
+
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(100000:0,`date`val,[DATE,DECIMAL128(8)])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+    }
+
+    @Test
+    public void testCompressDecimal128() throws Exception {
+        int n=5000000;
+        List<String> colNames = new ArrayList<>();
+        colNames.add("date");
+        colNames.add("val");
+        int[] time = new int[n*2];
+        int baseTime = Utils.countDays(2000,1,1);
+        for (int i = 0; i < n*2; i++) {
+            time[i] = baseTime + (i % 15);
+        }
+        List<Vector> colVectors = new ArrayList<>();
+        BasicDateVector dateVector = new BasicDateVector(time);
+        dateVector.setCompressedMethod(1);
+        colVectors.add(dateVector);
+        conn.run("n="+n+"*2;\n" +
+                "a = decimal128(rand(1000,n)\\10,8)");
+        BasicDecimal128Vector valVector = (BasicDecimal128Vector) conn.run("a");
+        valVector.setCompressedMethod(1);
+        colVectors.add(valVector);
+
+        BasicTable table = new BasicTable(colNames, colVectors);
+
+        List<Entity> args = Arrays.asList(table);
+        conn.run("t = table(100000:0,`date`val,[DATE,DECIMAL128(8)])" +
+                "share t as st");
+        BasicInt count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(n*2, count.getInt());
+        BasicTable newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable_has_decimal(table, newT);
+        //include null
+        BasicDecimal128Vector val1 = (BasicDecimal128Vector) conn.run("decimal128(rand(10.0,"+n+"),8)  join take(double(),"+n+")");
+        val1.setCompressedMethod(Vector.COMPRESS_LZ4);
+        colVectors = new ArrayList<>();
+        colVectors.add(new BasicDateVector(time));
+        colVectors.add(val1);
+        table = new BasicTable(colNames, colVectors);
+        args = Arrays.asList(table);
+        conn.run("t = table(1000:0,`date`val,[DATE,DECIMAL128(8)])" +
+                "share t as st");
+        count = (BasicInt) conn.run("tableInsert{st}", args);
+        assertEquals(2*n, count.getInt());
+        newT = (BasicTable) conn.run("select * from st");
+        compareBasicTable_has_decimal(table, newT);
+    }
 
     @After
     public void tearDown() throws Exception {
