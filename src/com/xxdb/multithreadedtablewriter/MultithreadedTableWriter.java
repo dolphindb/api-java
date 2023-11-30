@@ -301,7 +301,7 @@ public class MultithreadedTableWriter {
         long sentRows_;
         boolean exit_;//Only set when exit
         boolean isFinished_;
-        public static int vectorSize = 65536;
+        public static int vectorSize = 65535;
     };
     private String dbName_;
     private String tableName_;
@@ -681,9 +681,10 @@ public class MultithreadedTableWriter {
             threadhashkey = 0;
         int threadIndex = threadhashkey % threads_.size();
         WriterThread writerThread=threads_.get(threadIndex);
+        int blockSize = Math.max(this.batchSize_, WriterThread.vectorSize);
         synchronized (writerThread.writeQueue_) {
             int rows = writerThread.writeQueue_.get(writerThread.writeQueue_.size() - 1).get(0).rows();
-            if (rows > WriterThread.vectorSize){
+            if (rows > blockSize){
                 writerThread.writeQueue_.add(createListVector());
             }
             int size = row.size();
