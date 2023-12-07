@@ -618,7 +618,7 @@ public class DBConnection {
     }
 
     /**
-     * This method has been deprecated since 'Java API 1.30.22.4' and will be disabled in the next version: 'Java API 1.30.22.4'.
+     * This method has been deprecated since 'Java API 1.30.22.4' and will be privated in the next version: 'Java API xxx'.
      * @param asynchronousTask
      * @param useSSL
      * @param compress
@@ -628,7 +628,7 @@ public class DBConnection {
      * @param sqlStd
      */
     @Deprecated
-    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, boolean isReverseStreaming, SqlStdEnum sqlStd){
+    private DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, boolean isReverseStreaming, SqlStdEnum sqlStd){
         this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, isReverseStreaming, sqlStd);
         this.mutex_ = new ReentrantLock();
     }
