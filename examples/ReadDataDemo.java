@@ -1,4 +1,4 @@
-package com.dolphindb.examples;
+package examples;
 
 import com.xxdb.*;
 import com.xxdb.data.*;

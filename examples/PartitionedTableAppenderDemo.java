@@ -1,4 +1,4 @@
-package com.dolphindb.examples;
+package examples;
 
 import com.xxdb.DBConnection;
 import com.xxdb.DBConnectionPool;
@@ -23,7 +23,7 @@ public class PartitionedTableAppenderDemo {
     public static void main(String[] args) throws Exception {
 
         String prepareData = "drop database if exists \"dfs://test\"\n"
-            + "n=1000000\n" +
+            + "n=100000\n" +
             "t=table(rand(`IBM`MS`APPL`AMZN,n) as symbol, rand(10.0, n) as value)\n" +
             "db = database(\"dfs://test\", RANGE, `A`F`M`S`ZZZZ)\n" +
             "db.createPartitionedTable(t, \"pt\", \"symbol\")";

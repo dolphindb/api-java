@@ -27,3 +27,4 @@ dolphindb_javaapi.iml
 .settings/org.eclipse.m2e.core.prefs
 /.idea
 /.project
+target/

@@ -1,10 +1,12 @@
-package com.dolphindb.examples;
+package examples;
 
 import com.xxdb.DBConnection;
 import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
+
+import java.time.LocalDate;
 import java.util.*;
 
 
@@ -41,9 +43,9 @@ public class MultithreadedTableWriterDemo {
         {
             for (int i = 0; i < 10000; ++i)
             {
-                ret = multithreadedTableWriter_.insert(new Date(2022, 3, 23), "AAAAAAAB", random.nextInt() % 10000);
+                ret = multithreadedTableWriter_.insert(LocalDate.of(2022, 3, 23), "AAAAAAAB", random.nextInt() % 10000);
                 if(ret.hasError()){
-                    System.out.println("insert failed: " + ret.errorInfo);
+                    System.out.println("insert failed: " + ret.getErrorInfo());
                 }
             }
         }
@@ -58,7 +60,7 @@ public class MultithreadedTableWriterDemo {
         writeStatus = multithreadedTableWriter_.getStatus();
 
         // check if mtw has errors.
-        if (!writeStatus.errorInfo.equals(""))
+        if (writeStatus.hasError())
         {
             System.out.println("error in writing !");
         }

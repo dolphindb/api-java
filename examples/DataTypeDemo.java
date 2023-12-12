@@ -1,4 +1,4 @@
-package com.dolphindb.examples;
+package examples;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 import java.math.BigDecimal;
@@ -129,7 +129,7 @@ public class DataTypeDemo {
         BasicUuid basicUuid = BasicUuid.random();
         UUID uuid = UUID.fromString(basicUuid.getString());
 
-        BasicDecimal32 basicDecimal32 = new BasicDecimal32(34567.1, 2);
+        BasicDecimal32 basicDecimal32 = new BasicDecimal32("34567.1", 2);
         BigDecimal decimal32 = new BigDecimal(basicDecimal32.getString());
 
         BasicDate basicDate = new BasicDate(LocalDate.now());

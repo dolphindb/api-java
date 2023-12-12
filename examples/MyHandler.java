@@ -1,4 +1,4 @@
-package com.dolphindb.examples;
+package examples;
 
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.MessageHandler;
