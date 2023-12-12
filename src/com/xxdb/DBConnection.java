@@ -49,7 +49,7 @@ public class DBConnection {
     private Random nodeRandom_ = new Random();
     private int connTimeout_ = 0;
     private boolean closed_ = false;
-    private boolean loadBalance_ = true;
+    private boolean loadBalance_ = false;
     private String runClientId_ = null;
     private long runSeqNo_ = 0;
     private int[] serverVersion_;
@@ -725,66 +725,78 @@ public class DBConnection {
     }
 
     public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect) throws IOException {
+        if (enableHighAvailability)
+            return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, true);
+        else
+            return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, false);
+    }
+
+    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance) throws IOException {
         mutex_.lock();
         try {
             this.uid_ = userId;
             this.pwd_ = password;
             this.initialScript_ = initialScript;
             this.enableHighAvailability_ = enableHighAvailability;
+            this.loadBalance_ = enableLoadBalance;
+            if (this.loadBalance_ && !this.enableHighAvailability_)
+                throw new RuntimeException("Cannot only enable loadbalance but not enable highAvailablity.");
 
-            if (enableHighAvailability){
+            if (enableHighAvailability) {
                 nodes_.add(new Node(hostName, port));
-                if (highAvailabilitySites != null){
+                if (highAvailabilitySites != null) {
                     for (String site : highAvailabilitySites) {
                         Node node = new Node(site);
-                        if(nodes_.contains(node)==false) {
+                        if (!nodes_.contains(node))
                             nodes_.add(node);
-                        }
                     }
                 }
+
                 Node connectedNode = new Node();
                 BasicTable bt = null;
-                while (!closed_){
-                    while (!conn_.isConnected() && !closed_){
-                        for (Node one : nodes_){
-                            if (connectNode(one)){
+                while (!closed_) {
+                    while (!conn_.isConnected() && !closed_) {
+                        for (Node one : nodes_) {
+                            if (connectNode(one)) {
                                 connectedNode = one;
                                 break;
                             }
+
                             try {
                                 Thread.sleep(100);
-                            }catch (Exception e){
+                            } catch (Exception e){
                                 e.printStackTrace();
                                 return false;
                             }
                         }
                     }
+
                     try {
                         bt = (BasicTable) conn_.run("select host,port,(memoryUsed/1024.0/1024.0/1024.0)/maxMemSize as memLoad,ratio(connectionNum,maxConnections) as connLoad,avgLoad from rpc(getControllerAlias(),getClusterPerf) where mode=0",0);
                         break;
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         System.out.println("ERROR getting other data nodes, exception: " + e.getMessage());
                         Node node1 = new Node();
-                        if (isConnected()){
+                        if (isConnected()) {
                             ExceptionType type = parseException(e.getMessage(), node1);
                             if (type == ExceptionType.ET_IGNORE){
                                 continue;
-                            }else if (type == ExceptionType.ET_NEWLEADER || type == ExceptionType.ET_NODENOTAVAIL){
+                            } else if (type == ExceptionType.ET_NEWLEADER || type == ExceptionType.ET_NODENOTAVAIL){
                                 switchDataNode(node1);
                             }
-                        }else {
+                        } else {
                             switchDataNode(node1);
                         }
                     }
                 }
-                if(closed_)
+
+                if (closed_)
                     return false;
 
-                if ( bt!=null && bt.getDataForm() != Entity.DATA_FORM.DF_TABLE){
+                if ( bt!=null && bt.getDataForm() != Entity.DATA_FORM.DF_TABLE)
                     throw new IOException("Run getClusterPerf() failed.");
-                }
 
-                if (bt!=null && loadBalance_){
+                if (bt!=null && loadBalance_) {
                     //ignore very high load nodes, rand one in low load nodes
                     List<Node> lowLoadNodes=new ArrayList<>();
                     BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
@@ -792,11 +804,11 @@ public class DBConnection {
                     BasicDoubleVector memLoad = (BasicDoubleVector) bt.getColumn("memLoad");
                     BasicDoubleVector connLoad = (BasicDoubleVector) bt.getColumn("connLoad");
                     BasicDoubleVector avgLoad = (BasicDoubleVector) bt.getColumn("avgLoad");
-                    for (int i = 0; i < colHost.rows(); i++){
+                    for (int i = 0; i < colHost.rows(); i++) {
                         Node nodex = new Node(colHost.getString(i), colPort.getInt(i));
                         Node pexistNode = null;
-                        if (highAvailabilitySites != null){
-                            for (Node node : nodes_){
+                        if (highAvailabilitySites != null) {
+                            for (Node node : nodes_) {
                                 if ((node.hostName.equals(nodex.hostName) || nodex.hostName.equals("localhost")) && node.port == nodex.port){
                                     pexistNode = node;
                                     break;
@@ -807,48 +819,48 @@ public class DBConnection {
                                 continue;
                         }
                         double load=(memLoad.getDouble(i)+connLoad.getDouble(i)+avgLoad.getDouble(i))/3.0;
-                        if (pexistNode != null){
+                        if (pexistNode != null) {
                             pexistNode.load = load;
-                        }else {
+                        } else {
                             pexistNode=new Node(colHost.getString(i), colPort.getInt(i), load);
                             nodes_.add(pexistNode);
                         }
-                        //low load
-                        if(memLoad.getDouble(i)<0.8&&
-                                connLoad.getDouble(i)<0.9&&
-                                avgLoad.getDouble(i)<0.8){
+                        // low load
+                        if (memLoad.getDouble(i)<0.8 && connLoad.getDouble(i)<0.9 && avgLoad.getDouble(i)<0.8)
                             lowLoadNodes.add(pexistNode);
-                        }
                     }
+
                     Node pMinNode;
-                    if(lowLoadNodes.isEmpty()==false){
+                    if (!lowLoadNodes.isEmpty()) {
                         pMinNode=lowLoadNodes.get(nodeRandom_.nextInt(lowLoadNodes.size()));
-                    }else{
+                    } else {
                         pMinNode=nodes_.get(nodeRandom_.nextInt(nodes_.size()));
                     }
-                    if (pMinNode != null && pMinNode.equals(connectedNode)==false){
+
+                    if (pMinNode != null && !pMinNode.equals(connectedNode)){
                         System.out.println("Switch to node: " + pMinNode.hostName + ":" + pMinNode.port);
                         conn_.close();
                         switchDataNode(pMinNode);
                     }
                 }
-            }else {
-                if (reconnect){
+            } else {
+                if (reconnect) {
                     nodes_.add(new Node(hostName, port));
                     switchDataNode(new Node(hostName, port));
-                }else {
+                } else {
                     if (!connectNode(new Node(hostName, port)))
                         return false;
                 }
             }
-            InitConnection();
+
+            initConnection();
             return true;
         } finally {
             mutex_.unlock();
         }
     }
 
-    private void InitConnection() throws IOException{
+    private void initConnection() throws IOException{
         runClientId_ = null;
         if(enableHighAvailability_){
             if(getServerVersion()) {
@@ -858,6 +870,7 @@ public class DBConnection {
                 }
             }
         }
+
         if (initialScript_!=null && initialScript_.length() > 0){
             run(initialScript_);
         }
