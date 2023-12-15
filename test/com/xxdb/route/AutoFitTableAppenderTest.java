@@ -1,6 +1,7 @@
 package com.xxdb.route;
 
 import com.xxdb.DBConnection;
+import com.xxdb.ExclusiveDBConnectionPool;
 import com.xxdb.data.*;
 import org.junit.After;
 import org.junit.Assert;
@@ -2129,6 +2130,50 @@ public class AutoFitTableAppenderTest {
         Assert.assertEquals(100, ua.rows());
         BasicTable act = (BasicTable)conn.run("select * from loadTable(\"dfs://tableAppenderTest\",`pt) ");
         compareBasicTable(bt, act);
+    }
+    @Test
+    public void test_AutoFitTableAppender_illegal_string() throws Exception {
+        conn.run("if(existsDatabase('dfs://db1')) dropDatabase('dfs://db1'); db = database('dfs://db1', VALUE, 1..10,,'TSDB');t = table(1:0,`id`string1`symbol1`blob1,[INT,STRING,SYMBOL,BLOB]);db.createPartitionedTable(t,'t1', 'id',,'id')");
+        AutoFitTableAppender aftu = new AutoFitTableAppender("dfs://db1", "t1", conn);
+        List<String> colName=new ArrayList<>();
+        colName.add("id");
+        colName.add("string1");
+        colName.add("symbol1");
+        colName.add("blob1");
+        List<Vector> cols = new ArrayList<>();
+        BasicIntVector trade_dt = new BasicIntVector(0);
+        trade_dt.add(1);
+        trade_dt.add(2);
+        trade_dt.add(3);
+        cols.add(trade_dt);
+        BasicStringVector string1 = new BasicStringVector(0);
+        string1.add("string1AM\000ZN/n0");
+        string1.add("\000\00PL\0");
+        string1.add("string1AM\0");
+        cols.add(string1);
+        BasicStringVector symbol1 = new BasicStringVector(0);
+        symbol1.add("symbol1AM\0\0ZN");
+        symbol1.add("\0symbol1AP\0PL\0");
+        symbol1.add("symbol1AM\0");
+        cols.add(symbol1);
+        BasicStringVector blob1 = new BasicStringVector(0);
+        blob1.add("blob1AM\0ZN");
+        blob1.add("\0blob1AM\0ZN");
+        blob1.add("blob1AMZN\0");
+        cols.add(blob1);
+        BasicTable tmpTable = new BasicTable(colName, cols);
+        aftu.append(tmpTable);
+        BasicTable table2 = (BasicTable) conn.run("select * from loadTable(\"dfs://db1\", `t1) ;\n");
+        System.out.println(table2.getString());
+        assertEquals("string1AM", table2.getColumn(1).get(0).getString());
+        assertEquals("", table2.getColumn(1).get(1).getString());
+        assertEquals("string1AM", table2.getColumn(1).get(2).getString());
+        assertEquals("symbol1AM", table2.getColumn(2).get(0).getString());
+        assertEquals("", table2.getColumn(2).get(1).getString());
+        assertEquals("symbol1AM", table2.getColumn(2).get(2).getString());
+        assertEquals("blob1AM", table2.getColumn(3).get(0).getString());
+        assertEquals("", table2.getColumn(3).get(1).getString());
+        assertEquals("blob1AMZN", table2.getColumn(3).get(2).getString());
     }
 }
 

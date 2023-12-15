@@ -5,6 +5,7 @@ import com.xxdb.data.Vector;
 import com.xxdb.data.*;
 import com.xxdb.multithreadedtablewriter.Callback;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
+import com.xxdb.route.AutoFitTableAppender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -5537,7 +5538,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                     "", "t1", false, false,null,1, 1,
                     1, "int",new int[]{Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4});
+        mutithreadTableWriter_.insert(new BasicInt(1),new BasicDouble(12.88));
         System.out.println(mutithreadTableWriter_.getStatus().toString());
+
         conn.run("undef(`t1,SHARED)");
     }
 
@@ -7096,7 +7099,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.close();
     }
     @Test(timeout = 120000)
-    public void test_insert_integer_to_floating_() throws Exception {
+    public void test_insert_integer_to_floating() throws Exception {
 
         StringBuilder sb = new StringBuilder();
         sb.append("t = table(100:0, `float`double," +
@@ -7119,6 +7122,50 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("[1,2,3,4,5.55000019,6.65999985]", bt.getColumn("float").getString());
         assertEquals("[11,22,33,44,55,66.66]", bt.getColumn("double").getString());
         conn.run("undef(`t1,SHARED)");
+    }
+    @Test
+    public void test_MultithreadedTableWriter_illegal_string() throws Exception {
+        conn.run("if(existsDatabase('dfs://db1')) dropDatabase('dfs://db1'); db = database('dfs://db1', VALUE, 1..10,,'TSDB');t = table(1:0,`id`string1`symbol1`blob1,[INT,STRING,SYMBOL,BLOB]);db.createPartitionedTable(t,'t1', 'id',,'id')");
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "dfs://db1", "t1", false, false, null, 1, 1,
+                1, "id");
+        mtw.insert( new BasicInt(1), new BasicString("string1AM\000ZN/n0"),new BasicString("symbol1AM\0\0ZN"),new BasicString("blob1AM\0ZN",true));
+        mtw.insert( new BasicInt(2), new BasicString("\000\00PL\0"),new BasicString("\0symbol1AP\0PL\0"),new BasicString("\0blob1AM\0ZN",true));
+        mtw.insert( new BasicInt(3), new BasicString("string1AM\0"),new BasicString("symbol1AM\0"),new BasicString("blob1AMZN\0",true));
+        mtw.waitForThreadCompletion();
+        BasicTable table2 = (BasicTable) conn.run("select * from loadTable(\"dfs://db1\", `t1) ;\n");
+        System.out.println(table2.getString());
+        assertEquals("string1AM", table2.getColumn(1).get(0).getString());
+        assertEquals("", table2.getColumn(1).get(1).getString());
+        assertEquals("string1AM", table2.getColumn(1).get(2).getString());
+        assertEquals("symbol1AM", table2.getColumn(2).get(0).getString());
+        assertEquals("", table2.getColumn(2).get(1).getString());
+        assertEquals("symbol1AM", table2.getColumn(2).get(2).getString());
+        assertEquals("blob1AM", table2.getColumn(3).get(0).getString());
+        assertEquals("", table2.getColumn(3).get(1).getString());
+        assertEquals("blob1AMZN", table2.getColumn(3).get(2).getString());
+    }
+    @Test
+    public void test_MultithreadedTableWriter_illegal_string_1() throws Exception {
+        conn.run("if(existsDatabase('dfs://db1')) dropDatabase('dfs://db1'); db = database('dfs://db1', VALUE, 1..10,,'TSDB');t = table(1:0,`id`string1`symbol1`blob1,[INT,STRING,SYMBOL,BLOB]);db.createPartitionedTable(t,'t1', 'id',,'id')");
+        MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "dfs://db1", "t1", false, false, null, 1, 1,
+                1, "id");
+        mtw.insert( 1, "string1AM\000ZN/n0","symbol1AM\0\0ZN","blob1AM\0ZN");
+        mtw.insert( 2, "\000\00PL\0","\0symbol1AP\0PL\0","\0blob1AM\0ZN");
+        mtw.insert( 3, "string1AM\0","symbol1AM\0","blob1AMZN\0");
+        mtw.waitForThreadCompletion();
+        BasicTable table2 = (BasicTable) conn.run("select * from loadTable(\"dfs://db1\", `t1) ;\n");
+        System.out.println(table2.getString());
+        assertEquals("string1AM", table2.getColumn(1).get(0).getString());
+        assertEquals("", table2.getColumn(1).get(1).getString());
+        assertEquals("string1AM", table2.getColumn(1).get(2).getString());
+        assertEquals("symbol1AM", table2.getColumn(2).get(0).getString());
+        assertEquals("", table2.getColumn(2).get(1).getString());
+        assertEquals("symbol1AM", table2.getColumn(2).get(2).getString());
+        assertEquals("blob1AM", table2.getColumn(3).get(0).getString());
+        assertEquals("", table2.getColumn(3).get(1).getString());
+        assertEquals("blob1AMZN", table2.getColumn(3).get(2).getString());
     }
 }
 

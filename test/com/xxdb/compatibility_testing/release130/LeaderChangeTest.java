@@ -201,7 +201,7 @@ public class LeaderChangeTest {
     public static void test11()throws Exception
     {
         DBConnection dBConnection = new DBConnection();
-        dBConnection.connect("192.168.1.116", 8999);
+        dBConnection.connect(HOST, PORT);
         dBConnection.run("data = table([concat(char(1..1000))] as id);share data as data1;");
         BasicTable vector = (BasicTable)dBConnection.run("data1");
         Map<String, Entity> map = new HashMap<>();
