@@ -115,7 +115,7 @@ public class BasicChunkMeta extends AbstractEntity implements Entity{
 		for(String site : sites)
 			length += AbstractExtendedDataOutputStream.getUTFlength(site, 0, 0);
 		output.writeShort(length);
-		output.writeString(path);
+		output.writeString(path, false);
 		output.writeLong2(id.getLong2());
 		output.writeInt(version);
 		output.writeInt(size);

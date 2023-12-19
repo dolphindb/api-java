@@ -54,7 +54,7 @@ public class SymbolBaseCollection {
 			int size = base.size();
 			out.writeInt(size);
 			for(int i=0; i<size; ++i)
-				out.writeString(base.getSymbol(i));
+				out.writeString(base.getSymbol(i), true);
 		}
 	}
 	

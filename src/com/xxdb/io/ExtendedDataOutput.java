@@ -4,7 +4,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 public interface ExtendedDataOutput extends DataOutput {
-	void writeString(String str) throws IOException;
+	void writeString(String str, boolean isSymbol) throws IOException;
 	void writeBlob(byte[] v) throws IOException;
 	void writeLong2(Long2 v) throws IOException;
 	void writeDouble2(Double2 v) throws IOException;

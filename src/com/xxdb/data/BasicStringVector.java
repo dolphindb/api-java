@@ -13,7 +13,7 @@ import com.xxdb.io.ExtendedDataOutput;
 import com.xxdb.route.BitConverter;
 
 /**
- * 
+ *
  * Corresponds to DolphinDB string vector
  *
  */
@@ -25,6 +25,12 @@ public class BasicStringVector extends AbstractVector{
 	private List<byte[]> blobValues;
 	private int size;
 	private int capaticy;
+    private static final String SYMBOL_LENGTH_EXCEED_MSG = "Serialized symbol length must be less than 256k bytes.";
+    private static final String STRING_LENGTH_EXCEED_MSG = "Serialized string length must be less than 64k bytes.";
+	private static final String BLOB_LENGTH_EXCEED_MSG = "Serialized blob length must be less than 64m bytes.";
+	private static final int SERIALIZED_SYMBOL_MAX_LENGTH = 262144;
+	private static final int SERIALIZED_STRING_MAX_LENGTH = 65536;
+	private static final int SERIALIZED_BLOB_MAX_LENGTH = 67108864;
 
 	public BasicStringVector(int size){
 		this(DATA_FORM.DF_VECTOR, size, false);
@@ -420,19 +426,12 @@ public class BasicStringVector extends AbstractVector{
 
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
-		if (isBlob)
-		{
+		if (isBlob) {
 			for (int i = 0; i < count; ++i)
-			{
 				out.writeBlob(blobValues.get(start + i));
-			}
-		}
-		else
-		{
+		} else {
 			for (int i = 0; i < count; ++i)
-			{
-				out.writeString(values[start + i]);
-			}
+				out.writeString(values[start + i], isSymbol);
 		}
 	}
 
@@ -449,13 +448,11 @@ public class BasicStringVector extends AbstractVector{
 		} else {
 			String[] data = new String[size];
 			System.arraycopy(values, 0, data, 0, size);
-			for (String str : data)
-			{
-				if (str == null){
-					out.writeString("");
-				}else {
-					out.writeString(str);
-				}
+			for (String str : data) {
+				if (str == null)
+					out.writeString("", isSymbol);
+				else
+					out.writeString(str, isSymbol);
 			}
 		}
 	}
@@ -516,10 +513,8 @@ public class BasicStringVector extends AbstractVector{
 	public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
 		if (isBlob) {
 			for (byte[] val : blobValues) {
-				if (val.length >= 4194304) {
-					throw new RuntimeException("Serialized blob length must" +
-							" less than 4096k bytes.");
-				}
+				if (val.length >= SERIALIZED_BLOB_MAX_LENGTH)
+					throw new RuntimeException(BLOB_LENGTH_EXCEED_MSG);
 
 				while(val.length + 1 + buffer.position() > buffer.limit()) {
 					buffer = Utils.reAllocByteBuffer(buffer, Math.max(buffer.capacity() * 2,1024));
@@ -530,12 +525,11 @@ public class BasicStringVector extends AbstractVector{
 		} else {
 			String[] data = new String[size];
 			System.arraycopy(values, 0, data, 0, size);
-			for (String val : data)
-			{
-				if(val.length() >= 65536) {
-					throw new RuntimeException("Serialized string length must" +
-							" less than 64k bytes.");
-				}
+			for (String val : data) {
+				int utf8Length = val.getBytes(StandardCharsets.UTF_8).length;
+                if ((isSymbol && utf8Length >= SERIALIZED_SYMBOL_MAX_LENGTH) || (!isSymbol && utf8Length >= SERIALIZED_STRING_MAX_LENGTH))
+                    throw new RuntimeException(isSymbol ? SYMBOL_LENGTH_EXCEED_MSG : STRING_LENGTH_EXCEED_MSG);
+
 				byte[] tmp = val.getBytes(StandardCharsets.UTF_8);
 				while(tmp.length + 1 + buffer.position() > buffer.limit()) {
 					buffer = Utils.reAllocByteBuffer(buffer, Math.max(buffer.capacity() * 2,1024));
@@ -555,10 +549,8 @@ public class BasicStringVector extends AbstractVector{
 			while(len < bufSize && count < elementCount && start + count < total) {
 				byte[] str = blobValues.get(start + count);
 				int strLen = str.length;
-				if (strLen >= 4194304) {
-					throw new RuntimeException("Serialized blob length must" +
-							" less than 4096k bytes.");
-				}
+				if (strLen >= SERIALIZED_BLOB_MAX_LENGTH)
+					throw new RuntimeException(BLOB_LENGTH_EXCEED_MSG);
 
 				if (strLen + Integer.BYTES + 1 >= bufSize - len)
 					break;
@@ -568,13 +560,12 @@ public class BasicStringVector extends AbstractVector{
 				len += strLen + Integer.BYTES;
 				count++;
 			}
-		}
-		else {
+		} else {
 			while (len < bufSize && count < elementCount && start + count < total) {
-				if(values[start + count].length() >= 65536) {
-					throw new RuntimeException("Serialized string length must" +
-							" less than 64k bytes.");
-				}
+				int utf8Length = values[start + count].getBytes(StandardCharsets.UTF_8).length;
+				if ((isSymbol && utf8Length >= SERIALIZED_SYMBOL_MAX_LENGTH) || (!isSymbol && utf8Length >= SERIALIZED_STRING_MAX_LENGTH))
+					throw new RuntimeException(isSymbol ? SYMBOL_LENGTH_EXCEED_MSG : STRING_LENGTH_EXCEED_MSG);
+
 				String str = values[start + count];
 				int strLen = str.length();
 				if (strLen + 1 >= bufSize - len)
@@ -598,10 +589,8 @@ public class BasicStringVector extends AbstractVector{
 		for (int i = 0; i < targetNumElement; ++i, ++numElementAndPartial.numElement) {
 			if (isBlob) {
 				byte[] data = blobValues.get(i);
-				if (data.length >= 4194304) {
-					throw new RuntimeException("Serialized blob length must" +
-							" less than 4096k bytes.");
-				}
+				if (data.length >= SERIALIZED_BLOB_MAX_LENGTH)
+					throw new RuntimeException(BLOB_LENGTH_EXCEED_MSG);
 
 				if (Integer.BYTES + data.length > out.remaining())
 					break;
@@ -609,10 +598,10 @@ public class BasicStringVector extends AbstractVector{
 				out.put(data);
 				readByte += Integer.BYTES + data.length;
 			} else {
-				if(values[indexStart + i].length() >= 65536) {
-					throw new RuntimeException("Serialized string length must" +
-							" less than 64k bytes.");
-				}
+				int utf8Length = values[indexStart + i].getBytes(StandardCharsets.UTF_8).length;
+				if ((isSymbol && utf8Length >= SERIALIZED_SYMBOL_MAX_LENGTH) || (!isSymbol && utf8Length >= SERIALIZED_STRING_MAX_LENGTH))
+					throw new RuntimeException(isSymbol ? SYMBOL_LENGTH_EXCEED_MSG : STRING_LENGTH_EXCEED_MSG);
+
 				byte[] data = values[indexStart + i].getBytes(Charset.defaultCharset());
 				if (Byte.BYTES + data.length > out.remaining())
 					break;
