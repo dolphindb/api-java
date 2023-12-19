@@ -98,7 +98,7 @@ public interface Entity {
 			return Entity.DATA_CATEGORY.LOGICAL;
 		else if(type == Entity.DATA_TYPE.DT_DOUBLE || type == Entity.DATA_TYPE.DT_FLOAT)
 			return Entity.DATA_CATEGORY.FLOATING;
-		else if(type == Entity.DATA_TYPE.DT_STRING || type == Entity.DATA_TYPE.DT_SYMBOL)
+		else if(type == Entity.DATA_TYPE.DT_STRING || type == Entity.DATA_TYPE.DT_SYMBOL || type == DATA_TYPE.DT_BLOB)
 			return Entity.DATA_CATEGORY.LITERAL;
 		else if(type==Entity.DATA_TYPE.DT_INT128 || type==Entity.DATA_TYPE.DT_UUID || type==Entity.DATA_TYPE.DT_IPADDR)
 			return Entity.DATA_CATEGORY.BINARY;
