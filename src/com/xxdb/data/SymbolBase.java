@@ -90,6 +90,6 @@ public class SymbolBase {
 		out.writeInt(0);
 		out.writeInt(count);
 		for(int i=0; i<count; ++i)
-			out.writeString(syms.get(i), true);
+			out.writeString(syms.get(i));
 	}
 }

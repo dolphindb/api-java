@@ -283,9 +283,9 @@ public class BasicTable extends AbstractEntity implements Table{
 		out.writeShort(flag);
 		out.writeInt(rows());
 		out.writeInt(columns());
-		out.writeString("", false); //table name
+		out.writeString(""); //table name
 		for(String colName : colNames)
-			out.writeString(colName, false);
+			out.writeString(colName);
 		SymbolBaseCollection collection = null;
 		for(Vector vector : columns){
 			if(vector instanceof BasicSymbolVector){
@@ -307,9 +307,9 @@ public class BasicTable extends AbstractEntity implements Table{
 		int cols = this.columns();
 		output.writeInt(rows);
 		output.writeInt(cols);
-		output.writeString("", false); //table name
+		output.writeString(""); //table name
 		for (int i = 0; i < cols; i++) {
-			output.writeString(this.getColumnName(i), false);
+			output.writeString(this.getColumnName(i));
 		}
 
 		for (int i = 0; i < cols; i++) {

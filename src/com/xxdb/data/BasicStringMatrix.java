@@ -102,6 +102,6 @@ public class BasicStringMatrix extends AbstractMatrix{
 
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		for(String value : values)
-			out.writeString(value, isSymbol);
+			out.writeString(value);
 	}
 }

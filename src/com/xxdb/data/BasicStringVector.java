@@ -431,7 +431,7 @@ public class BasicStringVector extends AbstractVector{
 				out.writeBlob(blobValues.get(start + i));
 		} else {
 			for (int i = 0; i < count; ++i)
-				out.writeString(values[start + i], isSymbol);
+				out.writeString(values[start + i]);
 		}
 	}
 
@@ -450,9 +450,9 @@ public class BasicStringVector extends AbstractVector{
 			System.arraycopy(values, 0, data, 0, size);
 			for (String str : data) {
 				if (str == null)
-					out.writeString("", isSymbol);
+					out.writeString("");
 				else
-					out.writeString(str, isSymbol);
+					out.writeString(str);
 			}
 		}
 	}
@@ -526,9 +526,10 @@ public class BasicStringVector extends AbstractVector{
 			String[] data = new String[size];
 			System.arraycopy(values, 0, data, 0, size);
 			for (String val : data) {
-				int utf8Length = val.getBytes(StandardCharsets.UTF_8).length;
-                if ((isSymbol && utf8Length >= SERIALIZED_SYMBOL_MAX_LENGTH) || (!isSymbol && utf8Length >= SERIALIZED_STRING_MAX_LENGTH))
-                    throw new RuntimeException(isSymbol ? SYMBOL_LENGTH_EXCEED_MSG : STRING_LENGTH_EXCEED_MSG);
+				if(val.length() >= 262144) {
+					throw new RuntimeException("Serialized string length must" +
+							" less than 256k bytes.");
+				}
 
 				byte[] tmp = val.getBytes(StandardCharsets.UTF_8);
 				while(tmp.length + 1 + buffer.position() > buffer.limit()) {
@@ -562,9 +563,10 @@ public class BasicStringVector extends AbstractVector{
 			}
 		} else {
 			while (len < bufSize && count < elementCount && start + count < total) {
-				int utf8Length = values[start + count].getBytes(StandardCharsets.UTF_8).length;
-				if ((isSymbol && utf8Length >= SERIALIZED_SYMBOL_MAX_LENGTH) || (!isSymbol && utf8Length >= SERIALIZED_STRING_MAX_LENGTH))
-					throw new RuntimeException(isSymbol ? SYMBOL_LENGTH_EXCEED_MSG : STRING_LENGTH_EXCEED_MSG);
+				if(values[start + count].length() >= 262144) {
+					throw new RuntimeException("Serialized string length must" +
+							" less than 256k bytes.");
+				}
 
 				String str = values[start + count];
 				int strLen = str.length();
@@ -598,9 +600,10 @@ public class BasicStringVector extends AbstractVector{
 				out.put(data);
 				readByte += Integer.BYTES + data.length;
 			} else {
-				int utf8Length = values[indexStart + i].getBytes(StandardCharsets.UTF_8).length;
-				if ((isSymbol && utf8Length >= SERIALIZED_SYMBOL_MAX_LENGTH) || (!isSymbol && utf8Length >= SERIALIZED_STRING_MAX_LENGTH))
-					throw new RuntimeException(isSymbol ? SYMBOL_LENGTH_EXCEED_MSG : STRING_LENGTH_EXCEED_MSG);
+				if(values[indexStart + i].length() >= 262144) {
+					throw new RuntimeException("Serialized string length must" +
+							" less than 256k bytes.");
+				}
 
 				byte[] data = values[indexStart + i].getBytes(Charset.defaultCharset());
 				if (Byte.BYTES + data.length > out.remaining())

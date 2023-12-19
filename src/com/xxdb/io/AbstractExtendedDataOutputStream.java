@@ -16,10 +16,6 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 	protected int[] intBuf;
 	protected long[] longBuf;
 	protected double[] doubleBuf;
-	private static final String SYMBOL_LENGTH_EXCEED_MSG = "Serialized symbol length must be less than 256k bytes.";
-	private static final String STRING_LENGTH_EXCEED_MSG = "Serialized string length must be less than 64k bytes.";
-	private static final int SERIALIZED_SYMBOL_MAX_LENGTH = 262144;
-	private static final int SERIALIZED_STRING_MAX_LENGTH = 65536;
 
 	public AbstractExtendedDataOutputStream(OutputStream out) {
 		super(out);
@@ -78,10 +74,12 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 	}
 
 	@Override
-	public void writeString(String value, boolean isSymbol) throws IOException{
-		int utf8Length = value.getBytes(StandardCharsets.UTF_8).length;
-		if ((isSymbol && utf8Length >= SERIALIZED_SYMBOL_MAX_LENGTH) || (!isSymbol && utf8Length >= SERIALIZED_STRING_MAX_LENGTH))
-			throw new RuntimeException(isSymbol ? SYMBOL_LENGTH_EXCEED_MSG : STRING_LENGTH_EXCEED_MSG);
+	public void writeString(String value) throws IOException{
+		int len = value.length();
+		if(len >= 262144) {
+			throw new RuntimeException("Serialized string length must " +
+					"less than 256k bytes.");
+		}
 
 		byte[] valueBytes = value.getBytes(StandardCharsets.UTF_8);
 		byte[] newValueBytes = getResolveZeroByteArray(valueBytes);
