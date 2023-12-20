@@ -1,7 +1,6 @@
 package com.xxdb;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.xxdb.comm.SqlStdEnum;
 import com.xxdb.data.Vector;
 import com.xxdb.data.*;
 import com.xxdb.io.Double2;
@@ -22,7 +21,6 @@ import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.*;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.*;
@@ -43,10 +41,10 @@ public class DBConnectionTest {
     static int CONTROLLER_PORT = Integer.parseInt(bundle.getString("CONTROLLER_PORT"));
     static String[] ipports = bundle.getString("SITES").split(",");
 
-
     static String[] host_list= bundle.getString("HOSTS").split(",");
-    static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
 
+    static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
+    private double load = -1.0;
     public int getConnCount() throws IOException {
         return ((BasicInt) conn.run("(exec connectionNum from rpc(getControllerAlias(),getClusterPerf) where port = getNodePort())[0]")).getInt();
     }
@@ -97,7 +95,71 @@ public class DBConnectionTest {
 
 //    @Rule
 //    public ExpectedException thrown= ExpectedException.none();
+    @Test
+    public void Test_DBConnection_1() throws IOException {
+    DBConnection conn = new DBConnection(false,false,false,false,DolphinDB);
+    boolean re = conn.connect(HOST,PORT,100,false);
+    Assert.assertEquals(true,re);
+    }
+    @Test
+    public void Test_DBConnection_Urgent_true() throws IOException {
+        DBConnection conn = new DBConnection(false,false,false,false,true);
+        boolean re = conn.connect(HOST,PORT,100,false);
+        Assert.assertEquals(true,re);
+    }
+    @Test
+    public void Test_DBConnection_Urgent_false() throws IOException {
+        DBConnection conn = new DBConnection(false,false,false,false,false);
+        boolean re = conn.connect(HOST,PORT,100,false);
+        Assert.assertEquals(true,re);
+    }
+    @Test
+    public void Test_Connect_timeout_1() throws IOException {
+        DBConnection conn = new DBConnection();
+        boolean re = conn.connect(HOST,111,1,true);
+    }
+    @Test
+    public void Test_Connect_2() throws IOException {
+        DBConnection conn = new DBConnection();
+        boolean re = conn.connect(HOST,PORT,100,false);
+        Assert.assertEquals(true,re);
+    }
+    @Test
+    public void Test_Connect_3() throws IOException {
+        DBConnection conn = new DBConnection();
+        boolean re = conn.connect(HOST,PORT,ipports);
+        Assert.assertEquals(true,re);
+    }
+    @Test
+    public void Test_Connect_4() throws IOException {
+        DBConnection conn = new DBConnection();
+        boolean re = conn.connect(HOST,PORT,null,null,ipports);
+        Assert.assertEquals(true,re);
+    }
+    @Test
+    public void Test_Connect_5() throws IOException {
+        DBConnection conn = new DBConnection();
+        boolean re = conn.connect(HOST,PORT,"","",ipports);
+        Assert.assertEquals(true,re);
+    }
 
+    @Test
+    public void Test_Connect_initialScript() throws IOException {
+        DBConnection conn = new DBConnection();
+        boolean re = conn.connect(HOST,PORT,"a=1",ipports);
+        Assert.assertEquals(true,re);
+        BasicInt re1 = (BasicInt)conn.run("a");
+        Assert.assertEquals(1,re1.getInt());
+    }
+
+    @Test
+    public void Test_Connect_initialScript_1() throws IOException {
+        DBConnection conn = new DBConnection();
+        boolean re = conn.connect(HOST,PORT,"admin","123456","a=1",ipports);
+        Assert.assertEquals(true,re);
+        BasicInt re1 = (BasicInt)conn.run("a");
+        Assert.assertEquals(1,re1.getInt());
+    }
     @Test
     public void testCharScalar() throws Exception {
         BasicByte scalar = (BasicByte) conn.run("'a'");
