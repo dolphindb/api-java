@@ -117,6 +117,15 @@ public class BasicArrayVector extends AbstractVector {
 		capacity = rowIndices.length;
 	}
 
+	public BasicArrayVector(DATA_TYPE type, ExtendedDataInput in, int rows, int cols, int scale) throws IOException {
+		super(DATA_FORM.DF_VECTOR);
+		this.type = type;
+		this.scale_ = scale;
+		rowIndices = new int[rows];
+		DATA_TYPE valueType = DATA_TYPE.valueOf(type.getValue() - 64);
+		deserialize(valueType, in, rows, cols, this.scale_);
+	}
+
 	public BasicArrayVector(DATA_TYPE type, ExtendedDataInput in) throws IOException {
 		super(DATA_FORM.DF_VECTOR);
 		this.type = type;
@@ -129,7 +138,12 @@ public class BasicArrayVector extends AbstractVector {
 			this.scale_ = in.readInt();
 			// ((AbstractVector)valueVec).setExtraParamForType(scale_);
 		}
-		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, cols, this.scale_);
+
+		deserialize(valueType, in, rows, cols, this.scale_);
+	}
+
+	public void deserialize(DATA_TYPE valueType,  ExtendedDataInput in, int rows, int cols, int scale) throws IOException {
+		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, cols, scale);
 
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		this.baseUnitLength_ = valueVec.getUnitLength();
@@ -178,12 +192,18 @@ public class BasicArrayVector extends AbstractVector {
 				rowsReadInBlock += curRows;
 				offset += len;
 			}
-			
+
 			//read array of values
 			int rowStart =  rowsRead == 0 ? 0 : rowIndices[rowsRead - 1];
 			int valueCount = rowIndices[rowsRead + rowsReadInBlock - 1] - rowStart;
-			valueVec.deserialize(rowStart, valueCount, in);
-			
+			Vector subVector = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, valueCount, scale);
+			subVector.deserialize(rowStart, valueCount, in);
+			try {
+				valueVec.Append(subVector);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+
 			rowsRead += rowsReadInBlock;
 		}
 		rowIndicesSize = rowIndices.length;

@@ -134,7 +134,7 @@ public class StreamDeserializer {
             colTypes_.addAll(colTypes);
         }
 
-        public BasicAnyVector parse(byte[] data) throws IOException {
+        public BasicAnyVector parse(byte[] data) throws Exception {
             ByteArrayOutputStream memoryStream = new ByteArrayOutputStream();
             ExtendedDataOutput writeStream = new BigEndianDataOutputStream(memoryStream);
             writeStream.writeBlob(data);
@@ -144,8 +144,16 @@ public class StreamDeserializer {
             int columns = colTypes_.size();
             dataStream.readInt();
             BasicAnyVector ret = new BasicAnyVector(columns);
-            for (int i = 0; i < columns; ++i)
-                ret.setEntity(i, basicEntityFactory.createEntity(Entity.DATA_FORM.DF_SCALAR, colTypes_.get(i), dataStream, false));
+//            for (int i = 0; i < columns; ++i)
+//                ret.setEntity(i, basicEntityFactory.createEntity(Entity.DATA_FORM.DF_SCALAR, colTypes_.get(i), dataStream, false));
+            for (int i = 0; i < columns; ++i) {
+                if (colTypes_.get(i).getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && colTypes_.get(i).getValue() <= Entity.DATA_TYPE.DT_DECIMAL128_ARRAY.getValue()) {
+                    ret.setEntity(i, new BasicArrayVector(colTypes_.get(i), dataStream, 1, 0, -1));
+                } else {
+                    ret.setEntity(i, basicEntityFactory.createEntity(Entity.DATA_FORM.DF_SCALAR, colTypes_.get(i), dataStream, false));
+                }
+            }
+
             return ret;
         }
     }
