@@ -197,7 +197,7 @@ public class BasicArrayVector extends AbstractVector {
 			int rowStart =  rowsRead == 0 ? 0 : rowIndices[rowsRead - 1];
 			int valueCount = rowIndices[rowsRead + rowsReadInBlock - 1] - rowStart;
 			Vector subVector = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, valueCount, scale);
-			subVector.deserialize(rowStart, valueCount, in);
+			subVector.deserialize(0, valueCount, in);
 			try {
 				valueVec.Append(subVector);
 			} catch (Exception e) {
