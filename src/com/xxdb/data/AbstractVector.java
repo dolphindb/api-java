@@ -72,7 +72,10 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	}
 
 	public String getString(){
-		StringBuilder sb = new StringBuilder("[");
+		StringBuilder sb = new StringBuilder();
+		if (get(0).isScalar())
+			sb.append("[");
+
 		int size = Math.min(DISPLAY_ROWS, rows());
 		if(size > 0)
 			sb.append(getString(0));
@@ -82,7 +85,10 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		}
 		if(size < rows())
 			sb.append(",...");
-		sb.append("]");
+
+		if (get(0).isScalar())
+			sb.append("]");
+
 		return sb.toString();
 	}
 
