@@ -2112,5 +2112,31 @@ public class ConnectionPoolTest {
         assertEquals("blob1AMZN", table2.getColumn(3).get(2).getString());
         pool.shutdown();
     }
+    @Test
+    public void test_PartitionedTableAppender_dbUrl_null() throws Exception {
+        conn.run("t = table(1:0,`id`string1`symbol1`blob1,[INT,STRING,SYMBOL,BLOB]); share t as tt");
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        String re = null;
+        try{
+            PartitionedTableAppender appender = new PartitionedTableAppender(null,"tt",null,pool);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("Can't find specified partition column name.", re);
+        pool.shutdown();
+    }
+    @Test
+    public void test_PartitionedTableAppender_dbUrl_null_1() throws Exception {
+        conn.run("t = table(1:0,`id`string1`symbol1`blob1,[INT,STRING,SYMBOL,BLOB]); share t as tt");
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        String re = null;
+        try{
+            PartitionedTableAppender appender = new PartitionedTableAppender("","tt","",pool);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("Can't find specified partition column name.", re);
+        pool.shutdown();
+    }
 }
 

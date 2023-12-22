@@ -4,6 +4,7 @@ import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 import com.xxdb.streaming.client.*;
+import org.javatuples.Pair;
 import org.junit.*;
 
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static com.xxdb.data.Entity.DATA_TYPE.DT_DOUBLE;
+import static com.xxdb.streaming.reverse.ThreadedClientsubscribeReverseTest.*;
 import static org.junit.Assert.*;
 
 public class ThreadPooledClientReverseTest {
@@ -235,6 +237,29 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
         for (int i = 0; i < except.columns(); i++) {
             System.out.println("col" + res.getColumnName(i));
             assertEquals(except.getColumn(i).getString(), res.getColumn(i).getString());
+        }
+    }
+    public static void checkResult1() throws IOException, InterruptedException {
+        for (int i = 0; i < 10; i++)
+        {
+            BasicInt tmpNum = (BasicInt)conn.run("exec count(*) from sub1 ");
+            BasicInt tmpNum1 = (BasicInt)conn.run("exec count(*) from sub2 ");
+            if (tmpNum.getInt()==(1000)&& tmpNum1.getInt()==(1000))
+            {
+                break;
+            }
+            Thread.sleep(2000);
+        }
+        BasicTable except = (BasicTable)conn.run("select * from  pub_t1 order by timestampv");
+        BasicTable res = (BasicTable)conn.run("select * from  sub1 order by timestampv");
+        BasicTable except1 = (BasicTable)conn.run("select * from  pub_t2 order by timestampv");
+        BasicTable res1 = (BasicTable)conn.run("select * from  sub2 order by timestampv");
+        assertEquals(except.rows(), res.rows());
+        assertEquals(except1.rows(), res1.rows());
+        for (int i = 0; i < except.columns(); i++) {
+            System.out.println("col" + res.getColumnName(i));
+            assertEquals(except.getColumn(i).getString(), res.getColumn(i).getString());
+            assertEquals(except1.getColumn(i).getString(), res1.getColumn(i).getString());
         }
     }
     static class Handler7 implements MessageHandler {
@@ -1276,5 +1301,488 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
         checkResult();
         client.unsubscribe(HOST, PORT, "Trades");
     }
+    class Handler_Heterogeneous_array implements MessageHandler {
+        private StreamDeserializer deserializer_;
+        public Handler_Heterogeneous_array(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String dataType = message.getEntity(1).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,%s)", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,%s)", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_BOOL()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("BOOL");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_CHAR()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("CHAR");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_SHORT()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("SHORT");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_LONG()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("LONG");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_DOUBLE()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("DOUBLE");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_FLOAT()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("FLOAT");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_MONTH()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("MONTH");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_TIME()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("TIME");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_MINUTE()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("MINUTE");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_SECOND()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("SECOND");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_DATETIME()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("DATETIME");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_TIMESTAMP()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("TIMESTAMP");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_NANOTIME()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("NANOTIME");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_NANOTIMESTAMP()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("NANOTIMESTAMP");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    class Handler_Heterogeneous_array_UUID implements MessageHandler {
+        private StreamDeserializer deserializer_;
+        public Handler_Heterogeneous_array_UUID(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String dataType = message.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,[uuid(%s)])", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,[uuid(%s)])", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_UUID()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("UUID");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array_UUID handler = new Handler_Heterogeneous_array_UUID(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    class Handler_Heterogeneous_array_DATEHOUR implements MessageHandler {
+        private StreamDeserializer deserializer_;
+        public Handler_Heterogeneous_array_DATEHOUR(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String dataType = message.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,[datehour(%s)])", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,[datehour(%s)])", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_DATEHOUR()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("DATEHOUR");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array_DATEHOUR handler = new Handler_Heterogeneous_array_DATEHOUR(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    class Handler_Heterogeneous_array_IPADDR implements MessageHandler {
+        private StreamDeserializer deserializer_;
+        public Handler_Heterogeneous_array_IPADDR(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String dataType = message.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,[ipaddr(%s)])", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,[ipaddr(%s)])", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_IPADDR()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("IPADDR");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array_IPADDR handler = new Handler_Heterogeneous_array_IPADDR(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    class Handler_Heterogeneous_array_INT128 implements MessageHandler {
+        private StreamDeserializer deserializer_;
+        public Handler_Heterogeneous_array_INT128(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String dataType = message.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,[int128(%s)])", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,[int128(%s)])", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_INT128()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("INT128");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array_INT128 handler = new Handler_Heterogeneous_array_INT128(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
 
+    class Handler_Heterogeneous_array_COMPLEX implements MessageHandler {
+        private StreamDeserializer deserializer_;
+        public Handler_Heterogeneous_array_COMPLEX(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String complex1 = message.getEntity(1).getString().replaceAll(",,", ",NULL+NULL,").replaceAll("\\[,", "[NULL+NULL,").replaceAll(",]", ",NULL+NULL]");
+                complex1 = complex1.substring(1, complex1.length() - 1);
+                String[] complex2 = complex1.split(",");
+                String complex3 = null;
+                StringBuilder re1 = new StringBuilder();
+                StringBuilder re2 = new StringBuilder();
+                for(int i=0;i<complex2.length;i++){
+                    complex3 = complex2[i];
+                    String[] complex4 = complex3.split("\\+");
+                    re1.append(complex4[0]);
+                    re1.append(' ');
+                    re2.append(complex4[1]);
+                    re2.append(' ');
+                }
+                complex1 = re1+","+re2;
+                String dataType = complex1.replaceAll("i","");
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,[complex(%s)])", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,[complex(%s)])", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_COMPLEX()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("COMPLEX");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array_COMPLEX handler = new Handler_Heterogeneous_array_COMPLEX(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    class Handler_Heterogeneous_array_POINT implements MessageHandler {
+        private StreamDeserializer deserializer_;
+        public Handler_Heterogeneous_array_POINT(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String dataType = message.getEntity(1).getString().replaceAll("\\(,\\)", "\\(NULL,NULL\\)");
+                dataType = dataType.substring(1, dataType.length() - 1);
+                String[] dataType1 = dataType.split("\\),\\(");
+                String dataType2 = null;
+                StringBuilder re1 = new StringBuilder();
+                StringBuilder re2 = new StringBuilder();
+                for(int i=0;i<dataType1.length;i++){
+                    dataType2 = dataType1[i];
+                    String[] dataType3 = dataType2.split(",");
+                    re1.append(dataType3[0]);
+                    re1.append(' ');
+                    re2.append(dataType3[1]);
+                    re2.append(' ');
+                }
+                dataType = re1+","+re2;
+                dataType = dataType.replaceAll("\\(","").replaceAll("\\)","");
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,[complex(%s)])", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,[complex(%s)])", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_POINT()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("POINT");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array_POINT handler = new Handler_Heterogeneous_array_POINT(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_DECIMAL32()throws IOException, InterruptedException {
+        PrepareStreamTableDecimal_Heterogeneous("DECIMAL32",3);
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_DECIMAL64()throws IOException, InterruptedException {
+        PrepareStreamTableDecimal_Heterogeneous("DECIMAL64",7);
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadPooledClient_subscribe_Heterogeneous_streamTable_arrayVector_DECIMAL128()throws IOException, InterruptedException {
+        PrepareStreamTableDecimal_Heterogeneous("DECIMAL128",10);
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
 }

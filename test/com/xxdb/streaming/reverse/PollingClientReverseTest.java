@@ -20,17 +20,16 @@ package com.xxdb.streaming.reverse;
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import com.xxdb.streaming.client.*;
+import org.javatuples.Pair;
 import org.junit.*;
 
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import static com.xxdb.streaming.reverse.ThreadedClientsubscribeReverseTest.PrepareStreamTable_Heterogeneous;
 import static org.junit.Assert.*;
 
 public class PollingClientReverseTest {
@@ -40,6 +39,7 @@ public class PollingClientReverseTest {
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     //static int PORT=9002;
     public static PollingClient client;
+    private StreamDeserializer deserializer_;
     public void clear_env() throws IOException {
         conn.run("a = getStreamingStat().pubTables\n" +
                 "for(i in a){\n" +
@@ -184,6 +184,29 @@ public class PollingClientReverseTest {
         for (int i = 0; i < except.columns(); i++) {
             System.out.println("col" + res.getColumnName(i));
             assertEquals(except.getColumn(i).getString(), res.getColumn(i).getString());
+        }
+    }
+    public static void checkResult1() throws IOException, InterruptedException {
+        for (int i = 0; i < 10; i++)
+        {
+            BasicInt tmpNum = (BasicInt)conn.run("exec count(*) from sub1 ");
+            BasicInt tmpNum1 = (BasicInt)conn.run("exec count(*) from sub2 ");
+            if (tmpNum.getInt()==(1000)&& tmpNum1.getInt()==(1000))
+            {
+                break;
+            }
+            Thread.sleep(3000);
+        }
+        BasicTable except = (BasicTable)conn.run("select * from  pub_t1 order by timestampv");
+        BasicTable res = (BasicTable)conn.run("select * from  sub1 order by timestampv");
+        BasicTable except1 = (BasicTable)conn.run("select * from  pub_t2 order by timestampv");
+        BasicTable res1 = (BasicTable)conn.run("select * from  sub2 order by timestampv");
+        assertEquals(except.rows(), res.rows());
+        assertEquals(except1.rows(), res1.rows());
+        for (int i = 0; i < except.columns(); i++) {
+            System.out.println("col" + res.getColumnName(i));
+            assertEquals(except.getColumn(i).getString(), res.getColumn(i).getString());
+            assertEquals(except1.getColumn(i).getString(), res1.getColumn(i).getString());
         }
     }
     @Test(expected = IOException.class)
@@ -1105,5 +1128,51 @@ public class PollingClientReverseTest {
         Handler_array(messages);
         checkResult();
         client.unsubscribe(HOST, PORT, "Trades","subTread1");
+    }
+
+    class Handler_Heterogeneous_array implements MessageHandler {
+        private StreamDeserializer deserializer_;
+
+        public Handler_Heterogeneous_array(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+
+        public void doEvent(IMessage msg) {
+                try {
+                    BasicMessage message = deserializer_.parse(msg);
+                    String timestampv = message.getEntity(0).getString();
+                    String dataType = message.getEntity(1).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+                    String script = null;
+                    if (message.getSym().equals("msg1")) {
+                        script = String.format("insert into sub1 values( %s,%s)", timestampv, dataType);
+                    } else if (message.getSym().equals("msg2")) {
+                        script = String.format("insert into sub2 values( %s,%s)", timestampv, dataType);
+                    }
+                    conn.run(script);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_Heterogeneous_streamTable_arrayVector_BOOL()throws IOException, InterruptedException {
+        PrepareStreamTable_Heterogeneous("BOOL");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 1000);
+        System.out.println(messages.size());
+        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 }
