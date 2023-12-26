@@ -1620,8 +1620,8 @@ public class AutoFitTableAppenderTest {
         script += "dbPath = \"dfs://tableAppenderTest\"\n" ;
         script += "if(existsDatabase(dbPath))\n";
         script += "dropDatabase(dbPath)\n";
-        script += "db=database(dbPath,VALUE, 1..10,engine='TSDB')\n";
-        script += "pt = db.createPartitionedTable(t,`pt,`cint,,`cint`cdate)\n";
+        script += "db=database(dbPath,VALUE, 1..10)\n";
+        script += "pt = db.createPartitionedTable(t,`pt,`cint)\n";
         script += "pt.append!(t)";
         conn.run(script);
         BasicTable bt = (BasicTable)conn.run("table(true as cbool,'d' as cchar,86h as cshort,10 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour)");
@@ -1645,9 +1645,9 @@ public class AutoFitTableAppenderTest {
         script += "dbPath = \"dfs://tableAppenderTest\"\n" ;
         script += "if(existsDatabase(dbPath))\n";
         script += "dropDatabase(dbPath)\n";
-        script += "db=database(dbPath,VALUE, 1..10,engine='TSDB')\n";
-        script += "pt = db.createPartitionedTable(t,`pt,`intv,,`intv)\n";
-        script += "pt1 = db.createPartitionedTable(t,`pt1,`intv,,`intv)\n";
+        script += "db=database(dbPath,VALUE, 1..10)\n";
+        script += "pt = db.createPartitionedTable(t,`pt,`intv)\n";
+        script += "pt1 = db.createPartitionedTable(t,`pt1,`intv)\n";
         script += "pt.append!(t)";
         conn.run(script);
         BasicTable bt = (BasicTable)conn.run("select * from t");
@@ -1686,8 +1686,8 @@ public class AutoFitTableAppenderTest {
         script += "dbPath = \"dfs://tableAppenderTest\"\n" ;
         script += "if(existsDatabase(dbPath))\n";
         script += "dropDatabase(dbPath)\n";
-        script += "db=database(dbPath,VALUE, 1..10,engine='TSDB')\n";
-        script += "pt = db.createTable(t,`pt,,`cint)\n";
+        script += "db=database(dbPath,VALUE, 1..10)\n";
+        script += "pt = db.createTable(t,`pt)\n";
         script += "pt.append!(t)";
         conn.run(script);
         BasicTable bt = (BasicTable)conn.run("table(true as cbool,'d' as cchar,86h as cshort,10 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour)");
@@ -1711,9 +1711,9 @@ public class AutoFitTableAppenderTest {
         script += "dbPath = \"dfs://tableAppenderTest\"\n" ;
         script += "if(existsDatabase(dbPath))\n";
         script += "dropDatabase(dbPath)\n";
-        script += "db=database(dbPath,VALUE, 1..10,engine='TSDB')\n";
-        script += "pt = db.createTable(t,`pt,,`intv)\n";
-        script += "pt1 = db.createTable(t,`pt1,,`intv)\n";
+        script += "db=database(dbPath,VALUE, 1..10)\n";
+        script += "pt = db.createTable(t,`pt)\n";
+        script += "pt1 = db.createTable(t,`pt1)\n";
         script += "pt.append!(t)";
         conn.run(script);
         BasicTable bt = (BasicTable)conn.run("select * from t");

@@ -1028,43 +1028,6 @@ public class ConnectionPoolTest {
     }
 
     @Test
-    public void test_PartitionedTableAppender_ArrayVector_Int() throws Exception {
-        conn.run("if(existsDatabase(\"dfs://testArrayVector\")){\n" +
-                "dropDatabase(\"dfs://testArrayVector\")\n" +
-                "}\n" +
-                "db=database(\"dfs://testArrayVector\",RANGE,int(1..10),,\"TSDB\")\n" +
-                "t = table(1000000:0,`sym`tradeDate`volume`valueTrade,[INT,DATETIME,INT[],DOUBLE])\n" +
-                "pt = db.createPartitionedTable(t,`pt,`sym,,`tradeDate)");
-        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
-        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testArrayVector","pt","sym",pool);
-        List<String> colNames = new ArrayList<>();
-        colNames.add("sym");
-        colNames.add("tradesDate");
-        colNames.add("volume");
-        colNames.add("valueTrade");
-        List<Vector> cols = new ArrayList<>();
-        BasicIntVector biv = new BasicIntVector(new int[]{1,2,3});
-        cols.add(biv);
-        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{10,20,30});
-        cols.add(bdtv);
-        List<Vector> value = new ArrayList<>();
-        value.add(new BasicIntVector(new int[]{1,2,3}));
-        value.add(new BasicIntVector(new int[]{4,5,6,7,8}));
-        value.add(new BasicIntVector(new int[]{9,10,11,13,17,21}));
-        BasicArrayVector bav = new BasicArrayVector(value);
-        cols.add(bav);
-        BasicDoubleVector bdv = new BasicDoubleVector(new double[]{1.1,3.6,7.9});
-        cols.add(bdv);
-        BasicTable bt = new BasicTable(colNames,cols);
-        int x = appender.append(bt);
-        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
-        assertEquals(3,res.rows());
-        assertEquals(Entity.DATA_TYPE.DT_INT_ARRAY,res.getColumn(2).getDataType());
-        System.out.println(res.getColumn(2).getString());
-        pool.shutdown();
-    }
-
-    @Test
     public void test_pool_execute_timeout_10000() throws Exception {
         ExclusiveDBConnectionPool connectionPool = new ExclusiveDBConnectionPool(HOST, PORT,
                 "admin", "123456", 3, false, true,

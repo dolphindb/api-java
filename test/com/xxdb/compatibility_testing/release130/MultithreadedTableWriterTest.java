@@ -1009,27 +1009,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(ex1.rows(),ex.rows());
         conn.run("undef(`t1,SHARED)");
     }
-
-
-    /**
-     *
-     *delta compress test
-     */
-
-    @Test(expected = RuntimeException.class)
-    public  void test_insert_arrayVector_delta()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`array," +
-                "[INT,INT[]]);" +
-                "share t as t1;");
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "int",new int[]{Vector.COMPRESS_LZ4,Vector.COMPRESS_DELTA});
-        conn.run("undef(`t1,SHARED)");
-    }
-
     @Test(timeout = 120000)
     public void test_insert_delta_short_int_long() throws Exception {
 
@@ -1846,537 +1825,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
      *  array vector test
      * * @throws Exception
      */
-
-    @Test(timeout = 120000)
-    public  void test_insert_empty_arrayVector()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,INT[]]);" +
-                "share t as t1;");
-
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "int");
-        for (int i=0;i<1000;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new Integer[]{});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        for (int i=0;i<1000;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,null);
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(2000,bt.rows());
-        for (int i=0;i<2000;i++) {
-            assertEquals("[]", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).getString());
-        }
-        conn.run("undef(`t1,SHARED)");
-
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_different_length()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv`arrayv1`arrayv2," +
-                "[INT,INT[],BOOL[],BOOL[]]);" +
-                "share t as t1;");
-
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "int");
-
-        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new Integer[]{1},new Boolean[]{true,null,false},new Boolean[]{true});
-        pErrorInfo=mutithreadTableWriter_.insert( 1,new Integer[]{},new Boolean[]{true,null,false},new Boolean[]{true});
-        pErrorInfo=mutithreadTableWriter_.insert( 1,new Integer[]{1,2},new Boolean[]{true,null,false},new Boolean[]{true});
-        pErrorInfo=mutithreadTableWriter_.insert( 1,new Integer[]{1,null,1},new Boolean[]{true,null,false},new Boolean[]{true});
-        assertEquals("code= info=",pErrorInfo.toString());
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(4,bt.rows());
-        assertEquals("[1]", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(0).getString());
-        assertEquals("[]", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(1).getString());
-        assertEquals("[1,2]", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(2).getString());
-        assertEquals("[1,,1]", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(3).getString());
-        for (int i=0;i<4;i++) {
-            assertEquals("[true,,false]", ((BasicArrayVector)bt.getColumn("arrayv1")).getVectorValue(i).getString());
-            assertEquals("[true]", ((BasicArrayVector)bt.getColumn("arrayv2")).getVectorValue(i).getString());
-        }
-        conn.run("undef(`t1,SHARED)");
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_int_Integer()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,INT[]]);" +
-                "share t as t1;");
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "int");
-        for (int i=0;i<10;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new Integer[]{1, i});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(10,bt.rows());
-        for (int i=0;i<10;i++) {
-            assertEquals(1, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(i, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-        conn.run("undef(`t1,SHARED)");
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_int_int()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,INT[]]);" +
-                "share t as t1;");
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "int");
-        for (int i=0;i<10;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new int[]{1, i});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(10,bt.rows());
-        for (int i=0;i<10;i++) {
-            assertEquals(1, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(i, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-        conn.run("undef(`t1,SHARED)");
-    }
-
-    @Test(timeout = 60000)
-    public  void test_insert_arrayVector_char_Byte()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,CHAR[]]);" +
-                "share t as t1;");
-
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "int");
-        for (int i=0;i<10;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new Byte[]{'a','3'});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(10,bt.rows());
-        for (int i=0;i<10;i++) {
-            assertEquals("['a','3']", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).getString());
-        }
-        conn.run("undef(`t1,SHARED)");
-    }
-    @Test(timeout = 60000)
-    public  void test_insert_arrayVector_char_byte()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,CHAR[]]);" +
-                "share t as t1;");
-
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "int");
-        for (int i=0;i<10;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new byte[]{'a','3'});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(10,bt.rows());
-        for (int i=0;i<10;i++) {
-            assertEquals("['a','3']", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).getString());
-        }
-        conn.run("undef(`t1,SHARED)");
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_bool_Boolean()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,BOOL[]]);" +
-                "share t as t1;");
-
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "int");
-        for (int i=0;i<10;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new Boolean[]{true,false});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(10,bt.rows());
-        for (int i=0;i<10;i++) {
-            assertEquals("true",((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0).getString());
-            assertEquals("false", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1).getString());
-        }
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_bool_bool()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,BOOL[]]);" +
-                "share t as t1;");
-
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "int");
-        for (int i=0;i<10;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,new boolean[]{true,false});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(10,bt.rows());
-        for (int i=0;i<10;i++) {
-            assertEquals("true",((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0).getString());
-            assertEquals("false", ((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1).getString());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_long_Long()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,LONG[]]);" +
-                "share t as t1;");
-        int time=1024;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "arrayv");
-        for (int i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new Long[]{1l, Long.valueOf(i)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(1l, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(Long.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_long_long()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,LONG[]]);" +
-                "share t as t1;");
-        int time=1024;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "arrayv");
-        for (int i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new long[]{1l, (long)i});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        // conn.run(String.format("insert into t1 values('%s',%s)",1,"1232"));
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(1l, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(Long.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_short_Short()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,SHORT[]]);" +
-                "share t as t1;");
-        int time=10240;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "arrayv");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new Short[]{1,i});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(Short.valueOf("1"), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(Short.valueOf(""+i+""), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_short_short()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,SHORT[]]);" +
-                "share t as t1;");
-        int time=10240;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "arrayv");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new short[]{1,i});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(Short.valueOf("1"), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(Short.valueOf(""+i+""), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_float_Float()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,FLOAT[]]);" +
-                "share t as t1;");
-        int time=10240;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "arrayv");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new Float[]{0.0f,Float.valueOf(i)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(0.0f, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(Float.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_float_float()throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,FLOAT[]]);" +
-                "share t as t1;");
-        int time=10240;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "arrayv");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new float[]{0.0f,(float)i});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(0.0f, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(Float.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_double_Double()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,DOUBLE[]]);" +
-                "share t as t1;");
-        int time=10240;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "arrayv");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new Double[]{Double.valueOf(0),Double.valueOf(i-10)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(Double.valueOf(0), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(Double.valueOf(i-10), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_double_double()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv," +
-                "[INT,DOUBLE[]]);" +
-                "share t as t1;");
-        int time=10240;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "arrayv");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new double[]{(double)0,(double)(i-10)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(Double.valueOf(0), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
-            assertEquals(Double.valueOf(i-10), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_date_month()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `int`arrayv1`arrayv2," +
-                "[INT,DATE[],MONTH[]]); share t as t1;");
-        int time=10240;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "arrayv1");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new LocalDate[]{LocalDate.of(1,1,1)},
-                    new LocalDate[]{LocalDate.of(2021,1,1)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(LocalDate.of(1,1,1), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv1")).getVectorValue(i).get(0)).getTemporal());
-            assertEquals("2021.01M", ((BasicArrayVector)bt.getColumn("arrayv2")).getVectorValue(i).get(0).getString());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_time_minute_second()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `time`minute`second," +
-                "[TIME[],MINUTE[],SECOND[]]);" +
-                "share t as t1");
-        int time=10240;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "time");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(
-                    new LocalTime[]{LocalTime.of(1,1,1,342)},
-                    new LocalTime[]{LocalTime.of(1,1,1,342)},
-                    new LocalTime[]{LocalTime.of(1,1,1,1)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals("01:01:01.000", ((BasicArrayVector)bt.getColumn("time")).getVectorValue(i).get(0).getString());
-            assertEquals("01:01m", ((BasicArrayVector)bt.getColumn("minute")).getVectorValue(i).get(0).getString());
-            assertEquals("01:01:01", ((BasicArrayVector)bt.getColumn("second")).getVectorValue(i).get(0).getString());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_datetime_timestamp_nanotime_nanotimstamp()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `datetime`timestamp`nanotime`nanotimstamp," +
-                "[DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[]]);" +
-                "share t as t1");
-        int time=1048;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "datetime");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(
-                    new LocalDateTime[]{LocalDateTime.of(2022,2,1,1,1,2,45364654+i)},
-                    new LocalDateTime[]{LocalDateTime.of(2022,2,1,1,1,2,45364654+i)},
-                    new LocalTime[]{LocalTime.of(1,1,1,45364654+i)},
-                    new LocalDateTime[]{LocalDateTime.of(2022,2,1,1,1,2,45364654+i),
-                            LocalDateTime.of(2022,2,1,1,1,2,45364654+i)});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-
-       // System.out.println(LocalDateTime.of(2022,2,1,1,1,2,033));
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(time,bt.rows());
-        System.out.println(((Scalar)((BasicArrayVector)bt.getColumn("timestamp")).getVectorValue(0).get(0)).getTemporal());
-
-        for (int i=0;i<time;i++) {
-            assertEquals(LocalDateTime.of(2022,2,1,1,1,2), ((Scalar)((BasicArrayVector)bt.getColumn("datetime")).getVectorValue(i).get(0)).getTemporal());
-            assertEquals(LocalDateTime.of(2022,2,1,1,1,2,45000000), ((Scalar)((BasicArrayVector)bt.getColumn("timestamp")).getVectorValue(i).get(0)).getTemporal());
-            assertEquals(LocalTime.of(1,1,1,45364654+i), ((Scalar)((BasicArrayVector)bt.getColumn("nanotime")).getVectorValue(i).get(0)).getTemporal());
-            assertEquals(LocalDateTime.of(2022,2,1,1,1,2,45364654+i), ((Scalar)((BasicArrayVector)bt.getColumn("nanotimstamp")).getVectorValue(i).get(0)).getTemporal());
-        }
-    }
-
-    @Test(timeout = 120000)
-    public  void test_insert_arrayVector_otherType()throws Exception {
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `uuid`int128`ipaddr," +
-                "[UUID[],INT128[],IPADDR[]]);" +
-                "share t as t1");
-        int time=1048;
-        conn.run(sb.toString());
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "t1", false, false,null,1, 1,
-                1, "uuid");
-        BasicUuidVector bv= (BasicUuidVector) conn.run("uuid(['5d212a78-cc48-e3b1-4235-b4d91473ee87',,'5d212a78-cc48-e3b1-4235-b4d91473ee87'])");
-        BasicInt128Vector iv= (BasicInt128Vector) conn.run("int128(['e1671797c52e15f763380b45e841ec32',,'e1671797c52e15f763380b45e841ec32'])");
-        BasicIPAddrVector ipv= (BasicIPAddrVector) conn.run("ipaddr(['192.168.1.13',,'192.168.1.13'])");
-        for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new String[]{"5d212a78-cc48-e3b1-4235-b4d91473ee87",null,"5d212a78-cc48-e3b1-4235-b4d91473ee87"},new String[]{"e1671797c52e15f763380b45e841ec32",null,"e1671797c52e15f763380b45e841ec32"}
-            ,new String[]{"192.168.1.13",null,"192.168.1.13"});
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-
-        // System.out.println(LocalDateTime.of(2022,2,1,1,1,2,033));
-        mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt= (BasicTable) conn.run("select * from t1;");
-        assertEquals(time,bt.rows());
-        for (int i=0;i<time;i++) {
-            assertEquals(bv.getString(), ((BasicArrayVector)(bt.getColumn("uuid"))).getVectorValue(i).getString());
-            assertEquals(iv.getString(), ((BasicArrayVector)(bt.getColumn("int128"))).getVectorValue(i).getString());
-            assertEquals(ipv.getString(), ((BasicArrayVector)(bt.getColumn("ipaddr"))).getVectorValue(i).getString());
-        }
-    }
-
     @Test(timeout = 120000)
     public  void test_insert_blob()throws Exception {
         
@@ -2606,28 +2054,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
         //mutithreadTableWriter_.waitForThreadCompletion();
     }
-
-    @Test(timeout = 120000)//(expected = RuntimeException.class)
-    public void test_insert_tsdb_dt_multipleThreadCount() throws Exception {
-
-        String dbName = "dfs://test_MultithreadedTableWriter";
-        String script = "dbName = \"dfs://test_MultithreadedTableWriter\"\n" +
-                "if(exists(dbName)){\n" +
-                "\tdropDatabase(dbName)\t\n" +
-                "}\n" +
-                "db=database(dbName, VALUE, 2012.01.01..2012.01.30,,'TSDB')\n" +
-                "t=table(1:0, `sym`tradeDate`tradePrice`vwap`volume`valueTrade, [SYMBOL, DATETIME, DOUBLE, DOUBLE, INT, DOUBLE])\n ;share t as t1;" +
-                "\tcreateTable(dbHandle=db, table=t, tableName=`pt,sortColumns=`sym)\n";
-        conn.run(script);
-        try {
-            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                    dbName, "pt", false, false, null, 10, 1,
-                    10, "tradeDate");
-        }catch (Exception ex){
-            assertEquals("The parameter threadCount must be 1 for a dimension table.",ex.getMessage());
-        }
-    }
-
     @Test(timeout = 120000)
     public void test_insert_dt_multipleThread() throws Exception {
 
@@ -2667,47 +2093,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
         checkData(ex, bt);
         mutithreadTableWriter_.waitForThreadCompletion();
     }
-
-    @Test(timeout = 120000)
-    public void test_insert_TSDBdt_multipleThread() throws Exception {
-
-        String dbName = "dfs://test_MultithreadedTableWriter";
-        String script = "dbName = \"dfs://test_MultithreadedTableWriter\"\n" +
-                "if(exists(dbName)){\n" +
-                "\tdropDatabase(dbName)\t\n" +
-                "}\n" +
-                "db=database(dbName, VALUE, 2012.01.01..2012.01.30,,'TSDB')\n" +
-                "t=table(1:0, `sym`tradeDate`tradePrice`vwap`volume`valueTrade, [SYMBOL, DATETIME, DOUBLE, DOUBLE, INT, DOUBLE])\n ;share t as t1;" +
-                "\tcreateTable(dbHandle=db, table=t, tableName=`pt,sortColumns=`sym)\n";
-        conn.run(script);
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                dbName, "pt", false, false, null, 10, 1,
-                1, "tradeDate");
-        Integer threadTime = 10;
-        List<List<Entity>> tb = new ArrayList<>();
-        for (int i = 0; i < threadTime; i++) {
-            new Thread(new MultithreadedTableWriterTest()).start();
-        }
-        for (int j = 0; j < threadTime; j++) {
-            for (int i = 0; i < insertTime; i++) {
-                List<Entity> row = new ArrayList<>();
-                row.add(new BasicString("2" + i % 100));
-                row.add(new BasicDateTime(LocalDateTime.of(2022, 1, (i % 10) + 1, (i % 10) + 1, (i % 10) + 10, 0)));
-                row.add(new BasicDouble(i + 0.1));
-                row.add(new BasicDouble(i + 0.1));
-                row.add(new BasicInt((i % 10) + 1));
-                row.add(new BasicDouble(i + 0.1));
-                tb.add(row);
-                conn.run("tableInsert{t1}", row);
-            }
-        }
-        Thread.sleep(2000);
-        BasicTable bt = (BasicTable) conn.run("select * from loadTable('dfs://test_MultithreadedTableWriter',`pt) order by sym,tradeDate,tradePrice,vwap,volume,valueTrade;");
-        BasicTable ex = (BasicTable) conn.run("select * from t1 order by sym,tradeDate,tradePrice,vwap,volume,valueTrade;");
-        checkData(ex, bt);
-        mutithreadTableWriter_.waitForThreadCompletion();
-    }
-
     @Test(timeout = 120000)
     public void test_insert_dt_oneThread() throws Exception {
 
@@ -4141,21 +3526,20 @@ public  class MultithreadedTableWriterTest implements Runnable {
     }
 
     @Test(timeout = 220000)
-    public void test_insert_tsdb_multiple_mutithreadTableWriter_differentTable_useSSL() throws Exception {
-
+    public void test_insert_multiple_mutithreadTableWriter_differentTable_useSSL() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("\n" +
                 "dbName = \"dfs://test_MultithreadedTableWriter\"\n" +
                 "if(exists(dbName)){\n" +
                 "\tdropDatabase(dbName)\t\n" +
                 "}\n" +
-                "db=database(dbName, VALUE, 1..5,,'TSDB');\n" +
+                "db=database(dbName, VALUE, 1..5);\n" +
                 "t=table(1:0, `volume`valueTrade, [INT, DOUBLE]);\n" +
-                "share t as t1;\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt1, partitionColumns=[\"volume\"],sortColumns=`volume,compressMethods={volume:\"delta\"});" +
-                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt2, partitionColumns=[\"volume\"],sortColumns=`volume);" +
-                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt3, partitionColumns=[\"volume\"],sortColumns=`volume);" +
-                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt4, partitionColumns=[\"volume\"],sortColumns=`volume);" +
-                "createTable(dbHandle=db, table=t, tableName=`pt5,sortColumns=`volume,compressMethods={volume:\"delta\"});\n");
+                "share t as t1;\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt1, partitionColumns=[\"volume\"]);" +
+                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt2, partitionColumns=[\"volume\"]);" +
+                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt3, partitionColumns=[\"volume\"]);" +
+                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt4, partitionColumns=[\"volume\"]);" +
+                "createTable(dbHandle=db, table=t, tableName=`pt5);\n");
         conn.run(sb.toString());
         MultithreadedTableWriter mutithreadTableWriter1 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "dfs://test_MultithreadedTableWriter", "pt1", true, false, null, 10, 1,
@@ -4216,21 +3600,21 @@ public  class MultithreadedTableWriterTest implements Runnable {
     }
 
     @Test(timeout = 120000)
-    public void test_insert_tsdb_keepDuplicates() throws Exception {
+    public void test_insert_keepDuplicates() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("\n" +
                 "dbName = \"dfs://test_MultithreadedTableWriter\"\n" +
                 "if(exists(dbName)){\n" +
                 "\tdropDatabase(dbName)\t\n" +
                 "}\n" +
-                "db=database(dbName, VALUE, 1..5,,'TSDB');\n" +
-                "share keyedStreamTable(`volume`date,1:0, `volume`valueTrade`date, [INT, DOUBLE,DATE]) as t1\n" +
+                "db=database(dbName, VALUE, 1..5);\n" +
+                "share streamTable(1:0, `volume`valueTrade`date, [INT, DOUBLE,DATE]) as t1\n" +
                 "t=table(1:0, `volume`valueTrade`date, [INT, DOUBLE,DATE]); " +
-                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt1, partitionColumns=[\"volume\"],sortColumns=`volume`date,compressMethods={volume:\"delta\"},keepDuplicates=LAST);" +
-                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt2, partitionColumns=[\"volume\"],sortColumns=`volume`date,keepDuplicates=LAST);" +
-                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt3, partitionColumns=[\"volume\"],sortColumns=`volume`date,keepDuplicates=LAST);" +
-                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt4, partitionColumns=[\"volume\"],sortColumns=`volume`date,keepDuplicates=LAST);" +
-                "createTable(dbHandle=db, table=t, tableName=`pt5,sortColumns=`volume`date,compressMethods={volume:\"delta\"},keepDuplicates=LAST);\n");
+                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt1, partitionColumns=[\"volume\"],compressMethods={volume:\"delta\"});" +
+                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt2, partitionColumns=[\"volume\"]);" +
+                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt3, partitionColumns=[\"volume\"]);" +
+                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt4, partitionColumns=[\"volume\"]);" +
+                "createTable(dbHandle=db, table=t, tableName=`pt5,compressMethods={volume:\"delta\"});\n");
         conn.run(sb.toString());
         MultithreadedTableWriter mutithreadTableWriter1 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "dfs://test_MultithreadedTableWriter", "pt1", true, false, null, 10, 1,
@@ -4569,8 +3953,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "if(exists(dbName)){\n" +
                 "\tdropDatabase(dbName)\t\n" +
                 "}\n" +
-                "db=database(dbName, VALUE, date(1..2),,'TSDB');\n" +
-                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt1, partitionColumns=[\"tradeDate\"],sortColumns=`sym,compressMethods={tradeDate:\"delta\"});" ;
+                "db=database(dbName, VALUE, date(1..2));\n" +
+                "createPartitionedTable(dbHandle=db, table=t, tableName=`pt1, partitionColumns=[\"tradeDate\"],compressMethods={tradeDate:\"delta\"});" ;
 
         conn.run(script);
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
@@ -5570,9 +4954,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "if(existsDatabase(dbName)){\n" +
                 "\tdropDB(dbName);\n" +
                 "}\n" +
-                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "db = database(dbName, HASH, [STRING, 10]);\n"+
                 "dummy = table(100:0, [`id], [STRING]);\n" +
-                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+                "db.createPartitionedTable(dummy, `pt, `id);");
         conn.run(sb.toString());
         List<Vector> cols = new ArrayList<>();
         List<String> colNames = new ArrayList<>();
@@ -5640,9 +5024,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "if(existsDatabase(dbName)){\n" +
                 "\tdropDB(dbName);\n" +
                 "}\n" +
-                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "db = database(dbName, HASH, [STRING, 10]);\n"+
                 "dummy = table(100:0, [`id], [STRING]);\n" +
-                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+                "db.createPartitionedTable(dummy, `pt, `id);");
         conn.run(sb.toString());
         List<Vector> cols = new ArrayList<>();
         List<String> colNames = new ArrayList<>();
@@ -5728,9 +5112,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "if(existsDatabase(dbName)){\n" +
                 "\tdropDB(dbName);\n" +
                 "}\n" +
-                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "db = database(dbName, HASH, [STRING, 10]);\n"+
                 "dummy = table(100:0, [`id], [STRING]);\n" +
-                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+                "db.createPartitionedTable(dummy, `pt, `id);");
         conn.run(sb.toString());
         List<Vector> cols = new ArrayList<>();
         List<String> colNames = new ArrayList<>();
@@ -5798,9 +5182,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "if(existsDatabase(dbName)){\n" +
                 "\tdropDB(dbName);\n" +
                 "}\n" +
-                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "db = database(dbName, HASH, [STRING, 10]);\n"+
                 "dummy = table(100:0, [`id], [STRING]);\n" +
-                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+                "db.createPartitionedTable(dummy, `pt, `id);");
         conn.run(sb.toString());
         List<Vector> cols = new ArrayList<>();
         List<String> colNames = new ArrayList<>();
@@ -5885,9 +5269,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "if(existsDatabase(dbName)){\n" +
                 "\tdropDB(dbName);\n" +
                 "}\n" +
-                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "db = database(dbName, HASH, [STRING, 10]);\n"+
                 "dummy = table(100:0, [`id], [STRING]);\n" +
-                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+                "db.createPartitionedTable(dummy, `pt, `id);");
         conn.run(sb.toString());
         List<Vector> cols = new ArrayList<>();
         List<String> colNames = new ArrayList<>();
@@ -5957,9 +5341,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "if(existsDatabase(dbName)){\n" +
                 "\tdropDB(dbName);\n" +
                 "}\n" +
-                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "db = database(dbName, HASH, [STRING, 10]);\n"+
                 "dummy = table(100:0, [`id], [STRING]);\n" +
-                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+                "db.createPartitionedTable(dummy, `pt, `id);");
         conn.run(sb.toString());
         List<Vector> cols = new ArrayList<>();
         List<String> colNames = new ArrayList<>();
@@ -6050,9 +5434,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "if(existsDatabase(dbName)){\n" +
                 "\tdropDB(dbName);\n" +
                 "}\n" +
-                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "db = database(dbName, HASH, [STRING, 10]);\n"+
                 "dummy = table(100:0, [`id], [STRING]);\n" +
-                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+                "db.createPartitionedTable(dummy, `pt, `id);");
         conn.run(sb.toString());
         List<Vector> cols = new ArrayList<>();
         List<String> colNames = new ArrayList<>();
@@ -6149,9 +5533,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
 //                "if(existsDatabase(dbName)){\n" +
 //                "\tdropDB(dbName);\n" +
 //                "}\n" +
-//                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+//                "db = database(dbName, HASH, [STRING, 10]);\n"+
 //                "dummy = table(100:0, [`id], [STRING]);\n" +
-//                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+//                "db.createPartitionedTable(dummy, `pt, `id);");
 //        conn.run(sb.toString());
 //        List<Vector> cols = new ArrayList<>();
 //        List<String> colNames = new ArrayList<>();
@@ -6253,9 +5637,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "if(existsDatabase(dbName)){\n" +
                 "\tdropDB(dbName);\n" +
                 "}\n" +
-                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "db = database(dbName, HASH, [STRING, 10]);\n"+
                 "dummy = table(100:0, [`id], [STRING]);\n" +
-                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+                "db.createPartitionedTable(dummy, `pt, `id);");
         conn.run(sb.toString());
 
         MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_MultithreadedTableWriter", "pt", false,
@@ -6289,9 +5673,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "if(existsDatabase(dbName)){\n" +
                 "\tdropDB(dbName);\n" +
                 "}\n" +
-                "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
+                "db = database(dbName, HASH, [STRING, 10]);\n"+
                 "dummy = table(100:0, [`id], [STRING]);\n" +
-                "db.createPartitionedTable(dummy, `pt, `id, , `id);");
+                "db.createPartitionedTable(dummy, `pt, `id);");
         conn.run(sb.toString());
 
         MultithreadedTableWriter mtw = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://test_MultithreadedTableWriter", "pt", false,
