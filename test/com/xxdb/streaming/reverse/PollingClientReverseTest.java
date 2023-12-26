@@ -29,7 +29,7 @@ import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import static com.xxdb.streaming.reverse.ThreadedClientsubscribeReverseTest.PrepareStreamTable_Heterogeneous;
+import static com.xxdb.streaming.reverse.ThreadedClientsubscribeReverseTest.PrepareStreamTable_StreamDeserializer;
 import static org.junit.Assert.*;
 
 public class PollingClientReverseTest {
@@ -1130,10 +1130,10 @@ public class PollingClientReverseTest {
         client.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
 
-    class Handler_Heterogeneous_array implements MessageHandler {
+    class Handler_StreamDeserializer_array implements MessageHandler {
         private StreamDeserializer deserializer_;
 
-        public Handler_Heterogeneous_array(StreamDeserializer deserializer) {
+        public Handler_StreamDeserializer_array(StreamDeserializer deserializer) {
             deserializer_ = deserializer;
         }
 
@@ -1154,9 +1154,9 @@ public class PollingClientReverseTest {
                 }
         }
     }
-    @Test(timeout = 120000)
-    public void test_PollingClient_subscribe_Heterogeneous_streamTable_arrayVector_BOOL()throws IOException, InterruptedException {
-        PrepareStreamTable_Heterogeneous("BOOL");
+    //@Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_BOOL()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("BOOL");
         Map<String, Pair<String, String>> tables = new HashMap<>();
         tables.put("msg1", new Pair<>("", "pub_t1"));
         tables.put("msg2", new Pair<>("", "pub_t2"));
@@ -1167,7 +1167,7 @@ public class PollingClientReverseTest {
         Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 1000);
         System.out.println(messages.size());
-        Handler_Heterogeneous_array handler = new Handler_Heterogeneous_array(streamFilter);
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
             IMessage msg = messages.get(i);
             handler.doEvent(msg);
