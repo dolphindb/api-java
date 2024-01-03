@@ -362,10 +362,15 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
         ThreadPooledClient client2 = new ThreadPooledClient(10012);
         client2.close();
     }
-    @Test(expected = Exception.class)
+    @Test
     public void test_ThreadPooledClient_threadCount_not_true() throws IOException {
-        ThreadPooledClient client2 = new ThreadPooledClient(-1);
-        client2.close();
+        String re = null;
+        try{
+            ThreadPooledClient client2 = new ThreadPooledClient(-1);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        Assert.assertEquals(re,"The 'threadCount' parameter cannot be less than or equal to zero.");
     }
     @Test
     public void test_ThreadPooledClient_threadCount_0() throws IOException {
