@@ -394,7 +394,7 @@ public class LoadBalanceTest {
         assertEquals(true,re.getInt(0)>100);
     }
 
-    //@Test//The current node is unavailable
+    @Test//The current node is unavailable
     public void Test_getConnection_enableHighAvailability_true_enableLoadBalance_false_1() throws SQLException, ClassNotFoundException, IOException {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host, controller_port, "admin", "123456");
@@ -402,7 +402,7 @@ public class LoadBalanceTest {
         List<DBConnection> list = new ArrayList<>();
         for (int i = 0; i < 100; ++i) {
             DBConnection connection = new DBConnection();
-            connection.connect(HOST, PORT, "admin", "123456",null,true,null,false,false);
+            connection.connect(HOST, PORT, "admin", "123456",null,true,ipports,false,false);
             list.add(conn);
         }
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
@@ -473,5 +473,28 @@ public class LoadBalanceTest {
             re = ex.getMessage();
         }
         Assert.assertEquals("Cannot only enable loadbalance but not enable highAvailablity.",re);
+    }
+    @Test
+    public void Test_getConnection_enableHighAvailability_true_enableLoadBalance_false_site_not_null() throws SQLException, ClassNotFoundException, IOException {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host, controller_port, "admin", "123456");
+        controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("2000");
+        DBConnection connection = new DBConnection();
+        String[] ipportArray = new String[1];
+        ipportArray[0] = ipports[2];
+        connection.connect(HOST, PORT, "admin", "123456",null,true,ipportArray,false,false);
+        BasicInt node1 = (BasicInt)connection.run("getNodePort()");
+        System.out.println(node1.getString());
+        Assert.assertEquals(ipports[2].split(":")[1],node1.getString());
+        controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("2000");
+        controller_conn.run("try{stopDataNode('"+HOST+":"+node1.getInt()+"')}catch(ex){}");
+        controller_conn.run("2000");
+        BasicInt node2 = (BasicInt)connection.run("getNodePort()");
+        System.out.println(node2.getString());
+        Assert.assertEquals(PORT,node2.getInt());
+        controller_conn.run("try{startDataNode('"+HOST+":"+node1.getInt()+"')}catch(ex){}");
+        controller_conn.run("2000");
     }
 }
