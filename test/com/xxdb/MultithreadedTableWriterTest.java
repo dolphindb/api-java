@@ -6,6 +6,7 @@ import com.xxdb.data.*;
 import com.xxdb.multithreadedtablewriter.Callback;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 import com.xxdb.route.AutoFitTableAppender;
+import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +32,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     static String CONTROLLER_HOST = bundle.getString("CONTROLLER_HOST");
     static int CONTROLLER_PORT = Integer.parseInt(bundle.getString("CONTROLLER_PORT"));
+    static String[] ipports = bundle.getString("SITES").split(",");
+
     public static Integer insertTime = 5000;
     public static ErrorCodeInfo pErrorInfo =new ErrorCodeInfo();;
 
@@ -352,9 +355,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "", "t1", false, false, null, 3, 3000,
                 1, "date");
-        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( System.currentTimeMillis(), "A", 0);
-        mutithreadTableWriter_.insert( System.currentTimeMillis(), "A", 1);
-        assertEquals("code= info=",pErrorInfo.toString());
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(System.currentTimeMillis(), "A", 0);
+        mutithreadTableWriter_.insert(System.currentTimeMillis(), "A", 1);
+        assertEquals("code= info=", pErrorInfo.toString());
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
         assertEquals(0, bt.rows());
         List<List<Entity>> tb = new ArrayList<>();
@@ -372,9 +375,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(5, bt.rows());
         mutithreadTableWriter_.waitForThreadCompletion();
         conn.run("undef(`t1,SHARED)");
-
     }
-
     @Test(timeout = 120000)
     public void test_MultithreadedTableWriter_batchsize_Negtive() throws Exception {
         StringBuilder sb = new StringBuilder();
@@ -5531,16 +5532,30 @@ public  class MultithreadedTableWriterTest implements Runnable {
     @Test(timeout = 120000)
     public void test_ThreadStatus_toString()throws Exception {
         StringBuilder sb = new StringBuilder();
-        sb.append("t = streamTable(1000:0, `int`delta," +
-                "[INT,DOUBLE]);" +
-                "share t as t1;");
+        sb.append("t = streamTable(1000:0, `int`delta,[INT,DOUBLE]);\n share t as t1;");
         conn.run(sb.toString());
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                    "", "t1", false, false,null,1, 1,
+                    "", "t1", false, false,null,1, 1000,
                     1, "int",new int[]{Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4});
-        mutithreadTableWriter_.insert(new BasicInt(1),new BasicDouble(12.88));
+        mutithreadTableWriter_.insert(new BasicInt(0),new BasicDouble(12.88));
+        //conn.run("sleep(500)");
         System.out.println(mutithreadTableWriter_.getStatus().toString());
-
+        //assertEquals(1,mutithreadTableWriter_.getStatus().unsentRows);
+        assertEquals(0,mutithreadTableWriter_.getStatus().sendFailedRows);
+        assertEquals(0,mutithreadTableWriter_.getStatus().sentRows);
+        for (int i=1;i<=100;i++) {
+            mutithreadTableWriter_.insert(new BasicInt(1),new BasicDouble(12.88));
+            assertEquals("code= info=",pErrorInfo.toString());
+        }
+        System.out.println(mutithreadTableWriter_.getStatus().toString());
+        //assertEquals(101,mutithreadTableWriter_.getStatus().unsentRows);
+        assertEquals(0,mutithreadTableWriter_.getStatus().sendFailedRows);
+        assertEquals(0,mutithreadTableWriter_.getStatus().sentRows);
+        mutithreadTableWriter_.waitForThreadCompletion();
+        System.out.println(mutithreadTableWriter_.getStatus().toString());
+        assertEquals(0,mutithreadTableWriter_.getStatus().unsentRows);
+        assertEquals(0,mutithreadTableWriter_.getStatus().sendFailedRows);
+        //assertEquals(101,mutithreadTableWriter_.getStatus().sentRows);
         conn.run("undef(`t1,SHARED)");
     }
 
@@ -6473,6 +6488,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 System.out.println(ex.getMessage());
             }
         }
+        System.out.println(mtw.getStatus().toString());
         mtw.waitForThreadCompletion();
         try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
 
@@ -6630,6 +6646,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 System.out.println(ex.getMessage());
             }
         }
+        System.out.println(mtw.getStatus().toString());
+        Assert.assertEquals(true,mtw.getStatus().sendFailedRows>0);
+        Assert.assertEquals(true,mtw.getStatus().unsentRows==0);
         mtw.waitForThreadCompletion();
         try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
 
@@ -7141,9 +7160,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("symbol1AM", table2.getColumn(2).get(0).getString());
         assertEquals("", table2.getColumn(2).get(1).getString());
         assertEquals("symbol1AM", table2.getColumn(2).get(2).getString());
-        assertEquals("blob1AM", table2.getColumn(3).get(0).getString());
-        assertEquals("", table2.getColumn(3).get(1).getString());
-        assertEquals("blob1AMZN", table2.getColumn(3).get(2).getString());
+        assertEquals("blob1AM\0ZN", table2.getColumn(3).get(0).getString());
+        assertEquals("\0blob1AM\0ZN", table2.getColumn(3).get(1).getString());
+        assertEquals("blob1AMZN\0", table2.getColumn(3).get(2).getString());
     }
     @Test
     public void test_MultithreadedTableWriter_illegal_string_1() throws Exception {
@@ -7163,9 +7182,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("symbol1AM", table2.getColumn(2).get(0).getString());
         assertEquals("", table2.getColumn(2).get(1).getString());
         assertEquals("symbol1AM", table2.getColumn(2).get(2).getString());
-        assertEquals("blob1AM", table2.getColumn(3).get(0).getString());
-        assertEquals("", table2.getColumn(3).get(1).getString());
-        assertEquals("blob1AMZN", table2.getColumn(3).get(2).getString());
+        assertEquals("blob1AM\0ZN", table2.getColumn(3).get(0).getString());
+        assertEquals("\0blob1AM\0ZN", table2.getColumn(3).get(1).getString());
+        assertEquals("blob1AMZN\0", table2.getColumn(3).get(2).getString());
     }
 }
 
