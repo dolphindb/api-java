@@ -371,7 +371,21 @@ public class LoadBalanceTest {
         for (int i = 0; i < 100; ++i) {
             DBConnection connection = new DBConnection();
             connection.connect(HOST, PORT, "admin", "123456",null,false,null,false,false);
-            list.add(conn);
+            list.add(connection);
+        }
+        DBConnection connection1 = new DBConnection();
+        connection1.connect(HOST, PORT, "admin", "123456",false);
+        BasicIntVector re = (BasicIntVector)connection1.run("EXEC connectionNum from rpc(getControllerAlias(),getClusterPerf) where port="+PORT);
+        System.out.println(re.getInt(0));
+        assertEquals(true,re.getInt(0)>100);
+    }
+    @Test
+    public void Test_getConnection_enableHighAvailability_false_enableLoadBalance_null() throws SQLException, ClassNotFoundException, IOException {
+        List<DBConnection> list = new ArrayList<>();
+        for (int i = 0; i < 100; ++i) {
+            DBConnection connection = new DBConnection();
+            connection.connect(HOST, PORT, "admin", "123456",null,false,null,false);
+            list.add(connection);
         }
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",false);
@@ -385,7 +399,7 @@ public class LoadBalanceTest {
         for (int i = 0; i < 100; ++i) {
             DBConnection connection = new DBConnection();
             connection.connect(HOST, PORT, "admin", "123456",null,true,null,false,false);
-            list.add(conn);
+            list.add(connection);
         }
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",false);
@@ -403,7 +417,7 @@ public class LoadBalanceTest {
         for (int i = 0; i < 100; ++i) {
             DBConnection connection = new DBConnection();
             connection.connect(HOST, PORT, "admin", "123456",null,true,ipports,false,false);
-            list.add(conn);
+            list.add(connection);
         }
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
         DBConnection connection1 = new DBConnection();
@@ -438,7 +452,7 @@ public class LoadBalanceTest {
             assertEquals(true, Integer.valueOf(connectionNum) < 50);
         }
     }
-    //@Test//The current node is unavailable
+    @Test//The current node is unavailable
     public void Test_getConnection_enableHighAvailability_true_enableLoadBalance_true_1() throws SQLException, ClassNotFoundException, IOException {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host, controller_port, "admin", "123456");
@@ -446,8 +460,8 @@ public class LoadBalanceTest {
         List<DBConnection> list = new ArrayList<>();
         for (int i = 0; i < 100; ++i) {
             DBConnection connection = new DBConnection();
-            connection.connect(HOST, PORT, "admin", "123456",null,true,null,false,true);
-            list.add(conn);
+            connection.connect(HOST, PORT, "admin", "123456",null,true,ipports,false,true);
+            list.add(connection);
         }
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
         DBConnection connection1 = new DBConnection();
