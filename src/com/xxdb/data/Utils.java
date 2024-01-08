@@ -284,13 +284,7 @@ public class Utils {
 	}
 
 	public static long countDateMilliseconds(Calendar value) {
-		return countMilliseconds(value.get(Calendar.YEAR),
-				value.get(Calendar.MONTH)+1,
-				value.get(Calendar.DAY_OF_MONTH),
-				value.get(Calendar.HOUR_OF_DAY),
-				value.get(Calendar.MINUTE),
-				value.get(Calendar.SECOND),
-				value.get(Calendar.MILLISECOND));
+		return value.getTimeInMillis();
 	}
 	
 	public static int countMilliseconds(int hour, int minute, int second, int millisecond){
