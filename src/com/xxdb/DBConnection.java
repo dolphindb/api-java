@@ -15,7 +15,8 @@ import com.xxdb.comm.SqlStdEnum;
 import com.xxdb.data.*;
 import com.xxdb.data.Void;
 import com.xxdb.io.*;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -55,6 +56,7 @@ public class DBConnection {
     private int[] serverVersion_;
     private boolean isReverseStreaming_ = false;
 
+    private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
     private enum ServerExceptionState {
         NEW_LEADER, WAIT, CONN_FAIL, OTHER_EXCEPTION, DATA_NODE_NOT_AVAILABLE
@@ -200,6 +202,7 @@ public class DBConnection {
                     socket_.connect(new InetSocketAddress(hostName_,port_), 3000);
                 }
             } catch (ConnectException ex) {
+                log.error("Connect to " + this.hostName_ + ":" + this.port_ + " failed.");
                 throw ex;
             }
             if (this.connTimeout_ > 0) {
@@ -251,6 +254,7 @@ public class DBConnection {
                 }
             }
 
+            log.info("Connect to " + this.hostName_ + ":" + this.port_ + " successfully.");
             return true;
         }
 
@@ -838,7 +842,7 @@ public class DBConnection {
                     }
 
                     if (pMinNode != null && !pMinNode.equals(connectedNode)){
-                        System.out.println("Switch to node: " + pMinNode.hostName + ":" + pMinNode.port);
+                        log.info("Switch to node: " + pMinNode.hostName + ":" + pMinNode.port);
                         conn_.close();
                         switchDataNode(pMinNode);
                     }
@@ -880,14 +884,17 @@ public class DBConnection {
         do {
             if (node.hostName != null && node.hostName.length() > 0){
                 if (connectNode(node)){
+                    log.info("Switch to node: " + node.hostName + ":" + node.port + " successfully.");
                     break;
                 }
             }
             if (nodes_.isEmpty()){
-                throw new RuntimeException("Failed to connect to " + node.hostName + ":" + node.port);
+                log.error("Connect to " + node.hostName + ":" + node.port + " failed.");
+                throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed.");
             }
             int index = nodeRandom_.nextInt(nodes_.size());
             if (connectNode(nodes_.get(index))){
+                log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
                 break;
             }
             try {
@@ -903,7 +910,7 @@ public class DBConnection {
     }
 
     public boolean connectNode(Node node) throws IOException{
-        System.out.println("Connect to " + node.hostName + ":" + node.port + ".");
+        log.info("Connect to " + node.hostName + ":" + node.port + ".");
         while (!closed_){
             try {
                 return conn_.connect(node.hostName, node.port, uid_, pwd_, connTimeout_);
