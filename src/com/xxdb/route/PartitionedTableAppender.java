@@ -7,7 +7,8 @@ import com.xxdb.DBTask;
 import com.xxdb.ExclusiveDBConnectionPool;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.*;
 
@@ -26,6 +27,8 @@ public class PartitionedTableAppender {
     private DBConnectionPool pool;
     private List<ArrayList<Integer>> chunkIndices;
     private String appendScript;
+
+	private static final Logger log = LoggerFactory.getLogger(PartitionedTableAppender.class);
 
     public PartitionedTableAppender(String dbUrl, String tableName, String partitionColName, DBConnectionPool pool) throws Exception {
     	this(dbUrl, tableName, partitionColName, null, pool);
@@ -187,7 +190,7 @@ public class PartitionedTableAppender {
 	    	appender.append(new BasicTable(colNames, cols));
     	}
     	catch(Exception ex){
-    		System.out.println(ex.getMessage());
+			log.error(ex.getMessage());
     	}
     }
 }

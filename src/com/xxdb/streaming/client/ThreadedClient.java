@@ -5,6 +5,8 @@ import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicString;
 import com.xxdb.data.Entity;
 import com.xxdb.data.Vector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -20,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 public class ThreadedClient extends AbstractClient {
     private HashMap<String, HandlerLopper> handlerLoppers = new HashMap<>();
     private HashMap<String, List<String>> users = new HashMap<>();
+
+    private static final Logger log = LoggerFactory.getLogger(ThreadedClient.class);
 
     public ThreadedClient() throws SocketException {
         this(DEFAULT_PORT);
@@ -164,12 +168,12 @@ public class ThreadedClient extends AbstractClient {
             subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
             Date d = new Date();
             DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            System.out.println(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
+            log.info(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
             return true;
         } catch (Exception ex) {
             Date d = new Date();
             DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            System.out.println(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
+            log.error(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
             ex.printStackTrace();
             return false;
         }
@@ -407,7 +411,7 @@ public class ThreadedClient extends AbstractClient {
            synchronized (queueManager) {
                queueManager.removeQueue(topic);
            }
-            System.out.println("Successfully unsubscribed table " + fullTableName);
+            log.info("Successfully unsubscribed table " + fullTableName);
         } catch (Exception ex) {
             throw ex;
         } finally {

@@ -779,7 +779,7 @@ public class DBConnection {
                         bt = (BasicTable) conn_.run("select host,port,(memoryUsed/1024.0/1024.0/1024.0)/maxMemSize as memLoad,ratio(connectionNum,maxConnections) as connLoad,avgLoad from rpc(getControllerAlias(),getClusterPerf) where mode=0",0);
                         break;
                     } catch (Exception e) {
-                        System.out.println("ERROR getting other data nodes, exception: " + e.getMessage());
+                        log.error("ERROR getting other data nodes, exception: " + e.getMessage());
                         Node node1 = new Node();
                         if (isConnected()) {
                             ExceptionType type = parseException(e.getMessage(), node1);
@@ -926,7 +926,7 @@ public class DBConnection {
                             throw e;
                     }
                 }else {
-                    System.out.println(e.getMessage());
+                    log.error(e.getMessage());
                     return false;
                 }
             }
@@ -951,11 +951,11 @@ public class DBConnection {
             index = msg.indexOf(">");
             String ipport = msg.substring(index + 1);
             if (!Pattern.matches("\\d+", ipport)) {
-                System.out.println("The control node you are accessing is not the leader node of the highly available (raft) cluster.");
+                log.error("The control node you are accessing is not the leader node of the highly available (raft) cluster.");
                 return ExceptionType.ET_NOTLEADER;
             } else {
                 parseIpPort(ipport, node);
-                System.out.println("New leader is " + node.hostName + ":" + node.port);
+                log.info("New leader is " + node.hostName + ":" + node.port);
                 return ExceptionType.ET_NEWLEADER;
             }
         }else if ((index = msg.indexOf("<DataNodeNotAvail>")) != -1){
@@ -967,7 +967,7 @@ public class DBConnection {
             conn_.getNode(lastNode);
             node.hostName = "";
             node.port = 0;
-            System.out.println(msg);
+            log.info(msg);
             return ExceptionType.ET_NODENOTAVAIL;
         }else if ((index = msg.indexOf("The datanode isn't initialized yet. Please try again later")) != -1){
             node.hostName = "";

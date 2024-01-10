@@ -9,6 +9,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class BasicArrayVector extends AbstractVector {
@@ -19,6 +21,8 @@ public class BasicArrayVector extends AbstractVector {
 	private int rowIndicesSize;
 	private int capacity;
 	private int scale_ = -1;
+
+	private static final Logger log = LoggerFactory.getLogger(BasicArrayVector.class);
 
 	public BasicArrayVector(DATA_TYPE type, int size){
 		this(type, size, -1);
@@ -251,7 +255,7 @@ public class BasicArrayVector extends AbstractVector {
 		try {
 			return new BasicArrayVector(value);
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			log.error(e.getMessage());
 			e.printStackTrace();
 			return null;
 		}

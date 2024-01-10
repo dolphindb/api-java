@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
 import com.xxdb.data.BasicStringVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class ExclusiveDBConnectionPool implements DBConnectionPool {
@@ -14,6 +15,8 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 	private int tasksCount_ = 0;
 	private final Object finishedTasklock_ = new Object();
 	private int finishedTaskCount_ = 0;
+
+	private static final Logger log = LoggerFactory.getLogger(ExclusiveDBConnectionPool.class);
 
 	private class AsyncWorker implements Runnable {
 		private DBConnection conn_;
@@ -63,7 +66,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 				}
 			}
 			conn_.close();
-			System.out.println("ExclusiveDBConnectionPool AsyncWorker terminated peacefully.");
+			log.info("ExclusiveDBConnectionPool AsyncWorker terminated peacefully.");
 		}
 	}
 
@@ -140,7 +143,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 	public void waitForThreadCompletion() {
 		try {
 			synchronized (finishedTasklock_) {
-				System.out.println("Waiting for tasks to complete, remain Task: " + (tasksCount_-finishedTaskCount_));
+				log.info("Waiting for tasks to complete, remain Task: " + (tasksCount_-finishedTaskCount_));
 				while (finishedTaskCount_ >= 0) {
 					if (finishedTaskCount_ < tasksCount_) {
 						finishedTasklock_.wait();

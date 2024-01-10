@@ -5,6 +5,8 @@ import java.util.*;
 import com.xxdb.compression.VectorDecompressor;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -17,6 +19,8 @@ public class BasicTable extends AbstractEntity implements Table{
 	private List<String> colNames = new ArrayList<String>();
 	private Map<String, Integer> colNamesIndex = new HashMap<String, Integer>();
 	private int[] colCompresses = null;
+
+	private static final Logger log = LoggerFactory.getLogger(BasicTable.class);
 
 	public BasicTable(ExtendedDataInput in) throws IOException{
 		int rows = in.readInt();
@@ -272,7 +276,7 @@ public class BasicTable extends AbstractEntity implements Table{
 				jsonStr.append("}");
 			}
 		}catch (Exception e){
-			System.out.println(e.getMessage());
+			log.error(e.getMessage());
 			e.printStackTrace();
 		}
 		return jsonStr.toString();

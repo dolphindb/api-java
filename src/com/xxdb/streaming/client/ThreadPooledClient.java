@@ -6,6 +6,8 @@ import com.xxdb.data.BasicString;
 import com.xxdb.data.Entity;
 
 import com.xxdb.data.Vector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -20,6 +22,8 @@ public class ThreadPooledClient extends AbstractClient {
     private ExecutorService threadPool;
     private HashMap<String, List<String>> users = new HashMap<>();
     private Object lock = new Object();
+
+    private static final Logger log = LoggerFactory.getLogger(ThreadPooledClient.class);
 
     private class QueueHandlerBinder {
         public QueueHandlerBinder(BlockingQueue<List<IMessage>> queue, MessageHandler handler) {
@@ -119,10 +123,10 @@ public class ThreadPooledClient extends AbstractClient {
         try {
             Thread.sleep(1000);
             subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
-            System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + site.actionName);
+            log.info("Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + site.actionName);
             return true;
         } catch (Exception ex) {
-            System.out.println("Unable to subscribe table. Will try again after 1 seconds.");
+            log.error("Unable to subscribe table. Will try again after 1 seconds.");
             ex.printStackTrace();
             return false;
         }
@@ -238,7 +242,8 @@ public class ThreadPooledClient extends AbstractClient {
             synchronized (queueManager) {
                 queueManager.removeQueue(topic);
             }
-            System.out.println("Successfully unsubscribed table " + fullTableName);
+
+            log.info("Successfully unsubscribed table " + fullTableName);
         } catch (Exception ex) {
             throw ex;
         } finally {

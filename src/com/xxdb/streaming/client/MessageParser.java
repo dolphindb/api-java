@@ -13,10 +13,14 @@ import com.xxdb.data.*;
 import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.LittleEndianDataInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class MessageParser implements Runnable {
     private final int MAX_FORM_VALUE = Entity.DATA_FORM.values().length - 1;
     private final int MAX_TYPE_VALUE = Entity.DATA_TYPE.DT_OBJECT.getValue();
+
+    private static final Logger log = LoggerFactory.getLogger(MessageParser.class);
 
     BufferedInputStream bis = null;
     Socket socket = null;
@@ -164,13 +168,13 @@ class MessageParser implements Runnable {
                     }
                     dispatcher.setMsgId(topic, msgid);
                 } else {
-                        System.out.println("message body has an invalid format. Vector or table is expected");
+                        log.error("message body has an invalid format. Vector or table is expected");
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
             if (dispatcher.isClosed(topic)) {
-                System.out.println("check " + topic + " is unsubscribed");
+                log.error("check " + topic + " is unsubscribed");
                 return;
             } else {
                 dispatcher.setNeedReconnect(topic, 1);

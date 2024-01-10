@@ -7,10 +7,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
-
 import com.xxdb.data.Entity.DATA_CATEGORY;
 import com.xxdb.data.Entity.DATA_FORM;
 import com.xxdb.data.Entity.DATA_TYPE;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class Utils {
@@ -24,6 +25,8 @@ public class Utils {
 	private static final int[] leapMonthDays={31,29,31,30,31,30,31,31,30,31,30,31};
 
 	public static int SCALE = -1;
+
+	private static final Logger log = LoggerFactory.getLogger(Utils.class);
 
 	public static void setFormat(int scale){
 		SCALE = scale;
@@ -630,7 +633,7 @@ public class Utils {
 					}
 				}
 				avg = sum / times.size();
-				System.out.println(prefix + "avg = " + avg + " min = " + min + " max = " + max);
+				log.info(prefix + "avg = " + avg + " min = " + min + " max = " + max);
 			}
 		}
 

@@ -6,7 +6,8 @@ import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicString;
 import com.xxdb.data.Entity;
 import com.xxdb.data.Vector;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
@@ -18,6 +19,8 @@ import java.util.concurrent.BlockingQueue;
 public class PollingClient extends AbstractClient {
     TopicPoller topicPoller = null;
     private HashMap<List<String>, List<String>> users = new HashMap<>();
+
+    private static final Logger log = LoggerFactory.getLogger(PollingClient.class);
 
     public PollingClient() throws SocketException {
         super(0);
@@ -36,11 +39,11 @@ public class PollingClient extends AbstractClient {
         try {
             Thread.sleep(1000);
             BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, (MessageHandler) null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord, site.msgAstable);
-            System.out.println("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
+            log.info("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
             topicPoller.setQueue(queue);
             return true;
         } catch (Exception ex) {
-            System.out.println("Unable to subscribe table. Will try again after 1 seconds.");
+            log.error("Unable to subscribe table. Will try again after 1 seconds.");
             ex.printStackTrace();
             return false;
         }
@@ -152,7 +155,7 @@ public class PollingClient extends AbstractClient {
             synchronized (queueManager) {
                 queueManager.removeQueue(topic);
             }
-            System.out.println("Successfully unsubscribed table " + fullTableName);
+            log.info("Successfully unsubscribed table " + fullTableName);
         } catch (Exception ex) {
             throw ex;
         } finally {

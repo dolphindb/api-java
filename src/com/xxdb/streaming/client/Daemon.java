@@ -2,6 +2,8 @@ package com.xxdb.streaming.client;
 
 import com.xxdb.DBConnection;
 import com.xxdb.io.ExtendedDataInput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -18,6 +20,8 @@ class Daemon implements Runnable {
     private static final int KEEPALIVE_COUNT = 5;
     private Thread runningThread_= null;
     private LinkedBlockingQueue<DBConnection> connList = new LinkedBlockingQueue<>();
+
+    private static final Logger log = LoggerFactory.getLogger(Daemon.class);
 
     public Daemon(int port, MessageDispatcher dispatcher, LinkedBlockingQueue<DBConnection> connections) {
         this.listeningPort = port;
@@ -120,7 +124,7 @@ class Daemon implements Runnable {
                             dispatcher.activeCloseConnection(s);
                             String lastTopic = "";
                             for (String topic : dispatcher.getAllTopicsBySite(site)) {
-                                System.out.println("try to reconnect topic " + topic);
+                                log.info("try to reconnect topic " + topic);
                                 dispatcher.tryReconnect(topic);
                                 lastTopic = topic;
                             }
@@ -132,7 +136,7 @@ class Daemon implements Runnable {
                                 AbstractClient.Site s = dispatcher.getSiteByName(site);
                                 dispatcher.activeCloseConnection(s);
                                 for (String topic : dispatcher.getAllTopicsBySite(site)) {
-                                    System.out.println("try to reconnect topic " + topic);
+                                    log.info("try to reconnect topic " + topic);
                                     dispatcher.tryReconnect(topic);
                                 }
                                 dispatcher.setReconnectTimestamp(site, System.currentTimeMillis());
@@ -186,7 +190,7 @@ class Daemon implements Runnable {
                         continue;
 
                     try {
-                        System.out.println("Connection closed!!");
+                        log.info("Connection closed!!");
                         socket.close();
                         return;
                     } catch (Exception e) {

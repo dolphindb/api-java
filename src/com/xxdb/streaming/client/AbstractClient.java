@@ -14,6 +14,8 @@ import com.xxdb.comm.SqlStdEnum;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 import com.xxdb.data.Void;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 abstract class AbstractClient implements MessageDispatcher {
     protected static final int DEFAULT_PORT = 8849;
@@ -37,6 +39,8 @@ abstract class AbstractClient implements MessageDispatcher {
     protected LinkedBlockingQueue<DBConnection> connList = new LinkedBlockingQueue<>();
 
     private Daemon daemon = null;
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractClient.class);
 
     class ReconnectItem {
         /**
@@ -301,7 +305,7 @@ abstract class AbstractClient implements MessageDispatcher {
                 if (verNum >= 995)
                     params.add(new BasicBoolean(true));
                 conn.run("activeClosePublishConnection", params);
-                System.out.println("Successfully closed publish connection");
+                log.info("Successfully closed publish connection");
             } catch (IOException ioex) {
                 throw ioex;
             } finally {
@@ -309,7 +313,7 @@ abstract class AbstractClient implements MessageDispatcher {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            System.out.println("Unable to actively close the publish connection from site " + site.host + ":" + site.port);
+            log.error("Unable to actively close the publish connection from site " + site.host + ":" + site.port);
         }
 
         try {
@@ -575,7 +579,7 @@ abstract class AbstractClient implements MessageDispatcher {
                 for (int i = 0; i < sites.length; i++)
                     sites[i].closed = true;
             }
-            System.out.println("Successfully unsubscribed table " + fullTableName);
+            log.info("Successfully unsubscribed table " + fullTableName);
         } catch (Exception ex) {
             throw ex;
         } finally {

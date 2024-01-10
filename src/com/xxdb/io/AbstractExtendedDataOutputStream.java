@@ -1,6 +1,8 @@
 package com.xxdb.io;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,6 +18,8 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 	protected int[] intBuf;
 	protected long[] longBuf;
 	protected double[] doubleBuf;
+
+	private static final Logger log = LoggerFactory.getLogger(AbstractExtendedDataOutputStream.class);
 
 	public AbstractExtendedDataOutputStream(OutputStream out) {
 		super(out);
@@ -227,7 +231,7 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 		byte[] newArray;
 		if (indexOfZero != -1) {
 			// Create a new array containing only the elements before 0.
-			System.out.println("The input String contains '\0', it will be dropped start from '\0' to last.");
+			log.warn("The input String contains '\0', it will be dropped start from '\0' to last.");
 			newArray = new byte[indexOfZero];
 			System.arraycopy(originalArray, 0, newArray, 0, indexOfZero);
 		} else {
