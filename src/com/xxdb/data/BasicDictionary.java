@@ -34,7 +34,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 		if(form != DATA_FORM.DF_VECTOR.ordinal())
 			throw new IOException("The form of dictionary keys must be vector");
 		keyType = DATA_TYPE.valueOf(type);
-		Vector keys = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, keyType, in, extended);
+		Vector keys = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, keyType, in, extended, -1);
 		
 		//read value vector
 		flag = in.readShort();
@@ -46,7 +46,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 		if(form != DATA_FORM.DF_VECTOR.ordinal())
 			throw new IOException("The form of dictionary values must be vector");
 		valueType = DATA_TYPE.valueOf(type);
-		Vector values = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, valueType, in, extended);
+		Vector values = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, valueType, in, extended, -1);
 		
 		if(keys.rows() != values.rows()){
 			throw new IOException("The key size doesn't equate to value size.");

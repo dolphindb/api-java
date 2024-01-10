@@ -508,7 +508,7 @@ public class DBConnection {
                     return new EntityBlockReader(in_);
                 }
                 EntityFactory factory = BasicEntityFactory.instance();
-                return factory.createEntity(df, dt, in_, extended);
+                return factory.createEntity(df, dt, in_, extended, -1);
             }catch (IOException ex){
                 isConnected_ = false;
                 socket_ = null;

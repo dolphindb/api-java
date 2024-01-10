@@ -42,7 +42,7 @@ public class BasicAnyVector extends AbstractVector{
             boolean extended = type >= 128;
             if(type >= 128)
             	type -= 128;
-			Entity obj = BasicEntityFactory.instance().createEntity(DATA_FORM.values()[form], DATA_TYPE.valueOf(type), in, extended);
+			Entity obj = BasicEntityFactory.instance().createEntity(DATA_FORM.values()[form], DATA_TYPE.valueOf(type), in, extended, -1);
 			values[i] = obj;
 		}
 	}
