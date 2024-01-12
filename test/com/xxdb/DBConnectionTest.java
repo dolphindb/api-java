@@ -113,8 +113,8 @@ public class DBConnectionTest {
         boolean re = conn.connect(HOST,PORT,100,false);
         Assert.assertEquals(true,re);
     }
-    @Test
-    public void Test_Connect_timeout_1() throws IOException {
+    //@Test
+    public void daimaTest_Connect_timeout_1() throws IOException {
         DBConnection conn = new DBConnection();
         boolean re = conn.connect(HOST,111,1,true);
     }

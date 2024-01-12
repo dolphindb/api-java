@@ -60,7 +60,7 @@ public class BasicTable extends AbstractEntity implements Table{
 				vector = decompressor.decompress(BasicEntityFactory.instance(), in, extended, true);
 			}
 			else{
-				vector = (Vector)BasicEntityFactory.instance().createEntity(df, dt, in, extended);
+				vector = (Vector)BasicEntityFactory.instance().createEntity(df, dt, in, extended, -1);
 			}
 			if(vector.rows() != rows && vector.rows()!= 1)
 				throw new IOException("The number of rows for column " + colNames.get(i) + " is not consistent with other columns");

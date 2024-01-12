@@ -5,7 +5,7 @@ import java.io.IOException;
 import com.xxdb.io.ExtendedDataInput;
 
 public interface EntityFactory {
-	Entity createEntity(Entity.DATA_FORM form, Entity.DATA_TYPE type, ExtendedDataInput in, boolean exteneded)  throws IOException;
+	Entity createEntity(Entity.DATA_FORM form, Entity.DATA_TYPE type, ExtendedDataInput in, boolean exteneded, int extraParam)  throws IOException;
 	Matrix createMatrixWithDefaultValue(Entity.DATA_TYPE type, int rows, int columns);
 	Vector createVectorWithDefaultValue(Entity.DATA_TYPE type, int size, int extra);
 	Vector createPairWithDefaultValue(Entity.DATA_TYPE type);
