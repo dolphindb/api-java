@@ -147,7 +147,7 @@ public class BasicArrayVector extends AbstractVector {
 	}
 
 	public void deserialize(DATA_TYPE valueType,  ExtendedDataInput in, int rows, int cols, int scale) throws IOException {
-		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, cols, scale);
+		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, 0, scale);
 
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		this.baseUnitLength_ = valueVec.getUnitLength();
