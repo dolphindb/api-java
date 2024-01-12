@@ -35,7 +35,7 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
             	type -= 128;
 			if(form != DATA_FORM.DF_VECTOR.ordinal())
 				throw new IOException("The form of matrix row labels must be vector");
-			rowLabels = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, DATA_TYPE.valueOf(type), in, extended, -1);
+			rowLabels = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, DATA_TYPE.valueOf(type), in, extended);
 		}
 		
 		if((hasLabels & 2) == 2){
@@ -50,7 +50,7 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 				throw new IOException("The form of matrix columns labels must be vector");
 			if(type <0 || type >= DATA_TYPE.DT_OBJECT.getValue())
 				throw new IOException("Invalid data type for matrix column labels: " + type);
-			columnLabels = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, DATA_TYPE.valueOf(type), in, extended, -1);
+			columnLabels = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, DATA_TYPE.valueOf(type), in, extended);
 		}
 		
 		short flag = in.readShort();

@@ -98,18 +98,15 @@ public class StreamDeserializer {
         for(Map.Entry<String, BasicDictionary> keyValue : filters.entrySet())
         {
             List<Entity.DATA_TYPE> colTypes = new ArrayList<>();
-            List<Integer> colScales = new ArrayList<>();
             if (keyValue.getValue() == null)
                 throw new RuntimeException("The schema can not be null");
             BasicTable colDefs = (BasicTable)(keyValue.getValue()).get("colDefs");
             BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
-            BasicIntVector colDefsScales = (BasicIntVector)colDefs.getColumn("extra");
             for (int i = 0; i < colDefsTypeInt.rows(); ++i)
             {
                 colTypes.add(Entity.DATA_TYPE.valueOf(colDefsTypeInt.getInt(i)));
-                colScales.add(colDefsScales.getInt(i));
             }
-            msgDeserializers_.put(keyValue.getKey(), new MsgDeserializer(colTypes, colScales));
+            msgDeserializers_.put(keyValue.getKey(), new MsgDeserializer(colTypes));
         }
     }
 
@@ -131,20 +128,10 @@ public class StreamDeserializer {
     class MsgDeserializer
     {
         List<Entity.DATA_TYPE> colTypes_;
-        List<Integer> colScales_;
         public MsgDeserializer(List<Entity.DATA_TYPE> colTypes)
         {
             colTypes_ = new ArrayList<>();
             colTypes_.addAll(colTypes);
-        }
-
-        public MsgDeserializer(List<Entity.DATA_TYPE> colTypes, List<Integer> colScales)
-        {
-            colTypes_ = new ArrayList<>();
-            colTypes_.addAll(colTypes);
-
-            colScales_ = new ArrayList<>();
-            colScales_.addAll(colScales);
         }
 
         public BasicAnyVector parse(byte[] data) throws Exception {
@@ -160,17 +147,10 @@ public class StreamDeserializer {
 //            for (int i = 0; i < columns; ++i)
 //                ret.setEntity(i, basicEntityFactory.createEntity(Entity.DATA_FORM.DF_SCALAR, colTypes_.get(i), dataStream, false));
             for (int i = 0; i < columns; ++i) {
-                Entity.DATA_TYPE type = colTypes_.get(i);
-
-                int scale = -1;
-                if (Utils.getCategory(type) == Entity.DATA_CATEGORY.DENARY || type.getValue() >= Entity.DATA_TYPE.DT_DECIMAL32_ARRAY.getValue()) {
-                    scale = colScales_.get(i);
-                }
-
-                if (type.getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && colTypes_.get(i).getValue() <= Entity.DATA_TYPE.DT_DECIMAL128_ARRAY.getValue()) {
-                    ret.setEntity(i, new BasicArrayVector(colTypes_.get(i), dataStream, 1, 0, scale));
+                if (colTypes_.get(i).getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && colTypes_.get(i).getValue() <= Entity.DATA_TYPE.DT_DECIMAL128_ARRAY.getValue()) {
+                    ret.setEntity(i, new BasicArrayVector(colTypes_.get(i), dataStream, 1, 0, -1));
                 } else {
-                    ret.setEntity(i, basicEntityFactory.createEntity(Entity.DATA_FORM.DF_SCALAR, colTypes_.get(i), dataStream, false, scale));
+                    ret.setEntity(i, basicEntityFactory.createEntity(Entity.DATA_FORM.DF_SCALAR, colTypes_.get(i), dataStream, false));
                 }
             }
 

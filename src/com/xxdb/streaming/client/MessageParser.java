@@ -116,7 +116,7 @@ class MessageParser implements Runnable {
                 Entity.DATA_TYPE dt = Entity.DATA_TYPE.valueOf(type);
                 Entity body;
 
-                body = BasicEntityFactory.instance().createEntity(df, dt, in, extended, -1);
+                body = BasicEntityFactory.instance().createEntity(df, dt, in, extended);
                 if (body.isTable() && body.rows() == 0) {
                     for (String t : topic.split(",")) {
                         dispatcher.setNeedReconnect(t, 0);

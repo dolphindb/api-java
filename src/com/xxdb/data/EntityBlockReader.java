@@ -28,7 +28,7 @@ public class EntityBlockReader implements Entity {
         boolean extended = type >= 128;
         if(type >= 128)
         	type -= 128;
-        currentValue = BasicEntityFactory.instance().createEntity(Entity.DATA_FORM.values()[form], Entity.DATA_TYPE.valueOf(type), instream, extended, -1);
+        currentValue = BasicEntityFactory.instance().createEntity(Entity.DATA_FORM.values()[form], Entity.DATA_TYPE.valueOf(type), instream, extended);
         currentIndex++;
         return currentValue;
     }
@@ -41,7 +41,7 @@ public class EntityBlockReader implements Entity {
             boolean extended = type >= 128;
             if(type >= 128)
             	type -= 128;
-            currentValue = BasicEntityFactory.instance().createEntity(Entity.DATA_FORM.values()[form], Entity.DATA_TYPE.valueOf(type), instream, extended, -1);
+            currentValue = BasicEntityFactory.instance().createEntity(Entity.DATA_FORM.values()[form], Entity.DATA_TYPE.valueOf(type), instream, extended);
             currentIndex++;
         }
     }

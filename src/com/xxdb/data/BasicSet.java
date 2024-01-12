@@ -32,7 +32,7 @@ public class BasicSet extends AbstractEntity implements Set {
 		if(type <0 || type >= DATA_TYPE.DT_OBJECT.getValue())
 			throw new IOException("Invalid key type: " + type);
 		
-		Vector keys = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, DATA_TYPE.valueOf(type), in, extended, -1);
+		Vector keys = (Vector)BasicEntityFactory.instance().createEntity(DATA_FORM.DF_VECTOR, DATA_TYPE.valueOf(type), in, extended);
 			
 		int size = keys.rows();
 		int capacity = (int)(size/0.75);
