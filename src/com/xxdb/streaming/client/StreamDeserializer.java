@@ -148,7 +148,7 @@ public class StreamDeserializer {
 //                ret.setEntity(i, basicEntityFactory.createEntity(Entity.DATA_FORM.DF_SCALAR, colTypes_.get(i), dataStream, false));
             for (int i = 0; i < columns; ++i) {
                 if (colTypes_.get(i).getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && colTypes_.get(i).getValue() <= Entity.DATA_TYPE.DT_DECIMAL128_ARRAY.getValue()) {
-                    ret.setEntity(i, new BasicArrayVector(colTypes_.get(i), dataStream, 1, 0, -1));
+                    ret.setEntity(i, (new BasicArrayVector(colTypes_.get(i), dataStream, 1, 0, -1)).get(0));
                 } else {
                     ret.setEntity(i, basicEntityFactory.createEntity(Entity.DATA_FORM.DF_SCALAR, colTypes_.get(i), dataStream, false));
                 }
