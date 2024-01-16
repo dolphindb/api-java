@@ -15,18 +15,9 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 	public BasicDuration(DURATION unit, int value){
 		this.value = value;
 		if (unit == DURATION.TDAY)
-			throw new RuntimeException("the exchange unit should be given when use exchange calendar.");
+			throw new RuntimeException("the exchange unit should be given as String when use exchange calendar.");
 		this.unit = unit;
 		this.exchange_ = unit.ordinal();
-	}
-
-	public BasicDuration(DURATION unit, int value, String exchangeUnit) {
-		this.value = value;
-		this.unit = unit;
-		if (this.unit == DURATION.TDAY)
-			this.exchange_ = getCodeNumber(exchangeUnit);
-		else
-			this.exchange_ = this.unit.ordinal();
 	}
 
 	public BasicDuration(String unit, int value) {
@@ -196,7 +187,7 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 			}
 			return (codes[0] << 24) + (codes[1] << 16) + (codes[2] << 8) + codes[3];
 		} else {
-			throw new RuntimeException(String.format("except duration enum type or length 4, got %s and length %d", unit, unit.length()));
+			throw new RuntimeException("The value of unit must duration enum type or contain four consecutive uppercase letters.");
 		}
 	}
 }
