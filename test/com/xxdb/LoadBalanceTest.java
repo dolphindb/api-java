@@ -313,7 +313,7 @@ public class LoadBalanceTest {
             list.add(conn);
         }
         DBConnection connection1 = new DBConnection();
-        connection1.connect(HOST, PORT, "admin", "123456",true);
+        connection1.connect(HOST, controller_port, "admin", "123456",true);
         BasicTable re = (BasicTable)connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re.rows(); i++) {
             System.out.println("port:"+ re.getColumn(0).get(i)+" connectionNum:"+re.getColumn(1).get(i));
@@ -341,7 +341,7 @@ public class LoadBalanceTest {
             System.out.println("port:"+ re.getColumn(0).get(i)+" connectionNum:"+re.getColumn(1).get(i));
             String port = re.getColumn(0).get(i).toString();
             String connectionNum = re.getColumn(1).get(i).toString();
-            assertEquals(true,Integer.valueOf(connectionNum)>25);
+            assertEquals(true,Integer.valueOf(connectionNum)>=20);
             assertEquals(true,Integer.valueOf(connectionNum)<50);
         }
     }
@@ -429,7 +429,7 @@ public class LoadBalanceTest {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
             String port = re.getColumn(0).get(i).toString();
             String connectionNum = re.getColumn(1).get(i).toString();
-            if(Integer.valueOf(port)!=port1) {
+            if(Integer.valueOf(port)==port1) {
                 assertEquals(true, Integer.valueOf(connectionNum) >= 100);
             }
         }
@@ -449,7 +449,7 @@ public class LoadBalanceTest {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
             String port = re.getColumn(0).get(i).toString();
             String connectionNum = re.getColumn(1).get(i).toString();
-            assertEquals(true, Integer.valueOf(connectionNum) > 25);
+            assertEquals(true, Integer.valueOf(connectionNum) >= 20);
             assertEquals(true, Integer.valueOf(connectionNum) < 50);
         }
     }

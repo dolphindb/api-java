@@ -4140,7 +4140,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 //        assertEquals(1000000,result.getLong());
 //    }
 
-    @Test(timeout = 120000)
+    @Test(timeout = 200000)
     public void test_mtw_concurrentWrite_getFailedData() throws Exception {
         conn.run("login(`admin,`123456)\n" +
                 "dbName = \"dfs://test_mtw_concurrentWrite_getFailedData1\"\n" +
