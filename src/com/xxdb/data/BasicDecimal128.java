@@ -44,12 +44,8 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
         this.scale = scale;
     }
 
-    public BasicDecimal128(ExtendedDataInput in, int extra) throws IOException {
-        if (extra != -1)
-            scale = extra;
-        else
-            scale = in.readInt();
-
+    public BasicDecimal128(ExtendedDataInput in) throws IOException {
+        scale = in.readInt();
         unscaledValue = handleLittleEndianBigEndian(in);
     }
 

@@ -11,12 +11,8 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
     private int scale_=0;
     private int value_;
 
-    public BasicDecimal32(ExtendedDataInput in, int extra) throws IOException{
-        if (extra != -1)
-            scale_ = extra;
-        else
-            scale_ = in.readInt();
-
+    public BasicDecimal32(ExtendedDataInput in) throws IOException{
+        scale_ = in.readInt();
         value_ = in.readInt();
     }
 

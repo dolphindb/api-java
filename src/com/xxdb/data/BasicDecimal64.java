@@ -17,13 +17,9 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
     private static final BigDecimal DECIMAL64_MIN_VALUE = new BigDecimal("-9223372036854775808");
     private static final BigDecimal DECIMAL64_MAX_VALUE = new BigDecimal("9223372036854775807");
 
-    public BasicDecimal64(ExtendedDataInput in, int extra) throws IOException{
-        if (extra != -1)
-            scale_ = extra;
-        else
-            scale_ = in.readInt();
-
-        value_ = in.readInt();
+    public BasicDecimal64(ExtendedDataInput in) throws IOException{
+        scale_ = in.readInt();
+        value_ = in.readLong();
     }
 
     public BasicDecimal64(long value, int scale){

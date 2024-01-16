@@ -35,7 +35,7 @@ public class VectorDecompressor {
 		else if (dt == DATA_TYPE.DT_DECIMAL64)
 			return new BasicDecimal64Vector(DATA_FORM.DF_VECTOR, decompressedIn, tmp);
 		else
-			return (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, dt, decompressedIn, extended, -1); // Haotian - TODO: this function `decompress` may need to be updated
+			return (Vector)factory.createEntity(DATA_FORM.DF_VECTOR, dt, decompressedIn, extended);
 	}
 
 }
