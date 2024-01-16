@@ -53,13 +53,13 @@ public class BasicDurationVector extends AbstractVector{
 		if(unitIndex == Integer.MIN_VALUE)
 			return new BasicDuration(DURATION.NS, Integer.MIN_VALUE);
 		else
-			return new BasicDuration(DURATION.values()[values[2*index + 1]], values[2*index]);
+			return new BasicDuration(values[2*index + 1], values[2*index]);
 	}
 		
 	public void set(int index, Entity value) throws Exception {
 		BasicDuration duration = (BasicDuration)value;
 		values[2*index] = duration.getDuration();
-		values[2*index + 1] = duration.getUnit().ordinal();
+		values[2*index + 1] = duration.getExchangeInt();
 	}
 
 	@Override
@@ -95,7 +95,7 @@ public class BasicDurationVector extends AbstractVector{
 
 	@Override
 	public void Append(Scalar value) throws Exception{
-		add(((BasicDuration)value).getDuration(), ((BasicDuration)value).getUnit().ordinal());
+		add(((BasicDuration)value).getDuration(), ((BasicDuration)value).getExchangeInt());
 	}
 
 	@Override
