@@ -182,7 +182,7 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 			int[] codes = new int[4];
 			for (int i = 0; i < 4; i++) {
 				if (!Character.isUpperCase(unit.charAt(i)))
-					throw new RuntimeException("except upper letter, got " + unit);
+					throw new RuntimeException("The value of unit must duration enum type or contain four consecutive uppercase letters.");
 				codes[i] = unit.charAt(i);
 			}
 			return (codes[0] << 24) + (codes[1] << 16) + (codes[2] << 8) + codes[3];
