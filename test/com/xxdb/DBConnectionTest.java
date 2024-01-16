@@ -1332,6 +1332,15 @@ public class DBConnectionTest {
         Entity dict1 = conn.run("dict");
         assertEquals(3, dict1.rows());
     }
+    @Test
+    public void testDurationUpload() throws IOException {
+        Entity duration = conn.run("duration(3XNYS)");
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("duration", duration);
+        conn.upload(map);
+        Entity duration1 = conn.run("duration");
+        assertEquals("3XNYS", duration1.getString());
+    }
 
     @Test
     public void testFunction() throws IOException {
@@ -1365,6 +1374,17 @@ public class DBConnectionTest {
         assertEquals("2", result.get(0).getString());
     }
 
+    @Test
+    public void testAnyVector_Duration_Upload() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        Entity bdv = conn.run("[duration(3XNYS),duration(3XNYS)]");
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("duration", bdv);
+        conn.upload(map);
+        Entity duration1 = conn.run("duration");
+        assertEquals("(3XNYS,3XNYS)", duration1.getString());
+    }
     @Test
     public void testSet() throws IOException {
         BasicSet result = (BasicSet) conn.run("set(1+3*1..100)");
