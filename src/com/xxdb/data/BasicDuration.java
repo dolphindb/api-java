@@ -196,7 +196,7 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 			}
 			return (codes[0] << 24) + (codes[1] << 16) + (codes[2] << 8) + codes[3];
 		} else {
-			throw new RuntimeException("error length of unit, " + unit.length());
+			throw new RuntimeException(String.format("except duration enum type or length 4, got %s and length %d", unit, unit.length()));
 		}
 	}
 }
