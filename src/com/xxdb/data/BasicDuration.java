@@ -190,8 +190,8 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 		} else if (unit.length() == 4) {
 			int[] codes = new int[4];
 			for (int i = 0; i < 4; i++) {
-				if (Character.isLowerCase(unit.charAt(i)))
-					throw new RuntimeException("the exchange unit except all upper, got " + unit);
+				if (!Character.isUpperCase(unit.charAt(i)))
+					throw new RuntimeException("except upper letter, got " + unit);
 				codes[i] = unit.charAt(i);
 			}
 			return (codes[0] << 24) + (codes[1] << 16) + (codes[2] << 8) + codes[3];
