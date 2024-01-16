@@ -8,6 +8,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -135,7 +136,7 @@ public class UtilsTest {
         assertEquals(Entity.DATA_CATEGORY.BINARY,Utils.getCategory(Entity.DATA_TYPE.DT_IPADDR));
         assertEquals(Entity.DATA_CATEGORY.MIXED,Utils.getCategory(Entity.DATA_TYPE.DT_ANY));
         assertEquals(Entity.DATA_CATEGORY.NOTHING,Utils.getCategory(Entity.DATA_TYPE.DT_VOID));
-        assertEquals(Entity.DATA_CATEGORY.SYSTEM,Utils.getCategory(Entity.DATA_TYPE.DT_BLOB));
+        assertEquals(Entity.DATA_CATEGORY.LITERAL,Utils.getCategory(Entity.DATA_TYPE.DT_BLOB));
         assertEquals(Entity.DATA_CATEGORY.INTEGRAL,Utils.getCategory(Entity.DATA_TYPE.DT_INT));
     }
 

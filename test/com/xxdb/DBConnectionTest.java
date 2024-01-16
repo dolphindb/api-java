@@ -4280,4 +4280,54 @@ public void test_SSL() throws Exception {
         assertEquals("", table2.getColumn(3).get(1).getString());
         assertEquals("blob1AMZN", table2.getColumn(3).get(2).getString());
     }
+    @Test
+    public void test_connection_enableSeqNo_true() throws Exception {
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456",
+                "", true, ipports);
+        connection.run("\n" +
+                "dbPath = \"dfs://tableUpsert_test\"\n" +
+                "if(existsDatabase(dbPath)){\n" +
+                "\tdropDatabase(dbPath)\n" +
+                "}\n" +
+                "t = table(100:1, `id`id2`value, `INT`INT`INT)\n" +
+                "db  = database(dbPath, RANGE,1 50 10000)\n" +
+                "pt1 = db.createPartitionedTable(t,`pt1,`id).append!(t)\n" +
+                "pt = db.createPartitionedTable(t,`pt,`id).append!(t)");
+        BasicTable ex = (BasicTable)connection.run("t=table( take(1..3000,3000) as id, 1..3000 as id2, 1..3000 as value);t;",null,4, 4, 0, false,"", true);
+        for(int i = 0; i < 10; i++){
+            connection.run("pt = loadTable(\"dfs://tableUpsert_test\",\"pt\"); pt.append!(t) ; pt1 = loadTable(\"dfs://tableUpsert_test\",\"pt1\"); pt1.append!(t) ;",null,4, 4, 0, false,"", true);
+        }
+        BasicTable res1 = (BasicTable) connection.run("select * from loadTable(\"dfs://tableUpsert_test\",\"pt\")");
+        BasicTable res2 = (BasicTable) connection.run("select * from loadTable(\"dfs://tableUpsert_test\",\"pt1\")");
+        assertEquals(30000, res1.rows());
+        assertEquals(30000, res1.rows());
+        connection.close();
+    }
+
+    @Test
+    public void test_connection_enableSeqNo_false() throws Exception {
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456",
+                "", true, ipports);
+        connection.run("\n" +
+                "dbPath = \"dfs://tableUpsert_test\"\n" +
+                "if(existsDatabase(dbPath)){\n" +
+                "\tdropDatabase(dbPath)\n" +
+                "}\n" +
+                "t = table(100:1, `id`id2`value, `INT`INT`INT)\n" +
+                "db  = database(dbPath, RANGE,1 50 10000)\n" +
+                "pt1 = db.createPartitionedTable(t,`pt1,`id).append!(t)\n" +
+                "pt = db.createPartitionedTable(t,`pt,`id).append!(t)");
+        BasicTable ex = (BasicTable)connection.run("t=table( take(1..3000,3000) as id, 1..3000 as id2, 1..3000 as value);t;",null,4, 4, 0, false,"", false);
+        for(int i = 0; i < 10; i++){
+            connection.run("pt = loadTable(\"dfs://tableUpsert_test\",\"pt\"); pt.append!(t) ; pt1 = loadTable(\"dfs://tableUpsert_test\",\"pt1\"); pt1.append!(t) ;",null,4, 4, 0, false,"", false);
+        }
+        BasicTable res1 = (BasicTable) connection.run("select * from loadTable(\"dfs://tableUpsert_test\",\"pt\")");
+        BasicTable res2 = (BasicTable) connection.run("select * from loadTable(\"dfs://tableUpsert_test\",\"pt1\")");
+        assertEquals(30000, res1.rows());
+        assertEquals(30000, res1.rows());
+        connection.close();
+    }
+
 }
