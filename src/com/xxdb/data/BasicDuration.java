@@ -10,14 +10,14 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 	private static final String[] unitSyms = {"ns", "us", "ms", "s", "m", "H", "d", "w", "M", "y", "B"};
 	private int value;
 	private DURATION unit;
-	private int exchange_;
+	private int exchange;
 
 	public BasicDuration(DURATION unit, int value){
 		this.value = value;
 		if (unit == DURATION.TDAY)
 			throw new RuntimeException("the exchange unit should be given as String when use exchange calendar.");
 		this.unit = unit;
-		this.exchange_ = unit.ordinal();
+		this.exchange = unit.ordinal();
 	}
 
 	public BasicDuration(String unit, int value) {
@@ -27,16 +27,16 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 			this.unit = DURATION.values()[codeNumber];
 		else
 			this.unit = DURATION.TDAY;
-		this.exchange_ = codeNumber;
+		this.exchange = codeNumber;
 	}
 
-	protected BasicDuration(int exchange_, int value) {
+	protected BasicDuration(int exchange, int value) {
 		this.value = value;
-		if (exchange_ >= 0 && exchange_ <= 10)
-			this.unit = DURATION.values()[exchange_];
+		if (exchange >= 0 && exchange <= 10)
+			this.unit = DURATION.values()[exchange];
 		else
 			this.unit = DURATION.TDAY;
-		this.exchange_ = exchange_;
+		this.exchange = exchange;
 	}
 
 	public BasicDuration(ExtendedDataInput in) throws IOException{
@@ -46,7 +46,7 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 			unit = DURATION.values()[codeNumber];
 		else
 			unit = DURATION.TDAY;
-		exchange_ = codeNumber;
+		this.exchange = codeNumber;
 	}
 
 	public int getDuration() {
@@ -58,34 +58,34 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 	}
 
 	public int getExchangeInt() {
-		return exchange_;
+		return this.exchange;
 	}
 
 	public String getExchangeName() {
-		if (exchange_ >= 0 && exchange_ <= 10) {
-			return unitSyms[exchange_];
-		}
+		if (this.exchange >= 0 && this.exchange <= 10)
+			return this.unitSyms[this.exchange];
+
 		char[] codes = new char[4];
-		codes[0] = (char) ((exchange_ >> 24) & 255);
-		codes[1] = (char) ((exchange_ >> 16) & 255);
-		codes[2] = (char) ((exchange_ >> 8) & 255);
-		codes[3] = (char) (exchange_ & 255);
+		codes[0] = (char) ((this.exchange >> 24) & 255);
+		codes[1] = (char) ((this.exchange >> 16) & 255);
+		codes[2] = (char) ((this.exchange >> 8) & 255);
+		codes[3] = (char) (this.exchange & 255);
 		return String.valueOf(codes);
 	}
 
 	@Override
 	public boolean isNull() {
-		return value == Integer.MIN_VALUE;
+		return this.value == Integer.MIN_VALUE;
 	}
 
 	@Override
 	public void setNull() {
-		value = Integer.MIN_VALUE;
+		this.value = Integer.MIN_VALUE;
 	}
 
 	@Override
 	public Number getNumber() throws Exception {
-		return value;
+		return this.value;
 	}
 
 	@JsonIgnore
@@ -116,22 +116,22 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 
 	@Override
 	public String getString() {
-		if(value == Integer.MIN_VALUE)
+		if (this.value == Integer.MIN_VALUE)
 			return "";
 		else
-			return value + getExchangeName();
+			return this.value + getExchangeName();
 	}
 
 	@Override
 	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
-		out.writeInt(value);
-		out.writeInt(exchange_);
+		out.writeInt(this.value);
+		out.writeInt(this.exchange);
 	}
 
 	@Override
 	public int compareTo(BasicDuration o) {
-		if (unit == o.unit && exchange_ == o.exchange_)
-			return Integer.compare(o.value, value);
+		if (this.unit == o.unit && this.exchange == o.exchange)
+			return Integer.compare(o.value, this.value);
 		else
 			return -1;
 	}
@@ -141,7 +141,7 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 		if(! (o instanceof BasicDuration) || o == null)
 			return false;
 		else
-			return value == ((BasicDuration) o).value && unit == ((BasicDuration) o).unit && exchange_ == ((BasicDuration) o).exchange_;
+			return this.value == ((BasicDuration) o).value && this.unit == ((BasicDuration) o).unit && this.exchange == ((BasicDuration) o).exchange;
 	}
 
 	@JsonIgnore
