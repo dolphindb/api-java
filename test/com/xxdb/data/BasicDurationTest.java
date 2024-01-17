@@ -463,7 +463,7 @@ public class BasicDurationTest {
         BasicDuration bd = new BasicDuration(Entity.DURATION.MS,2);
         String re = JSONObject.toJSONString(bd);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"SYSTEM\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DURATION\",\"dictionary\":false,\"duration\":2,\"jsonString\":\"2ms\",\"matrix\":false,\"null\":false,\"number\":2,\"pair\":false,\"scalar\":true,\"string\":\"2ms\",\"table\":false,\"unit\":\"MS\",\"vector\":false}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"SYSTEM\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DURATION\",\"dictionary\":false,\"duration\":2,\"exchangeInt\":2,\"exchangeName\":\"ms\",\"jsonString\":\"2ms\",\"matrix\":false,\"null\":false,\"number\":2,\"pair\":false,\"scalar\":true,\"string\":\"2ms\",\"table\":false,\"unit\":\"MS\",\"vector\":false}", re);
     }
     @Test
     public void test_BasicDuration_1() throws IOException {

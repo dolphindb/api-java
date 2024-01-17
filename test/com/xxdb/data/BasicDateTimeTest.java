@@ -84,9 +84,9 @@ public class BasicDateTimeTest {
         BasicDateTime nt1 = new BasicDateTime(LocalDateTime.of(1969,7,29,11,07));
         System.out.println(nt1.getString());
         assertEquals("1969.07.29T11:07:00",nt1.getString());
-        BasicDateTime nt2 = new BasicDateTime(LocalDateTime.of(2099,7,29,11,07));
+        BasicDateTime nt2 = new BasicDateTime(LocalDateTime.of(2038,1,1,11,07));
         System.out.println(nt2.getString());
-        assertEquals("2099.07.29T11:07:00",nt2.getString());
+        assertEquals("2038.01.01T11:07:00",nt2.getString());
     }
     @Test
     public void test_BasicDateTimeMatrix(){

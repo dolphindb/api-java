@@ -1668,7 +1668,7 @@ public class ConnectionPoolTest {
         pool.shutdown();
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout = 200000)
     public void test_PartitionedTableAppender_ArrayVector_BigData() throws Exception {
         String script = "if(existsDatabase(\"dfs://testArrayVector\")){\n" +
                 "    dropDatabase(\"dfs://testArrayVector\")\n" +

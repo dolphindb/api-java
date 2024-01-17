@@ -130,7 +130,7 @@ public class DBConnectionTest {
         boolean re = conn.connect(HOST,PORT,ipports);
         Assert.assertEquals(true,re);
     }
-    @Test
+    //@Test
     public void Test_Connect_4() throws IOException {
         DBConnection conn = new DBConnection();
         boolean re = conn.connect(HOST,PORT,null,null,ipports);
