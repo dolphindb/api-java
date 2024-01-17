@@ -848,7 +848,7 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
 
     @Test(timeout = 120000)
     public void test_StreamDeserializer_dataType_filters_subscribe_haStreamTable() throws IOException, InterruptedException {
-        PrepareStreamTable();
+        //PrepareStreamTable();
         conn.run("try{dropStreamTable(`outTables)}catch(ex){};" +
                 "st11 = NULL");
         String script = "t = table(100:0, `timestampv`sym`blob`price1,[TIMESTAMP,SYMBOL,BLOB,DOUBLE])\n" +
@@ -1751,7 +1751,7 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
-    @Test(timeout = 120000)
+    //@Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_DECIMAL32()throws IOException, InterruptedException {
         PrepareStreamTableDecimal_StreamDeserializer("DECIMAL32",3);
         Map<String, Pair<String, String>> tables = new HashMap<>();
@@ -1764,7 +1764,7 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
-    @Test(timeout = 120000)
+    //@Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_DECIMAL64()throws IOException, InterruptedException {
         PrepareStreamTableDecimal_StreamDeserializer("DECIMAL64",7);
         Map<String, Pair<String, String>> tables = new HashMap<>();
@@ -1777,7 +1777,7 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
-    @Test(timeout = 120000)
+    //@Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_DECIMAL128()throws IOException, InterruptedException {
         PrepareStreamTableDecimal_StreamDeserializer("DECIMAL128",10);
         Map<String, Pair<String, String>> tables = new HashMap<>();

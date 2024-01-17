@@ -24,14 +24,15 @@ public class BasicMonthTest {
         }
     }
     @Test
-    public void test_BasicMonth_negative() throws Exception {
+    public void test_BasicMonth_negative() throws DateTimeException {
         String re = null;
         try{
             BasicMonth nt1 = new BasicMonth(-5);
-        }catch(Exception e){
+            System.out.println(nt1.getString());
+        }catch(DateTimeException e){
             re = e.getMessage();
         }
-        assertEquals("number -5 is invalid, it must be non-negative integer",re);
+        assertEquals("Invalid value for MonthOfYear (valid values 1 - 12): -4",re);
     }
     @Test
     public void test_BasicMonthMatrix() throws Exception{

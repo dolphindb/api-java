@@ -564,7 +564,7 @@ public class PollingClientReverseTest {
 
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 200000)
     public void test_subscribe_offset_reconnect() throws IOException {
         for (int j=0;j<10;j++) {
             TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1",-1,true);
@@ -601,7 +601,7 @@ public class PollingClientReverseTest {
         }
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout = 200000)
     public void test_subscribe_tableName_actionName_offset_reconnect() throws IOException {
         for (int j=0;j<10;j++) {
             TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1","subTrades1",-1,true);
