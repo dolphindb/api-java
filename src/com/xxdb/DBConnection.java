@@ -622,7 +622,7 @@ public class DBConnection {
     }
 
     /**
-     * This method has been deprecated since 'Java API 1.30.22.4' and will be privated in the next version: 'Java API xxx'.
+     * This method has been deprecated since 'Java API 1.30.22.4'.
      * @param asynchronousTask
      * @param useSSL
      * @param compress
@@ -1031,7 +1031,7 @@ public class DBConnection {
     }
 
     public Entity run(String script, String tableName) throws IOException{
-        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, tableName, true);
+        return run(script, (ProgressListener) null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, tableName);
     }
 
     public Entity run(String script) throws IOException {
@@ -1089,7 +1089,7 @@ public class DBConnection {
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory) throws IOException{
-        return run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, "", true);
+        return run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, "");
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory, String tableName, boolean enableSeqNo) throws IOException{
@@ -1130,7 +1130,38 @@ public class DBConnection {
         }
     }
 
-
+    public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory, String tableName) throws IOException{
+        mutex_.lock();
+        try {
+            if (!nodes_.isEmpty()) {
+                long curSeqNo = newSeqNo();
+                while (!closed_) {
+                    try {
+                        return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, curSeqNo);
+                    } catch (IOException e) {
+                        if(curSeqNo>0)
+                            curSeqNo = -curSeqNo;
+                        Node node = new Node();
+                        if (connected()) {
+                            ExceptionType type = parseException(e.getMessage(), node);
+                            if (type == ExceptionType.ET_IGNORE)
+                                return new Void();
+                            else if (type == ExceptionType.ET_UNKNOW)
+                                throw e;
+                        }else {
+                            parseException(e.getMessage(), node);
+                        }
+                        switchDataNode(node);
+                    }
+                }
+                return null;
+            } else {
+                return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, 0);
+            }
+        } finally {
+            mutex_.unlock();
+        }
+    }
 
     public Entity tryRun(String function, List<Entity> arguments) throws IOException {
         return tryRun(function, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM);
@@ -1143,7 +1174,7 @@ public class DBConnection {
         if (!mutex_.tryLock())
             return null;
         try {
-            return run(function, arguments, priority, parallelism, fetchSize, true);
+            return run(function, arguments, priority, parallelism, fetchSize);
         } finally {
             mutex_.unlock();
         }
@@ -1158,7 +1189,7 @@ public class DBConnection {
     }
 
     public Entity run(String function, List<Entity> arguments, int priority, int parallelism) throws IOException {
-        return run(function, arguments, priority, parallelism, 0, true);
+        return run(function, arguments, priority, parallelism, 0);
     }
     private long newSeqNo(){
         mutex_.lock();
@@ -1209,7 +1240,38 @@ public class DBConnection {
         }
     }
 
-
+    public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize) throws IOException {
+        mutex_.lock();
+        try {
+            if (!nodes_.isEmpty()){
+                long seqNo = newSeqNo();
+                while (!closed_){
+                    try {
+                        return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false,seqNo);
+                    }catch (IOException e){
+                        if(seqNo > 0)
+                            seqNo = -seqNo;
+                        Node node = new Node();
+                        if (connected()){
+                            ExceptionType type = parseException(e.getMessage(), node);
+                            if (type == ExceptionType.ET_IGNORE)
+                                return new Void();
+                            else if (type == ExceptionType.ET_UNKNOW)
+                                throw e;
+                        }else {
+                            parseException(e.getMessage(), node);
+                        }
+                        switchDataNode(node);
+                    }
+                }
+                return null;
+            }else {
+                return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false, 0);
+            }
+        }finally {
+            mutex_.unlock();
+        }
+    }
 
     public void tryUpload(final Map<String, Entity> variableObjectMap) throws IOException {
         if (!mutex_.tryLock())
