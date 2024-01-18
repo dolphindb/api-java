@@ -56,7 +56,7 @@ DBConnection类提供如下主要方法：
 | 方法名        | 详情          |
 |:------------- |:-------------|
 |DBConnection([asynchronousTask, useSSL, compress, usePython, sqlStd])|构造对象|
-|connect(host, port, [username, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect])|将会话连接到DolphinDB服务器|
+|connect(host, port, [username, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, enableLoadBalance])|将会话连接到DolphinDB服务器|
 |login(username,password,enableEncryption)|登陆服务器|
 |run(script)|将脚本在DolphinDB服务器运行|
 |run(functionName,args)|调用DolphinDB服务器上的函数|
@@ -107,16 +107,34 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 
 若未使用用户名及密码连接成功，则脚本在Guest权限下运行。后续运行中若需要提升权限，可以使用 conn.login('admin','123456',true) 登录获取权限。
 
-若需要开启 API 高可用，则须设置 highAvailability=true。1.30.22.1及之前版本的 API 将随机选择一个可用节点进行连接；用户也可以通过 highAvailabilitySites 指定可连接的节点组，此时 API 将从 highAvailabilitySites 中随机选择可用节点进行连接。示例如下：
+若需要开启 API 高可用，则须设置 `highAvailability=true`。2.00.11.0版本之前，开启高可用模式即开启负载均衡模式；自2.00.11.0版本起，`connect` 方法新增参数 *enableLoadBalance*，用户可手动关闭高可用模式下的负载均衡功能，且该功能默认为关闭。
+
+**以下为同时开启高可用模式和负载均衡功能的情况：**
+
+1.30.22.1及之前版本的 API 将随机选择一个可用节点进行连接；用户也可以通过 highAvailabilitySites 指定可连接的节点组，此时 API 将从 highAvailabilitySites 中随机选择可用节点进行连接。
+
+1.30.22.2 版本起，API 将优先选择低负载节点，判断标准为：内存占用小于80%、连接数小于90% 且节点负载小于80%。即在开启高可用后，API 将优先随机选择一个低负载节点进行连接，若没有低负载节点，则将随机连接一个可用节点。若用户通过 highAvailabilitySites 指定了可连接的节点组，此时 API 将仍优先从highAvailabilitySites 中随机连接一个低负载节点，若无，则随机选择一个highAvailabilitySites 中的可用节点。
+
+注意：若 API 断开重连，将按照上述规则重新连接节点。
+
+示例如下：
+
+* 仅开启高可用模式，此时会开启负载均衡功能。
 
 ```java
 sites=["192.168.1.2:24120", "192.168.1.3:24120", "192.168.1.4:24120"]
 boolean success = conn.connect("192.168.1.2", 24120, "admin", "123456", highAvailability=true, highAvailabilitySites=sites);
 ```
 
-1.30.22.2 版本起，API 将优先选择低负载节点，判断标准为：内存占用小于80%、连接数小于90% 且节点负载小于80%。即在开启高可用后，API 将优先随机选择一个低负载节点进行连接，若没有低负载节点，则将随机连接一个可用节点。若用户通过 highAvailabilitySites 指定了可连接的节点组，此时 API 将仍优先从highAvailabilitySites 中随机连接一个低负载节点，若无，则随机选择一个highAvailabilitySites 中的可用节点。
+* 开启高可用模式，同时手动开启负载均衡功能。
 
-注意：若 API 断开重连，将按照上述规则重新连接节点。
+```java
+boolean success = conn.connect("192.168.1.2", 24120, "admin", "123456", enableHighAvailability=true, highAvailabilitySites=sites, enableLoadBalance);
+```
+
+**若开启高可用模式、同时不开启负载均衡功能**：API 将优先从 *highAvailabilitySites* 中随机选择一个可用节点进行连接。若未设置 *highAvailabilitySites*，则将随机选择一个集群中的节点。
+
+注意：不支持仅开启负载均衡功能的情况。
 
 当需要在应用程序里定义和使用自定义函数时，可以使用 initialScript 参数传入函数定义脚本。这样做的好处是：一、无需每次运行`run`函数的时候重复定义这些函数。二、API提供自动重连机制，断线之后重连时会产生新的会话。如果 initialScript 参数不为空，API会在新的会话中自动执行初始化脚本重新注册函数。在一些网络不是很稳定但是应用程序需要持续运行的场景里，这个参数会非常有用。
 ```java
@@ -223,6 +241,17 @@ for (int i = 0; i < 10; ++i)
 conn.run("script");
 ```
 
+2.00.11.0版本之前，`run` 方法自动开启 seqNo 功能。seqNo 是一个长整型，代表一个客户端的任务序号。若当前写入任务失败，则将重复提交该任务。但在部分情况下该功能会影响使用效果。例如，当一次性写入多个数据表的任务时会有可能发生丢失数据。
+
+自2.00.11.0版本起，run 方法支持参数 enableSeqNo，用户可关闭 seqNo 功能。方法如下：
+
+```java
+public Entity run(String script, ProgressListener listener, int priority, int 
+parallelism, int fetchSize, boolean clearSessionMemory, String tableName, boolean enableSeqNo)
+```
+
+用户手动关闭 seqNo 功能后，即可避免如数据丢失等不当情况。但若当前任务失败，则不会重复提交该任务。
+
 ## 4. 运行DolphinDB函数
 
 除了运行脚本之外，run命令还可以直接在远程DolphinDB服务器上执行DolphinDB内置或用户自定义函数。若`run`方法只有一个参数，则该参数为脚本；若`run`方法有两个参数，则第一个参数为DolphinDB中的函数名，第二个参数是该函数的参数。
@@ -289,6 +318,12 @@ public void testFunction() throws IOException{
     Vector result = (Vector)conn.run("add", args);
     System.out.println(result.getString());
 }
+```
+
+2.00.11.0版本之前，`run` 方法自动开启 seqNo 功能。具体可参见运行 DolphinDB 脚本小节，此处不再赘述。方法如下：
+
+```java
+public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize, boolean enableSeqNo)
 ```
 
 ## 5. 上传本地对象到DolphinDB服务器
