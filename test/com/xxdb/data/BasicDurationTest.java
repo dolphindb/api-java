@@ -30,7 +30,38 @@ public class BasicDurationTest {
         assertFalse(bd.equals(null));
         assertEquals("",new BasicDuration(Entity.DURATION.US,Integer.MIN_VALUE).getString());
     }
-
+    @Test
+    public void test_BasicDuration_unit_string() throws IOException {
+        BasicDuration bd1 = new BasicDuration("ns",3);
+        assertEquals("3ns",bd1.getJsonString());
+        BasicDuration bd2 = new BasicDuration("us",3);
+        assertEquals("3us",bd2.getJsonString());
+        BasicDuration bd3 = new BasicDuration("ms",3);
+        assertEquals("3ms",bd3.getJsonString());
+        BasicDuration bd4 = new BasicDuration("s",3);
+        assertEquals("3s",bd4.getJsonString());
+        BasicDuration bd5 = new BasicDuration("m",3);
+        assertEquals("3m",bd5.getJsonString());
+        BasicDuration bd6 = new BasicDuration("H",3);
+        assertEquals("3H",bd6.getJsonString());
+        BasicDuration bd7 = new BasicDuration("d",3);
+        assertEquals("3d",bd7.getJsonString());
+        BasicDuration bd8 = new BasicDuration("w",3);
+        assertEquals("3w",bd8.getJsonString());
+        BasicDuration bd9 = new BasicDuration("M",3);
+        assertEquals("3M",bd9.getJsonString());
+        BasicDuration bd10 = new BasicDuration("y",3);
+        assertEquals("3y",bd10.getJsonString());
+        BasicDuration bd11 = new BasicDuration("B",3);
+        assertEquals("3B",bd11.getJsonString());
+        String re = null;
+        try{
+            BasicDuration bd12 = new BasicDuration("b",3);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("error unit: b",re);
+    }
     @Test
     public void test_BasicDuration_write() throws IOException {
         BasicDuration bd = new BasicDuration(Entity.DURATION.MONTH,3);
@@ -481,6 +512,7 @@ public class BasicDurationTest {
         BasicDuration bd3 = (BasicDuration)conn.run("duration(-9999999XNYS)");
         assertEquals(-9999999,bd3.getDuration());
         assertEquals("-9999999XNYS",bd3.getString());
+        conn.close();
     }
     @Test
     public void test_BasicDuration_2() throws IOException {
@@ -536,6 +568,7 @@ public class BasicDurationTest {
         assertEquals("(3XNYS,3XNYS)",bdv.getString());
         System.out.println(((BasicDuration)bdv.get(0)).getDuration());
         assertEquals(3,((BasicDuration)bdv.get(0)).getDuration());
+        conn.close();
     }
     @Test
     public void test_BasicDurationVector_2() throws Exception {
@@ -545,5 +578,15 @@ public class BasicDurationTest {
         bdv.Append(new BasicDuration("XNYS",-999999999));
         assertEquals("[3XNYS,0XNYS,-999999999XNYS]",bdv.getString());
         assertEquals("3XNYS",bdv.get(0).getString());
+    }
+    @Test
+    public void test_BasicDurationVector_3() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        BasicDurationVector Vector1 = (BasicDurationVector) conn.run("-5AAAA:0AAAA");
+        BasicDurationVector Vector2 = (BasicDurationVector) conn.run("pair(-5AAAA,0AAAA)");
+        assertEquals("[-5AAAA,0AAAA]",Vector1.getString());
+        assertEquals("[-5AAAA,0AAAA]",Vector2.getString());
+        conn.close();
     }
 }

@@ -376,6 +376,7 @@ public class LoadBalanceTest {
         }
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",false);
+        connection1.run("sleep(1000)");
         BasicIntVector re = (BasicIntVector)connection1.run("EXEC connectionNum from rpc(getControllerAlias(),getClusterPerf) where port="+PORT);
         System.out.println(re.getInt(0));
         assertEquals(true,re.getInt(0)>100);
@@ -421,6 +422,7 @@ public class LoadBalanceTest {
             list.add(connection);
         }
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("sleep(2000);");
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",false);
         int port1 = port_list[1];

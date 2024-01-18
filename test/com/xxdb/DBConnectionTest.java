@@ -829,7 +829,6 @@ public class DBConnectionTest {
         dataStream.close();
         fos.close();
     }
-
     @Test
     public void testSymbolVector() throws IOException {
         BasicStringVector vector = (BasicStringVector) conn.run("rand(`IBM`MSFT`GOOG`BIDU,10)");
