@@ -10,32 +10,11 @@ public class SimpleDBConnectionPoolConfig {
     private boolean compress = false;
     private boolean useSSL = false;
     private boolean usePython = false;
-    private boolean loadBalance;
+    private boolean loadBalance = false;
     private boolean enableHighAvailability = false;
     private String[] highAvailabilitySites = null;
 
-    public SimpleDBConnectionPoolConfig(String hostName, int port, String userId, String password, int initialPoolSize, String initialScript, boolean compress, boolean useSSL, boolean usePython, boolean loadBalance, boolean enableHighAvailability, String[] highAvailabilitySites) {
-        this.hostName = hostName;
-        this.port = port;
-        this.userId = userId;
-        this.password = password;
-        this.initialPoolSize = initialPoolSize;
-        this.initialScript = initialScript;
-        this.compress = compress;
-        this.useSSL = useSSL;
-        this.usePython = usePython;
-        this.loadBalance = loadBalance;
-        this.enableHighAvailability = enableHighAvailability;
-        this.highAvailabilitySites = highAvailabilitySites;
-    }
-
-    public SimpleDBConnectionPoolConfig(String hostName, int port, String userId, String password, int initialPoolSize, boolean loadBalance) {
-        this.hostName = hostName;
-        this.port = port;
-        this.userId = userId;
-        this.password = password;
-        this.initialPoolSize = initialPoolSize;
-        this.loadBalance = loadBalance;
+    public SimpleDBConnectionPoolConfig() {
     }
 
     public String getHostName() {
