@@ -27,20 +27,11 @@ public class SimpleDBConnectionPool {
     private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
     public SimpleDBConnectionPool(SimpleDBConnectionPoolConfig simpleDBConnectionPoolConfig) {
-        if (Objects.isNull(simpleDBConnectionPoolConfig.getHostName()))
-            throw new RuntimeException("The host name can not be null.");
+        simpleDBConnectionPoolConfig.validate();
         this.hostName = simpleDBConnectionPoolConfig.getHostName();
-        if (simpleDBConnectionPoolConfig.getPort() <= 0)
-            throw new RuntimeException("The port needs to be greater than 0.");
         this.port = simpleDBConnectionPoolConfig.getPort();
-        if (Objects.isNull(simpleDBConnectionPoolConfig.getUserId()))
-            throw new RuntimeException("The user Id can not be null.");
         this.userId = simpleDBConnectionPoolConfig.getUserId();
-        if (Objects.isNull(simpleDBConnectionPoolConfig.getPassword()))
-            throw new RuntimeException("The password can not be null.");
         this.password = simpleDBConnectionPoolConfig.getPassword();
-        if (simpleDBConnectionPoolConfig.getInitialPoolSize() <= 0)
-            throw new RuntimeException("The number of connection pools needs to be greater than 0.");
         this.initialPoolSize = simpleDBConnectionPoolConfig.getInitialPoolSize();
         this.initialScript = simpleDBConnectionPoolConfig.getInitialScript();
         this.compress = simpleDBConnectionPoolConfig.isCompress();

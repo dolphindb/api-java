@@ -1,5 +1,9 @@
 package com.xxdb;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.Objects;
+
 public class SimpleDBConnectionPoolConfig {
     private String hostName;
     private int port;
@@ -13,6 +17,7 @@ public class SimpleDBConnectionPoolConfig {
     private boolean loadBalance = false;
     private boolean enableHighAvailability = false;
     private String[] highAvailabilitySites = null;
+    private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
     public SimpleDBConnectionPoolConfig() {
     }
@@ -30,6 +35,8 @@ public class SimpleDBConnectionPoolConfig {
     }
 
     public void setPort(int port) {
+        if (port <= 0)
+            throw new RuntimeException("The port should be positive.");
         this.port = port;
     }
 
@@ -54,6 +61,8 @@ public class SimpleDBConnectionPoolConfig {
     }
 
     public void setInitialPoolSize(int initialPoolSize) {
+        if (initialPoolSize <= 0)
+            throw new RuntimeException("The number of connection pools should be positive.");
         this.initialPoolSize = initialPoolSize;
     }
 
@@ -111,6 +120,28 @@ public class SimpleDBConnectionPoolConfig {
 
     public void setHighAvailabilitySites(String[] highAvailabilitySites) {
         this.highAvailabilitySites = highAvailabilitySites;
+    }
+
+    public void validate() {
+        hostName = getNullIfEmpty(hostName);
+        if (Objects.isNull(hostName)) {
+            hostName = "localhost";
+            log.warn("HostName not set, use the default value 'localhost'");
+        }
+        if (port <= 0)
+            throw new RuntimeException("The port should be positive.");
+        userId = getNullIfEmpty(userId);
+        if (Objects.isNull(userId))
+            log.warn("Logging in needs userId.");
+        password = getNullIfEmpty(password);
+        if (Objects.isNull(password))
+            log.warn("Logging in needs password.");
+        if (initialPoolSize <= 0)
+            throw new RuntimeException("The number of connection pools should be positive.");
+    }
+
+    private static String getNullIfEmpty(String text) {
+        return text == null ? null : (text.trim().isEmpty() ? null : text.trim());
     }
 }
 
