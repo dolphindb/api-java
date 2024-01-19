@@ -137,20 +137,20 @@ public class SimpleDBConnectionPool {
 
     }
 
-    public class PoolEntry extends DBConnection {
+    class PoolEntry extends DBConnection {
         AtomicBoolean inUse = new AtomicBoolean(false);
         String connectionName;
 
-        public PoolEntry(boolean useSSL, boolean compress, boolean usePython, String connectionName) {
+        PoolEntry(boolean useSSL, boolean compress, boolean usePython, String connectionName) {
             super(false, useSSL, compress, usePython);
             this.connectionName = connectionName;
         }
 
-        public String getConnectionName() {
+        String getConnectionName() {
             return connectionName;
         }
 
-        public boolean isIdle() {
+        boolean isIdle() {
             return !this.inUse.get();
         }
 

@@ -2,6 +2,7 @@ package com.xxdb;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.Objects;
 
 public class SimpleDBConnectionPoolConfig {
@@ -138,8 +139,10 @@ public class SimpleDBConnectionPoolConfig {
         password = getNullIfEmpty(password);
         if (Objects.isNull(password))
             log.warn("Logging in needs password.");
-        if (initialPoolSize <= 0)
-            throw new RuntimeException("The number of connection pools should be positive.");
+        if (initialPoolSize <= 0) {
+            initialPoolSize = 5;
+            log.warn("The number of connection pools is invalid, use the default value 5.");
+        }
     }
 
     private static String getNullIfEmpty(String text) {
