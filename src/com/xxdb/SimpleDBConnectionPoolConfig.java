@@ -128,8 +128,10 @@ public class SimpleDBConnectionPoolConfig {
             hostName = "localhost";
             log.warn("HostName not set, use the default value 'localhost'");
         }
-        if (port <= 0)
-            throw new RuntimeException("The port should be positive.");
+        if (port <= 0) {
+            port = 8848;
+            log.warn("invalid port, use the default value 8848.");
+        }
         userId = getNullIfEmpty(userId);
         if (Objects.isNull(userId))
             log.warn("Logging in needs userId.");
