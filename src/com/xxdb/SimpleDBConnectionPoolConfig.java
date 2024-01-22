@@ -2,6 +2,7 @@ package com.xxdb;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.net.util.IPAddressUtil;
 
 import java.util.Objects;
 
@@ -129,9 +130,11 @@ public class SimpleDBConnectionPoolConfig {
             hostName = "localhost";
             log.warn("HostName not set, use the default value 'localhost'");
         }
+        if (checkHostNameValid(hostName))
+            throw new RuntimeException(String.format("Invalid hostName: %s", hostName));
         if (port <= 0) {
             port = 8848;
-            log.warn("invalid port, use the default value 8848.");
+            log.warn("Invalid port, use the default value 8848.");
         }
         userId = getNullIfEmpty(userId);
         if (Objects.isNull(userId))
@@ -147,6 +150,18 @@ public class SimpleDBConnectionPoolConfig {
 
     private static String getNullIfEmpty(String text) {
         return text == null ? null : (text.trim().isEmpty() ? null : text.trim());
+    }
+
+    private static boolean checkHostNameValid(String hostName) {
+        return hostName.equals("localhost") ||
+                IPAddressUtil.isIPv4LiteralAddress(hostName) ||
+                IPAddressUtil.isIPv6LiteralAddress(hostName) ||
+                isDomain(hostName);
+    }
+
+    private static boolean isDomain(String hostName) {
+        String regex = "^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$";
+        return hostName.matches(regex);
     }
 }
 
