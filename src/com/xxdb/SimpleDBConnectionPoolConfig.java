@@ -1,5 +1,6 @@
 package com.xxdb;
 
+import org.apache.commons.validator.routines.InetAddressValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.net.util.IPAddressUtil;
@@ -130,7 +131,7 @@ public class SimpleDBConnectionPoolConfig {
             hostName = "localhost";
             log.warn("HostName not set, use the default value 'localhost'");
         }
-        if (checkHostNameValid(hostName))
+        if (!checkHostNameValid(hostName))
             throw new RuntimeException(String.format("Invalid hostName: %s", hostName));
         if (port <= 0) {
             port = 8848;
@@ -154,14 +155,36 @@ public class SimpleDBConnectionPoolConfig {
 
     private static boolean checkHostNameValid(String hostName) {
         return hostName.equals("localhost") ||
-                IPAddressUtil.isIPv4LiteralAddress(hostName) ||
+                isIPV4(hostName) ||
                 IPAddressUtil.isIPv6LiteralAddress(hostName) ||
                 isDomain(hostName);
     }
 
     private static boolean isDomain(String hostName) {
-        String regex = "^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$";
+        String regex = "^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$";
         return hostName.matches(regex);
+    }
+
+    private static boolean isIPV4(String hostName) {
+        String regex = "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$";
+        if (hostName == null || hostName.trim().isEmpty()) {
+            return false;
+        }
+        if (!hostName.matches(regex)) {
+            return false;
+        }
+        String[] parts = hostName.split("\\.");
+        try {
+            for (String segment : parts) {
+                if (Integer.parseInt(segment) > 255 ||
+                        (segment.length() > 1 && segment.startsWith("0"))) {
+                    return false;
+                }
+            }
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
     }
 }
 
