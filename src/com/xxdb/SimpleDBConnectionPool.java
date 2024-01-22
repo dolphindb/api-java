@@ -58,14 +58,26 @@ public class SimpleDBConnectionPool {
     }
 
     public int getActiveConnectionsCount() {
+        if (Objects.isNull(connectionPool))
+            return 0;
+        if (connectionPool.isClosed())
+            return 0;
         return connectionPool.getCount(false);
     }
 
     public int getIdleConnectionsCount() {
+        if (Objects.isNull(connectionPool))
+            return initialPoolSize;
+        if (connectionPool.isClosed())
+            return 0;
         return connectionPool.getCount(true);
     }
 
     public int getTotalConnectionsCount() {
+        if (Objects.isNull(connectionPool))
+            return initialPoolSize;
+        if (connectionPool.isClosed())
+            return 0;
         return connectionPool.getTotalCount();
     }
 
@@ -95,7 +107,6 @@ public class SimpleDBConnectionPool {
                     if (!poolEntry.connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, loadBalance)) {
                         log.error(String.format("Connection %s connect failure.", poolEntry.connectionName));
                     }
-                    ;
                     poolEntryArrayList.add(poolEntry);
                 }
                 poolEntries = new CopyOnWriteArrayList<>(poolEntryArrayList);
