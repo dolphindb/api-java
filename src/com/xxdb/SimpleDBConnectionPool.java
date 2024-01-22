@@ -57,12 +57,16 @@ public class SimpleDBConnectionPool {
         }
     }
 
-    public int getActiveConnections() {
+    public int getActiveConnectionsCount() {
         return connectionPool.getCount(false);
     }
 
-    public int getIdleConnections() {
+    public int getIdleConnectionsCount() {
         return connectionPool.getCount(true);
+    }
+
+    public int getTotalConnectionsCount() {
+        return connectionPool.getTotalCount();
     }
 
     public void close() {
@@ -117,6 +121,10 @@ public class SimpleDBConnectionPool {
                     count++;
             }
             return count;
+        }
+
+        int getTotalCount() {
+            return poolEntries.size();
         }
 
         void close() {
