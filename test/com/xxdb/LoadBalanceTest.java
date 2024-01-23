@@ -255,6 +255,7 @@ public class LoadBalanceTest {
             conn.connect(HOST, PORT, "admin", "123456", "", true,ipports);
             list1.add(conn);
         }
+        connection1.run("sleep(3000)");
         BasicTable re1 = (BasicTable)connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re1.rows(); i++) {
             System.out.println("port:"+ re1.getColumn(0).get(i)+" connectionNum:"+re1.getColumn(1).get(i));
@@ -296,6 +297,7 @@ public class LoadBalanceTest {
             conn.connect(HOST, PORT, "admin", "123456", "", true,ipports);
             list1.add(conn);
         }
+        connection1.run("sleep(3000)");
         BasicTable re2 = (BasicTable)connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re2.rows(); i++) {
             System.out.println("port:"+ re2.getColumn(0).get(i)+" connectionNum:"+re2.getColumn(1).get(i));
@@ -314,6 +316,7 @@ public class LoadBalanceTest {
         }
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, controller_port, "admin", "123456",true);
+        connection1.run("sleep(3000)");
         BasicTable re = (BasicTable)connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re.rows(); i++) {
             System.out.println("port:"+ re.getColumn(0).get(i)+" connectionNum:"+re.getColumn(1).get(i));
@@ -336,6 +339,7 @@ public class LoadBalanceTest {
         }
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",true);
+        connection1.run("sleep(3000)");
         BasicTable re = (BasicTable)connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re.rows(); i++) {
             System.out.println("port:"+ re.getColumn(0).get(i)+" connectionNum:"+re.getColumn(1).get(i));
@@ -357,6 +361,7 @@ public class LoadBalanceTest {
         }
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456", true);
+        connection1.run("sleep(3000)");
         BasicTable re = (BasicTable) connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re.rows(); i++) {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
@@ -376,7 +381,7 @@ public class LoadBalanceTest {
         }
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",false);
-        connection1.run("sleep(1000)");
+        connection1.run("sleep(3000)");
         BasicIntVector re = (BasicIntVector)connection1.run("EXEC connectionNum from rpc(getControllerAlias(),getClusterPerf) where port="+PORT);
         System.out.println(re.getInt(0));
         assertEquals(true,re.getInt(0)>100);
@@ -391,6 +396,7 @@ public class LoadBalanceTest {
         }
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",false);
+        connection1.run("sleep(3000)");
         BasicIntVector re = (BasicIntVector)connection1.run("EXEC connectionNum from rpc(getControllerAlias(),getClusterPerf) where port="+PORT);
         System.out.println(re.getInt(0));
         assertEquals(true,re.getInt(0)>100);
@@ -405,6 +411,7 @@ public class LoadBalanceTest {
         }
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",false);
+        connection1.run("sleep(3000)");
         BasicIntVector re = (BasicIntVector)connection1.run("EXEC connectionNum from rpc(getControllerAlias(),getClusterPerf) where port="+PORT);
         System.out.println(re.getInt(0));
         assertEquals(true,re.getInt(0)>100);
@@ -422,7 +429,7 @@ public class LoadBalanceTest {
             list.add(connection);
         }
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
-        controller_conn.run("sleep(2000);");
+        controller_conn.run("sleep(3000);");
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",false);
         int port1 = port_list[1];
@@ -446,6 +453,7 @@ public class LoadBalanceTest {
         }
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",true);
+        connection1.run("sleep(3000)");
         BasicTable re = (BasicTable) connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re.rows(); i++) {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
@@ -469,6 +477,7 @@ public class LoadBalanceTest {
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",false);
+        connection1.run("sleep(3000)");
         BasicTable re = (BasicTable) connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re.rows(); i++) {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
