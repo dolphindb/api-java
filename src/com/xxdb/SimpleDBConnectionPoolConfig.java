@@ -167,17 +167,13 @@ public class SimpleDBConnectionPoolConfig {
 
     private static boolean isIPV4(String hostName) {
         String regex = "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$";
-        if (hostName == null || hostName.trim().isEmpty()) {
-            return false;
-        }
         if (!hostName.matches(regex)) {
             return false;
         }
         String[] parts = hostName.split("\\.");
         try {
             for (String segment : parts) {
-                if (Integer.parseInt(segment) > 255 ||
-                        (segment.length() > 1 && segment.startsWith("0"))) {
+                if (Integer.parseInt(segment) > 255) {
                     return false;
                 }
             }
