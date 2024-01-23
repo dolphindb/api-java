@@ -135,11 +135,15 @@ public class SimpleDBConnectionPoolConfig {
             log.warn("Invalid port, use the default value 8848.");
         }
         userId = getNullIfEmpty(userId);
-        if (Objects.isNull(userId))
+        if (Objects.isNull(userId)){
+            userId = "";
             log.warn("Logging in needs userId.");
+        }
         password = getNullIfEmpty(password);
-        if (Objects.isNull(password))
+        if (Objects.isNull(password)){
+            password = "";
             log.warn("Logging in needs password.");
+        }
         if (initialPoolSize <= 0) {
             initialPoolSize = 5;
             log.warn("The number of connection pools is invalid, use the default value 5.");

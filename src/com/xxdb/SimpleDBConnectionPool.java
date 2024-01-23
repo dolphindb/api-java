@@ -3,14 +3,13 @@ package com.xxdb;
 import com.xxdb.data.BasicInt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SimpleDBConnectionPool {
-    private SimpleDBConnectionPoolImpl connectionPool;
+    private volatile SimpleDBConnectionPoolImpl connectionPool;
     private String hostName;
     private int port;
     private String userId;
@@ -40,6 +39,7 @@ public class SimpleDBConnectionPool {
         this.loadBalance = simpleDBConnectionPoolConfig.isLoadBalance();
         this.enableHighAvailability = simpleDBConnectionPoolConfig.isEnableHighAvailability();
         this.highAvailabilitySites = simpleDBConnectionPoolConfig.getHighAvailabilitySites();
+        this.connectionPool = new SimpleDBConnectionPoolImpl();
     }
 
     public DBConnection getConnection() {
@@ -58,41 +58,32 @@ public class SimpleDBConnectionPool {
     }
 
     public int getActiveConnectionsCount() {
-        if (Objects.isNull(connectionPool))
-            return 0;
-        if (connectionPool.isClosed())
-            return 0;
+        if (isClosed())
+            throw new RuntimeException("The connection pool has been closed.");
         return connectionPool.getCount(false);
     }
 
     public int getIdleConnectionsCount() {
-        if (Objects.isNull(connectionPool))
-            return initialPoolSize;
-        if (connectionPool.isClosed())
-            return 0;
+        if (isClosed())
+            throw new RuntimeException("The connection pool has been closed.");
         return connectionPool.getCount(true);
     }
 
     public int getTotalConnectionsCount() {
-        if (Objects.isNull(connectionPool))
-            return initialPoolSize;
-        if (connectionPool.isClosed())
-            return 0;
+        if (isClosed())
+            throw new RuntimeException("The connection pool has been closed.");
         return connectionPool.getTotalCount();
     }
 
     public void close() {
-        if (Objects.nonNull(connectionPool))
+        if (!isClosed())
             connectionPool.close();
         else
             log.info("The connection pool is closed.");
     }
 
     public boolean isClosed() {
-        if (Objects.nonNull(connectionPool))
-            return connectionPool.isClosed();
-        else
-            return false;
+        return connectionPool.isClosed();
     }
 
     protected class SimpleDBConnectionPoolImpl {
@@ -112,6 +103,7 @@ public class SimpleDBConnectionPool {
                 poolEntries = new CopyOnWriteArrayList<>(poolEntryArrayList);
             } catch (Exception e) {
                 log.error("Create connection pool failure, because " + e.getMessage());
+                throw new RuntimeException(e);
             }
         }
 
@@ -141,8 +133,10 @@ public class SimpleDBConnectionPool {
         void close() {
             if (!this.isShutdown.getAndSet(true)) {
                 log.info("Closing the connection pool......");
-                for (PoolEntry poolEntry : poolEntries) {
-                    poolEntry.release();
+                if (Objects.nonNull(poolEntries)){
+                    for (PoolEntry poolEntry : poolEntries) {
+                        poolEntry.release();
+                    }
                 }
                 log.info("Closing the connection pool finished.");
             } else {
