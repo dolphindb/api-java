@@ -1201,7 +1201,150 @@ public class SimpleDBConnectionPoolTest {
         }
         pool.close();
     }
-
+    @Test
+    public void test_SimpleDBConnectionPool_insert_into_dfs_arrayVector_all_dateType() throws IOException, InterruptedException {
+        config.setInitialPoolSize(100);
+        pool = new SimpleDBConnectionPool(config);
+        String script = "login(`admin, `123456); \n"+
+                "if(existsDatabase('dfs://test_append_type_tsdb1'))" +
+                "{ dropDatabase('dfs://test_append_type_tsdb1')} \n"+
+                "colNames=\"col\"+string(1..26);\n" +
+                "colTypes=[INT,BOOL[],CHAR[],SHORT[],INT[],LONG[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[],FLOAT[],DOUBLE[],UUID[],DATEHOUR[],IPADDR[],INT128[],COMPLEX[],POINT[],DECIMAL32(2)[],DECIMAL64(7)[],DECIMAL128(19)[]];\n" +
+                "t1 =  table(1:0,colNames,colTypes) ;\n" +
+                "db=database('dfs://test_append_type_tsdb1', RANGE, 0 5 11,,'TSDB') \n"+
+                "db.createPartitionedTable(t1, `pt, `col1,,`col1)\n";
+        DBConnection poolEntry = pool.getConnection();
+        poolEntry.run(script);
+        poolEntry.close();
+        DBConnection poolEntry1 = pool.getConnection();
+        String script1 = "col1 = 1..10;\n" +
+                "cbool = array(BOOL[]).append!(cut(take([true, false, NULL], 1000), 100))\n" +
+                "cchar = array(CHAR[]).append!(cut(take(char(-100..100 join NULL), 1000), 100))\n" +
+                "cshort = array(SHORT[]).append!(cut(take(short(-100..100 join NULL), 1000), 100))\n" +
+                "cint = array(INT[]).append!(cut(take(-100..100 join NULL, 1000), 100))\n" +
+                "clong = array(LONG[]).append!(cut(take(long(-100..100 join NULL), 1000), 100))\n" +
+                "cdouble = array(DOUBLE[]).append!(cut(take(-100..100 join NULL, 1000) + 0.254, 100))\n" +
+                "cfloat = array(FLOAT[]).append!(cut(take(-100..100 join NULL, 1000) + 0.254f, 100))\n" +
+                "cdate = array(DATE[]).append!(cut(take(2012.01.01..2012.02.29, 1000), 100))\n" +
+                "cmonth = array(MONTH[]).append!(cut(take(2012.01M..2013.12M, 1000), 100))\n" +
+                "ctime = array(TIME[]).append!(cut(take(09:00:00.000 + 0..99 * 1000, 1000), 100))\n" +
+                "cminute = array(MINUTE[]).append!(cut(take(09:00m..15:59m, 1000), 100))\n" +
+                "csecond = array(SECOND[]).append!(cut(take(09:00:00 + 0..999, 1000), 100))\n" +
+                "cdatetime = array(DATETIME[]).append!(cut(take(2012.01.01T09:00:00 + 0..999, 1000), 100))\n" +
+                "ctimestamp = array(TIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000 + 0..999 * 1000, 1000), 100))\n" +
+                "cnanotime =array(NANOTIME[]).append!(cut(take(09:00:00.000000000 + 0..999 * 1000000000, 1000), 100))\n" +
+                "cnanotimestamp = array(NANOTIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000000000 + 0..999 * 1000000000, 1000), 100))\n" +
+                "cuuid = array(UUID[]).append!(cut(take(uuid([\"5d212a78-cc48-e3b1-4235-b4d91473ee87\", \"5d212a78-cc48-e3b1-4235-b4d91473ee88\", \"5d212a78-cc48-e3b1-4235-b4d91473ee89\", \"\"]), 1000), 100))\n" +
+                "cdatehour = array(DATEHOUR[]).append!(cut(take(datehour(1..10 join NULL), 1000), 100))\n" +
+                "cipaddr = array(IPADDR[]).append!(cut(take(ipaddr([\"192.168.100.10\", \"192.168.100.11\", \"192.168.100.14\", \"\"]), 1000), 100))\n" +
+                "cint128 = array(INT128[]).append!(cut(take(int128([\"e1671797c52e15f763380b45e841ec32\", \"e1671797c52e15f763380b45e841ec33\", \"e1671797c52e15f763380b45e841ec35\", \"\"]), 1000), 100))\n" +
+                "ccomplex = array(	COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, 1000), 100))\n" +
+                "cpoint = array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, 1000), 100))\n" +
+                "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000) + 0.254, 3), 100))\n" +
+                "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, 1000) + 0.25467, 4), 100))\n" +
+                "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, 1000) + 0.25467, 5), 100))\n" +
+                "share table(col1, cbool, cchar, cshort, cint, clong, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cfloat, cdouble, cuuid, cdatehour,cipaddr, cint128,  ccomplex,cpoint,cdecimal32,cdecimal64,cdecimal128) as data;\n" +
+                "pt = loadTable(\"dfs://test_append_type_tsdb1\",`pt)\n"+
+                "pt.append!(data)\n";
+        poolEntry1.run(script1);
+        poolEntry1.close();
+        Thread [] threads = new Thread[100];
+        for (int i = 0; i < 100 ; ++i) {
+            threads[i] = new Thread(() -> {
+                DBConnection poolEntry2 =  pool.getConnection();
+                try {
+                    BasicTable re1 = (BasicTable)poolEntry2.run("select count(*) from loadTable(\"dfs://test_append_type_tsdb1\",`pt);");
+                    assertEquals("10",re1.getColumn(0).get(0).toString());
+                    BasicTable re2 = (BasicTable)poolEntry2.run("select * from loadTable(\"dfs://test_append_type_tsdb1\",`pt);");
+                    for(int j=0; j<10; j++){
+                        assertEquals(String.valueOf(j+1),re2.getColumn(0).get(j).toString());
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                poolEntry2.close();
+            });
+        }
+        for (int i = 0; i < 100; i++) {
+            threads[i].start();
+        }
+        for (int i = 0; i < 100; i++){
+            threads[i].join();
+        }
+        pool.close();
+    }
+    @Test
+    public void test_SimpleDBConnectionPool_insert_into_DimensionTable_arrayVector_all_dateType() throws IOException, InterruptedException {
+        config.setInitialPoolSize(100);
+        pool = new SimpleDBConnectionPool(config);
+        String script = "login(`admin, `123456); \n"+
+                "if(existsDatabase('dfs://test_append_type_tsdb1'))" +
+                "{ dropDatabase('dfs://test_append_type_tsdb1')} \n"+
+                "colNames=\"col\"+string(1..26);\n" +
+                "colTypes=[INT,BOOL[],CHAR[],SHORT[],INT[],LONG[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[],FLOAT[],DOUBLE[],UUID[],DATEHOUR[],IPADDR[],INT128[],COMPLEX[],POINT[],DECIMAL32(2)[],DECIMAL64(7)[],DECIMAL128(19)[]];\n" +
+                "t1 =  table(1:0,colNames,colTypes) ;\n" +
+                "db=database('dfs://test_append_type_tsdb1', RANGE, 0 5 11,,'TSDB') \n"+
+                "db.createTable(t1, `pt,,`col1)\n";
+        DBConnection poolEntry = pool.getConnection();
+        poolEntry.run(script);
+        poolEntry.close();
+        DBConnection poolEntry1 = pool.getConnection();
+        String script1 = "col1 = 1..10;\n" +
+                "cbool = array(BOOL[]).append!(cut(take([true, false, NULL], 1000), 100))\n" +
+                "cchar = array(CHAR[]).append!(cut(take(char(-100..100 join NULL), 1000), 100))\n" +
+                "cshort = array(SHORT[]).append!(cut(take(short(-100..100 join NULL), 1000), 100))\n" +
+                "cint = array(INT[]).append!(cut(take(-100..100 join NULL, 1000), 100))\n" +
+                "clong = array(LONG[]).append!(cut(take(long(-100..100 join NULL), 1000), 100))\n" +
+                "cdouble = array(DOUBLE[]).append!(cut(take(-100..100 join NULL, 1000) + 0.254, 100))\n" +
+                "cfloat = array(FLOAT[]).append!(cut(take(-100..100 join NULL, 1000) + 0.254f, 100))\n" +
+                "cdate = array(DATE[]).append!(cut(take(2012.01.01..2012.02.29, 1000), 100))\n" +
+                "cmonth = array(MONTH[]).append!(cut(take(2012.01M..2013.12M, 1000), 100))\n" +
+                "ctime = array(TIME[]).append!(cut(take(09:00:00.000 + 0..99 * 1000, 1000), 100))\n" +
+                "cminute = array(MINUTE[]).append!(cut(take(09:00m..15:59m, 1000), 100))\n" +
+                "csecond = array(SECOND[]).append!(cut(take(09:00:00 + 0..999, 1000), 100))\n" +
+                "cdatetime = array(DATETIME[]).append!(cut(take(2012.01.01T09:00:00 + 0..999, 1000), 100))\n" +
+                "ctimestamp = array(TIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000 + 0..999 * 1000, 1000), 100))\n" +
+                "cnanotime =array(NANOTIME[]).append!(cut(take(09:00:00.000000000 + 0..999 * 1000000000, 1000), 100))\n" +
+                "cnanotimestamp = array(NANOTIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000000000 + 0..999 * 1000000000, 1000), 100))\n" +
+                "cuuid = array(UUID[]).append!(cut(take(uuid([\"5d212a78-cc48-e3b1-4235-b4d91473ee87\", \"5d212a78-cc48-e3b1-4235-b4d91473ee88\", \"5d212a78-cc48-e3b1-4235-b4d91473ee89\", \"\"]), 1000), 100))\n" +
+                "cdatehour = array(DATEHOUR[]).append!(cut(take(datehour(1..10 join NULL), 1000), 100))\n" +
+                "cipaddr = array(IPADDR[]).append!(cut(take(ipaddr([\"192.168.100.10\", \"192.168.100.11\", \"192.168.100.14\", \"\"]), 1000), 100))\n" +
+                "cint128 = array(INT128[]).append!(cut(take(int128([\"e1671797c52e15f763380b45e841ec32\", \"e1671797c52e15f763380b45e841ec33\", \"e1671797c52e15f763380b45e841ec35\", \"\"]), 1000), 100))\n" +
+                "ccomplex = array(	COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, 1000), 100))\n" +
+                "cpoint = array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, 1000), 100))\n" +
+                "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000) + 0.254, 3), 100))\n" +
+                "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, 1000) + 0.25467, 4), 100))\n" +
+                "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, 1000) + 0.25467, 5), 100))\n" +
+                "share table(col1, cbool, cchar, cshort, cint, clong, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cfloat, cdouble, cuuid, cdatehour,cipaddr, cint128,  ccomplex,cpoint,cdecimal32,cdecimal64,cdecimal128) as data;\n" +
+                "pt = loadTable(\"dfs://test_append_type_tsdb1\",`pt)\n"+
+                "pt.append!(data)\n";
+        poolEntry1.run(script1);
+        poolEntry1.close();
+        Thread [] threads = new Thread[100];
+        for (int i = 0; i < 100 ; ++i) {
+            threads[i] = new Thread(() -> {
+                DBConnection poolEntry2 =  pool.getConnection();
+                try {
+                    BasicTable re1 = (BasicTable)poolEntry2.run("select count(*) from loadTable(\"dfs://test_append_type_tsdb1\",`pt);");
+                    assertEquals("10",re1.getColumn(0).get(0).toString());
+                    BasicTable re2 = (BasicTable)poolEntry2.run("select * from loadTable(\"dfs://test_append_type_tsdb1\",`pt);");
+                    for(int j=0; j<10; j++){
+                        assertEquals(String.valueOf(j+1),re2.getColumn(0).get(j).toString());
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                poolEntry2.close();
+            });
+        }
+        for (int i = 0; i < 100; i++) {
+            threads[i].start();
+        }
+        for (int i = 0; i < 100; i++){
+            threads[i].join();
+        }
+        pool.close();
+    }
     @Test
     public void test_SimpleDBConnectionPool_insert_into_dfs_all_dateType() throws IOException, InterruptedException {
         config.setInitialPoolSize(100);
