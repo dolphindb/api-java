@@ -137,12 +137,12 @@ public class SimpleDBConnectionPoolConfig {
         userId = getNullIfEmpty(userId);
         if (Objects.isNull(userId)){
             userId = "";
-            log.warn("Log in needs userId.");
+            log.warn("Login needs userId.");
         }
         password = getNullIfEmpty(password);
         if (Objects.isNull(password)){
             password = "";
-            log.warn("Log in needs password.");
+            log.warn("Login needs password.");
         }
         if (initialPoolSize <= 0) {
             initialPoolSize = 5;
