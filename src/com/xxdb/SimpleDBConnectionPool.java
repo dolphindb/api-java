@@ -3,6 +3,8 @@ package com.xxdb;
 import com.xxdb.data.BasicInt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -95,7 +97,9 @@ public class SimpleDBConnectionPool {
             try {
                 for (int i = 0; i < initialPoolSize; i++) {
                     PoolEntry poolEntry = new PoolEntry(useSSL, compress, usePython, String.format("DolphinDBConnection_%d", i + 1));
-                    if (!poolEntry.connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, loadBalance)) {
+                    if (poolEntry.connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, loadBalance)) {
+                        poolEntry.isFirstLogin.set(false);
+                    }else {
                         log.error(String.format("Connection %s connect failure.", poolEntry.connectionName));
                     }
                     poolEntryArrayList.add(poolEntry);
@@ -156,6 +160,8 @@ public class SimpleDBConnectionPool {
 
     class PoolEntry extends DBConnection {
         AtomicBoolean inUse = new AtomicBoolean(false);
+        AtomicBoolean isFirstConnect = new AtomicBoolean(true);
+        AtomicBoolean isFirstLogin = new AtomicBoolean(true);
         String connectionName;
 
         PoolEntry(boolean useSSL, boolean compress, boolean usePython, String connectionName) {
@@ -169,6 +175,27 @@ public class SimpleDBConnectionPool {
 
         boolean isIdle() {
             return !this.inUse.get();
+        }
+
+        @Override
+        public void setLoadBalance(boolean loadBalance) {
+            throw new RuntimeException("The loadBalance configuration of connection in connection pool can only be set in SimpleDBConnectionPoolConfig.");
+        }
+
+        @Override
+        public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance) throws IOException {
+            if (isFirstConnect.compareAndSet(true, false))
+                return super.connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, enableLoadBalance);
+            else
+                throw new RuntimeException("The connection in connection pool can only connect by pool.");
+        }
+
+        @Override
+        public void login(String userId, String password, boolean enableEncryption) throws IOException {
+            if (isFirstLogin.get())
+                super.login(userId, password, enableEncryption);
+            else
+                throw new RuntimeException("The connection in connection pool can only login by pool.");
         }
 
         @Override
