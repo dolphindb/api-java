@@ -3,7 +3,6 @@ package com.xxdb;
 import com.xxdb.data.BasicInt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -157,16 +156,11 @@ public class SimpleDBConnectionPool {
 
     class PoolEntry extends DBConnection {
         AtomicBoolean inUse = new AtomicBoolean(false);
-        volatile boolean isFirstConnect = true;
         String connectionName;
 
         PoolEntry(boolean useSSL, boolean compress, boolean usePython, String connectionName) {
             super(false, useSSL, compress, usePython);
             this.connectionName = connectionName;
-        }
-
-        String getConnectionName() {
-            return connectionName;
         }
 
         boolean isIdle() {
