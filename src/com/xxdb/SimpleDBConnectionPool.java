@@ -109,7 +109,7 @@ public class SimpleDBConnectionPool {
                 if (userId.isEmpty() || password.isEmpty())
                     log.warn("Create connection pool successfully without log in.");
                 else
-                    log.info("Create connection pool successfully with log in.");
+                    log.info(String.format("Create connection pool successfully with user: %s log in.", userId));
             } catch (Exception e) {
                 log.error("Create connection pool failure, because " + e.getMessage());
                 throw new RuntimeException(e);
@@ -202,14 +202,14 @@ public class SimpleDBConnectionPool {
         @Override
         public void close() {
             if (isBusy())
-                log.error("Cannot release the connection,is running now.");
+                log.error("Cannot release the connection, is running now.");
             else {
                 try {
                     BasicInt ret = (BasicInt) run("1+1", true);
                     if (!ret.isNull() && (ret.getInt() == 2))
                         inUse.compareAndSet(true, false);
                     else
-                        log.error("Cannot release memory,release connection failure.");
+                        log.error("Cannot release memory, release connection failure.");
                 } catch (Exception e) {
                     log.error("Cannot release memory, because " + e.getMessage());
                 }

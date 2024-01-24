@@ -122,11 +122,11 @@ public class SimpleDBConnectionPoolConfig {
         this.highAvailabilitySites = highAvailabilitySites;
     }
 
-    public void validate() {
+    protected void validate() {
         hostName = getNullIfEmpty(hostName);
         if (Objects.isNull(hostName)) {
             hostName = "localhost";
-            log.warn("HostName not set, use the default value 'localhost'");
+            log.warn("The param hostName not set, use the default value 'localhost'");
         }
         if (!checkHostNameValid(hostName))
             throw new RuntimeException(String.format("Invalid hostName: %s", hostName));
@@ -137,12 +137,12 @@ public class SimpleDBConnectionPoolConfig {
         userId = getNullIfEmpty(userId);
         if (Objects.isNull(userId)){
             userId = "";
-            log.warn("Logging in needs userId.");
+            log.warn("Log in needs userId.");
         }
         password = getNullIfEmpty(password);
         if (Objects.isNull(password)){
             password = "";
-            log.warn("Logging in needs password.");
+            log.warn("Log in needs password.");
         }
         if (initialPoolSize <= 0) {
             initialPoolSize = 5;
