@@ -127,15 +127,20 @@ public class SimpleDBConnectionPoolTest {
     @Test
     public void test_SimpleDBConnectionPool_config_userId_null() throws IOException, InterruptedException {
         SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
-        config1.setHostName(controller_host);
-        config1.setPort(controller_port);
+        config1.setHostName(HOST);
+        config1.setPort(PORT);
         //config1.setUserId("admin");
         //config1.setPassword("123456");
         config1.setInitialPoolSize(5);
         pool = new SimpleDBConnectionPool(config1);
         DBConnection poolEntity = pool.getConnection();
-        BasicBoolean re = (BasicBoolean)poolEntity.run("isLoggedIn(`admin)");
-        assertEquals(false,re.getBoolean());
+        String re = null;
+        try{
+            poolEntity.run("getGroupList();");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals(true,re.contains("getGroupList() => Only administrators execute function getGroupList' script: 'getGroupList();"));
     }
     @Test
     public void test_SimpleDBConnectionPool_config_userId_not_admin() throws IOException, InterruptedException {
@@ -175,8 +180,13 @@ public class SimpleDBConnectionPoolTest {
         config1.setInitialPoolSize(5);
         pool = new SimpleDBConnectionPool(config1);
         DBConnection poolEntity = pool.getConnection();
-        BasicBoolean re = (BasicBoolean)poolEntity.run("isLoggedIn(`test)");
-        assertEquals(false,re.getBoolean());
+        String re = null;
+        try{
+            poolEntity.run("getGroupList();");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals(true,re.contains("getGroupList() => Only administrators execute function getGroupList' script: 'getGroupList();"));
     }
 
     @Test
@@ -364,6 +374,7 @@ public class SimpleDBConnectionPoolTest {
         assertEquals(100, pool.getTotalConnectionsCount());
         assertEquals(true, config1.isLoadBalance());
         DBConnection poolEntity = pool.getConnection();
+        poolEntity.run("sleep(2000)");
         BasicTable re = (BasicTable) poolEntity.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re.rows(); i++) {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
@@ -388,7 +399,7 @@ public class SimpleDBConnectionPoolTest {
         assertEquals(100,pool.getTotalConnectionsCount());
         assertEquals(false,config1.isLoadBalance());
         DBConnection poolEntity = pool.getConnection();
-        poolEntity.run("2000");
+        poolEntity.run("sleep(2000)");
         BasicTable re = (BasicTable) poolEntity.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re.rows(); i++) {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
@@ -443,6 +454,7 @@ public class SimpleDBConnectionPoolTest {
         DBConnection poolEntity = pool.getConnection();
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
         int port1 = port_list[1];
+        poolEntity.run("sleep(2000)");
         BasicTable re = (BasicTable) poolEntity.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re.rows(); i++) {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
@@ -471,10 +483,11 @@ public class SimpleDBConnectionPoolTest {
         config1.setHighAvailabilitySites(ipports);
         pool = new SimpleDBConnectionPool(config1);
         assertEquals(100,pool.getTotalConnectionsCount());
-        assertEquals(false,config1.isLoadBalance());
+        assertEquals(true,config1.isLoadBalance());
         DBConnection poolEntity = pool.getConnection();
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
         int port1 = port_list[1];
+        poolEntity.run("sleep(2000)");
         BasicTable re = (BasicTable) poolEntity.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re.rows(); i++) {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
@@ -482,6 +495,7 @@ public class SimpleDBConnectionPoolTest {
             String connectionNum = re.getColumn(1).get(i).toString();
             if(Integer.valueOf(port) != PORT) {
                 assertEquals(true, Integer.valueOf(connectionNum) > 25);
+                assertEquals(true, Integer.valueOf(connectionNum) <= 50);
             }
         }
         controller_conn.close();
@@ -1190,7 +1204,7 @@ public class SimpleDBConnectionPoolTest {
 
     @Test
     public void test_SimpleDBConnectionPool_insert_into_dfs_all_dateType() throws IOException, InterruptedException {
-        config.setInitialPoolSize(10);
+        config.setInitialPoolSize(100);
         pool = new SimpleDBConnectionPool(config);
         String script = "login(`admin, `123456); \n"+
                 "if(existsDatabase('dfs://test_append_type_tsdb1'))" +
@@ -1239,8 +1253,8 @@ public class SimpleDBConnectionPoolTest {
                     "pt.append!(data)\n";
         poolEntry1.run(script1);
         poolEntry1.close();
-        Thread [] threads = new Thread[10];
-        for (int i = 0; i < 10 ; ++i) {
+        Thread [] threads = new Thread[100];
+        for (int i = 0; i < 100 ; ++i) {
             threads[i] = new Thread(() -> {
                 DBConnection poolEntry2 =  pool.getConnection();
                 try {
@@ -1256,10 +1270,86 @@ public class SimpleDBConnectionPoolTest {
                 poolEntry2.close();
             });
         }
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 100; i++) {
             threads[i].start();
         }
-        for (int i = 0; i < 10; i++){
+        for (int i = 0; i < 100; i++){
+            threads[i].join();
+        }
+        pool.close();
+    }
+    @Test
+    public void test_SimpleDBConnectionPool_insert_into_DimensionTable_all_dateType() throws IOException, InterruptedException {
+        config.setInitialPoolSize(100);
+        pool = new SimpleDBConnectionPool(config);
+        String script = "login(`admin, `123456); \n"+
+                "if(existsDatabase('dfs://test_append_type_tsdb1'))" +
+                "{ dropDatabase('dfs://test_append_type_tsdb1')} \n"+
+                "n=1000;\n" +
+                "t1 = table(n:0, `col1`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`uuidv`datehourv`ippaddrv`int128v`blobv`decimal32v`decimal64v`decimal128v, [INT, BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, SYMBOL, STRING, UUID, DATEHOUR, IPADDR, INT128, BLOB, DECIMAL32(3), DECIMAL64(8), DECIMAL128(10)]);\n" +
+                "share t1 as tt;\n" +
+                "db=database('dfs://test_append_type_tsdb1', RANGE, 0 100 200 300 400 500 600 700 800 900 1001,,'TSDB') \n"+
+                "db.createTable(t1, `pt,,`col1)\n";
+        DBConnection poolEntry = pool.getConnection();
+        poolEntry.run(script);
+        poolEntry.close();
+        DBConnection poolEntry1 = pool.getConnection();
+        String script1 = "n = 1000;\n" +
+                "col1 = 1..1000;\n" +
+                "boolv = bool(rand([true, false, NULL], n));\n" +
+                "charv = char(rand(rand(-100..100, 1000) join take(char(), 4), n));\n" +
+                "shortv = short(rand(rand(-100..100, 1000) join take(short(), 4), n));\n" +
+                "intv = int(rand(rand(-100..100, 1000) join take(int(), 4), n));\n" +
+                "longv = long(rand(rand(-100..100, 1000) join take(long(), 4), n));\n" +
+                "doublev = double(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n));\n" +
+                "floatv = float(rand(rand(-100..100, 1000)*0.23 join take(float(), 4), n));\n" +
+                "datev = date(rand(rand(-100..100, 1000) join take(date(), 4), n));\n" +
+                "monthv = month(rand(1967.12M+rand(-100..100, 1000) join take(month(), 4), n));\n" +
+                "timev = time(rand(rand(0..100, 1000) join take(time(), 4), n));\n" +
+                "minutev = minute(rand(12:13m+rand(-100..100, 1000) join take(minute(), 4), n));\n" +
+                "secondv = second(rand(12:13:12+rand(-100..100, 1000) join take(second(), 4), n));\n" +
+                "datetimev = datetime(rand(1969.12.23+rand(-100..100, 1000) join take(datetime(), 4), n));\n" +
+                "timestampv = timestamp(rand(1970.01.01T00:00:00.023+rand(-100..100, 1000) join take(timestamp(), 4), n));\n" +
+                "nanotimev = nanotime(rand(12:23:45.452623154+rand(-100..100, 1000) join take(nanotime(), 4), n));\n" +
+                "nanotimestampv = nanotimestamp(rand(rand(-100..100, 1000) join take(nanotimestamp(), 4), n));\n" +
+                "symbolv = rand((\"syms\"+string(rand(100, 1000))) join take(string(), 4), n);\n" +
+                "stringv = rand((\"stringv\"+string(rand(100, 1000))) join take(string(), 4), n);\n" +
+                "uuidv = rand(rand(uuid(), 1000) join take(uuid(), 4), n);\n" +
+                "datehourv = datehour(rand(datehour(1969.12.31T12:45:12)+rand(-100..100, 1000) join take(datehour(), 4), n));\n" +
+                "ippaddrv = rand(rand(ipaddr(), 1000) join take(ipaddr(), 4), n);\n" +
+                "int128v = rand(rand(int128(), 1000) join take(int128(), 4), n);\n" +
+                "blobv = blob(string(rand((\"blob\"+string(rand(100, 1000))) join take(\"\", 4), n)));\n" +
+                "complexv = rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n);\n" +
+                "pointv = rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n);\n" +
+                "decimal32v = decimal32(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 3);\n" +
+                "decimal64v = decimal64(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 8);\n" +
+                "decimal128v = decimal128(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 10);\n" +
+                "share table(col1, boolv, charv, intv, shortv, longv, floatv, doublev, datev, monthv, timev, minutev, secondv, datetimev, timestampv, nanotimev, nanotimestampv, symbolv, stringv, uuidv, datehourv, ippaddrv, int128v, blobv, decimal32v, decimal64v, decimal128v) as data;\n"+
+                "pt = loadTable(\"dfs://test_append_type_tsdb1\",`pt)\n"+
+                "pt.append!(data)\n";
+        poolEntry1.run(script1);
+        poolEntry1.close();
+        Thread [] threads = new Thread[100];
+        for (int i = 0; i < 100 ; ++i) {
+            threads[i] = new Thread(() -> {
+                DBConnection poolEntry2 =  pool.getConnection();
+                try {
+                    BasicTable re1 = (BasicTable)poolEntry2.run("select count(*) from loadTable(\"dfs://test_append_type_tsdb1\",`pt);");
+                    assertEquals("1000",re1.getColumn(0).get(0).toString());
+                    BasicTable re2 = (BasicTable)poolEntry2.run("select * from loadTable(\"dfs://test_append_type_tsdb1\",`pt);");
+                    for(int j=0; j<1000; j++){
+                        assertEquals(String.valueOf(j+1),re2.getColumn(0).get(j).toString());
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                poolEntry2.close();
+            });
+        }
+        for (int i = 0; i < 100; i++) {
+            threads[i].start();
+        }
+        for (int i = 0; i < 100; i++){
             threads[i].join();
         }
         pool.close();
