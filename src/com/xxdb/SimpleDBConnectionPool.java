@@ -100,11 +100,11 @@ public class SimpleDBConnectionPool {
                     }
                     poolEntryArrayList.add(poolEntry);
                 }
+                poolEntries = new CopyOnWriteArrayList<>(poolEntryArrayList);
                 if (userId.isEmpty() || password.isEmpty())
                     log.warn("Create connection pool successfully without log in.");
                 else
                     log.info("Create connection pool successfully with log in.");
-                poolEntries = new CopyOnWriteArrayList<>(poolEntryArrayList);
             } catch (Exception e) {
                 log.error("Create connection pool failure, because " + e.getMessage());
                 throw new RuntimeException(e);
