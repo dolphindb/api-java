@@ -142,39 +142,6 @@ public class TopicManager {
         }
     }
 
-
-    private class SiteInfo {
-        ConcurrentHashMap<String, TopicInfo> topicQueue;
-        private int reconnectStat;
-
-        public SiteInfo() {
-            topicQueue = new ConcurrentHashMap<>();
-            reconnectStat = 0;
-        }
-
-        public void addTopic(String topic) {
-            if (!topicQueue.containsKey(topic)) {
-                topicQueue.put(topic, new TopicInfo(topic));
-            }
-        }
-
-        public TopicInfo getTopic(String topic) {
-            if (topicQueue.containsKey(topic))
-                return topicQueue.get(topic);
-            else
-                return null;
-        }
-
-        public int getReconnectStat() {
-            return this.reconnectStat;
-        }
-
-        public void setReconnectStat(int state) {
-            this.reconnectStat = state;
-        }
-    }
-
-
     public static class Utils {
         public static String getSiteFromTopic(String topic) {
             String site = topic.substring(0, topic.indexOf("/"));

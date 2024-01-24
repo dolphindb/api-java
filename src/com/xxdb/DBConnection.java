@@ -58,10 +58,6 @@ public class DBConnection {
 
     private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
-    private enum ServerExceptionState {
-        NEW_LEADER, WAIT, CONN_FAIL, OTHER_EXCEPTION, DATA_NODE_NOT_AVAILABLE
-    }
-
     private enum ExceptionType{
         ET_IGNORE(0),
         ET_UNKNOW(1),
