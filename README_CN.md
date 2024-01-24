@@ -5,7 +5,8 @@
   - [1. Java API 概述](#1-java-api-概述)
   - [2. 建立DolphinDB连接](#2-建立dolphindb连接)
     - [2.1 DBConnection](#21-dbconnection)
-    - [2.2 ExclusiveDBConnectionPool](#22-exclusivedbconnectionpool)
+    - [2.2 SimpleDBConnectionPool 连接池](#22-simpledbconnectionpool-连接池)
+    - [2.3 ExclusiveDBConnectionPool 任务池](#23-exclusivedbconnectionpool-任务池)
   - [3.运行DolphinDB脚本](#3运行dolphindb脚本)
   - [4. 运行DolphinDB函数](#4-运行dolphindb函数)
   - [5. 上传本地对象到DolphinDB服务器](#5-上传本地对象到dolphindb服务器)
@@ -29,13 +30,13 @@
 
 ## 1. Java API 概述
 
-Java API需要运行在Java 1.8或以上环境。使用Java API前，引入以下maven依赖（以1.30.22.1为例）
+Java API需要运行在Java 1.8或以上环境。使用Java API前，引入以下maven依赖（以2.00.11.1为例）
 ```java
 <!-- https://mvnrepository.com/artifact/com.dolphindb/dolphindb-javaapi -->
 <dependency>
     <groupId>com.dolphindb</groupId>
     <artifactId>dolphindb-javaapi</artifactId>
-    <version>1.30.22.1</version>
+    <version>2.00.11.1</version>
 </dependency>
 ```
 Java API遵循面向接口编程的原则。Java API使用接口类Entity来表示DolphinDB返回的所有数据类型。在Entity接口类的基础上，根据DolphinDB的数据类型，Java API提供了7种拓展接口，分别是scalar，vector，matrix，set，dictionary，table和chart。这些接口类都包含在com.xxdb.data包中。
@@ -137,15 +138,103 @@ boolean success = conn.connect("192.168.1.2", 24120, "admin", "123456", enableHi
 注意：不支持仅开启负载均衡功能的情况。
 
 当需要在应用程序里定义和使用自定义函数时，可以使用 initialScript 参数传入函数定义脚本。这样做的好处是：一、无需每次运行`run`函数的时候重复定义这些函数。二、API提供自动重连机制，断线之后重连时会产生新的会话。如果 initialScript 参数不为空，API会在新的会话中自动执行初始化脚本重新注册函数。在一些网络不是很稳定但是应用程序需要持续运行的场景里，这个参数会非常有用。
+
 ```java
 boolean success = conn.connect("localhost", 8848, "admin", "123456", "");
 ```
-### 2.2 ExclusiveDBConnectionPool
-ExclusiveDBConnectionPool可以复用多个DBConnection。可以直接使用ExclusiveDBConnectionPool.run执行命令，也可以通过execute方法执行任务，然后使用BasicDBTask的getResults方法获取该任务的执行结果。
+
+### 2.2 SimpleDBConnectionPool 连接池
+
+Java API 自 2.00.11.1 版本起提供 `SimpleDBConnectionPool` 连接池，以此对连接进行管理和重用。
+
+在使用时，先通过 `SimpleDBConnectionPoolConfig` 设置连接池的具体参数，然后在构造连接池时，将 `SimpleDBConnectionPoolConfig` 作为 `SimpleDBConnectionPool` 的配置参数。`SimpleDBConnectionPool` 将根据传递的参数进行解析、初始化连接等操作。连接池创建成功后，用户可以通过 `getConnection` 方法获取一个连接进行使用。使用完毕后，用户可通过 `DBConnection.close()` 释放连接。连接重回连接池后属于闲置状态，之后可以再次被获取使用。
+
+**SimpleDBConnectionPoolConfig 说明**
+
+`SimpleDBConnectionPoolConfig` 仅可通过 setXxx 方法来配置参数，示例如下：
+
+```java
+SimpleDBConnectionPoolConfig config = new SimpleDBConnectionPoolConfig();
+        config.setHostName("1sss");
+        config.setPort(PORT);
+        config.setUserId("admin");
+        config.setPassword("123456");
+        config.setInitialPoolSize(5);
+        config.setEnableHighAvailability(false);
+```
+
+目前 `SimpleDBConnectionPoolConfig` 支持的参数如下：
+
+- `hostName` ：IP，默认为 localhost。
+- `port` ：端口，默认为 8848。
+- `userId`：用户名，默认为””。
+- `password`：密码，默认为””。用户名和密码仅填写其中一个，创建连接不登录；用户名和密码填写正确，创建连接且登录；用户名和密码填写错误，创建连接失败
+- `initialPoolSize`：连接池的初始连接数，默认为 5。
+- `initialScript`：表示初始化的脚本，默认为空。
+- `compress`：表示是否在下载时对数据进行压缩，默认值为 false。该模式适用于大数据量的查询。压缩数据后再传输，这可以节省网络带宽，但会增加 DolphinDB、API 的计算量。
+- `useSSL`：表示是否使用 SSL 连接，默认值为 false 。注意：若要开启 SSL 连接，服务器端的配置文件（如果是单节点为 dolphindb.cfg，如果是集群为 cluster.cfg）须同时配置功能参数 `enableHTTPS=true`。
+- `usePython`：表示是否开启 Python 解析，默认值为 false。
+- `loadBalance`：表示是否开启负载均衡，默认为 false，为 true 时注意：
+  - 如果未指定`highAvailabilitySites` ， Java API 会对 server 集群的所有节点采取轮询策略的负载均衡；
+  - 如果指定了`highAvailabilitySites` ，Java API 将对 `highAvailabilitySites` 数组中的连接节点执行轮询策略的负载均衡。
+- `enableHighAvailability`：表示是否开启高可用，默认为 false。
+- `highAvailabilitySites`：表示开启高可用情况下指定填入的主机名和端口号数组，默认为 null。
+
+`SimpleDBConnectionPool` **类的相关方法**
+
+| **方法名**                                  | **详情**      |
+| ---------------------------------------- | ----------- |
+| SimpleDBConnectionPool(simpleDBConnectionPoolConfig) | 构造方法        |
+| DBConnection getConnection()             | 从连接池中获取一个连接 |
+| close()                                  | 关闭连接池       |
+| isClosed()                               | 查看连接池是否关闭   |
+| getActiveConnectionsCount()              | 获取当前使用中的连接数 |
+| getIdleConnectionsCount()                | 获取当前空闲的连接数  |
+| getTotalConnectionsCount()               | 获取总连接数      |
+| DBConnection.close()                     | 释放当前连接      |
+
+注意：该处的 `DBConnection.close()` 方法区别于 DBConnection 类中关闭当前会话的功能，此处仅用于将使用 `getConnection` 获取的连接释放到连接池。
+
+**连接池使用示例**
+
+```java
+// 设置连接池参数
+SimpleDBConnectionPoolConfig config = new SimpleDBConnectionPoolConfig();
+        config.setHostName("1sss");
+        config.setPort(PORT);
+        config.setUserId("admin");
+        config.setPassword("123456");
+        config.setInitialPoolSize(5);
+        config.setEnableHighAvailability(false);
+ 
+// 初始化连接池       
+SimpleDBConnectionPool pool = new SimpleDBConnectionPool(config);
+
+// 从连接池中获取一个连接
+DBConnection conn = pool.getConnection();
+conn.run("..."); // 执行脚本
+
+// 释放当前连接
+conn.close();
+
+// 获取当前使用中的连接数
+int activeConns = pool.getActiveConnectionsCount();
+
+// 获取当前空闲的连接数
+int idleConns = pool.getIdleConnectionsCount();
+
+// 关闭连接池
+pool.close();
+
+```
+
+### 2.3 ExclusiveDBConnectionPool 任务池
+
+Java API 提供 ExclusiveDBConnectionPool 任务池。用户可以通过 `execute` 方法执行任务，然后使用BasicDBTask 的 `getResult` 方法获取该任务的执行结果。
 
 | 方法名        | 详情          |
 |:------------- |:-------------|
-|ExclusiveDBConnectionPool(string host, int port, string uid,string pwd, int count, bool loadBalance,bool enableHighAvailability, string[] highAvailabilitySites = null, string initialScript, bool compress = false, bool useSSL = false, bool usePython = false)|构造函数，参数count为连接数，loadBalance为true会连接不同的节点|
+|ExclusiveDBConnectionPool(string host, int port, string uid,string pwd, int count, bool loadBalance,bool enableHighAvailability, string[] highAvailabilitySites = null, string initialScript, bool compress = false, bool useSSL = false, bool usePython = false)|构造方法，参数count为连接数，loadBalance为true会连接不同的节点|
 |execute(IDBTask task)|执行任务|
 |execute(List<IDBTask> tasks)|执行批量任务|
 |getConnectionCount()|获取连接数|
@@ -161,7 +250,7 @@ BasicDBTask包装了需要执行的脚本和参数。
 |getResult()|获取脚本运行结果|
 |getErrorMsg()|获取任务运行时发生的异常信息|
 
-建立一个DBConnection连接数为10的连接池。
+建立一个数量为 10 的任务池。
 
 ```java
 ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(hostName, port, userName, passWord, 10, false, false);
