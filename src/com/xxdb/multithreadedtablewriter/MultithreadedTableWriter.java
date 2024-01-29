@@ -8,8 +8,10 @@ import com.xxdb.route.DomainFactory;
 
 import java.io.IOException;
 import java.sql.Types;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 import static com.xxdb.data.Entity.DATA_TYPE.*;
@@ -180,6 +182,15 @@ public class MultithreadedTableWriter {
                 if (isWriteDone) {//may contain empty vector for exit
                     String runscript = "";
                     try {//save table
+                        if (tableWriter_.enableActualSendTime_) {
+                            long[] time = new long[writeTable.rows()];
+                            long curTime = Utils.countDTNanoseconds(LocalDateTime.now());
+                            for (int i = 0; i < writeTable.rows(); i++) {
+                                time[i] = curTime;
+                            }
+                            BasicNanoTimestampVector basicNanoTimestampVector = new BasicNanoTimestampVector(time);
+                            writeTable.replaceColumn(writeTable.getColumnName(writeTable.columns() - 1), basicNanoTimestampVector);
+                        }
                         List<Entity> args = new ArrayList<>();
                         args.add(writeTable);
                         runscript = scriptTableInsert_;
@@ -321,7 +332,7 @@ public class MultithreadedTableWriter {
     private String[] pModeOption_;
     private boolean ifCallback_ = false;
     private ColInfo[] colInfos_;
-
+    private boolean enableActualSendTime_ = false;
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
                                     boolean enableHighAvailability, String[] highAvailabilitySites,
@@ -329,7 +340,7 @@ public class MultithreadedTableWriter {
                                     int threadCount, String partitionCol,
                                     int[] compressTypes, Mode mode, String[] pModeOption) throws Exception{
         init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
-                batchSize, throttle,threadCount,partitionCol,compressTypes, mode, pModeOption, null);
+                batchSize, throttle,threadCount,partitionCol,compressTypes, mode, pModeOption, null, false);
     }
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
@@ -338,7 +349,7 @@ public class MultithreadedTableWriter {
                                     int threadCount, String partitionCol,
                                     int[] compressTypes) throws Exception{
         init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
-                batchSize, throttle,threadCount,partitionCol,compressTypes, Mode.M_Append, null, null);
+                batchSize, throttle,threadCount,partitionCol,compressTypes, Mode.M_Append, null, null, false);
     }
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
@@ -346,7 +357,7 @@ public class MultithreadedTableWriter {
                                     int batchSize, float throttle,
                                     int threadCount, String partitionCol) throws Exception{
         init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
-                batchSize, throttle,threadCount,partitionCol,null, Mode.M_Append, null, null);
+                batchSize, throttle,threadCount,partitionCol,null, Mode.M_Append, null, null, false);
     }
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
@@ -355,7 +366,50 @@ public class MultithreadedTableWriter {
                                     int threadCount, String partitionCol,
                                     int[] compressTypes, Callback callbackHandler) throws Exception{
         init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
-                batchSize, throttle,threadCount,partitionCol,compressTypes, Mode.M_Append, null, callbackHandler);
+                batchSize, throttle,threadCount,partitionCol,compressTypes, Mode.M_Append, null, callbackHandler, false);
+    }
+
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean enableHighAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionCol,
+                                    int[] compressTypes, Mode mode, String[] pModeOption,
+                                    boolean enableActualSendTime) throws Exception {
+        init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
+                batchSize, throttle, threadCount, partitionCol, compressTypes, mode, pModeOption, null, enableActualSendTime);
+    }
+
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean enableHighAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionCol,
+                                    int[] compressTypes,
+                                    boolean enableActualSendTime) throws Exception {
+        init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
+                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, null, enableActualSendTime);
+    }
+
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean enableHighAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionCol,
+                                    boolean enableActualSendTime) throws Exception {
+        init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
+                batchSize, throttle, threadCount, partitionCol, null, Mode.M_Append, null, null, enableActualSendTime);
+    }
+
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean enableHighAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionCol,
+                                    int[] compressTypes, Callback callbackHandler,
+                                    boolean enableActualSendTime) throws Exception {
+        init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
+                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, callbackHandler, enableActualSendTime);
     }
 
     private void init(String hostName, int port, String userId, String password,
@@ -363,12 +417,14 @@ public class MultithreadedTableWriter {
                       boolean enableHighAvailability, String[] highAvailabilitySites,
                       int batchSize, float throttle,
                       int threadCount, String partitionCol,
-                      int[] compressTypes, Mode mode, String[] pModeOption, Callback callbackHandler) throws Exception{
+                      int[] compressTypes, Mode mode, String[] pModeOption, Callback callbackHandler,
+                      boolean enableActualSendTime) throws Exception{
         dbName_=dbName;
         tableName_=tableName;
         batchSize_=batchSize;
         throttleMilsecond_=(int)throttle*1000;
         hasError_=false;
+        enableActualSendTime_ = enableActualSendTime;
         if (mode == null)
             mode_ = Mode.M_Append;
         else
@@ -423,8 +479,17 @@ public class MultithreadedTableWriter {
         BasicTable colDefs = (BasicTable)schema.get(new BasicString("colDefs"));
         BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
         int columnSize = colDefs.rows();
-        if (compressTypes_!=null && compressTypes_.length != columnSize) {
-            throw new RuntimeException("The number of elements in parameter compressMethods does not match the column size "+columnSize);
+        if (Objects.nonNull(compressTypes_)) {
+            if (!enableActualSendTime && compressTypes_.length != columnSize)
+                throw new RuntimeException("The number of elements in parameter compressMethods does not match the column size " + columnSize);
+            if (enableActualSendTime_) {
+                if (compressTypes_.length != columnSize - 1)
+                    throw new RuntimeException("The number of elements in parameter compressMethods does not match the column size " + (columnSize - 1));
+                int[] copy = new int[compressTypes_.length + 1];
+                System.arraycopy(compressTypes_, 0, copy, 0, compressTypes_.length);
+                copy[compressTypes_.length] = Vector.COMPRESS_LZ4;
+                compressTypes_ = copy;
+            }
         }
         if (callbackHandler != null){
             ifCallback_ = true;
@@ -703,8 +768,9 @@ public class MultithreadedTableWriter {
         if(isExiting()){
             throw new RuntimeException("Thread is exiting. ");
         }
-        if(args.length!=colInfos_.length){
-            return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter,"Column counts don't match.");
+        if ((!enableActualSendTime_ && args.length != colInfos_.length) ||
+                (enableActualSendTime_ && args.length != colInfos_.length - 1)) {
+            return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter, "Column counts don't match.");
         }
         try {
             List<Entity> prow=new ArrayList<>();
@@ -721,6 +787,15 @@ public class MultithreadedTableWriter {
                 }
                 prow.add(entity);
                 colindex++;
+            }
+            if (enableActualSendTime_) {
+                dataType = colInfos_[colindex].type_;
+                if (dataType != DT_NANOTIMESTAMP)
+                    return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, String.format("Data type error: %s,should be NANOTIMESTAMP.", dataType));
+                Entity entity;
+                isAllNull = false;
+                entity = BasicEntityFactory.createScalar(dataType, null, colInfos_[colindex].extra_);
+                prow.add(entity);
             }
             if(isAllNull){
                 return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, "Can't insert a Null row.");
