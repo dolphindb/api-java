@@ -5,9 +5,7 @@ import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.*;
 import com.xxdb.route.Domain;
 import com.xxdb.route.DomainFactory;
-
 import java.io.IOException;
-import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
