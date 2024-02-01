@@ -27,6 +27,8 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     public BasicDecimal128Vector(int size, int scale) {
         super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 38)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,38].");
         this.scale_ = scale;
         this.unscaledValues = new BigInteger[size];
         Arrays.fill(this.unscaledValues, BigInteger.ZERO);
@@ -37,9 +39,8 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     public BasicDecimal128Vector(String[] dataValue, int scale) {
         super(DATA_FORM.DF_VECTOR);
-        if (scale < 0 || scale > 38) {
+        if (scale < 0 || scale > 38)
             throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,38].");
-        }
         this.scale_ = scale;
 
         BigInteger[] newArray = new BigInteger[dataValue.length];
@@ -67,6 +68,8 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     BasicDecimal128Vector(BigInteger[] dataValue, int scale) {
         super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 38)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,38].");
         this.scale_ = scale;
         BigInteger[] newArray = new BigInteger[dataValue.length];
         for(int i = 0; i < dataValue.length; i++ ) {
@@ -351,9 +354,6 @@ public class BasicDecimal128Vector extends AbstractVector {
     }
 
     public void add(BigDecimal value) {
-        if (scale_ < 0) {
-            throw new RuntimeException("Please set scale first.");
-        }
         if (size + 1 > capacity && this.unscaledValues.length > 0) {
             this.unscaledValues = Arrays.copyOf(this.unscaledValues, this.unscaledValues.length * 2);
         } else if (this.unscaledValues.length == 0) {
@@ -398,10 +398,6 @@ public class BasicDecimal128Vector extends AbstractVector {
     }
 
     public void addRange(BigDecimal[] valueList) {
-        if (scale_ < 0) {
-            throw new RuntimeException("Please set scale first.");
-        }
-
         int newSize = size + valueList.length;
         if (newSize > capacity && this.unscaledValues.length > 0) {
             this.unscaledValues = Arrays.copyOf(this.unscaledValues, Math.max(this.unscaledValues.length * 2, newSize));
