@@ -23,8 +23,10 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     public BasicDecimal32Vector(int size, int scale){
         super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 9)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,9].");
         this.scale_ = scale;
-        values = new int[size];
+        this.values = new int[size];
 
         this.size = values.length;
         capacity = values.length;
@@ -40,10 +42,9 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     public BasicDecimal32Vector(String[] data, int scale) {
         super(DATA_FORM.DF_VECTOR);
-        if (scale < 0 || scale > 9) {
+        if (scale < 0 || scale > 9)
             throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,9].");
-        }
-        scale_ = scale;
+        this.scale_ = scale;
 
         int length = data.length;
         values = new int[length];
@@ -61,6 +62,8 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     BasicDecimal32Vector(int[] dataValue, int scale){
         super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 9)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,9].");
         this.scale_ = scale;
         this.values = dataValue;
         this.size = values.length;
@@ -103,7 +106,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         super(DATA_FORM.DF_VECTOR);
         if (scale < 0 || scale > 9)
             throw new RuntimeException("Scale out of bound (valid range: [0, 9], but get: " + scale + ")");
-        scale_ = scale;
+        this.scale_ = scale;
         int[] newIntValue = new int[data.length];
         for(int i = 0; i < data.length; i++){
             BigDecimal pow = new BigDecimal(1);
@@ -235,10 +238,6 @@ public class BasicDecimal32Vector extends AbstractVector{
     }
 
     public void add(String value) {
-        if (scale_ < 0){
-            throw new RuntimeException("Please set scale first.");
-        }
-
         if (size + 1 > capacity && values.length > 0) {
             values = Arrays.copyOf(values, values.length * 2);
         } else if (values.length <= 0){
@@ -261,9 +260,6 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Deprecated
     public void add(double value) {
-        if (scale_ < 0){
-            throw new RuntimeException("Please set scale first.");
-        }
         if (size + 1 > capacity && values.length > 0){
             values = Arrays.copyOf(values, values.length * 2);
         }else if (values.length <= 0){
@@ -291,9 +287,6 @@ public class BasicDecimal32Vector extends AbstractVector{
     }
 
     public void addRange(String[] valueList) {
-        if (scale_ < 0){
-            throw new RuntimeException("Please set scale first.");
-        }
         int[] newIntValue = new int[valueList.length];
         BigDecimal pow = BigDecimal.TEN.pow(scale_);
         for(int i = 0; i < valueList.length; i++){
@@ -310,9 +303,6 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Deprecated
     public void addRange(double[] valueList) {
-        if (scale_ < 0){
-            throw new RuntimeException("Please set scale first.");
-        }
         int[] newIntValue = new int[valueList.length];
         for(int i = 0; i < valueList.length; i++){
             BigDecimal pow = new BigDecimal(1);
@@ -330,18 +320,11 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void Append(Scalar value) throws Exception{
-        if (scale_ < 0){
-            throw new RuntimeException("Please set scale first.");
-        }
-
         add(value.getString());
     }
 
     @Override
     public void Append(Vector value) throws Exception{
-        if (scale_ < 0){
-            throw new RuntimeException("Please set scale first.");
-        }
         if(((BasicDecimal32Vector)value).getScale() == scale_)
             addRange(((BasicDecimal32Vector)value).getdataArray());
         else{
