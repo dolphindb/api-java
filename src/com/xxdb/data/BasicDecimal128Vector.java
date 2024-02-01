@@ -82,11 +82,6 @@ public class BasicDecimal128Vector extends AbstractVector {
     }
 
     private BigInteger checkValRange(BigInteger unscaledVal) {
-        BigDecimal bd = new BigDecimal(unscaledVal);
-        if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0) {
-            throw new RuntimeException("Decimal128 overflow " + unscaledVal);
-        }
-
         if (unscaledVal.compareTo(BIGINT_MIN_VALUE) < 0) {
             throw new RuntimeException("Decimal128 " + unscaledVal + " cannot be less than " + BIGINT_MIN_VALUE);
         }
@@ -349,26 +344,6 @@ public class BasicDecimal128Vector extends AbstractVector {
         }
         out.write(buffer);
     }
-
-
-//    private static void handleLittleEndianBigEndianWrite(ExtendedDataInput in, BigInteger[] unscaledValues, byte[] buffer, int count) throws IOException {
-//        int totalBytes = count * 16, off = 0;
-//        while (off < totalBytes) {
-//            byte[] val = new byte[16];
-//            int len = Math.min(4096, totalBytes - off);
-//
-//            in.readFully(buffer, 0, len);
-//            if (in.isLittleEndian())
-//                reverseByteArrayEvery8Byte(buffer);
-//
-//            int start = off / 16, end = len / 16;
-//            for (int i = 0; i < end; i++) {
-//                System.arraycopy(buffer, i * 16, val, 0, 16);
-//                unscaledValues[i + start] = new BigInteger(val);
-//            }
-//            off += len;
-//        }
-//    }
 
     @Override
     public int getUnitLength() {
