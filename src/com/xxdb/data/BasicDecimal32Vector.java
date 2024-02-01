@@ -196,15 +196,7 @@ public class BasicDecimal32Vector extends AbstractVector{
             values[index] = Integer.MIN_VALUE;
         else{
             if(scale_ != newScale) {
-                BigInteger newValue;
-                if (type == Entity.DATA_TYPE.DT_LONG) {
-                    newValue = BigInteger.valueOf(((BasicLong)(value)).getLong());
-                } else if (type == Entity.DATA_TYPE.DT_INT) {
-                    newValue = BigInteger.valueOf(((BasicInt)(value)).getInt());
-                } else {
-                    newValue = BigInteger.valueOf(((BasicDecimal32) (value)).getInt());
-                }
-
+                BigInteger newValue = BigInteger.valueOf(((BasicDecimal32) (value)).getInt());
                 BigInteger pow = BigInteger.valueOf(10);
                 if(newScale - scale_ > 0){
                     pow = pow.pow(newScale - scale_);
