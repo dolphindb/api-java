@@ -101,7 +101,7 @@ public class BasicDecimal32Vector extends AbstractVector{
     @Deprecated
     public BasicDecimal32Vector(double[] data, int scale){
         super(DATA_FORM.DF_VECTOR);
-        if (scale < 0 || scale > 18)
+        if (scale < 0 || scale > 9)
             throw new RuntimeException("Scale out of bound (valid range: [0, 9], but get: " + scale + ")");
         scale_ = scale;
         int[] newIntValue = new int[data.length];
