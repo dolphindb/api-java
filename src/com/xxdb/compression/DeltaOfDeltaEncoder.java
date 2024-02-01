@@ -51,27 +51,6 @@ public class DeltaOfDeltaEncoder implements Encoder {
         }
         return out;
     }
-
-    public ByteBuffer compress(ByteBuffer in, int elementCount, int unitLength, int maxCompressedLength) throws IOException {
-        DeltaOfDeltaBlockEncoder blockEncoder = new DeltaOfDeltaBlockEncoder(unitLength);
-        int count = 0;
-        //TODO: create header in advanced
-        ByteBuffer out = ByteBuffer.allocate(maxCompressedLength);
-        while (elementCount > 0 && count < maxCompressedLength) {
-            int blockSize = Math.min(elementCount * unitLength, DEFAULT_BLOCK_SIZE);
-            long[] compressed = blockEncoder.compress(in, blockSize);
-            //write blockSize+data
-            out.putInt(compressed.length * Long.BYTES);
-            for (long l : compressed) {
-                out.putLong(l);
-            }
-            count += Integer.BYTES + compressed.length * Long.BYTES;
-            elementCount -= blockSize / unitLength;
-        }
-        return out;
-    }
-
-
 }
 
 class DeltaOfDeltaBlockEncoder {
