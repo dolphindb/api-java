@@ -1,4 +1,4 @@
-package com.xxdb;
+package com.xxdb.data;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.data.*;

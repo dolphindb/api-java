@@ -1,4 +1,4 @@
-package com.xxdb;
+package com.xxdb.io;
 
 import com.xxdb.io.BigEndianDataOutputStream;
 import com.xxdb.io.ExtendedDataOutput;

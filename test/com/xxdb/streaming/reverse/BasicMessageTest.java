@@ -1,4 +1,4 @@
-package com.xxdb;
+package com.xxdb.streaming.reverse;
 
 import com.xxdb.data.*;
 import com.xxdb.streaming.client.BasicMessage;
