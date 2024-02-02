@@ -227,13 +227,50 @@ public class BasicTableTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void test_BasicTable_setColCompressTypes_match(){
+    public void test_BasicTable_setColCompressTypes_not_match(){
         BasicTable bt = createBasicTable();
         System.out.println(bt.getString());
         int[] colCompresses = new int[]{1,2,3,4,5};
         bt.setColumnCompressTypes(colCompresses);
     }
-
+    @Test
+    public void test_BasicTable_setColCompressTypes_not_support(){
+        BasicTable bt = createBasicTable();
+        System.out.println(bt.getString());
+        int[] colCompresses = new int[]{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18};
+        String re = null;
+        try{
+            bt.setColumnCompressTypes(colCompresses);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        Assert.assertEquals("Delta compression only supports short/int/long and temporal data.",re);
+    }
+    @Test
+    public void test_BasicTable_setColCompressTypes(){
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("cshort");
+        colNames.add("cint");
+        colNames.add("clong");
+        List<Vector> cols = new ArrayList<Vector>(){};
+        //cshort
+        short[] vshort = new short[]{32767,29};
+        BasicShortVector bshv = new BasicShortVector(vshort);
+        cols.add(bshv);
+        //cint
+        int[] vint = new int[]{2147483647,483647};
+        BasicIntVector bintv = new BasicIntVector(vint);
+        cols.add(bintv);
+        //clong
+        long[] vlong = new long[]{2147483647,483647};
+        BasicLongVector blongv = new BasicLongVector(vlong);
+        cols.add(blongv);
+        BasicTable bt = new BasicTable(colNames, cols);
+        System.out.println(bt.getString());
+        int[] colCompresses = new int[]{1,2,3};
+        bt.setColumnCompressTypes(colCompresses);
+        //System.out.println(bt.);
+    }
     @Test(expected = RuntimeException.class)
     public void test_BasicTable_other(){
         BasicTable bt = createBasicTable();
