@@ -151,19 +151,11 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
-        if (capacity < start + count) {
-            BigInteger[] expandedArray = new BigInteger[start + count];
-            System.arraycopy(this.unscaledValues, 0, expandedArray, 0, this.unscaledValues.length);
-            this.unscaledValues = expandedArray;
-			this.size = start + count;
-            this.capacity = start + count;
-		} else if (this.size < start + count) {
-			this.size = start + count;
-		}
-
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++)
             this.unscaledValues[start + i] = handleLittleEndianBigEndian(in);
-        }
+
+        this.size = this.unscaledValues.length;
+        capacity = this.unscaledValues.length;
     }
 
     @Override
