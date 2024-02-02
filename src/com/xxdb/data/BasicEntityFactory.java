@@ -84,25 +84,24 @@ public class BasicEntityFactory implements EntityFactory{
 		else if(type == Entity.DATA_TYPE.DT_VOID && form == Entity.DATA_FORM.DF_SCALAR){
 			in.readBoolean();
 			return new Void();
-		}
-		else{
+		} else {
 			int index = type.getValue();
-			if(factories[index] == null)
-				throw new IOException("Data type " + type.name() +" is not supported yet.");
-			else if(form == Entity.DATA_FORM.DF_VECTOR){
+			if(factories[index] == null) {
+				throw new IOException("Data type " + type.name() + " is not supported yet.");
+			} else if (form == Entity.DATA_FORM.DF_VECTOR) {
 				if(!extended)
 					return factories[index].createVector(in);
 				else
 					return factoriesExt[index].createVector(in);
-			}
-			else if(form == Entity.DATA_FORM.DF_SCALAR)
+			} else if (form == Entity.DATA_FORM.DF_SCALAR) {
 				return factories[index].createScalar(in);
-			else if(form == Entity.DATA_FORM.DF_MATRIX)
+			} else if (form == Entity.DATA_FORM.DF_MATRIX) {
 				return factories[index].createMatrix(in);
-			else if(form == Entity.DATA_FORM.DF_PAIR)
+			} else if (form == Entity.DATA_FORM.DF_PAIR) {
 				return factories[index].createPair(in);
-			else
+			} else {
 				throw new IOException("Data form " + form.name() +" is not supported yet.");
+			}
 		}
 	}
 

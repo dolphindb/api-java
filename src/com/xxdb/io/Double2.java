@@ -1,5 +1,7 @@
 package com.xxdb.io;
 
+import java.util.Objects;
+
 public class Double2 {
 	public double x;
 	public double y;
@@ -19,7 +21,9 @@ public class Double2 {
 	}
 	
 	public boolean equals(Object o){
-		if(! (o instanceof Double2) || o == null)
+		if (Objects.isNull(o))
+			return false;
+		else if (!(o instanceof Double2))
 			return false;
 		else
 			return x== ((Double2)o).x && y== ((Double2)o).y;

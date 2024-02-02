@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.temporal.Temporal;
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.Double2;
 import com.xxdb.io.ExtendedDataInput;
@@ -77,7 +78,9 @@ public class BasicPoint extends AbstractScalar{
 
 	@Override
 	public boolean equals(Object o){
-		if(! (o instanceof BasicPoint) || o == null)
+		if (Objects.isNull(o))
+			return false;
+		else if (!(o instanceof BasicPoint))
 			return false;
 		else
 			return value.equals(((BasicPoint)o).value);
