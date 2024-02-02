@@ -35,7 +35,42 @@ public class BasicDecimal64VectorTest {
         conn.close();
     }
 
-
+    @Test
+    public void test_BasicDecimal64Vector_scale_not_true() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        String ex = null;
+        try{
+            BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,19);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale 19 is out of bounds, it must be in [0,18].",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,-1);
+        }catch(Exception E){
+            ex1 = E.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,18].",ex1);
+    }
+    @Test
+    public void test_BasicDecimal64Vector_scale_not_true_1() throws Exception {
+        double[] tmp_double_v = {1.1};
+        String ex = null;
+        try{
+            BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,19);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale 19 is out of bounds, it must be in [0,18].",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_double_v,-1);
+        }catch(Exception E){
+            ex1 = E.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,18].",ex1);
+    }
     @Test
     public void test_BasicDecimal64Vector_run_vector() throws IOException {
         BasicDecimal64Vector re1 =(BasicDecimal64Vector) conn.run("decimal64([1.232,-12.43,123.53],6)");
@@ -263,6 +298,14 @@ public class BasicDecimal64VectorTest {
         String[] tmp_string1_v = {};
         tmp_64_v.addRange(tmp_string1_v);
         assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal64Vector_addRange_string_decimal_min_or_max_value() throws Exception {
+        String[] tmp_string_v = {"-9223372036854775808","9223372036854775807"};
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,0);
+        String[] tmp_string1_v = {};
+        tmp_64_v.addRange(tmp_string1_v);
+        assertEquals("[0,0]",tmp_64_v.getString());
     }
     @Test
     public void test_BasicDecimal64Vector_append_error() throws Exception {

@@ -2612,4 +2612,21 @@ public class BasicTableTest {
         bt.replaceColName("值收到回复核实对方回复收到回复哈代发","q!@#$%^&*()_+-={}[]:;'.,/`12345ddfsfSSSx测试");
         assertEquals("q!@#$%^&*()_+-={}[]:;'.,/`12345ddfsfSSSx测试",bt.getColumnName(0));
     }
+    @Test
+    public void test_tableInsert_exceed_256k() throws IOException {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        conn.run("t = table(1:0,[`col1],[SYMBOL]);share t as test_symbol\n");
+        conn.run("n=6;\nlen=1000000;\n a1=string(take(concat(rand([\"a\"],len)),n));\n t1 = table(a1 as str);\n");
+        BasicTable table = (BasicTable)conn.run("select * from t1");
+        List<Entity> list = new ArrayList<>(1);
+        list.add(table);
+        String re = null;
+        try{
+            conn.run("tableInsert{test_symbol}", list);
+        }catch(RuntimeException e){
+            re = e.getMessage();
+        }
+        assertEquals("Serialized string length must less than 256k bytes.",re);
+    }
 }

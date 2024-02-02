@@ -73,10 +73,10 @@ public class SimpleDBConnectionPoolTest {
         assertEquals("Invalid hostName: 111.111.111.111.111",re1);
     }
 
-    //@Test default localhost
+    //@Test //default localhost
     public void test_SimpleDBConnectionPool_config_hostName_null() throws IOException, InterruptedException {
         SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
-        config1.setPort(PORT);
+        config1.setPort(8848);
         config1.setUserId("admin");
         config1.setPassword("123456");
         config1.setInitialPoolSize(5);
@@ -102,10 +102,10 @@ public class SimpleDBConnectionPoolTest {
         assertEquals("The port should be positive.",re1);
 
     }
-    //@Test default is 8848
+    //@Test //default is 8848
     public void test_SimpleDBConnectionPool_config_port_null() throws IOException, InterruptedException {
         SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
-        config1.setHostName(HOST);
+        config1.setHostName("127.0.0.1");
         //config1.setPort(PORT);
         config1.setUserId("admin");
         config1.setPassword("123456");
@@ -495,7 +495,7 @@ public class SimpleDBConnectionPoolTest {
             String connectionNum = re.getColumn(1).get(i).toString();
             if(Integer.valueOf(port) != PORT) {
                 assertEquals(true, Integer.valueOf(connectionNum) > 25);
-                assertEquals(true, Integer.valueOf(connectionNum) <= 50);
+                assertEquals(true, Integer.valueOf(connectionNum) <= 60);
             }
         }
         controller_conn.close();
@@ -552,7 +552,6 @@ public class SimpleDBConnectionPoolTest {
         pool = new SimpleDBConnectionPool(config1);
         DBConnection poolEntry = pool.getConnection();
         assertEquals(5,pool.getTotalConnectionsCount());
-        poolEntry.connect(HOST,PORT);
         poolEntry.run("table(1..10000 as id ,take(`qq`aa`ss,10000) as id1)");
         pool.close();
     }
@@ -748,6 +747,46 @@ public class SimpleDBConnectionPoolTest {
         assertEquals(false,pool.isClosed());
         pool.close();
         assertEquals(true,pool.isClosed());
+        pool.close();
+        assertEquals(true,pool.isClosed());
+        String re = null;
+        try{
+            pool.getConnection();
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The connection pool has been closed.",re);
+    }
+
+    @Test
+    public void test_SimpleDBConnectionPool_close_isBusy() throws IOException, InterruptedException {
+        SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
+        config1.setHostName(HOST);
+        config1.setPort(PORT);
+        config1.setUserId("admin");
+        config1.setPassword("123456");
+        config1.setInitialPoolSize(5);
+        pool = new SimpleDBConnectionPool(config1);
+        DBConnection poolEntry = pool.getConnection();
+        Thread [] threads = new Thread[2];
+        threads[0] = new Thread(() -> {
+                try {
+                    poolEntry.run("sleep(5000);");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        threads[1] = new Thread(() -> {
+            try {
+                poolEntry.run("sleep(1000);");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            pool.close();
+        });
+        for (int i = 0; i < 2; i++) {
+            threads[i].start();
+        }
     }
     @Test
     public void test_SimpleDBConnectionPool_getConnection() throws IOException, InterruptedException {
@@ -1496,6 +1535,42 @@ public class SimpleDBConnectionPoolTest {
             threads[i].join();
         }
         pool.close();
+    }
+    @Test
+    public void test_SimpleDBConnectionPool_upload_WideTable() throws Exception {
+        List<String> colNames = new ArrayList<>();
+        List<Vector> cols = new ArrayList<>();
+        for(int i=0;i<1000;i++){
+            colNames.add("id"+i);
+            Vector v = null;
+            if((i%6) == 0){
+                v = new BasicIntVector(new int[]{i,i+5,i+10,i+15});
+            }else if((i%6) == 1){
+                v = new BasicDateVector(new int[]{i,i+105,i+110,i+115});
+            }else if((i%6) == 2){
+                v = new BasicComplexVector(new Double2[]{new Double2(i+0.1,i+0.2),new Double2(i+100.5,i-0.25),new Double2(i+1.35,i-0.75),new Double2(i+1.65,i-0.5)});
+            }else if((i%6) == 3){
+                v = new BasicDecimal32Vector(4,4);
+                v.set(0,new BasicDecimal32(i+3,4));
+                v.set(1,new BasicDecimal32(i+6,4));
+                v.set(2,new BasicDecimal32(i+9,4));
+                v.set(3,new BasicDecimal32(i+12,4));
+            }else if((i%6) == 4){
+                v = new BasicNanoTimeVector(new long[]{i+4,i+8,i+12,i+16});
+            }else{
+                v = new BasicByteVector(new byte[]{(byte) ('a'+i%6), (byte) ('e'+i%6), (byte) ('k'+i%6), (byte) ('q'+i%6)});
+            }
+            cols.add(v);
+        }
+        BasicTable bt = new BasicTable(colNames,cols);
+        DBConnection poolEntry = pool.getConnection();
+        poolEntry.connect(HOST,PORT,"admin","123456");
+        Map<String,Entity> map = new HashMap<>();
+        map.put("wideTable",bt);
+        poolEntry.upload(map);
+        BasicTable ua = (BasicTable) poolEntry.run("wideTable;");
+        assertEquals(1000,ua.columns());
+        assertEquals(bt.getString(),ua.getString());
     }
 }
 

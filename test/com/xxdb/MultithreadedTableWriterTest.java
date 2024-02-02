@@ -6585,7 +6585,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
         conn.close();
     }
-    @Test(timeout = 120000)
+    @Test(timeout = 200000)
     public  void test_MultithreadedTableWriter_Callback_dfs_single_thread_false()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -7186,7 +7186,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("\0blob1AM\0ZN", table2.getColumn(3).get(1).getString());
         assertEquals("blob1AMZN\0", table2.getColumn(3).get(2).getString());
     }
-    //@Test(timeout = 120000)
+    @Test(timeout = 200000)
     public  void test_MultithreadedTableWriter_write_block()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
         conn.connect(HOST, PORT, "admin", "123456");

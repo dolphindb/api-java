@@ -20,9 +20,20 @@ public class BasicChartTest {
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void test_BasicChart_chartType() throws Exception {
         BasicChart bc = new BasicChart();
+        String re = null;
+        try{
+            bc.getChartType();
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("Invalid chart object. Chart type is not defined.",re);
+    }
+    @Test
+    public void test_BasicChart_chartType_1() throws Exception {
+        BasicChart bc = new BasicChart(1);
         bc.getChartType();
     }
 

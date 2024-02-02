@@ -36,6 +36,82 @@ public class BasicDecimal128VectorTest {
         conn.close();
     }
 
+    @Test
+    public void test_BasicDecimal128Vector_scale_not_true() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        String ex = null;
+        try{
+            BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,39);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale 39 is out of bounds, it must be in [0,38].",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,-1);
+        }catch(Exception E){
+            ex1 = E.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,38].",ex1);
+    }
+    @Test
+    public void test_BasicDecimal128Vector_scale_not_true_1() throws Exception {
+        BigInteger[] tmp_string_v = {new BigInteger("1")};
+        String ex = null;
+        try{
+            BasicDecimal128Vector tmp_128_v1 = new BasicDecimal128Vector(tmp_string_v,39);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale 39 is out of bounds, it must be in [0,38].",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal128Vector tmp_128_v1 = new BasicDecimal128Vector(tmp_string_v,-1);
+        }catch(Exception E){
+            ex1 = E.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,38].",ex1);
+    }
+    @Test
+    public void test_BasicDecimal128Vector_dataValue_not_true() throws Exception {
+        String[] tmp_string_v = {"-170141183460469231731687303715884105729"};
+        String ex = null;
+        try{
+            BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,5);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Decimal128 overflow -17014118346046923173168730371588410572900000",ex);
+        String ex1 = null;
+        String[] tmp_string_v1 = {"170141183460469231731687303715884105729"};
+        try{
+            BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v1,5);
+        }catch(Exception E){
+            ex1 = E.getMessage();
+        }
+        assertEquals("Decimal128 overflow 17014118346046923173168730371588410572900000",ex1);
+    }
+
+    @Test
+    public void test_BasicDecimal128Vector_dataValue_not_true_1() throws Exception {
+        BigInteger[] tmp_string_v = {new BigInteger("-170141183460469231731687303715884105729")};
+        String ex = null;
+        try{
+            BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,5);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Decimal128 -170141183460469231731687303715884105729 cannot be less than -170141183460469231731687303715884105728",ex);
+        String ex1 = null;
+
+        BigInteger[] tmp_string_v1 = {new BigInteger("170141183460469231731687303715884105729")};
+        try{
+            BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v1,5);
+        }catch(Exception E){
+            ex1 = E.getMessage();
+        }
+        assertEquals("Decimal128 170141183460469231731687303715884105729 cannot exceed 170141183460469231731687303715884105728",ex1);
+    }
 
     @Test
     public void test_BasicDecimal128Vector_run_vector() throws IOException {
@@ -116,6 +192,9 @@ public class BasicDecimal128VectorTest {
         String[] tmp_string_v = {};
         BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
         assertEquals("[]",tmp_128_v.getString());
+        BigInteger[] tmp_string_v1 = {};
+        BasicDecimal128Vector tmp_128_v1 = new BasicDecimal128Vector(tmp_string_v1,4);
+        assertEquals("[]",tmp_128_v1.getString());
     }
 
     @Test
@@ -123,6 +202,11 @@ public class BasicDecimal128VectorTest {
         BasicDecimal128Vector re1 =(BasicDecimal128Vector) conn.run("decimal128([1.232,-12.43,NULL],6)");
         assertEquals(true,re1.isNull(2));
         assertEquals(false,re1.isNull(0));
+        BigInteger[] tmp_string_v1 = new BigInteger[5];
+        tmp_string_v1[0] = BigInteger.ONE;
+        tmp_string_v1[1] = null;
+        BasicDecimal128Vector tmp_128_v1 = new BasicDecimal128Vector(tmp_string_v1,4);
+        assertEquals("[0.0001,0.0000,0.0000,0.0000,0.0000]",tmp_128_v1.getString());
     }
 
     @Test
@@ -405,5 +489,20 @@ public class BasicDecimal128VectorTest {
         String re = JSONObject.toJSONString(re1);
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DECIMAL128\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDecimal128\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"scale\":2,\"string\":\"[0.00,0.00]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicDecimal128Vector_deserialize() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
+        BasicDecimal128 tmp_32 = new BasicDecimal128("3.032",4);
+        tmp_128_v.set(0,tmp_32);
+        assertEquals("[3.0320,-123.0043,132.2042,100.0000]",tmp_128_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal128Vector_asof() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
+        Scalar sc = new BasicDecimal128("1",2);
+        assertEquals(0,tmp_128_v.asof(sc));
     }
 }

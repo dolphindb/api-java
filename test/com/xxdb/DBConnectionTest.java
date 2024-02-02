@@ -42,6 +42,8 @@ public class DBConnectionTest {
     static String[] ipports = bundle.getString("SITES").split(",");
 
     static String[] host_list= bundle.getString("HOSTS").split(",");
+    static String controller_host = bundle.getString("CONTROLLER_HOST");
+    static int controller_port = Integer.parseInt(bundle.getString("CONTROLLER_PORT"));
 
     static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
     private double load = -1.0;
@@ -2000,7 +2002,18 @@ public class DBConnectionTest {
             assertTrue(ServerExceptionUtils.isNotLogin(ex.getMessage()));
         }
     }
-
+    @Test
+    public void test_DBConnection_not_login() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(controller_host,controller_port);
+        String re = null;
+        try{
+            conn.run("getGroupList();");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals(true,re.contains("getGroupList() => Only administrators execute function getGroupList' script: 'getGroupList();"));
+    }
     @Test
     public void TestPartitionTable() throws IOException, InterruptedException {
         //createPartitionTable
@@ -4197,6 +4210,28 @@ public void test_SSL() throws Exception {
             e=t.getMessage();
         }
         assertEquals(e,"No matching SqlStdEnum constant found for name: fdfd");
+    }
+    @Test
+    public void Test_Connect_SqlStdEnum_getByName() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection( getByName("MySQL"));
+        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT);
+        Thread.sleep(500);
+        assertEquals(true, conn.isConnected());
+        BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb');");
+        System.out.println(ba.getString());
+        assertEquals("[1,1.5,2]", ba.getString());
+
+        BasicDate da1 = (BasicDate)conn.run("runSQL(\"SYSDATE()\", 'mysql');");
+        System.out.println(da1.getString());
+        Date currentTime2 = new Date();
+        SimpleDateFormat formatter2 = new SimpleDateFormat("yyyy-MM-dd");
+        String currentTime3 = formatter2.format(currentTime2);
+        assertEquals(currentTime3.replace("-",""), da1.toString().replace(".",""));
+
+        BasicStringVector ca = (BasicStringVector)conn.run("runSQL(\"concat(string(1 2 3), string(4 5 6))\", 'oracle');");
+        assertEquals("[14,25,36]", ca.getString());
+        conn.close();
     }
     @Test
     public void Test_Connect_test() throws IOException, InterruptedException {
