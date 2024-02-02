@@ -793,7 +793,7 @@ public class BasicStringTest {
     @Test
     public void test_BasicStringVector_big_string_data() throws IOException {
         BasicStringVector re1 =(BasicStringVector) conn.run("string([concat(take(`abcd中文123,100000))])");
-        System.out.println(re1.getString());
+        //System.out.println(re1.getString());
         String d = "abcd中文123";
         String dd = "";
         for(int i = 0; i < 100000; i++) {
@@ -817,7 +817,7 @@ public class BasicStringTest {
     @Test
     public void test_BasicStringVector_run_array_blob_bigdata() throws IOException {
         BasicStringVector re1 =(BasicStringVector) conn.run("t = array(BLOB,10).append!(blob(concat(take(`abcd中文123,100000))));t");
-        System.out.println(re1.get(10).getString());
+        //System.out.println(re1.get(10).getString());
         for(int i = 0; i < 10; i++) {
             assertEquals("",re1.get(i).getString());
         }
@@ -832,7 +832,7 @@ public class BasicStringTest {
     @Test
     public void test_BasicStringVector_run_array_bigdata() throws IOException {
         BasicStringVector re1 =(BasicStringVector) conn.run("a = array(STRING,10).append!(string(concat(take(\"123&#@!^%;d《》中文\",100000))));a");
-        System.out.println(re1.get(10).getString());
+        //System.out.println(re1.get(10).getString());
         for(int i = 0; i < 10; i++) {
             assertEquals("",re1.get(i).getString());
         }
@@ -847,7 +847,7 @@ public class BasicStringTest {
     @Test
     public void test_BasicStringVector_run_array_bigdata_1() throws IOException {
         BasicStringVector re1 =(BasicStringVector) conn.run("t = array(STRING,10).append!(string(concat(take(`abcd中文123,100000))));t");
-        System.out.println(re1.get(10).getString());
+        //System.out.println(re1.get(10).getString());
         for(int i = 0; i < 10; i++) {
             assertEquals("",re1.get(i).getString());
         }

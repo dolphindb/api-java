@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.ResourceBundle;
 
@@ -34,7 +35,43 @@ public class BasicDecimal32VectorTest {
     public void tearDown() throws Exception {
         conn.close();
     }
+    @Test
+    public void test_BasicDecimal32Vector_scale_not_true() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        String ex = null;
+        try{
+            BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,10);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale 10 is out of bounds, it must be in [0,9].",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,-1);
+        }catch(Exception E){
+            ex1 = E.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,9].",ex1);
+    }
 
+    @Test
+    public void test_BasicDecimal32Vector_scale_not_true_1() throws Exception {
+        double[] tmp_double_v = {1.1};
+        String ex = null;
+        try{
+            BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_double_v,10);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale 10 is out of bounds, it must be in [0,9].",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_double_v,-1);
+        }catch(Exception E){
+            ex1 = E.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,9].",ex1);
+    }
 
     @Test
     public void test_BasicDecimal32Vector_run_vector() throws IOException {
@@ -159,8 +196,15 @@ public class BasicDecimal32VectorTest {
             RE = E.getMessage();
         }
         assertEquals("value type is not BasicDecimal32!",RE);
-
+        String RE1 = null;
+        try{
+            tmp_32_v.set(0,new BasicIntVector(2));
+        }catch(Exception E){
+            RE1 = E.getMessage();
+        }
+        assertEquals("value type is not BasicDecimal32!",RE1);
     }
+
     @Test
     public void test_BasicDecimal32Vector_set_string() throws Exception {
         double[] tmp_double_v = {0.0,-123.00432,132.204234,100.0};
@@ -413,5 +457,12 @@ public class BasicDecimal32VectorTest {
         String re = JSONObject.toJSONString(re1);
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DECIMAL32\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDecimal32\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"scale\":2,\"string\":\"[0.00,0.00]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+    }
+    @Test
+    public void test_BasicDecimal32Vector_asof() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
+        Scalar sc = new BasicDecimal32("1",2);
+        assertEquals(0,tmp_32_v.asof(sc));
     }
 }
