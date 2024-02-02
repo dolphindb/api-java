@@ -62,11 +62,11 @@ public abstract class AbstractExtendedDataInputStream extends BufferedInputStrea
 		return readUTF8((byte)0);
 	}
 
-	private int isHaveBytesEndWith(byte endChar){
+	private int isHaveEndBytes(byte endChar){
 		byte[] streamBuf = this.buf;
-		for(int i = this.pos; i < count; ++i){
+		for (int i = this.pos; i < this.count; ++i)
 			if(streamBuf[i] == endChar) return i;
-		}
+
 		return -1;
 	}
 
@@ -92,7 +92,7 @@ public abstract class AbstractExtendedDataInputStream extends BufferedInputStrea
 			buf_ = new byte[2048];
 		int bufPos = 0;
 		while(true){
-			int terminatorPos = isHaveBytesEndWith(terminator);
+			int terminatorPos = isHaveEndBytes(terminator);
 			int dataCount = terminatorPos == -1 ? this.count - this.pos : terminatorPos - this.pos + 1;
 			if(dataCount + bufPos > buf_.length){
 				int bufferSize = Math.max(dataCount + bufPos, buf_.length * 2);
