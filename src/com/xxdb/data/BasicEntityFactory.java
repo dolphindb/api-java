@@ -988,20 +988,6 @@ public class BasicEntityFactory implements EntityFactory{
 		}
 	}
 
-	private static Scalar createScalar(DATA_TYPE dataType, char[] val, int extraParam) {
-		return createScalar(dataType, new String(val), extraParam);
-	}
-
-	private static boolean isScalarValid(DATA_TYPE scalarType,DATA_TYPE expectedType){
-		if(scalarType==expectedType)
-			return true;
-		if(scalarType==DT_STRING){
-			if(expectedType==DATA_TYPE.DT_SYMBOL)
-				return true;
-		}
-		return false;
-	}
-
 	private static Scalar createScalar(DATA_TYPE dataType, String val, int extraParam) {
 		switch (dataType) {
 			case DT_INT128: {
