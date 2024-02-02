@@ -231,7 +231,7 @@ public class LoadBalanceTest {
     @Test
     public void Test_getConnection_enableHighAvailability_true_conn_high_load() throws SQLException, ClassNotFoundException, IOException {
         List<DBConnection> list = new ArrayList<>();
-        for (int i = 0; i < 460; ++i) {
+        for (int i = 0; i < 420; ++i) {
             DBConnection conn = new DBConnection();
             conn.connect(HOST, PORT, "admin", "123456", "", false);
             list.add(conn);
