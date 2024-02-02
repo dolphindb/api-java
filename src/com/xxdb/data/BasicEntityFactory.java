@@ -108,7 +108,7 @@ public class BasicEntityFactory implements EntityFactory{
 	@Override
 	public Matrix createMatrixWithDefaultValue(Entity.DATA_TYPE type, int rows, int columns) {
 		int index = type.getValue();
-		if(factories[index] == null)
+		if(index >= factories.length || factories[index] == null)
 			return null;
 		else
 			return factories[index].createMatrixWithDefaultValue(rows, columns);
