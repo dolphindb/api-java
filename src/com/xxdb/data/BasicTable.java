@@ -89,6 +89,7 @@ public class BasicTable extends AbstractEntity implements Table{
 		if (colCompresses!=null && colCompresses.length != columns.size()) {
 			throw new RuntimeException("Compress type size must match column size "+ columns.size()+".");
 		}
+
 		if(colCompresses!=null) {
 			for (int i = 0; i < colCompresses.length; i++) {
 				if (colCompresses[i] == Vector.COMPRESS_DELTA) {
@@ -102,11 +103,17 @@ public class BasicTable extends AbstractEntity implements Table{
 				}
 			}
 		}
-		if(colCompresses!=null){
+
+		if (colCompresses!=null) {
 			this.colCompresses =new int[colCompresses.length];
 			System.arraycopy(colCompresses,0, this.colCompresses,0,colCompresses.length);
-		}else
+		} else {
 			this.colCompresses = null;
+		}
+	}
+
+	public int[] getColumnCompressTypes() {
+		return this.colCompresses;
 	}
 
 	/**
