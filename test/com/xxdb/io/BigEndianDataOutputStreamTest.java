@@ -1,4 +1,4 @@
-package com.xxdb;
+package com.xxdb.io;
 
 import com.xxdb.io.BigEndianDataOutputStream;
 import com.xxdb.io.ExtendedDataOutput;
@@ -35,5 +35,11 @@ public class BigEndianDataOutputStreamTest {
         output.writeIntArray(intv,0,2);
         output.writeLongArray(longv,0,2);
         output.writeLong2Array(long2v,0,2);
+        output.writeBoolean(true);
+        output.writeBoolean(false);
+        output.writeChar(1);
+        output.writeChars("1");
+        output.writeStringArray(new String[]{"12A","HELLO"});
+        output.writeStringArray(new String[]{"12A","HELLO"},1,1);
     }
 }

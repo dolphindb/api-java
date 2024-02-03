@@ -1,5 +1,6 @@
-package com.xxdb;
+package com.xxdb.streaming.reverse;
 
+import com.xxdb.DBConnection;
 import com.xxdb.streaming.client.PollingClient;
 import org.junit.Test;
 

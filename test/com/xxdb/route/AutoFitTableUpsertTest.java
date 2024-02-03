@@ -1,5 +1,6 @@
-package com.xxdb;
+package com.xxdb.route;
 
+import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import com.xxdb.route.AutoFitTableUpsert;
 import com.xxdb.route.AutoFitTableAppender;
