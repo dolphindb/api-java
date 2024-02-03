@@ -99,9 +99,6 @@ public class BasicTable extends AbstractEntity implements Table{
 							throw new RuntimeException("Delta compression only supports short/int/long and temporal data.");
 						}
 					}
-					if(dataType.getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && dataType.getValue() <= Entity.DATA_TYPE.DT_POINT_ARRAY.getValue()){
-						throw new RuntimeException("Delta compression doesn't support array vector.");
-					}
 				}
 			}
 		}
