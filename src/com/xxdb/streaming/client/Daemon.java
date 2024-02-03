@@ -70,8 +70,8 @@ class Daemon implements Runnable {
                 threadSet.add(socket);
                 listeningThread.start();
 
-                if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
-                    new Thread(new ConnectionDetector(socket)).start();
+//                if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
+//                    new Thread(new ConnectionDetector(socket)).start();
             }catch(Exception ex){
                 try {
                     if(runningThread_.isInterrupted()) {
