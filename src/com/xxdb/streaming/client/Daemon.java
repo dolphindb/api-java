@@ -15,9 +15,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 class Daemon implements Runnable {
     private int listeningPort = 0;
     private MessageDispatcher dispatcher;
-    private static final int KEEPALIVE_IDLE = 1000;
-    private static final int KEEPALIVE_INTERVAL = 1000;
-    private static final int KEEPALIVE_COUNT = 5;
+//    private static final int KEEPALIVE_IDLE = 1000;
+//    private static final int KEEPALIVE_INTERVAL = 1000;
+//    private static final int KEEPALIVE_COUNT = 5;
     private Thread runningThread_= null;
     private LinkedBlockingQueue<DBConnection> connList = new LinkedBlockingQueue<>();
 
@@ -159,52 +159,52 @@ class Daemon implements Runnable {
         }
     }
 
-    class ConnectionDetector implements Runnable {
-        Socket socket = null;
-
-        public ConnectionDetector(Socket socket) {
-            this.socket = socket;
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    socket.sendUrgentData(0xFF);
-                } catch (Exception ex) {
-                    int failCount = 0;
-                    for (int i = 0; i < KEEPALIVE_COUNT; i++) {
-                        try {
-                            socket.sendUrgentData(0xFF);
-                        } catch (Exception ex0) {
-                            failCount++;
-                        }
-
-                        try {
-                            Thread.sleep(KEEPALIVE_INTERVAL);
-                        } catch (Exception ex1) {
-                            ex.printStackTrace();
-                        }
-                    }
-                    if (failCount != KEEPALIVE_COUNT)
-                        continue;
-
-                    try {
-                        log.info("Connection closed!!");
-                        socket.close();
-                        return;
-                    } catch (Exception e) {
-                        return;
-                    }
-                }
-
-                try {
-                    Thread.sleep(KEEPALIVE_IDLE);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-    }
+//    class ConnectionDetector implements Runnable {
+//        Socket socket = null;
+//
+//        public ConnectionDetector(Socket socket) {
+//            this.socket = socket;
+//        }
+//
+//        @Override
+//        public void run() {
+//            while (true) {
+//                try {
+//                    socket.sendUrgentData(0xFF);
+//                } catch (Exception ex) {
+//                    int failCount = 0;
+//                    for (int i = 0; i < KEEPALIVE_COUNT; i++) {
+//                        try {
+//                            socket.sendUrgentData(0xFF);
+//                        } catch (Exception ex0) {
+//                            failCount++;
+//                        }
+//
+//                        try {
+//                            Thread.sleep(KEEPALIVE_INTERVAL);
+//                        } catch (Exception ex1) {
+//                            ex.printStackTrace();
+//                        }
+//                    }
+//                    if (failCount != KEEPALIVE_COUNT)
+//                        continue;
+//
+//                    try {
+//                        log.info("Connection closed!!");
+//                        socket.close();
+//                        return;
+//                    } catch (Exception e) {
+//                        return;
+//                    }
+//                }
+//
+//                try {
+//                    Thread.sleep(KEEPALIVE_IDLE);
+//                } catch (Exception ex) {
+//                    ex.printStackTrace();
+//                }
+//            }
+//        }
+//    }
 }
 
