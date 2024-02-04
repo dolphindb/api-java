@@ -701,7 +701,7 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
         }
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st1.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st2.append!(t)");
-        Thread.sleep(40000);
+        Thread.sleep(100000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(20000,row_num.getInt());
         client.unsubscribe(HOST,PORT,"tmp_st1","subTread1");

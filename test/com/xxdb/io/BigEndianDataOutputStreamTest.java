@@ -9,6 +9,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.SocketException;
+import java.sql.Array;
+import java.util.Arrays;
 import java.util.ResourceBundle;
 
 import static org.junit.Assert.*;
@@ -41,5 +43,10 @@ public class BigEndianDataOutputStreamTest {
         output.writeChars("1");
         output.writeStringArray(new String[]{"12A","HELLO"});
         output.writeStringArray(new String[]{"12A","HELLO"},1,1);
+        Double2[] double2 = new Double2[513];
+        for(int i=0; i<=512;i++){
+            double2[i]=new Double2(i,i);
+        }
+        output.writeDouble2Array(double2);
     }
 }

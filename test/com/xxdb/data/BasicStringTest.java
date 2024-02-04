@@ -805,7 +805,7 @@ public class BasicStringTest {
     @Test
     public void test_BasicStringVector_big_symbol_data() throws IOException {
         BasicStringVector re1 =(BasicStringVector) conn.run("symbol([concat(take(`abcd中文123,100000))])");
-        System.out.println(re1.getString());
+        //System.out.println(re1.getString());
         String d = "abcd中文123";
         String dd = "";
         for(int i = 0; i < 100000; i++) {

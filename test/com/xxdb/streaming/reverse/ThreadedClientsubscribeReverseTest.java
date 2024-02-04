@@ -1247,7 +1247,40 @@ public class ThreadedClientsubscribeReverseTest {
         assertEquals(100000,row_num.getInt());
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
-
+    @Test(timeout = 200000)
+        public void test_subscribe_throttle_0f() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        Vector filter1 = (Vector) conn.run("1..100000");
+        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,false,filter1,null,true,100000,0.0f);
+        conn.run("n=100000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",100000);
+        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        assertEquals(100000,row_num.getInt());
+        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+    }
+    @Test(timeout = 200000)
+    public void test_subscribe_throttle_0() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        Vector filter1 = (Vector) conn.run("1..1000");
+        client.subscribe(HOST,PORT,"Trades","subTread1",BatchMessageHandler_handler,-1,false,filter1,null,true,1000,0);
+        conn.run("n=100000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",1000);
+        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        assertEquals(1000,row_num.getInt());
+        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+    }
     @Test(timeout = 120000)
     public void test_func_BatchMessageHandler_mul_subscribe() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +

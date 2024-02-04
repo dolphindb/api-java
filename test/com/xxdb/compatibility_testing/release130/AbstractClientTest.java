@@ -28,6 +28,7 @@ public class AbstractClientTest {
         assertNotEquals(client.getReconnectTimestamp("dolphindb"),time1);
         assertNull(client.getSiteByName("MongoDB"));
         client.setNeedReconnect("dolphindb/",4);
+        client.setNeedReconnect("",4);
     }
 
     @Test
