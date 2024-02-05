@@ -22,13 +22,10 @@ public class ValueDomain implements Domain{
 	public List<Integer> getPartitionKeys(Vector partitionCol) {
 		if(partitionCol.getDataCategory() != cat)
 			throw new RuntimeException("Data category incompatible.");
-		if(cat == Entity.DATA_CATEGORY.TEMPORAL && type != partitionCol.getDataType()){
-			DATA_TYPE old = partitionCol.getDataType();
-			partitionCol = (Vector)Utils.castDateTime(partitionCol, type);
-			if(partitionCol == null)
-				throw new RuntimeException("Can't convert type from " + old.name() + " to " + type.name());
-		}
-		if(type == DATA_TYPE.DT_LONG)
+		if(cat == Entity.DATA_CATEGORY.TEMPORAL && this.type != partitionCol.getDataType())
+			partitionCol = (Vector)Utils.castDateTime(partitionCol, this.type);
+
+		if(this.type == DATA_TYPE.DT_LONG)
 			throw new RuntimeException("Long type value can't be used as a partition column.");
 		
 		int rows = partitionCol.rows();
@@ -42,14 +39,10 @@ public class ValueDomain implements Domain{
 	public int getPartitionKey(Scalar partitionCol) {
 		if (partitionCol.getDataCategory() != cat)
 			throw new RuntimeException("Data category incompatible.");
-		if (cat == Entity.DATA_CATEGORY.TEMPORAL && type != partitionCol.getDataType())
-		{
-			DATA_TYPE old = partitionCol.getDataType();
-			partitionCol = (Scalar)Utils.castDateTime(partitionCol, type);
-			if (partitionCol == null)
-				throw new RuntimeException("Can't convert type from " + old + " to " + type);
-		}
-		if (type == DATA_TYPE.DT_LONG)
+		if (cat == Entity.DATA_CATEGORY.TEMPORAL && this.type != partitionCol.getDataType())
+			partitionCol = (Scalar)Utils.castDateTime(partitionCol, this.type);
+
+		if (this.type == DATA_TYPE.DT_LONG)
 			throw new RuntimeException("Long type value can't be used as a partition column.");
 		int key = partitionCol.hashBucket(1048576);
 		return key;

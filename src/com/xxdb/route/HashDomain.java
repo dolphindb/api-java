@@ -22,32 +22,25 @@ public class HashDomain implements Domain{
 	
 	@Override
 	public List<Integer> getPartitionKeys(Vector partitionCol) {
-		if(partitionCol.getDataCategory() != cat)
+		if (partitionCol.getDataCategory() != this.cat)
 			throw new RuntimeException("Data category incompatible.");
-		if(cat == Entity.DATA_CATEGORY.TEMPORAL && type != partitionCol.getDataType()){
-			DATA_TYPE old = partitionCol.getDataType();
-			partitionCol = (Vector)Utils.castDateTime(partitionCol, type);
-			if(partitionCol == null)
-				throw new RuntimeException("Can't convert type from " + old.name() + " to " + type.name());
-		}
+		if (this.cat == Entity.DATA_CATEGORY.TEMPORAL && this.type != partitionCol.getDataType())
+			partitionCol = (Vector)Utils.castDateTime(partitionCol, this.type);
+
 		int rows = partitionCol.rows();
 		ArrayList<Integer> keys = new ArrayList<Integer>(rows);
 		for(int i=0; i<rows; ++i)
-			keys.add(partitionCol.hashBucket(i, buckets));
+			keys.add(partitionCol.hashBucket(i, this.buckets));
 		return keys;
 	}
 
 	@Override
 	public int getPartitionKey(Scalar partitionCol) {
-		if(partitionCol.getDataCategory() != cat)
+		if (partitionCol.getDataCategory() != this.cat)
 			throw new RuntimeException("Data category incompatible.");
-		if(cat == Entity.DATA_CATEGORY.TEMPORAL && type != partitionCol.getDataType())
-		{
-			DATA_TYPE old = partitionCol.getDataType();
-			partitionCol = (Scalar)Utils.castDateTime(partitionCol, type);
-			if (partitionCol == null)
-				throw new RuntimeException("Can't convert type from " + old + " to " + type);
-		}
-		return partitionCol.hashBucket(buckets);
+		if (cat == Entity.DATA_CATEGORY.TEMPORAL && this.type != partitionCol.getDataType())
+			partitionCol = (Scalar)Utils.castDateTime(partitionCol, this.type);
+
+		return partitionCol.hashBucket(this.buckets);
 	}
 }

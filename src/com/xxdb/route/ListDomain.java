@@ -22,36 +22,32 @@ public class ListDomain implements Domain {
 		this.cat = cat;
 		if(list.getDataType() != Entity.DATA_TYPE.DT_ANY)
 			throw new RuntimeException("The input list must be a tuple.");
-		dict = new HashMap<Entity, Integer>();
+		this.dict = new HashMap<Entity, Integer>();
 		BasicAnyVector values = (BasicAnyVector)list;
 		int partitions = values.rows();
 		for(int i=0; i<partitions; ++i){
 			Entity cur = values.getEntity(i);
 			if(cur.isScalar())
-				dict.put((Scalar)cur, i);
+				this.dict.put((Scalar)cur, i);
 			else{
 				Vector vec = (Vector)cur;
 				for(int j=0; j<vec.rows(); ++j)
-					dict.put(vec.get(j), i);
+					this.dict.put(vec.get(j), i);
 			}
 		}
 	}
 	
 	@Override
 	public List<Integer> getPartitionKeys(Vector partitionCol) {
-		if(partitionCol.getDataCategory() != cat)
+		if(partitionCol.getDataCategory() != this.cat)
 			throw new RuntimeException("Data category incompatible.");
-		if(cat == Entity.DATA_CATEGORY.TEMPORAL && type != partitionCol.getDataType()){
-			DATA_TYPE old = partitionCol.getDataType();
-			partitionCol = (Vector)Utils.castDateTime(partitionCol, type);
-			if(partitionCol == null)
-				throw new RuntimeException("Can't convert type from " + old.name() + " to " + type.name());
-		}
+		if (this.cat == Entity.DATA_CATEGORY.TEMPORAL && type != partitionCol.getDataType())
+			partitionCol = (Vector)Utils.castDateTime(partitionCol, this.type);
 		
 		int rows = partitionCol.rows();
 		ArrayList<Integer> keys = new ArrayList<Integer>(rows);
 		for(int i=0; i<rows; ++i){
-			Integer index = dict.get(partitionCol.get(i));
+			Integer index = this.dict.get(partitionCol.get(i));
 			if(index == null)
 				keys.add(-1);
 			else
@@ -62,17 +58,13 @@ public class ListDomain implements Domain {
 
 	@Override
 	public int getPartitionKey(Scalar partitionCol) {
-		if (partitionCol.getDataCategory() != cat)
+		if (partitionCol.getDataCategory() != this.cat)
 			throw new RuntimeException("Data category incompatible.");
-		if (cat == Entity.DATA_CATEGORY.TEMPORAL && type != partitionCol.getDataType())
-		{
-			DATA_TYPE old = partitionCol.getDataType();
-			partitionCol = (Scalar)Utils.castDateTime(partitionCol, type);
-			if (partitionCol == null)
-				throw new RuntimeException("Can't convert type from " + old + " to " + type);
-		}
+		if (this.cat == Entity.DATA_CATEGORY.TEMPORAL && this.type != partitionCol.getDataType())
+			partitionCol = (Scalar)Utils.castDateTime(partitionCol, this.type);
+
 		int index = 0;
-		index = dict.getOrDefault(partitionCol, -1);
+		index = this.dict.getOrDefault(partitionCol, -1);
 		return index;
 	}
 }
