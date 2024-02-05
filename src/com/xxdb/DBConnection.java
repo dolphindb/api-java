@@ -198,6 +198,7 @@ public class DBConnection {
                     socket_.connect(new InetSocketAddress(hostName_,port_), 3000);
                 }
             } catch (ConnectException ex) {
+                log.error("com.xxdb.DBConnection.DBConnectionImpl.connect() has exception. Current node hostName: " + this.hostName_ + ", port: " + this.port_);
                 log.error("Connect to " + this.hostName_ + ":" + this.port_ + " failed.");
                 throw ex;
             }
@@ -885,6 +886,7 @@ public class DBConnection {
                 }
             }
             if (nodes_.isEmpty()){
+                log.error("com.xxdb.DBConnection.switchDataNode nodes_ is empty. Current node hostName: " + node.hostName + ", port: " + node.port);
                 log.error("Connect to " + node.hostName + ":" + node.port + " failed.");
                 throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed.");
             }
@@ -937,6 +939,7 @@ public class DBConnection {
     }
 
     public ExceptionType parseException(String msg, Node node){
+        log.info("com.xxdb.DBConnection.parseException msg: " + msg + ", node hostName: " + node.hostName + ", port: " + node.port);
         if(msg==null){
             node.hostName = "";
             node.port = 0;
