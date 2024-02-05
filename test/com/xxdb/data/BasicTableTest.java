@@ -269,8 +269,9 @@ public class BasicTableTest {
         System.out.println(bt.getString());
         int[] colCompresses = new int[]{1,2,3};
         bt.setColumnCompressTypes(colCompresses);
-        //System.out.println(bt.);
+        Assert.assertEquals("[1, 2, 3]", Arrays.toString(bt.getColumnCompressTypes()));
     }
+
     @Test(expected = RuntimeException.class)
     public void test_BasicTable_other(){
         BasicTable bt = createBasicTable();

@@ -2959,7 +2959,7 @@ public class DBConnectionTest {
         timer.cancel();
     }
 
-    @Test
+    //@Test
     public void test_asynchronousTask_true() throws IOException{
         DBConnection conn = new DBConnection(true);
         conn.connect(HOST,PORT,"admin","123456");

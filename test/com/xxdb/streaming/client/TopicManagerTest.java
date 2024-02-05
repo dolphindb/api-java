@@ -1,4 +1,4 @@
-package com.xxdb.streaming.reverse;
+package com.xxdb.streaming.client;
 
 import com.xxdb.streaming.client.TopicManager;
 import org.junit.Test;

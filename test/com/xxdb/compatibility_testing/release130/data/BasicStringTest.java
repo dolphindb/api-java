@@ -639,7 +639,7 @@ public class BasicStringTest {
     @Test
     public void test_BasicString_big_blob_data() throws IOException {
         BasicString re1 =(BasicString) conn.run("blob(concat(take(`abcd中文123,100000)))");
-        System.out.println(re1.getString());
+        //System.out.println(re1.getString());
         String d = "abcd中文123";
         String dd = "";
         for(int i = 0; i < 100000; i++) {
@@ -651,7 +651,7 @@ public class BasicStringTest {
     @Test
     public void test_BasicString_big_string_data() throws IOException {
         BasicString re1 =(BasicString) conn.run("string(concat(take(`abcd中文123,100000)))");
-        System.out.println(re1.getString());
+       // System.out.println(re1.getString());
         String d = "abcd中文123";
         String dd = "";
         for(int i = 0; i < 100000; i++) {
@@ -663,7 +663,7 @@ public class BasicStringTest {
     @Test
     public void test_BasicStringVector_big_blob_data() throws IOException {
         BasicStringVector re1 =(BasicStringVector) conn.run("blob([concat(take(`abcd中文123,100000))])");
-        System.out.println(re1.getString());
+        //System.out.println(re1.getString());
         String d = "abcd中文123";
         String dd = "";
         for(int i = 0; i < 100000; i++) {
