@@ -939,7 +939,7 @@ public class DBConnection {
     }
 
     public ExceptionType parseException(String msg, Node node){
-        log.info("com.xxdb.DBConnection.parseException msg: " + msg + ", node hostName: " + node.hostName + ", port: " + node.port);
+        log.info("com.xxdb.DBConnection.parseException msg: " + msg);
         if(msg==null){
             node.hostName = "";
             node.port = 0;
