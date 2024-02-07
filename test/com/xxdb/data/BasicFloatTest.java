@@ -1,11 +1,6 @@
 package com.xxdb.data;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.xxdb.DBConnection;
-import com.xxdb.DBConnectionTest;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
