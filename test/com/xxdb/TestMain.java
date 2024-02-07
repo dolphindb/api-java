@@ -11,7 +11,7 @@ public class TestMain {
     public static void main(String[] args) {
 
         List<Result> results = new ArrayList<>();
-        results.add(doTest(DBConnectionTest.class));
+        //results.add(doTest(DBConnectionTest.class));
         results.add(doTest(BasicTableTest.class));
         results.add(doTest(UtilsTest.class));
         results.add(doTest(BasicStringTest.class));

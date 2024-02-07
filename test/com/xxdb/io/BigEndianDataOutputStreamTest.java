@@ -17,10 +17,6 @@ import static org.junit.Assert.*;
 
 
 public class BigEndianDataOutputStreamTest {
-    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
-    static String HOST = bundle.getString("HOST");
-    static int PORT = Integer.parseInt(bundle.getString("PORT"));
-
     @Test
     public void test_BigEndianDataOutputStream_Basic() throws IOException {
         ExtendedDataOutput output = new BigEndianDataOutputStream(new OutputStream() {

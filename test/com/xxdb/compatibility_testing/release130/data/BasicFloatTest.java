@@ -1,11 +1,6 @@
 package com.xxdb.compatibility_testing.release130.data;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.xxdb.DBConnection;
-import com.xxdb.DBConnectionTest;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import com.xxdb.data.*;
 import java.io.IOException;
