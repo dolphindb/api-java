@@ -166,31 +166,4 @@ public class PartitionedTableAppender {
             throw new RuntimeException("column " + col + ", temporal column must have exactly the same type, expect " + expectType.name() + ", got " + type.name() );
         }
     }
-    
-    public static void main(String[] args){
-    	try{
-	    	DBConnectionPool pool = new ExclusiveDBConnectionPool("localhost", 8801, "admin", "123456", 5, true, true);
-	    	PartitionedTableAppender appender = new PartitionedTableAppender("dfs://demohash", "pt", "id", pool);
-	    	List<String> colNames = new ArrayList<String>(2);
-	    	colNames.add("id");
-	    	colNames.add("value");
-	    	List<Vector> cols = new ArrayList<Vector>(2);
-	    	BasicStringVector id = new BasicStringVector(3);
-	    	id.setString(0, "ORCA");
-	    	id.setString(1, "YHOO");
-	    	id.setString(2, "Ford");
-	    	cols.add(id);
-	    	
-	    	BasicIntVector value = new BasicIntVector(3);
-	    	value.setInt(0, 10);
-	    	value.setInt(1, 11);
-	    	value.setInt(2, 12);
-	    	cols.add(value);
-	    	
-	    	appender.append(new BasicTable(colNames, cols));
-    	}
-    	catch(Exception ex){
-			log.error(ex.getMessage());
-    	}
-    }
 }
