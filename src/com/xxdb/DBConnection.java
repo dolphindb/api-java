@@ -93,15 +93,6 @@ public class DBConnection {
             this.load = -1.0;
         }
 
-        public Node(String ipPort, double loadValue){
-            String[] v = ipPort.split(":");
-            if (v.length < 2){
-                throw new RuntimeException("The ipPort '" + ipPort + "' is invalid.");
-            }
-            this.hostName = v[0];
-            this.port = Integer.parseInt(v[1]);
-        }
-
         public Node(String ipPort){
             String[] v = ipPort.split(":");
             if (v.length < 2){
