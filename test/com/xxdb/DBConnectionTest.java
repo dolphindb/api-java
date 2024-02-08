@@ -4383,5 +4383,89 @@ public void test_SSL() throws Exception {
         assertEquals(30000, res1.rows());
         connection.close();
     }
-
+    @Test
+    public void test_upload() throws IOException {
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456","", true, ipports);
+        BasicTable tb = (BasicTable) connection.run("table(1..100 as id,take(`aaa,100) as name)");
+        BasicTable tb1 = (BasicTable) connection.run("table(1..100 as id,take(`aaa,100) as name)");
+        Map<String, Entity> upObj = new HashMap<String, Entity>();
+        upObj.put("table_upload_tb", (Entity) tb);
+        upObj.put("table_upload_tb1", (Entity) tb1);
+        connection.upload(upObj);
+        BasicTable table = (BasicTable) connection.run("table_upload_tb");
+        assertEquals(100, table.rows());
+        assertEquals(2, table.columns());
+        BasicTable table1 = (BasicTable) connection.run("table_upload_tb1");
+        assertEquals(100, table1.rows());
+        assertEquals(2, table1.columns());
+        }
+    @Test
+    public void test_upload_error() throws IOException {
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456","", true, ipports);
+        BasicTable tb = (BasicTable) connection.run("table(1..100 as id,take(`aaa,100) as name)");
+        BasicTable tb1 = (BasicTable) connection.run("table(1..100 as id,take(`aaa,100) as name)");
+        connection.run("share table(1..100 as id,take(`aaa,100) as name) as table_upload_tb3");
+        Map<String, Entity> upObj = new HashMap<String, Entity>();
+        upObj.put("table_upload_tb", (Entity) tb);
+        upObj.put("table_upload_tb1", (Entity) tb1);
+        upObj.put("table_upload_tb3", (Entity) tb1);
+        String re = null;
+        try{
+            connection.upload(upObj);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(true, re.contains("''table_upload_tb3' is a shared variable and can't be overwritten.' variable: 'table_upload_tb1,table_upload_tb,table_upload_tb3'"));
+    }
+    //@Test
+    public void test_upload_error_1() throws IOException {
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456","", true, ipports);
+        BasicTable tb = (BasicTable) connection.run("table(1..100 as id,take(`aaa,100) as name)");
+        BasicTable tb1 = (BasicTable) connection.run("table(1..100 as id,take(`aaa,100) as name)");
+        connection.run("share table(1..100 as id,take(`aaa,100) as name) as table_upload_tb3");
+        Map<String, Entity> upObj = new HashMap<String, Entity>();
+        upObj.put("table_upload_tb", (Entity) tb);
+        upObj.put("table_upload_tb1", (Entity) tb1);
+        upObj.put("table_upload_tb3", null);
+        connection.upload(upObj);
+    }
+    @Test
+    public void test_run_error() throws IOException {
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456","", true, ipports);
+        String re = null;
+        try{
+            connection.run("share table(1..100 as id,take(`aaa,100) as name) as table_upload_tb3;table_upload_tb3 = table(1..100 as id,take(`aaa,100) as name);", (List<Entity>) null,1,1,8191,false);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(true, re.contains("fetchSize must be greater than 8192"));
+    }
+    @Test
+    public void test_ipPort_invalid() throws IOException {
+        DBConnection connection = new DBConnection(false, false, false);
+        String[] ipport = new String[]{"192.168.0.69"};
+        String re = null;
+        try{
+            connection.connect(HOST, PORT, "admin", "123456","", true, ipport);
+        }catch(RuntimeException e){
+            re = e.getMessage();
+        }
+        assertEquals("The ipPort '192.168.0.69' is invalid.", re);
+    }
+    @Test
+    public void test_parseException() throws IOException {
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456","", true, ipports);
+        String re = null;
+        try{
+            connection.run("share table(1..100 as id,take(`aaa,100) as name) as table_upload_tb3;table_upload_tb3 = table(1..100 as id,take(`aaa,100) as name);", (List<Entity>) null,1,1,8191,false);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(true, re.contains("fetchSize must be greater than 8192"));
+    }
 }

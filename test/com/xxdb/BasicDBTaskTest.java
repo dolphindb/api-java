@@ -40,4 +40,27 @@ public class BasicDBTaskTest {
         System.out.println((end - start) / 1000000);
         assertEquals(true,(end - start) / 1000000<1100);
     }
+    @Test
+    public void test_BasicDBTask_getResult()throws Exception{
+        conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicDBTask bt = new BasicDBTask("sleep(`1)");
+        String re = null;
+        try{
+            bt.getResult();
+        }catch(RuntimeException e){
+            re = e.getMessage();
+        }
+        assertEquals("Current status is: PENDING!",re);
+    }
+    @Test
+    public void test_BasicDBTask_isFinished()throws Exception{
+        conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicDBTask bt = new BasicDBTask("sleep(1)");
+        assertEquals(false,bt.isFinished());
+        bt.setDBConnection(conn);
+        bt.call();
+        assertEquals(true,bt.isFinished());
+    }
 }
