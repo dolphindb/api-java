@@ -17,6 +17,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static com.xxdb.data.BasicArrayVectorTest.bundle;
+import static com.xxdb.data.Utils.getDataTypeString;
 import static org.junit.Assert.*;
 
 public class UtilsTest {
@@ -269,5 +270,33 @@ public class UtilsTest {
         timer.reset();
         timer.recordTime("third",389L,7082504L);
         timer.printAll();
+    }
+    @Test
+    public void test_getDataTypeString(){
+        assertEquals("bool",getDataTypeString(Entity.DATA_TYPE.DT_BOOL));
+        assertEquals("byte",getDataTypeString(Entity.DATA_TYPE.DT_BYTE));
+        assertEquals("short",getDataTypeString(Entity.DATA_TYPE.DT_SHORT));
+        assertEquals("int",getDataTypeString(Entity.DATA_TYPE.DT_INT));
+        assertEquals("long",getDataTypeString(Entity.DATA_TYPE.DT_LONG));
+        assertEquals("float",getDataTypeString(Entity.DATA_TYPE.DT_FLOAT));
+        assertEquals("double",getDataTypeString(Entity.DATA_TYPE.DT_DOUBLE));
+        assertEquals("nanotime",getDataTypeString(Entity.DATA_TYPE.DT_NANOTIME));
+        assertEquals("nanotimestamp",getDataTypeString(Entity.DATA_TYPE.DT_NANOTIMESTAMP));
+        assertEquals("timestamp",getDataTypeString(Entity.DATA_TYPE.DT_TIMESTAMP));
+        assertEquals("date",getDataTypeString(Entity.DATA_TYPE.DT_DATE));
+        assertEquals("month",getDataTypeString(Entity.DATA_TYPE.DT_MONTH));
+        assertEquals("time",getDataTypeString(Entity.DATA_TYPE.DT_TIME));
+        assertEquals("second",getDataTypeString(Entity.DATA_TYPE.DT_SECOND));
+        assertEquals("minute",getDataTypeString(Entity.DATA_TYPE.DT_MINUTE));
+        assertEquals("datetime",getDataTypeString(Entity.DATA_TYPE.DT_DATETIME));
+        assertEquals("int128",getDataTypeString(Entity.DATA_TYPE.DT_INT128));
+        assertEquals("ipaddr",getDataTypeString(Entity.DATA_TYPE.DT_IPADDR));
+        assertEquals("uuid",getDataTypeString(Entity.DATA_TYPE.DT_UUID));
+        assertEquals("string",getDataTypeString(Entity.DATA_TYPE.DT_STRING));
+        assertEquals("symbol",getDataTypeString(Entity.DATA_TYPE.DT_SYMBOL));
+        assertEquals("decimal32",getDataTypeString(Entity.DATA_TYPE.DT_DECIMAL32));
+        assertEquals("decimal64",getDataTypeString(Entity.DATA_TYPE.DT_DECIMAL64));
+        assertEquals("DT_DECIMAL128",getDataTypeString(Entity.DATA_TYPE.DT_DECIMAL128));
+
     }
 }
