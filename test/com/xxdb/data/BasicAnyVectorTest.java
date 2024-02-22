@@ -102,7 +102,6 @@ public class BasicAnyVectorTest {
             assertEquals("The element of the vector is not a scalar object.",re.getMessage());
         }
     }
-
     @Test
     public void test_BasicAnyVector_scalar() throws Exception {
         DBConnection conn = new DBConnection();
@@ -118,6 +117,10 @@ public class BasicAnyVectorTest {
         assertEquals("(0,1,2,3,4,5,6,7,8,9,...)",bav.getString());
         bav.set(11, (Scalar) conn.run("date(2022.08.01);"));
         assertEquals("2022.08.01",bav.get(11).getString());
+        BasicAnyVector bav1 = new BasicAnyVector(0);
+        System.out.println();
+        assertEquals("()",bav1.getString());
+
     }
 
     @Test

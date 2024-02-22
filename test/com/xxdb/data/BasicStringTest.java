@@ -933,4 +933,36 @@ public class BasicStringTest {
         BasicTable re = (BasicTable)conn.run("select * from test_null");
         assertEquals(1,re.rows());
     }
+    @Test
+    public void test_BasicStringVector_list_null() throws Exception {
+        List<String> list = null;
+        BasicStringVector bbv = new BasicStringVector(list,false);
+        assertEquals(null,bbv);
+        BasicStringVector bsv = new BasicStringVector(list);
+        assertEquals(null,bsv);
+    }
+    @Test
+    public void test_BasicStringVector_1() throws Exception {
+        BasicStringVector bbv = new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, 1, false,false);
+        assertEquals("DT_STRING",bbv.getDataType().toString());
+        assertEquals("[]",bbv.getString());
+    }
+    @Test
+    public void test_BasicStringVector_blob() throws Exception {
+        List<String> list = new ArrayList<>();
+        list.add("DolphinDB");
+        BasicStringVector bsv = new BasicStringVector(list,true);
+        bsv.add("MysqlDB");
+        assertEquals("[DolphinDB,MysqlDB]",bsv.getString());
+        String[] valueList = new String[]{"121212121","GoldenDB@@@@!!!"};
+        bsv.addRange(valueList);
+        assertEquals("[DolphinDB,MysqlDB,121212121,GoldenDB@@@@!!!]",bsv.getString());
+        Vector value = new BasicStringVector(list,true);
+        bsv.Append(value);
+        assertEquals("[DolphinDB,MysqlDB,121212121,GoldenDB@@@@!!!,DolphinDB]",bsv.getString());
+        Entity entity = new BasicString("GoldenDB@@@@!!!",true);
+        bsv.set(0,entity);
+        assertEquals("[GoldenDB@@@@!!!,MysqlDB,121212121,GoldenDB@@@@!!!,DolphinDB]",bsv.getString());
+        System.out.println(bsv.getString());
+    }
 }

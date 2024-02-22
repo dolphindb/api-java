@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -111,7 +112,7 @@ public class BasicDecimal128Test {
         assertEquals("0.0000000000000000000000000000000000000",Decimal1284.getString());
     }
     @Test
-    public void testBasicDecimal128_scale_39() throws Exception {
+    public void testBasicDecimal128_scale_not_true() throws Exception {
         String ex = null;
         try{
             BasicDecimal128 Decimal128 = new BasicDecimal128("9.9999999999999999999999999999999999999",39);
@@ -119,7 +120,51 @@ public class BasicDecimal128Test {
             ex=E.getMessage();
         }
         assertEquals("Scale 39 is out of bounds, it must be in [0,38].",ex);
+        try{
+            BasicDecimal128 Decimal128 = new BasicDecimal128("9.999",-1);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,38].",ex);
     }
+    @Test
+    public void test_BasicDecimal128_dataValue_not_true() throws Exception {
+        String ex = null;
+        try{
+            BasicDecimal128 tmp_128 = new BasicDecimal128("-170141183460469231731687303715884105729",5);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Decimal128 overflow -170141183460469231731687303715884105729.00000",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal128 tmp_128 = new BasicDecimal128("170141183460469231731687303715884105729",5);
+        }catch(Exception E){
+            ex1 = E.getMessage();
+        }
+        assertEquals("Decimal128 overflow 170141183460469231731687303715884105729.00000",ex1);
+    }
+//    @Test
+//    public void test_BasicDecimal128_dataValue_not_true_1() throws Exception {
+//        BasicDecimal128 tmp_1281 = new BasicDecimal128(new BigInteger("-170141183460469231731687303715884105728"),5);
+//
+//        String ex = null;
+//        try{
+//            BasicDecimal128 tmp_128 = new BasicDecimal128(new BigInteger("-170141183460469231731687303715884105728"),5);
+//        }catch(Exception E){
+//            ex=E.getMessage();
+//        }
+//        assertEquals("Decimal128 -170141183460469231731687303715884105729 cannot be less than -170141183460469231731687303715884105728",ex);
+//        String ex1 = null;
+//
+//        try{
+//            BasicDecimal128 tmp_128 = new BasicDecimal128(new BigInteger("170141183460469231731687303715884105728"),5);
+//        }catch(Exception E){
+//            ex1 = E.getMessage();
+//        }
+//        assertEquals("Decimal128 170141183460469231731687303715884105729 cannot exceed 170141183460469231731687303715884105728",ex1);
+//    }
+
     @Test
     public void testBasicDecimal128_getString1() {
         BasicDecimal128 Decimal128_a = new BasicDecimal128("103", 6);
@@ -294,6 +339,9 @@ public class BasicDecimal128Test {
         BasicDecimal128 re1 = new BasicDecimal128( "0.003", 6);
         re1.setNull();
         assertEquals(true,re1.isNull());
+        BigInteger value = null;
+        BasicDecimal128 re2 = (BasicDecimal128)conn.run("decimal128(NULL,3)");
+        assertEquals(true,re2.isNull());
     }
     @Test
     public void testBasicDecimal128_getScale() throws Exception {

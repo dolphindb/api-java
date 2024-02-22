@@ -35,9 +35,13 @@ public class BasicFloatTest {
         BasicFloat bf2 = new BasicFloat(Float.NEGATIVE_INFINITY);
         assertEquals(String.valueOf(Float.NEGATIVE_INFINITY),bf2.getString());
         assertFalse(bf.equals(new GregorianCalendar()));
+        assertTrue(bf.equals(bf));
+        assertFalse(bf.equals(null));
         BasicFloat bf3 = new BasicFloat((float) 0.000001);
         assertEquals("0.000001",bf3.getString());
         assertEquals("0.000001",bf3.getJsonString());
+        BasicFloat bf1 = new BasicFloat(1);
+        assertFalse(bf.equals(bf1));
     }
 
     @Test

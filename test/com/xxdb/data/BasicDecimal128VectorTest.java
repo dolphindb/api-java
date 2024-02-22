@@ -42,15 +42,15 @@ public class BasicDecimal128VectorTest {
         String ex = null;
         try{
             BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,39);
-        }catch(Exception E){
-            ex=E.getMessage();
+        }catch(Exception e){
+            ex = e.getMessage();
         }
         assertEquals("Scale 39 is out of bounds, it must be in [0,38].",ex);
         String ex1 = null;
         try{
             BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,-1);
-        }catch(Exception E){
-            ex1 = E.getMessage();
+        }catch(Exception e){
+            ex1 = e.getMessage();
         }
         assertEquals("Scale -1 is out of bounds, it must be in [0,38].",ex1);
     }
@@ -73,6 +73,23 @@ public class BasicDecimal128VectorTest {
         assertEquals("Scale -1 is out of bounds, it must be in [0,38].",ex1);
     }
     @Test
+    public void test_BasicDecimal128Vector_scale_not_true_2() throws Exception {
+        String ex = null;
+        try{
+            BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(2,39);
+        }catch(Exception e){
+            ex = e.getMessage();
+        }
+        assertEquals("Scale 39 is out of bounds, it must be in [0,38].",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(2,-1);
+        }catch(Exception e){
+            ex1 = e.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,38].",ex1);
+    }
+    @Test//AJ-583
     public void test_BasicDecimal128Vector_dataValue_not_true() throws Exception {
         String[] tmp_string_v = {"-170141183460469231731687303715884105729"};
         String ex = null;

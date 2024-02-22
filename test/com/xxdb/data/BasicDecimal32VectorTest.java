@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.ResourceBundle;
@@ -72,7 +73,41 @@ public class BasicDecimal32VectorTest {
         }
         assertEquals("Scale -1 is out of bounds, it must be in [0,9].",ex1);
     }
-
+    @Test
+    public void test_BasicDecimal32Vector_scale_not_true_2() throws Exception {
+        String ex = null;
+        try{
+            BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(2,10);
+        }catch(Exception e){
+            ex = e.getMessage();
+        }
+        assertEquals("Scale 10 is out of bounds, it must be in [0,9].",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(2,-1);
+        }catch(Exception e){
+            ex1 = e.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,9].",ex1);
+    }
+    @Test
+    public void test_BasicDecimal32Vector_scale_not_true_3() throws Exception {
+        int[] tmp_int_v = {1};
+        String ex = null;
+        try{
+            BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_int_v,10);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale 10 is out of bounds, it must be in [0,9].",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_int_v,-1);
+        }catch(Exception E){
+            ex1 = E.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,9].",ex1);
+    }
     @Test
     public void test_BasicDecimal32Vector_run_vector() throws IOException {
         BasicDecimal32Vector re1 =(BasicDecimal32Vector) conn.run("decimal32([1.232,-12.43,123.53],6)");
@@ -94,13 +129,15 @@ public class BasicDecimal32VectorTest {
 
     @Test
     public void test_BasicDecimal32Vector_basicFunction() throws Exception {
-        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(2,2);
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(3,2);
         bd32v.set(0,new BasicDecimal32(11,2));
         bd32v.set(1,new BasicDecimal32(17,2));
         assertFalse(bd32v.isNull(1));
         assertEquals(BasicDecimal32.class,bd32v.getElementClass());
         bd32v.setNull(0);
         assertTrue(bd32v.isNull(0));
+        bd32v.set(2,new BasicDecimal32("7.3322",4));
+        assertEquals("7.33",bd32v.getString(2));
     }
 
     @Test

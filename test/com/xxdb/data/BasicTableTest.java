@@ -271,6 +271,14 @@ public class BasicTableTest {
         bt.setColumnCompressTypes(colCompresses);
         Assert.assertEquals("[1, 2, 3]", Arrays.toString(bt.getColumnCompressTypes()));
     }
+    @Test
+    public void test_BasicTable_setColCompressTypes_colCompresses_null(){
+        BasicTable bt = createBasicTable();
+        System.out.println(bt.getString());
+        int[] colCompresses = null;
+        bt.setColumnCompressTypes(colCompresses);
+        Assert.assertEquals(null, bt.getColumnCompressTypes());
+    }
 
     @Test(expected = RuntimeException.class)
     public void test_BasicTable_other(){
@@ -706,6 +714,7 @@ public class BasicTableTest {
         DBConnection conn = new DBConnection(false, false, true);
         conn.connect(HOST, PORT, "admin", "123456");
         BasicTable bt = (BasicTable) conn.run("t = table(1:0,[`int1] ,[INT]);select * from t");
+        Assert.assertEquals(0,bt.rows());
         System.out.println(bt.getString());
         BasicBooleanVector bbv = new BasicBooleanVector(0);
         System.out.println(bbv.getString());
@@ -1632,7 +1641,35 @@ public class BasicTableTest {
             re = e.getMessage();
         }
         assertEquals("The length of column int1  must be the same as the first column length: 3.",re);
+    }
+    @Test
+    public void Test_BasicTable_replaceColumn_colName_null() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        BasicBooleanVector bbv = new BasicBooleanVector(2);
+        String re = null;
+        try{
+            bt.replaceColumn(null, bbv);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' or 'col' in table cannot be null.",re);
+    }
 
+    @Test
+    public void Test_BasicTable_replaceColumn_col_null() throws Exception {
+        DBConnection conn = new DBConnection(false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable bt = (BasicTable) conn.run("t = table(1 2 3 as int1);select * from t");
+        BasicBooleanVector bbv = new BasicBooleanVector(2);
+        String re = null;
+        try{
+            bt.replaceColumn("int1", null);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' or 'col' in table cannot be null.",re);
     }
     @Test
     public void Test_BasicTable_replaceColumn_BOOL() throws Exception {

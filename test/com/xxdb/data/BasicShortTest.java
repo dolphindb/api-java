@@ -176,6 +176,18 @@ public class BasicShortTest {
         assertEquals(size+4,bsv.rows());
     }
     @Test
+    public void test_BasicShortVector_setNull() throws Exception {
+        List<Short> list = new ArrayList<>();
+        list.add((short) 2);
+        list.add((short) 7);
+        list.add((short) 16);
+        BasicShortVector bsv = new BasicShortVector(list);
+        bsv.setNull(0);
+        assertEquals(true,bsv.isNull(0));
+        List<Short> list1 = null;
+        BasicShortVector bsv1 = new BasicShortVector(list1);
+    }
+    @Test
     public void test_shortValue() throws Exception {
         BasicShort bb = new BasicShort((short) 88);
         bb.setNull();
