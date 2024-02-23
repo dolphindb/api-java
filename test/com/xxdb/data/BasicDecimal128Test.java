@@ -7,13 +7,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.math.BigDecimal;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertTrue;
 
 public class BasicDecimal128Test {
 
@@ -339,7 +337,6 @@ public class BasicDecimal128Test {
         BasicDecimal128 re1 = new BasicDecimal128( "0.003", 6);
         re1.setNull();
         assertEquals(true,re1.isNull());
-        BigInteger value = null;
         BasicDecimal128 re2 = (BasicDecimal128)conn.run("decimal128(NULL,3)");
         assertEquals(true,re2.isNull());
     }
