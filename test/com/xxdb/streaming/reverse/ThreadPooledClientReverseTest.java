@@ -1728,9 +1728,9 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
                 dataType = dataType.replaceAll("\\(","").replaceAll("\\)","");
                 String script = null;
                 if (message.getSym().equals("msg1")) {
-                    script = String.format("insert into sub1 values( %s,[complex(%s)])", timestampv,dataType);
+                    script = String.format("insert into sub1 values( %s,[point(%s)])", timestampv,dataType);
                 } else if (message.getSym().equals("msg2")) {
-                    script = String.format("insert into sub2 values( %s,[complex(%s)])", timestampv,dataType);
+                    script = String.format("insert into sub2 values( %s,[point(%s)])", timestampv,dataType);
                 }
                 conn.run(script);
             } catch (Exception e) {

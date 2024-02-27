@@ -29,6 +29,7 @@ import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import static com.xxdb.streaming.reverse.ThreadedClientsubscribeReverseTest.PrepareStreamTableDecimal_StreamDeserializer;
 import static com.xxdb.streaming.reverse.ThreadedClientsubscribeReverseTest.PrepareStreamTable_StreamDeserializer;
 import static org.junit.Assert.*;
 
@@ -1154,7 +1155,7 @@ public class PollingClientReverseTest {
                 }
         }
     }
-    //@Test(timeout = 120000)
+    @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_BOOL()throws IOException, InterruptedException {
         PrepareStreamTable_StreamDeserializer("BOOL");
         Map<String, Pair<String, String>> tables = new HashMap<>();
@@ -1165,7 +1166,646 @@ public class PollingClientReverseTest {
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 1000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_CHAR()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("CHAR");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_SHORT()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("SHORT");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_LONG()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("LONG");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_DOUBLE()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("DOUBLE");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_FLOAT()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("FLOAT");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_MONTH()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("MONTH");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_TIME()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("TIME");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_MINUTE()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("MINUTE");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_SECOND()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("SECOND");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_DATETIME()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("DATETIME");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_TIMESTAMP()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("TIMESTAMP");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_NANOTIME()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("NANOTIME");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_NANOTIMESTAMP()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("NANOTIMESTAMP");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    class Handler_StreamDeserializer_array_UUID implements MessageHandler {
+        private StreamDeserializer deserializer_;
+
+        public Handler_StreamDeserializer_array_UUID(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String dataType = message.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,[uuid(%s)])", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,[uuid(%s)])", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_UUID()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("UUID");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array_UUID handler = new Handler_StreamDeserializer_array_UUID(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    class Handler_StreamDeserializer_array_DATEHOUR implements MessageHandler {
+        private StreamDeserializer deserializer_;
+
+        public Handler_StreamDeserializer_array_DATEHOUR(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String dataType = message.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,[datehour(%s)])", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,[datehour(%s)])", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_DATEHOUR()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("DATEHOUR");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array_DATEHOUR handler = new Handler_StreamDeserializer_array_DATEHOUR(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    class Handler_StreamDeserializer_array_IPADDR implements MessageHandler {
+        private StreamDeserializer deserializer_;
+
+        public Handler_StreamDeserializer_array_IPADDR(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String dataType = message.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,[ipaddr(%s)])", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,[ipaddr(%s)])", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_IPADDR()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("IPADDR");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(2000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array_IPADDR handler = new Handler_StreamDeserializer_array_IPADDR(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+
+    class Handler_StreamDeserializer_array_INT128 implements MessageHandler {
+        private StreamDeserializer deserializer_;
+
+        public Handler_StreamDeserializer_array_INT128(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String dataType = message.getEntity(1).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,[int128(%s)])", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,[int128(%s)])", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_INT128()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("INT128");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array_INT128 handler = new Handler_StreamDeserializer_array_INT128(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+
+    class Handler_StreamDeserializer_array_COMPLEX implements MessageHandler {
+        private StreamDeserializer deserializer_;
+
+        public Handler_StreamDeserializer_array_COMPLEX(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String complex1 = message.getEntity(1).getString().replaceAll(",,", ",NULL+NULL,").replaceAll("\\[,", "[NULL+NULL,").replaceAll(",]", ",NULL+NULL]");
+                complex1 = complex1.substring(1, complex1.length() - 1);
+                String[] complex2 = complex1.split(",");
+                String complex3 = null;
+                StringBuilder re1 = new StringBuilder();
+                StringBuilder re2 = new StringBuilder();
+                for(int i=0;i<complex2.length;i++){
+                    complex3 = complex2[i];
+                    String[] complex4 = complex3.split("\\+");
+                    re1.append(complex4[0]);
+                    re1.append(' ');
+                    re2.append(complex4[1]);
+                    re2.append(' ');
+                }
+                complex1 = re1+","+re2;
+                String dataType = complex1.replaceAll("i","");
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,[complex(%s)])", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,[complex(%s)])", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_COMPLEX()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("COMPLEX");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array_COMPLEX handler = new Handler_StreamDeserializer_array_COMPLEX(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+
+    class Handler_StreamDeserializer_array_POINT implements MessageHandler {
+        private StreamDeserializer deserializer_;
+
+        public Handler_StreamDeserializer_array_POINT(StreamDeserializer deserializer) {
+            deserializer_ = deserializer;
+        }
+
+        public void doEvent(IMessage msg) {
+            try {
+                BasicMessage message = deserializer_.parse(msg);
+                String timestampv = message.getEntity(0).getString();
+                String dataType = message.getEntity(1).getString().replaceAll("\\(,\\)", "\\(NULL,NULL\\)");
+                dataType = dataType.substring(1, dataType.length() - 1);
+                String[] dataType1 = dataType.split("\\),\\(");
+                String dataType2 = null;
+                StringBuilder re1 = new StringBuilder();
+                StringBuilder re2 = new StringBuilder();
+                for(int i=0;i<dataType1.length;i++){
+                    dataType2 = dataType1[i];
+                    String[] dataType3 = dataType2.split(",");
+                    re1.append(dataType3[0]);
+                    re1.append(' ');
+                    re2.append(dataType3[1]);
+                    re2.append(' ');
+                }
+                dataType = re1+","+re2;
+                dataType = dataType.replaceAll("\\(","").replaceAll("\\)","");
+                String script = null;
+                if (message.getSym().equals("msg1")) {
+                    script = String.format("insert into sub1 values( %s,[point(%s)])", timestampv,dataType);
+                } else if (message.getSym().equals("msg2")) {
+                    script = String.format("insert into sub2 values( %s,[point(%s)])", timestampv,dataType);
+                }
+                conn.run(script);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_POINT()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("POINT");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array_POINT handler = new Handler_StreamDeserializer_array_POINT(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    //@Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_DECIMAL32()throws IOException, InterruptedException {
+        PrepareStreamTableDecimal_StreamDeserializer("DECIMAL32",3);
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    //@Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_DECIMAL64()throws IOException, InterruptedException {
+        PrepareStreamTableDecimal_StreamDeserializer("DECIMAL64",7);
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
+        System.out.println(messages.size());
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        for (int i = 0; i < messages.size(); i++) {
+            IMessage msg = messages.get(i);
+            handler.doEvent(msg);
+        }
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    //@Test(timeout = 120000)
+    public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_DECIMAL128()throws IOException, InterruptedException {
+        PrepareStreamTableDecimal_StreamDeserializer("DECIMAL128",10);
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
+        System.out.println(re.getString());
+        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        Thread.sleep(30000);
+        List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
