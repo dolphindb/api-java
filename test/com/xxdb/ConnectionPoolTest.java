@@ -1,8 +1,10 @@
 package com.xxdb;
 
+import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.*;
 import com.xxdb.io.Double2;
 import com.xxdb.io.Long2;
+import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 import com.xxdb.route.PartitionedTableAppender;
 import org.junit.After;
 import org.junit.Before;
@@ -2137,6 +2139,155 @@ public class ConnectionPoolTest {
         }
         assertEquals("Can't find specified partition column name.", re);
         pool.shutdown();
+    }
+    @Test(timeout = 120000)
+    public void test_PartitionedTableAppender_allDataType_null() throws Exception {
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("boolv");
+        colNames.add("charv");
+        colNames.add("shortv");
+        colNames.add("intv");
+        colNames.add("longv");
+        colNames.add("doublev");
+        colNames.add("floatv");
+        colNames.add("datev");
+        colNames.add("monthv");
+        colNames.add("timev");
+        colNames.add("minutev");
+        colNames.add("secondv");
+        colNames.add("datetimev");
+        colNames.add("timestampv");
+        colNames.add("nanotimev");
+        colNames.add("nanotimestampv");
+        colNames.add("symbolv");
+        colNames.add("stringv");
+        colNames.add("uuidv");
+        colNames.add("datehourv");
+        colNames.add("ippaddrv");
+        colNames.add("int128v");
+        colNames.add("blobv");
+        colNames.add("complexv");
+        colNames.add("pointv");
+        colNames.add("decimal32v");
+        colNames.add("decimal64v");
+        colNames.add("decimal128V");
+
+        List<Vector> cols = new ArrayList<Vector>();
+        cols.add(new BasicBooleanVector(0));
+        cols.add(new BasicByteVector(0));
+        cols.add(new BasicShortVector(0));
+        cols.add(new BasicIntVector(0));
+        cols.add(new BasicLongVector(0));
+        cols.add(new BasicDoubleVector(0));
+        cols.add(new BasicFloatVector(0));
+        cols.add(new BasicDateVector(0));
+        cols.add(new BasicMonthVector(0));
+        cols.add(new BasicTimeVector(0));
+        cols.add(new BasicMinuteVector(0));
+        cols.add(new BasicSecondVector(0));
+        cols.add(new BasicDateTimeVector(0));
+        cols.add(new BasicTimestampVector(0));
+        cols.add(new BasicNanoTimeVector(0));
+        cols.add(new BasicNanoTimestampVector(0));
+        cols.add(new BasicSymbolVector(0));
+        cols.add(new BasicStringVector(0));
+        cols.add(new BasicUuidVector(0));
+        cols.add(new BasicDateHourVector(0));
+        cols.add(new BasicIPAddrVector(0));
+        cols.add(new BasicInt128Vector(0));
+        cols.add(new BasicStringVector(new String[0],true));
+        cols.add(new BasicComplexVector(0));
+        cols.add(new BasicPointVector(0));
+        cols.add(new BasicDecimal32Vector(0,0));
+        cols.add(new BasicDecimal64Vector(0,0));
+        cols.add(new BasicDecimal128Vector(0,0));
+        conn.run("dbPath = \"dfs://empty_table\";if(existsDatabase(dbPath)) dropDatabase(dbPath); \n" +
+                " db = database(dbPath, HASH,[STRING, 2],,\"TSDB\");\n " +
+                "t= table(100:0,`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`uuidv`datehourv`ippaddrv`int128v`blobv`complexv`pointv`decimal32v`decimal64v`decimal128v, " +
+                "[BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, SYMBOL, STRING, UUID, DATEHOUR, IPADDR, INT128, BLOB, complex, POINT, DECIMAL32(3), DECIMAL64(4),DECIMAL128(10) ]);\n" +
+                " pt=db.createPartitionedTable(t,`pt,`stringv,,`stringv);");
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://empty_table","pt","stringv",pool);
+        int res = appender.append(new BasicTable(colNames, cols));
+        assertEquals(0, res);
+        BasicTable bt = (BasicTable) conn.run("select * from loadTable(\"dfs://empty_table\",`pt);");
+        assertEquals(0, bt.rows());
+        pool.shutdown();
+        conn.close();
+    }
+    @Test(timeout = 120000)
+    public void test_PartitionedTableAppender_allDataType_array_null() throws Exception {
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("id");
+        colNames.add("boolv");
+        colNames.add("charv");
+        colNames.add("shortv");
+        colNames.add("intv");
+        colNames.add("longv");
+        colNames.add("doublev");
+        colNames.add("floatv");
+        colNames.add("datev");
+        colNames.add("monthv");
+        colNames.add("timev");
+        colNames.add("minutev");
+        colNames.add("secondv");
+        colNames.add("datetimev");
+        colNames.add("timestampv");
+        colNames.add("nanotimev");
+        colNames.add("nanotimestampv");
+        //colNames.add("symbolv");
+        //colNames.add("stringv");
+        colNames.add("uuidv");
+        colNames.add("datehourv");
+        colNames.add("ippaddrv");
+        colNames.add("int128v");
+        //colNames.add("blobv");
+        colNames.add("complexv");
+        colNames.add("pointv");
+        colNames.add("decimal32v");
+        colNames.add("decimal64v");
+        colNames.add("decimal128V");
+
+        List<Vector> cols = new ArrayList<Vector>();
+        cols.add(new BasicIntVector(0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_BOOL_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_BYTE_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_SHORT_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_INT_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_LONG_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DOUBLE_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_FLOAT_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DATE_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_MONTH_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_TIME_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_MINUTE_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_SECOND_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DATETIME_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_TIMESTAMP_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_NANOTIME_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_NANOTIMESTAMP_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_UUID_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DATEHOUR_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_IPADDR_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_INT128_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_COMPLEX_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_POINT_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL32_ARRAY,0,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL64_ARRAY,0,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL128_ARRAY,0,0));
+        conn.run("dbPath = \"dfs://empty_table\";if(existsDatabase(dbPath)) dropDatabase(dbPath); \n" +
+                " db = database(dbPath, HASH,[INT, 2],,\"TSDB\");\n " +
+                "t= table(100:0,`id`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`uuidv`datehourv`ippaddrv`int128v`complexv`pointv`decimal32v`decimal64v`decimal128v, " +
+                "[INT, BOOL[], CHAR[], SHORT[], INT[], LONG[], DOUBLE[], FLOAT[], DATE[], MONTH[], TIME[], MINUTE[], SECOND[], DATETIME[], TIMESTAMP[], NANOTIME[], NANOTIMESTAMP[], UUID[], DATEHOUR[], IPADDR[], INT128[], COMPLEX[], POINT[], DECIMAL32(3)[], DECIMAL64(4)[],DECIMAL128(10)[] ]);\n" +
+                " pt=db.createPartitionedTable(t,`pt,`id,,`id);");
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://empty_table","pt","id", pool);
+        int res = appender.append(new BasicTable(colNames, cols));
+        assertEquals(0, res);
+        BasicTable bt = (BasicTable) conn.run("select * from loadTable(\"dfs://empty_table\",`pt);");
+        assertEquals(0, bt.rows());
+        pool.shutdown();
+        conn.close();
     }
 }
 
