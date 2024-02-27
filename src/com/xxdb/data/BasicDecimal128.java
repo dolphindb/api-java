@@ -49,6 +49,11 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
         unscaledValue = handleLittleEndianBigEndian(in);
     }
 
+    BasicDecimal128(int scale, BigInteger unscaledVal) {
+        this.unscaledValue = unscaledVal;
+        this.scale = scale;
+    }
+
     private static BigInteger handleLittleEndianBigEndian(ExtendedDataInput in) throws IOException {
         byte[] buffer = new byte[16];
         BigInteger value;

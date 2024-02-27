@@ -13,6 +13,7 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 	protected boolean extended = false;
 	protected static final int BUF_SIZE = 4096;
 	protected byte[] buf = new byte[BUF_SIZE];
+	protected int scale = -1;
 	
 	protected abstract void readMatrixFromInputStream(int rows, int columns, ExtendedDataInput in) throws IOException;
 	protected abstract void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException;
