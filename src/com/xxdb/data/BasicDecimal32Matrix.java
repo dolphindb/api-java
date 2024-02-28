@@ -3,6 +3,7 @@ package com.xxdb.data;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
@@ -15,16 +16,41 @@ public class BasicDecimal32Matrix extends AbstractMatrix {
         this.values = new int[rows * columns];
     }
 
-    public BasicDecimal32Matrix(int rows, int columns, List<int[]> listOfArrays) throws Exception {
+    public BasicDecimal32Matrix(int rows, int columns, List<?> listOfArrays, int scale) throws Exception {
         super(rows, columns);
+
+        if (scale < 0 || scale > 9)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,9].");
+        this.scale = scale;
+
         values = new int[rows * columns];
         if (listOfArrays == null || listOfArrays.size() != columns)
             throw new Exception("input list of arrays does not have " + columns + " columns");
-        for (int i=0; i<columns; ++i) {
-            int[] array = listOfArrays.get(i);
-            if (array == null || array.length != rows)
-                throw new Exception("The length of array "+ (i+1) + " doesn't have " + rows + " elements");
-            System.arraycopy(array, 0, values, i * rows, rows);
+        for (int i = 0; i < columns; ++i) {
+            Object array = listOfArrays.get(i);
+            if (array instanceof String[]) {
+                String[] newArray = (String[]) array;
+                int[] tempArr = new int[newArray.length];
+                if (newArray.length == 0 || newArray.length != rows)
+                    throw new Exception("The length of array "+ (i+1) + " doesn't have " + rows + " elements");
+
+                BigDecimal pow = BigDecimal.TEN.pow(this.scale);
+                for (int j = 0; j < newArray.length; j ++) {
+                    BigDecimal bd = new BigDecimal(newArray[j]);
+                    if (bd.multiply(pow).intValue() > Integer.MIN_VALUE && bd.multiply(pow).intValue() < Integer.MAX_VALUE)
+                        tempArr[j] = bd.multiply(pow).intValue();
+                }
+                System.arraycopy(tempArr, 0, values, i * rows, rows);
+            } else if (array instanceof int[]) {
+                int[] newArray = (int[]) listOfArrays.get(i);
+                if (newArray.length == 0 || newArray.length != rows)
+                    throw new Exception("The length of array "+ (i+1) + " doesn't have " + rows + " elements");
+                for (int j = 0; j < newArray.length; j ++)
+                    newArray[j] = newArray[j] * (int)Math.pow(10, this.scale);
+                System.arraycopy(newArray, 0, values, i * rows, rows);
+            } else {
+                throw new RuntimeException("BasicDecimal32Matrix 'listOfArrays' param only support String[] or int[].");
+            }
         }
     }
 
@@ -39,12 +65,24 @@ public class BasicDecimal32Matrix extends AbstractMatrix {
 
     @Override
     public void setNull(int row, int column) {
-        values[getIndex(row, column)] = -Integer.MAX_VALUE;
+        this.values[getIndex(row, column)] = -Integer.MAX_VALUE;
     }
 
     @Override
     public Scalar get(int row, int column) {
-        return new BasicDecimal32(new int[]{this.scale, values[getIndex(row, column)]});
+        return new BasicDecimal32(new int[]{this.scale, this.values[getIndex(row, column)]});
+    }
+
+    public int getValue(int row, int column) {
+        return this.values[getIndex(row, column)];
+    }
+
+    public void setValue(int row, int column, int value) {
+        this.values[getIndex(row, column)] = value;
+    }
+
+    public void setScale(int scale) {
+        this.scale = scale;
     }
 
     @Override

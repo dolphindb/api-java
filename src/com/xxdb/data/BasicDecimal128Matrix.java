@@ -3,6 +3,7 @@ package com.xxdb.data;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 
@@ -12,6 +13,8 @@ public class BasicDecimal128Matrix extends AbstractMatrix {
 
     private static final BigInteger BIGINT_MIN_VALUE = new BigInteger("-170141183460469231731687303715884105728");
     private static final BigInteger BIGINT_MAX_VALUE = new BigInteger("170141183460469231731687303715884105728");
+    private static final BigDecimal DECIMAL128_MIN_VALUE = new BigDecimal("-170141183460469231731687303715884105728");
+    private static final BigDecimal DECIMAL128_MAX_VALUE = new BigDecimal("170141183460469231731687303715884105728");
 
 
     public BasicDecimal128Matrix(int rows, int columns){
@@ -19,16 +22,42 @@ public class BasicDecimal128Matrix extends AbstractMatrix {
         this.values = new BigInteger[rows * columns];
     }
 
-    public BasicDecimal128Matrix(int rows, int columns, List<long[]> listOfArrays) throws Exception {
+    public BasicDecimal128Matrix(int rows, int columns, List<?> listOfArrays, int scale) throws Exception {
         super(rows, columns);
+
+        if (scale < 0 || scale > 38)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,38].");
+        this.scale = scale;
+
         values = new BigInteger[rows * columns];
         if (listOfArrays == null || listOfArrays.size() != columns)
             throw new Exception("input list of arrays does not have " + columns + " columns");
-        for (int i=0; i<columns; ++i) {
-            long[] array = listOfArrays.get(i);
-            if (array == null || array.length != rows)
-                throw new Exception("The length of array "+ (i+1) + " doesn't have " + rows + " elements");
-            System.arraycopy(array, 0, values, i * rows, rows);
+        for (int i = 0; i < columns; ++i) {
+            Object array = listOfArrays.get(i);
+            if (array instanceof String[]) {
+                String[] newArray = (String[]) array;
+                BigInteger[] tempArr = new BigInteger[newArray.length];
+                if (newArray.length == 0 || newArray.length != rows)
+                    throw new Exception("The length of array "+ (i+1) + " doesn't have " + rows + " elements");
+
+                BigDecimal pow = BigDecimal.TEN.pow(this.scale);
+                for (int j = 0; j < newArray.length; j ++) {
+                    BigDecimal bd = new BigDecimal(newArray[j]);
+                    if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0)
+                        throw new RuntimeException("Decimal128 overflow " + new BigDecimal(newArray[j]).scaleByPowerOfTen(-scale));
+                    tempArr[j] = bd.scaleByPowerOfTen(scale).toBigInteger();
+                }
+                System.arraycopy(tempArr, 0, values, i * rows, rows);
+            } else if (array instanceof BigInteger[]) {
+                BigInteger[] newArray = (BigInteger[]) listOfArrays.get(i);
+                if (newArray.length == 0 || newArray.length != rows)
+                    throw new Exception("The length of array "+ (i+1) + " doesn't have " + rows + " elements");
+                for (int j = 0; j < newArray.length; j ++)
+                    newArray[j] = newArray[j].multiply(BigInteger.TEN.pow(scale));
+                System.arraycopy(newArray, 0, values, i * rows, rows);
+            } else {
+                throw new RuntimeException("BasicDecimal128Matrix 'listOfArrays' param only support String[] or int[].");
+            }
         }
     }
 
@@ -49,6 +78,18 @@ public class BasicDecimal128Matrix extends AbstractMatrix {
     @Override
     public Scalar get(int row, int column) {
         return new BasicDecimal128(this.scale, values[getIndex(row, column)]);
+    }
+
+    public BigInteger getValue(int row, int column) {
+        return this.values[getIndex(row, column)];
+    }
+
+    public void setValue(int row, int column, BigInteger value) {
+        this.values[getIndex(row, column)] = value;
+    }
+
+    public void setScale(int scale) {
+        this.scale = scale;
     }
 
     @Override
