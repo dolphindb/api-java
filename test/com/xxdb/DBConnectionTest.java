@@ -1924,9 +1924,205 @@ public class DBConnectionTest {
         BasicTable table = (BasicTable) conn.run("lj(t1, t2, `id)");
 
         assertEquals(5, table.rows());
-
     }
+    @Test//AJ-523
+    public void test_Table_Upload_allDateType_null() throws IOException {
+        conn.run("try{" +
+                "undef(`t1,SHARED);" +
+                "}" +
+                "catch(ex){}");
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("boolv");
+        colNames.add("charv");
+        colNames.add("shortv");
+        colNames.add("intv");
+        colNames.add("longv");
+        colNames.add("doublev");
+        colNames.add("floatv");
+        colNames.add("datev");
+        colNames.add("monthv");
+        colNames.add("timev");
+        colNames.add("minutev");
+        colNames.add("secondv");
+        colNames.add("datetimev");
+        colNames.add("timestampv");
+        colNames.add("nanotimev");
+        colNames.add("nanotimestampv");
+        //colNames.add("symbolv");
+        colNames.add("stringv");
+        colNames.add("uuidv");
+        colNames.add("datehourv");
+        colNames.add("ippaddrv");
+        colNames.add("int128v");
+        colNames.add("blobv");
+        colNames.add("complexv");
+        colNames.add("pointv");
+        colNames.add("decimal32v");
+        colNames.add("decimal64v");
+        colNames.add("decimal128V");
 
+        List<Vector> cols = new ArrayList<Vector>();
+        cols.add(new BasicBooleanVector(0));
+        cols.add(new BasicByteVector(0));
+        cols.add(new BasicShortVector(0));
+        cols.add(new BasicIntVector(0));
+        cols.add(new BasicLongVector(0));
+        cols.add(new BasicDoubleVector(0));
+        cols.add(new BasicFloatVector(0));
+        cols.add(new BasicDateVector(0));
+        cols.add(new BasicMonthVector(0));
+        cols.add(new BasicTimeVector(0));
+        cols.add(new BasicMinuteVector(0));
+        cols.add(new BasicSecondVector(0));
+        cols.add(new BasicDateTimeVector(0));
+        cols.add(new BasicTimestampVector(0));
+        cols.add(new BasicNanoTimeVector(0));
+        cols.add(new BasicNanoTimestampVector(0));
+        //cols.add(new BasicSymbolVector(0));
+        cols.add(new BasicStringVector(0));
+        cols.add(new BasicUuidVector(0));
+        cols.add(new BasicDateHourVector(0));
+        cols.add(new BasicIPAddrVector(0));
+        cols.add(new BasicInt128Vector(0));
+        cols.add(new BasicStringVector(new String[0],true));
+        cols.add(new BasicComplexVector(0));
+        cols.add(new BasicPointVector(0));
+        cols.add(new BasicDecimal32Vector(0,0));
+        cols.add(new BasicDecimal64Vector(0,0));
+        cols.add(new BasicDecimal128Vector(0,0));
+
+        BasicTable t1 = new BasicTable(colNames, cols);
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("t1", t1);
+        conn.upload(map);
+        BasicTable table = (BasicTable) conn.run("select * from t1");
+        System.out.println(table.getString());
+        assertEquals(0, table.rows());
+        assertEquals(27, table.columns());
+        assertEquals("DT_BOOL", table.getColumn(0).getDataType().toString());
+        assertEquals("DT_BYTE", table.getColumn(1).getDataType().toString());
+        assertEquals("DT_SHORT", table.getColumn(2).getDataType().toString());
+        assertEquals("DT_INT", table.getColumn(3).getDataType().toString());
+        assertEquals("DT_LONG", table.getColumn(4).getDataType().toString());
+        assertEquals("DT_DOUBLE", table.getColumn(5).getDataType().toString());
+        assertEquals("DT_FLOAT", table.getColumn(6).getDataType().toString());
+        assertEquals("DT_DATE", table.getColumn(7).getDataType().toString());
+        assertEquals("DT_MONTH", table.getColumn(8).getDataType().toString());
+        assertEquals("DT_TIME", table.getColumn(9).getDataType().toString());
+        assertEquals("DT_MINUTE", table.getColumn(10).getDataType().toString());
+        assertEquals("DT_SECOND", table.getColumn(11).getDataType().toString());
+        assertEquals("DT_DATETIME", table.getColumn(12).getDataType().toString());
+        assertEquals("DT_TIMESTAMP", table.getColumn(13).getDataType().toString());
+        assertEquals("DT_NANOTIME", table.getColumn(14).getDataType().toString());
+        assertEquals("DT_NANOTIMESTAMP", table.getColumn(15).getDataType().toString());
+        assertEquals("DT_STRING", table.getColumn(16).getDataType().toString());
+        assertEquals("DT_UUID", table.getColumn(17).getDataType().toString());
+        assertEquals("DT_DATEHOUR", table.getColumn(18).getDataType().toString());
+        assertEquals("DT_IPADDR", table.getColumn(19).getDataType().toString());
+        assertEquals("DT_INT128", table.getColumn(20).getDataType().toString());
+        assertEquals("DT_BLOB", table.getColumn(21).getDataType().toString());
+        assertEquals("DT_COMPLEX", table.getColumn(22).getDataType().toString());
+        assertEquals("DT_POINT", table.getColumn(23).getDataType().toString());
+        assertEquals("DT_DECIMAL32", table.getColumn(24).getDataType().toString());
+        assertEquals("DT_DECIMAL64", table.getColumn(25).getDataType().toString());
+        assertEquals("DT_DECIMAL128", table.getColumn(26).getDataType().toString());
+    }
+    @Test
+    public void test_Table_Upload_allDateType_array_null() throws Exception {
+        conn.run("try{" +
+                "undef(`t1,SHARED);" +
+                "}" +
+                "catch(ex){}");
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("boolv");
+        colNames.add("charv");
+        colNames.add("shortv");
+        colNames.add("intv");
+        colNames.add("longv");
+        colNames.add("doublev");
+        colNames.add("floatv");
+        colNames.add("datev");
+        colNames.add("monthv");
+        colNames.add("timev");
+        colNames.add("minutev");
+        colNames.add("secondv");
+        colNames.add("datetimev");
+        colNames.add("timestampv");
+        colNames.add("nanotimev");
+        colNames.add("nanotimestampv");
+        //colNames.add("symbolv");
+        //colNames.add("stringv");
+        colNames.add("uuidv");
+        colNames.add("datehourv");
+        colNames.add("ippaddrv");
+        colNames.add("int128v");
+        //colNames.add("blobv");
+        colNames.add("complexv");
+        colNames.add("pointv");
+        colNames.add("decimal32v");
+        colNames.add("decimal64v");
+        colNames.add("decimal128V");
+
+        List<Vector> cols = new ArrayList<Vector>();
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_BOOL_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_BYTE_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_SHORT_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_INT_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_LONG_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DOUBLE_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_FLOAT_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DATE_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_MONTH_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_TIME_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_MINUTE_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_SECOND_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DATETIME_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_TIMESTAMP_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_NANOTIME_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_NANOTIMESTAMP_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_UUID_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DATEHOUR_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_IPADDR_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_INT128_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_COMPLEX_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_POINT_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL32_ARRAY,0,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL64_ARRAY,0,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL128_ARRAY,0,0));
+        BasicTable t1 = new BasicTable(colNames, cols);
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("t1", t1);
+        conn.upload(map);
+        BasicTable table = (BasicTable) conn.run("select * from t1");
+        System.out.println(table.getString());
+        assertEquals(0, table.rows());
+        assertEquals(25, table.columns());
+        assertEquals("DT_BOOL_ARRAY", table.getColumn(0).getDataType().toString());
+        assertEquals("DT_BYTE_ARRAY", table.getColumn(1).getDataType().toString());
+        assertEquals("DT_SHORT_ARRAY", table.getColumn(2).getDataType().toString());
+        assertEquals("DT_INT_ARRAY", table.getColumn(3).getDataType().toString());
+        assertEquals("DT_LONG_ARRAY", table.getColumn(4).getDataType().toString());
+        assertEquals("DT_DOUBLE_ARRAY", table.getColumn(5).getDataType().toString());
+        assertEquals("DT_FLOAT_ARRAY", table.getColumn(6).getDataType().toString());
+        assertEquals("DT_DATE_ARRAY", table.getColumn(7).getDataType().toString());
+        assertEquals("DT_MONTH_ARRAY", table.getColumn(8).getDataType().toString());
+        assertEquals("DT_TIME_ARRAY", table.getColumn(9).getDataType().toString());
+        assertEquals("DT_MINUTE_ARRAY", table.getColumn(10).getDataType().toString());
+        assertEquals("DT_SECOND_ARRAY", table.getColumn(11).getDataType().toString());
+        assertEquals("DT_DATETIME_ARRAY", table.getColumn(12).getDataType().toString());
+        assertEquals("DT_TIMESTAMP_ARRAY", table.getColumn(13).getDataType().toString());
+        assertEquals("DT_NANOTIME_ARRAY", table.getColumn(14).getDataType().toString());
+        assertEquals("DT_NANOTIMESTAMP_ARRAY", table.getColumn(15).getDataType().toString());
+        assertEquals("DT_UUID_ARRAY", table.getColumn(16).getDataType().toString());
+        assertEquals("DT_DATEHOUR_ARRAY", table.getColumn(17).getDataType().toString());
+        assertEquals("DT_IPADDR_ARRAY", table.getColumn(18).getDataType().toString());
+        assertEquals("DT_INT128_ARRAY", table.getColumn(19).getDataType().toString());
+        assertEquals("DT_COMPLEX_ARRAY", table.getColumn(20).getDataType().toString());
+        assertEquals("DT_POINT_ARRAY", table.getColumn(21).getDataType().toString());
+        assertEquals("DT_DECIMAL32_ARRAY", table.getColumn(22).getDataType().toString());
+        assertEquals("DT_DECIMAL64_ARRAY", table.getColumn(23).getDataType().toString());
+        assertEquals("DT_DECIMAL128_ARRAY", table.getColumn(24).getDataType().toString());
+    }
     @Test
     public void TestShareTable() throws IOException {
         conn.run("share table(1 2 as id ,3 4 as val) as sharedT1");

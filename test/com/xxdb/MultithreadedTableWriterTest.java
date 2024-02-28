@@ -13,10 +13,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -7352,5 +7350,334 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.close();
     }
 
+    @Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_enableActualSendTime_true_column_not_NANOTIMESTAMP() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `bool`char`short`long`date`month`second`datetime`timestamp`nanotime`nanotimestamp`float`double`symbol`string`uuid`ipaddr`int128`id`nanotimestamp1," +
+                "[BOOL,CHAR,SHORT,LONG,DATE,MONTH,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID, IPADDR, INT128,INT,NANOTIME]);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false, null, 1, 1,
+                1, "bool",true);
+
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( null, null, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        assertEquals("code=A1 info=Data type error: DT_NANOTIME,should be NANOTIMESTAMP.",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        conn.run("undef(`t1,SHARED)");
+    }
+
+    @Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_enableActualSendTime_true_column_not_exist() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `bool`char`short`long`date`month`second`datetime`timestamp`nanotime`nanotimestamp`float`double`symbol`string`uuid`ipaddr`int128`id," +
+                "[BOOL,CHAR,SHORT,LONG,DATE,MONTH,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID, IPADDR, INT128,INT]);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false, null, 1, 1,
+                1, "bool",true);
+
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( null, null, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        assertEquals("code=A2 info=Column counts don't match.",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        conn.run("undef(`t1,SHARED)");
+    }
+
+    @Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_enableActualSendTime_true_column_NANOTIMESTAMP() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `bool`char`short`long`date`month`second`datetime`timestamp`nanotime`nanotimestamp`float`double`symbol`string`uuid`ipaddr`int128`id`enableActualSendTime," +
+                "[BOOL,CHAR,SHORT,LONG,DATE,MONTH,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID, IPADDR, INT128,INT,NANOTIMESTAMP]);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false, null, 1, 1,
+                1, "bool",true);
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSSSSSSSS");
+        String formattedTimestamp = formatter.format(now);
+        System.out.println("当前时间戳：" + formattedTimestamp);
+        mutithreadTableWriter_.insert( null, null, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        mutithreadTableWriter_.waitForThreadCompletion();
+        LocalDateTime now1 = LocalDateTime.now();
+        DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSSSSSSSS");
+        String formattedTimestamp1 = formatter1.format(now1);
+        System.out.println("当前时间戳：" + formattedTimestamp1);
+        BasicTable bt = (BasicTable) conn.run("select * from t1;");
+        assertEquals(1, bt.rows());
+        BasicNanoTimestamp sendTime = (BasicNanoTimestamp)bt.getColumn("enableActualSendTime").get(0);
+        assertEquals(true, sendTime.getNanoTimestamp().getNano() > now.getNano());
+        assertEquals(true, sendTime.getNanoTimestamp().getNano() < now1.getNano());
+        conn.run("undef(`t1,SHARED)");
+    }
+
+    @Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_enableActualSendTime_false_column_NANOTIMESTAMP() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `bool`char`short`long`date`month`second`datetime`timestamp`nanotime`nanotimestamp`float`double`symbol`string`uuid`ipaddr`int128`id`nanotimestamp1," +
+                "[BOOL,CHAR,SHORT,LONG,DATE,MONTH,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID, IPADDR, INT128,INT,NANOTIMESTAMP]);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false, null, 1, 1,
+                1, "bool",false);
+
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( null, null, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        assertEquals("code=A2 info=Column counts don't match.",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        conn.run("undef(`t1,SHARED)");
+    }
+
+    @Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_enableActualSendTime_false() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `bool`char`short`long`date`month`second`datetime`timestamp`nanotime`nanotimestamp`float`double`symbol`string`uuid`ipaddr`int128`id," +
+                "[BOOL,CHAR,SHORT,LONG,DATE,MONTH,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID, IPADDR, INT128,INT]);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false, null, 1, 1,
+                1, "bool",false);
+
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( null, null, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        assertEquals("code= info=",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt = (BasicTable) conn.run("select * from t1;");
+        assertEquals(1, bt.rows());
+        for (int i = 0; i < bt.columns(); i++) {
+            System.out.println(bt.getColumn(i).get(0).toString());
+        }
+        conn.run("undef(`t1,SHARED)");
+    }
+    @Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_streamTable_enableActualSendTime_true() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = streamTable(1000:0, `bool`char`short`long`date`month`second`datetime`timestamp`nanotime`nanotimestamp`float`double`symbol`string`uuid`ipaddr`int128`id`enableActualSendTime," +
+                "[BOOL,CHAR,SHORT,LONG,DATE,MONTH,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID, IPADDR, INT128,INT,NANOTIMESTAMP]);\n" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false, null, 1, 1,
+                1, "bool",true);
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSSSSSSSS");
+        String formattedTimestamp = formatter.format(now);
+        System.out.println("当前时间戳：" + formattedTimestamp);
+        mutithreadTableWriter_.insert( null, null, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 1);
+        mutithreadTableWriter_.waitForThreadCompletion();
+        LocalDateTime now1 = LocalDateTime.now();
+        DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSSSSSSSS");
+        String formattedTimestamp1 = formatter1.format(now1);
+        System.out.println("当前时间戳：" + formattedTimestamp1);
+        BasicTable bt = (BasicTable) conn.run("select * from t1;");
+        assertEquals(1, bt.rows());
+        BasicNanoTimestamp sendTime = (BasicNanoTimestamp)bt.getColumn("enableActualSendTime").get(0);
+        assertEquals(true, sendTime.getNanoTimestamp().getNano() > now.getNano());
+        assertEquals(true, sendTime.getNanoTimestamp().getNano() < now1.getNano());
+        conn.run("undef(`t1,SHARED)");
+    }
+    @Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_dfs_enableActualSendTime_true() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("pt = table(1000:0, `bool`char`short`long`date`month`second`datetime`timestamp`nanotime`nanotimestamp`float`double`symbol`string`uuid`ipaddr`int128`id`enableActualSendTime," +
+                "[BOOL,CHAR,SHORT,LONG,DATE,MONTH,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID, IPADDR, INT128,INT,NANOTIMESTAMP]);\n" +
+                "if(existsDatabase(\"dfs://enableActualSendTime\")) dropDatabase(\"dfs://enableActualSendTime\");\n" +
+                "db = database(\"dfs://enableActualSendTime\", VALUE, 1..1000, , 'TSDB');\n" +
+                "pt = db.createPartitionedTable(pt,`pt, `id , , `id, );");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "dfs://enableActualSendTime", "pt", false, false, null, 1, 1,
+                1, "id",true);
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSSSSSSSS");
+        String formattedTimestamp = formatter.format(now);
+        System.out.println("当前时间戳：" + formattedTimestamp);
+        mutithreadTableWriter_.insert( null, null, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 1);
+        mutithreadTableWriter_.waitForThreadCompletion();
+        LocalDateTime now1 = LocalDateTime.now();
+        DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSSSSSSSS");
+        String formattedTimestamp1 = formatter1.format(now1);
+        System.out.println("当前时间戳：" + formattedTimestamp1);
+        BasicTable bt = (BasicTable) conn.run("select * from loadTable(\"dfs://enableActualSendTime\",`pt);");
+        assertEquals(1, bt.rows());
+        BasicNanoTimestamp sendTime = (BasicNanoTimestamp)bt.getColumn("enableActualSendTime").get(0);
+        assertEquals(true, sendTime.getNanoTimestamp().getNano() > now.getNano());
+        assertEquals(true, sendTime.getNanoTimestamp().getNano() < now1.getNano());
+    }
+
+    @Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_Dimension_enableActualSendTime_true() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("pt = table(1000:0, `bool`char`short`long`date`month`second`datetime`timestamp`nanotime`nanotimestamp`float`double`symbol`string`uuid`ipaddr`int128`id`enableActualSendTime," +
+                "[BOOL,CHAR,SHORT,LONG,DATE,MONTH,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID, IPADDR, INT128,INT,NANOTIMESTAMP]);\n" +
+                "if(existsDatabase(\"dfs://enableActualSendTime\")) dropDatabase(\"dfs://enableActualSendTime\");\n" +
+                "db = database(\"dfs://enableActualSendTime\", VALUE, 1..1000, , 'TSDB');\n" +
+                "pt = db.createTable(pt,`pt, ,`id );");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "dfs://enableActualSendTime", "pt", false, false, null, 1, 1,
+                1, "id",true);
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSSSSSSSS");
+        String formattedTimestamp = formatter.format(now);
+        System.out.println("当前时间戳：" + formattedTimestamp);
+        mutithreadTableWriter_.insert( null, null, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 1);
+        mutithreadTableWriter_.waitForThreadCompletion();
+        LocalDateTime now1 = LocalDateTime.now();
+        DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSSSSSSSS");
+        String formattedTimestamp1 = formatter1.format(now1);
+        System.out.println("当前时间戳：" + formattedTimestamp1);
+        BasicTable bt = (BasicTable) conn.run("select * from loadTable(\"dfs://enableActualSendTime\",`pt);");
+        assertEquals(1, bt.rows());
+        BasicNanoTimestamp sendTime = (BasicNanoTimestamp)bt.getColumn("enableActualSendTime").get(0);
+        assertEquals(true, sendTime.getNanoTimestamp().getNano() > now.getNano());
+        assertEquals(true, sendTime.getNanoTimestamp().getNano() < now1.getNano());
+    }
+    //@Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_allDataType_null() throws Exception {
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("boolv");
+        colNames.add("charv");
+        colNames.add("shortv");
+        colNames.add("intv");
+        colNames.add("longv");
+        colNames.add("doublev");
+        colNames.add("floatv");
+        colNames.add("datev");
+        colNames.add("monthv");
+        colNames.add("timev");
+        colNames.add("minutev");
+        colNames.add("secondv");
+        colNames.add("datetimev");
+        colNames.add("timestampv");
+        colNames.add("nanotimev");
+        colNames.add("nanotimestampv");
+        colNames.add("symbolv");
+        colNames.add("stringv");
+        colNames.add("uuidv");
+        colNames.add("datehourv");
+        colNames.add("ippaddrv");
+        colNames.add("int128v");
+        colNames.add("blobv");
+        colNames.add("complexv");
+        colNames.add("pointv");
+        colNames.add("decimal32v");
+        colNames.add("decimal64v");
+        colNames.add("decimal128V");
+
+        List<Vector> cols = new ArrayList<Vector>();
+        cols.add(new BasicBooleanVector(0));
+        cols.add(new BasicByteVector(0));
+        cols.add(new BasicShortVector(0));
+        cols.add(new BasicIntVector(0));
+        cols.add(new BasicLongVector(0));
+        cols.add(new BasicDoubleVector(0));
+        cols.add(new BasicFloatVector(0));
+        cols.add(new BasicDateVector(0));
+        cols.add(new BasicMonthVector(0));
+        cols.add(new BasicTimeVector(0));
+        cols.add(new BasicMinuteVector(0));
+        cols.add(new BasicSecondVector(0));
+        cols.add(new BasicDateTimeVector(0));
+        cols.add(new BasicTimestampVector(0));
+        cols.add(new BasicNanoTimeVector(0));
+        cols.add(new BasicNanoTimestampVector(0));
+        cols.add(new BasicSymbolVector(0));
+        cols.add(new BasicStringVector(0));
+        cols.add(new BasicUuidVector(0));
+        cols.add(new BasicDateHourVector(0));
+        cols.add(new BasicIPAddrVector(0));
+        cols.add(new BasicInt128Vector(0));
+        cols.add(new BasicStringVector(new String[0],true));
+        cols.add(new BasicComplexVector(0));
+        cols.add(new BasicPointVector(0));
+        cols.add(new BasicDecimal32Vector(0,0));
+        cols.add(new BasicDecimal64Vector(0,0));
+        cols.add(new BasicDecimal128Vector(0,0));
+        conn.run("dbPath = \"dfs://empty_table\";if(existsDatabase(dbPath)) dropDatabase(dbPath); \n" +
+                " db = database(dbPath, HASH,[STRING, 2],,\"TSDB\");\n " +
+                "t= table(100:0,`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`uuidv`datehourv`ippaddrv`int128v`blobv`complexv`pointv`decimal32v`decimal64v`decimal128v, " +
+                "[BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, SYMBOL, STRING, UUID, DATEHOUR, IPADDR, INT128, BLOB, complex, POINT, DECIMAL32(3), DECIMAL64(4),DECIMAL128(10) ]);\n" +
+                " pt=db.createPartitionedTable(t,`pt,`stringv,,`stringv);");        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://empty_table", "pt", false, false, null, 1, 1, 1, "stringv");
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( cols);
+        assertEquals("code= info=",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt = (BasicTable) conn.run("select * from loadTable(\"dfs://empty_table\",`pt);");
+        assertEquals(0, bt.rows());
+        conn.close();
+    }
+    //@Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_allDataType_array_null() throws Exception {
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("boolv");
+        colNames.add("charv");
+        colNames.add("shortv");
+        colNames.add("intv");
+        colNames.add("longv");
+        colNames.add("doublev");
+        colNames.add("floatv");
+        colNames.add("datev");
+        colNames.add("monthv");
+        colNames.add("timev");
+        colNames.add("minutev");
+        colNames.add("secondv");
+        colNames.add("datetimev");
+        colNames.add("timestampv");
+        colNames.add("nanotimev");
+        colNames.add("nanotimestampv");
+        //colNames.add("symbolv");
+        //colNames.add("stringv");
+        colNames.add("uuidv");
+        colNames.add("datehourv");
+        colNames.add("ippaddrv");
+        colNames.add("int128v");
+        //colNames.add("blobv");
+        colNames.add("complexv");
+        colNames.add("pointv");
+        colNames.add("decimal32v");
+        colNames.add("decimal64v");
+        colNames.add("decimal128V");
+
+        List<Vector> cols = new ArrayList<Vector>();
+        cols.add(new BasicIntVector(0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_BOOL_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_BYTE_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_SHORT_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_INT_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_LONG_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DOUBLE_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_FLOAT_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DATE_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_MONTH_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_TIME_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_MINUTE_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_SECOND_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DATETIME_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_TIMESTAMP_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_NANOTIME_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_NANOTIMESTAMP_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_UUID_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DATEHOUR_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_IPADDR_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_INT128_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_COMPLEX_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_POINT_ARRAY,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL32_ARRAY,0,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL64_ARRAY,0,0));
+        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL128_ARRAY,0,0));
+        conn.run("dbPath = \"dfs://empty_table\";if(existsDatabase(dbPath)) dropDatabase(dbPath); \n" +
+                " db = database(dbPath, HASH,[INT, 2],,\"TSDB\");\n " +
+                "t= table(100:0,`id`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`uuidv`datehourv`ippaddrv`int128v`complexv`pointv`decimal32v`decimal64v`decimal128v, " +
+                "[INT, BOOL[], CHAR[], SHORT[], INT[], LONG[], DOUBLE[], FLOAT[], DATE[], MONTH[], TIME[], MINUTE[], SECOND[], DATETIME[], TIMESTAMP[], NANOTIME[], NANOTIMESTAMP[], UUID[], DATEHOUR[], IPADDR[], INT128[], COMPLEX[], POINT[], DECIMAL32(3)[], DECIMAL64(4)[],DECIMAL128(10)[] ]);\n" +
+                " pt=db.createPartitionedTable(t,`pt,`id,,`id);");
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://empty_table", "pt", false, false, null, 1, 1, 1, "id");
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( cols);
+        assertEquals("code= info=",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt = (BasicTable) conn.run("select * from loadTable(\"dfs://empty_table\",`pt);");
+        assertEquals(0, bt.rows());
+        conn.close();
+    }
 }
 
