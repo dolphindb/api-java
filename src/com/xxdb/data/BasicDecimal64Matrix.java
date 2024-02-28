@@ -8,7 +8,6 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
-
 import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL64;
 
 public class BasicDecimal64Matrix extends AbstractMatrix {
@@ -153,7 +152,7 @@ public class BasicDecimal64Matrix extends AbstractMatrix {
             int start = (int)(off / 8), end = len / 8;
             ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
             for (int i = 0; i < end; i++)
-                values[i + start] = byteBuffer.getInt(i * 8);
+                values[i + start] = byteBuffer.getLong(i * 8);
             off += len;
         }
     }

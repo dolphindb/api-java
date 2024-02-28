@@ -8,7 +8,6 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
-
 import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL32;
 
 public class BasicDecimal32Matrix extends AbstractMatrix {
