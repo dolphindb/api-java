@@ -4,9 +4,12 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
+
+import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL64;
 
 public class BasicDecimal64Matrix extends AbstractMatrix {
     private long[] values;
@@ -73,12 +76,45 @@ public class BasicDecimal64Matrix extends AbstractMatrix {
         return new BasicDecimal64(this.scale, values[getIndex(row, column)]);
     }
 
-    public long getValue(int row, int column) {
-        return this.values[getIndex(row, column)];
+    public void set(int row, int column, Entity value) {
+        if (!value.getDataForm().equals(DATA_FORM.DF_SCALAR) || value.getDataType() != DT_DECIMAL64) {
+            throw new RuntimeException("The value type is not BasicDecimal64!");
+        }
+
+        int newScale = ((Scalar) value).getScale();
+        DATA_TYPE type = value.getDataType();
+        if (this.scale < 0)
+            this.scale = newScale;
+        if (((Scalar)value).isNull())
+            this.values[getIndex(row, column)] = -Long.MAX_VALUE;
+        else {
+            if(this.scale != newScale) {
+                BigInteger newValue;
+                if (type == Entity.DATA_TYPE.DT_LONG) {
+                    newValue = BigInteger.valueOf(((BasicLong)(value)).getLong());
+                } else if (type == Entity.DATA_TYPE.DT_INT) {
+                    newValue = BigInteger.valueOf(((BasicInt)(value)).getInt());
+                } else {
+                    newValue = BigInteger.valueOf(((BasicDecimal64) (value)).getLong());
+                }
+
+                BigInteger pow = BigInteger.valueOf(10);
+                if (newScale - this.scale > 0) {
+                    pow = pow.pow(newScale - this.scale);
+                    newValue = newValue.divide(pow);
+                } else{
+                    pow = pow.pow(this.scale - newScale);
+                    newValue = newValue.multiply(pow);
+                }
+                this.values[getIndex(row, column)] = newValue.intValue();
+            } else {
+                this.values[getIndex(row, column)] = ((BasicDecimal64) value).getLong();
+            }
+        }
     }
 
-    public void setValue(int row, int column, long value) {
-        this.values[getIndex(row, column)] = value;
+    public long getValue(int row, int column) {
+        return this.values[getIndex(row, column)];
     }
 
     public void setScale(int scale) {

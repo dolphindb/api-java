@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 
+import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL128;
+
 public class BasicDecimal128Matrix extends AbstractMatrix {
 
     private BigInteger[] values;
@@ -80,12 +82,45 @@ public class BasicDecimal128Matrix extends AbstractMatrix {
         return new BasicDecimal128(this.scale, values[getIndex(row, column)]);
     }
 
-    public BigInteger getValue(int row, int column) {
-        return this.values[getIndex(row, column)];
+    public void set(int row, int column, Entity value) {
+        if (!value.getDataForm().equals(DATA_FORM.DF_SCALAR) || value.getDataType() != DT_DECIMAL128) {
+            throw new RuntimeException("The value type is not BasicDecimal128!");
+        }
+
+        int newScale = ((Scalar) value).getScale();
+        DATA_TYPE type = value.getDataType();
+        if (this.scale < 0)
+            throw new RuntimeException("scale cannot less than 0.");
+        if (((Scalar) value).isNull()) {
+            this.values[getIndex(row, column)] = BIGINT_MIN_VALUE;
+        } else {
+            if (this.scale != newScale) {
+                BigInteger newValue;
+                if (type == Entity.DATA_TYPE.DT_LONG) {
+                    newValue = BigInteger.valueOf(((BasicLong) value).getLong());
+                } else if (type == Entity.DATA_TYPE.DT_INT) {
+                    newValue = BigInteger.valueOf(((BasicInt) value).getInt());
+                } else {
+                    newValue = ((BasicDecimal128) value).unscaledValue();
+                }
+
+                BigInteger pow = BigInteger.TEN;
+                if (newScale - this.scale > 0) {
+                    pow = pow.pow(newScale - this.scale);
+                    newValue = newValue.divide(pow);
+                } else {
+                    pow = pow.pow(this.scale - newScale);
+                    newValue = newValue.multiply(pow);
+                }
+                this.values[getIndex(row, column)] = newValue;
+            } else {
+                this.values[getIndex(row, column)] = ((BasicDecimal128) value).unscaledValue();
+            }
+        }
     }
 
-    public void setValue(int row, int column, BigInteger value) {
-        this.values[getIndex(row, column)] = value;
+    public BigInteger getValue(int row, int column) {
+        return this.values[getIndex(row, column)];
     }
 
     public void setScale(int scale) {
