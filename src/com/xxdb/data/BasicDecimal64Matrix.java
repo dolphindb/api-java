@@ -121,6 +121,10 @@ public class BasicDecimal64Matrix extends AbstractMatrix {
         this.scale = scale;
     }
 
+    public int getScale() {
+        return this.scale;
+    }
+
     @Override
     public DATA_CATEGORY getDataCategory() {
         return DATA_CATEGORY.DENARY;
