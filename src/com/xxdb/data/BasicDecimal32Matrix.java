@@ -102,10 +102,6 @@ public class BasicDecimal32Matrix extends AbstractMatrix {
         }
     }
 
-    public int getValue(int row, int column) {
-        return this.values[getIndex(row, column)];
-    }
-
     public void setScale(int scale) {
         this.scale = scale;
     }
