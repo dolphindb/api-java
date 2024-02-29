@@ -43,7 +43,7 @@ public class BasicDecimal64Matrix extends AbstractMatrix {
                 for (int j = 0; j < newArray.length; j ++) {
                     BigDecimal bd = new BigDecimal(newArray[j]);
                     if (bd.multiply(pow).longValue() > MIN_VALUE && bd.multiply(pow).longValue() < MAX_VALUE)
-                        tempArr[j] = bd.multiply(pow).intValue();
+                        tempArr[j] = bd.multiply(pow).longValue();
                 }
                 System.arraycopy(tempArr, 0, values, i * rows, rows);
             } else if (array instanceof long[]) {
