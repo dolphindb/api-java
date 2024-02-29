@@ -155,8 +155,8 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 	    		if(listTmp[i+1].length()>maxColWidth)
 	    			maxColWidth=listTmp[i+1].length();
 	    	}
-	    	if(maxColWidth>limitColMaxWidth)
-	    		maxColWidth=limitColMaxWidth;
+//	    	if(maxColWidth>limitColMaxWidth)
+//	    		maxColWidth=limitColMaxWidth;
 	    	if((int)listTmp[0].length()>maxColWidth)
 	    		maxColWidth=Math.min(limitColMaxWidth, listTmp[0].length());
 	    	if(curCol<columns()-1)
@@ -174,11 +174,14 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 	    					list[i].append(' ');
 	    			}
 	    		}
-	    		else{
-	    			if(maxColWidth>3)
-	    				list[i].append(listTmp[i].substring(0,maxColWidth-3));
-	    			list[i].append("...");
-	    		}
+//	    		else{
+//	    			if(maxColWidth>3)
+//	    				list[i].append(listTmp[i].substring(0,maxColWidth-3));
+//	    			list[i].append("...");
+//	    		}
+				else{
+					list[i].append(listTmp[i]);
+				}
 	    	}
 	    	length+=maxColWidth;
 	    	curCol++;
