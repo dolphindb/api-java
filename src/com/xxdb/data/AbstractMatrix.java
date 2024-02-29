@@ -22,6 +22,12 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 		this.rows = rows;
 		this.columns = columns;
 	}
+
+	protected AbstractMatrix(int rows, int columns, int scale){
+		this.rows = rows;
+		this.columns = columns;
+		this.scale = scale;
+	}
 	
 	protected AbstractMatrix(ExtendedDataInput in) throws IOException{
 		byte hasLabels = in.readByte();

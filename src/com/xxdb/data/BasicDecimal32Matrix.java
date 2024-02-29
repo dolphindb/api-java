@@ -16,8 +16,12 @@ public class BasicDecimal32Matrix extends AbstractMatrix {
     private static final int MIN_VALUE = Integer.MIN_VALUE;
     private static final int MAX_VALUE = Integer.MAX_VALUE;
 
-    public BasicDecimal32Matrix(int rows, int columns){
-        super(rows, columns);
+    public BasicDecimal32Matrix(int rows, int columns, int scale){
+        super(rows, columns, scale);
+
+        if (scale < 0 || scale > 9)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,9].");
+
         this.values = new int[rows * columns];
     }
 

@@ -19,8 +19,12 @@ public class BasicDecimal128Matrix extends AbstractMatrix {
     private static final BigDecimal DECIMAL128_MAX_VALUE = new BigDecimal("170141183460469231731687303715884105728");
 
 
-    public BasicDecimal128Matrix(int rows, int columns){
-        super(rows, columns);
+    public BasicDecimal128Matrix(int rows, int columns, int scale){
+        super(rows, columns, scale);
+
+        if (scale < 0 || scale > 38)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,38].");
+
         this.values = new BigInteger[rows * columns];
     }
 

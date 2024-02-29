@@ -191,7 +191,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 		@Override
 		public Matrix createMatrixWithDefaultValue(int rows, int columns) {
-			return new BasicDecimal64Matrix(rows, columns);
+			return new BasicDecimal64Matrix(rows, columns, 0);
 		}
 	}
 
@@ -233,7 +233,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 		@Override
 		public Matrix createMatrixWithDefaultValue(int rows, int columns) {
-			return new BasicDecimal128Matrix(rows, columns);
+			return new BasicDecimal128Matrix(rows, columns, 0);
 		}
 
 	}
@@ -277,7 +277,7 @@ public class BasicEntityFactory implements EntityFactory{
 
 		@Override
 		public Matrix createMatrixWithDefaultValue(int rows, int columns) {
-			return new BasicDecimal32Matrix(rows, columns);
+			return new BasicDecimal32Matrix(rows, columns, 0);
 		}
 	}
 

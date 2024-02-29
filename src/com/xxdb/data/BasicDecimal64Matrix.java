@@ -16,8 +16,12 @@ public class BasicDecimal64Matrix extends AbstractMatrix {
     private static final long MIN_VALUE = Long.MIN_VALUE;
     private static final long MAX_VALUE = Long.MAX_VALUE;
 
-    public BasicDecimal64Matrix(int rows, int columns){
-        super(rows, columns);
+    public BasicDecimal64Matrix(int rows, int columns, int scale){
+        super(rows, columns, scale);
+
+        if (scale < 0 || scale > 18)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,18].");
+
         this.values = new long[rows * columns];
     }
 
