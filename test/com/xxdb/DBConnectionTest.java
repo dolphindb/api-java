@@ -1287,7 +1287,85 @@ public class DBConnectionTest {
         assertEquals(2, matrix.columns());
         assertEquals("2012.06.13T13:30:10.008", matrix.getRowLabel(0).getString());
     }
+    @Test
+    public void testDecimal32Matrix() throws IOException {
+        BasicDecimal32Matrix matrix = (BasicDecimal32Matrix) conn.run("matrix(DECIMAL32(1),1,1, ,);");
+        assertEquals(1, matrix.rows());
+        assertEquals(1, matrix.columns());
+        assertEquals("", matrix.get(0,0).getString());
 
+        BasicDecimal32Matrix matrix1 = (BasicDecimal32Matrix) conn.run("decimal32(1..10$2:5,2)");
+        assertEquals("#0   #1   #2   #3   #4   \n" +
+                "1.00 3.00 5.00 7.00 9.00 \n" +
+                "2.00 4.00 6.00 8.00 10.00\n", matrix1.getString());
+
+        BasicDecimal32Matrix matrix2 = (BasicDecimal32Matrix) conn.run("decimal32(-1.999999999 -1.0000001 0 1.999999999 1.01 0.1$3:2,9)");
+        assertEquals(3, matrix2.rows());
+        assertEquals(2, matrix2.columns());
+        assertEquals("#0           #1         \n" +
+                "-1.999999999 1.999999999\n" +
+                "-1.000000100 1.010000000\n" +
+                "0.000000000  0.100000000\n", matrix2.getString());
+        BasicDecimal32Matrix matrix3= (BasicDecimal32Matrix) conn.run("decimal32(cross(add,1 2,3 4),2)");
+        assertEquals(2, matrix3.rows());
+        assertEquals(2, matrix3.columns());
+        assertEquals("1",  matrix3.getRowLabel(0).getString());
+        assertEquals("4.00",  matrix3.get(0,0).getString());
+    }
+
+    @Test
+    public void testDecimal64Matrix() throws Exception {
+        BasicDecimal64Matrix matrix = (BasicDecimal64Matrix) conn.run("matrix(DECIMAL64(1),1,1, ,);");
+        assertEquals(1, matrix.rows());
+        assertEquals(1, matrix.columns());
+        assertEquals("", matrix.get(0,0).getString());
+
+        BasicDecimal64Matrix matrix1 = (BasicDecimal64Matrix) conn.run("decimal64(1..10$2:5,2)");
+        assertEquals("#0   #1   #2   #3   #4   \n" +
+                "1.00 3.00 5.00 7.00 9.00 \n" +
+                "2.00 4.00 6.00 8.00 10.00\n", matrix1.getString());
+
+        BasicDecimal64Matrix matrix2 = (BasicDecimal64Matrix) conn.run("decimal64(-1.99999999999999999 -1.00000001 0 1.99999999999999999 1.01 0.1$3:2,18)");
+        assertEquals(3, matrix2.rows());
+        assertEquals(2, matrix2.columns());
+        System.out.println(matrix2.getString());
+        assertEquals("#0                    #1                  \n" +
+                "-2.000000000000000000 2.000000000000000000\n" +
+                "-1.000000010000000000 1.010000000000000000\n" +
+                "0.000000000000000000  0.100000000000000000\n", matrix2.getString());
+        BasicDecimal64Matrix matrix3= (BasicDecimal64Matrix) conn.run("decimal64(cross(add,1 2,3 4),2)");
+        assertEquals(2, matrix3.rows());
+        assertEquals(2, matrix3.columns());
+        assertEquals("1",  matrix3.getRowLabel(0).getString());
+        assertEquals("4.00",  matrix3.get(0,0).getString());
+    }
+
+    @Test
+    public void testDecimal128Matrix() throws IOException {
+        BasicDecimal128Matrix matrix = (BasicDecimal128Matrix) conn.run("matrix(DECIMAL128(1),1,1, ,);");
+        assertEquals(1, matrix.rows());
+        assertEquals(1, matrix.columns());
+        assertEquals("", matrix.get(0,0).getString());
+
+        BasicDecimal128Matrix matrix1 = (BasicDecimal128Matrix) conn.run("decimal128(1..10$2:5,2)");
+        assertEquals("#0   #1   #2   #3   #4   \n" +
+                "1.00 3.00 5.00 7.00 9.00 \n" +
+                "2.00 4.00 6.00 8.00 10.00\n", matrix1.getString());
+
+        BasicDecimal128Matrix matrix2 = (BasicDecimal128Matrix) conn.run("decimal128(-1.99999999999999999 -1.00000001 0 1.99999999999999999 1.01 0.1$3:2,37)");
+        assertEquals(3, matrix2.rows());
+        assertEquals(2, matrix2.columns());
+        System.out.println(matrix2.getString());
+        assertEquals("#0                                       #1                                     \n" +
+                "-2.0000000000000000000000000000000000000 2.0000000000000000000000000000000000000\n" +
+                "-1.0000000099999999391949224840481734656 1.0100000000000000089028346521325666304\n" +
+                "0.0000000000000000000000000000000000000  0.1000000000000000055535119488920846336\n", matrix2.getString());
+        BasicDecimal128Matrix matrix3= (BasicDecimal128Matrix) conn.run("decimal128(cross(add,1 2,3 4),2)");
+        assertEquals(2, matrix3.rows());
+        assertEquals(2, matrix3.columns());
+        assertEquals("1",  matrix3.getRowLabel(0).getString());
+        assertEquals("4.00",  matrix3.get(0,0).getString());
+    }
     @Test
     public void testBasicTableSerialize() throws IOException {
         StringBuilder sb = new StringBuilder();
@@ -1792,7 +1870,92 @@ public class DBConnectionTest {
         assertEquals(6, matrixShortCross.columns());
         assertTrue(((BasicIntMatrix) matrixShortCross).get(0, 0).getString().equals("-5"));
     }
+    @Test
+    public void testDecimal32MatrixUpload() throws Exception {
+        HashMap<String, Entity> map = new HashMap<String, Entity>();
+        Entity decimal32matrix = conn.run("decimal32(-1.999999999 -1.0000001 0 1.999999999 1.01 0.1$3:2,9)");
+        map.put("decimal32matrix", decimal32matrix);
+        conn.upload(map);
+        Entity decimal32matrixRes = conn.run("decimal32matrix");
+        assertEquals(3, decimal32matrixRes.rows());
+        assertEquals(2, decimal32matrixRes.columns());
+        assertEquals(decimal32matrix.getString(), decimal32matrixRes.getString());
 
+        List<String[]> list = new ArrayList<>();
+        list.add(new String[]{"999999999", "0", "-999999999"});
+        list.add(new String[]{"999999999", "999999999", "999999999"});
+        list.add(new String[]{"-999999999", "-999999999", "-999999999"});
+        BasicDecimal32Matrix decimal32matrix1 = new BasicDecimal32Matrix(3, 3,list,0);
+        map.put("decimal32matrix1", decimal32matrix1);
+        conn.upload(map);
+        Entity decimal32matrix1Res = conn.run("decimal32matrix1");
+        assertEquals(decimal32matrix1.getString(), decimal32matrix1Res.getString());
+
+        BasicDecimal32Matrix decimal32matrix2 = new BasicDecimal32Matrix(0, 0,0);
+        map.put("decimal32matrix2", decimal32matrix2);
+        conn.upload(map);
+        Entity decimal32matrix2Res = conn.run("decimal32matrix2");
+        assertEquals(decimal32matrix2.getString(), decimal32matrix2Res.getString());
+        assertEquals("\n", decimal32matrix2Res.getString());
+    }
+
+    @Test
+    public void testDecimal64MatrixUpload() throws Exception {
+        HashMap<String, Entity> map = new HashMap<String, Entity>();
+        Entity decimal64matrix = conn.run("decimal64(-1.99999999999999999 -1.00000001 0 1.99999999999999999 1.01 0.1$3:2,18)");
+        map.put("decimal64matrix", decimal64matrix);
+        conn.upload(map);
+        Entity decimal64matrixRes = conn.run("decimal64matrix");
+        assertEquals(3, decimal64matrixRes.rows());
+        assertEquals(2, decimal64matrixRes.columns());
+        assertEquals(decimal64matrix.getString(), decimal64matrixRes.getString());
+
+        List<String[]> list = new ArrayList<>();
+        list.add(new String[]{"999999999999999999", "0", "-999999999999999999"});
+        list.add(new String[]{"999999999999999999", "9.99999999999999999", "9999.99999999999999"});
+        list.add(new String[]{"-9.999999999999999999", "-9.99999999999999999", "-9999.99999999999999"});
+        BasicDecimal64Matrix decimal64matrix1 = new BasicDecimal64Matrix(3, 3,list,0);
+        map.put("decimal64matrix1", decimal64matrix1);
+        conn.upload(map);
+        Entity decimal64matrix1Res = conn.run("decimal64matrix1");
+        assertEquals(decimal64matrix1.getString(), decimal64matrix1Res.getString());
+
+        BasicDecimal64Matrix decimal64matrix2 = new BasicDecimal64Matrix(0, 0,0);
+        map.put("decimal64matrix2", decimal64matrix2);
+        conn.upload(map);
+        Entity decimal64matrix2Res = conn.run("decimal64matrix2");
+        assertEquals(decimal64matrix2.getString(), decimal64matrix2Res.getString());
+        assertEquals("\n", decimal64matrix2Res.getString());
+    }
+
+    @Test
+    public void testDecimal128MatrixUpload() throws Exception {
+        HashMap<String, Entity> map = new HashMap<String, Entity>();
+        Entity decimal128matrix = conn.run("decimal128(-1.99999999999999999 -1.00000001 0 1.99999999999999999 1.01 0.1$3:2,37)");
+        map.put("decimal128matrix", decimal128matrix);
+        conn.upload(map);
+        Entity decimal128matrixRes = conn.run("decimal128matrix");
+        assertEquals(3, decimal128matrixRes.rows());
+        assertEquals(2, decimal128matrixRes.columns());
+        assertEquals(decimal128matrix.getString(), decimal128matrixRes.getString());
+
+        List<String[]> list = new ArrayList<>();
+        list.add(new String[]{"9999999999999999999.9999999999999999999", "0", "-9999999999999999999"});
+        list.add(new String[]{"9999999999999999999.0000000000000000009", "9999999999999999999", "9999999999999999999"});
+        list.add(new String[]{"-9999999999999999999.0000000000000000009", "-9999999999999999999", "-9999999999999999999"});
+        BasicDecimal128Matrix decimal128matrix1 = new BasicDecimal128Matrix(3, 3,list,0);
+        map.put("decimal128matrix1", decimal128matrix1);
+        conn.upload(map);
+        Entity decimal128matrix1Res = conn.run("decimal128matrix1");
+        assertEquals(decimal128matrix1.getString(), decimal128matrix1Res.getString());
+
+        BasicDecimal128Matrix decimal128matrix2 = new BasicDecimal128Matrix(0, 0,0);
+        map.put("decimal128matrix2", decimal128matrix2);
+        conn.upload(map);
+        Entity decimal128matrix2Res = conn.run("decimal128matrix2");
+        assertEquals(decimal128matrix2.getString(), decimal128matrix2Res.getString());
+        assertEquals("\n", decimal128matrix2Res.getString());
+    }
     @Test
     public void testUserDefineFunction() throws IOException {
         conn.run("def f(a,b) {return a+b};");

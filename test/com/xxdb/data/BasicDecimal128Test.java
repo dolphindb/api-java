@@ -38,19 +38,19 @@ public class BasicDecimal128Test {
     }
 
     @Test
-    public void testBasicDecimal128_value_string(){
+    public void test_BasicDecimal128_value_string(){
         BasicDecimal128 Decimal128 = new BasicDecimal128("1232",4);
         assertEquals("1232.0000",Decimal128.getString());
     }
 
     @Test
-    public void testBasicDecimal128_value_string_1(){
+    public void test_BasicDecimal128_value_string_1(){
         BasicDecimal128 Decimal128 = new BasicDecimal128("121.23", 6);
         assertEquals("121.230000",Decimal128.getString());
     }
 
     @Test
-    public void testBasicDecimal128_scale_0() throws Exception {
+    public void test_BasicDecimal128_scale_0() throws Exception {
         BasicDecimal128 Decimal128 = new BasicDecimal128("123.2",0);
         assertEquals("123",Decimal128.getString());
         assertEquals(new BigDecimal("123"),Decimal128.getNumber());
@@ -63,7 +63,7 @@ public class BasicDecimal128Test {
     }
 
     @Test
-    public void testBasicDecimal128_scale_18() throws Exception {
+    public void test_BasicDecimal128_scale_18() throws Exception {
 
         BasicDecimal128 Decimal128 = new BasicDecimal128("1.2312",18);
         assertEquals("1.231200000000000000",Decimal128.getString());
@@ -74,7 +74,7 @@ public class BasicDecimal128Test {
     }
 
     @Test
-    public void testBasicDecimal128_scale_19() throws Exception {
+    public void test_BasicDecimal128_scale_19() throws Exception {
         BasicDecimal128 Decimal128 = new BasicDecimal128("1.2312",19);
         assertEquals("1.2312000000000000000",Decimal128.getString());
         assertEquals(new BigDecimal("1.2312"),Decimal128.getNumber());
@@ -86,7 +86,7 @@ public class BasicDecimal128Test {
         assertEquals(new BigDecimal("1.2312000000000000001"),Decimal1282.getNumber());
     }
     @Test
-    public void testBasicDecimal128_scale_30() throws Exception {
+    public void test_BasicDecimal128_scale_30() throws Exception {
         BasicDecimal128 Decimal128 = new BasicDecimal128("99999999.999999999999999999999999999999",30);
         assertEquals("99999999.999999999999999999999999999999",Decimal128.getString());
         BasicDecimal128 Decimal1281 = new BasicDecimal128("99999999.000000000000000000000000000009",30);
@@ -97,7 +97,7 @@ public class BasicDecimal128Test {
         assertEquals("-99999999.000000000000000000000000000009",Decimal1283.getString());
     }
     @Test
-    public void testBasicDecimal128_scale_37() throws Exception {
+    public void test_BasicDecimal128_scale_37() throws Exception {
         BasicDecimal128 Decimal128 = new BasicDecimal128("9.9999999999999999999999999999999999999",37);
         assertEquals("9.9999999999999999999999999999999999999",Decimal128.getString());
         BasicDecimal128 Decimal1281 = new BasicDecimal128("9.9999999000000000000000000000000000009",37);
@@ -110,7 +110,7 @@ public class BasicDecimal128Test {
         assertEquals("0.0000000000000000000000000000000000000",Decimal1284.getString());
     }
     @Test
-    public void testBasicDecimal128_scale_not_true() throws Exception {
+    public void test_BasicDecimal128_scale_not_true() throws Exception {
         String ex = null;
         try{
             BasicDecimal128 Decimal128 = new BasicDecimal128("9.9999999999999999999999999999999999999",39);
@@ -164,168 +164,168 @@ public class BasicDecimal128Test {
 //    }
 
     @Test
-    public void testBasicDecimal128_getString1() {
+    public void test_BasicDecimal128_getString1() {
         BasicDecimal128 Decimal128_a = new BasicDecimal128("103", 6);
         assertEquals("103.000000", Decimal128_a.getString());
     }
     @Test
-    public void testBasicDecimal128_getString2() {
+    public void test_BasicDecimal128_getString2() {
         BasicDecimal128 Decimal128_b = new BasicDecimal128("-103", 6);
         assertEquals("-103.000000", Decimal128_b.getString());
     }
     @Test
-    public void testBasicDecimal128_getString3() {
+    public void test_BasicDecimal128_getString3() {
         BasicDecimal128 Decimal128_c = new BasicDecimal128("0", 6);
         assertEquals("0.000000", Decimal128_c.getString());
     }
     @Test
-    public void testBasicDecimal128_getString4() {
+    public void test_BasicDecimal128_getString4() {
         BasicDecimal128 Decimal128 = new BasicDecimal128( "1.23", 6);
         assertEquals("1.230000", Decimal128.getString());
     }
     @Test
-    public void testBasicDecimal128_getString5() {
+    public void test_BasicDecimal128_getString5() {
         BasicDecimal128 Decimal128_2 = new BasicDecimal128( "0.003", 6);
         assertEquals("0.003000", Decimal128_2.getString());
     }
     @Test
-    public void testBasicDecimal128_getString6() {
+    public void test_BasicDecimal128_getString6() {
         BasicDecimal128 Decimal128_3 = new BasicDecimal128("-1.23", 6);
         assertEquals("-1.230000", Decimal128_3.getString());
     }
     @Test
-    public void testBasicDecimal128_getString7(){
+    public void test_BasicDecimal128_getString7(){
         BasicDecimal128 Decimal128_4 = new BasicDecimal128("-0.003", 6);
         assertEquals("-0.003000",Decimal128_4.getString());
     }
     @Test
-    public void testBasicDecimal128_getString8() {
+    public void test_BasicDecimal128_getString8() {
         BasicDecimal128 Decimal128_5 = new BasicDecimal128( "1.23231", 2);
         assertEquals("1.23", Decimal128_5.getString());
     }
     @Test
-    public void testBasicDecimal128_getString9(){
+    public void test_BasicDecimal128_getString9(){
         BasicDecimal128 Decimal128_6 = new BasicDecimal128("-1.23231", 2);
         assertEquals("-1.23",Decimal128_6.getString());
     }
     @Test
-    public void testBasicDecimal128_getString10(){
+    public void test_BasicDecimal128_getString10(){
         BasicDecimal128 Decimal128_6 = new BasicDecimal128("-1.23231", 0);
         assertEquals("-1",Decimal128_6.getString());
     }
     @Test
-    public void testBasicDecimal128_getString11(){
+    public void test_BasicDecimal128_getString11(){
         BasicDecimal128 Decimal128_6 = new BasicDecimal128("1.23231", 0);
         assertEquals("1",Decimal128_6.getString());
     }
     @Test
-    public void testBasicDecimal128_getString12(){
+    public void test_BasicDecimal128_getString12(){
         BasicDecimal128 Decimal128_6 = new BasicDecimal128("1.23231", 37);
         assertEquals("1.2323100000000000000000000000000000000",Decimal128_6.getString());
     }
     @Test
-    public void testBasicDecimal128_getString13(){
+    public void test_BasicDecimal128_getString13(){
         BasicDecimal128 Decimal128_6 = new BasicDecimal128("-1.23231", 37);
         assertEquals("-1.2323100000000000000000000000000000000",Decimal128_6.getString());
     }
     @Test
-    public void testBasicDecimal128_getNumber1() throws Exception {
+    public void test_BasicDecimal128_getNumber1() throws Exception {
         BasicDecimal128 Decimal128_a = new BasicDecimal128("103", 6);
         assertEquals(new BigDecimal(103.000000), Decimal128_a.getNumber());
     }
     @Test
-    public void testBasicDecimal128_getNumber2() throws Exception {
+    public void test_BasicDecimal128_getNumber2() throws Exception {
         BasicDecimal128 Decimal128_b = new BasicDecimal128("-103", 6);
         assertEquals(new BigDecimal(-103), Decimal128_b.getNumber());
     }
     @Test
-    public void testBasicDecimal128_getNumber3() throws Exception {
+    public void test_BasicDecimal128_getNumber3() throws Exception {
         BasicDecimal128 Decimal128_c = new BasicDecimal128("0", 6);
         assertEquals(new BigDecimal(0), Decimal128_c.getNumber());
     }
     @Test
-    public void testBasicDecimal128_getNumber4() throws Exception {
+    public void test_BasicDecimal128_getNumber4() throws Exception {
         BasicDecimal128 Decimal128 = new BasicDecimal128( "1.23", 6);
         assertEquals(new BigDecimal("1.23"), Decimal128.getNumber());
         assertEquals("1.230000", Decimal128.getString());
 
     }
     @Test
-    public void testBasicDecimal128_getNumber5() throws Exception {
+    public void test_BasicDecimal128_getNumber5() throws Exception {
         BasicDecimal128 Decimal128_2 = new BasicDecimal128( "0.003", 6);
         assertEquals(new BigDecimal("0.003"), Decimal128_2.getNumber());
     }
     @Test
-    public void testBasicDecimal128_getNumber6() throws Exception {
+    public void test_BasicDecimal128_getNumber6() throws Exception {
         BasicDecimal128 Decimal128_3 = new BasicDecimal128("-1.23", 6);
         assertEquals(new BigDecimal("-1.23"), Decimal128_3.getNumber());
     }
     @Test
-    public void testBasicDecimal128_getNumber7() throws Exception {
+    public void test_BasicDecimal128_getNumber7() throws Exception {
         BasicDecimal128 Decimal128_4 = new BasicDecimal128("-0.003", 6);
         assertEquals(new BigDecimal("-0.003"),Decimal128_4.getNumber());
     }
     @Test
-    public void testBasicDecimal128_getNumber8() throws Exception {
+    public void test_BasicDecimal128_getNumber8() throws Exception {
         BasicDecimal128 Decimal128_5 = new BasicDecimal128("1.23231", 2);
         assertEquals(new BigDecimal("1.23"), Decimal128_5.getNumber());
     }
     @Test
-    public void testBasicDecimal128_getNumber9() throws Exception {
+    public void test_BasicDecimal128_getNumber9() throws Exception {
         BasicDecimal128 Decimal128_6 = new BasicDecimal128( "-1.23231", 2);
         assertEquals(new BigDecimal("-1.23"),Decimal128_6.getNumber());
     }
     @Test
-    public void testBasicDecimal128_getNumber10() throws Exception {
+    public void test_BasicDecimal128_getNumber10() throws Exception {
         BasicDecimal128 Decimal128_6 = new BasicDecimal128( "-1.23231", 0);
         assertEquals(new BigDecimal("-1"),Decimal128_6.getNumber());
     }
     @Test
-    public void testBasicDecimal128_getNumber11() throws Exception {
+    public void test_BasicDecimal128_getNumber11() throws Exception {
         BasicDecimal128 Decimal128_6 = new BasicDecimal128( "1.23231", 0);
         assertEquals(new BigDecimal("1"),Decimal128_6.getNumber());
     }
     @Test
-    public void testBasicDecimal128_getNumber12() throws Exception {
+    public void test_BasicDecimal128_getNumber12() throws Exception {
         BasicDecimal128 Decimal128_6 = new BasicDecimal128( "-1.23231", 18);
         assertEquals(-1.23231, Decimal128_6.getNumber().doubleValue(),5);
     }
     @Test
-    public void testBasicDecimal128_getNumber13() throws Exception {
+    public void test_BasicDecimal128_getNumber13() throws Exception {
         BasicDecimal128 Decimal128_6 = new BasicDecimal128( "1.23231", 18);
         assertEquals(1.23231, Decimal128_6.getNumber().doubleValue(),5);
     }
 
     @Test
-    public void testBasicDecimal128_run() throws Exception {
+    public void test_BasicDecimal128_run() throws Exception {
         BasicDecimal128 re1 =(BasicDecimal128) conn.run("decimal128('1.003',4)");
         assertEquals("1.0030",re1.getString());
         assertEquals(new BigDecimal("1.003"),re1.getNumber());
     }
 
     @Test
-    public void testBasicDecimal128_run2() throws Exception {
+    public void test_BasicDecimal128_run2() throws Exception {
         BasicDecimal128 re1 =(BasicDecimal128) conn.run("decimal128(-12.332,6)");
         assertEquals("-12.332000",re1.getString());
         assertEquals(new BigDecimal("-12.332"),re1.getNumber());
     }
 
     @Test
-    public void testBasicDecimal128_run3() throws Exception {
+    public void test_BasicDecimal128_run3() throws Exception {
         BasicDecimal128 re1 =(BasicDecimal128) conn.run("decimal128(0,6)");
         assertEquals("0.000000",re1.getString());
         assertEquals(new BigDecimal("0"),re1.getNumber());
     }
 
     @Test
-    public void testBasicDecimal128_run_NULL() throws Exception {
+    public void test_BasicDecimal128_run_NULL() throws Exception {
         BasicDecimal128 re1 =(BasicDecimal128) conn.run("decimal128(NULL,6)");
         assertEquals("",re1.getString());
         assertEquals(true,re1.isNull());
         assertEquals("-170141183460469231731687303715884105728",re1.getNumber().toString());
     }
     @Test
-    public void testBasicDecimal128_run_NULL_1() throws Exception {
+    public void test_BasicDecimal128_run_NULL_1() throws Exception {
         BasicDecimal128 re1 =(BasicDecimal128) conn.run("decimal64(NULL,18) * decimal64(NULL,1)");
         assertEquals("",re1.getString());
         assertEquals(true,re1.isNull());
@@ -333,7 +333,7 @@ public class BasicDecimal128Test {
     }
 
     @Test
-    public void testBasicDecimal128_setNULL() throws IOException {
+    public void test_BasicDecimal128_setNULL() throws IOException {
         BasicDecimal128 re1 = new BasicDecimal128( "0.003", 6);
         re1.setNull();
         assertEquals(true,re1.isNull());
@@ -341,31 +341,31 @@ public class BasicDecimal128Test {
         assertEquals(true,re2.isNull());
     }
     @Test
-    public void testBasicDecimal128_getScale() throws Exception {
+    public void test_BasicDecimal128_getScale() throws Exception {
         BasicDecimal128 Decimal128_5 = new BasicDecimal128( "1.23231", 2);
         assertEquals(2, Decimal128_5.getScale());
     }
 
     @Test
-    public void testBasicDecimal128_getScale_0() throws Exception {
+    public void test_BasicDecimal128_getScale_0() throws Exception {
         BasicDecimal128 Decimal128_5 = new BasicDecimal128("1.23231", 0);
         assertEquals(0, Decimal128_5.getScale());
     }
 
     @Test
-    public void testBasicDecimal128_getScale_18() throws Exception {
+    public void test_BasicDecimal128_getScale_18() throws Exception {
         BasicDecimal128 Decimal128_5 = new BasicDecimal128( "1.23231", 18);
         assertEquals(18, Decimal128_5.getScale());
     }
 
     @Test(expected = Exception.class)
-    public void testBasicDecimal128_getTemporal() throws Exception {
+    public void test_BasicDecimal128_getTemporal() throws Exception {
         BasicDecimal128 Decimal128_5 = new BasicDecimal128( "1.23231", 18);
         Decimal128_5.getTemporal();
     }
 
     @Test
-    public void testBasicDecimal128_hashBucket()  {
+    public void test_BasicDecimal128_hashBucket()  {
         BasicDecimal128 Decimal128_5 = new BasicDecimal128( "1.23231", 9);
         String re=null;
         assertEquals(0, Decimal128_5.hashBucket(1));
@@ -378,34 +378,34 @@ public class BasicDecimal128Test {
     }
 
     @Test
-    public void testBasicDecimal128_getJsonString()  {
+    public void test_BasicDecimal128_getJsonString()  {
         BasicDecimal128 Decimal128_5 = new BasicDecimal128( "1.23", 4);
         assertEquals("1.2300", Decimal128_5.getJsonString());
     }
 
     @Test
-    public void testBasicDecimal128_compareTo_1()  {
+    public void test_BasicDecimal128_compareTo_1()  {
         BasicDecimal128 re1 = new BasicDecimal128( "122.23", 4);
         BasicDecimal128 re2 = new BasicDecimal128( "121.23", 6);
         assertEquals(1, re1.compareTo(re2));
     }
 
     @Test
-    public void testBasicDecimal128_compareTo_0()  {
+    public void test_BasicDecimal128_compareTo_0()  {
         BasicDecimal128 re1 = new BasicDecimal128("1.23", 4);
         BasicDecimal128 re2 = new BasicDecimal128( "1.23", 6);
         assertEquals(0, re1.compareTo(re2));
     }
 
     @Test
-    public void testBasicDecimal128_compareTo_minus()  {
+    public void test_BasicDecimal128_compareTo_minus()  {
         BasicDecimal128 re1 = new BasicDecimal128( "1.23", 4);
         BasicDecimal128 re2 = new BasicDecimal128( "2.23", 6);
         assertEquals(-1, re1.compareTo(re2));
     }
 
     @Test
-    public void testBasicDecimal128_compareTo_upload() throws IOException {
+    public void test_BasicDecimal128_compareTo_upload() throws IOException {
         BasicDecimal128 re1 = new BasicDecimal128( "1.23", 4);
         Map<String, Entity> vars = new HashMap<String, Entity>();
         vars.put("a",re1);
@@ -415,7 +415,7 @@ public class BasicDecimal128Test {
     }
 
     @Test
-    public void testBasicDecimal128_compareTo_upload2() throws IOException {
+    public void test_BasicDecimal128_compareTo_upload2() throws IOException {
         BasicDecimal128 re1 = new BasicDecimal128( "12341.23", 3);
         Map<String, Entity> vars = new HashMap<String, Entity>();
         vars.put("a",re1);
@@ -429,7 +429,7 @@ public class BasicDecimal128Test {
         assertEquals(true, res.getBoolean());
     }
     @Test
-    public void testBasicDecimal128_compareTo_upload3() throws IOException {
+    public void test_BasicDecimal128_compareTo_upload3() throws IOException {
         BasicDecimal128 b=new BasicDecimal128("-1441050.00",0);
         System.out.println(b.getString());
         BasicDecimal128 c=new BasicDecimal128("-1441050.00",2);
@@ -443,7 +443,7 @@ public class BasicDecimal128Test {
     }
 
     @Test
-    public void testBasicDecimal128_compareTo_upload_NULL() throws IOException {
+    public void test_BasicDecimal128_compareTo_upload_NULL() throws IOException {
         BasicDecimal128 re1 = new BasicDecimal128( "12341.23", 3);
         re1.setNull();
         Map<String, Entity> vars = new HashMap<String, Entity>();
@@ -466,12 +466,12 @@ public class BasicDecimal128Test {
     }
 
     @Test
-    public void testBasicDecimal128_run_mul() throws IOException {
+    public void test_BasicDecimal128_run_mul() throws IOException {
         BasicDecimal128 re1 =(BasicDecimal128) conn.run("m = decimal64(9223372036854775807, 0);t=m*m*NULL; t");
         assertEquals("",re1.getString());
     }
     @Test
-    public void testBasicDecimal128_toJsonString() throws IOException {
+    public void test_BasicDecimal128_toJsonString() throws IOException {
         BasicDecimal128 re1 = new BasicDecimal128("12341.23", 3);
         String re = JSONObject.toJSONString(re1);
         System.out.println(re);
@@ -479,7 +479,7 @@ public class BasicDecimal128Test {
 
     }
     @Test
-    public void testBasicDecimal128_toJsonString_null() throws IOException {
+    public void test_BasicDecimal128_toJsonString_null() throws IOException {
         BasicDecimal128 re1 = new BasicDecimal128("12341.23", 3);
         re1.setNull();
         String re = JSONObject.toJSONString(re1);
