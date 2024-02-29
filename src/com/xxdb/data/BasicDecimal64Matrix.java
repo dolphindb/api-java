@@ -112,7 +112,7 @@ public class BasicDecimal64Matrix extends AbstractMatrix {
                     pow = pow.pow(this.scale - newScale);
                     newValue = newValue.multiply(pow);
                 }
-                this.values[getIndex(row, column)] = newValue.intValue();
+                this.values[getIndex(row, column)] = newValue.longValue();
             } else {
                 this.values[getIndex(row, column)] = ((BasicDecimal64) value).getLong();
             }
