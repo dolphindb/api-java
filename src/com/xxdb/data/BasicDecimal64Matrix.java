@@ -13,6 +13,9 @@ import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL64;
 public class BasicDecimal64Matrix extends AbstractMatrix {
     private long[] values;
 
+    private static final long MIN_VALUE = Long.MIN_VALUE;
+    private static final long MAX_VALUE = Long.MAX_VALUE;
+
     public BasicDecimal64Matrix(int rows, int columns){
         super(rows, columns);
         this.values = new long[rows * columns];
@@ -39,7 +42,7 @@ public class BasicDecimal64Matrix extends AbstractMatrix {
                 BigDecimal pow = BigDecimal.TEN.pow(this.scale);
                 for (int j = 0; j < newArray.length; j ++) {
                     BigDecimal bd = new BigDecimal(newArray[j]);
-                    if (bd.multiply(pow).intValue() > Integer.MIN_VALUE && bd.multiply(pow).intValue() < Integer.MAX_VALUE)
+                    if (bd.multiply(pow).longValue() > MIN_VALUE && bd.multiply(pow).longValue() < MAX_VALUE)
                         tempArr[j] = bd.multiply(pow).intValue();
                 }
                 System.arraycopy(tempArr, 0, values, i * rows, rows);
@@ -62,12 +65,12 @@ public class BasicDecimal64Matrix extends AbstractMatrix {
 
     @Override
     public boolean isNull(int row, int column) {
-        return values[getIndex(row, column)] == -Long.MAX_VALUE;
+        return values[getIndex(row, column)] == MIN_VALUE;
     }
 
     @Override
     public void setNull(int row, int column) {
-        values[getIndex(row, column)] = -Long.MAX_VALUE;
+        values[getIndex(row, column)] = MIN_VALUE;
     }
 
     @Override
@@ -85,7 +88,7 @@ public class BasicDecimal64Matrix extends AbstractMatrix {
         if (this.scale < 0)
             this.scale = newScale;
         if (((Scalar)value).isNull())
-            this.values[getIndex(row, column)] = -Long.MAX_VALUE;
+            this.values[getIndex(row, column)] = MIN_VALUE;
         else {
             if(this.scale != newScale) {
                 BigInteger newValue;
