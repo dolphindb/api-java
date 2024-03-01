@@ -522,7 +522,7 @@ public class BasicEntityTest {
     public void test_BasicEntityFactory_createScalar_createAnyVector_double() throws Exception {
         BasicEntityFactory factory = new BasicEntityFactory();
         double[]  double1 = new double[]{-1,0,2};
-        BasicFloatVector  re = (BasicFloatVector)factory.createScalar(Entity.DATA_TYPE.DT_FLOAT_ARRAY, double1,0);
+        BasicDoubleVector  re = (BasicDoubleVector)factory.createScalar(Entity.DATA_TYPE.DT_DOUBLE_ARRAY, double1,0);
         assertEquals("[-1,0,2]",re.getString());
     }
     @Test

@@ -1563,8 +1563,8 @@ public class SimpleDBConnectionPoolTest {
             cols.add(v);
         }
         BasicTable bt = new BasicTable(colNames,cols);
+        pool = new SimpleDBConnectionPool(config);
         DBConnection poolEntry = pool.getConnection();
-        poolEntry.connect(HOST,PORT,"admin","123456");
         Map<String,Entity> map = new HashMap<>();
         map.put("wideTable",bt);
         poolEntry.upload(map);
