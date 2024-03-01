@@ -46,7 +46,6 @@ public class BasicDecimal128Matrix extends AbstractMatrix {
                 if (newArray.length == 0 || newArray.length != rows)
                     throw new Exception("The length of array "+ (i+1) + " doesn't have " + rows + " elements");
 
-                BigDecimal pow = BigDecimal.TEN.pow(this.scale);
                 for (int j = 0; j < newArray.length; j ++) {
                     BigDecimal bd = new BigDecimal(newArray[j]);
                     if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0)

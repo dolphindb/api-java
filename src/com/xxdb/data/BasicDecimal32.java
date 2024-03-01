@@ -17,8 +17,7 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
     }
 
     public BasicDecimal32(int value, int scale){
-        scale_ = scale;
-        value_ = value * (int)Math.pow(10, scale_);
+        this(String.valueOf(value), scale);
     }
 
     public BasicDecimal32(String value, int scale) {

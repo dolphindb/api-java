@@ -19,30 +19,23 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
     private static final BigInteger BIGINT_MIN_VALUE = new BigInteger("-170141183460469231731687303715884105728");
     private static final BigInteger BIGINT_MAX_VALUE = new BigInteger("170141183460469231731687303715884105728");
 
-    public BasicDecimal128(String data, int scale) {
-        this(new BigDecimal(data).scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP).toBigInteger(), scale);
+    public BasicDecimal128(BigInteger unscaledVal, int scale) {
+        this(unscaledVal.toString(), scale);
     }
 
-    public BasicDecimal128(BigInteger unscaledVal, int scale) {
+    public BasicDecimal128(String data, int scale) {
         if (scale < 0 || scale > 38) {
             throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,38].");
         }
 
-        BigDecimal bd = new BigDecimal(unscaledVal);
-        if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0) {
-            throw new RuntimeException("Decimal128 overflow " + new BigDecimal(unscaledVal).scaleByPowerOfTen(-scale));
+        BigDecimal bd = new BigDecimal(data);
+        if (bd.scaleByPowerOfTen(scale).compareTo(DECIMAL128_MIN_VALUE) <0 || bd.scaleByPowerOfTen(scale).compareTo(DECIMAL128_MAX_VALUE) > 0) {
+            throw new RuntimeException("Decimal128 overflow " + new BigDecimal(data).scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP).toBigInteger());
         }
 
-        unscaledValue = unscaledVal;
-        if (unscaledValue.compareTo(BIGINT_MIN_VALUE) < 0) {
-            throw new RuntimeException("Decimal128 " + unscaledValue + " cannot be less than " + BIGINT_MIN_VALUE);
-        }
-
-        if (unscaledValue.compareTo(BIGINT_MAX_VALUE) > 0) {
-            throw new RuntimeException("Decimal128 " + unscaledValue + " cannot exceed " + BIGINT_MAX_VALUE);
-        }
-
+        this.unscaledValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP).toBigInteger();
         this.scale = scale;
+
     }
 
     public BasicDecimal128(ExtendedDataInput in) throws IOException {

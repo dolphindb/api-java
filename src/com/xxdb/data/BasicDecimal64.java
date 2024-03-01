@@ -24,8 +24,7 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
     }
 
     public BasicDecimal64(long value, int scale){
-        scale_ = scale;
-        value_ = value * (long) Math.pow(10, scale_);
+        this(String.valueOf(value), scale);
     }
 
     public BasicDecimal64(String value, int scale) {
@@ -176,9 +175,5 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
 
     public long getLong(){
         return value_;
-    }
-
-    private boolean checkDecimal64Range(BigDecimal value) {
-        return value.compareTo(DECIMAL64_MIN_VALUE) > 0 && value.compareTo(DECIMAL64_MAX_VALUE) < 0;
     }
 }
