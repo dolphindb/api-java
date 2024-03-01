@@ -144,7 +144,7 @@ public class BasicNanoTimestampTest {
 
         String re = JSONObject.toJSONString(bdhm2);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_NANOTIMESTAMP\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicNanoTimestamp\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0                        #1                       \\n1970.01.01T00:00:00.000...1970.01.01T00:00:00.00...\\n1970.01.01T00:00:00.000...1970.01.01T00:00:00.00...\\n\",\"table\":false,\"vector\":false}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_NANOTIMESTAMP\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicNanoTimestamp\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0                            #1                           \\n1970.01.01T00:00:00.000000001 1970.01.01T00:00:00.000000003\\n1970.01.01T00:00:00.000000002 1970.01.01T00:00:00.000000004\\n\",\"table\":false,\"vector\":false}", re);
     }
 
 }
