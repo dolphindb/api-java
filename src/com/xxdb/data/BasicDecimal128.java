@@ -6,6 +6,7 @@ import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.temporal.Temporal;
 import java.util.Objects;
 
@@ -19,7 +20,7 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
     private static final BigInteger BIGINT_MAX_VALUE = new BigInteger("170141183460469231731687303715884105728");
 
     public BasicDecimal128(String data, int scale) {
-        this(new BigDecimal(data).scaleByPowerOfTen(scale).toBigInteger(), scale);
+        this(new BigDecimal(data).scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP).toBigInteger(), scale);
     }
 
     public BasicDecimal128(BigInteger unscaledVal, int scale) {

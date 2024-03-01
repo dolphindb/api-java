@@ -7,6 +7,7 @@ import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.temporal.Temporal;
 
 
@@ -40,7 +41,7 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
         if ("0".equals(value)) {
             value_ = 0L;
         } else {
-            BigInteger unscaledVal = new BigDecimal(value).scaleByPowerOfTen(scale).toBigInteger();
+            BigInteger unscaledVal = new BigDecimal(value).scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP).toBigInteger();
             BigDecimal bd = new BigDecimal(unscaledVal);
             if (bd.compareTo(DECIMAL64_MIN_VALUE) < 0  || bd.compareTo(DECIMAL64_MAX_VALUE) > 0) {
                 throw new RuntimeException("Decimal math overflow: " + value);
