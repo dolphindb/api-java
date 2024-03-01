@@ -189,6 +189,16 @@ public class BasicDecimal32MatrixTest {
                 "0.000000000  0.000000000 0.010000000  -0.001000000\n" +
                 "-1.000000090 1.000000090 -0.000000090 0.000000090 \n" +
                 "-1.999999999 1.999999999 -0.999999999 0.999999999 \n", re4.getString());
+
+        List<String[]> list4 = new ArrayList<>();
+        list4.add(new String[]{"0.49","-123.44","132.50","-0.51"});
+        BasicDecimal32Matrix re5 = new BasicDecimal32Matrix(4, 1,list4,0);
+        System.out.println(re5.getString());
+        assertEquals("#0  \n" +
+                "0   \n" +
+                "-123\n" +
+                "133 \n" +
+                "-1   \n", re5.getString());
     }
 
     @Test

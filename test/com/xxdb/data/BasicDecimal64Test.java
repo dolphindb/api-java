@@ -63,6 +63,24 @@ public class BasicDecimal64Test {
     public void test_BasicDecimal64_value_string_2(){
         BasicDecimal64 Decimal64 = new BasicDecimal64("0",4);
         assertEquals("0.0000",Decimal64.getString());
+
+        BasicDecimal64 re1 = new BasicDecimal64("-0.5900",0);
+        assertEquals("-1",re1.getString());
+
+        BasicDecimal64 re2 = new BasicDecimal64("0.6900",0);
+        assertEquals("1",re2.getString());
+
+        BasicDecimal64 re3 = new BasicDecimal64("0.4900",0);
+        assertEquals("0",re3.getString());
+
+        BasicDecimal64 re4 = new BasicDecimal64("-0.4949",2);
+        assertEquals("-0.49",re4.getString());
+
+        BasicDecimal64 re5 = new BasicDecimal64("-0.4950",2);
+        assertEquals("-0.50",re5.getString());
+
+        BasicDecimal64 re6 = new BasicDecimal64("-0.4960",2);
+        assertEquals("-0.50",re6.getString());
     }
     @Test
     public void test_BasicDecimal64_value_string_scale_negative(){

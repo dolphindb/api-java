@@ -202,6 +202,10 @@ public class BasicDecimal128VectorTest {
         String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
         BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
         assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_128_v.getString());
+
+        String[] tmp_string_v1 = {"0.49","-123.49","132.99","-0.51"};
+        BasicDecimal128Vector tmp_128_v1 = new BasicDecimal128Vector(tmp_string_v1,0);
+        assertEquals("[0,-123,133,-1]",tmp_128_v1.getString());
     }
 
     @Test

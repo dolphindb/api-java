@@ -118,6 +118,10 @@ public class BasicDecimal64VectorTest {
         String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
         BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,0);
         assertEquals("[0,-123,132,100]",tmp_64_v.getString());
+
+        String[] tmp_string_v1 = {"0.49","-123.49","132.99","-0.51"};
+        BasicDecimal64Vector tmp_64_v1 = new BasicDecimal64Vector(tmp_string_v1,0);
+        assertEquals("[0,-123,133,-1]",tmp_64_v1.getString());
     }
     @Test
     public void test_BasicDecimal64Vector_create_string_scale_17() throws Exception {
