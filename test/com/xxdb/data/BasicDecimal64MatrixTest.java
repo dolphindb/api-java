@@ -190,6 +190,16 @@ public class BasicDecimal64MatrixTest {
                 "0.000000000000000000  0.000000000000000000 0.010000000000000000  -0.001000000000000000\n" +
                 "-1.000000000000090000 1.000000000090000000 -0.000000000090000000 0.000000000000000000 \n" +
                 "-1.999999999999999999 1.999999999999999999 -0.999999999999999999 0.999999999999999999 \n", re4.getString());
+
+        List<String[]> list4 = new ArrayList<>();
+        list4.add(new String[]{"0.49","-123.44","132.50","-0.51"});
+        BasicDecimal64Matrix re5 = new BasicDecimal64Matrix(4, 1,list4,0);
+        System.out.println(re5.getString());
+        assertEquals("#0  \n" +
+                "0   \n" +
+                "-123\n" +
+                "133 \n" +
+                "-1   \n", re5.getString());
     }
 
     @Test

@@ -41,6 +41,24 @@ public class BasicDecimal128Test {
     public void test_BasicDecimal128_value_string(){
         BasicDecimal128 Decimal128 = new BasicDecimal128("1232",4);
         assertEquals("1232.0000",Decimal128.getString());
+
+        BasicDecimal128 re1 = new BasicDecimal128("-0.5900",0);
+        assertEquals("-1",re1.getString());
+
+        BasicDecimal128 re2 = new BasicDecimal128("0.6900",0);
+        assertEquals("1",re2.getString());
+
+        BasicDecimal128 re3 = new BasicDecimal128("0.4900",0);
+        assertEquals("0",re3.getString());
+
+        BasicDecimal128 re4 = new BasicDecimal128("-0.4949",2);
+        assertEquals("-0.49",re4.getString());
+
+        BasicDecimal128 re5 = new BasicDecimal128("-0.4950",2);
+        assertEquals("-0.50",re5.getString());
+
+        BasicDecimal128 re6 = new BasicDecimal128("-0.4960",2);
+        assertEquals("-0.50",re6.getString());
     }
 
     @Test
@@ -485,6 +503,5 @@ public class BasicDecimal128Test {
         String re = JSONObject.toJSONString(re1);
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_DECIMAL128\",\"dictionary\":false,\"jsonString\":\"null\",\"matrix\":false,\"null\":true,\"number\":-170141183460469231731687303715884105728,\"pair\":false,\"scalar\":true,\"scale\":3,\"string\":\"\",\"table\":false,\"vector\":false}", re);
-
     }
 }

@@ -158,6 +158,10 @@ public class BasicDecimal32VectorTest {
         String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
         BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,0);
         assertEquals("[0,-123,132,100]",tmp_32_v.getString());
+
+        String[] tmp_string_v1 = {"0.49","-123.44","132.50","-0.51"};
+        BasicDecimal32Vector tmp_32_v1 = new BasicDecimal32Vector(tmp_string_v1,0);
+        assertEquals("[0,-123,133,-1]",tmp_32_v1.getString());
     }
     @Test
     public void test_BasicDecimal32Vector_create_string_scale_8() throws Exception {

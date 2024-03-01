@@ -60,6 +60,24 @@ public class BasicDecimal32Test {
     public void test_BasicDecimal32_value_string_2(){
         BasicDecimal32 Decimal32 = new BasicDecimal32("0",4);
         assertEquals("0.0000",Decimal32.getString());
+
+        BasicDecimal32 re1 = new BasicDecimal32("-0.5900",0);
+        assertEquals("-1",re1.getString());
+
+        BasicDecimal32 re2 = new BasicDecimal32("0.6900",0);
+        assertEquals("1",re2.getString());
+
+        BasicDecimal32 re3 = new BasicDecimal32("0.4900",0);
+        assertEquals("0",re3.getString());
+
+        BasicDecimal32 re4 = new BasicDecimal32("-0.4949",2);
+        assertEquals("-0.49",re4.getString());
+
+        BasicDecimal32 re5 = new BasicDecimal32("-0.4950",2);
+        assertEquals("-0.50",re5.getString());
+
+        BasicDecimal32 re6 = new BasicDecimal32("-0.4960",2);
+        assertEquals("-0.50",re6.getString());
     }
     @Test
     public void test_BasicDecimal32_value_string_scale_negative(){
