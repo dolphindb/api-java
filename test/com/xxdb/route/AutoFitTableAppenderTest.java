@@ -38,6 +38,10 @@ public class AutoFitTableAppenderTest {
         conn.run("if(existsDatabase(\"dfs://tableAppenderTest\")){\n" +"\tdropDatabase(\"dfs://tableAppenderTest\")\n" +                "}");
         conn.close();
     }
+    public static void PrepareTable(String dataType) throws IOException {
+        String script = "try{\nundef(`pt, SHARED)\n}\n catch(ex){\n}\n;share table(1:0, `permno`dateType, [INT,"+dataType+"]) as pt;\n";
+        conn.run(script);
+    }
     public void compareBasicTable(BasicTable table, BasicTable newTable) {
         Assert.assertEquals(table.rows(), newTable.rows());
         Assert.assertEquals(table.columns(), newTable.columns());
@@ -2377,5 +2381,71 @@ public class AutoFitTableAppenderTest {
         assertEquals(0, bt.rows());
         conn.close();
     }
+    @Test
+    public void Test_AutoFitTableAppender_dateType_not_match() throws IOException {
+        PrepareTable("DATE");
+        AutoFitTableAppender aftu = new AutoFitTableAppender("", "pt", conn);
+        List<String> colName=new ArrayList<>();
+        colName.add("permno");
+        colName.add("dateType");
+        List<Vector> cols = new ArrayList<>();
+        BasicIntVector permno = new BasicIntVector(0);
+        permno.add(1);
+        cols.add(permno);
+        BasicIntVector dateType = new BasicIntVector(0);
+        dateType.add(2);
+        cols.add(dateType);
+        BasicTable bt = new BasicTable(colName, cols);
+        aftu.append(bt);
+        BasicTable bt1 = (BasicTable) conn.run("select * from pt;");
+        assertEquals(0, bt1.rows());
+
+        PrepareTable("MONTH");
+        aftu.append(bt);
+        BasicTable bt2 = (BasicTable) conn.run("select * from pt;");
+        assertEquals(0, bt2.rows());
+
+        PrepareTable("TIME");
+        aftu.append(bt);
+        BasicTable bt3 = (BasicTable) conn.run("select * from pt;");
+        assertEquals(0, bt3.rows());
+
+        PrepareTable("MINUTE");
+        aftu.append(bt);
+        BasicTable bt4 = (BasicTable) conn.run("select * from pt;");
+        assertEquals(0, bt4.rows());
+
+        PrepareTable("SECOND");
+        aftu.append(bt);
+        BasicTable bt5 = (BasicTable) conn.run("select * from pt;");
+        assertEquals(0, bt5.rows());
+
+        PrepareTable("DATETIME");
+        aftu.append(bt);
+        BasicTable bt6 = (BasicTable) conn.run("select * from pt;");
+        assertEquals(0, bt6.rows());
+
+        PrepareTable("TIMESTAMP");
+        aftu.append(bt);
+        BasicTable bt7 = (BasicTable) conn.run("select * from pt;");
+        assertEquals(0, bt7.rows());
+
+        PrepareTable("NANOTIME");
+        aftu.append(bt);
+        BasicTable bt8 = (BasicTable) conn.run("select * from pt;");
+        assertEquals(0, bt8.rows());
+
+        PrepareTable("NANOTIMESTAMP");
+        aftu.append(bt);
+        BasicTable bt9 = (BasicTable) conn.run("select * from pt;");
+        assertEquals(0, bt9.rows());
+
+        PrepareTable("DATEHOUR");
+        aftu.append(bt);
+        BasicTable bt10 = (BasicTable) conn.run("select * from pt;");
+        assertEquals(0, bt10.rows());
+
+    }
+
 }
 
