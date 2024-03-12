@@ -1842,7 +1842,7 @@ public class DBConnectionTest {
     }
 
     @Test
-    public void testStringMatrixUpload() throws IOException {
+    public void testSymbolMatrixUpload() throws IOException {
         HashMap<String, Entity> map = new HashMap<String, Entity>();
         Entity matrixString = conn.run("matrix(`SYMBOL,2,4, ,`T)");
         map.put("matrixString", matrixString);
@@ -1851,7 +1851,53 @@ public class DBConnectionTest {
         assertEquals(2, matrixStringRes.rows());
         assertEquals(4, matrixStringRes.columns());
     }
-
+    @Test
+    public void testStringMatrixUpload() throws IOException {
+        HashMap<String, Entity> map = new HashMap<String, Entity>();
+        Entity matrixString = conn.run("matrix(`STRING,2,4, ,`T)");
+        map.put("matrixString", matrixString);
+        conn.upload(map);
+        Entity matrixStringRes = conn.run("matrixString");
+        assertEquals(2, matrixStringRes.rows());
+        assertEquals(4, matrixStringRes.columns());
+        assertEquals(matrixString.getString(), matrixStringRes.getString());
+        map = new HashMap<String, Entity>();
+        Entity matrixString1 = conn.run("string(1..36)$6:6");
+        map.put("matrixString", matrixString1);
+        map.put("matrixString1", matrixString1);
+        conn.upload(map);
+        assertEquals(6, matrixString1.rows());
+        assertEquals(6, matrixString1.columns());
+        assertTrue(((BasicStringMatrix) matrixString1).get(0, 0).getString().equals("1"));
+    }
+    @Test
+    public void testStringMatrixUpload1() throws IOException {
+        HashMap<String, Entity> map = new HashMap<String, Entity>();
+        Entity matrixString = conn.run("matrix(`STRING,1000,1000, ,\"NULL中国测试!@#$%^&*()_+{}:COUNT<>,.//;'|[]=-`~\\\\\");");
+        map.put("matrixString", matrixString);
+        conn.upload(map);
+        Entity matrixStringRes = conn.run("matrixString");
+        assertEquals(1000, matrixStringRes.rows());
+        assertEquals(1000, matrixStringRes.columns());
+        assertEquals(matrixString.getString(), matrixStringRes.getString());
+    }
+    @Test
+    public void testStringMatrixUploadNull() throws IOException {
+        HashMap<String, Entity> map = new HashMap<String, Entity>();
+        Entity matrixString = conn.run("matrix(`STRING,2,4, ,\"\")");
+        map.put("matrixString", matrixString);
+        conn.upload(map);
+        Entity matrixStringRes = conn.run("matrixString");
+        assertEquals(2, matrixStringRes.rows());
+        assertEquals(4, matrixStringRes.columns());
+        assertEquals(matrixString.getString(), matrixStringRes.getString());
+        map.put("matrixString1", matrixString);
+        conn.tryUpload(map);
+        Entity matrixString1Res = conn.run("matrixString");
+        assertEquals(2, matrixString1Res.rows());
+        assertEquals(4, matrixString1Res.columns());
+        assertEquals(matrixString.getString(), matrixString1Res.getString());
+    }
     @Test
     public void testShortMatrixUpload() throws IOException {
         HashMap<String, Entity> map = new HashMap<String, Entity>();
