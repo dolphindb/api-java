@@ -1420,13 +1420,19 @@ public class BasicArrayVectorTest {
         System.out.println(arryDate.serialize(0,1,71532,numElementAndPartial,bb));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void test_BasicArrayVector_AppendScalar() throws Exception {
         DBConnection conn = new DBConnection();
         conn.connect(HOST, PORT);
         BasicArrayVector bav = (BasicArrayVector) conn.run("j = arrayVector(9 13 16 18,14:10:50+0..17);j;");
         assertEquals(Entity.DATA_TYPE.DT_SECOND_ARRAY,bav.getDataType());
-        bav.Append(new BasicSecond(51072));
+        String re = null;
+        try{
+            bav.Append(new BasicSecond(51072));
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("ArrayVector not support append scalar value",re);
     }
 
     @Test
