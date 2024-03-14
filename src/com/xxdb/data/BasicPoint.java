@@ -103,7 +103,7 @@ public class BasicPoint extends AbstractScalar{
 	}
 
 	@Override
-	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
+    public void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
 		out.writeDouble2(value);
 	}
 

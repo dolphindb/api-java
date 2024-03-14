@@ -129,7 +129,7 @@ public class BasicFloat extends AbstractScalar implements Comparable<BasicFloat>
 		return getString();
 	}
 
-	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
+	public void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeFloat(value);
 	}
 	

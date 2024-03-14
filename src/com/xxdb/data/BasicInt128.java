@@ -95,7 +95,7 @@ public class BasicInt128 extends AbstractScalar {
 	}
 
 	@Override
-	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
+    public void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
 		out.writeLong2(value);
 	}
 	

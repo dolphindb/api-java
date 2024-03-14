@@ -109,7 +109,7 @@ public class BasicBoolean extends AbstractScalar implements Comparable<BasicBool
 		return getString();
 	}
 
-	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
+	public void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeByte(value);
 	}
 

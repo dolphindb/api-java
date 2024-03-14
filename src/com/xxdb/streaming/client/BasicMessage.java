@@ -55,6 +55,10 @@ public class BasicMessage implements IMessage {
         return this.msg.getEntity(colIndex);
     }
 
+    public Entity getMsg() {
+        return this.msg;
+    }
+
     public int size(){
         return msg.rows();
     }

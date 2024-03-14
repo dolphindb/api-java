@@ -123,7 +123,7 @@ public class BasicDuration extends AbstractScalar implements Comparable<BasicDur
 	}
 
 	@Override
-	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
+    public void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
 		out.writeInt(this.value);
 		out.writeInt(this.exchange);
 	}

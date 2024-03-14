@@ -106,7 +106,7 @@ public class BasicShort extends AbstractScalar implements Comparable<BasicShort>
 		return getString();
 	}
 
-	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
+	public void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeShort(value);
 	}
 

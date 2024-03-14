@@ -111,7 +111,7 @@ public class BasicInt extends AbstractScalar implements Comparable<BasicInt>{
 		return getString();
 	}
 
-	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
+	public void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeInt(value);
 	}
 

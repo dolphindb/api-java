@@ -17,7 +17,7 @@ import com.xxdb.data.Void;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-abstract class AbstractClient implements MessageDispatcher {
+public abstract class AbstractClient implements MessageDispatcher {
     protected static final int DEFAULT_PORT = 8849;
     protected static final String DEFAULT_HOST = "localhost";
     protected static final String DEFAULT_ACTION_NAME = "javaStreamingApi";
@@ -613,7 +613,7 @@ abstract class AbstractClient implements MessageDispatcher {
             int v1 = Integer.parseInt(_[1]);
             int v2 = Integer.parseInt(_[2]);
 
-            if ((v0 == 2 && v1 == 0 && v2 >= 9) || (v0 == 2 && v1 == 10) || (v0 == 3 && v1 == 0 && v2 >= 0)) {
+            if (v0 ==3 || (v0 == 2 && v1 == 0 && v2 >= 9) || (v0 == 2 && v1 == 10) || (v0 == 3 && v1 == 0 && v2 >= 0)) {
                 //server only support reverse connection
                 this.listeningPort = 0;
             } else {

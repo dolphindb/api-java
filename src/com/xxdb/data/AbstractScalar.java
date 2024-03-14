@@ -6,7 +6,7 @@ import com.xxdb.io.ExtendedDataOutput;
 
 public abstract class AbstractScalar extends AbstractEntity implements Scalar{
 	
-	protected abstract void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException;
+	public abstract void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException;
 	
 	@Override
 	public DATA_FORM getDataForm() {

@@ -111,7 +111,7 @@ public class BasicLong extends AbstractScalar implements Comparable<BasicLong>{
 		return getString();
 	}
 
-	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
+	public void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeLong(value);
 	}
 

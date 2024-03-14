@@ -65,7 +65,7 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
     }
 
     @Override
-    protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
+    public void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException {
         out.writeInt(this.scale);
 
         byte[] newArray = new byte[16];

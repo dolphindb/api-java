@@ -65,7 +65,7 @@ public class Void extends AbstractScalar{
 		return getString();
 	}
 
-	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
+	public void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeBoolean(false); //explicit null value
 	}
 

@@ -2,6 +2,8 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
@@ -14,10 +16,15 @@ import com.xxdb.io.ExtendedDataOutput;
 
 public class BasicAnyVector extends AbstractVector{
 	private Entity[] values;
+	private int size;
+	private int capaticy;
 	
 	public BasicAnyVector(int size){
 		super(DATA_FORM.DF_VECTOR);
 		values = new Entity[size];
+
+		this.size = size;
+		this.capaticy = this.values.length;
 	}
 	
 	protected BasicAnyVector(Entity[] array, boolean copy){
@@ -26,6 +33,9 @@ public class BasicAnyVector extends AbstractVector{
 			values = array.clone();
 		else
 			values = array;
+
+		this.size = this.values.length;
+		this.capaticy = this.values.length;
 	}
 	
 	protected BasicAnyVector(ExtendedDataInput in) throws IOException{
@@ -45,6 +55,9 @@ public class BasicAnyVector extends AbstractVector{
 			Entity obj = BasicEntityFactory.instance().createEntity(DATA_FORM.values()[form], DATA_TYPE.valueOf(type), in, extended);
 			values[i] = obj;
 		}
+
+		this.size = this.values.length;
+		this.capaticy = this.values.length;
 	}
 
 	public Entity getEntity(int index){
@@ -111,14 +124,20 @@ public class BasicAnyVector extends AbstractVector{
 		throw new RuntimeException("AnyVector not support addRange");
 	}
 
+	public void Append(Entity value) {
+		add(value);
+	}
+
 	@Override
 	public void Append(Scalar value) {
-		throw new RuntimeException("AnyVector not support append");
+		// throw new RuntimeException("AnyVector not support append");
+		add(value);
 	}
 
 	@Override
 	public void Append(Vector value) {
-		throw new RuntimeException("AnyVector not support append");
+		// throw new RuntimeException("AnyVector not support append");
+		add(value);
 	}
 
 	public String getString(){
@@ -150,14 +169,25 @@ public class BasicAnyVector extends AbstractVector{
 		throw new RuntimeException("BasicAnyVector.serialize not supported.");
 	}
 
-	public void add(Object value) {
-		throw new RuntimeException("AnyVector not support add");
+	public void add(Entity value) {
+		// throw new RuntimeException("AnyVector not support add");
+		if (size + 1 > capaticy && values.length > 0)
+			values = Arrays.copyOf(values, values.length * 2);
+		else if (values.length <= 0)
+			values = Arrays.copyOf(values, values.length + 1);
+
+		capaticy = values.length;
+		values[size] = value;
+		size++;
 	}
 
 	@Override
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
-		for(Entity value : values)
-			value.write(out);
+		for(Entity value : values) {
+			if (Objects.nonNull(value))
+				value.write(out);
+		}
+
 	}
 	
 	@Override

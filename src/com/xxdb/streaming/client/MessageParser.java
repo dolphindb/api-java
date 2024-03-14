@@ -118,14 +118,13 @@ class MessageParser implements Runnable {
                         nameToIndex.put(name.toLowerCase(), i);
                     }
                     topicNameToIndex.put(topic, nameToIndex);
-                }
-                else if (body.isVector()) {
+                } else if (body.isVector()) {
                     BasicAnyVector dTable = (BasicAnyVector) body;
 
                     AbstractClient.Site[] sites = topicToSites.get(topic);
                     int colSize = dTable.rows();
                     int rowSize = dTable.getEntity(0).rows();
-                    if (sites != null && sites[0].msgAstable == true) {
+                    if (sites != null && sites[0].msgAstable) {
                         BasicMessage rec = new BasicMessage(msgid - rowSize + 1, topic, dTable, topicNameToIndex.get(topic.split(",")[0]));
                         dispatcher.dispatch(rec);
                     } else {

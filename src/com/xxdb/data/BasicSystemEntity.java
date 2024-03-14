@@ -26,7 +26,7 @@ public class BasicSystemEntity extends BasicString {
 		return type;
 	}
 	
-	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
+	public void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		throw new IOException("System entity is not supposed to serialize.");
 	}
 }

@@ -128,7 +128,7 @@ public class BasicDouble extends AbstractScalar implements Comparable<BasicDoubl
 		return getString();
 	}
 
-	protected void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
+	public void writeScalarToOutputStream(ExtendedDataOutput out) throws IOException{
 		out.writeDouble(value);
 	}
 
