@@ -6,6 +6,7 @@ import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
@@ -61,11 +62,11 @@ public class BasicDecimal64Vector extends AbstractVector{
 
         int length = data.length;
         values = new long[length];
-        BigDecimal pow = BigDecimal.TEN.pow(scale_);
         for (int i = 0; i < length; i++) {
             BigDecimal bd = new BigDecimal(data[i]);
-            if (checkDecimal64Range(bd))
-                values[i] = bd.multiply(pow).longValue();
+            BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
+            if (checkDecimal64Range(multipliedValue))
+                values[i] = multipliedValue.intValue();
         }
 
         size = length;

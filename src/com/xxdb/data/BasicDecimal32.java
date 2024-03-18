@@ -5,6 +5,7 @@ import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.temporal.Temporal;
 
 public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDecimal32>{
@@ -35,13 +36,11 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
             value_ = 0;
         } else {
             BigDecimal bd = new BigDecimal(value);
-            BigDecimal pow = BigDecimal.TEN.pow(scale_);
-            BigDecimal multipliedValue = bd.multiply(pow);
-            if (multipliedValue.intValue() != multipliedValue.longValue()) {
+            BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
+            if (multipliedValue.intValue() != multipliedValue.longValue())
                 throw new RuntimeException("Decimal math overflow!");
-            } else {
+            else
                 value_ = multipliedValue.intValue();
-            }
         }
     }
 

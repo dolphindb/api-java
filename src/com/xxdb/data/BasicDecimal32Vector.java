@@ -6,6 +6,7 @@ import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
@@ -48,12 +49,11 @@ public class BasicDecimal32Vector extends AbstractVector{
 
         int length = data.length;
         values = new int[length];
-        BigDecimal pow = BigDecimal.TEN.pow(scale_);
         for (int i = 0; i < length; i++) {
             BigDecimal bd = new BigDecimal(data[i]);
-            if (bd.multiply(pow).intValue() > Integer.MIN_VALUE && bd.multiply(pow).intValue() < Integer.MAX_VALUE) {
-                values[i] = bd.multiply(pow).intValue();
-            }
+            BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
+            if (multipliedValue.intValue() > Integer.MIN_VALUE && multipliedValue.intValue() < Integer.MAX_VALUE)
+                values[i] = multipliedValue.intValue();
         }
 
         size = length;

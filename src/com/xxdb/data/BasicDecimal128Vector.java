@@ -6,6 +6,7 @@ import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
@@ -45,8 +46,10 @@ public class BasicDecimal128Vector extends AbstractVector {
 
         BigInteger[] newArray = new BigInteger[dataValue.length];
         for (int i = 0; i < dataValue.length; i++ ) {
-            BigDecimal bd = new BigDecimal(dataValue[i]).scaleByPowerOfTen(scale);
-            BigInteger unscaledValue = bd.toBigInteger();
+            BigDecimal bd = new BigDecimal(dataValue[i]);
+            BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
+            BigInteger unscaledValue = multipliedValue.toBigInteger();
+
 
             if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0) {
                 throw new RuntimeException("Decimal128 overflow " + unscaledValue);
