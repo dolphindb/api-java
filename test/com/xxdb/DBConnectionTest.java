@@ -1888,6 +1888,8 @@ public class DBConnectionTest {
         map.put("matrixString", matrixString);
         conn.upload(map);
         Entity matrixStringRes = conn.run("matrixString");
+        BasicString datatype1 = (BasicString)conn.run("typestr(matrixString)");
+        System.out.println(datatype1.getString());
         assertEquals(2, matrixStringRes.rows());
         assertEquals(4, matrixStringRes.columns());
         assertEquals(matrixString.getString(), matrixStringRes.getString());
