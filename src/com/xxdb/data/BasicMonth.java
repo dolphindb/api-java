@@ -32,7 +32,7 @@ public class BasicMonth extends BasicInt{
 		super(in);
 	}
 	
-	protected BasicMonth(int value){
+	public BasicMonth(int value){
 		super(value);
 	}
 

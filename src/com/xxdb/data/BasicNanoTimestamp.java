@@ -23,7 +23,7 @@ public class BasicNanoTimestamp extends BasicLong{
 		super(in);
 	}
 
-	protected BasicNanoTimestamp(long value){
+	public BasicNanoTimestamp(long value){
 		super(value);
 	}
 

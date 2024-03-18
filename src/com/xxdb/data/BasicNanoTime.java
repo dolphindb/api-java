@@ -27,7 +27,7 @@ public class BasicNanoTime extends BasicLong{
 		super(in);
 	}
 
-	protected BasicNanoTime(long value){
+	public BasicNanoTime(long value){
 		super(value);
 	}
 

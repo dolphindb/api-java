@@ -28,7 +28,7 @@ public class BasicDateHour extends BasicInt {
 		super(in);
 	}
 	
-	protected BasicDateHour(int value){
+	public BasicDateHour(int value){
 		super(value);
 	}
 	

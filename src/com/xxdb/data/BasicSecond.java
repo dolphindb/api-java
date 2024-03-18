@@ -29,7 +29,6 @@ public class BasicSecond extends BasicInt{
 		super(in);
 	}
 
-	//TODO: change to public
 	public BasicSecond(int value){
 		super(value);
 	}

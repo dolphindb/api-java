@@ -28,7 +28,7 @@ public class BasicMinute extends BasicInt{
 		super(in);
 	}
 	
-	protected BasicMinute(int value){
+	public BasicMinute(int value){
 		super(value);
 	}
 	

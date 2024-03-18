@@ -27,7 +27,7 @@ public class BasicDate extends BasicInt{
 		super(in);
 	}
 	
-	protected BasicDate(int value){
+	public BasicDate(int value){
 		super(value);
 	}
 	

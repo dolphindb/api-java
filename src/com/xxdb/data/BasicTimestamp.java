@@ -26,8 +26,8 @@ public class BasicTimestamp extends BasicLong{
 	public BasicTimestamp(ExtendedDataInput in) throws IOException {
 		super(in);
 	}
-	
-	protected BasicTimestamp(long value){
+
+	public BasicTimestamp(long value){
 		super(value);
 	}
 	

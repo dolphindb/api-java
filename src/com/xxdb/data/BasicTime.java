@@ -27,7 +27,7 @@ public class BasicTime extends BasicInt{
 		super(in);
 	}
 	
-	protected BasicTime(int value){
+	public BasicTime(int value){
 		super(value);
 	}
 	
