@@ -61,7 +61,7 @@ public class BasicDecimal128Matrix extends AbstractMatrix {
                     newArray[j] = newArray[j].multiply(BigInteger.TEN.pow(scale));
                 System.arraycopy(newArray, 0, values, i * rows, rows);
             } else {
-                throw new RuntimeException("BasicDecimal128Matrix 'listOfArrays' param only support String[] or int[].");
+                throw new RuntimeException("BasicDecimal128Matrix 'listOfArrays' param only support String[] or BigInteger[].");
             }
         }
     }

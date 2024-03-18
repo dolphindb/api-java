@@ -58,7 +58,7 @@ public class BasicDecimal64Matrix extends AbstractMatrix {
                     newArray[j] = newArray[j] * (long) Math.pow(10, this.scale);
                 System.arraycopy(newArray, 0, values, i * rows, rows);
             } else {
-                throw new RuntimeException("BasicDecimal64Matrix 'listOfArrays' param only support String[] or int[].");
+                throw new RuntimeException("BasicDecimal64Matrix 'listOfArrays' param only support String[] or long[].");
             }
         }
     }
