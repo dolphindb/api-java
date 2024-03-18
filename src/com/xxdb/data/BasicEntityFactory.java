@@ -547,7 +547,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicString(in);}
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, in, false, false);}
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in, false, false);}
-		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in, false);}
 		public Scalar createScalarWithDefaultValue() { return new BasicString("");}
 		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicStringVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, 2, false);}
@@ -558,7 +558,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Scalar createScalar(ExtendedDataInput in) throws IOException { return new BasicString(in);}
 		public Vector createVector(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, in, true, false);}
 		public Vector createPair(ExtendedDataInput in) throws IOException { return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, in, true, false);}
-		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in);}
+		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicStringMatrix(in, true);}
 		public Scalar createScalarWithDefaultValue() { return new BasicString("");}
 		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicStringVector(Entity.DATA_FORM.DF_VECTOR, size, true);}
 		public Vector createPairWithDefaultValue(){ return new BasicStringVector(Entity.DATA_FORM.DF_PAIR, 2, true);}

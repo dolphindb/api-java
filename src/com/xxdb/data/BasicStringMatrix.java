@@ -41,6 +41,11 @@ public class BasicStringMatrix extends AbstractMatrix{
 		isSymbol = true;
 	}
 
+	public BasicStringMatrix(ExtendedDataInput in, boolean isSymbol) throws IOException {
+		super(in);
+		this.isSymbol = isSymbol;
+	}
+
 	public void setString(int row, int column, String value){
 		values[getIndex(row, column)] = value;
 	}
