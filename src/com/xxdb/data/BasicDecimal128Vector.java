@@ -47,14 +47,10 @@ public class BasicDecimal128Vector extends AbstractVector {
         BigInteger[] newArray = new BigInteger[dataValue.length];
         for (int i = 0; i < dataValue.length; i++ ) {
             BigDecimal bd = new BigDecimal(dataValue[i]);
+            Utils.checkDecimal128Range(bd, scale);
+
             BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
             BigInteger unscaledValue = multipliedValue.toBigInteger();
-
-
-            if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0) {
-                throw new RuntimeException("Decimal128 overflow " + unscaledValue);
-            }
-
             newArray[i] = unscaledValue;
             if (newArray[i].compareTo(BIGINT_MIN_VALUE) < 0) {
                 throw new RuntimeException("Decimal128 below " + newArray[i]);

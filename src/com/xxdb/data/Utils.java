@@ -1,12 +1,11 @@
 package com.xxdb.data;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.time.*;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import com.xxdb.data.Entity.DATA_CATEGORY;
 import com.xxdb.data.Entity.DATA_FORM;
 import com.xxdb.data.Entity.DATA_TYPE;
@@ -714,5 +713,20 @@ public class Utils {
 
 	public static boolean isEmpty(CharSequence cs) {
 		return cs == null || cs.length() == 0;
+	}
+
+	private static final BigDecimal DECIMAL128_MIN_VALUE = new BigDecimal("-170141183460469231731687303715884105728");
+	private static final BigDecimal DECIMAL128_MAX_VALUE = new BigDecimal("170141183460469231731687303715884105728");
+
+	public static void checkDecimal128Range(BigDecimal value, int scale) {
+		if (Objects.isNull(value))
+			throw new RuntimeException("Decimal value cannot be null.");
+
+		if (value.scaleByPowerOfTen(scale).compareTo(DECIMAL128_MIN_VALUE) <0 || value.scaleByPowerOfTen(scale).compareTo(DECIMAL128_MAX_VALUE) > 0) {
+			if (scale == 0)
+				throw new RuntimeException("Decimal128 overflow " + value.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP).toBigInteger());
+			else
+				throw new RuntimeException("Decimal128 overflow " + new BigDecimal(value.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP).toBigInteger()).scaleByPowerOfTen(-scale));
+		}
 	}
 }

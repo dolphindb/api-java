@@ -50,8 +50,7 @@ public class BasicDecimal128Matrix extends AbstractMatrix {
 
                 for (int j = 0; j < newArray.length; j ++) {
                     BigDecimal bd = new BigDecimal(newArray[j]);
-                    if (bd.compareTo(DECIMAL128_MIN_VALUE) <0 || bd.compareTo(DECIMAL128_MAX_VALUE) > 0)
-                        throw new RuntimeException("Decimal128 overflow " + new BigDecimal(newArray[j]).scaleByPowerOfTen(-scale));
+                    Utils.checkDecimal128Range(bd, scale);
                     tempArr[j] = bd.scaleByPowerOfTen(scale).toBigInteger();
                 }
                 System.arraycopy(tempArr, 0, values, i * rows, rows);

@@ -29,13 +29,10 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
         }
 
         BigDecimal bd = new BigDecimal(data);
-        if (bd.scaleByPowerOfTen(scale).compareTo(DECIMAL128_MIN_VALUE) <0 || bd.scaleByPowerOfTen(scale).compareTo(DECIMAL128_MAX_VALUE) > 0) {
-            throw new RuntimeException("Decimal128 overflow " + new BigDecimal(data).scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP).toBigInteger());
-        }
+        Utils.checkDecimal128Range(bd, scale);
 
         this.unscaledValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP).toBigInteger();
         this.scale = scale;
-
     }
 
     public BasicDecimal128(ExtendedDataInput in) throws IOException {
