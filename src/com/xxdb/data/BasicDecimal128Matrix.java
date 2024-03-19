@@ -5,6 +5,7 @@ import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL128;
@@ -26,6 +27,7 @@ public class BasicDecimal128Matrix extends AbstractMatrix {
             throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,38].");
 
         this.values = new BigInteger[rows * columns];
+        Arrays.fill(this.values, BigInteger.ZERO);
     }
 
     public BasicDecimal128Matrix(int rows, int columns, List<?> listOfArrays, int scale) throws Exception {
