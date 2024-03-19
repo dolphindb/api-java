@@ -62,6 +62,19 @@ public class BasicTimestampTest {
         assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
     }
     @Test
+    public void test_BasicTimestamp_long(){
+        BasicTimestamp nano = new BasicTimestamp(-1);
+        assertEquals("1969.12.31T23:59:59.999",nano.getString());
+        BasicTimestamp nano1 = new BasicTimestamp(0);
+        assertEquals("1970.01.01T00:00:00.000",nano1.getString());
+        BasicTimestamp nano2 = new BasicTimestamp(1);
+        assertEquals("1970.01.01T00:00:00.001",nano2.getString());
+        BasicTimestamp nano3 = new BasicTimestamp(100);
+        assertEquals("1970.01.01T00:00:00.100",nano3.getString());
+        BasicTimestamp nano4 = new BasicTimestamp(140000000000l);
+        assertEquals("1974.06.09T08:53:20.000",nano4.getString());
+    }
+    @Test
     public void test_BasicTimeStampMatrix() throws Exception {
         BasicTimestampMatrix bdhm = new BasicTimestampMatrix(2,2);
         bdhm.setTimestamp(0,0,LocalDateTime.of(1970,11,22,19,12,25));

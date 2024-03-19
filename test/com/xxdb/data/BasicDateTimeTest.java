@@ -77,6 +77,19 @@ public class BasicDateTimeTest {
         assertEquals(dt,date.getDateTime());
     }
     @Test
+    public void test_BasicDateTime_int(){
+        BasicDateTime date = new BasicDateTime(-1);
+        assertEquals("1969.12.31T23:59:59",date.getString());
+        BasicDateTime date1 = new BasicDateTime(0);
+        assertEquals("1970.01.01T00:00:00",date1.getString());
+        BasicDateTime date2 = new BasicDateTime(1);
+        assertEquals("1970.01.01T00:00:01",date2.getString());
+        BasicDateTime date3 = new BasicDateTime(100);
+        assertEquals("1970.01.01T00:01:40",date3.getString());
+        BasicDateTime date4 = new BasicDateTime(1000000);
+        assertEquals("1970.01.12T13:46:40",date4.getString());
+    }
+    @Test
     public void test_BasicDateTime_specimal_time() throws Exception {
         BasicDateTime nt = new BasicDateTime(LocalDateTime.of(2000,7,29,11,07));
         System.out.println(nt.getString());

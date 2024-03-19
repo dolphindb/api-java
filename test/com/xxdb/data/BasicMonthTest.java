@@ -24,6 +24,17 @@ public class BasicMonthTest {
         }
     }
     @Test
+    public void test_BasicMonth_int(){
+        BasicMonth mon1 = new BasicMonth(0);
+        assertEquals("0000.01M",mon1.getString());
+        BasicMonth mon2 = new BasicMonth(1);
+        assertEquals("0000.02M",mon2.getString());
+        BasicMonth mon3 = new BasicMonth(100);
+        assertEquals("0008.05M",mon3.getString());
+        BasicMonth mon4 = new BasicMonth(1400);
+        assertEquals("0116.09M",mon4.getString());
+    }
+    @Test
     public void test_BasicMonth_negative() throws DateTimeException {
         String re = null;
         try{

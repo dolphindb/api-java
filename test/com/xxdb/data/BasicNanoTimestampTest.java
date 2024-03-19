@@ -59,6 +59,19 @@ public class BasicNanoTimestampTest {
         assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
     }
     @Test
+    public void test_BasicNanoTimestamp_long(){
+        BasicNanoTimestamp nano = new BasicNanoTimestamp(-1);
+        assertEquals("1969.12.31T23:59:59.999999999",nano.getString());
+        BasicNanoTimestamp nano1 = new BasicNanoTimestamp(0);
+        assertEquals("1970.01.01T00:00:00.000000000",nano1.getString());
+        BasicNanoTimestamp nano2 = new BasicNanoTimestamp(1);
+        assertEquals("1970.01.01T00:00:00.000000001",nano2.getString());
+        BasicNanoTimestamp nano3 = new BasicNanoTimestamp(100);
+        assertEquals("1970.01.01T00:00:00.000000100",nano3.getString());
+        BasicNanoTimestamp nano4 = new BasicNanoTimestamp(140000000000l);
+        assertEquals("1970.01.01T00:02:20.000000000",nano4.getString());
+    }
+    @Test
     public void test_BasicNanoTimestamp_special_time() throws Exception {
         BasicNanoTimestamp nt = new BasicNanoTimestamp(LocalDateTime.of(2000,7,29,11,07));
         System.out.println(nt.getString());

@@ -24,52 +24,23 @@ public class BasicTimeTest {
         }
     }
     @Test
-    public void test_BasicDate(){
-        LocalDate dt = LocalDate.of(2022,1,31);
-        BasicDate date = new BasicDate(dt);
-        assertEquals("2022.01.31",date.getString());
-        assertEquals(dt,date.getDate());
-
-        dt = LocalDate.of(2022,2,28);
-        date = new BasicDate(dt);
-        assertEquals("2022.02.28",date.getString());
-        assertEquals(dt,date.getDate());
-
-        dt = LocalDate.of(2008,2,29);
-        date = new BasicDate(dt);
-        assertEquals("2008.02.29",date.getString());
-        assertEquals(dt,date.getDate());
-
-        dt = LocalDate.of(2008,3,31);
-        date = new BasicDate(dt);
-        String[] lt=dt.toString().split("\\-");
-        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
-        assertEquals(dt,date.getDate());
-
-        dt = LocalDate.of(2008,1,1);
-        date = new BasicDate(dt);
-        lt=dt.toString().split("\\-");
-        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
-        assertEquals(dt,date.getDate());
-
-        dt = LocalDate.of(2008,12,31);
-        date = new BasicDate(dt);
-        lt=dt.toString().split("\\-");
-        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
-        assertEquals(dt,date.getDate());
-
-        dt = LocalDate.of(2008,3,1);
-        date = new BasicDate(dt);
-        lt=dt.toString().split("\\-");
-        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
-        assertEquals(dt,date.getDate());
-
-        dt = LocalDate.of(2000,2,29);
-        date = new BasicDate(dt);
-        lt=dt.toString().split("\\-");
-        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
-        assertEquals(dt,date.getDate());
-
+    public void test_BasicTime_int(){
+        String re = null;
+        try{
+            BasicTime time = new BasicTime(-1);
+            System.out.println(time.getString());
+        }catch(DateTimeException ex){
+            re = ex.getMessage();
+        }
+        assertEquals("Invalid value for NanoOfSecond (valid values 0 - 999999999): -1000000",re);
+        BasicTime time1 = new BasicTime(0);
+        assertEquals("00:00:00.000",time1.getString());
+        BasicTime time2 = new BasicTime(1);
+        assertEquals("00:00:00.001",time2.getString());
+        BasicTime time3 = new BasicTime(100);
+        assertEquals("00:00:00.100",time3.getString());
+        BasicTime time4 = new BasicTime(140000);
+        assertEquals("00:02:20.000",time4.getString());
     }
     @Test
     public void test_BasicTime_constructor(){

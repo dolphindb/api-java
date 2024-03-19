@@ -1,15 +1,73 @@
 package com.xxdb.data;
 import com.alibaba.fastjson2.JSONObject;
-import com.xxdb.DBConnection;
 import org.junit.Test;
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.*;
-import static com.xxdb.data.Utils.countMilliseconds;
 import static org.junit.Assert.*;
 public class BasicDateTest {
+    @Test
+    public void test_BasicDate(){
+        LocalDate dt = LocalDate.of(2022,1,31);
+        BasicDate date = new BasicDate(dt);
+        assertEquals("2022.01.31",date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2022,2,28);
+        date = new BasicDate(dt);
+        assertEquals("2022.02.28",date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2008,2,29);
+        date = new BasicDate(dt);
+        assertEquals("2008.02.29",date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2008,3,31);
+        date = new BasicDate(dt);
+        String[] lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2008,1,1);
+        date = new BasicDate(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2008,12,31);
+        date = new BasicDate(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2008,3,1);
+        date = new BasicDate(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDate());
+
+        dt = LocalDate.of(2000,2,29);
+        date = new BasicDate(dt);
+        lt=dt.toString().split("\\-");
+        assertEquals(lt[0]+"."+lt[1]+"."+lt[2],date.getString());
+        assertEquals(dt,date.getDate());
+
+    }
+    @Test
+    public void test_BasicDate_int(){
+        BasicDate v = new BasicDate(1);
+        assertEquals("1970.01.02" ,v.getString());
+        BasicDate v1 = new BasicDate(100);
+        assertEquals("1970.04.11" ,v1.getString());
+        BasicDate v2 = new BasicDate(100000);
+        assertEquals("2243.10.17" ,v2.getString());
+        BasicDate v3 = new BasicDate(-1);
+        assertEquals("1969.12.31" ,v3.getString());
+        BasicDate v4 = new BasicDate(0);
+        assertEquals("1970.01.01" ,v4.getString());
+    }
+
     @Test
     public void testDateCombine(){
         List<Integer> list = Arrays.asList(1,2,3);

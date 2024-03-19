@@ -39,6 +39,19 @@ public class BasicMinuteTest {
         assertEquals("01:40m",nt3.getString());
     }
     @Test
+    public void test_BasicMinute_int(){
+        BasicMinute min = new BasicMinute(-1);
+        assertEquals("23:59m",min.getString());
+        BasicMinute min1 = new BasicMinute(0);
+        assertEquals("00:00m",min1.getString());
+        BasicMinute min2 = new BasicMinute(1);
+        assertEquals("00:01m",min2.getString());
+        BasicMinute min3 = new BasicMinute(100);
+        assertEquals("01:40m",min3.getString());
+        BasicMinute min4 = new BasicMinute(1400);
+        assertEquals("23:20m",min4.getString());
+    }
+    @Test
     public void test_BasicMinuteMatrix() throws Exception{
         BasicMinuteMatrix bdhm = new BasicMinuteMatrix(2,2);
         bdhm.setMinute(0,0,LocalTime.of(1,9,4));

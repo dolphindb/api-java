@@ -52,6 +52,19 @@ public class BasicDateHourTest {
         assertEquals("2000.02.29T02",date.getString());
     }
     @Test
+    public void test_BasicDateHour_int(){
+        BasicDateHour date = new BasicDateHour(1);
+        assertEquals("1970.01.01T01",date.getString());
+        date = new BasicDateHour(100);
+        assertEquals("1970.01.05T04",date.getString());
+        date = new BasicDateHour(100000);
+        assertEquals("1981.05.29T16",date.getString());
+        date = new BasicDateHour(-1);
+        assertEquals("1969.12.31T23",date.getString());
+        date = new BasicDateHour(0);
+        assertEquals("1970.01.01T00",date.getString());
+    }
+    @Test
     public void test_BasicDateHourMatrix() throws Exception {
         BasicDateHourMatrix bdhm = new BasicDateHourMatrix(2,2);
         bdhm.setDateHour(0,0,LocalDateTime.of(2022,7,29,11,07));

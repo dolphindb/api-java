@@ -33,6 +33,25 @@ public class BasicNanoTimeTest {
         assertEquals("11:07:00.000000000",nt1.getString());
     }
     @Test
+    public void test_BasicNanoTime_long(){
+        String re = null;
+        try{
+            BasicNanoTime nano = new BasicNanoTime(-1);
+            System.out.println(nano.getString());
+        }catch(DateTimeException ex){
+          re = ex.getMessage();
+        }
+        assertEquals("Invalid value for NanoOfDay (valid values 0 - 86399999999999): -1",re);
+        BasicNanoTime nano1 = new BasicNanoTime(0);
+        assertEquals("00:00:00.000000000",nano1.getString());
+        BasicNanoTime nano2 = new BasicNanoTime(1);
+        assertEquals("00:00:00.000000001",nano2.getString());
+        BasicNanoTime nano3 = new BasicNanoTime(100);
+        assertEquals("00:00:00.000000100",nano3.getString());
+        BasicNanoTime nano4 = new BasicNanoTime(140000000000l);
+        assertEquals("00:02:20.000000000",nano4.getString());
+    }
+    @Test
     public void test_BasicNanoTimeMatrix() throws Exception{
         BasicNanoTimeMatrix bdhm = new BasicNanoTimeMatrix(2,2);
         bdhm.setNanoTime(0,0,LocalTime.of(19,12,25));

@@ -24,6 +24,25 @@ public class BasicSecondTest {
         }
     }
     @Test
+    public void test_BasicSecond_int(){
+        String re = null;
+        try{
+            BasicSecond sec = new BasicSecond(-1);
+            System.out.println(sec.getString());
+        }catch(DateTimeException ex){
+            re = ex.getMessage();
+        }
+        assertEquals("Invalid value for SecondOfMinute (valid values 0 - 59): -1",re);
+        BasicSecond sec1 = new BasicSecond(0);
+        assertEquals("00:00:00",sec1.getString());
+        BasicSecond sec2 = new BasicSecond(1);
+        assertEquals("00:00:01",sec2.getString());
+        BasicSecond sec3 = new BasicSecond(100);
+        assertEquals("00:01:40",sec3.getString());
+        BasicSecond sec4 = new BasicSecond(24000);
+        assertEquals("06:40:00",sec4.getString());
+    }
+    @Test
     public void test_BasicSecondMatrix() throws Exception {
         BasicSecondMatrix bsm = new BasicSecondMatrix(2,2);
         bsm.setSecond(0,0,LocalTime.of(16,19,53));
