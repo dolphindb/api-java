@@ -19,15 +19,11 @@ public class EventSender {
         this.isConnected = false;
     }
 
-    public void connect(String ip, int port, String user, String password, String tableName) throws IOException {
+    public void connect(DBConnection conn, String tableName) throws IOException {
         if (this.isConnected)
             throw new RuntimeException("This eventSender is already connected");
 
-        this.conn = new DBConnection();
-        boolean success = this.conn.connect(ip, port, user, password, "", false, null,  true);
-        if (!success) {
-            throw new RuntimeException("connect dolphindb fail");
-        }
+        this.conn = conn;
 
         String sql = "select top 0 * from " + tableName;
         StringBuilder errMsg = new StringBuilder();
