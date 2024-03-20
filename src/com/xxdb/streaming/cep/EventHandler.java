@@ -234,7 +234,7 @@ public class EventHandler {
     private boolean checkSchema(List<EventScheme> eventSchemes, List<String> expandTimeKeys, List<String> commonKeys, StringBuilder errMsg) {
         int index = 0;
         for (EventScheme scheme : eventSchemes) {
-            if (eventInfos.containsKey(scheme.getType())) {
+            if (eventInfos.containsKey(scheme.getEventType())) {
                 errMsg.append("eventType must be unique");
                 return false;
             }
@@ -245,7 +245,7 @@ public class EventHandler {
             if (isNeedEventTime) {
                 int timeIndex = scheme.getAttrKeys().indexOf(expandTimeKeys.get(index));
                 if (timeIndex == -1) {
-                    errMsg.append("event ").append(scheme.getType()).append(" doesn't contain eventTimeKey ").append(expandTimeKeys.get(index));
+                    errMsg.append("event ").append(scheme.getEventType()).append(" doesn't contain eventTimeKey ").append(expandTimeKeys.get(index));
                     return false;
                 }
                 schemeEx.setTimeIndex(timeIndex);
@@ -254,7 +254,7 @@ public class EventHandler {
             for (String commonKey : commonKeys) {
                 int commonKeyIndex = scheme.getAttrKeys().indexOf(commonKey);
                 if (commonKeyIndex == -1) {
-                    errMsg.append("event ").append(scheme.getType()).append(" doesn't contain commonKey ").append(commonKey);
+                    errMsg.append("event ").append(scheme.getEventType()).append(" doesn't contain commonKey ").append(commonKey);
                     return false;
                 }
                 schemeEx.getCommonKeyIndex().add(commonKeyIndex);
@@ -305,7 +305,7 @@ public class EventHandler {
             }
 
             EventInfo info = new EventInfo(serls, schemeEx);
-            eventInfos.put(scheme.getType(), info);
+            eventInfos.put(scheme.getEventType(), info);
             index++;
         }
         return true;

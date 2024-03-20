@@ -6,7 +6,7 @@ import java.util.List;
 
 public class EventScheme {
 
-    private String type;
+    private String eventType;
     private List<String> attrKeys;
     private List<Entity.DATA_TYPE> attrTypes;
     private List<Entity.DATA_FORM> attrForms;
@@ -23,8 +23,8 @@ public class EventScheme {
         return attrKeys;
     }
 
-    public String getType() {
-        return this.type;
+    public String getEventType() {
+        return this.eventType;
     }
 
     public List<Entity.DATA_TYPE> getAttrTypes() {
@@ -43,8 +43,8 @@ public class EventScheme {
         this.attrExtraParams = attrExtraParams;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
     }
 
     public void setAttrKeys(List<String> attrKeys) {
