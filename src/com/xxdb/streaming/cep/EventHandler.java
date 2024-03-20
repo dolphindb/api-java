@@ -60,9 +60,9 @@ public class EventHandler {
 
         // prepare eventInfos
         StringBuilder errMsg = new StringBuilder();
-        if (!checkSchema(expandEventSchemes, expandTimeKeys, commonKeys, errMsg)) {
-            throw new IllegalArgumentException(funcName + errMsg);
-        }
+        if (!checkSchema(expandEventSchemes, expandTimeKeys, commonKeys, errMsg))
+            throw new IllegalArgumentException(funcName + " " + errMsg);
+
         this.commonKeySize = commonKeys.size();
     }
 
@@ -269,7 +269,7 @@ public class EventHandler {
                 // todo 因为目前server代码不能正确序列化symbol vector,所以API暂时先不支持
 //                if (type < 0 || type > Entity.DATA_TYPE.DT_OBJECT_ARRAY || type == Entity.DATA_TYPE.DT_SYMBOL) {
                 if (type == Entity.DATA_TYPE.DT_SYMBOL) {
-                    errMsg.append("Invalid eventTypeID");
+                    errMsg.append("not support DT_SYMBOL type.");
                     return false;
                 }
 
