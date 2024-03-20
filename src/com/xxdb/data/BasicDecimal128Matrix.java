@@ -83,7 +83,7 @@ public class BasicDecimal128Matrix extends AbstractMatrix {
 
     @Override
     public Scalar get(int row, int column) {
-        return new BasicDecimal128(values[getIndex(row, column)], this.scale);
+        return new BasicDecimal128(this.scale, values[getIndex(row, column)]);
     }
 
     public void set(int row, int column, Entity value) {
