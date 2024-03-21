@@ -74,7 +74,7 @@ public class EventHandler {
         if (outputColNums != outputTable.columns()) {
             errMsg.append("Incompatible ")
                     .append(tableName)
-                    .append("columns, expected: ")
+                    .append(" columns, expected: ")
                     .append(outputColNums)
                     .append(", got: ")
                     .append(outputTable.columns());
