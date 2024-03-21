@@ -27,8 +27,8 @@ public class EventSender {
 
         String sql = "select top 0 * from " + tableName;
         StringBuilder errMsg = new StringBuilder();
-        BasicTable outputTable = (BasicTable) this.conn.run(sql);
-        if (!this.eventHandler.checkOutputTable(outputTable, errMsg))
+        BasicTable inputTable = (BasicTable) this.conn.run(sql);
+        if (!this.eventHandler.checkInputTable(tableName, inputTable, errMsg))
             throw new RuntimeException(errMsg.toString());
 
         this.insertScript = "tableInsert{" + tableName + "}";

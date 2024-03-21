@@ -69,10 +69,12 @@ public class EventHandler {
         this.commonKeySize = commonKeys.size();
     }
 
-    public boolean checkOutputTable(BasicTable outputTable, StringBuilder errMsg) {
+    public boolean checkInputTable(String tableName, BasicTable outputTable, StringBuilder errMsg) {
         outputColNums = isNeedEventTime ? (3 + commonKeySize) : (2 + commonKeySize);
         if (outputColNums != outputTable.columns()) {
-            errMsg.append("Incompatible outputTable columns, expected: ")
+            errMsg.append("Incompatible ")
+                    .append(tableName)
+                    .append("columns, expected: ")
                     .append(outputColNums)
                     .append(", got: ")
                     .append(outputTable.columns());
