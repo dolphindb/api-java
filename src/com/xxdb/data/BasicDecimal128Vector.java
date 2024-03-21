@@ -260,7 +260,7 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public Entity get(int index) {
-        return new BasicDecimal128(this.unscaledValues[index], scale_);
+        return new BasicDecimal128(scale_, this.unscaledValues[index]);
     }
 
     @Override
