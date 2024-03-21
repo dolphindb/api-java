@@ -41,7 +41,7 @@ public class EventHandler {
                 throw new IllegalArgumentException(funcName + " the eventKey in eventScheme must not be empty");
             }
             if ((!event.getAttrExtraParams().isEmpty() && length != event.getAttrExtraParams().size()) || length != event.getAttrForms().size() || length != event.getAttrTypes().size()) {
-                throw new IllegalArgumentException(funcName + " the number of eventKey, eventTypes, eventForms and eventExtraParams must have the same length.");
+                throw new IllegalArgumentException(funcName + " the number of eventKey, eventTypes, eventForms and eventExtraParams (if set) must have the same length.");
             }
         }
         int eventNum = eventSchemes.size();
