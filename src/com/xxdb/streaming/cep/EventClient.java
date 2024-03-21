@@ -33,7 +33,7 @@ public class EventClient extends AbstractClient {
         }
 
         Thread thread = new Thread(() -> {
-            log.info("nht handle start.");
+            log.info("EventClient subscribe start.");
             IMessage msg;
             List<String> eventTypes = new ArrayList<>();
             List<List<Entity>> attributes = new ArrayList<>();
