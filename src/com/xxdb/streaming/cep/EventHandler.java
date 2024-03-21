@@ -26,19 +26,22 @@ public class EventHandler {
         String funcName = "createEventSender";
         // check eventSchemes
         if (eventSchemes.isEmpty()) {
-            throw new IllegalArgumentException(funcName + "eventSchemes must not be empty");
+            throw new IllegalArgumentException(funcName + " eventSchemes must not be empty");
         }
         List<EventScheme> expandEventSchemes = new ArrayList<>(eventSchemes);
         for (EventScheme event : expandEventSchemes) {
+            if (Utils.isEmpty(event.getEventType()))
+                throw new IllegalArgumentException(funcName + " the eventType cannot be empty");
+
             int length = event.getAttrKeys().size();
             if (event.getAttrExtraParams().isEmpty()) {
                 event.setAttrExtraParams(Collections.nCopies(length, 0));
             }
             if (length == 0) {
-                throw new IllegalArgumentException(funcName + "the eventKey in eventScheme must not be empty");
+                throw new IllegalArgumentException(funcName + " the eventKey in eventScheme must not be empty");
             }
-            if (length != event.getAttrExtraParams().size() || length != event.getAttrForms().size() || length != event.getAttrTypes().size()) {
-                throw new IllegalArgumentException(funcName + "The number of eventKey, eventTypes, eventForms and eventExtraParams must have the same length.");
+            if ((!event.getAttrExtraParams().isEmpty() && length != event.getAttrExtraParams().size()) || length != event.getAttrForms().size() || length != event.getAttrTypes().size()) {
+                throw new IllegalArgumentException(funcName + " the number of eventKey, eventTypes, eventForms and eventExtraParams must have the same length.");
             }
         }
         int eventNum = eventSchemes.size();
@@ -51,7 +54,7 @@ public class EventHandler {
                 expandTimeKeys = Collections.nCopies(eventNum, eventTimeKeys.get(0));
             } else {
                 if (eventTimeKeys.size() != eventNum) {
-                    throw new IllegalArgumentException(funcName + "The number of eventTimeKey is inconsistent with the number of events in eventSchemes.");
+                    throw new IllegalArgumentException(funcName + "the number of eventTimeKey is inconsistent with the number of events in eventSchemes.");
                 }
                 expandTimeKeys = new ArrayList<>(eventTimeKeys);
             }
