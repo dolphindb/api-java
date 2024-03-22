@@ -9,6 +9,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.Set;
 
 public class EventHandler {
 
@@ -32,6 +33,13 @@ public class EventHandler {
         for (EventScheme event : expandEventSchemes) {
             if (Utils.isEmpty(event.getEventType()))
                 throw new IllegalArgumentException(funcName + " the eventType cannot be empty");
+
+            // check if has duplicate key in attrKeys
+            Set<String> set = new HashSet<>();
+            for (String attrKey : event.getAttrKeys()) {
+                if (!set.add(attrKey))
+                    throw new IllegalArgumentException("EventScheme cannot has duplicated attrKey in attrKeys.");
+            }
 
             int length = event.getAttrKeys().size();
             if (event.getAttrExtraParams().isEmpty()) {
