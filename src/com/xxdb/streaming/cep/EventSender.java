@@ -21,7 +21,7 @@ public class EventSender {
 
     public void connect(DBConnection conn, String tableName) throws IOException {
         if (this.isConnected)
-            throw new RuntimeException("This eventSender is already connected.");
+            throw new RuntimeException("The eventSender has already been called.");
 
         if (!conn.isConnected())
             throw new RuntimeException("The connection to dolphindb has not been established.");
