@@ -124,11 +124,25 @@ public class EventHandler {
                         .append(" but now it is ").append(attributes.get(i).getDataType().toString());
                 return false;
             }
+
             if (info.getEventScheme().getScheme().getAttrForms().get(i) != attributes.get(i).getDataForm()) {
                 errMsg.append("the form of ").append(i + 1).append("th attribute of ").append(eventType)
                         .append(" should be ").append(info.getEventScheme().getScheme().getAttrForms().get(i).toString())
                         .append(" but now it is ").append(attributes.get(i).getDataForm().toString());
                 return false;
+            }
+
+            // check scheme attrExtraParams with decimal attribute.
+            EventInfo eventInfo = this.eventInfos.get(eventType);
+            EventSchemeEx eventScheme = eventInfo.getEventScheme();
+            EventScheme scheme = eventScheme.getScheme();
+            List<Integer> attrExtraParams = scheme.getAttrExtraParams();
+            if (!attrExtraParams.isEmpty()) {
+                Entity attribute = attributes.get(i);
+                if ((attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL32 && ((BasicDecimal32) attribute).getScale() != attrExtraParams.get(i))
+                        || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL64 && ((BasicDecimal64) attribute).getScale() != attrExtraParams.get(i))
+                        || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL128 && ((BasicDecimal128) attribute).getScale() != attrExtraParams.get(i)))
+                    throw new IllegalArgumentException("The decimal attribute' scale doesn't match to scheme attrExtraParams scale.");
             }
         }
 
