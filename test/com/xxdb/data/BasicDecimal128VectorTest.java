@@ -98,7 +98,7 @@ public class BasicDecimal128VectorTest {
         }catch(Exception E){
             ex=E.getMessage();
         }
-        assertEquals("Decimal128 overflow -17014118346046923173168730371588410572900000",ex);
+        assertEquals("Decimal128 overflow -170141183460469231731687303715884105729.00000",ex);
         String ex1 = null;
         String[] tmp_string_v1 = {"170141183460469231731687303715884105729"};
         try{
@@ -106,7 +106,7 @@ public class BasicDecimal128VectorTest {
         }catch(Exception E){
             ex1 = E.getMessage();
         }
-        assertEquals("Decimal128 overflow 17014118346046923173168730371588410572900000",ex1);
+        assertEquals("Decimal128 overflow 170141183460469231731687303715884105729.00000",ex1);
     }
 
     @Test

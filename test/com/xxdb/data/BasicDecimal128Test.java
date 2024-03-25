@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -66,7 +67,26 @@ public class BasicDecimal128Test {
         BasicDecimal128 Decimal128 = new BasicDecimal128("121.23", 6);
         assertEquals("121.230000",Decimal128.getString());
     }
+    @Test
+    public void test_BasicDecimal128_value_BigInteger (){
+        BasicDecimal128 Decimal128 = new BasicDecimal128(new BigInteger("1234"),4);
+        assertEquals("1234.0000",Decimal128.getString());
 
+        BasicDecimal128 re1 = new BasicDecimal128(new BigInteger("-1234"),0);
+        assertEquals("-1234",re1.getString());
+
+        BasicDecimal128 re2 = new BasicDecimal128(new BigInteger("10000000000000000000000000000000000000"),0);
+        assertEquals("10000000000000000000000000000000000000",re2.getString());
+
+        BasicDecimal128 re3 = new BasicDecimal128(new BigInteger("-10000000000000000000000000000000000000"),0);
+        assertEquals("-10000000000000000000000000000000000000",re3.getString());
+
+        BasicDecimal128 re4 = new BasicDecimal128(new BigInteger("-1"),38);
+        assertEquals("-1.00000000000000000000000000000000000000",re4.getString());
+
+        BasicDecimal128 re5 = new BasicDecimal128(new BigInteger("0"),38);
+        assertEquals("0.00000000000000000000000000000000000000",re5.getString());
+    }
     @Test
     public void test_BasicDecimal128_scale_0() throws Exception {
         BasicDecimal128 Decimal128 = new BasicDecimal128("123.2",0);
