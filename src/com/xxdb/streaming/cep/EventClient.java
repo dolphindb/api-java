@@ -3,6 +3,7 @@ package com.xxdb.streaming.cep;
 import com.xxdb.DBConnection;
 import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.Entity;
+import com.xxdb.data.Utils;
 import com.xxdb.streaming.client.AbstractClient;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.MessageHandler;
@@ -26,6 +27,12 @@ public class EventClient extends AbstractClient {
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, String userName, String password) throws IOException {
+        if (Utils.isEmpty(tableName))
+            throw new IllegalArgumentException("EventClient subscribe 'tableName' param cannot be null or empty.");
+
+        if (Utils.isEmpty(actionName))
+            actionName = DEFAULT_ACTION_NAME;
+
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, null, null, false, userName, password, false);
         if (queue == null) {
             System.err.println("Subscription already made, handler loop not created.");
