@@ -24,6 +24,7 @@ public class EventClientTest {
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     static EventClient client = null;
+    static EventSender sender = null;
 
     public void clear_env() throws IOException {
         conn.run("a = getStreamingStat().pubTables\n" +
@@ -129,7 +130,10 @@ public class EventClientTest {
                 "data = table(cbool, cchar, cshort, cint, clong, cdouble, cfloat, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cdatehour, cuuid, cipaddr, cint128, cpoint, ccomplex,  cdecimal32, cdecimal64)\n" ;
         conn.run(script1);
     }
-
+    public static void PrepareUser(String userName,String password) throws IOException {
+        conn.run("def create_user(){try{deleteUser(`"+userName+")}catch(ex){};createUser(`"+userName+", '"+password+"');};"+
+                "rpc(getControllerAlias(),create_user);" );
+    }
     public static  EventMessageHandler handler = new EventMessageHandler() {
         @Override
         public void doEvent(String eventType, List<Entity> attribute) {
@@ -161,7 +165,6 @@ public class EventClientTest {
                     throw new RuntimeException(e);
                 }
             }
-
         }
     };
     @Test
@@ -177,7 +180,7 @@ public class EventClientTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("createEventSender eventSchemes must not be empty",re);
+        Assert.assertEquals("eventSchema must be non-null and non-empty for the EventClient Constructor.",re);
     }
 
     @Test
@@ -196,7 +199,7 @@ public class EventClientTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("EventClient eventSchemes must not be empty",re);
+        Assert.assertEquals("eventSchema must be non-null and non-empty for the EventClient Constructor.",re);
     }
 
     @Test
@@ -491,13 +494,6 @@ public class EventClientTest {
                 "timestamp = t\n"+
                 "}\n"+
                 "}\n"+
-                "class MainMonitor{\n"+
-                "def MainMonitor(){}\n"+
-                "def updateMarketData(event)\n"+
-                "def onload(){addEventListener(updateMarketData,'MarketData',,'all')}\n"+
-                "def updateMarketData(event){emitEvent(event)}\n"+
-                "}\n"+
-                "dummy = table(array(TIMESTAMP, 0) as timestamp, array(STRING, 0) as eventType, array(BLOB, 0) as blobs);\n"+
                 "share streamTable(array(TIMESTAMP, 0) as timestamp, array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput\n"+
                 "schema = table(1:0, `eventType`eventKeys`eventValuesTypeString`eventValueTypeID`eventValuesFormID, [STRING, STRING, STRING, INT[], INT[]])\n"+
                 "insert into schema values(\"MarketData\", \"timestamp,time\", \"TIMESTAMP,TIME\", [12 8], [0 0])\n"+
@@ -645,16 +641,17 @@ public class EventClientTest {
         Assert.assertEquals("tesrtrrr",re.getColumn(3).get(1).getString());
     }
     public static void subscribePrepare() throws IOException {
-        conn.run("share streamTable(1000000:0, `eventType`event`comment1`comment2, [STRING,BLOB,TIME,STRING]) as inputTable;");
+        conn.run("share streamTable(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable;");
         EventScheme scheme = new EventScheme();
         scheme.setEventType("MarketData");
-        scheme.setAttrKeys(Arrays.asList("timestamp", "time"));
-        scheme.setAttrTypes(Arrays.asList( DT_TIMESTAMP,DT_TIME));
+        scheme.setAttrKeys(Arrays.asList("timestamp", "comment1"));
+        scheme.setAttrTypes(Arrays.asList( DT_TIMESTAMP,DT_STRING));
         scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventScheme> eventSchemes = new ArrayList<>();
         eventSchemes.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeKeys = Arrays.asList(new String[]{"timestamp"});
+        List<String> commonKeys = Arrays.asList(new String[]{"comment1"});
+        sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
         client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
     }
     @Test
@@ -663,7 +660,6 @@ public class EventClientTest {
         String re = null;
         try{
             client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -674,20 +670,18 @@ public class EventClientTest {
         subscribePrepare();
         String re = null;
         try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
+            client.subscribe("erer", PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
         }catch(Exception ex){
             re = ex.getMessage();
         }
         Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
     }
     @Test
-    public  void test_EventClient_subscribe_port_null() throws IOException, InterruptedException {
+    public  void test_EventClient_subscribe_port_0() throws IOException, InterruptedException {
         subscribePrepare();
         String re = null;
         try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
+            client.subscribe(HOST, 0, "inputTable", "test1", handler1, -1, true, "admin", "123456");
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -699,8 +693,7 @@ public class EventClientTest {
         subscribePrepare();
         String re = null;
         try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
+            client.subscribe(HOST, 18888, "inputTable", "test1", handler1, -1, true, "admin", "123456");
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -712,122 +705,145 @@ public class EventClientTest {
         subscribePrepare();
         String re = null;
         try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
+            client.subscribe(HOST, PORT, "inputTable111", "test1", handler1, -1, true, "admin", "123456");
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        Assert.assertEquals(true,re.contains("The shared table inputTable111 doesn't exist."));
     }
+
     @Test
-    public  void test_EventClient_subscribe_actionName_exist() throws IOException, InterruptedException {
+    public  void test_EventClient_subscribe_tableName_null() throws IOException, InterruptedException {
         subscribePrepare();
         String re = null;
         try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
+            client.subscribe(HOST, PORT, null, "test1", handler1, -1, true, "admin", "123456");
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        Assert.assertEquals("EventClient subscribe 'tableName' param cannot be null or empty.",re);
+    }
+
+    @Test
+    public  void test_EventClient_subscribe_actionName_exist() throws IOException, InterruptedException {
+        subscribePrepare();
+        conn.run("share streamTable(1000000:0, `eventType`event`comment1`comment2, [STRING,BLOB,TIME,STRING]) as inputTable1;");
+        String re = null;
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
+        client.subscribe(HOST, PORT, "inputTable1", "test1", handler1, -1, true, "admin", "123456");
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
+        client.unsubscribe(HOST, PORT, "inputTable1", "test1");
     }
     @Test
     public  void test_EventClient_subscribe_actionName_null() throws IOException, InterruptedException {
         subscribePrepare();
-        String re = null;
-        try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        client.subscribe(HOST, PORT, "inputTable", null, handler1, -1, true, "admin", "123456");
+        client.unsubscribe(HOST, PORT, "inputTable",null);
     }
     @Test
     public  void test_EventClient_subscribe_handler_null() throws IOException, InterruptedException {
         subscribePrepare();
         String re = null;
-        try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        client.subscribe(HOST, PORT, "inputTable", "test1", null, -1, true, "admin", "123456");
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
     @Test
-    public  void test_EventClient_subscribe_offset_null() throws IOException, InterruptedException {
+    public  void test_EventClient_subscribe_offset_negative_1() throws IOException, InterruptedException {
         subscribePrepare();
-        String re = null;
-        try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        sender.sendEvent("MarketData", attributes);
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
+        sender.sendEvent("MarketData", attributes);
+        Thread.sleep(1000);
+        BasicTable re = (BasicTable)conn.run("select * from outputTable");
+        Assert.assertEquals(1,re.rows());
     }
     @Test
-    public  void test_EventClient_subscribe_offset_negative() throws IOException, InterruptedException {
+    public  void test_EventClient_subscribe_offset_negative_2() throws IOException, InterruptedException {
         subscribePrepare();
-        String re = null;
-        try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        sender.sendEvent("MarketData", attributes);
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -2, true, "admin", "123456");
+        sender.sendEvent("MarketData", attributes);
+        Thread.sleep(1000);
+        BasicTable re = (BasicTable)conn.run("select * from outputTable");
+        Assert.assertEquals(1,re.rows());
     }
     @Test
     public  void test_EventClient_subscribe_offset_0() throws IOException, InterruptedException {
         subscribePrepare();
-        String re = null;
-        try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        sender.sendEvent("MarketData", attributes);
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, 0, true, "admin", "123456");
+        sender.sendEvent("MarketData", attributes);
+        Thread.sleep(1000);
+        BasicTable re = (BasicTable)conn.run("select * from outputTable");
+        Assert.assertEquals(2,re.rows());
     }
 
     @Test
     public  void test_EventClient_subscribe_offset_1() throws IOException, InterruptedException {
         subscribePrepare();
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        sender.sendEvent("MarketData", attributes);
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, 1, true, "admin", "123456");
+        sender.sendEvent("MarketData", attributes);
+        Thread.sleep(1000);
+        BasicTable re = (BasicTable)conn.run("select * from outputTable");
+        Assert.assertEquals(1,re.rows());
+    }
+    @Test
+    public  void test_EventClient_subscribe_offset_not_match() throws IOException, InterruptedException {
+        subscribePrepare();
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        sender.sendEvent("MarketData", attributes);
         String re = null;
         try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
+            client.subscribe(HOST, PORT, "inputTable", "test1", handler, 2, true, "admin", "123456");
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        Assert.assertEquals(true,re.contains("Can't find the message with offset"));
     }
     @Test
     public  void test_EventClient_subscribe_reconnect_true() throws IOException, InterruptedException {
         subscribePrepare();
-        String re = null;
-        try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        sender.sendEvent("MarketData", attributes);
+       // client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, false, "admin", "123456");
+        Thread.sleep(1000);
 
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
 
     @Test
     public  void test_EventClient_subscribe_reconnect_false() throws IOException, InterruptedException {
         subscribePrepare();
-        String re = null;
-        try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
 
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
     }
 
     @Test
@@ -835,106 +851,132 @@ public class EventClientTest {
         subscribePrepare();
         String re = null;
         try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
+            client.subscribe(HOST, PORT, "inputTable", "test1", handler1, -1, true, "admin123", "123456");
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        Assert.assertEquals(true,re.contains("The user name or password is incorrect"));
     }
+
 
     @Test
     public  void test_EventClient_subscribe_password_error() throws IOException, InterruptedException {
         subscribePrepare();
         String re = null;
         try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
+            client.subscribe(HOST, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456WWW");
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        Assert.assertEquals(true,re.contains("The user name or password is incorrect"));
     }
 
     @Test
     public  void test_EventClient_subscribe_admin() throws IOException, InterruptedException {
+        PrepareUser("user1","123456");
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT,"user1","123456");
         subscribePrepare();
-        String re = null;
-        try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        conn.run("share streamTable(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable1;");
+        conn.run("addAccessControl(`inputTable1)");
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable1");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        client.subscribe(HOST, PORT, "inputTable1", "test1", handler, -1, true, "admin", "123456");
+        sender.sendEvent("MarketData", attributes);
+        Thread.sleep(1000);
+        BasicTable re = (BasicTable)conn.run("select * from outputTable");
+        Assert.assertEquals(1,re.rows());
     }
     @Test
     public  void test_EventClient_subscribe_other_user() throws IOException, InterruptedException {
+        PrepareUser("user1","123456");
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT,"user1","123456");
         subscribePrepare();
-        String re = null;
-        try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        conn.run("share streamTable(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable1;");
+        conn.run("addAccessControl(`inputTable1)");
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable1");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        client.subscribe(HOST, PORT, "inputTable1", "test1", handler, -1, true, "user1", "123456");
+        sender.sendEvent("MarketData", attributes);
+        Thread.sleep(1000);
+        BasicTable re = (BasicTable)conn.run("select * from outputTable");
+        Assert.assertEquals(1,re.rows());
     }
     @Test
     public  void test_EventClient_other_user_unallow() throws IOException, InterruptedException {
+        PrepareUser("user1","123456");
+        PrepareUser("user2","123456");
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT,"user1","123456");
         subscribePrepare();
+        conn.run("share streamTable(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable1;");
+        conn.run("addAccessControl(`inputTable1)");
         String re = null;
         try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
+            client.subscribe(HOST, PORT, "inputTable1", "test1", handler1, -1, true, "user2", "123456");
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        Assert.assertEquals(true, re.contains("No access to shared table [inputTable1]"));
     }
     @Test
     public  void test_EventClient_subscribe_unsubscribe_resubscribe() throws IOException, InterruptedException {
         subscribePrepare();
-        String re = null;
-        try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        sender.sendEvent("MarketData", attributes);
 
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
+        sender.sendEvent("MarketData", attributes);
+
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
+        Thread.sleep(1000);
+
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
+        sender.sendEvent("MarketData", attributes);
+        Thread.sleep(1000);
+        BasicTable re = (BasicTable)conn.run("select * from outputTable");
+        Assert.assertEquals(2,re.rows());
     }
     @Test
     public  void test_EventClient_subscribe_duplicated() throws IOException, InterruptedException {
         subscribePrepare();
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
         String re = null;
         try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
+            client.subscribe(HOST, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        Assert.assertEquals(true, re.contains("already be subscribed' function: 'publishTable'"));
     }
-    @Test
+    @Test(expected = NullPointerException.class)
     public  void test_EventClient_not_subscribe_unsubscribe() throws IOException, InterruptedException {
         subscribePrepare();
         String re = null;
-        try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
 
-    @Test
+    @Test//跟这个AJ-644问题应该是同一个
     public  void test_EventClient_unsubscribe_duplicated() throws IOException, InterruptedException {
         subscribePrepare();
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
         String re = null;
         try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
+            client.unsubscribe(HOST, PORT, "inputTable", "test1");
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -944,270 +986,51 @@ public class EventClientTest {
     @Test
     public  void test_EventClient_subscribe_haStreamTable() throws IOException, InterruptedException {
         subscribePrepare();
-        String re = null;
-        try{
-            client.subscribe(null, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
-
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
-    }
-
-    //@Test//not support
-    public  void test_EventClient_conn_asynchronousTask_true() throws IOException, InterruptedException {
-        conn.run("share streamTable(1000000:0, `eventType`event`comment1`comment2, [STRING,BLOB,TIME,STRING]) as inputTable;");
-        EventScheme scheme = new EventScheme();
-        scheme.setEventType("market");
-        scheme.setAttrKeys(Arrays.asList("market", "time"));
-        scheme.setAttrTypes(Arrays.asList(DT_STRING, DT_TIME));
-        scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
-        List<EventScheme> eventSchemes = new ArrayList<>();
-        eventSchemes.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        DBConnection conn1 = new DBConnection(true);
-        conn1.connect(HOST,PORT);
-        sender.connect(conn1, "inputTable");
-    }
-    @Test
-    public  void test_EventClient_conn_ssl_true() throws IOException, InterruptedException {
-        conn.run("share streamTable(1000000:0, `eventType`event`comment1`comment2, [STRING,BLOB,TIME,STRING]) as inputTable;");
-        EventScheme scheme = new EventScheme();
-        scheme.setEventType("market");
-        scheme.setAttrKeys(Arrays.asList("market", "time"));
-        scheme.setAttrTypes(Arrays.asList(DT_STRING, DT_TIME));
-        scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
-        List<EventScheme> eventSchemes = new ArrayList<>();
-        eventSchemes.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        DBConnection conn1 = new DBConnection(false,true);
-        conn1.connect(HOST,PORT);
-        sender.connect(conn1, "inputTable");
-
-        List<Entity> attributes1 = new ArrayList<>();
-        attributes1.add(new BasicString("tesrtrrr"));
-        attributes1.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,12,45,3,100000000))));
-        sender.sendEvent("market", attributes1);
-
-        BasicTable re = (BasicTable)conn.run("select * from inputTable");
+        conn.run("table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable1;");
+        conn.run("haStreamTable(11, table, `inputTable1, 100000)");
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable1");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        client.subscribe(HOST, PORT, "inputTable1", "test1", handler, -1, true, "user1", "123456");
+        sender.sendEvent("MarketData", attributes);
+        Thread.sleep(1000);
+        BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
-        Assert.assertEquals("12:45:03.100",re.getColumn(2).get(0).getString());
-        Assert.assertEquals("tesrtrrr",re.getColumn(3).get(0).getString());
     }
     @Test
-    public  void test_EventClient_conn_compress_true() throws IOException, InterruptedException {
-        conn.run("share streamTable(1000000:0, `eventType`event`comment1`comment2, [STRING,BLOB,TIME,STRING]) as inputTable;");
-        EventScheme scheme = new EventScheme();
-        scheme.setEventType("market");
-        scheme.setAttrKeys(Arrays.asList("market", "time"));
-        scheme.setAttrTypes(Arrays.asList(DT_STRING, DT_TIME));
-        scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
-        List<EventScheme> eventSchemes = new ArrayList<>();
-        eventSchemes.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        DBConnection conn1 = new DBConnection(false,true,true);
-        conn1.connect(HOST,PORT);
-        sender.connect(conn1, "inputTable");
-
-        List<Entity> attributes1 = new ArrayList<>();
-        attributes1.add(new BasicString("tesrtrrr"));
-        attributes1.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,12,45,3,100000000))));
-        sender.sendEvent("market", attributes1);
-
-        BasicTable re = (BasicTable)conn.run("select * from inputTable");
+    public  void test_EventClient_subscribe_haStreamTable_leader() throws IOException, InterruptedException {
+        subscribePrepare();
+        conn.run("table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable1;");
+        conn.run("haStreamTable(11, table, `inputTable1, 100000)");
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable1");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        client.subscribe(HOST, PORT, "inputTable1", "test1", handler, -1, true, "user1", "123456");
+        sender.sendEvent("MarketData", attributes);
+        Thread.sleep(1000);
+        BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
-        Assert.assertEquals("12:45:03.100",re.getColumn(2).get(0).getString());
-        Assert.assertEquals("tesrtrrr",re.getColumn(3).get(0).getString());
     }
 
     @Test
-    public  void test_EventClient_conn_not_admin() throws IOException, InterruptedException {
-        conn.run("share streamTable(1000000:0, `eventType`event`comment1`comment2, [STRING,BLOB,TIME,STRING]) as inputTable;");
-        EventScheme scheme = new EventScheme();
-        scheme.setEventType("market");
-        scheme.setAttrKeys(Arrays.asList("market", "time"));
-        scheme.setAttrTypes(Arrays.asList(DT_STRING, DT_TIME));
-        scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
-        List<EventScheme> eventSchemes = new ArrayList<>();
-        eventSchemes.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        DBConnection conn1 = new DBConnection(false,true,true);
-        conn1.connect(HOST,PORT,"user1","123456");
-        sender.connect(conn1, "inputTable");
-
-        List<Entity> attributes1 = new ArrayList<>();
-        attributes1.add(new BasicString("tesrtrrr"));
-        attributes1.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,12,45,3,100000000))));
-        sender.sendEvent("market", attributes1);
-
-        BasicTable re = (BasicTable)conn1.run("select * from inputTable");
+    public  void test_EventClient_subscribe_haStreamTable_follower() throws IOException, InterruptedException {
+        subscribePrepare();
+        conn.run("table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable1;");
+        conn.run("haStreamTable(11, table, `inputTable1, 100000)");
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable1");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        client.subscribe(HOST, PORT, "inputTable1", "test1", handler, -1, true, "user1", "123456");
+        sender.sendEvent("MarketData", attributes);
+        Thread.sleep(1000);
+        BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
-        Assert.assertEquals("12:45:03.100",re.getColumn(2).get(0).getString());
-        Assert.assertEquals("tesrtrrr",re.getColumn(3).get(0).getString());
-    }
-
-    @Test
-    public  void test_EventClient_tableName_not_exist() throws IOException, InterruptedException {
-        EventScheme scheme = new EventScheme();
-        scheme.setEventType("market");
-        scheme.setAttrKeys(Arrays.asList("market", "time"));
-        scheme.setAttrTypes(Arrays.asList(DT_STRING, DT_TIME));
-        scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
-        List<EventScheme> eventSchemes = new ArrayList<>();
-        eventSchemes.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        String re = null;
-        try{
-            sender.connect(conn, "inputTable11");
-
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals(true,re.contains("Can't find the object with name inputTable11"));
-    }
-
-    @Test
-    public  void test_EventClient_tableName_null() throws IOException, InterruptedException {
-        EventScheme scheme = new EventScheme();
-        scheme.setEventType("market");
-        scheme.setAttrKeys(Arrays.asList("market", "time"));
-        scheme.setAttrTypes(Arrays.asList(DT_STRING, DT_TIME));
-        scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
-        List<EventScheme> eventSchemes = new ArrayList<>();
-        eventSchemes.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        String re = null;
-        try{
-            sender.connect(conn, null);
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals(true,re.contains("FROM clause must return a table."));
-    }
-
-    @Test
-    public  void test_EventClient_sendEvent_eventType_not_exist() throws IOException, InterruptedException {
-        conn.run("share streamTable(1000000:0, `eventType`event`comment1`comment2, [STRING,BLOB,TIME,STRING]) as inputTable;");
-        EventScheme scheme = new EventScheme();
-        scheme.setEventType("market");
-        scheme.setAttrKeys(Arrays.asList("market", "time"));
-        scheme.setAttrTypes(Arrays.asList(DT_STRING, DT_TIME));
-        scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
-        List<EventScheme> eventSchemes = new ArrayList<>();
-        eventSchemes.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        sender.connect(conn, "inputTable");
-
-        List<Entity> attributes1 = new ArrayList<>();
-        attributes1.add(new BasicString("tesrtrrr"));
-        attributes1.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,12,45,3,100000000))));
-        String re = null;
-        try{
-            sender.sendEvent("market111", attributes1);
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("serialize event Fail for unknown eventType market111",re);
-    }
-    @Test
-    public  void test_EventClient_sendEvent_eventType_null() throws IOException, InterruptedException {
-        conn.run("share streamTable(1000000:0, `eventType`event`comment1`comment2, [STRING,BLOB,TIME,STRING]) as inputTable;");
-        EventScheme scheme = new EventScheme();
-        scheme.setEventType("market");
-        scheme.setAttrKeys(Arrays.asList("market", "time"));
-        scheme.setAttrTypes(Arrays.asList(DT_STRING, DT_TIME));
-        scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
-        List<EventScheme> eventSchemes = new ArrayList<>();
-        eventSchemes.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        sender.connect(conn, "inputTable");
-
-        List<Entity> attributes1 = new ArrayList<>();
-        attributes1.add(new BasicString("tesrtrrr"));
-        attributes1.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,12,45,3,100000000))));
-        String re = null;
-        try{
-            sender.sendEvent(null, attributes1);
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("serialize event Fail for unknown eventType null",re);
-        String re1 = null;
-        try{
-            sender.sendEvent("", attributes1);
-        }catch(Exception ex){
-            re1 = ex.getMessage();
-        }
-        Assert.assertEquals("serialize event Fail for unknown eventType ",re1);
-    }
-
-    @Test
-    public  void test_EventClient_sendEvent_attributes_column_not_match() throws IOException, InterruptedException {
-        conn.run("share streamTable(1000000:0, `eventType`event`comment1`comment2, [STRING,BLOB,TIME,STRING]) as inputTable;");
-        EventScheme scheme = new EventScheme();
-        scheme.setEventType("market");
-        scheme.setAttrKeys(Arrays.asList("market", "time"));
-        scheme.setAttrTypes(Arrays.asList(DT_STRING, DT_TIME));
-        scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
-        List<EventScheme> eventSchemes = new ArrayList<>();
-        eventSchemes.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        sender.connect(conn, "inputTable");
-
-        List<Entity> attributes1 = new ArrayList<>();
-        attributes1.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,12,45,3,100000000)));
-        //attributes1.add("11111");
-        String re = null;
-        try{
-            sender.sendEvent("market", attributes1);
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("serialize event Fail for the num of attributes is not match with market",re);
-    }
-    @Test
-    public  void test_EventClient_sendEvent_attributes_type_not_match() throws IOException, InterruptedException {
-        conn.run("share streamTable(1000000:0, `eventType`event`comment1`comment2, [STRING,BLOB,TIME,STRING]) as inputTable;");
-        EventScheme scheme = new EventScheme();
-        scheme.setEventType("market");
-        scheme.setAttrKeys(Arrays.asList("market", "time"));
-        scheme.setAttrTypes(Arrays.asList(DT_STRING, DT_TIME));
-        scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
-        List<EventScheme> eventSchemes = new ArrayList<>();
-        eventSchemes.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        sender.connect(conn, "inputTable");
-
-        List<Entity> attributes1 = new ArrayList<>();
-        attributes1.add(new BasicString("12"));
-        attributes1.add(new BasicInt(1));
-        String re = null;
-        try{
-            sender.sendEvent("market", attributes1);
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("serialize event Fail for the type of 2th attribute of market should be DT_TIME but now it is DT_INT",re);
     }
     @Test
     public  void test_EventClient_sendEvent_attributes_null() throws IOException, InterruptedException {
