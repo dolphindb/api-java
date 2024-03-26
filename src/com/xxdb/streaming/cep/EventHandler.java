@@ -147,10 +147,17 @@ public class EventHandler {
             List<Integer> attrExtraParams = scheme.getAttrExtraParams();
             if (!attrExtraParams.isEmpty()) {
                 Entity attribute = attributes.get(i);
-                if ((attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL32 && ((BasicDecimal32) attribute).getScale() != attrExtraParams.get(i))
-                        || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL64 && ((BasicDecimal64) attribute).getScale() != attrExtraParams.get(i))
-                        || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL128 && ((BasicDecimal128) attribute).getScale() != attrExtraParams.get(i)))
-                    throw new IllegalArgumentException("The decimal attribute' scale doesn't match to scheme attrExtraParams scale.");
+                if (attribute.isScalar()) {
+                    if ((attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL32 && ((BasicDecimal32) attribute).getScale() != attrExtraParams.get(i))
+                            || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL64 && ((BasicDecimal64) attribute).getScale() != attrExtraParams.get(i))
+                            || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL128 && ((BasicDecimal128) attribute).getScale() != attrExtraParams.get(i)))
+                        throw new IllegalArgumentException("The decimal attribute' scale doesn't match to scheme attrExtraParams scale.");
+                } else if (attribute.isVector()) {
+                    if ((attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL32 && ((BasicDecimal32Vector) attribute).getScale() != attrExtraParams.get(i))
+                            || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL64 && ((BasicDecimal64Vector) attribute).getScale() != attrExtraParams.get(i))
+                            || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL128 && ((BasicDecimal128Vector) attribute).getScale() != attrExtraParams.get(i)))
+                        throw new IllegalArgumentException("The decimal attribute' scale doesn't match to scheme attrExtraParams scale.");
+                }
             }
         }
 
