@@ -34,11 +34,23 @@ public class EventHandler {
             if (Utils.isEmpty(event.getEventType()))
                 throw new IllegalArgumentException("eventType must be non-empty.");
 
-            // check if has duplicate key in attrKeys
+            // check scheme attrKey
             Set<String> set = new HashSet<>();
             for (String attrKey : event.getAttrKeys()) {
+                if (Utils.isEmpty(attrKey))
+                    throw new IllegalArgumentException("attrKey must be non-null and non-empty.");
+
+                // check if has duplicate key in attrKeys
                 if (!set.add(attrKey))
                     throw new IllegalArgumentException("EventScheme cannot has duplicated attrKey in attrKeys.");
+            }
+
+            // check scheme attrForm
+            for (Entity.DATA_FORM attrForm : event.getAttrForms()) {
+                if (Objects.isNull(attrForm))
+                    throw new IllegalArgumentException("attrForm must be non-null.");
+                if (attrForm != Entity.DATA_FORM.DF_SCALAR && attrForm != Entity.DATA_FORM.DF_VECTOR)
+                    throw new IllegalArgumentException("attrForm only can be DF_SCALAR or DF_VECTOR.");
             }
 
             int length = event.getAttrKeys().size();
