@@ -244,7 +244,11 @@ public class EventHandler {
             for (int i = 0; i < attrCount; ++i) {
                 Entity.DATA_FORM form = scheme.getAttrForms().get(i);
                 Entity.DATA_TYPE type = scheme.getAttrTypes().get(i);
-                int extraParam = scheme.getAttrExtraParams().get(i);
+                int extraParam;
+                if (Objects.nonNull(scheme.getAttrExtraParams().get(i)))
+                    extraParam = scheme.getAttrExtraParams().get(i);
+                else
+                    extraParam = -1;
 
                 try {
                     if (form == Entity.DATA_FORM.DF_SCALAR) {
