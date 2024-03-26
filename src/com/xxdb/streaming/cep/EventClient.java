@@ -78,6 +78,8 @@ public class EventClient extends AbstractClient {
     }
 
     public void unsubscribe(String host, int port, String tableName, String actionName) throws IOException {
+        if (Utils.isEmpty(actionName))
+            actionName = DEFAULT_ACTION_NAME;
         unsubscribeInternal(host, port, tableName, actionName);
     }
 
