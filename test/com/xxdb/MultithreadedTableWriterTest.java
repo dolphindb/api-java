@@ -70,7 +70,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.close();
     }
 
-    public void checkData(BasicTable exception, BasicTable resTable) {
+    public static void checkData(BasicTable exception, BasicTable resTable) {
         assertEquals(exception.rows(), resTable.rows());
         for (int i = 0; i < exception.columns(); i++) {
             System.out.println("col" + resTable.getColumnName(i));
@@ -7679,5 +7679,24 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(0, bt.rows());
         conn.close();
     }
+
+//    @Test(timeout = 120000)
+//    public void test_insert_haStreamTable() throws Exception {
+//        conn.run("haTableName='ha_stream'; " +
+//                "try{ dropStreamTable(haTableName); }catch(ex){}\n " +
+//                "t = table(1:0, `tradeDate`tradePrice`vwap`volume`valueTrade, [DATETIME, DOUBLE, DOUBLE, INT, DOUBLE]);" +
+//                "haStreamTable(3,t,haTableName,1000000);");
+//        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+//                "", "ha_stream", false, true, ipports, 10, 1,
+//                1, "tradeDate");
+//        List<List<Entity>> tb = new ArrayList<>();
+//        for (int i = 0; i < 10000; i++) {
+//            mutithreadTableWriter_.insert( LocalDateTime.of(2012, 1, i % 10 + 1, 1, i%10), i + 0.1, i + 0.1, i % 10, i + 0.1);
+//        }
+//        Thread.sleep(2000);
+//        BasicTable ex = (BasicTable) conn.run("select * from ha_stream order by tradeDate,tradePrice,vwap,volume,valueTrade;");
+//        assertEquals(10000,ex.rows());
+//        mutithreadTableWriter_.waitForThreadCompletion();
+//    }
 }
 

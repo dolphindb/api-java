@@ -231,8 +231,8 @@ public class BasicDecimal128MatrixTest {
         System.out.println(re1.getString());
         assertEquals(6, re1.getScale());
         assertEquals(new BasicDecimal128("1.999990",6).getString(), re1.get(0,0).getString());
-        assertEquals(new BasicDecimal128("0.000000",6).getString(), re1.get(0,1).getString());
-        assertEquals(new BasicDecimal128("999.999000",6).getString(), re1.get(1,0).getString());
+        assertEquals(new BasicDecimal128("-1.000000",6).getString(), re1.get(0,1).getString());
+        assertEquals(new BasicDecimal128("1000.000000",6).getString(), re1.get(1,0).getString());
         assertEquals(new BasicDecimal128("-999.999990",6).getString(), re1.get(1,1).getString());
     }
 

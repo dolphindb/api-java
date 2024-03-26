@@ -230,8 +230,8 @@ public class BasicDecimal64MatrixTest {
         System.out.println(re1.getString());
         assertEquals(6, re1.getScale());
         assertEquals(new BasicDecimal64("1.999990",6).getString(), re1.get(0,0).getString());
-        assertEquals(new BasicDecimal64("0.000000",6).getString(), re1.get(0,1).getString());
-        assertEquals(new BasicDecimal64("999.999000",6).getString(), re1.get(1,0).getString());
+        assertEquals(new BasicDecimal64("-1.000000",6).getString(), re1.get(0,1).getString());
+        assertEquals(new BasicDecimal64("1000.000000",6).getString(), re1.get(1,0).getString());
         assertEquals(new BasicDecimal64("-999.999990",6).getString(), re1.get(1,1).getString());
         re1.setScale(10);
         re1.set(0,0,new BasicDecimal64("1.999900009",9));
@@ -241,8 +241,8 @@ public class BasicDecimal64MatrixTest {
         System.out.println(re1.getString());
         assertEquals(10, re1.getScale());
         assertEquals(new BasicDecimal64("1.9999000090",10).getString(), re1.get(0,0).getString());
-        assertEquals(new BasicDecimal64("-0.0000000000",10).getString(), re1.get(0,1).getString());
-        assertEquals(new BasicDecimal64("99999999.9990000000",10).getString(), re1.get(1,0).getString());
+        assertEquals(new BasicDecimal64("-1.0000000000",10).getString(), re1.get(0,1).getString());
+        assertEquals(new BasicDecimal64("100000000.0000000000",10).getString(), re1.get(1,0).getString());
         assertEquals(new BasicDecimal64("-99999999.9999900000",10).getString(), re1.get(1,1).getString());
     }
 

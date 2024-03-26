@@ -3,6 +3,7 @@ package com.xxdb.data;
 
 
 import com.xxdb.DBConnection;
+import junit.framework.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -297,6 +298,9 @@ public class UtilsTest {
         assertEquals("decimal32",getDataTypeString(Entity.DATA_TYPE.DT_DECIMAL32));
         assertEquals("decimal64",getDataTypeString(Entity.DATA_TYPE.DT_DECIMAL64));
         assertEquals("DT_DECIMAL128",getDataTypeString(Entity.DATA_TYPE.DT_DECIMAL128));
-
+    }
+    @Test
+    public void test_getJavaApiVersion(){
+        Assert.assertNotNull(Utils.getJavaApiVersion());
     }
 }
