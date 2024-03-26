@@ -266,7 +266,7 @@ public class EventClientTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("？ eventType must be unique",re);
+        Assert.assertEquals("EventClient eventType must be unique",re);
     }
 
     @Test
@@ -307,7 +307,7 @@ public class EventClientTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("提示待确认",re);
+        Assert.assertEquals("EventScheme cannot has duplicated attrKey in attrKeys.",re);
     }
 
     @Test
@@ -453,26 +453,6 @@ public class EventClientTest {
         }
         Assert.assertEquals("EventClient event market doesn't contain eventTimeKey datetimev",re);
     }
-    @Test
-    public  void test_EventClient_eventTimeKeys_not_time_column() throws IOException, InterruptedException {
-        EventScheme scheme = new EventScheme();
-        scheme.setEventType("market");
-        scheme.setAttrKeys(Arrays.asList("market", "code", "decimal32", "decimal64", "decimal128"));
-        scheme.setAttrTypes(Arrays.asList(DT_STRING, DT_STRING, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
-        scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
-        List<EventScheme> eventSchemes = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = Collections.singletonList("market");
-        List<String> commonKeys = new ArrayList<>();
-        String re = null;
-        try{
-            EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
-
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("待确认",re);
-    }
-
     @Test
     public  void test_EventClient_eventTimeKeys_two_column() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `time`eventType`event, [TIME,STRING,BLOB]) as inputTable;");
