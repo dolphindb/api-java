@@ -51,6 +51,20 @@ public class EventHandler {
             if ((!event.getAttrExtraParams().isEmpty() && length != event.getAttrExtraParams().size()) || length != event.getAttrForms().size() || length != event.getAttrTypes().size()) {
                 throw new IllegalArgumentException("the number of eventKey, eventTypes, eventForms and eventExtraParams (if set) must have the same length.");
             }
+
+            // check if attrExtraParams valid
+            if (Objects.nonNull(event.getAttrExtraParams()) && !event.getAttrExtraParams().isEmpty()) {
+                for (int i = 0; i < event.getAttrTypes().size(); i++) {
+                    Entity.DATA_TYPE attrType = event.getAttrTypes().get(i);
+                    Integer scale = event.getAttrExtraParams().get(i);
+                    if (attrType == Entity.DATA_TYPE.DT_DECIMAL32 && (scale < 0 || scale > 9))
+                        throw new IllegalArgumentException(attrType + " scale " + scale + " is out of bounds, it must be in [0,9].");
+                    else if (attrType == Entity.DATA_TYPE.DT_DECIMAL64 && (scale < 0 || scale > 18))
+                        throw new IllegalArgumentException(attrType + " scale " + scale + " is out of bounds, it must be in [0,18].");
+                    else if (attrType == Entity.DATA_TYPE.DT_DECIMAL128 && (scale < 0 || scale > 38))
+                        throw new IllegalArgumentException(attrType + " scale " + scale + " is out of bounds, it must be in [0,38].");
+                }
+            }
         }
         int eventNum = eventSchemes.size();
 
