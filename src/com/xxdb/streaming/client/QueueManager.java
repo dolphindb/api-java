@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-class QueueManager {
+public class QueueManager {
     private HashMap<String, BlockingQueue<List<IMessage>>> queueMap = new HashMap<String, BlockingQueue<List<IMessage>>>();
 
     public synchronized BlockingQueue<List<IMessage>> addQueue(String topic) {

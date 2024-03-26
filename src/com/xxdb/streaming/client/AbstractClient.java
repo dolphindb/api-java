@@ -178,7 +178,7 @@ public abstract class AbstractClient implements MessageDispatcher {
         long msgId;
         boolean reconnect;
         Vector filter = null;
-        boolean closed = false;
+        public boolean closed = false;
         boolean allowExistTopic = false;
         StreamDeserializer deserializer;
         String userName = "";
