@@ -32,7 +32,7 @@ public class EventHandler {
         List<EventScheme> expandEventSchemes = new ArrayList<>(eventSchemes);
         for (EventScheme event : expandEventSchemes) {
             if (Utils.isEmpty(event.getEventType()))
-                throw new IllegalArgumentException(funcName + " the eventType cannot be empty");
+                throw new IllegalArgumentException("eventType must be non-empty.");
 
             // check if has duplicate key in attrKeys
             Set<String> set = new HashSet<>();
@@ -46,10 +46,10 @@ public class EventHandler {
                 event.setAttrExtraParams(Collections.nCopies(length, 0));
             }
             if (length == 0) {
-                throw new IllegalArgumentException(funcName + " the eventKey in eventScheme must not be empty");
+                throw new IllegalArgumentException("eventKey in eventScheme must be non-empty.");
             }
             if ((!event.getAttrExtraParams().isEmpty() && length != event.getAttrExtraParams().size()) || length != event.getAttrForms().size() || length != event.getAttrTypes().size()) {
-                throw new IllegalArgumentException(funcName + " the number of eventKey, eventTypes, eventForms and eventExtraParams (if set) must have the same length.");
+                throw new IllegalArgumentException("the number of eventKey, eventTypes, eventForms and eventExtraParams (if set) must have the same length.");
             }
         }
         int eventNum = eventSchemes.size();
@@ -72,7 +72,7 @@ public class EventHandler {
         // prepare eventInfos
         StringBuilder errMsg = new StringBuilder();
         if (!checkSchema(expandEventSchemes, expandTimeKeys, commonKeys, errMsg))
-            throw new IllegalArgumentException(funcName + " " + errMsg);
+            throw new IllegalArgumentException(errMsg.toString());
 
         this.commonKeySize = commonKeys.size();
     }
@@ -269,7 +269,7 @@ public class EventHandler {
         int index = 0;
         for (EventScheme scheme : eventSchemes) {
             if (eventInfos.containsKey(scheme.getEventType())) {
-                errMsg.append("eventType must be unique");
+                errMsg.append("eventType must be unique.");
                 return false;
             }
 
@@ -279,7 +279,7 @@ public class EventHandler {
             if (isNeedEventTime) {
                 int timeIndex = scheme.getAttrKeys().indexOf(expandTimeKeys.get(index));
                 if (timeIndex == -1) {
-                    errMsg.append("event ").append(scheme.getEventType()).append(" doesn't contain eventTimeKey ").append(expandTimeKeys.get(index));
+                    errMsg.append("event ").append(scheme.getEventType()).append(" doesn't contain eventTimeKey ").append(expandTimeKeys.get(index)).append(".");
                     return false;
                 }
                 schemeEx.setTimeIndex(timeIndex);
