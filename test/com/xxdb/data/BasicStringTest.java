@@ -933,13 +933,13 @@ public class BasicStringTest {
         BasicTable re = (BasicTable)conn.run("select * from test_null");
         assertEquals(1,re.rows());
     }
-    @Test
+    @Test(expected = RuntimeException.class)
     public void test_BasicStringVector_list_null() throws Exception {
         List<String> list = null;
         BasicStringVector bbv = new BasicStringVector(list,false);
-        assertEquals(null,bbv);
+        //assertEquals(null,bbv);
         BasicStringVector bsv = new BasicStringVector(list);
-        assertEquals(null,bsv);
+        //assertEquals(null,bsv);
     }
     @Test
     public void test_BasicStringVector_1() throws Exception {

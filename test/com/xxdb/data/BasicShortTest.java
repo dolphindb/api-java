@@ -184,8 +184,8 @@ public class BasicShortTest {
         BasicShortVector bsv = new BasicShortVector(list);
         bsv.setNull(0);
         assertEquals(true,bsv.isNull(0));
-        List<Short> list1 = null;
-        BasicShortVector bsv1 = new BasicShortVector(list1);
+        //List<Short> list1 = null;
+        //BasicShortVector bsv1 = new BasicShortVector(list1);
     }
     @Test
     public void test_shortValue() throws Exception {

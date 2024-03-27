@@ -91,7 +91,7 @@ public class ThreadPooledClientTest {
             try {
                 String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
                 conn.run(script);
-                //  System.out.println(msg.getEntity(0).getString());
+                  System.out.println(msg.getEntity(0).getString());
             } catch (IOException e) {
                 e.printStackTrace();
             }

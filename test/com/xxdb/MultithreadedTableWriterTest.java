@@ -887,7 +887,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable ex = (BasicTable) conn.run("select * from loadTable(\"dfs://test_MultithreadedTableWriter\",`pt)");
         assertTrue(ex.rows()<2000);
         conn.run("undef(`t1,SHARED)");
-
     }
     /**
      * getUnwrittenData
@@ -5981,7 +5980,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 1, "int");
 
         for (int i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal32[]{new BasicDecimal32(1,0),new BasicDecimal32(1.00,0),new BasicDecimal32(3.0001,0),new BasicDecimal32(99999.99999999999,0)},new BasicDecimal32[]{new BasicDecimal32(1,3),new BasicDecimal32(1.00,3),new BasicDecimal32(3.0001,3),new BasicDecimal32(99999.99999999999,3)},new BasicDecimal64[]{new BasicDecimal64(1,0),new BasicDecimal64(1.00,0),new BasicDecimal64(3.0001,0),new BasicDecimal64(99999.99999999999,0)},new BasicDecimal64[]{new BasicDecimal64(1,4),new BasicDecimal64(1.00,4),new BasicDecimal64(3.0001,4),new BasicDecimal64(99999.99999999999,4)},new BasicDecimal64[]{new BasicDecimal64(1,8),new BasicDecimal64(1.00,8),new BasicDecimal64(3.0001,8),new BasicDecimal64(99999.99999999999,8)});
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal32[]{new BasicDecimal32(1,0),new BasicDecimal32(1.00,0),new BasicDecimal32(3.0001,0),new BasicDecimal32("99999.99999999999",0)},new BasicDecimal32[]{new BasicDecimal32(1,3),new BasicDecimal32(1.00,3),new BasicDecimal32(3.0001,3),new BasicDecimal32("99999.99999999999",3)},new BasicDecimal64[]{new BasicDecimal64(1,0),new BasicDecimal64(1.00,0),new BasicDecimal64(3.0001,0),new BasicDecimal64("99999.99999999999",0)},new BasicDecimal64[]{new BasicDecimal64(1,4),new BasicDecimal64(1.00,4),new BasicDecimal64(3.0001,4),new BasicDecimal64("99999.99999999999",4)},new BasicDecimal64[]{new BasicDecimal64(1,8),new BasicDecimal64(1.00,8),new BasicDecimal64(3.0001,8),new BasicDecimal64("99999.99999999999",8)});
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
@@ -6020,7 +6019,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 1, "int",new int[]{Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4,Vector.COMPRESS_LZ4});
 
         for (int i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal32[]{new BasicDecimal32(1,0),new BasicDecimal32(1.00,0),new BasicDecimal32(3.0001,0),new BasicDecimal32(99999.99999999999,0)},new BasicDecimal32[]{new BasicDecimal32(1,3),new BasicDecimal32(1.00,3),new BasicDecimal32(3.0001,3),new BasicDecimal32(99999.99999999999,3)},new BasicDecimal64[]{new BasicDecimal64(1,0),new BasicDecimal64(1.00,0),new BasicDecimal64(3.0001,0),new BasicDecimal64(99999.99999999999,0)},new BasicDecimal64[]{new BasicDecimal64(1,4),new BasicDecimal64(1.00,4),new BasicDecimal64(3.0001,4),new BasicDecimal64(99999.99999999999,4)},new BasicDecimal64[]{new BasicDecimal64(1,8),new BasicDecimal64(1.00,8),new BasicDecimal64(3.0001,8),new BasicDecimal64(99999.99999999999,8)});
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal32[]{new BasicDecimal32(1,0),new BasicDecimal32(1.00,0),new BasicDecimal32(3.0001,0),new BasicDecimal32("99999.99999999999",0)},new BasicDecimal32[]{new BasicDecimal32(1,3),new BasicDecimal32(1.00,3),new BasicDecimal32(3.0001,3),new BasicDecimal32("99999.99999999999",3)},new BasicDecimal64[]{new BasicDecimal64(1,0),new BasicDecimal64(1.00,0),new BasicDecimal64(3.0001,0),new BasicDecimal64("99999.99999999999",0)},new BasicDecimal64[]{new BasicDecimal64(1,4),new BasicDecimal64(1.00,4),new BasicDecimal64(3.0001,4),new BasicDecimal64("99999.99999999999",4)},new BasicDecimal64[]{new BasicDecimal64(1,8),new BasicDecimal64(1.00,8),new BasicDecimal64(3.0001,8),new BasicDecimal64("99999.99999999999",8)});
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
@@ -6093,7 +6092,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 1, "int");
 
         for (short i=0;i<time;i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal32[]{new BasicDecimal32(1,0),new BasicDecimal32(1.00,0),new BasicDecimal32(3.0001,0),new BasicDecimal32(99999.99999999999,0)},new BasicDecimal32[]{new BasicDecimal32(1,3),new BasicDecimal32(1.00,3),new BasicDecimal32(3.0001,3),new BasicDecimal32(99999.99999999999,3)},new BasicDecimal64[]{new BasicDecimal64(1,0),new BasicDecimal64(1.00,0),new BasicDecimal64(3.0001,0),new BasicDecimal64(99999.99999999999,0)},new BasicDecimal64[]{new BasicDecimal64(1,4),new BasicDecimal64(1.00,4),new BasicDecimal64(3.0001,4),new BasicDecimal64(99999.99999999999,4)},new BasicDecimal64[]{new BasicDecimal64(1,8),new BasicDecimal64(1.00,8),new BasicDecimal64(3.0001,8),new BasicDecimal64(99999.99999999999,8)});
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(1,new BasicDecimal32[]{new BasicDecimal32(1,0),new BasicDecimal32(1.00,0),new BasicDecimal32(3.0001,0),new BasicDecimal32("99999.99999999999",0)},new BasicDecimal32[]{new BasicDecimal32(1,3),new BasicDecimal32(1.00,3),new BasicDecimal32(3.0001,3),new BasicDecimal32("99999.99999999999",3)},new BasicDecimal64[]{new BasicDecimal64(1,0),new BasicDecimal64(1.00,0),new BasicDecimal64(3.0001,0),new BasicDecimal64("99999.99999999999",0)},new BasicDecimal64[]{new BasicDecimal64(1,4),new BasicDecimal64(1.00,4),new BasicDecimal64(3.0001,4),new BasicDecimal64("99999.99999999999",4)},new BasicDecimal64[]{new BasicDecimal64(1,8),new BasicDecimal64(1.00,8),new BasicDecimal64(3.0001,8),new BasicDecimal64("99999.99999999999",8)});
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
@@ -7492,13 +7491,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSSSSSSSS");
         String formattedTimestamp = formatter.format(now);
-        System.out.println("当前时间戳：" + formattedTimestamp);
+        System.out.println("now当前时间戳：" + formattedTimestamp);
         mutithreadTableWriter_.insert( null, null, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 1);
         mutithreadTableWriter_.waitForThreadCompletion();
         LocalDateTime now1 = LocalDateTime.now();
         DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy.MM.dd'T'HH:mm:ss.SSSSSSSSS");
         String formattedTimestamp1 = formatter1.format(now1);
-        System.out.println("当前时间戳：" + formattedTimestamp1);
+        System.out.println("now1当前时间戳：" + formattedTimestamp1);
         BasicTable bt = (BasicTable) conn.run("select * from loadTable(\"dfs://enableActualSendTime\",`pt);");
         assertEquals(1, bt.rows());
         BasicNanoTimestamp sendTime = (BasicNanoTimestamp)bt.getColumn("enableActualSendTime").get(0);

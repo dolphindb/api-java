@@ -106,9 +106,9 @@ public class BasicDecimal32Test {
     @Test
     public void test_BasicDecimal32_value_string_scale_8(){
         BasicDecimal32 Decimal32 = new BasicDecimal32("0.999999999",8);
-        assertEquals("0.99999999",Decimal32.getString());
+        assertEquals("1.00000000",Decimal32.getString());
         BasicDecimal32 Decimal32_1 = new BasicDecimal32("-0.999999999",8);
-        assertEquals("-0.99999999",Decimal32_1.getString());
+        assertEquals("-1.00000000",Decimal32_1.getString());
     }
     @Test
     public void test_BasicDecimal32_value_string_scale_9(){
