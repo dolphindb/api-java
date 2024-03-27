@@ -80,9 +80,9 @@ public class TopicManager {
         return re;
     }
 
-    public AbstractClient.Site[] getSites(String topic) {
+    public Site[] getSites(String topic) {
         TopicInfo ti = getTopicInfo(topic);
-        AbstractClient.Site[] q = ti.sites;
+        Site[] q = ti.sites;
         return q;
     }
 
@@ -91,7 +91,7 @@ public class TopicManager {
         return ti.originTopic;
     }
 
-    public void setSites(String topic, AbstractClient.Site[] sites) {
+    public void setSites(String topic, Site[] sites) {
         TopicInfo ti = getTopicInfo(topic);
         ti.sites = sites;
     }
@@ -101,7 +101,7 @@ public class TopicManager {
         private String originTopic; // originTopic is same to
         private BlockingQueue<List<IMessage>> messageQueue;
         private ConcurrentHashMap<String, Integer> nameToIndex;
-        private AbstractClient.Site[] sites;
+        private Site[] sites;
         private int reconnectStat;
 
         public TopicInfo(String topic) {
@@ -133,11 +133,11 @@ public class TopicManager {
             return this.reconnectStat;
         }
 
-        public void setSites(AbstractClient.Site[] sites) {
+        public void setSites(Site[] sites) {
             this.sites = sites;
         }
 
-        public AbstractClient.Site[] getSites() {
+        public Site[] getSites() {
             return this.sites;
         }
     }

@@ -1,4 +1,4 @@
-package com.xxdb.streaming.cep;
+package com.xxdb.streaming.client.cep;
 
 import com.xxdb.data.AbstractScalar;
 import com.xxdb.data.Entity;

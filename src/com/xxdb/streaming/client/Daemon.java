@@ -120,7 +120,7 @@ class Daemon implements Runnable {
             while (!pThread.isInterrupted()) {
                     for (String site : this.dispatcher.getAllReconnectSites()) {
                         if (dispatcher.getNeedReconnect(site) == 1) {
-                            AbstractClient.Site s = dispatcher.getSiteByName(site);
+                            Site s = dispatcher.getSiteByName(site);
                             dispatcher.activeCloseConnection(s);
                             String lastTopic = "";
                             for (String topic : dispatcher.getAllTopicsBySite(site)) {
@@ -133,7 +133,7 @@ class Daemon implements Runnable {
                             // try reconnect after 3 second when reconnecting stat
                             long ts = dispatcher.getReconnectTimestamp(site);
                             if (System.currentTimeMillis() >= ts + 3000) {
-                                AbstractClient.Site s = dispatcher.getSiteByName(site);
+                                Site s = dispatcher.getSiteByName(site);
                                 dispatcher.activeCloseConnection(s);
                                 for (String topic : dispatcher.getAllTopicsBySite(site)) {
                                     log.info("try to reconnect topic " + topic);

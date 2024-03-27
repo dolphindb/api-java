@@ -1,4 +1,4 @@
-package com.xxdb.streaming.cep;
+package com.xxdb.streaming.client.cep;
 
 import java.util.ArrayList;
 import java.util.List;

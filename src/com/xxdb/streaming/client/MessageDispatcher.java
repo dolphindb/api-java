@@ -30,9 +30,9 @@ interface MessageDispatcher {
 
     List<String> getAllReconnectSites();
 
-    AbstractClient.Site getSiteByName(String site);
+    Site getSiteByName(String site);
 
-    void activeCloseConnection(AbstractClient.Site site);
+    void activeCloseConnection(Site site);
 
     List<String> getAllTopicsBySite(String site);
 
@@ -40,7 +40,7 @@ interface MessageDispatcher {
 
     Map<String, StreamDeserializer> getSubInfos();
 
-    ConcurrentHashMap<String, AbstractClient.Site[]> getTopicToSites();
+    ConcurrentHashMap<String, Site[]> getTopicToSites();
 }
 
 

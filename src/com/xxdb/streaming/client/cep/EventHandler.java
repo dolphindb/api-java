@@ -1,4 +1,4 @@
-package com.xxdb.streaming.cep;
+package com.xxdb.streaming.client.cep;
 
 import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.*;

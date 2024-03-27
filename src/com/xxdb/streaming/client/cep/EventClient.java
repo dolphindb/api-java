@@ -1,4 +1,4 @@
-package com.xxdb.streaming.cep;
+package com.xxdb.streaming.client.cep;
 
 import com.xxdb.DBConnection;
 import com.xxdb.comm.ErrorCodeInfo;
@@ -9,12 +9,16 @@ import com.xxdb.data.Utils;
 import com.xxdb.streaming.client.AbstractClient;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.MessageHandler;
+import com.xxdb.streaming.client.Site;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.SocketException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
@@ -118,7 +122,7 @@ public class EventClient extends AbstractClient {
                 if (sites == null || sites.length == 0)
                     ;
                 for (int i = 0; i < sites.length; i++)
-                    sites[i].closed = true;
+                    sites[i].setClosed(true);
             }
             synchronized (queueManager) {
                 queueManager.removeQueue(topic);
@@ -135,6 +139,19 @@ public class EventClient extends AbstractClient {
 
     @Override
     protected boolean doReconnect(Site site) {
-        return false;
+        try {
+            site.getHost();
+            subscribe(site.getHost(), site.getPort(), site.getTableName(), site.getActionName(), site.getHandler(), site.getMsgId() + 1, true, site.getUserName(), site.getPassWord());
+            Date d = new Date();
+            DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            log.info(df.format(d) + " Successfully reconnected and subscribed " + site.getHost() + ":" + site.getPort() + "/" + site.getTableName() + "/" + site.getActionName());
+            return true;
+        } catch (Exception ex) {
+            Date d = new Date();
+            DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            log.error(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.getHost() + ":" + site.getPort() + "/" + site.getTableName() + "/" + site.getActionName());
+            ex.printStackTrace();
+            return false;
+        }
     }
 }

@@ -45,7 +45,7 @@ class MessageParser implements Runnable {
 
     public void run() {
         Map<String, StreamDeserializer> subinfos = dispatcher.getSubInfos();
-        ConcurrentHashMap<String, AbstractClient.Site[]> topicToSites = dispatcher.getTopicToSites();
+        ConcurrentHashMap<String, Site[]> topicToSites = dispatcher.getTopicToSites();
         Socket socket = null;
         try {
             DBConnection conn;
@@ -121,7 +121,7 @@ class MessageParser implements Runnable {
                 } else if (body.isVector()) {
                     BasicAnyVector dTable = (BasicAnyVector) body;
 
-                    AbstractClient.Site[] sites = topicToSites.get(topic);
+                    Site[] sites = topicToSites.get(topic);
                     int colSize = dTable.rows();
                     int rowSize = dTable.getEntity(0).rows();
                     if (sites != null && sites[0].msgAstable) {

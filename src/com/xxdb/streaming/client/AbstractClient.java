@@ -169,41 +169,6 @@ public abstract class AbstractClient implements MessageDispatcher {
         return subInfos_;
     }
 
-    public class Site {
-        String host;
-        int port;
-        String tableName;
-        String actionName;
-        MessageHandler handler;
-        long msgId;
-        boolean reconnect;
-        Vector filter = null;
-        public boolean closed = false;
-        boolean allowExistTopic = false;
-        StreamDeserializer deserializer;
-        String userName = "";
-        String passWord = "";
-
-        boolean msgAstable = false;
-
-        Site(String host, int port, String tableName, String actionName,
-             MessageHandler handler, long msgId, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord, boolean msgAstable) {
-            this.host = host;
-            this.port = port;
-            this.tableName = tableName;
-            this.actionName = actionName;
-            this.handler = handler;
-            this.msgId = msgId;
-            this.reconnect = reconnect;
-            this.filter = filter;
-            this.allowExistTopic = allowExistTopic;
-            this.deserializer = deserializer;
-            this.userName = userName;
-            this.passWord = passWord;
-            this.msgAstable = msgAstable;
-        }
-    }
-
     abstract protected boolean doReconnect(Site site);
 
     public void setMsgId(String topic, long msgId) {
@@ -636,7 +601,7 @@ public abstract class AbstractClient implements MessageDispatcher {
         }
     }
 
-    public ConcurrentHashMap<String, AbstractClient.Site[]> getTopicToSites() {
+    public ConcurrentHashMap<String, Site[]> getTopicToSites() {
         return trueTopicToSites;
     }
 }
