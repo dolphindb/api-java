@@ -66,7 +66,7 @@ public class BasicDecimal64Vector extends AbstractVector{
             BigDecimal bd = new BigDecimal(data[i]);
             BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
             if (checkDecimal64Range(multipliedValue))
-                values[i] = multipliedValue.intValue();
+                values[i] = multipliedValue.longValue();
         }
 
         size = length;
