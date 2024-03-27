@@ -1829,13 +1829,13 @@ public class ConnectionPoolTest {
         System.out.println(res.getString());
         assertEquals(7,res.columns());
         assertEquals(2,res.rows());
-        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
-        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(1).getString());
-        assertEquals("[[1.000,3.000,99999.999],[-1.000,0.000,0.123]]",res.getColumn(2).getString());
-        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(3).getString());
-        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
-        assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(5).getString());
-        assertEquals("[[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678]]",res.getColumn(6).getString());
+        assertEquals("[[1,3,100000],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0,3.0,100000.0],[-1.0,0.0,0.1]]",res.getColumn(1).getString());
+        assertEquals("[[1.000,3.000,100000.000],[-1.000,0.000,0.123]]",res.getColumn(2).getString());
+        assertEquals("[[1,3,100000],[-1,0,0]]",res.getColumn(3).getString());
+        assertEquals("[[1.0,3.0,100000.0],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
+        assertEquals("[[1.0000,3.0000,100000.0000],[-1.0000,0.0000,0.1235]]",res.getColumn(5).getString());
+        assertEquals("[[1.00000000,3.00001000,100000.00000000],[-1.00000000,0.00000000,0.12345679]]",res.getColumn(6).getString());
         System.out.println(res.getColumn(0).getString());
         pool.shutdown();
     }
@@ -1867,13 +1867,13 @@ public class ConnectionPoolTest {
         System.out.println(res.getString());
         assertEquals(7,res.columns());
         assertEquals(2,res.rows());
-        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
-        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(1).getString());
-        assertEquals("[[1.000,3.000,99999.999],[-1.000,0.000,0.123]]",res.getColumn(2).getString());
-        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(3).getString());
-        assertEquals("[[1.0,3.0,99999.9],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
-        assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(5).getString());
-        assertEquals("[[1.00000000,3.00001000,99999.99999999],[-1.00000000,0.00000000,0.12345678]]",res.getColumn(6).getString());
+        assertEquals("[[1,3,100000],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0,3.0,100000.0],[-1.0,0.0,0.1]]",res.getColumn(1).getString());
+        assertEquals("[[1.000,3.000,100000.000],[-1.000,0.000,0.123]]",res.getColumn(2).getString());
+        assertEquals("[[1,3,100000],[-1,0,0]]",res.getColumn(3).getString());
+        assertEquals("[[1.0,3.0,100000.0],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
+        assertEquals("[[1.0000,3.0000,100000.0000],[-1.0000,0.0000,0.1235]]",res.getColumn(5).getString());
+        assertEquals("[[1.00000000,3.00001000,100000.00000000],[-1.00000000,0.00000000,0.12345679]]",res.getColumn(6).getString());
         System.out.println(res.getColumn(0).getString());
         pool.shutdown();
     }
@@ -1901,9 +1901,9 @@ public class ConnectionPoolTest {
         System.out.println(res.getString());
         assertEquals(5, res.columns());
         assertEquals(2, res.rows());
-        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
-        assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(1).getString());
-        assertEquals("[[1.0000000000,3.0000100000,99999.9999999999],[-1.0000000000,0.0000000000,0.1234567890]]",res.getColumn(2).getString());
+        assertEquals("[[1,3,100000],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0000,3.0000,100000.0000],[-1.0000,0.0000,0.1235]]",res.getColumn(1).getString());
+        assertEquals("[[1.0000000000,3.0000100000,100000.0000000000],[-1.0000000000,0.0000000000,0.1234567890]]",res.getColumn(2).getString());
         assertEquals("[[1.0000000000000000000,3.0000100000000000000,99999.9999999999849005056],[-1.0000000000000000000,0.0000000000000000000,0.1234567890000000000]]",res.getColumn(3).getString());
         assertEquals("[[1.0000000000000000000000000000000000000,3.0000000000000000000000000000000000000,1.0000000000000000000000000000000000000],[-3.0000000000000000000000000000000000000,0.0000000000000000000000000000000000000,0.1234567889999999866557890289987485696]]",res.getColumn(4).getString());
     }
@@ -1931,9 +1931,9 @@ public class ConnectionPoolTest {
         System.out.println(res.getString());
         assertEquals(5, res.columns());
         assertEquals(2, res.rows());
-        assertEquals("[[1,3,99999],[-1,0,0]]",res.getColumn(0).getString());
-        assertEquals("[[1.0000,3.0000,99999.9999],[-1.0000,0.0000,0.1234]]",res.getColumn(1).getString());
-        assertEquals("[[1.0000000000,3.0000100000,99999.9999999999],[-1.0000000000,0.0000000000,0.1234567890]]",res.getColumn(2).getString());
+        assertEquals("[[1,3,100000],[-1,0,0]]",res.getColumn(0).getString());
+        assertEquals("[[1.0000,3.0000,100000.0000],[-1.0000,0.0000,0.1235]]",res.getColumn(1).getString());
+        assertEquals("[[1.0000000000,3.0000100000,100000.0000000000],[-1.0000000000,0.0000000000,0.1234567890]]",res.getColumn(2).getString());
         assertEquals("[[1.0000000000000000000,3.0000100000000000000,99999.9999999999849005056],[-1.0000000000000000000,0.0000000000000000000,0.1234567890000000000]]",res.getColumn(3).getString());
         assertEquals("[[1.0000000000000000000000000000000000000,3.0000000000000000000000000000000000000,1.0000000000000000000000000000000000000],[-3.0000000000000000000000000000000000000,0.0000000000000000000000000000000000000,0.1234567889999999866557890289987485696]]",res.getColumn(4).getString());
     }

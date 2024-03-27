@@ -857,16 +857,23 @@ public class EventClientTest {
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
         sender.sendEvent("MarketData", attributes);
-       // client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, false, "admin", "123456");
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, false, "admin", "123456");
         Thread.sleep(1000);
-
         client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
 
     @Test
     public  void test_EventClient_subscribe_reconnect_false() throws IOException, InterruptedException {
         subscribePrepare();
-
+        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
+        sender.connect(conn,"inputTable");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
+        attributes.add(new BasicString("123456"));
+        sender.sendEvent("MarketData", attributes);
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
+        Thread.sleep(1000);
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
 
     @Test

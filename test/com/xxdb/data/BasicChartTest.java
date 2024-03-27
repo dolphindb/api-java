@@ -31,7 +31,7 @@ public class BasicChartTest {
         }
         assertEquals("Invalid chart object. Chart type is not defined.",re);
     }
-    @Test
+    @Test(expected = RuntimeException.class)
     public void test_BasicChart_chartType_1() throws Exception {
         BasicChart bc = new BasicChart(1);
         bc.getChartType();

@@ -105,7 +105,6 @@ public class AbstractClientTest {
         long time1 = client.getReconnectTimestamp("dolphindb");
         assertEquals(0,client.getNeedReconnect("OceanBase"));
         assertEquals(0,client.getReconnectTimestamp("kingBase"));
-        assertEquals(0,client.getReconnectTimestamp(null));
         System.out.println(client.getNeedReconnect("dolphindb"));
         client.setReconnectTimestamp("dolphindb",8);
         assertNotEquals(client.getReconnectTimestamp("dolphindb"),time1);
@@ -113,7 +112,12 @@ public class AbstractClientTest {
         client.setNeedReconnect("dolphindb/",4);
         client.setNeedReconnect("",4);
     }
-
+    @Test(expected = RuntimeException.class)
+    public void test_AbstractClient_error() throws SocketException {
+        PollingClient client = new PollingClient(0);
+        client.setNeedReconnect("dolphindb/",2);
+        client.getReconnectTimestamp(null);
+    }
     @Test
     public void test_AbstractClient() throws IOException {
         PollingClient client = new PollingClient(0);
