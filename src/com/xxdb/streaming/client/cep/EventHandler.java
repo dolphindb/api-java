@@ -27,7 +27,7 @@ public class EventHandler {
         String funcName = "createEventSender";
         // check eventSchemes
         if (Objects.isNull(eventSchemes) || eventSchemes.isEmpty())
-            throw new IllegalArgumentException("eventSchema must be non-null and non-empty for the EventClient Constructor.");
+            throw new IllegalArgumentException("eventSchema must be non-null and non-empty.");
 
         List<EventScheme> expandEventSchemes = new ArrayList<>(eventSchemes);
         for (EventScheme event : expandEventSchemes) {
