@@ -4875,4 +4875,31 @@ public void test_SSL() throws Exception {
         }
         assertEquals(true, re.contains("fetchSize must be greater than 8192"));
     }
+    @Test
+    public void test_exception_script() throws IOException {
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456","", true, ipports);
+        String re = null;
+        try{
+            connection.run("share table(1..100 as name,take(`aaa,100) as name) as table_upload_tb3;\n ;");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(true, re.contains("Duplicated column name name. "));
+    }
+
+    @Test
+    public void test_exception_Function() throws IOException {
+        List<Entity> args = new ArrayList<Entity>(1);
+        String[] array = {"1.5", "2.5", "A"};
+        BasicStringVector vec = new BasicStringVector(array);
+        args.add(vec);
+        String re = null;
+        try{
+            Scalar result = (Scalar) conn.run("C", args);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(true, re.contains("Can't recognize function name C. function: C"));
+    }
 }
