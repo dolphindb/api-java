@@ -153,6 +153,10 @@ public class EventHandler {
 
         for (int i = 0; i < attributes.size(); ++i) {
             if (info.getEventScheme().getScheme().getAttrTypes().get(i) != attributes.get(i).getDataType()) {
+                // An exception: when the type in schema is symbol, you can pass a string attribute
+                if (info.getEventScheme().getScheme().getAttrTypes().get(i) == Entity.DATA_TYPE.DT_SYMBOL && attributes.get(i).getDataType() == Entity.DATA_TYPE.DT_STRING)
+                    continue;
+
                 errMsg.append("the type of ").append(i + 1).append("th attribute of ").append(eventType)
                         .append(" should be ").append(info.getEventScheme().getScheme().getAttrTypes().get(i).toString())
                         .append(" but now it is ").append(attributes.get(i).getDataType().toString());
@@ -330,10 +334,13 @@ public class EventHandler {
                 Entity.DATA_TYPE type = scheme.getAttrTypes().get(j);
                 Entity.DATA_FORM form = scheme.getAttrForms().get(j);
 
-                // todo 因为目前server代码不能正确序列化symbol vector,所以API暂时先不支持
-//                if (type < 0 || type > Entity.DATA_TYPE.DT_OBJECT_ARRAY || type == Entity.DATA_TYPE.DT_SYMBOL) {
-                if (type == Entity.DATA_TYPE.DT_SYMBOL) {
-                    errMsg.append("not support DT_SYMBOL type.");
+                if (Objects.isNull(type)) {
+                    errMsg.append("attrType must be non-null.");
+                    return false;
+                }
+
+                if (type.getValue() < Entity.DATA_TYPE.DT_VOID.getValue() || type.getValue() > Entity.DATA_TYPE.DT_DECIMAL128_ARRAY.getValue()) {
+                    errMsg.append("Invalid data type for the field " + scheme.getAttrKeys().get(j) + " of event " + scheme.getEventType());
                     return false;
                 }
 
@@ -347,9 +354,13 @@ public class EventHandler {
                         continue;
                     }
 
-                    // BLOB STRING
                     // todo unitlen 如何获取，以及后续是否有用，这里先写 1
                     int unitLen = AbstractVector.getUnitLength(type);
+                    if(type == Entity.DATA_TYPE.DT_SYMBOL){
+                        // the size of symbol is 4, but it need to be serialized as a string
+                        unitLen = -1;
+                    }
+
                     if (unitLen > 0) {
                         if (form == Entity.DATA_FORM.DF_SCALAR) {
                             serls.add(new ScalarAttributeSerializer(unitLen));
