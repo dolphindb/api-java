@@ -5,6 +5,7 @@ import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
@@ -43,11 +44,11 @@ public class BasicDecimal64Matrix extends AbstractMatrix {
                 if (newArray.length == 0 || newArray.length != rows)
                     throw new Exception("The length of array "+ (i+1) + " doesn't have " + rows + " elements");
 
-                BigDecimal pow = BigDecimal.TEN.pow(this.scale);
                 for (int j = 0; j < newArray.length; j ++) {
                     BigDecimal bd = new BigDecimal(newArray[j]);
-                    if (bd.multiply(pow).longValue() > MIN_VALUE && bd.multiply(pow).longValue() < MAX_VALUE)
-                        tempArr[j] = bd.multiply(pow).longValue();
+                    BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
+                    if (multipliedValue.longValue() > MIN_VALUE && multipliedValue.longValue() < MAX_VALUE)
+                        tempArr[j] = multipliedValue.longValue();
                 }
                 System.arraycopy(tempArr, 0, values, i * rows, rows);
             } else if (array instanceof long[]) {

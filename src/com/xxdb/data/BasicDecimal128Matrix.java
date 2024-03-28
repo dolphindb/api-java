@@ -5,6 +5,7 @@ import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
 
@@ -51,7 +52,9 @@ public class BasicDecimal128Matrix extends AbstractMatrix {
                 for (int j = 0; j < newArray.length; j ++) {
                     BigDecimal bd = new BigDecimal(newArray[j]);
                     Utils.checkDecimal128Range(bd, scale);
-                    tempArr[j] = bd.scaleByPowerOfTen(scale).toBigInteger();
+                    BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
+                    BigInteger unscaledValue = multipliedValue.toBigInteger();
+                    tempArr[j] = unscaledValue;
                 }
                 System.arraycopy(tempArr, 0, values, i * rows, rows);
             } else if (array instanceof BigInteger[]) {
