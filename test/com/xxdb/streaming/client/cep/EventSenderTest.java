@@ -1368,7 +1368,63 @@ public class EventSenderTest {
         BasicTable re = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(1,re.rows());
     }
+    @Test//AJ-647
+    public  void test_EventClient_subscribe_attributes_vector_null() throws IOException, InterruptedException {
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
+                "colNames=\"col\"+string(1..25);\n" +
+                "colTypes=[BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[],DATEHOUR[],UUID[],IPADDR[],INT128[],POINT[],COMPLEX[],DECIMAL32(2)[],DECIMAL64(7)[],DECIMAL128(10)[]];\n" +
+                "share table(1:0,colNames,colTypes) as outputTable;\n" ;
+        conn.run(script);
+        EventScheme scheme = new EventScheme();
+        scheme.setEventType("event_all_array_dateType");
+        scheme.setAttrKeys(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "datehourv", "uuidv", "ippaddrv", "int128v", "pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
+        scheme.setAttrTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
+        //scheme.setAttrTypes(Arrays.asList(DT_BOOL_ARRAY, DT_BYTE_ARRAY, DT_SHORT_ARRAY, DT_INT_ARRAY, DT_LONG_ARRAY, DT_DOUBLE_ARRAY, DT_FLOAT_ARRAY, DT_DATE_ARRAY,DT_MONTH_ARRAY, DT_TIME_ARRAY, DT_MINUTE_ARRAY, DT_SECOND_ARRAY, DT_DATETIME_ARRAY, DT_TIMESTAMP_ARRAY, DT_NANOTIME_ARRAY, DT_NANOTIMESTAMP_ARRAY, DT_DATEHOUR_ARRAY, DT_UUID_ARRAY, DT_IPADDR_ARRAY, DT_INT128_ARRAY, DT_POINT_ARRAY, DT_COMPLEX_ARRAY, DT_DECIMAL32_ARRAY, DT_DECIMAL64_ARRAY, DT_DECIMAL128_ARRAY));
+        scheme.setAttrForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
 
+        List<EventScheme> eventSchemes = Collections.singletonList(scheme);
+        List<String> eventTimeKeys = new ArrayList<>();
+        List<String> commonKeys = new ArrayList<>();
+        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
+        sender.connect(conn,"inputTable");
+
+        EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
+
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicBooleanVector(0));
+        attributes.add(new BasicByteVector(0));
+        attributes.add(new BasicShortVector(0));
+        attributes.add(new BasicIntVector(0));
+        attributes.add(new BasicLongVector(0));
+        attributes.add(new BasicDoubleVector(0));
+        attributes.add(new BasicFloatVector(0));
+        attributes.add(new BasicDateVector(0));
+        attributes.add(new BasicMonthVector(0));
+        attributes.add(new BasicTimeVector(0));
+        attributes.add(new BasicMinuteVector(0));
+        attributes.add(new BasicSecondVector(0));
+        attributes.add(new BasicDateTimeVector(0));
+        attributes.add(new BasicTimestampVector(0));
+        attributes.add(new BasicNanoTimeVector(0));
+        attributes.add(new BasicNanoTimestampVector(0));
+        attributes.add(new BasicDateHourVector(0));
+        attributes.add(new BasicUuidVector(0));
+        attributes.add(new BasicIPAddrVector(0));
+        attributes.add(new BasicInt128Vector(0));
+        attributes.add(new BasicPointVector(0));
+        attributes.add(new BasicComplexVector(0));
+        attributes.add(new BasicDecimal32Vector(0,0));
+        attributes.add(new BasicDecimal64Vector(0,0));
+        attributes.add(new BasicDecimal128Vector(0,0));
+        sender.sendEvent("event_all_array_dateType", attributes);
+        //conn.run("tableInsert{outputTable}", attributes);
+        Thread.sleep(2000);
+        BasicTable re = (BasicTable)conn.run("select * from inputTable;");
+        Assert.assertEquals(1,re.rows());
+        BasicTable re1 = (BasicTable)conn.run("select * from outputTable;");
+        Assert.assertEquals(1,re1.rows());
+    }
     @Test//AJ-647
     public  void test_EventClient_subscribe_attributes_array_null() throws IOException, InterruptedException {
         String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
@@ -1851,9 +1907,10 @@ public class EventSenderTest {
             Thread.sleep(2000);
             BasicTable bt2 = (BasicTable) conn.run("select * from intput;");
             Assert.assertEquals(1, bt2.rows());
+            checkData(bt1,bt2);
             BasicTable bt3 = (BasicTable) conn.run("select * from outputTable;");
             Assert.assertEquals(1, bt3.rows());
-            checkData(bt1,bt2);
+            System.out.println(bt3.getString());
         }
     }
     @Test
