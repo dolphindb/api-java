@@ -1,7 +1,6 @@
 package com.xxdb.streaming.client.cep;
 
 import com.xxdb.DBConnection;
-import com.xxdb.compatibility_testing.release130.data.BasicSymbolTest;
 import com.xxdb.data.*;
 import org.junit.After;
 import org.junit.Assert;
@@ -129,7 +128,7 @@ public class EventSenderTest {
                 "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, n) + 0.254, 3), m))\n" +
                 "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, n) + 0.25467, 4), m))\n" +
                 "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, n) + 0.25467, 5), m))\n" +
-                "data = table(cbool, cchar, cshort, cint, clong, cdouble, cfloat, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cdatehour, cuuid, cipaddr, cint128, cpoint, ccomplex,  cdecimal32, cdecimal64)\n" ;
+                "data = table(cbool, cchar, cshort, cint, clong, cdouble, cfloat, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cdatehour, cuuid, cipaddr, cint128, cpoint, ccomplex,  cdecimal32, cdecimal64, cdecimal128)\n" ;
         conn.run(script1);
     }
     public static void PrepareInputSerializer(String type,Entity.DATA_TYPE data_type) throws IOException {
@@ -1707,6 +1706,29 @@ public class EventSenderTest {
         checkData(bt1,bt2);
     }
     @Test
+    public  void test_EventSender_scaler_UUID() throws IOException, InterruptedException {
+        PrepareInputSerializer("UUID",DT_UUID);
+        String script = "event_dateType1 = event_dateType(uuid(\"00000000-0000-006f-0000-000000000001\"));\n" +
+                "event_dateType2 = event_dateType(NULL);\n" +
+                "appendEvent(inputSerializer, [event_dateType1, event_dateType2]);";
+        conn.run(script);
+        List<Entity> attributes1 = new ArrayList<>();
+        attributes1.add(new BasicUuid(111, 1));
+        List<Entity> attributes2 = new ArrayList<>();
+        BasicUuid bb = new BasicUuid(0, 0);
+        bb.setNull();
+        System.out.println(bb.getString());
+        attributes2.add(bb);
+        sender.sendEvent("event_dateType", attributes1);
+        sender.sendEvent("event_dateType", attributes2);
+        BasicTable bt1 = (BasicTable) conn.run("select * from inputTable;");
+        Assert.assertEquals(2, bt1.rows());
+        Thread.sleep(2000);
+        BasicTable bt2 = (BasicTable) conn.run("select * from intput;");
+        Assert.assertEquals(2, bt2.rows());
+        checkData(bt1,bt2);
+    }
+    @Test
     public  void test_EventSender_scaler_COMPLEX() throws IOException, InterruptedException {
         PrepareInputSerializer("COMPLEX",DT_COMPLEX);
         String script = "event_dateType1 = event_dateType(complex(111, 1));\n" +
@@ -1738,121 +1760,38 @@ public class EventSenderTest {
         checkData(bt1,bt2);
     }
     @Test
-    public  void test_EventSender_no_DECIMAL() throws IOException, InterruptedException {
-        String script = "share streamTable(1:0, `eventTime`eventType`blobs, [TIMESTAMP,STRING,BLOB]) as inputTable;\n" +
-                "share table(100:0, `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`stringv`datehourv`uuidv`ippaddrv`int128v`blobv`pointv`complexv, [BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, STRING, DATEHOUR, UUID, IPADDR, INT128, BLOB, POINT, COMPLEX]) as outputTable;\n";
+    public  void test_EventSender_scaler_POINT() throws IOException, InterruptedException {
+        PrepareInputSerializer("POINT",DT_POINT);
+        String script = "event_dateType1 = event_dateType(point(111, 1));\n" +
+                "event_dateType2 = event_dateType( point(0, 0));\n" +
+                "event_dateType3 = event_dateType(point(-0.99, -0.11));\n" +
+                "event_dateType4 = event_dateType(NULL);\n" +
+                "appendEvent(inputSerializer, [event_dateType1, event_dateType2, event_dateType3, event_dateType4]);";
         conn.run(script);
-        String script1 = "class event_all_dateType{\n" +
-                "\tboolv :: BOOL\n" +
-                "\tcharv :: CHAR\n" +
-                "\tshortv :: SHORT\n" +
-                "\tintv :: INT\n" +
-                "\tlongv :: LONG\n" +
-                "\tdoublev :: DOUBLE \n" +
-                "\tfloatv :: FLOAT\n" +
-                "\tdatev :: DATE\n" +
-                "\tmonthv :: MONTH\n" +
-                "\ttimev :: TIME\n" +
-                "\tminutev :: MINUTE\n" +
-                "\tsecondv :: SECOND\n" +
-                "\tdatetimev :: DATETIME \n" +
-                "\ttimestampv :: TIMESTAMP\n" +
-                "\tnanotimev :: NANOTIME\n" +
-                "\tnanotimestampv :: NANOTIMESTAMP\n" +
-                "\tstringv :: STRING\n" +
-                "\tdatehourv :: DATEHOUR\n" +
-                "\tuuidv :: UUID\n" +
-                "\tippaddrv :: IPADDR \n" +
-                "\tint128v :: INT128\n" +
-                "\tblobv :: BLOB\n" +
-                "\tpointv :: POINT\n" +
-                "\tcomplexv :: COMPLEX\n" +
-//                "\tdecimal32v :: DECIMAL32(3)\n" +
-//                "\tdecimal64v :: DECIMAL64(8)\n" +
-//                "\tdecimal128v :: DECIMAL128(10) \n" +
-                "  def event_all_dateType(bool, char, short, int, long, double, float, date, month, time, minute, second, datetime, timestamp, nanotime, nanotimestamp, string, datehour, uuid, ippaddr, int128, blob,point, complex){\n" +
-                "\tboolv = bool\n" +
-                "\tcharv = char\n" +
-                "\tshortv = short\n" +
-                "\tintv = int\n" +
-                "\tlongv = long\n" +
-                "\tdoublev = double\n" +
-                "\tfloatv = float\n" +
-                "\tdatev = date\n" +
-                "\tmonthv = month\n" +
-                "\ttimev = time\n" +
-                "\tminutev = minute\n" +
-                "\tsecondv = second\n" +
-                "\tdatetimev = datetime\n" +
-                "\ttimestampv = timestamp\n" +
-                "\tnanotimev = nanotime\n" +
-                "\tnanotimestampv = nanotimestamp\n" +
-                "\tstringv = string\n" +
-                "\tdatehourv = datehour\n" +
-                "\tuuidv = uuid\n" +
-                "\tippaddrv = ippaddr\n" +
-                "\tint128v = int128\n" +
-                "\tblobv = blob\n" +
-                "\tpointv = point\n" +
-                "\tcomplexv = complex\n" +
-//                "\tdecimal32v = decimal32\n" +
-//                "\tdecimal64v = decimal64\n" +
-//                "\tdecimal128v = decimal128\n" +
-                "  \t}\n" +
-                "}   \n" +
-                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[], ) as type, array(INT[], 0) as form)\n" +
-                "eventType = 'event_all_dateType'\n" +
-                "eventKeys = 'boolv,charv,shortv,intv,longv,doublev,floatv,datev,monthv,timev,minutev,secondv,datetimev,timestampv,nanotimev,nanotimestampv,stringv,datehourv,uuidv,ippaddrv,int128v,blobv\",\"pointv,complexv';\n" +
-                "typeV = [BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE,MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, STRING, DATEHOUR, UUID, IPADDR, INT128, BLOB, POINT, COMPLEX];\n" +
-                "formV = [SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR, SCALAR];\n" +
-                "insert into schemaTable values([eventType], [eventKeys], [typeV],[formV]);\n" +
-                "share streamTable(array(TIMESTAMP, 0) as eventTime, array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput;\n" +
-                "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
-                "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput, eventTimeField = \"timestampv\");" +
-                "all_data_type1=event_all_dateType(true, 'a', 2h, 2, 22l, 2.1, 2.1f, 2012.12.06, 2012.06M, 12:30:00.008, 12:30m, 12:30:00, 2012.06.12 12:30:00, 2012.06.12 12:30:00.008, 13:30:10.008007006, 2012.06.13 13:30:10.008007006,  \"world\", datehour(2012.06.13 13:30:10), uuid(\"9d457e79-1bed-d6c2-3612-b0d31c1881f6\"), ipaddr(\"192.168.1.253\"), int128(\"e1671797c52e15f763380b45e841ec32\"), blob(\"123\"), point(1, 2), complex(111, 1))\n" +
-                "appendEvent(inputSerializer, all_data_type1)";
-        conn.run(script1);
-        String script2 = "colNames=\"col\"+string(1..24)\n" +
-                "colTypes=[BOOL,CHAR,SHORT,INT,LONG,DOUBLE,FLOAT,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,STRING,DATEHOUR,UUID,IPADDR,INT128,BLOB,POINT,COMPLEX]\n" +
-                "t=table(1:0,colNames,colTypes)\n" +
-                "insert into t values(true, 'a', 2h, 2, 22l, 2.1, 2.1f, 2012.12.06, 2012.06M, 12:30:00.008, 12:30m, 12:30:00, 2012.06.12 12:30:00, 2012.06.12 12:30:00.008, 13:30:10.008007006, 2012.06.13 13:30:10.008007006,  \"world\", datehour(2012.06.13 13:30:10), uuid(\"9d457e79-1bed-d6c2-3612-b0d31c1881f6\"), ipaddr(\"192.168.1.253\"), int128(\"e1671797c52e15f763380b45e841ec32\"), blob(\"123\"), point(1, 2), complex(111, 1)) ;";
-        conn.run(script2);
-        EventScheme scheme = new EventScheme();
-        scheme.setEventType("event_all_dateType");
-        //scheme.setAttrKeys(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "symbolv", "stringv", "uuidv", "datehourv", "ippaddrv", "int128v", "blobv","pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
-        //scheme.setAttrTypes(Arrays.asList( DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE, DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_SYMBOL, DT_STRING, DT_UUID, DT_DATEHOUR, DT_IPADDR, DT_INT128, DT_BLOB, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
-        //scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
-        scheme.setAttrKeys(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "stringv", "datehourv", "uuidv", "ippaddrv", "int128v", "blobv", "pointv", "complexv"));
-        scheme.setAttrTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE, DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_STRING, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_BLOB, DT_POINT, DT_COMPLEX));
-        scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
-        // scheme.setAttrExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 8, 10));
-
-        List<EventScheme> eventSchemes = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = Collections.singletonList("timestampv");
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        sender.connect(conn, "inputTable");
-
-        BasicTable bt = (BasicTable) conn.run("select * from t");
-        for (int i = 0; i < bt.rows(); i++) {
-            List<Entity> attributes = new ArrayList<>();
-            for (int j = 0; j < bt.columns(); j++) {
-                Entity pt = bt.getColumn(j).get(i);
-                attributes.add(pt);
-            }
-            sender.sendEvent("event_all_dateType", attributes);
-
-            BasicTable bt1 = (BasicTable) conn.run("select * from inputTable;");
-            Assert.assertEquals(1, bt1.rows());
-            Thread.sleep(2000);
-            BasicTable bt2 = (BasicTable) conn.run("select * from intput;");
-            Assert.assertEquals(1, bt2.rows());
-            checkData(bt1,bt2);
-        }
+        List<Entity> attributes1 = new ArrayList<>();
+        attributes1.add(new BasicPoint(111, 1));
+        List<Entity> attributes2 = new ArrayList<>();
+        attributes2.add(new BasicPoint(0, 0));
+        List<Entity> attributes3 = new ArrayList<>();
+        attributes3.add(new BasicPoint(-0.99, -0.11));
+        List<Entity> attributes4 = new ArrayList<>();
+        BasicPoint bb = new BasicPoint(0, 0);
+        bb.setNull();
+        System.out.println(bb.getString());
+        attributes4.add(bb);
+        sender.sendEvent("event_dateType", attributes1);
+        sender.sendEvent("event_dateType", attributes2);
+        sender.sendEvent("event_dateType", attributes3);
+        sender.sendEvent("event_dateType", attributes4);
+        BasicTable bt1 = (BasicTable) conn.run("select * from inputTable;");
+        Assert.assertEquals(4, bt1.rows());
+        Thread.sleep(2000);
+        BasicTable bt2 = (BasicTable) conn.run("select * from intput;");
+        Assert.assertEquals(4, bt2.rows());
+        checkData(bt1,bt2);
     }
-
     @Test
-    public  void test_EventSender_scalar_DECIMAL() throws IOException, InterruptedException {
+    public  void test_EventSender_all_dateType_scalar_DECIMAL() throws IOException, InterruptedException {
         String script = "share streamTable(1:0, `eventType`blobs, [STRING,BLOB]) as inputTable;\n" +
                 "share table(100:0, `decimal32v`decimal64v`decimal128v, [DECIMAL32(3), DECIMAL64(8), DECIMAL128(10)]) as outputTable;\n";
         conn.run(script);
@@ -1895,6 +1834,8 @@ public class EventSenderTest {
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
         sender.connect(conn, "inputTable");
+        EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         BasicTable bt = (BasicTable) conn.run("select * from t");
         for (int i = 0; i < bt.rows(); i++) {
@@ -1910,6 +1851,8 @@ public class EventSenderTest {
             Thread.sleep(2000);
             BasicTable bt2 = (BasicTable) conn.run("select * from intput;");
             Assert.assertEquals(1, bt2.rows());
+            BasicTable bt3 = (BasicTable) conn.run("select * from outputTable;");
+            Assert.assertEquals(1, bt3.rows());
             checkData(bt1,bt2);
         }
     }
@@ -2040,15 +1983,15 @@ public class EventSenderTest {
     public  void test_EventSender_all_dateType_vector() throws IOException, InterruptedException {
         String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
                 "colNames=\"col\"+string(1..24);\n" +
-                "colTypes=[BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[],DATEHOUR[],UUID[],IPADDR[],INT128[],POINT[],COMPLEX[],DECIMAL32(2)[],DECIMAL64(7)[]];\n" +
+                "colTypes=[BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[],DATEHOUR[],UUID[],IPADDR[],INT128[],POINT[],COMPLEX[],DECIMAL32(2)[],DECIMAL64(7)[],DECIMAL128(10)[]];\n" +
                 "share table(1:0,colNames,colTypes) as outputTable;\n" ;
         conn.run(script);
 
         EventScheme scheme = new EventScheme();
         scheme.setEventType("event_all_array_dateType");
-        scheme.setAttrKeys(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "datehourv", "uuidv", "ippaddrv", "int128v", "pointv", "complexv", "decimal32v", "decimal64v"));
-        scheme.setAttrTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64));
-        scheme.setAttrForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
+        scheme.setAttrKeys(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "datehourv", "uuidv", "ippaddrv", "int128v", "pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
+        scheme.setAttrTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
+        scheme.setAttrForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
         List<EventScheme> eventSchemes = Collections.singletonList(scheme);
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
@@ -2066,15 +2009,15 @@ public class EventSenderTest {
             List<Entity> attributes = new ArrayList<>();
             for(int j=0;j<bt.columns();j++){
                 Entity pt = bt.getColumn(j).get(i);
-                //System.out.println(pt.getDataType());
-                //System.out.println(i + "行， " + j + "列：" + pt.getString());
+                System.out.println(pt.getDataType());
+                System.out.println(i + "行， " + j + "列：" + pt.getString());
                 attributes.add(pt);
             }
             sender.sendEvent("event_all_array_dateType",attributes);
         }
         BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
         Assert.assertEquals(10,bt1.rows());
-        Thread.sleep(20000);
+        Thread.sleep(50000);
         BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(10,bt2.rows());
         checkData(bt,bt2);
