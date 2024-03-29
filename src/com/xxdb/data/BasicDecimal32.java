@@ -75,6 +75,11 @@ public class BasicDecimal32 extends AbstractScalar implements Comparable<BasicDe
         out.writeInt(value_);
     }
 
+    public void writeScalarRawDataToOutputStream(ExtendedDataOutput out) throws IOException {
+        // not write scale
+        out.writeInt(value_);
+    }
+
     @Override
     public DATA_CATEGORY getDataCategory() {
         return DATA_CATEGORY.DENARY;

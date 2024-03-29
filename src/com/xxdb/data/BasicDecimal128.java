@@ -86,6 +86,30 @@ public class BasicDecimal128 extends AbstractScalar implements Comparable<BasicD
         out.writeBigIntArray(newArray, 0, newArray.length);
     }
 
+    public void writeScalarRawDataToOutputStream(ExtendedDataOutput out) throws IOException {
+        // not write scale
+
+        byte[] newArray = new byte[16];
+        byte[] originalArray = unscaledValue.toByteArray();
+
+        if(originalArray.length == 0 || originalArray.length > 16){
+            throw new RuntimeException("byte length of Decimal128 "+originalArray.length+" cannot be less than 0 or exceed 16.");
+        }
+
+        if (originalArray[0] >= 0) {
+            // if first bit is 0, represent non-negative.
+            System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
+        } else {
+            // if first bit is 1, represent negative.
+            System.arraycopy(originalArray, 0, newArray, 16 - originalArray.length, originalArray.length);
+            for (int i = 0; i < 16 - originalArray.length; i++) {
+                newArray[i] = -1;
+            }
+        }
+
+        out.writeBigIntArray(newArray, 0, newArray.length);
+    }
+
     public static void reverseByteArray(byte[] array) {
         int left = 0;
         int right = array.length - 1;
