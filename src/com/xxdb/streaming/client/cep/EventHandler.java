@@ -388,7 +388,14 @@ public class EventHandler {
 
     private Entity deserializeScalar(Entity.DATA_TYPE type, int extraParam, ExtendedDataInput input) throws IOException {
         BasicEntityFactory factory = new BasicEntityFactory();
-        return factory.createEntity(Entity.DATA_FORM.DF_SCALAR, type, input, false);
+        if (type == Entity.DATA_TYPE.DT_DECIMAL32)
+            return new BasicDecimal32(input, extraParam);
+        else if (type == Entity.DATA_TYPE.DT_DECIMAL64)
+            return new BasicDecimal64(input, extraParam);
+        else if (type == Entity.DATA_TYPE.DT_DECIMAL128)
+            return new BasicDecimal128(input, extraParam);
+        else
+            return factory.createEntity(Entity.DATA_FORM.DF_SCALAR, type, input, false);
     }
 
     private Entity deserializeFastArray(Entity.DATA_TYPE type, int extraParam, ExtendedDataInput input) throws IOException {

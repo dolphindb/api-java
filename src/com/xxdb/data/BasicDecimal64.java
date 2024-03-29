@@ -22,6 +22,10 @@ public class BasicDecimal64 extends AbstractScalar implements Comparable<BasicDe
         scale_ = in.readInt();
         value_ = in.readLong();
     }
+    public BasicDecimal64(ExtendedDataInput in, int scale) throws IOException{
+        scale_ = scale;
+        value_ = in.readLong();
+    }
 
     public BasicDecimal64(long value, int scale){
         this(String.valueOf(value), scale);
