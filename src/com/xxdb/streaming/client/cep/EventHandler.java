@@ -393,6 +393,7 @@ public class EventHandler {
 
     private Entity deserializeFastArray(Entity.DATA_TYPE type, int extraParam, ExtendedDataInput input) throws IOException {
         BasicEntityFactory factory = new BasicEntityFactory();
+        input.readShort();
         return factory.createEntity(Entity.DATA_FORM.DF_VECTOR, type, input, false);
     }
 
