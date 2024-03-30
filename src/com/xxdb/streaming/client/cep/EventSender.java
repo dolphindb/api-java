@@ -12,20 +12,9 @@ public class EventSender {
     private String insertScript;
     private EventHandler eventHandler;
     private DBConnection conn;
-    private boolean isConnected;
 
-    public EventSender(List<EventSchema> eventSchemas, List<String> eventTimeKeys, List<String> commonKeys) {
+    public EventSender(DBConnection conn, String tableName, List<EventSchema> eventSchemas, List<String> eventTimeKeys, List<String> commonKeys) throws IOException {
         this.eventHandler = new EventHandler(eventSchemas, eventTimeKeys, commonKeys);
-        this.isConnected = false;
-    }
-
-    public void connect(DBConnection conn, String tableName) throws IOException {
-        if (this.isConnected)
-            throw new RuntimeException("The eventSender has already been called.");
-
-        if (!conn.isConnected())
-            throw new RuntimeException("The connection to dolphindb has not been established.");
-
         this.conn = conn;
 
         String sql = "select top 0 * from " + tableName;
@@ -35,13 +24,9 @@ public class EventSender {
             throw new RuntimeException(errMsg.toString());
 
         this.insertScript = "tableInsert{" + tableName + "}";
-        this.isConnected = true;
     }
 
     public void sendEvent(String eventType, List<Entity> attributes) {
-        if (!isConnected)
-            throw new RuntimeException("This eventSender has not connected to the dolphindb");
-
         List<Entity> args = new ArrayList<>();
         StringBuilder errMsg = new StringBuilder();
 
@@ -53,10 +38,6 @@ public class EventSender {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static EventSender createEventSender(List<EventSchema> eventSchemas, List<String> eventTimeKeys, List<String> commonKeys) {
-        return new EventSender(eventSchemas, eventTimeKeys, commonKeys);
     }
 
 }
