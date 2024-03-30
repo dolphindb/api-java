@@ -6270,7 +6270,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
     }
     @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_memoryTable_single_thread_true()throws Exception {
-        DBConnection conn= new DBConnection(false, false, false, true);
+        DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
         conn.run("share table(100:0, [`col0], [INT]) as table1");
         Callback callbackHandler = new Callback(){
@@ -6305,18 +6305,10 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     }
     @Test(timeout = 120000)
-    public  void test_run()throws Exception {
-        DBConnection conn= new DBConnection(false, false, false, true);
-        conn.connect(HOST, PORT, "admin", "123456");
-        DBConnection conn1= new DBConnection(false, false, false, true);
-        conn1.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
-        conn.run("share table(100:0, [`col0], [INT]) as table1");
-    }
-    @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_memoryTable_single_thread_false()throws Exception {
-        DBConnection conn= new DBConnection(false, false, false, true);
+        DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
-        DBConnection conn1= new DBConnection(false, false, false, true);
+        DBConnection conn1= new DBConnection(false, false, false, false);
         conn1.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
         conn.run("share table(100:0, [`col0], [INT]) as table1");
         Callback callbackHandler = new Callback(){
@@ -6364,7 +6356,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
     }
     @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_multiple_thread_true()throws Exception {
-        DBConnection conn= new DBConnection(false, false, false, true);
+        DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
         StringBuilder sb = new StringBuilder();
         sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
@@ -6432,9 +6424,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
     }
     @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_multiple_thread_false()throws Exception {
-        DBConnection conn= new DBConnection(false, false, false, true);
+        DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
-        DBConnection conn1= new DBConnection(false, false, false, true);
+        DBConnection conn1= new DBConnection(false, false, false, false);
         conn1.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
         StringBuilder sb = new StringBuilder();
         sb.append("dbName = \"dfs://test_MultithreadedTableWriter\";\n" +
@@ -6501,7 +6493,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             System.out.println(ex.getMessage());
         }
         conn1.run("sleep(1000)");
-        DBConnection conn2= new DBConnection(false, false, false, true);
+        DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
         conn1.run("sleep(1000)");
         System.out.println("callback rows"+callback.rows());
@@ -6523,7 +6515,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
     }
     @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_single_thread_true()throws Exception {
-        DBConnection conn= new DBConnection(false, false, false, true);
+        DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
         StringBuilder sb = new StringBuilder();
         sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
@@ -6591,9 +6583,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
     }
     @Test(timeout = 200000)
     public  void test_MultithreadedTableWriter_Callback_dfs_single_thread_false()throws Exception {
-        DBConnection conn= new DBConnection(false, false, false, true);
+        DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
-        DBConnection conn1= new DBConnection(false, false, false, true);
+        DBConnection conn1= new DBConnection(false, false, false, false);
         conn1.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
         StringBuilder sb = new StringBuilder();
         sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
@@ -6661,7 +6653,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             System.out.println(ex.getMessage());
         }
         conn1.run("sleep(5000)");
-        DBConnection conn2= new DBConnection(false, false, false, true);
+        DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
         conn1.run("sleep(1000)");
         System.out.println("callback rows"+callback.rows());
@@ -6683,7 +6675,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_multiple_thread_true_bigData()throws Exception {
-        DBConnection conn= new DBConnection(false, false, false, true);
+        DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
         StringBuilder sb = new StringBuilder();
         sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
@@ -6753,9 +6745,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
     }
     @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_multiple_thread_false_bigData()throws Exception {
-        DBConnection conn= new DBConnection(false, false, false, true);
+        DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
-        DBConnection conn1= new DBConnection(false, false, false, true);
+        DBConnection conn1= new DBConnection(false, false, false, false);
         conn1.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
         StringBuilder sb = new StringBuilder();
         sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
@@ -6822,7 +6814,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             System.out.println(ex.getMessage());
         }
         conn1.run("sleep(2000)");
-        DBConnection conn2= new DBConnection(false, false, false, true);
+        DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
         conn1.run("sleep(2000)");
         System.out.println("callback rows"+callback.rows());
@@ -6846,9 +6838,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_single_thread_false_insertUnwrittenData()throws Exception {
-        DBConnection conn= new DBConnection(false, false, false, true);
+        DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
-        DBConnection conn1= new DBConnection(false, false, false, true);
+        DBConnection conn1= new DBConnection(false, false, false, false);
         conn1.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
         StringBuilder sb = new StringBuilder();
         sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
@@ -6913,7 +6905,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             System.out.println(ex.getMessage());
         }
         conn1.run("sleep(1000)");
-        DBConnection conn2= new DBConnection(false, false, false, true);
+        DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
         conn1.run("sleep(1000)");
         System.out.println("callback rows"+callback.rows());
@@ -6945,9 +6937,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
 //    @Test
 //    public  void test_MultithreadedTableWriter_Callback_dfs_multiple_thread_false_insertUnwrittenData()throws Exception {
-//        DBConnection conn= new DBConnection(false, false, false, true);
+//        DBConnection conn= new DBConnection(false, false, false, false);
 //        conn.connect(HOST, PORT, "admin", "123456");
-//        DBConnection conn1= new DBConnection(false, false, false, true);
+//        DBConnection conn1= new DBConnection(false, false, false, false);
 //        conn1.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
 //        StringBuilder sb = new StringBuilder();
 //        sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
@@ -7014,7 +7006,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 //            System.out.println(ex.getMessage());
 //        }
 //        conn1.run("sleep(1000)");
-//        DBConnection conn2= new DBConnection(false, false, false, true);
+//        DBConnection conn2= new DBConnection(false, false, false, false);
 //        conn2.connect(HOST, PORT, "admin", "123456");
 //        conn1.run("sleep(1000)");
 //        System.out.println("callback rows"+callback.rows());
@@ -7192,7 +7184,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
     }
     @Test(timeout = 200000)
     public  void test_MultithreadedTableWriter_write_block()throws Exception {
-        DBConnection conn= new DBConnection(false, false, false, true);
+        DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
         StringBuilder sb = new StringBuilder();
         sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
@@ -7263,9 +7255,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     //@Test
     public  void test_MultithreadedTableWriter_write_block_1()throws Exception {
-        DBConnection conn= new DBConnection(false, false, false, true);
+        DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
-        DBConnection conn1= new DBConnection(false, false, false, true);
+        DBConnection conn1= new DBConnection(false, false, false, false);
         conn1.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
         StringBuilder sb = new StringBuilder();
         sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
