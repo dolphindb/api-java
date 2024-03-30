@@ -14,8 +14,8 @@ public class EventSender {
     private DBConnection conn;
     private boolean isConnected;
 
-    public EventSender(List<EventScheme> eventSchemes, List<String> eventTimeKeys, List<String> commonKeys) {
-        this.eventHandler = new EventHandler(eventSchemes, eventTimeKeys, commonKeys);
+    public EventSender(List<EventSchema> eventSchemas, List<String> eventTimeKeys, List<String> commonKeys) {
+        this.eventHandler = new EventHandler(eventSchemas, eventTimeKeys, commonKeys);
         this.isConnected = false;
     }
 
@@ -55,8 +55,8 @@ public class EventSender {
         }
     }
 
-    public static EventSender createEventSender(List<EventScheme> eventSchemes, List<String> eventTimeKeys, List<String> commonKeys) {
-        return new EventSender(eventSchemes, eventTimeKeys, commonKeys);
+    public static EventSender createEventSender(List<EventSchema> eventSchemas, List<String> eventTimeKeys, List<String> commonKeys) {
+        return new EventSender(eventSchemas, eventTimeKeys, commonKeys);
     }
 
 }

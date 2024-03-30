@@ -28,9 +28,9 @@ public class EventClient extends AbstractClient {
 
     private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
-    public EventClient(List<EventScheme> eventSchemes, List<String> eventTimeKeys, List<String> commonKeys) throws SocketException {
+    public EventClient(List<EventSchema> eventSchemas, List<String> eventTimeKeys, List<String> commonKeys) throws SocketException {
         super(0);
-        eventHandler = new EventHandler(eventSchemes, eventTimeKeys, commonKeys);
+        eventHandler = new EventHandler(eventSchemas, eventTimeKeys, commonKeys);
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, String userName, String password) throws IOException {
