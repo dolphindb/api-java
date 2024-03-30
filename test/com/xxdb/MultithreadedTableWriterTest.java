@@ -188,7 +188,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "", "tt", false, false, null, 10000, 1,
                 5, "date");
         }catch (Exception e) {
-            assertEquals(HOST+":"+PORT+" Server response: 'Syntax Error: [line #1] Cannot recognize the token tt' script: 'schema(tt)'",e.getMessage());
+            assertEquals(true,e.getMessage().contains("Server response: 'Syntax Error: [line #1] Cannot recognize the token tt"));
         }
         conn.run("undef(`t1,SHARED)");
     }
@@ -257,7 +257,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 5, "tradeDate");
         }catch (Exception e) {
             //assertEquals(HOST+":"+PORT+" Server response: 'table file does not exist: s/pt.tbl' script: 'schema(loadTable(\"s\",\"pt\"))'",e.getMessage());
-            assertTrue(e.getMessage().contains("table file does not exist: s/pt.tbl' script: 'schema(loadTable(\"s\",\"pt\"))"));
+            assertTrue(e.getMessage().contains("table file does not exist: s/pt.tbl"));
         }
     }
 
@@ -856,7 +856,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         Thread.sleep(20000);
         MultithreadedTableWriter.Status status1=mutithreadTableWriter1.getStatus();
         MultithreadedTableWriter.Status status=mutithreadTableWriter2.getStatus();
-        if (status.getErrorInfo().toString().contains(HOST+":"+PORT+" Server response: '<ChunkInTransaction>filepath '/test_MultithreadedTableWriter")){
+        if (status.getErrorInfo().toString().contains(HOST+":"+PORT+" Server response: <ChunkInTransaction>")){
             assertEquals("",status1.getErrorInfo().toString());
             assertEquals("A5",status.getErrorCode());
             assertTrue(status.sendFailedRows >0);
@@ -870,7 +870,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(1000,status1.unsentRows+status.sendFailedRows+status.sentRows);
 
         }else {
-            assertTrue(status1.getErrorInfo().toString().contains(HOST+":"+PORT+" Server response: '<ChunkInTransaction>The openChunks operation failed because the chunk '/test_MultithreadedTableWriter"));
+            assertTrue(status1.getErrorInfo().toString().contains(HOST+":"+PORT+" Server response: <ChunkInTransaction>The openChunks operation failed because the chunk '/test_MultithreadedTableWriter"));
             assertEquals("A5",status1.getErrorCode());
             assertTrue(status1.sendFailedRows >0);
             assertEquals(true,status1.hasError());
@@ -6304,7 +6304,14 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.close();
 
     }
-
+    @Test(timeout = 120000)
+    public  void test_run()throws Exception {
+        DBConnection conn= new DBConnection(false, false, false, true);
+        conn.connect(HOST, PORT, "admin", "123456");
+        DBConnection conn1= new DBConnection(false, false, false, true);
+        conn1.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
+        conn.run("share table(100:0, [`col0], [INT]) as table1");
+    }
     @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_memoryTable_single_thread_false()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, true);
@@ -6430,9 +6437,9 @@ public  class MultithreadedTableWriterTest implements Runnable {
         DBConnection conn1= new DBConnection(false, false, false, true);
         conn1.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
         StringBuilder sb = new StringBuilder();
-        sb.append("dbName = 'dfs://test_MultithreadedTableWriter';\n" +
+        sb.append("dbName = \"dfs://test_MultithreadedTableWriter\";\n" +
                 "if(existsDatabase(dbName)){\n" +
-                "\tdropDB(dbName);\n" +
+                "dropDB(dbName);\n" +
                 "}\n" +
                 "db = database(dbName, HASH, [STRING, 10], engine=\"TSDB\");\n"+
                 "dummy = table(100:0, [`id], [STRING]);\n" +

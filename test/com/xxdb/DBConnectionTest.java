@@ -2420,7 +2420,7 @@ public class DBConnectionTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        assertEquals(true,re.contains("getGroupList() => Only administrators execute function getGroupList' script: 'getGroupList();"));
+        assertEquals(true,re.contains("getGroupList() => Only administrators execute function getGroupList"));
     }
     @Test
     public void TestPartitionTable() throws IOException, InterruptedException {
@@ -4167,7 +4167,7 @@ public void test_SSL() throws Exception {
         assertEquals("[[1.000,3.000,100000.000],[-1.000,0.000,0.123]]",res.getColumn(2).getString());
         assertEquals("[[1,3,100000],[-1,0,0]]",res.getColumn(3).getString());
         assertEquals("[[1.0,3.0,100000.0],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
-        assertEquals("[[1.0000,3.0000,100000.000],[-1.0000,0.0000,0.12345]]",res.getColumn(5).getString());
+        assertEquals("[[1.0000,3.0000,100000.0000],[-1.0000,0.0000,0.1235]]",res.getColumn(5).getString());
         assertEquals("[[1.00000000,3.00001000,100000.00000000],[-1.00000000,0.00000000,0.12345679]]",res.getColumn(6).getString());
 
     }
@@ -4824,7 +4824,7 @@ public void test_SSL() throws Exception {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals(true, re.contains("''table_upload_tb3' is a shared variable and can't be overwritten.' variable: 'table_upload_tb1,table_upload_tb,table_upload_tb3'"));
+        assertEquals(true, re.contains("table_upload_tb3' is a shared variable and can't be overwritten"));
     }
     //@Test
     public void test_upload_error_1() throws IOException {

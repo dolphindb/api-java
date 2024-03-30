@@ -4,6 +4,8 @@ import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import com.xxdb.route.AutoFitTableUpsert;
 import com.xxdb.route.AutoFitTableAppender;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -25,7 +27,32 @@ public class AutoFitTableUpsertTest {
     static String[] host_list= bundle.getString("HOSTS").split(",");
     static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
     //String[] highAvailabilitySites = {"192.168.0.57:9002","192.168.0.57:9003","192.168.0.57:9004","192.168.0.57:9005"};
-
+    @Before
+    public void setUp() throws IOException {
+        conn = new DBConnection();
+        conn.connect(HOST, PORT, "admin", "123456");
+        conn.run("def getAllShare(){\n" +
+                "\treturn select name from objs(true) where shared=1\n" +
+                "\t}\n" +
+                "\n" +
+                "def clearShare(){\n" +
+                "\tlogin(`admin,`123456)\n" +
+                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
+                "\tfor(i in allShare){\n" +
+                "\t\ttry{\n" +
+                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
+                "\t\t\t}catch(ex1){}\n" +
+                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
+                "\t}\n" +
+                "\ttry{\n" +
+                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
+                "\t}catch(ex1){}\n" +
+                "}\n" +
+                "clearShare()");
+    }
+    @After
+    public  void after() throws IOException, InterruptedException {
+    }
     @Test
     public void test_tableUpsert_DP_baseNull() throws Exception {
         conn = new DBConnection();

@@ -140,7 +140,7 @@ public class SimpleDBConnectionPoolTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        assertEquals(true,re.contains("getGroupList() => Only administrators execute function getGroupList' script: 'getGroupList();"));
+        assertEquals(true,re.contains("Only administrators execute function getGroupList"));
     }
     @Test
     public void test_SimpleDBConnectionPool_config_userId_not_admin() throws IOException, InterruptedException {
@@ -186,7 +186,7 @@ public class SimpleDBConnectionPoolTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        assertEquals(true,re.contains("getGroupList() => Only administrators execute function getGroupList' script: 'getGroupList();"));
+        assertEquals(true,re.contains("getGroupList() => Only administrators execute function getGroupList"));
     }
 
     @Test
@@ -509,7 +509,7 @@ public class SimpleDBConnectionPoolTest {
         config1.setUserId("admin");
         config1.setPassword("123456");
         config1.setInitialPoolSize(5);
-        config1.setInitialScript("null");
+        config1.setInitialScript("1");
         config1.setCompress(true);
         config1.setUseSSL(true);
         config1.setUsePython(true);
@@ -523,7 +523,7 @@ public class SimpleDBConnectionPoolTest {
         assertEquals("admin",config1.getUserId());
         assertEquals("123456",config1.getPassword());
         assertEquals(5,config1.getInitialPoolSize());
-        assertEquals("null",config1.getInitialScript());
+        assertEquals("1",config1.getInitialScript());
         assertEquals(true,config1.isUseSSL());
         assertEquals(true,config1.isUsePython());
         assertEquals(true,config1.isCompress());

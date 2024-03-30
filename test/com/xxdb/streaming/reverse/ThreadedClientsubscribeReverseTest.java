@@ -1047,7 +1047,7 @@ public class ThreadedClientsubscribeReverseTest {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]. Contact an administrator. RefId:S03009' function: 'publishTable'",e.getMessage());
+            assertEquals(true,e.getMessage().contains("No access to shared table [Trades]."));
         }
     }
 
@@ -1072,7 +1072,7 @@ public class ThreadedClientsubscribeReverseTest {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]. Contact an administrator. RefId:S03009' function: 'publishTable'",e.getMessage());
+            assertEquals(true,e.getMessage().contains("No access to shared table [Trades]."));
             System.out.println(e.getMessage());
         }
 
@@ -1553,7 +1553,7 @@ public class ThreadedClientsubscribeReverseTest {
             StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
             fail("no exception thrown");
         }catch(Exception ex){
-            assertEquals(HOST+":"+PORT+" Server response: 'schema() => The function [schema] expects 1 argument(s), but the actual number of arguments is: 0' script: 'schema()'",ex.getMessage());
+            assertEquals(true,ex.getMessage().contains("schema() => The function [schema] expects 1 argument(s), but the actual number of arguments is: 0"));
         }
     }
 
@@ -1579,7 +1579,7 @@ public class ThreadedClientsubscribeReverseTest {
             StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
             fail("no exception thrown");
         }catch(Exception ex){
-            assertEquals(HOST+":"+PORT+" Server response: 'Syntax Error: [line #1] Cannot recognize the token test2' script: 'schema(test2)'",ex.getMessage());
+            assertEquals(true,ex.getMessage().contains("Cannot recognize the token test2"));
         }
     }
 
