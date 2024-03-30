@@ -583,9 +583,7 @@ public class EventClientTest {
         eventSchemas.add(scheme1);
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = EventSender.createEventSender(eventSchemas, eventTimeKeys, commonKeys);
-
-        sender.connect(conn, "inputTable");
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicString("123456"));
         attributes.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,10,45,3,100000000))));
@@ -614,7 +612,7 @@ public class EventClientTest {
         eventSchemas.add(scheme);
         List<String> eventTimeKeys = Arrays.asList(new String[]{"timestamp"});
         List<String> commonKeys = Arrays.asList(new String[]{"comment1"});
-        sender = EventSender.createEventSender(eventSchemas, eventTimeKeys, commonKeys);
+        sender = new EventSender(conn, "inputTable", eventSchemas, eventTimeKeys, commonKeys);
         client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
     }
     @Test
@@ -721,7 +719,6 @@ public class EventClientTest {
     public  void test_EventClient_subscribe_offset_negative_1() throws IOException, InterruptedException {
         subscribePrepare();
         conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
-        sender.connect(conn,"inputTable");
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
@@ -736,7 +733,6 @@ public class EventClientTest {
     public  void test_EventClient_subscribe_offset_negative_2() throws IOException, InterruptedException {
         subscribePrepare();
         conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
-        sender.connect(conn,"inputTable");
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
@@ -751,7 +747,6 @@ public class EventClientTest {
     public  void test_EventClient_subscribe_offset_0() throws IOException, InterruptedException {
         subscribePrepare();
         conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
-        sender.connect(conn,"inputTable");
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
@@ -767,7 +762,6 @@ public class EventClientTest {
     public  void test_EventClient_subscribe_offset_1() throws IOException, InterruptedException {
         subscribePrepare();
         conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
-        sender.connect(conn,"inputTable");
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
@@ -782,7 +776,6 @@ public class EventClientTest {
     public  void test_EventClient_subscribe_offset_not_match() throws IOException, InterruptedException {
         subscribePrepare();
         conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
-        sender.connect(conn,"inputTable");
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
@@ -799,7 +792,6 @@ public class EventClientTest {
     public  void test_EventClient_subscribe_reconnect_true() throws IOException, InterruptedException {
         subscribePrepare();
         conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
-        sender.connect(conn,"inputTable");
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
@@ -813,7 +805,6 @@ public class EventClientTest {
     public  void test_EventClient_subscribe_reconnect_false() throws IOException, InterruptedException {
         subscribePrepare();
         conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
-        sender.connect(conn,"inputTable");
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
@@ -853,15 +844,15 @@ public class EventClientTest {
         PrepareUser("user1","123456");
         DBConnection conn = new DBConnection();
         conn.connect(HOST, PORT,"user1","123456");
-        subscribePrepare();
-        conn.run("share streamTable(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable1;");
-        conn.run("addAccessControl(`inputTable1)");
+        conn.run("share streamTable(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable;");
+        conn.run("addAccessControl(`inputTable)");
         conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
-        sender.connect(conn,"inputTable1");
+        subscribePrepare();
+
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
-        client.subscribe(HOST, PORT, "inputTable1", "test1", handler, -1, true, "admin", "123456");
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
         sender.sendEvent("MarketData", attributes);
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
@@ -872,15 +863,15 @@ public class EventClientTest {
         PrepareUser("user1","123456");
         DBConnection conn = new DBConnection();
         conn.connect(HOST, PORT,"user1","123456");
-        subscribePrepare();
-        conn.run("share streamTable(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable1;");
-        conn.run("addAccessControl(`inputTable1)");
+        conn.run("share streamTable(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable;");
+        conn.run("addAccessControl(`inputTable)");
         conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
-        sender.connect(conn,"inputTable1");
+        subscribePrepare();
+
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
-        client.subscribe(HOST, PORT, "inputTable1", "test1", handler, -1, true, "user1", "123456");
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "user1", "123456");
         sender.sendEvent("MarketData", attributes);
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
@@ -892,22 +883,31 @@ public class EventClientTest {
         PrepareUser("user2","123456");
         DBConnection conn = new DBConnection();
         conn.connect(HOST, PORT,"user1","123456");
-        subscribePrepare();
-        conn.run("share streamTable(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable1;");
-        conn.run("addAccessControl(`inputTable1)");
+        conn.run("share streamTable(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable;");
+        conn.run("addAccessControl(`inputTable)");
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("MarketData");
+        scheme.setFieldNames(Arrays.asList("timestamp", "comment1"));
+        scheme.setFieldTypes(Arrays.asList( DT_TIMESTAMP,DT_STRING));
+        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
+        List<EventSchema> eventSchemas = new ArrayList<>();
+        eventSchemas.add(scheme);
+        List<String> eventTimeKeys = Arrays.asList(new String[]{"timestamp"});
+        List<String> commonKeys = Arrays.asList(new String[]{"comment1"});
+        sender = new EventSender(conn, "inputTable", eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         String re = null;
         try{
-            client.subscribe(HOST, PORT, "inputTable1", "test1", handler1, -1, true, "user2", "123456");
+            client.subscribe(HOST, PORT, "inputTable", "test1", handler1, -1, true, "user2", "123456");
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals(true, re.contains("No access to shared table [inputTable1]"));
+        Assert.assertEquals(true, re.contains("No access to shared table [inputTable]"));
     }
     @Test
     public  void test_EventClient_subscribe_unsubscribe_resubscribe() throws IOException, InterruptedException {
         subscribePrepare();
         conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
-        sender.connect(conn,"inputTable");
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
@@ -955,15 +955,15 @@ public class EventClientTest {
 
     @Test
     public  void test_EventClient_subscribe_haStreamTable() throws IOException, InterruptedException {
-        subscribePrepare();
-        conn.run("table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable1;");
-        conn.run("haStreamTable(11, table, `inputTable1, 100000)");
+        conn.run("table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable;");
+        conn.run("haStreamTable(11, table, `inputTable, 100000)");
         conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
-        sender.connect(conn,"inputTable1");
+        subscribePrepare();
+
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
-        client.subscribe(HOST, PORT, "inputTable1", "test1", handler, -1, true, "user1", "123456");
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "user1", "123456");
         sender.sendEvent("MarketData", attributes);
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
@@ -971,7 +971,6 @@ public class EventClientTest {
     }
     @Test
     public  void test_EventClient_subscribe_haStreamTable_leader() throws IOException, InterruptedException {
-        subscribePrepare();
         BasicString StreamLeaderTmp = (BasicString)conn.run(String.format("getStreamingLeader(%d)", GROUP_ID));
         String StreamLeader = StreamLeaderTmp.getString();
         BasicString StreamLeaderHostTmp = (BasicString)conn.run(String.format("(exec host from rpc(getControllerAlias(), getClusterPerf) where name=\"%s\")[0]", StreamLeader));
@@ -982,28 +981,28 @@ public class EventClientTest {
         System.out.println(StreamLeaderPort);
         DBConnection conn1 = new DBConnection();
         conn1.connect(StreamLeaderHost, StreamLeaderPort, "admin", "123456");
-        String script = "try{\ndropStreamTable(`inputTable1)\n}catch(ex){\n}\n"+
+        String script = "try{\ndropStreamTable(`inputTable)\n}catch(ex){\n}\n"+
             "table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]);\n"+
-            "haStreamTable("+GROUP_ID+", table, `inputTable1, 100000);\n"+
+            "haStreamTable("+GROUP_ID+", table, `inputTable, 100000);\n"+
             "share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;;\n";
         conn1.run(script);
-        sender.connect(conn,"inputTable1");
+        subscribePrepare();
+
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
-        client.subscribe(StreamLeaderHost, StreamLeaderPort, "inputTable1", "test1", handler, -1, true, "user1", "123456");
+        client.subscribe(StreamLeaderHost, StreamLeaderPort, "inputTable", "test1", handler, -1, true, "user1", "123456");
         sender.sendEvent("MarketData", attributes);
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn1.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
         Assert.assertEquals("2024.03.22T10:45:03.100",re.getColumn(0).get(0).getString());
         Assert.assertEquals("123456",re.getColumn(1).get(0).getString());
-        client.unsubscribe(StreamLeaderHost, StreamLeaderPort, "inputTable1", "test1");
+        client.unsubscribe(StreamLeaderHost, StreamLeaderPort, "inputTable", "test1");
     }
 
     @Test//not support
     public  void test_EventClient_subscribe_haStreamTable_follower() throws IOException, InterruptedException {
-        subscribePrepare();
         String script0 ="leader = getStreamingLeader("+GROUP_ID+");\n" +
                 "groupSitesStr = (exec sites from getStreamingRaftGroups() where id =="+GROUP_ID+")[0];\n"+
                 "groupSites = split(groupSitesStr, \",\");\n"+
@@ -1017,23 +1016,24 @@ public class EventClientTest {
         System.out.println(StreamFollowerPort);
         DBConnection conn1 = new DBConnection();
         conn1.connect(StreamFollowerHost, StreamFollowerPort, "admin", "123456");
-        String script = "try{\ndropStreamTable(`inputTable1)\n}catch(ex){\n}\n"+
+        String script = "try{\ndropStreamTable(`inputTable)\n}catch(ex){\n}\n"+
                 "table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]);\n"+
-                "haStreamTable("+GROUP_ID+", table, `inputTable1, 100000);\n"+
+                "haStreamTable("+GROUP_ID+", table, `inputTable, 100000);\n"+
                 "share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;\n";
         conn1.run(script);
-        sender.connect(conn,"inputTable1");
+
+        subscribePrepare();
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
-        client.subscribe(StreamFollowerHost, StreamFollowerPort, "inputTable1", "test1", handler, -1, true, "user1", "123456");
+        client.subscribe(StreamFollowerHost, StreamFollowerPort, "inputTable", "test1", handler, -1, true, "user1", "123456");
         sender.sendEvent("MarketData", attributes);
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn1.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
         Assert.assertEquals("2024.03.22T10:45:03.100",re.getColumn(0).get(0).getString());
         Assert.assertEquals("123456",re.getColumn(1).get(0).getString());
-        client.unsubscribe(StreamFollowerHost, StreamFollowerPort, "inputTable1", "test1");
+        client.unsubscribe(StreamFollowerHost, StreamFollowerPort, "inputTable", "test1");
     }
 
     @Test
@@ -1441,8 +1441,7 @@ public class EventClientTest {
         List<EventSchema> eventSchemes = Collections.singletonList(scheme);
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        sender.connect(conn,"inputTable");
+        EventSender sender = new EventSender(conn, "inputTable", eventSchemes, eventTimeKeys, commonKeys);
 
         EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "intput1", "test1", handler_array_no_decimal, -1, true, "admin", "123456");
@@ -1515,8 +1514,7 @@ public class EventClientTest {
         List<EventSchema> eventSchemes = Collections.singletonList(scheme);
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
-        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
-        sender.connect(conn,"inputTable");
+        EventSender sender = new EventSender(conn, "inputTable", eventSchemes, eventTimeKeys, commonKeys);
 
         EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "intput1", "test1", handler_array_decimal, -1, true, "admin", "123456");
@@ -1568,10 +1566,9 @@ public class EventClientTest {
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
-        EventSender sender = EventSender.createEventSender(eventSchemas, eventTimeKeys, commonKeys);
         String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n";
         conn.run(script);
-        sender.connect(conn,"inputTable");
+        EventSender sender = new EventSender(conn, "inputTable", eventSchemas, eventTimeKeys, commonKeys);
         EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler_array, -1, true, "admin", "123456");
         Preparedata_array(100,10);
