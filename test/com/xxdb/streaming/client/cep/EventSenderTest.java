@@ -2325,6 +2325,115 @@ public class EventSenderTest {
         Assert.assertEquals(1,bt2.rows());
         checkData(bt1,bt2);
     }
+    public static  EventMessageHandler handler_string = new EventMessageHandler() {
+        @Override
+        public void doEvent(String eventType, List<Entity> attribute) {
+            System.out.println("eventType: " + eventType);
+            System.out.println(attribute.toString());
+            System.out.println(eventType.equals("event_string"));
+                try {
+                    conn.run("tableInsert{outputTable}", attribute);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+    };
+    @Test
+    public  void test_EventClient_vector_string() throws IOException, InterruptedException {
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
+                "share table(1:0,[\"col1\"],[STRING]) as outputTable;\n" ;
+        conn.run(script);
+        String script1 ="class event_string{\n" +
+                "\tstringv :: STRING  VECTOR\n" +
+                "  def event_string(string){\n" +
+                "\tstringv = string\n" +
+                "  \t}\n" +
+                "}   \n" +
+                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[], ) as type, array(INT[], 0) as form)\n" +
+                "eventType = 'event_string'\n" +
+                "eventKeys = 'stringv';\n" +
+                "typeV = [ STRING];\n" +
+                "formV = [ VECTOR];\n" +
+                "insert into schemaTable values([eventType], [eventKeys], [typeV],[formV]);\n" +
+                "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput1;\n" +
+                "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
+                "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput1);";
+        conn.run(script1);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("event_string");
+        scheme.setFieldNames(Arrays.asList("stringv"));
+        scheme.setFieldTypes(Arrays.asList( DT_STRING));
+        scheme.setFieldForms(Arrays.asList(  DF_VECTOR));
+        scheme.setFieldExtraParams(Arrays.asList( 2));
+
+        List<EventSchema> eventSchemes = Collections.singletonList(scheme);
+        List<String> eventTimeKeys = new ArrayList<>();
+        List<String> commonKeys = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeKeys, commonKeys);
+        EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        client.subscribe(HOST, PORT, "intput1", "test1", handler_string, -1, true, "admin", "123456");
+
+        String script2 = "\tevent_string1=event_string( [\"111\",\"222\",\"\",NULL])\n" +
+                "\tappendEvent(inputSerializer, event_string1)\n" ;
+        conn.run(script2);
+         List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicStringVector(new String[]{"111","222","",""}));
+        sender.sendEvent("event_string",attributes);
+        BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
+        Assert.assertEquals(1,bt1.rows());
+        Thread.sleep(2000);
+        BasicTable bt2 = (BasicTable)conn.run("select * from intput1;");
+        Assert.assertEquals(1,bt2.rows());
+        checkData(bt1,bt2);
+    }
+    @Test
+    public  void test_EventClient_vector_symbol() throws IOException, InterruptedException {
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
+                "share table(1:0,[\"col1\"],[STRING]) as outputTable;\n" ;
+        conn.run(script);
+        String script1 ="class event_symbol{\n" +
+                "\tsymbolv :: SYMBOL  VECTOR\n" +
+                "  def event_symbol(symbol){\n" +
+                "\tsymbolv = symbol\n" +
+                "  \t}\n" +
+                "}   \n" +
+                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[], ) as type, array(INT[], 0) as form)\n" +
+                "eventType = 'event_symbol'\n" +
+                "eventKeys = 'symbolv';\n" +
+                "typeV = [ SYMBOL];\n" +
+                "formV = [ VECTOR];\n" +
+                "insert into schemaTable values([eventType], [eventKeys], [typeV],[formV]);\n" +
+                "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput1;\n" +
+                "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
+                "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput1);";
+        conn.run(script1);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("event_symbol");
+        scheme.setFieldNames(Arrays.asList("symbolv"));
+        scheme.setFieldTypes(Arrays.asList( DT_SYMBOL));
+        scheme.setFieldForms(Arrays.asList(  DF_VECTOR));
+        scheme.setFieldExtraParams(Arrays.asList( 2));
+
+        List<EventSchema> eventSchemes = Collections.singletonList(scheme);
+        List<String> eventTimeKeys = new ArrayList<>();
+        List<String> commonKeys = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeKeys, commonKeys);
+        EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        client.subscribe(HOST, PORT, "intput1", "test1", handler_string, -1, true, "admin", "123456");
+
+        String script2 = "\tevent_symbol1=event_symbol( symbol([\"111\",\"222\",\"\",NULL]))\n" +
+                "\tappendEvent(inputSerializer, event_symbol1)\n" ;
+        conn.run(script2);
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicSymbolVector(Arrays.asList(new String[]{"111", "222", "", ""})));
+        sender.sendEvent("event_symbol",attributes);
+        BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
+        Assert.assertEquals(1,bt1.rows());
+        Thread.sleep(2000);
+        BasicTable bt2 = (BasicTable)conn.run("select * from intput1;");
+        Assert.assertEquals(1,bt2.rows());
+        checkData(bt1,bt2);
+    }
     @Test
     public  void test_EventSender_all_dateType_array() throws IOException {
         EventSchema scheme = new EventSchema();
