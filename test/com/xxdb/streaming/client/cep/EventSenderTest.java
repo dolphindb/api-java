@@ -128,7 +128,52 @@ public class EventSenderTest {
                 "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, n) + 0.254, 3), m))\n" +
                 "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, n) + 0.25467, 4), m))\n" +
                 "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, n) + 0.25467, 5), m))\n" +
-                "data = table(cbool, cchar, cshort, cint, clong, cdouble, cfloat, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cdatehour, cuuid, cipaddr, cint128, cpoint, ccomplex,  cdecimal32, cdecimal64, cdecimal128)\n" ;
+                "share table(cbool, cchar, cshort, cint, clong, cdouble, cfloat, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cdatehour, cuuid, cipaddr, cint128, cpoint, ccomplex,  cdecimal32, cdecimal64, cdecimal128) as data;\n" ;
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run(script1);
+    }
+    public static void Preparedata_array_1(long count1,long count2) throws IOException {
+        String script1 = "login(`admin, `123456); \n"+
+                "n="+count1+";\n" +
+                "m="+count2+";\n" +
+                "cbool = array(BOOL[]).append!(cut(take([true, false, NULL], n), m))\n" +
+                "cchar = array(CHAR[]).append!(cut(take(char(-100..100 join NULL), n), m))\n" +
+                "cshort = array(SHORT[]).append!(cut(take(short(-100..100 join NULL), n), m))\n" +
+                "cint = array(INT[]).append!(cut(take(-100..100 join NULL, n), m))\n" +
+                "clong = array(LONG[]).append!(cut(take(long(-100..100 join NULL), n), m))\n" +
+                "cdouble = array(DOUBLE[]).append!(cut(take(-100..100 join NULL, n) + 0.254, m))\n" +
+                "cfloat = array(FLOAT[]).append!(cut(take(-100..100 join NULL, n) + 0.254f, m))\n" +
+                "cdate = array(DATE[]).append!(cut(take(2012.01.01..2012.02.29, n), m))\n" +
+                "cmonth = array(MONTH[]).append!(cut(take(2012.01M..2013.12M, n), m))\n" +
+                "ctime = array(TIME[]).append!(cut(take(09:00:00.000 + 0..99 * 1000, n), m))\n" +
+                "cminute = array(MINUTE[]).append!(cut(take(09:00m..15:59m, n), m))\n" +
+                "csecond = array(SECOND[]).append!(cut(take(09:00:00 + 0..999, n), m))\n" +
+                "cdatetime = array(DATETIME[]).append!(cut(take(2012.01.01T09:00:00 + 0..999, n), m))\n" +
+                "ctimestamp = array(TIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000 + 0..999 * 1000, n), m))\n" +
+                "cnanotime =array(NANOTIME[]).append!(cut(take(09:00:00.000000000 + 0..999 * 1000000000, n), m))\n" +
+                "cnanotimestamp = array(NANOTIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000000000 + 0..999 * 1000000000, n), m))\n" +
+                "cuuid = array(UUID[]).append!(cut(take(uuid([\"5d212a78-cc48-e3b1-4235-b4d91473ee87\", \"5d212a78-cc48-e3b1-4235-b4d91473ee88\", \"5d212a78-cc48-e3b1-4235-b4d91473ee89\", \"\"]), n), m))\n" +
+                "cdatehour = array(DATEHOUR[]).append!(cut(take(datehour(1..10 join NULL), n), m))\n" +
+                "cipaddr = array(IPADDR[]).append!(cut(take(ipaddr([\"192.168.100.10\", \"192.168.100.11\", \"192.168.100.14\", \"\"]), n), m))\n" +
+                "cint128 = array(INT128[]).append!(cut(take(int128([\"e1671797c52e15f763380b45e841ec32\", \"e1671797c52e15f763380b45e841ec33\", \"e1671797c52e15f763380b45e841ec35\", \"\"]), n), m))\n" +
+                "ccomplex = array(	COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n), m))\n" +
+                "cpoint = array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n), m))\n" +
+                "share table(cbool, cchar, cshort, cint, clong, cdouble, cfloat, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cdatehour, cuuid, cipaddr, cint128, cpoint, ccomplex) as data;\n" ;
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run(script1);
+    }
+    public static void Preparedata_array_decimal(long count1,long count2) throws IOException {
+        String script1 = "login(`admin, `123456); \n"+
+                "n="+count1+";\n" +
+                "m="+count2+";\n" +
+                "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, n) + 0.254, 3), m))\n" +
+                "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, n) + 0.25467, 4), m))\n" +
+                "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, n) + 0.25467, 5), m))\n" +
+                "share table( cdecimal32, cdecimal64,cdecimal128) as data;" ;
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
         conn.run(script1);
     }
     public static void PrepareInputSerializer(String type,Entity.DATA_TYPE data_type) throws IOException {
@@ -170,6 +215,177 @@ public class EventSenderTest {
             System.out.println(attribute.toString());
             try {
                 conn.run("tableInsert{outputTable}", attribute);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
+    public static  EventMessageHandler handler_array = new EventMessageHandler() {
+        @Override
+        public void doEvent(String eventType, List<Entity> attributes) {
+            System.out.println("eventType: " + eventType);
+            String boolv = attributes.get(0).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String charv = attributes.get(1).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String shortv = attributes.get(2).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String intv = attributes.get(3).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String longv = attributes.get(4).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String doublev = attributes.get(5).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String floatv = attributes.get(6).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String datev = attributes.get(7).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String monthv = attributes.get(8).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String timev = attributes.get(9).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String minutev = attributes.get(10).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String secondv = attributes.get(11).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String datetimev = attributes.get(12).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String timestampv = attributes.get(13).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String nanotimev = attributes.get(14).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String nanotimestampv = attributes.get(15).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String datehourv = attributes.get(16).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+            String uuidv = attributes.get(17).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+            String ippaddrv = attributes.get(18).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+            String int128v = attributes.get(19).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+            String pointv =attributes.get(20).getString().replaceAll("\\(,\\)", "\\(NULL,NULL\\)");
+            pointv = pointv.substring(1, pointv.length() - 1);
+            String[] point1 = pointv.split("\\),\\(");
+            String point2 = null;
+            StringBuilder re1 = new StringBuilder();
+            StringBuilder re2 = new StringBuilder();
+            for(int i=0;i<point1.length;i++){
+                point2 = point1[i];
+                String[] dataType3 = point2.split(",");
+                re1.append(dataType3[0]);
+                re1.append(' ');
+                re2.append(dataType3[1]);
+                re2.append(' ');
+            }
+            pointv = re1+","+re2;
+            pointv = pointv.replaceAll("\\(","").replaceAll("\\)","");
+
+            String complex1 = attributes.get(21).getString().replaceAll(",,", ",NULL+NULL,").replaceAll("\\[,", "[NULL+NULL,").replaceAll(",]", ",NULL+NULL]");
+            complex1 = complex1.substring(1, complex1.length() - 1);
+            String[] complex2 = complex1.split(",");
+            String complex3 = null;
+            StringBuilder re11 = new StringBuilder();
+            StringBuilder re21 = new StringBuilder();
+            for(int i=0;i<complex2.length;i++){
+                complex3 = complex2[i];
+                String[] complex4 = complex3.split("\\+");
+                re11.append(complex4[0]);
+                re11.append(' ');
+                re21.append(complex4[1]);
+                re21.append(' ');
+            }
+            complex1 = re11+","+re21;
+            String complexv = complex1.replaceAll("i","");
+
+            String decimal32v = attributes.get(22).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String decimal64v = attributes.get(23).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String decimal128v = attributes.get(24).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+
+            for (int i=0;i<attributes.size();i++){
+                //attributes.get(i).getString();
+                System.out.println(attributes.get(i).getString());
+            }
+            String script = null;
+             script = String.format("insert into outputTable values( %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,[datehour(%s)],[uuid(%s)],[ipaddr(%s)],[int128(%s)],[point(%s)],[complex(%s)],%s,%s,%s)", boolv, charv, shortv, intv, longv, doublev, floatv, datev, monthv, timev, minutev, secondv, datetimev, timestampv, nanotimev, nanotimestampv, datehourv, uuidv, ippaddrv, int128v, pointv, complexv, decimal32v, decimal64v, decimal128v);
+            //script = String.format("insert into outputTable values( %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,[datehour(%s)],[uuid(%s)],[ipaddr(%s)],[int128(%s)],[point(%s)],[complex(%s)])", boolv, charv, shortv, intv, longv, doublev, floatv, datev, monthv, timev, minutev, secondv, datetimev, timestampv, nanotimev, nanotimestampv, datehourv, uuidv, ippaddrv, int128v, pointv, complexv);
+
+            try {
+                conn.run(script);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
+    public static  EventMessageHandler handler_array_no_decimal = new EventMessageHandler() {
+        @Override
+        public void doEvent(String eventType, List<Entity> attributes) {
+            System.out.println("eventType: " + eventType);
+            String boolv = attributes.get(0).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String charv = attributes.get(1).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String shortv = attributes.get(2).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String intv = attributes.get(3).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String longv = attributes.get(4).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String doublev = attributes.get(5).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String floatv = attributes.get(6).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String datev = attributes.get(7).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String monthv = attributes.get(8).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String timev = attributes.get(9).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String minutev = attributes.get(10).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String secondv = attributes.get(11).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String datetimev = attributes.get(12).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String timestampv = attributes.get(13).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String nanotimev = attributes.get(14).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String nanotimestampv = attributes.get(15).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String datehourv = attributes.get(16).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+            String uuidv = attributes.get(17).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+            String ippaddrv = attributes.get(18).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+            String int128v = attributes.get(19).getString().replaceAll("\\[", "\\[\"").replaceAll("]", "\"]").replaceAll(",", "\",\"").replaceAll("\"\"", "NULL");
+            String pointv =attributes.get(20).getString().replaceAll("\\(,\\)", "\\(NULL,NULL\\)");
+            pointv = pointv.substring(1, pointv.length() - 1);
+            String[] point1 = pointv.split("\\),\\(");
+            String point2 = null;
+            StringBuilder re1 = new StringBuilder();
+            StringBuilder re2 = new StringBuilder();
+            for(int i=0;i<point1.length;i++){
+                point2 = point1[i];
+                String[] dataType3 = point2.split(",");
+                re1.append(dataType3[0]);
+                re1.append(' ');
+                re2.append(dataType3[1]);
+                re2.append(' ');
+            }
+            pointv = re1+","+re2;
+            pointv = pointv.replaceAll("\\(","").replaceAll("\\)","");
+
+            String complex1 = attributes.get(21).getString().replaceAll(",,", ",NULL+NULL,").replaceAll("\\[,", "[NULL+NULL,").replaceAll(",]", ",NULL+NULL]");
+            complex1 = complex1.substring(1, complex1.length() - 1);
+            String[] complex2 = complex1.split(",");
+            String complex3 = null;
+            StringBuilder re11 = new StringBuilder();
+            StringBuilder re21 = new StringBuilder();
+            for(int i=0;i<complex2.length;i++){
+                complex3 = complex2[i];
+                String[] complex4 = complex3.split("\\+");
+                re11.append(complex4[0]);
+                re11.append(' ');
+                re21.append(complex4[1]);
+                re21.append(' ');
+            }
+            complex1 = re11+","+re21;
+            String complexv = complex1.replaceAll("i","");
+            for (int i=0;i<attributes.size();i++){
+                //attributes.get(i).getString();
+                System.out.println(attributes.get(i).getString());
+            }
+            String script = null;
+            script = String.format("insert into outputTable values( %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,[datehour(%s)],[uuid(%s)],[ipaddr(%s)],[int128(%s)],[point(%s)],[complex(%s)])", boolv, charv, shortv, intv, longv, doublev, floatv, datev, monthv, timev, minutev, secondv, datetimev, timestampv, nanotimev, nanotimestampv, datehourv, uuidv, ippaddrv, int128v, pointv, complexv);
+            try {
+                DBConnection conn1 = new DBConnection();
+                conn1.connect(HOST,PORT,"admin","123456");
+                conn1.run(script);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
+    public static  EventMessageHandler handler_array_decimal = new EventMessageHandler() {
+        @Override
+        public void doEvent(String eventType, List<Entity> attributes) {
+            System.out.println("eventType: " + eventType);
+            String decimal32v = attributes.get(0).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String decimal64v = attributes.get(1).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+            String decimal128v = attributes.get(2).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
+
+            for (int i=0;i<attributes.size();i++){
+                //attributes.get(i).getString();
+                System.out.println(attributes.get(i).getString());
+            }
+            String script = null;
+            script = String.format("insert into outputTable values( %s,%s,%s)", decimal32v, decimal64v, decimal128v);
+
+            try {
+                conn.run(script);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -2035,12 +2251,11 @@ public class EventSenderTest {
         Assert.assertEquals(100000,bt2.rows());
         checkData(bt,bt2);
     }
-
-    @Test
+    @Test//精度问题
     public  void test_EventSender_all_dateType_vector() throws IOException, InterruptedException {
         String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
-                "colNames=\"col\"+string(1..24);\n" +
-                "colTypes=[BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[],DATEHOUR[],UUID[],IPADDR[],INT128[],POINT[],COMPLEX[],DECIMAL32(2)[],DECIMAL64(7)[],DECIMAL128(10)[]];\n" +
+                "colNames=\"col\"+string(1..25);\n" +
+                "colTypes=[BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[],DATEHOUR[],UUID[],IPADDR[],INT128[],POINT[],COMPLEX[],DECIMAL32(2)[],DECIMAL64(7)[],DECIMAL128(19)[]];\n" +
                 "share table(1:0,colNames,colTypes) as outputTable;\n" ;
         conn.run(script);
 
@@ -2052,7 +2267,7 @@ public class EventSenderTest {
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
-        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, 2, 7));
+        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, 2, 7,19));
 
         EventSender sender = EventSender.createEventSender(eventSchemas, eventTimeKeys, commonKeys);
         sender.connect(conn,"inputTable");
@@ -2060,7 +2275,7 @@ public class EventSenderTest {
         BasicTable bt = (BasicTable)conn.run("select * from data");
 
         EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
-        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler_array, -1, true, "admin", "123456");
 
         for(int i=0;i<bt.rows();i++){
             List<Entity> attributes = new ArrayList<>();
@@ -2074,22 +2289,108 @@ public class EventSenderTest {
         }
         BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
         Assert.assertEquals(10,bt1.rows());
-        Thread.sleep(50000);
+        Thread.sleep(10000);
         BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(10,bt2.rows());
         checkData(bt,bt2);
     }
+    @Test
+    public  void test_EventSender_all_dateType_vector_no_decimal() throws IOException, InterruptedException {
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
+                "colNames=\"col\"+string(1..22);\n" +
+                "colTypes=[BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[],DATEHOUR[],UUID[],IPADDR[],INT128[],POINT[],COMPLEX[]];\n" +
+                "share table(1:0,colNames,colTypes) as outputTable;\n" ;
+        conn.run(script);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("event_all_array_dateType");
+        scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "datehourv", "uuidv", "ippaddrv", "int128v", "pointv", "complexv"));
+        scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_POINT, DT_COMPLEX));
+        scheme.setFieldForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
+        List<EventSchema> eventSchemes = Collections.singletonList(scheme);
+        List<String> eventTimeKeys = new ArrayList<>();
+        List<String> commonKeys = new ArrayList<>();
+        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null));
 
+        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
+        sender.connect(conn,"inputTable");
+        Preparedata_array_1(100,10);
+        BasicTable bt = (BasicTable)conn.run("select * from data");
+
+        EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler_array, -1, true, "admin", "123456");
+
+        for(int i=0;i<bt.rows();i++){
+            List<Entity> attributes = new ArrayList<>();
+            for(int j=0;j<bt.columns();j++){
+                Entity pt = bt.getColumn(j).get(i);
+                // System.out.println(pt.getDataType());
+                // System.out.println(i + "行， " + j + "列：" + pt.getString());
+                attributes.add(pt);
+            }
+            sender.sendEvent("event_all_array_dateType",attributes);
+        }
+        BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
+        Assert.assertEquals(10,bt1.rows());
+        Thread.sleep(10000);
+        BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
+        Assert.assertEquals(10,bt2.rows());
+        checkData(bt,bt2);
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
+    }
+
+    @Test
+    public  void test_EventClient_vector_decimal_1() throws IOException, InterruptedException {
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
+                "share table(1:0,[\"col1\"],[DECIMAL32(2)[]]) as outputTable;\n" ;
+        conn.run(script);
+        String script1 ="class event_all_array_dateType{\n" +
+                "\tdecimal32v :: DECIMAL32(3)  VECTOR\n" +
+                "  def event_all_array_dateType(decimal32){\n" +
+                "\tdecimal32v = decimal32\n" +
+                "  \t}\n" +
+                "}   \n" +
+                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[], ) as type, array(INT[], 0) as form)\n" +
+                "eventType = 'event_all_array_dateType'\n" +
+                "eventKeys = 'decimal32v';\n" +
+                "typeV = [ DECIMAL32(2)[]];\n" +
+                "formV = [ VECTOR];\n" +
+                "insert into schemaTable values([eventType], [eventKeys], [typeV],[formV]);\n" +
+                "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput1;\n" +
+                "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
+                "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput1);";
+        conn.run(script1);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("event_all_array_dateType");
+        scheme.setFieldNames(Arrays.asList("decimal32v"));
+        scheme.setFieldTypes(Arrays.asList( DT_DECIMAL32));
+        scheme.setFieldForms(Arrays.asList(  DF_VECTOR));
+        scheme.setFieldExtraParams(Arrays.asList( 2));
+
+        List<EventSchema> eventSchemes = Collections.singletonList(scheme);
+        List<String> eventTimeKeys = new ArrayList<>();
+        List<String> commonKeys = new ArrayList<>();
+        EventSender sender = EventSender.createEventSender(eventSchemes, eventTimeKeys, commonKeys);
+        sender.connect(conn,"inputTable");
+        String script2 = "\tevent_all_array_dateType1=event_all_array_dateType( decimal32(1 2.001,2))\n" +
+                "\tappendEvent(inputSerializer, event_all_array_dateType1)\n" ;
+        conn.run(script2);
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicDecimal32Vector(new String[]{"1","2.001"},2));
+        sender.sendEvent("event_all_array_dateType",attributes);
+        BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
+        Assert.assertEquals(1,bt1.rows());
+        BasicTable bt2 = (BasicTable)conn.run("select * from intput1;");
+        Assert.assertEquals(1,bt2.rows());
+        checkData(bt1,bt2);
+    }
     @Test
     public  void test_EventSender_all_dateType_array() throws IOException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("event_all_array_dateType");
-        //scheme.setAttrKeys(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "datehourv", "uuidv", "ippaddrv", "int128v", "pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
-        //scheme.setAttrTypes(Arrays.asList(DT_BOOL_ARRAY, DT_BYTE_ARRAY, DT_SHORT_ARRAY, DT_INT_ARRAY, DT_LONG_ARRAY, DT_DOUBLE_ARRAY, DT_FLOAT_ARRAY, DT_DATE_ARRAY,DT_MONTH_ARRAY, DT_TIME_ARRAY, DT_MINUTE_ARRAY, DT_SECOND_ARRAY, DT_DATETIME_ARRAY, DT_TIMESTAMP_ARRAY, DT_NANOTIME_ARRAY, DT_NANOTIMESTAMP_ARRAY, DT_DATEHOUR_ARRAY, DT_UUID_ARRAY, DT_IPADDR_ARRAY, DT_INT128_ARRAY, DT_POINT_ARRAY, DT_COMPLEX_ARRAY, DT_DECIMAL32_ARRAY, DT_DECIMAL64_ARRAY, DT_DECIMAL128_ARRAY));
-        //scheme.setAttrForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
-        scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "datehourv", "uuidv", "ippaddrv", "int128v", "pointv", "complexv", "decimal32v", "decimal64v"));
-        scheme.setFieldTypes(Arrays.asList(DT_BOOL_ARRAY, DT_BYTE_ARRAY, DT_SHORT_ARRAY, DT_INT_ARRAY, DT_LONG_ARRAY, DT_DOUBLE_ARRAY, DT_FLOAT_ARRAY, DT_DATE_ARRAY,DT_MONTH_ARRAY, DT_TIME_ARRAY, DT_MINUTE_ARRAY, DT_SECOND_ARRAY, DT_DATETIME_ARRAY, DT_TIMESTAMP_ARRAY, DT_NANOTIME_ARRAY, DT_NANOTIMESTAMP_ARRAY, DT_DATEHOUR_ARRAY, DT_UUID_ARRAY, DT_IPADDR_ARRAY, DT_INT128_ARRAY, DT_POINT_ARRAY, DT_COMPLEX_ARRAY, DT_DECIMAL32_ARRAY, DT_DECIMAL64_ARRAY));
-        scheme.setFieldForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
+        scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "datehourv", "uuidv", "ippaddrv", "int128v", "pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
+        scheme.setFieldTypes(Arrays.asList(DT_BOOL_ARRAY, DT_BYTE_ARRAY, DT_SHORT_ARRAY, DT_INT_ARRAY, DT_LONG_ARRAY, DT_DOUBLE_ARRAY, DT_FLOAT_ARRAY, DT_DATE_ARRAY,DT_MONTH_ARRAY, DT_TIME_ARRAY, DT_MINUTE_ARRAY, DT_SECOND_ARRAY, DT_DATETIME_ARRAY, DT_TIMESTAMP_ARRAY, DT_NANOTIME_ARRAY, DT_NANOTIMESTAMP_ARRAY, DT_DATEHOUR_ARRAY, DT_UUID_ARRAY, DT_IPADDR_ARRAY, DT_INT128_ARRAY, DT_POINT_ARRAY, DT_COMPLEX_ARRAY, DT_DECIMAL32_ARRAY, DT_DECIMAL64_ARRAY, DT_DECIMAL128_ARRAY));
+        scheme.setFieldForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
+        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, 2, 7,19));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
