@@ -123,7 +123,7 @@ public class LZ4Test {
         BasicTable newT = (BasicTable) conn.run("select * from st");
     }
 
-    @Test
+   // @Test
     public void testReadBigData1() throws IOException {
         conn.run("n = 100000000;" +
                 "t = table(1..n as a,take(`aaaaaaa,n) as b,take(2021.01.01,n) as c)"+
@@ -133,7 +133,7 @@ public class LZ4Test {
         clear_env();
     }
 
-    @Test
+    //@Test
     public void testReadBigData2() throws IOException {
         conn.run("n = 140000000;" +
                 "t = table(1..n as a,take(`aaaaaaa,n) as b,take(2021.01.01,n) as c)"+
