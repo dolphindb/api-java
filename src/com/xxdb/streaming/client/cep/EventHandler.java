@@ -18,57 +18,57 @@ public class EventHandler {
     private int outputColNums;
     private int commonKeySize;
 
-    public EventHandler(List<EventScheme> eventSchemes, List<String> eventTimeKeys, List<String> commonKeys) {
+    public EventHandler(List<EventSchema> eventSchemas, List<String> eventTimeKeys, List<String> commonKeys) {
         this.isNeedEventTime = false;
         this.outputColNums = 0;
         this.commonKeySize = 0;
         this.eventInfos = new HashMap<>();
 
         String funcName = "createEventSender";
-        // check eventSchemes
-        if (Objects.isNull(eventSchemes) || eventSchemes.isEmpty())
+        // check eventSchemas
+        if (Objects.isNull(eventSchemas) || eventSchemas.isEmpty())
             throw new IllegalArgumentException("eventSchema must be non-null and non-empty.");
 
-        List<EventScheme> expandEventSchemes = new ArrayList<>(eventSchemes);
-        for (EventScheme event : expandEventSchemes) {
+        List<EventSchema> expandEventSchemas = new ArrayList<>(eventSchemas);
+        for (EventSchema event : expandEventSchemas) {
             if (Utils.isEmpty(event.getEventType()))
                 throw new IllegalArgumentException("eventType must be non-empty.");
 
-            // check scheme attrKey
+            // check schema fieldNames
             Set<String> set = new HashSet<>();
-            for (String attrKey : event.getAttrKeys()) {
+            for (String attrKey : event.getFieldNames()) {
                 if (Utils.isEmpty(attrKey))
                     throw new IllegalArgumentException("attrKey must be non-null and non-empty.");
 
                 // check if has duplicate key in attrKeys
                 if (!set.add(attrKey))
-                    throw new IllegalArgumentException("EventScheme cannot has duplicated attrKey in attrKeys.");
+                    throw new IllegalArgumentException("EventSchema cannot has duplicated attrKey in attrKeys.");
             }
 
-            // check scheme attrForm
-            for (Entity.DATA_FORM attrForm : event.getAttrForms()) {
+            // check schema fieldForms
+            for (Entity.DATA_FORM attrForm : event.getFieldForms()) {
                 if (Objects.isNull(attrForm))
                     throw new IllegalArgumentException("attrForm must be non-null.");
                 if (attrForm != Entity.DATA_FORM.DF_SCALAR && attrForm != Entity.DATA_FORM.DF_VECTOR)
                     throw new IllegalArgumentException("attrForm only can be DF_SCALAR or DF_VECTOR.");
             }
 
-            int length = event.getAttrKeys().size();
-            if (event.getAttrExtraParams().isEmpty()) {
-                event.setAttrExtraParams(Collections.nCopies(length, 0));
+            int length = event.getFieldNames().size();
+            if (event.getFieldExtraParams().isEmpty()) {
+                event.setFieldExtraParams(Collections.nCopies(length, 0));
             }
             if (length == 0) {
-                throw new IllegalArgumentException("eventKey in eventScheme must be non-empty.");
+                throw new IllegalArgumentException("eventKey in eventSchema must be non-empty.");
             }
-            if ((!event.getAttrExtraParams().isEmpty() && length != event.getAttrExtraParams().size()) || length != event.getAttrForms().size() || length != event.getAttrTypes().size()) {
+            if ((!event.getFieldExtraParams().isEmpty() && length != event.getFieldExtraParams().size()) || length != event.getFieldForms().size() || length != event.getFieldTypes().size()) {
                 throw new IllegalArgumentException("the number of eventKey, eventTypes, eventForms and eventExtraParams (if set) must have the same length.");
             }
 
-            // check if attrExtraParams valid
-            if (Objects.nonNull(event.getAttrExtraParams()) && !event.getAttrExtraParams().isEmpty()) {
-                for (int i = 0; i < event.getAttrTypes().size(); i++) {
-                    Entity.DATA_TYPE attrType = event.getAttrTypes().get(i);
-                    Integer scale = event.getAttrExtraParams().get(i);
+            // check if fieldExtraParams valid
+            if (Objects.nonNull(event.getFieldExtraParams()) && !event.getFieldExtraParams().isEmpty()) {
+                for (int i = 0; i < event.getFieldTypes().size(); i++) {
+                    Entity.DATA_TYPE attrType = event.getFieldTypes().get(i);
+                    Integer scale = event.getFieldExtraParams().get(i);
                     if (attrType == Entity.DATA_TYPE.DT_DECIMAL32 && (scale < 0 || scale > 9))
                         throw new IllegalArgumentException(attrType + " scale " + scale + " is out of bounds, it must be in [0,9].");
                     else if (attrType == Entity.DATA_TYPE.DT_DECIMAL64 && (scale < 0 || scale > 18))
@@ -78,7 +78,7 @@ public class EventHandler {
                 }
             }
         }
-        int eventNum = eventSchemes.size();
+        int eventNum = eventSchemas.size();
 
         // check eventTimeKeys
         List<String> expandTimeKeys = new ArrayList<>();
@@ -88,7 +88,7 @@ public class EventHandler {
                 expandTimeKeys = Collections.nCopies(eventNum, eventTimeKeys.get(0));
             } else {
                 if (eventTimeKeys.size() != eventNum) {
-                    throw new IllegalArgumentException(funcName + "the number of eventTimeKey is inconsistent with the number of events in eventSchemes.");
+                    throw new IllegalArgumentException(funcName + "the number of eventTimeKey is inconsistent with the number of events in eventSchemas.");
                 }
                 expandTimeKeys = new ArrayList<>(eventTimeKeys);
             }
@@ -97,7 +97,7 @@ public class EventHandler {
 
         // prepare eventInfos
         StringBuilder errMsg = new StringBuilder();
-        if (!checkSchema(expandEventSchemes, expandTimeKeys, commonKeys, errMsg))
+        if (!checkSchema(expandEventSchemas, expandTimeKeys, commonKeys, errMsg))
             throw new IllegalArgumentException(errMsg.toString());
 
         this.commonKeySize = commonKeys.size();
@@ -147,53 +147,52 @@ public class EventHandler {
         }
 
         if (attributes.size() != info.getAttributeSerializers().size()) {
-            errMsg.append("the num of attributes is not match with ").append(eventType);
+            errMsg.append("the number of event values does not match ").append(eventType);
             return false;
         }
 
         for (int i = 0; i < attributes.size(); ++i) {
-            if (info.getEventScheme().getScheme().getAttrTypes().get(i) != attributes.get(i).getDataType()) {
+            if (info.getEventSchema().getSchema().getFieldTypes().get(i) != attributes.get(i).getDataType()) {
                 // An exception: when the type in schema is symbol, you can pass a string attribute
-                if (info.getEventScheme().getScheme().getAttrTypes().get(i) == Entity.DATA_TYPE.DT_SYMBOL && attributes.get(i).getDataType() == Entity.DATA_TYPE.DT_STRING)
+                if (info.getEventSchema().getSchema().getFieldTypes().get(i) == Entity.DATA_TYPE.DT_SYMBOL && attributes.get(i).getDataType() == Entity.DATA_TYPE.DT_STRING)
                     continue;
 
-                errMsg.append("the type of ").append(i + 1).append("th attribute of ").append(eventType)
-                        .append(" should be ").append(info.getEventScheme().getScheme().getAttrTypes().get(i).toString())
-                        .append(" but now it is ").append(attributes.get(i).getDataType().toString());
+                errMsg.append("Expected type for the field ").append(info.getEventSchema().getSchema().getFieldNames().get(i)).append(" of ").append(eventType).append(":")
+                        .append(info.getEventSchema().getSchema().getFieldTypes().get(i).toString())
+                        .append(", but now it is ").append(attributes.get(i).getDataType().toString());
                 return false;
             }
 
-            if (info.getEventScheme().getScheme().getAttrForms().get(i) != attributes.get(i).getDataForm()) {
-                errMsg.append("the form of ").append(i + 1).append("th attribute of ").append(eventType)
-                        .append(" should be ").append(info.getEventScheme().getScheme().getAttrForms().get(i).toString())
-                        .append(" but now it is ").append(attributes.get(i).getDataForm().toString());
+            if (info.getEventSchema().getSchema().getFieldForms().get(i) != attributes.get(i).getDataForm()) {
+                errMsg.append("Expected form for the field ").append(info.getEventSchema().getSchema().getFieldNames().get(i)).append(" of ").append(eventType).append(":")
+                        .append(", but now it is ").append(attributes.get(i).getDataForm().toString());
                 return false;
             }
 
-            // check scheme attrExtraParams with decimal attribute.
+            // check schema attrExtraParams with decimal attribute.
             EventInfo eventInfo = this.eventInfos.get(eventType);
-            EventSchemeEx eventScheme = eventInfo.getEventScheme();
-            EventScheme scheme = eventScheme.getScheme();
-            List<Integer> attrExtraParams = scheme.getAttrExtraParams();
+            EventSchemaEx eventSchema = eventInfo.getEventSchema();
+            EventSchema schema = eventSchema.getSchema();
+            List<Integer> attrExtraParams = schema.getFieldExtraParams();
             if (!attrExtraParams.isEmpty()) {
                 Entity attribute = attributes.get(i);
                 if (attribute.isScalar()) {
                     if ((attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL32 && ((BasicDecimal32) attribute).getScale() != attrExtraParams.get(i))
                             || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL64 && ((BasicDecimal64) attribute).getScale() != attrExtraParams.get(i))
                             || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL128 && ((BasicDecimal128) attribute).getScale() != attrExtraParams.get(i)))
-                        throw new IllegalArgumentException("The decimal attribute' scale doesn't match to scheme attrExtraParams scale.");
+                        throw new IllegalArgumentException("The decimal attribute' scale doesn't match to schema attrExtraParams scale.");
                 } else if (attribute.isVector()) {
                     if ((attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL32 && ((BasicDecimal32Vector) attribute).getScale() != attrExtraParams.get(i))
                             || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL64 && ((BasicDecimal64Vector) attribute).getScale() != attrExtraParams.get(i))
                             || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL128 && ((BasicDecimal128Vector) attribute).getScale() != attrExtraParams.get(i)))
-                        throw new IllegalArgumentException("The decimal attribute' scale doesn't match to scheme attrExtraParams scale.");
+                        throw new IllegalArgumentException("The decimal attribute' scale doesn't match to schema attrExtraParams scale.");
                 }
             }
         }
 
         if (isNeedEventTime) {
             try {
-                serializedEvent.add(attributes.get(info.getEventScheme().getTimeIndex()));
+                serializedEvent.add(attributes.get(info.getEventSchema().getTimeIndex()));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -211,7 +210,9 @@ public class EventHandler {
             try {
                 info.getAttributeSerializers().get(i).serialize(attributes.get(i), out);
             } catch (IOException e) {
-                errMsg.append("serialize ").append(i + 1).append("th attributes fail, ret ").append(e.getMessage());
+                // errMsg.append("serialize ").append(i + 1).append("th attributes fail, ret ").append(e.getMessage());
+                errMsg.append("Failed to serialize the field ").append(info.getEventSchema().getSchema().getFieldNames().get(i))
+                        .append(", ").append(e);
                 throw new RuntimeException(e);
             }
         }
@@ -222,7 +223,7 @@ public class EventHandler {
             throw new RuntimeException(e);
         }
 
-        for (int commonIndex : info.getEventScheme().getCommonKeyIndex()) {
+        for (int commonIndex : info.getEventSchema().getCommonKeyIndex()) {
             try {
                 serializedEvent.add(attributes.get(commonIndex));
             } catch (Exception e) {
@@ -253,16 +254,16 @@ public class EventHandler {
             ByteArrayInputStream memoryStream = new ByteArrayInputStream(blobValues);
             ExtendedDataInput input = new LittleEndianDataInputStream(memoryStream);
 
-            EventScheme scheme = eventInfo.getEventScheme().getScheme();
-            int attrCount = scheme.getAttrTypes().size();
+            EventSchema schema = eventInfo.getEventSchema().getSchema();
+            int attrCount = schema.getFieldTypes().size();
             List<Entity> datas = new ArrayList<>(attrCount);
 
             for (int i = 0; i < attrCount; ++i) {
-                Entity.DATA_FORM form = scheme.getAttrForms().get(i);
-                Entity.DATA_TYPE type = scheme.getAttrTypes().get(i);
+                Entity.DATA_FORM form = schema.getFieldForms().get(i);
+                Entity.DATA_TYPE type = schema.getFieldTypes().get(i);
                 int extraParam;
-                if (Objects.nonNull(scheme.getAttrExtraParams().get(i)))
-                    extraParam = scheme.getAttrExtraParams().get(i);
+                if (Objects.nonNull(schema.getFieldExtraParams().get(i)))
+                    extraParam = schema.getFieldExtraParams().get(i);
                 else
                     extraParam = -1;
 
@@ -299,40 +300,40 @@ public class EventHandler {
         return true;
     }
 
-    private boolean checkSchema(List<EventScheme> eventSchemes, List<String> expandTimeKeys, List<String> commonKeys, StringBuilder errMsg) {
+    private boolean checkSchema(List<EventSchema> eventSchemas, List<String> expandTimeKeys, List<String> commonKeys, StringBuilder errMsg) {
         int index = 0;
-        for (EventScheme scheme : eventSchemes) {
-            if (eventInfos.containsKey(scheme.getEventType())) {
-                errMsg.append("eventType must be unique.");
+        for (EventSchema schema : eventSchemas) {
+            if (eventInfos.containsKey(schema.getEventType())) {
+                errMsg.append("EventType must be unique.");
                 return false;
             }
 
-            EventSchemeEx schemeEx = new EventSchemeEx();
-            schemeEx.setScheme(scheme);
+            EventSchemaEx schemaEx = new EventSchemaEx();
+            schemaEx.setSchema(schema);
 
             if (isNeedEventTime) {
-                int timeIndex = scheme.getAttrKeys().indexOf(expandTimeKeys.get(index));
+                int timeIndex = schema.getFieldNames().indexOf(expandTimeKeys.get(index));
                 if (timeIndex == -1) {
-                    errMsg.append("event ").append(scheme.getEventType()).append(" doesn't contain eventTimeKey ").append(expandTimeKeys.get(index)).append(".");
+                    errMsg.append("Event ").append(schema.getEventType()).append(" doesn't contain eventTimeKey ").append(expandTimeKeys.get(index)).append(".");
                     return false;
                 }
-                schemeEx.setTimeIndex(timeIndex);
+                schemaEx.setTimeIndex(timeIndex);
             }
 
             for (String commonKey : commonKeys) {
-                int commonKeyIndex = scheme.getAttrKeys().indexOf(commonKey);
+                int commonKeyIndex = schema.getFieldNames().indexOf(commonKey);
                 if (commonKeyIndex == -1) {
-                    errMsg.append("event ").append(scheme.getEventType()).append(" doesn't contain commonKey ").append(commonKey);
+                    errMsg.append("Event ").append(schema.getEventType()).append(" doesn't contain commonKey ").append(commonKey);
                     return false;
                 }
-                schemeEx.getCommonKeyIndex().add(commonKeyIndex);
+                schemaEx.getCommonKeyIndex().add(commonKeyIndex);
             }
 
             List<AttributeSerializer> serls = new ArrayList<>();
-            int length = scheme.getAttrKeys().size();
+            int length = schema.getFieldNames().size();
             for (int j = 0; j < length; ++j) {
-                Entity.DATA_TYPE type = scheme.getAttrTypes().get(j);
-                Entity.DATA_FORM form = scheme.getAttrForms().get(j);
+                Entity.DATA_TYPE type = schema.getFieldTypes().get(j);
+                Entity.DATA_FORM form = schema.getFieldForms().get(j);
 
                 if (Objects.isNull(type)) {
                     errMsg.append("attrType must be non-null.");
@@ -340,7 +341,7 @@ public class EventHandler {
                 }
 
                 if (type.getValue() < Entity.DATA_TYPE.DT_VOID.getValue() || type.getValue() > Entity.DATA_TYPE.DT_DECIMAL128_ARRAY.getValue()) {
-                    errMsg.append("Invalid data type for the field " + scheme.getAttrKeys().get(j) + " of event " + scheme.getEventType());
+                    errMsg.append("Invalid data type for the field " + schema.getFieldNames().get(j) + " of event " + schema.getEventType());
                     return false;
                 }
 
@@ -379,8 +380,8 @@ public class EventHandler {
                 serls.add(new AttributeSerializer(0, form));
             }
 
-            EventInfo info = new EventInfo(serls, schemeEx);
-            eventInfos.put(scheme.getEventType(), info);
+            EventInfo info = new EventInfo(serls, schemaEx);
+            eventInfos.put(schema.getEventType(), info);
             index++;
         }
         return true;

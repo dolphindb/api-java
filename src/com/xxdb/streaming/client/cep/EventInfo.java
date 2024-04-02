@@ -5,18 +5,18 @@ import java.util.List;
 public class EventInfo {
 
     private List<AttributeSerializer> attributeSerializers;
-    private EventSchemeEx eventScheme;
+    private EventSchemaEx eventSchema;
 
-    public EventInfo(List<AttributeSerializer> attributeSerializers, EventSchemeEx eventScheme) {
+    public EventInfo(List<AttributeSerializer> attributeSerializers, EventSchemaEx eventSchema) {
         this.attributeSerializers = attributeSerializers;
-        this.eventScheme = eventScheme;
+        this.eventSchema = eventSchema;
     }
 
     public List<AttributeSerializer> getAttributeSerializers() {
         return this.attributeSerializers;
     }
 
-    public EventSchemeEx getEventScheme() {
-        return this.eventScheme;
+    public EventSchemaEx getEventSchema() {
+        return this.eventSchema;
     }
 }

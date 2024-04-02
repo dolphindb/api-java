@@ -3,23 +3,23 @@ package com.xxdb.streaming.client.cep;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EventSchemeEx {
+public class EventSchemaEx {
 
-    private EventScheme scheme;
+    private EventSchema schema;
     private int timeIndex;
     private List<Integer> commonKeyIndex;
 
-    public EventSchemeEx() {
-        this.scheme = new EventScheme();
+    public EventSchemaEx() {
+        this.schema = new EventSchema();
         this.commonKeyIndex = new ArrayList<>();
     }
 
-    public EventScheme getScheme() {
-        return this.scheme;
+    public EventSchema getSchema() {
+        return this.schema;
     }
 
-    public void setScheme(EventScheme scheme) {
-        this.scheme = scheme;
+    public void setSchema(EventSchema schema) {
+        this.schema = schema;
     }
 
     public int getTimeIndex() {
