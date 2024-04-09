@@ -869,8 +869,10 @@ public class DBConnection {
     }
 
     public void switchDataNode(Node node) throws IOException{
+        System.out.println("872 switchDataNode.");
         do {
             if (node.hostName != null && node.hostName.length() > 0){
+                System.out.println("flag 875 connectNode.");
                 if (connectNode(node)){
                     log.info("Switch to node: " + node.hostName + ":" + node.port + " successfully.");
                     break;
@@ -883,6 +885,7 @@ public class DBConnection {
             }
             int index = nodeRandom_.nextInt(nodes_.size());
             if (connectNode(nodes_.get(index))){
+                System.out.println("flag 888 connectNode.");
                 log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
                 break;
             }
