@@ -887,6 +887,10 @@ public class DBConnection {
             }
             int index = nodeRandom_.nextInt(nodes_.size());
             System.out.println("flag 889 connectNode." + nodes_.get(index).hostName + nodes_.get(index).port);
+            System.out.println("index: " + index);
+            System.out.println("nodes size: " + nodes_.size());
+            for (Node n : nodes_)
+                System.out.println("temp n: " + n.hostName + n.port);
             if (connectNode(nodes_.get(index))){
                 System.out.println("flag 888 connectNode.");
                 log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
