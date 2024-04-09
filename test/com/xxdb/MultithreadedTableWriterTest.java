@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static com.xxdb.Prepare.checkData;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
@@ -68,14 +69,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("try{undef(`st5,SHARED)}catch(ex){}");
         conn.run("try{undef(`ext1,SHARED)}catch(ex){}");
         conn.close();
-    }
-
-    public static void checkData(BasicTable exception, BasicTable resTable) {
-        assertEquals(exception.rows(), resTable.rows());
-        for (int i = 0; i < exception.columns(); i++) {
-            System.out.println("col" + resTable.getColumnName(i));
-            assertEquals(exception.getColumn(i).getString(), resTable.getColumn(i).getString());
-        }
     }
 
     @After
@@ -188,7 +181,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "", "tt", false, false, null, 10000, 1,
                 5, "date");
         }catch (Exception e) {
-            assertEquals(true,e.getMessage().contains("Server response: 'Syntax Error: [line #1] Cannot recognize the token tt"));
+            assertEquals(true,e.getMessage().contains("Syntax Error: [line #1] Cannot recognize the token tt"));
         }
         conn.run("undef(`t1,SHARED)");
     }

@@ -1,6 +1,7 @@
 package com.xxdb.streaming.client.cep;
 
 import com.xxdb.DBConnection;
+import com.xxdb.Prepare;
 import com.xxdb.data.*;
 import org.junit.After;
 import org.junit.Assert;
@@ -12,9 +13,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
-import static com.xxdb.MultithreadedTableWriterTest.checkData;
-import static com.xxdb.data.Entity.DATA_FORM.DF_SCALAR;
-import static com.xxdb.data.Entity.DATA_FORM.DF_VECTOR;
+import static com.xxdb.Prepare.*;
+import static com.xxdb.data.Entity.DATA_FORM.*;
 import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static com.xxdb.streaming.client.cep.EventSenderTest.*;
 
@@ -28,37 +28,12 @@ public class EventClientTest {
     static EventClient client = null;
     static EventSender sender = null;
 
-    public void clear_env() throws IOException {
-        conn.run("a = getStreamingStat().pubTables\n" +
-                "for(i in a){\n" +
-                "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
-                "}");
-        conn.run("def getAllShare(){\n" +
-                "\treturn select name from objs(true) where shared=1\n" +
-                "\t}\n" +
-                "\n" +
-                "def clearShare(){\n" +
-                "\tlogin(`admin,`123456)\n" +
-                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
-                "\tfor(i in allShare){\n" +
-                "\t\ttry{\n" +
-                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
-                "\t\t\t}catch(ex1){}\n" +
-                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
-                "\t}\n" +
-                "\ttry{\n" +
-                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
-                "\t}catch(ex1){}\n" +
-                "}\n" +
-                "clearShare()");
-        conn.run("try{dropStreamEngine(\"serInput\");\n}catch(ex){\n}\n");
-    }
 
     @Before
     public void setUp() throws IOException {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        clear_env();
+        Prepare.clear_env();
     }
 
     @After
@@ -66,47 +41,6 @@ public class EventClientTest {
         conn.close();
     }
 
-    public static void Preparedata(long count) throws IOException {
-        String script = "login(`admin, `123456); \n" +
-                "n="+count+";\n" +
-                "boolv = bool(rand([true, false, NULL], n));\n" +
-                "charv = char(rand(rand(-100..100, 1000) join take(char(), 4), n));\n" +
-                "shortv = short(rand(rand(-100..100, 1000) join take(short(), 4), n));\n" +
-                "intv = int(rand(rand(-100..100, 1000) join take(int(), 4), n));\n" +
-                "longv = long(rand(rand(-100..100, 1000) join take(long(), 4), n));\n" +
-                "doublev = double(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n));\n" +
-                "floatv = float(rand(rand(-100..100, 1000)*0.23 join take(float(), 4), n));\n" +
-                "datev = date(rand(rand(-100..100, 1000) join take(date(), 4), n));\n" +
-                "monthv = month(rand(1967.12M+rand(-100..100, 1000) join take(month(), 4), n));\n" +
-                "timev = time(rand(rand(0..100, 1000) join take(time(), 4), n));\n" +
-                "minutev = minute(rand(12:13m+rand(-100..100, 1000) join take(minute(), 4), n));\n" +
-                "secondv = second(rand(12:13:12+rand(-100..100, 1000) join take(second(), 4), n));\n" +
-                "datetimev = datetime(rand(1969.12.23+rand(-100..100, 1000) join take(datetime(), 4), n));\n" +
-                "timestampv = timestamp(rand(1970.01.01T00:00:00.023+rand(-100..100, 1000) join take(timestamp(), 4), n));\n" +
-                "nanotimev = nanotime(rand(12:23:45.452623154+rand(-100..100, 1000) join take(nanotime(), 4), n));\n" +
-                "nanotimestampv = nanotimestamp(rand(rand(-100..100, 1000) join take(nanotimestamp(), 4), n));\n" +
-                "symbolv = rand((\"syms\"+string(rand(100, 1000))) join take(string(), 4), n);\n" +
-                "stringv = rand((\"stringv\"+string(rand(100, 1000))) join take(string(), 4), n);\n" +
-                "uuidv = rand(rand(uuid(), 1000) join take(uuid(), 4), n);\n" +
-                "datehourv = datehour(rand(datehour(1969.12.31T12:45:12)+rand(-100..100, 1000) join take(datehour(), 4), n));\n" +
-                "ippaddrv = rand(rand(ipaddr(), 1000) join take(ipaddr(), 4), n);\n" +
-                "int128v = rand(rand(int128(), 1000) join take(int128(), 4), n);\n" +
-                "blobv = blob(string(rand((\"blob\"+string(rand(100, 1000))) join take(\"\", 4), n)));\n" +
-                "complexv = rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n);\n" +
-                "pointv = rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n);\n" +
-                "decimal32v = decimal32(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 3);\n" +
-                "decimal64v = decimal64(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 8);\n" +
-                "decimal128v = decimal128(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 10);\n" +
-                "share table(boolv, charv, shortv, intv, longv, doublev, floatv,  datev, monthv, timev, minutev, secondv, datetimev, timestampv, nanotimev, nanotimestampv,  stringv, datehourv, uuidv, ippaddrv, int128v, blobv, pointv, complexv, decimal32v, decimal64v,decimal128v) as data;\n";
-        conn.run(script);
-    }
-
-    public static void PrepareUser(String userName,String password) throws IOException {
-        DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT,"admin","123456");
-        conn.run("def create_user(){try{deleteUser(`"+userName+")}catch(ex){};createUser(`"+userName+", '"+password+"');};"+
-                "rpc(getControllerAlias(),create_user);" );
-    }
     public static  EventMessageHandler handler = new EventMessageHandler() {
         @Override
         public void doEvent(String eventType, List<Entity> attribute) {
@@ -1485,9 +1419,9 @@ public class EventClientTest {
                 "share table(1:0,colNames,colTypes) as outputTable;\n" ;
         conn.run(script);
         String script1 ="class event_all_array_dateType{\n" +
-                "\tdecimal32v :: DECIMAL32(3)  VECTOR\n" +
-                "\tdecimal64v :: DECIMAL64(8) VECTOR\n" +
-                "\tdecimal128v :: DECIMAL128(10) VECTOR \n" +
+                "\tdecimal32v :: DECIMAL32(2)  VECTOR\n" +
+                "\tdecimal64v :: DECIMAL64(7) VECTOR\n" +
+                "\tdecimal128v :: DECIMAL128(19) VECTOR \n" +
                 "  def event_all_array_dateType(decimal32, decimal64, decimal128){\n" +
                 "\tdecimal32v = decimal32\n" +
                 "\tdecimal64v = decimal64\n" +

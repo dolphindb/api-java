@@ -17,8 +17,12 @@
  */
 package com.xxdb.streaming.reverse;
 
+import com.xxdb.BasicDBTask;
 import com.xxdb.DBConnection;
+import com.xxdb.DBTask;
+import com.xxdb.ExclusiveDBConnectionPool;
 import com.xxdb.data.*;
+import com.xxdb.data.Vector;
 import com.xxdb.streaming.client.*;
 import org.javatuples.Pair;
 import org.junit.*;
@@ -1815,4 +1819,70 @@ public class PollingClientReverseTest {
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
+//    @Test
+//    public void test_subscribe_msgAsTable_true() throws IOException {
+//        //public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer
+//        //deserializer, String userName, String passWord, boolean msgAsTable) throws IOException {
+//
+//        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",0,true,null,null,"","",true);
+//        ArrayList<IMessage> msg1;
+//        List<String> colNames =  Arrays.asList("tag","ts","data");
+//        List<Vector> colData = Arrays.asList(new BasicIntVector(0),new BasicTimestampVector(0),new BasicDoubleVector(0));
+//        BasicTable bt = new BasicTable(colNames,colData);
+//        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+//                "Trades1.append!(t)");
+//        msg1 = poller1.poll(1000, 10000);
+//        System.out.println(bt.rows());
+//        assertEquals(5000, msg1.size());
+//        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+//    }
+//    @Test
+//    public void test_subscribe_msgAsTable_false() throws IOException {
+//        //public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer
+//        //deserializer, String userName, String passWord, boolean msgAsTable) throws IOException {
+//
+//        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",0,true,null,null,"","",false);
+//        ArrayList<IMessage> msg1;
+//        List<String> colNames =  Arrays.asList("tag","ts","data");
+//        List<Vector> colData = Arrays.asList(new BasicIntVector(0),new BasicTimestampVector(0),new BasicDoubleVector(0));
+//        BasicTable bt = new BasicTable(colNames,colData);
+//        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+//                "Trades1.append!(t)");
+//        msg1 = poller1.poll(1000, 10000);
+//        System.out.println(bt.rows());
+//        assertEquals(5000, msg1.size());
+//        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+//    }
+//    @Test
+//    public void test_subscribe_msgAsTable_true_allDataType() throws IOException {
+//
+//    }
+//
+//    @Test
+//    public void test_11() throws IOException {
+//        List<DBTask> tasks = new ArrayList<>();
+//        long startTime = System.currentTimeMillis();
+//        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT, "admin", "123456", 20, false, true);
+//        while (true) {
+//            try {
+//                // 创建任务
+//                BasicDBTask task = new BasicDBTask("1..10");
+//                // 执行任务
+//                pool.execute(task);
+//                BasicIntVector data = null;
+//                if (task.isSuccessful()) {
+//                    data = (BasicIntVector)task.getResult();
+//                } else {
+//                    throw new Exception(task.getErrorMsg());
+//                }
+//                System.out.print(data.getString()+"\n");
+//
+//                // 等待1秒
+//                Thread.sleep(1000);
+//            } catch (Exception e) {
+//                // 捕获异常并打印错误信息
+//                System.err.println("Error executing task: " + e.getMessage());
+//            }
+//        }
+//    }
 }

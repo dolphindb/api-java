@@ -314,6 +314,7 @@ public class ThreadPooledClientTest {
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades");
         assertEquals(2000, re.rows());
+        System.out.println(re.getString());
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
