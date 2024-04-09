@@ -900,6 +900,7 @@ public class DBConnection {
             }
         }while (!closed_);
         if (initialScript_!=null && initialScript_.length() > 0){
+            System.out.println("903 run.");
             run(initialScript_);
         }
     }
