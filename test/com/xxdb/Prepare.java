@@ -1,9 +1,6 @@
 package com.xxdb;
 
 import com.xxdb.data.BasicTable;
-import com.xxdb.streaming.client.cep.EventClient;
-import com.xxdb.streaming.client.cep.EventSender;
-
 import java.io.IOException;
 import java.util.ResourceBundle;
 

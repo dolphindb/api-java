@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.xxdb.Prepare.clear_env;
 import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static com.xxdb.data.Entity.DATA_TYPE.DT_DOUBLE;
 import static com.xxdb.streaming.reverse.ThreadedClientsubscribeReverseTest.*;
@@ -26,30 +27,7 @@ public class ThreadPooledClientReverseTest {
     //static int PORT = 9002;
 
     private static ThreadPooledClient client;
-    public void clear_env() throws IOException {
-        conn.run("a = getStreamingStat().pubTables\n" +
-                "for(i in a){\n" +
-                "\tstopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)\n" +
-                "}");
-        conn.run("def getAllShare(){\n" +
-                "\treturn select name from objs(true) where shared=1\n" +
-                "\t}\n" +
-                "\n" +
-                "def clearShare(){\n" +
-                "\tlogin(`admin,`123456)\n" +
-                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
-                "\tfor(i in allShare){\n" +
-                "\t\ttry{\n" +
-                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
-                "\t\t\t}catch(ex1){}\n" +
-                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
-                "\t}\n" +
-                "\ttry{\n" +
-                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
-                "\t}catch(ex1){}\n" +
-                "}\n" +
-                "clearShare()");
-    }
+
     @BeforeClass
     public static void setUp() throws IOException {
 

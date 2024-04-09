@@ -33,7 +33,7 @@ public class EventClientTest {
     public void setUp() throws IOException {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        Prepare.clear_env();
+        clear_env();
     }
 
     @After
