@@ -749,6 +749,7 @@ public class DBConnection {
                 while (!closed_) {
                     while (!conn_.isConnected() && !closed_) {
                         for (Node one : nodes_) {
+                            System.out.println("flag 752 connectNode." + one.hostName + one.port);
                             if (connectNode(one)) {
                                 connectedNode = one;
                                 break;
@@ -840,6 +841,7 @@ public class DBConnection {
                     nodes_.add(new Node(hostName, port));
                     switchDataNode(new Node(hostName, port));
                 } else {
+                    System.out.println("flag 844 connectNode.");
                     if (!connectNode(new Node(hostName, port)))
                         return false;
                 }
@@ -872,7 +874,7 @@ public class DBConnection {
         System.out.println("872 switchDataNode.");
         do {
             if (node.hostName != null && node.hostName.length() > 0){
-                System.out.println("flag 875 connectNode.");
+                System.out.println("flag 877 connectNode.");
                 if (connectNode(node)){
                     log.info("Switch to node: " + node.hostName + ":" + node.port + " successfully.");
                     break;
@@ -884,6 +886,7 @@ public class DBConnection {
                 throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed.");
             }
             int index = nodeRandom_.nextInt(nodes_.size());
+            System.out.println("flag 889 connectNode." + nodes_.get(index).hostName + nodes_.get(index).port);
             if (connectNode(nodes_.get(index))){
                 System.out.println("flag 888 connectNode.");
                 log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
