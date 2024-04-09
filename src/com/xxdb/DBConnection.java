@@ -964,6 +964,7 @@ public class DBConnection {
             node.port = 0;
             return ExceptionType.ET_NOINITIALIZED;
         }else {
+            System.out.println("flag last else.");
             node.hostName = "";
             node.port = 0;
             return ExceptionType.ET_UNKNOW;
@@ -1177,18 +1178,22 @@ public class DBConnection {
                     try {
                         return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false, currentSeqNo);
                     } catch (IOException e) {
+                        System.out.println("run e: " + e.getMessage());
                         if (currentSeqNo > 0)
                             currentSeqNo = -currentSeqNo;
                         Node node = new Node();
                         if (connected()){
+                            System.out.println("flag2: no connected.");
                             ExceptionType type = parseException(e.getMessage(), node);
                             if (type == ExceptionType.ET_IGNORE)
                                 return new Void();
                             else if (type == ExceptionType.ET_UNKNOW)
                                 throw e;
                         }else {
+                            System.out.println("flag2: no connected. parseException");
                             parseException(e.getMessage(), node);
                         }
+                        System.out.println("1195 start to switchDataNode.");
                         switchDataNode(node);
                     }
                 }
