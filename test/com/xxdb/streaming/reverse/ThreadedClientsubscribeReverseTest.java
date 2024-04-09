@@ -10,6 +10,7 @@ import org.junit.*;
 import java.io.IOException;
 import java.util.*;
 
+import static com.xxdb.Prepare.PrepareUser;
 import static com.xxdb.Prepare.clear_env;
 import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static org.junit.Assert.*;
@@ -967,8 +968,7 @@ public class ThreadedClientsubscribeReverseTest {
         String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
-                "rpc(getControllerAlias(),create_user);" );
+        PrepareUser("test1","123456");
         Vector filter1 = (Vector) conn.run("1..100000");
         client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,false,filter1,true,100,5,"test1","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -987,9 +987,8 @@ public class ThreadedClientsubscribeReverseTest {
         String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
-                "rpc(getControllerAlias(),create_user);" +
-                "colNames =`id`timestamp`sym`qty`price;" +
+        PrepareUser("test1","123456");
+        conn.run("colNames =`id`timestamp`sym`qty`price;" +
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
                 "rpc(getControllerAlias(),grant{`test1,TABLE_READ,getNodeAlias()+\":Trades\"});");
@@ -1011,9 +1010,8 @@ public class ThreadedClientsubscribeReverseTest {
         String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
-                "rpc(getControllerAlias(),create_user);" +
-                "colNames =`id`timestamp`sym`qty`price;" +
+        PrepareUser("test1","123456");
+        conn.run("colNames =`id`timestamp`sym`qty`price;" +
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
                 "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades\"});");
@@ -1036,9 +1034,10 @@ public class ThreadedClientsubscribeReverseTest {
         String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};try{deleteUser(`test2)}catch(ex){};try{deleteUser(`test3)}catch(ex){};createUser(`test1, '123456');createUser(`test2, '123456');createUser(`test3, '123456');};"+
-                "rpc(getControllerAlias(),create_user);" +
-                "colNames =`id`timestamp`sym`qty`price;" +
+        PrepareUser("test1","123456");
+        PrepareUser("test2","123456");
+        PrepareUser("test3","123456");
+        conn.run("colNames =`id`timestamp`sym`qty`price;" +
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
                 "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades\"});"+
@@ -1071,9 +1070,8 @@ public class ThreadedClientsubscribeReverseTest {
         String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
-                "rpc(getControllerAlias(),create_user);" +
-                "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
+        PrepareUser("test1","123456");
+        conn.run("share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st2;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st3;");
         client.subscribe(HOST,PORT,"tmp_st1","subTread1",MessageHandler_handler,-1,true,null,true,100,5,"test1","123456");

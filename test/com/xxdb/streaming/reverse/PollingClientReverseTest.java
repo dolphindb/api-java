@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import static com.xxdb.Prepare.PrepareUser;
 import static com.xxdb.Prepare.clear_env;
 import static com.xxdb.streaming.reverse.ThreadedClientsubscribeReverseTest.PrepareStreamTableDecimal_StreamDeserializer;
 import static com.xxdb.streaming.reverse.ThreadedClientsubscribeReverseTest.PrepareStreamTable_StreamDeserializer;
@@ -372,8 +373,7 @@ public class PollingClientReverseTest {
     }
     @Test(timeout = 120000)
     public void test_subscribe_other_user() throws IOException, InterruptedException {
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
-                "rpc(getControllerAlias(),create_user);");
+        PrepareUser("test1","123456");
         TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",-1,true,null,"test1","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
         Thread.sleep(5000);
@@ -384,9 +384,8 @@ public class PollingClientReverseTest {
 
     @Test(timeout = 120000)
     public void test_subscribe_other_user_unallow() throws IOException, InterruptedException {
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
-                "rpc(getControllerAlias(),create_user);" +
-                "colNames =`id`timestamp`sym`qty`price;" +
+        PrepareUser("test1","123456");
+        conn.run("colNames =`id`timestamp`sym`qty`price;" +
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
                 "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades1\"});");
@@ -400,9 +399,10 @@ public class PollingClientReverseTest {
 
     @Test(timeout = 120000)
     public void test_subscribe_other_some_user() throws IOException, InterruptedException {
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};try{deleteUser(`test2)}catch(ex){};try{deleteUser(`test3)}catch(ex){};createUser(`test1, '123456');createUser(`test2, '123456');createUser(`test3, '123456');};"+
-                "rpc(getControllerAlias(),create_user);" +
-                "colNames =`id`timestamp`sym`qty`price;" +
+        PrepareUser("test1","123456");
+        PrepareUser("test2","123456");
+        PrepareUser("test3","123456");
+        conn.run("colNames =`id`timestamp`sym`qty`price;" +
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
                 "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades1\"});"+
@@ -429,9 +429,8 @@ public class PollingClientReverseTest {
 
     @Test(timeout = 120000)
     public void test_subscribe_one_user_some_table() throws IOException, InterruptedException {
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
-                "rpc(getControllerAlias(),create_user);" +
-                "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
+        PrepareUser("test1","123456");
+        conn.run("share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st2;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st3;");
         TopicPoller poller1 = client.subscribe(HOST,PORT,"tmp_st1","subTread1",-1,true,null,"test1","123456");
