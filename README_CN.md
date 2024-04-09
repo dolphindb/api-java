@@ -1,5 +1,7 @@
 # JAVA API 使用说明
 
+> 注意：该 Readme 不再进行维护。用户可移步至 DolphinDB 官方文档中心 [Java API 手册](https://docs.dolphindb.cn/zh/api/java/java.html)。 
+
 本教程主要介绍以下内容：
 - [JAVA API 使用说明](#java-api-使用说明)
   - [1. Java API 概述](#1-java-api-概述)
