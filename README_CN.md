@@ -73,7 +73,7 @@ DBConnection 构造方法新增参数 *sqlStd*，是一个枚举类型，用于�
 DBConnection conn = new DBConnection(false, false, false, false, false, true, SqlStdEnum.DolphinDB);
 ```
 
-Java API 的实际用例参见[example目录](./example)。
+<!--Java API 的实际用例参见[example目录](./example)。-->
 
 ## 2. 建立DolphinDB连接
 

@@ -71,7 +71,7 @@ DBConnection conn = new DBConnection(false, false, false, false, false, true, Sq
 
 Note: If the current session is no longer in use, Java API will automatically close the connection after a while. You can close the session by calling `close()` to release the connection. Otherwise, other sessions may be unable to connect to the server due to too many connections.
 
-For a detailed example, you can refer to the [example directory](./example).
+<!-- For a detailed example, you can refer to the [example directory](./example). -->
 
 ## 2. Establish DolphinDB Connection
 
