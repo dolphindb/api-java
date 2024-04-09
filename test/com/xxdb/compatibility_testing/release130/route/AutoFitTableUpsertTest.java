@@ -1,4 +1,4 @@
-package com.xxdb.compatibility_testing.release130;
+package com.xxdb.compatibility_testing.release130.route;
 
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
