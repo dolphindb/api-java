@@ -874,7 +874,7 @@ public class DBConnection {
         System.out.println("872 switchDataNode.");
         do {
             if (node.hostName != null && node.hostName.length() > 0){
-                System.out.println("flag 877 connectNode.");
+                System.out.println("flag 877 connectNode." + node.hostName + node.port);
                 if (connectNode(node)){
                     log.info("Switch to node: " + node.hostName + ":" + node.port + " successfully.");
                     break;
