@@ -749,7 +749,6 @@ public class DBConnection {
                 while (!closed_) {
                     while (!conn_.isConnected() && !closed_) {
                         for (Node one : nodes_) {
-                            System.out.println("flag 752 connectNode." + one.hostName + one.port);
                             if (connectNode(one)) {
                                 connectedNode = one;
                                 break;
@@ -841,7 +840,6 @@ public class DBConnection {
                     nodes_.add(new Node(hostName, port));
                     switchDataNode(new Node(hostName, port));
                 } else {
-                    System.out.println("flag 844 connectNode.");
                     if (!connectNode(new Node(hostName, port)))
                         return false;
                 }
@@ -871,10 +869,8 @@ public class DBConnection {
     }
 
     public void switchDataNode(Node node) throws IOException{
-        System.out.println("872 switchDataNode.");
         do {
             if (node.hostName != null && node.hostName.length() > 0){
-                System.out.println("flag 877 connectNode." + node.hostName + node.port);
                 if (connectNode(node)){
                     log.info("Switch to node: " + node.hostName + ":" + node.port + " successfully.");
                     break;
@@ -886,13 +882,7 @@ public class DBConnection {
                 throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed.");
             }
             int index = nodeRandom_.nextInt(nodes_.size());
-            System.out.println("flag 889 connectNode." + nodes_.get(index).hostName + nodes_.get(index).port);
-            System.out.println("index: " + index);
-            System.out.println("nodes size: " + nodes_.size());
-            for (Node n : nodes_)
-                System.out.println("temp n: " + n.hostName + n.port);
             if (connectNode(nodes_.get(index))){
-                System.out.println("flag 888 connectNode.");
                 log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
                 break;
             }
@@ -904,7 +894,6 @@ public class DBConnection {
             }
         }while (!closed_);
         if (initialScript_!=null && initialScript_.length() > 0){
-            System.out.println("903 run.");
             run(initialScript_);
         }
     }
@@ -975,7 +964,6 @@ public class DBConnection {
             node.port = 0;
             return ExceptionType.ET_NOINITIALIZED;
         }else {
-            System.out.println("flag last else.");
             node.hostName = "";
             node.port = 0;
             return ExceptionType.ET_UNKNOW;
@@ -1189,22 +1177,18 @@ public class DBConnection {
                     try {
                         return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false, currentSeqNo);
                     } catch (IOException e) {
-                        System.out.println("run e: " + e.getMessage());
                         if (currentSeqNo > 0)
                             currentSeqNo = -currentSeqNo;
                         Node node = new Node();
                         if (connected()){
-                            System.out.println("flag2: no connected.");
                             ExceptionType type = parseException(e.getMessage(), node);
                             if (type == ExceptionType.ET_IGNORE)
                                 return new Void();
                             else if (type == ExceptionType.ET_UNKNOW)
                                 throw e;
                         }else {
-                            System.out.println("flag2: no connected. parseException");
                             parseException(e.getMessage(), node);
                         }
-                        System.out.println("1195 start to switchDataNode.");
                         switchDataNode(node);
                     }
                 }
