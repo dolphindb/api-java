@@ -457,12 +457,35 @@ public abstract class AbstractClient implements MessageDispatcher {
         else
             dbConn = DBConnection.internalCreateEnableReverseStreamingDBConnection(false, false, false, false, false, SqlStdEnum.DolphinDB);
 
-        if (!userName.equals(""))
-            dbConn.connect(host, port, userName, passWord);
-        else
-            dbConn.connect(host, port);
-        // set current site index
-        currentSiteIndexMap.put(topic, 0);
+        // prepare backupSites
+        Site[] parsedBackupSites = new Site[backupSites.size() + 1];
+        for (int i = 0; i < parsedBackupSites.length; i++) {
+            if (i == 0) {
+                parsedBackupSites[i] = new Site(host, port, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable);
+            } else {
+                String ipport = backupSites.get(i - 1);
+                String[] parseIpPort = parseIpPort(ipport);
+                String backupIP = parseIpPort[0];
+                int backupPort = Integer.parseInt(parseIpPort[1]);
+                parsedBackupSites[i] = new Site(backupIP, backupPort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable);
+            }
+        }
+
+        boolean isConnected = false;
+        for (int i = 0; i < parsedBackupSites.length && !isConnected; i++) {
+            try {
+                Site site = parsedBackupSites[i];
+                subscribeInternalConnect(dbConn, site.host, site.port, site.userName, site.passWord);
+                // set current site index
+                currentSiteIndexMap.put(topic, i);
+                isConnected = true;
+            } catch (IOException e) {
+                log.error("Connect to site " + i + " failed: " + e.getMessage());
+            }
+        }
+
+        if (!isConnected)
+            throw new IOException("All sites try connect failed.");
 
         if (deserializer!=null&&!deserializer.isInited())
             deserializer.init(dbConn);
@@ -479,22 +502,14 @@ public abstract class AbstractClient implements MessageDispatcher {
             hostEndian.put(host, dbConn.getRemoteLittleEndian());
         }
 
-        if (Objects.nonNull(backupSites) && !backupSites.isEmpty()) {
+        if (!backupSites.isEmpty()) {
             // prepare backupSites
-            Site[] sites = new Site[backupSites.size() + 1];
-            for (int i = 0; i < sites.length; i++) {
-                String ipport = backupSites.get(i);
-                String[] parseIpPort = parseIpPort(ipport);
-                String backupIP = parseIpPort[0];
-                int backupPort = Integer.parseInt(parseIpPort[1]);
-                if (i == 0) {
-                    sites[i] = new Site(host, port, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable);
-                } else {
-                    sites[i] = new Site(backupIP, backupPort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable);
-                }
+            for (int i = 0; i < parsedBackupSites.length; i++) {
+                String backupIP = parsedBackupSites[i].host;
+                int backupPort = parsedBackupSites[i].port;
 
                 if (!reconnect){
-                    sites[i].closed = true;
+                    parsedBackupSites[i].closed = true;
                 }
                 synchronized (tableNameToTrueTopic) {
                     tableNameToTrueTopic.put(backupIP + ":" + backupPort + "/" + tableName + "/" + actionName, topic);
@@ -510,7 +525,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                 subInfos_.put(topic, deserializer);
             }
             synchronized (trueTopicToSites) {
-                trueTopicToSites.put(topic, sites);
+                trueTopicToSites.put(topic, parsedBackupSites);
             }
         } else {
             // origin logic：HASites
@@ -731,5 +746,12 @@ public abstract class AbstractClient implements MessageDispatcher {
             throw new RuntimeException("The format of backupSite " + ipport + " is incorrect, port should be a positive integer less or equal to 65535");
 
         return res;
+    }
+
+    private static void subscribeInternalConnect(DBConnection dbConn, String host, int port, String userName, String passWord) throws IOException {
+        if (!userName.equals(""))
+            dbConn.connect(host, port, userName, passWord);
+        else
+            dbConn.connect(host, port);
     }
 }
