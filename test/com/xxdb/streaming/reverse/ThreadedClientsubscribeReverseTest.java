@@ -21,6 +21,9 @@ public class ThreadedClientsubscribeReverseTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
+    static String controller_host = bundle.getString("CONTROLLER_HOST");
+    static int controller_port = Integer.parseInt(bundle.getString("CONTROLLER_PORT"));
     //static int PORT = 9002;
     private static ThreadedClient client;
 
@@ -1309,7 +1312,7 @@ public class ThreadedClientsubscribeReverseTest {
         public void run() {
             try {
                 while (true) {
-                    conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
+                    conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
                     Thread.sleep(100);
                 }
             } catch (Exception e) {
@@ -2757,6 +2760,7 @@ public class ThreadedClientsubscribeReverseTest {
         public void doEvent(IMessage msg) {
             try {
                 BasicMessage message = deserializer_.parse(msg);
+                System.out.println( message.getEntity(0).getString());
                 String timestampv = message.getEntity(0).getString();
                 String dataType = message.getEntity(1).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
                 String script = null;
@@ -3235,6 +3239,44 @@ public class ThreadedClientsubscribeReverseTest {
     }
 
     @Test(timeout = 120000)
+    public void test_ThreadClient_subscribe_backupSites_batchSize_less_than_1()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("BOOL");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+
+        List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
+        String re = null;
+        try{
+            client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0,false, null,null,false,0,0,"admin","123456",backupSites);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("BatchSize must be greater than zero", re);
+    }
+
+    @Test(timeout = 120000)
+    public void test_ThreadClient_subscribe_backupSites_throttle_less_than_zero()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("BOOL");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+
+        List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
+        String re = null;
+        try{
+            client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0,false, null,null,false,1,-9,"admin","123456",backupSites);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("Throttle must be greater than or equal to zero", re);
+    }
+
+    @Test(timeout = 120000)
     public void test_ThreadClient_subscribe_backupSites_port_not_true()throws IOException, InterruptedException {
         PrepareStreamTable_StreamDeserializer("BOOL");
         Map<String, Pair<String, String>> tables = new HashMap<>();
@@ -3243,14 +3285,14 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         //subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
-        List<String> backupSites = new ArrayList<>(Collections.singleton("192.168.0.69:18921"));
-        client.subscribe("192.168.0.69", 11111, "outTables", "mutiSchema", handler, 0,false, null,streamFilter,false,1000,0,"admin","123456",backupSites);
+        List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
+        client.subscribe(HOST, 11111, "outTables", "mutiSchema", handler, 0,false, null,streamFilter,false,1000,0,"admin","123456",backupSites);
         Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
-    public void test_ThreadClient_subscribe_backupSites()throws IOException, InterruptedException {
+    public void test_ThreadClient_subscribe_backupSites_StreamDeserializer()throws IOException, InterruptedException {
         PrepareStreamTable_StreamDeserializer("BOOL");
         Map<String, Pair<String, String>> tables = new HashMap<>();
         tables.put("msg1", new Pair<>("", "pub_t1"));
@@ -3258,12 +3300,89 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         //subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
-        List<String> backupSites = new ArrayList<>(Collections.singleton("192.168.0.69:18921"));
-        client.subscribe("192.168.0.69", 18921, "outTables", "mutiSchema", handler, 0,false, null,null,false,1000,0,"admin","123456",backupSites);
+
+        List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
+        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0,false, null,null,false,1,0,"admin","123456",backupSites);
         Thread.sleep(30000);
-        //checkResult1();
+        checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
+    @Test(timeout = 180000)
+    public void test_ThreadClient_subscribe_backupSites() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        Vector filter1 = (Vector) conn.run("1..100000");
+        //subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
+        List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
+        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,100, (int) 4.5,"admin","123456",backupSites);
+        System.out.println("Successful subscribe");
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
+        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        System.out.println(row_num);
+        assertEquals(1000,row_num);
+        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+    }
 
+    @Test(timeout = 180000)
+    public void test_ThreadClient_subscribe_backupSites_server_disconnect() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,port_list[0],"admin","123456");
+        conn1.run(script1);
+        conn1.run(script2);
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host,controller_port,"admin","123456");
+
+        Vector filter1 = (Vector) conn.run("1..100000");
+        //subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
+        List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
+        client.subscribe(HOST,port_list[0],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,1000, 1,"admin","123456",backupSites);
+        System.out.println("Successful subscribe");
+        conn.run("n=100000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn1.run("n=100000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+
+        controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[0]+"')}catch(ex){}");
+        Thread.sleep(5000);
+        controller_conn.run("try{startDataNode('"+HOST+":"+port_list[0]+"')}catch(ex){}");
+        Thread.sleep(5000);
+        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        System.out.println(row_num);
+        assertEquals(100000,row_num);
+        client.unsubscribe(HOST,port_list[0],"Trades","subTread1");
+    }
+
+    @Test(timeout = 180000)
+    public void test_ThreadClient_subscribe_backupSites_unsubscribe() throws IOException, InterruptedException {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        Vector filter1 = (Vector) conn.run("1..100000");
+        //subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
+        List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
+        client.subscribe(HOST,11111,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,100, (int) 4.5,"admin","123456",backupSites);
+        System.out.println("Successful subscribe");
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
+        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        System.out.println(row_num);
+        assertEquals(1000,row_num);
+        client.unsubscribe(HOST,11111,"Trades","subTread1");
+    }
 }
