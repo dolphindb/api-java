@@ -1,6 +1,9 @@
 package com.xxdb.streaming.reverse;
 
+import com.xxdb.BasicDBTask;
 import com.xxdb.DBConnection;
+import com.xxdb.DBTask;
+import com.xxdb.ExclusiveDBConnectionPool;
 import com.xxdb.data.Vector;
 import com.xxdb.data.*;
 import com.xxdb.streaming.client.*;
@@ -3230,4 +3233,37 @@ public class ThreadedClientsubscribeReverseTest {
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
+
+    @Test(timeout = 120000)
+    public void test_ThreadClient_subscribe_backupSites_port_not_true()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("BOOL");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        //subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
+        List<String> backupSites = new ArrayList<>(Collections.singleton("192.168.0.69:18921"));
+        client.subscribe("192.168.0.69", 11111, "outTables", "mutiSchema", handler, 0,false, null,streamFilter,false,1000,0,"admin","123456",backupSites);
+        Thread.sleep(30000);
+        checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+    @Test(timeout = 120000)
+    public void test_ThreadClient_subscribe_backupSites()throws IOException, InterruptedException {
+        PrepareStreamTable_StreamDeserializer("BOOL");
+        Map<String, Pair<String, String>> tables = new HashMap<>();
+        tables.put("msg1", new Pair<>("", "pub_t1"));
+        tables.put("msg2", new Pair<>("", "pub_t2"));
+        StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
+        Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
+        //subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
+        List<String> backupSites = new ArrayList<>(Collections.singleton("192.168.0.69:18921"));
+        client.subscribe("192.168.0.69", 18921, "outTables", "mutiSchema", handler, 0,false, null,null,false,1000,0,"admin","123456",backupSites);
+        Thread.sleep(30000);
+        //checkResult1();
+        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+    }
+
+
 }
