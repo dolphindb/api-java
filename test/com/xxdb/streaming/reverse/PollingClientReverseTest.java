@@ -1791,31 +1791,4 @@ public class PollingClientReverseTest {
 //
 //    }
 //
-//    @Test
-//    public void test_11() throws IOException {
-//        List<DBTask> tasks = new ArrayList<>();
-//        long startTime = System.currentTimeMillis();
-//        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT, "admin", "123456", 20, false, true);
-//        while (true) {
-//            try {
-//                // 创建任务
-//                BasicDBTask task = new BasicDBTask("1..10");
-//                // 执行任务
-//                pool.execute(task);
-//                BasicIntVector data = null;
-//                if (task.isSuccessful()) {
-//                    data = (BasicIntVector)task.getResult();
-//                } else {
-//                    throw new Exception(task.getErrorMsg());
-//                }
-//                System.out.print(data.getString()+"\n");
-//
-//                // 等待1秒
-//                Thread.sleep(1000);
-//            } catch (Exception e) {
-//                // 捕获异常并打印错误信息
-//                System.err.println("Error executing task: " + e.getMessage());
-//            }
-//        }
-//    }
 }
