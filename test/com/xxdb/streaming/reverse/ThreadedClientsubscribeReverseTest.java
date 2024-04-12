@@ -558,7 +558,7 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
-        assertEquals(true,row_num.getInt()<=row_num2.getInt());
+        assertEquals(true,row_num.getInt()<=row_num2.getInt() && 0<=row_num.getInt());
         write_data.interrupt();
         client.unsubscribe(HOST,PORT,"Trades");
     }
@@ -587,7 +587,7 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
-        assertEquals(true,row_num.getInt()<=row_num2.getInt());
+        assertEquals(true,row_num.getInt()<=row_num2.getInt() && 0<=row_num.getInt());
         write_data.interrupt();
         client.unsubscribe(HOST,PORT,"Trades","subTrades1");
     }
@@ -616,7 +616,7 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
-        assertEquals(true,row_num.getInt()<=row_num2.getInt());
+        assertEquals(true,row_num.getInt()<=row_num2.getInt() && 0<=row_num.getInt());
         write_data.interrupt();
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
@@ -644,7 +644,7 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
-        assertEquals(true,row_num.getInt()<=row_num2.getInt());
+        assertEquals(true,row_num.getInt()<=row_num2.getInt() && 0<=row_num.getInt());
         write_data.interrupt();
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
@@ -673,7 +673,7 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
-        assertEquals(true,row_num.getInt()<=row_num2.getInt());
+        assertEquals(true,row_num.getInt()<=row_num2.getInt() && 0<=row_num.getInt());
         write_data.interrupt();
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
@@ -702,7 +702,7 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
-        assertEquals(true,row_num.getInt()<=row_num2.getInt());
+        assertEquals(true,row_num.getInt()<=row_num2.getInt() && 0<=row_num.getInt());
         write_data.interrupt();
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
@@ -731,7 +731,7 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
-        assertEquals(true,row_num.getInt()<=row_num2.getInt());
+        assertEquals(true,row_num.getInt()<=row_num2.getInt() && 0<=row_num.getInt());
         write_data.interrupt();
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
@@ -3246,7 +3246,6 @@ public class ThreadedClientsubscribeReverseTest {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
         String re = null;
         try{
@@ -3284,7 +3283,6 @@ public class ThreadedClientsubscribeReverseTest {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        //subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
         client.subscribe(HOST, 11111, "outTables", "mutiSchema", handler, 0,false, null,streamFilter,false,1000,0,"admin","123456",backupSites);
         Thread.sleep(30000);
@@ -3299,8 +3297,6 @@ public class ThreadedClientsubscribeReverseTest {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        //subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
-
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0,false, null,null,false,1,0,"admin","123456",backupSites);
         Thread.sleep(30000);
@@ -3318,7 +3314,6 @@ public class ThreadedClientsubscribeReverseTest {
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        //subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
         client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,100, (int) 4.5,"admin","123456",backupSites);
         System.out.println("Successful subscribe");
@@ -3347,7 +3342,6 @@ public class ThreadedClientsubscribeReverseTest {
         controller_conn.connect(controller_host,controller_port,"admin","123456");
 
         Vector filter1 = (Vector) conn.run("1..100000");
-        //subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
         client.subscribe(HOST,port_list[0],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,1000, 1,"admin","123456",backupSites);
         System.out.println("Successful subscribe");
@@ -3374,7 +3368,6 @@ public class ThreadedClientsubscribeReverseTest {
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        //subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
         client.subscribe(HOST,11111,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,100, (int) 4.5,"admin","123456",backupSites);
         System.out.println("Successful subscribe");
