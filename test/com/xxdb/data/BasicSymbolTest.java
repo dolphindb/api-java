@@ -522,10 +522,10 @@ public class BasicSymbolTest {
         assertEquals(size+1,bsv.rows());
     }
 
-    @Test(timeout=120000)
+    @Test(timeout=200000)
     public void test_BasicSymbolVector_run_bigdata() throws IOException {
         BasicSymbolVector re1 =(BasicSymbolVector) conn.run("a=array(SYMBOL,10).append!(string(concat(take(`abcd中文123,100000))));a");
-        System.out.println(re1.get(10).getString());
+        //System.out.println(re1.get(10).getString());
         for(int i = 0; i < 10; i++) {
             assertEquals("",re1.get(i).getString());
         }

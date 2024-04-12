@@ -70,7 +70,7 @@ public class ThreadedClientsubscribeReverseTest {
             try {
                 String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
                 conn.run(script);
-                //  System.out.println(msg.getEntity(0).getString());
+                  System.out.println(msg.getEntity(0).getString());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -1012,7 +1012,7 @@ public class ThreadedClientsubscribeReverseTest {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test3", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]. Contact an administrator. RefId:S03009' function: 'publishTable'",e.getMessage());
+            assertEquals(true,e.getMessage().contains("No access to shared table [Trades]."));
         }
         client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, false, filter1, true, 100, 5, "test2", "123456");
         client.unsubscribe(HOST, PORT, "Trades", "subTread1");

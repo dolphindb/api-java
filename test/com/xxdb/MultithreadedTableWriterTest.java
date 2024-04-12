@@ -197,7 +197,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "t1", "t1", false, false, null, 10000, 1,
                 5, "date");
         }catch (Exception e) {
-            assertTrue(e.getMessage().contains("table file does not exist: t1/t1.tbl' script: 'schema(loadTable(\"t1\",\"t1\"))"));
+            assertTrue(e.getMessage().contains("table file does not exist: t1/t1.tbl"));
         }
         conn.run("undef(`t1,SHARED)");
     }

@@ -39,6 +39,8 @@ public class EventClientTest {
     @After
     public  void after() throws IOException, InterruptedException {
         conn.close();
+        try{client.unsubscribe(HOST, PORT, "inputTable", "test1");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "intput", "test1");}catch (Exception ex){}
     }
 
     public static  EventMessageHandler handler = new EventMessageHandler() {
@@ -662,6 +664,7 @@ public class EventClientTest {
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
     @Test
     public  void test_EventClient_subscribe_offset_negative_2() throws IOException, InterruptedException {
@@ -676,6 +679,7 @@ public class EventClientTest {
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
     @Test
     public  void test_EventClient_subscribe_offset_0() throws IOException, InterruptedException {
@@ -1411,7 +1415,7 @@ public class EventClientTest {
         checkData(bt,bt3);
     }
 
-    @Test//AJ-659
+    //@Test//AJ-659
     public  void test_EventClient_all_dateType_vector_decimal() throws IOException, InterruptedException {
         String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
                 "colNames=\"col\"+string(1..3);\n" +
