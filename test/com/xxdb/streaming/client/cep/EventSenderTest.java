@@ -24,6 +24,7 @@ public class EventSenderTest {
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     static EventSender sender = null;
     static EventSchema scheme = null;
+    static EventClient client = null;
 
     @Before
     public void setUp() throws IOException {
@@ -36,6 +37,10 @@ public class EventSenderTest {
     @After
     public  void after() throws IOException, InterruptedException {
         conn.close();
+        try{client.unsubscribe(HOST, PORT, "inputTable", "test1");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "intput", "test1");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "inputTable" ,null);}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "intput" ,null);}catch (Exception ex){}
     }
 
     public static void PrepareInputSerializer(String type,Entity.DATA_TYPE data_type) throws IOException {
@@ -1298,7 +1303,7 @@ public class EventSenderTest {
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
         List<Entity> attributes = new ArrayList<>();
         BasicBoolean boolv = new BasicBoolean(true);
@@ -1411,7 +1416,7 @@ public class EventSenderTest {
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         List<Entity> attributes = new ArrayList<>();
@@ -1468,7 +1473,7 @@ public class EventSenderTest {
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         List<Entity> attributes = new ArrayList<>();
@@ -1913,7 +1918,7 @@ public class EventSenderTest {
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         BasicTable bt = (BasicTable) conn.run("select * from t");
@@ -1955,7 +1960,7 @@ public class EventSenderTest {
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         Preparedata(1);
@@ -1996,7 +2001,7 @@ public class EventSenderTest {
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         Preparedata(100);
@@ -2037,7 +2042,7 @@ public class EventSenderTest {
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         Preparedata(100000);
@@ -2081,7 +2086,7 @@ public class EventSenderTest {
         Preparedata_array(100,10);
         BasicTable bt = (BasicTable)conn.run("select * from data");
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler_array, -1, true, "admin", "123456");
 
         for(int i=0;i<bt.rows();i++){
@@ -2123,7 +2128,7 @@ public class EventSenderTest {
         Preparedata_array_1(100,10);
         BasicTable bt = (BasicTable)conn.run("select * from data");
 
-        EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler_array, -1, true, "admin", "123456");
 
         for(int i=0;i<bt.rows();i++){
@@ -2234,7 +2239,7 @@ public class EventSenderTest {
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeKeys, commonKeys);
-        EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "intput1", "test1", handler_string, -1, true, "admin", "123456");
 
         String script2 = "\tevent_string1=event_string( [\"111\",\"222\",\"\",NULL])\n" +
@@ -2283,7 +2288,7 @@ public class EventSenderTest {
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeKeys, commonKeys);
-        EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "intput1", "test1", handler_string, -1, true, "admin", "123456");
 
         String script2 = "\tevent_symbol1=event_symbol( symbol([\"111\",\"222\",\"\",NULL]))\n" +

@@ -41,6 +41,8 @@ public class EventClientTest {
         conn.close();
         try{client.unsubscribe(HOST, PORT, "inputTable", "test1");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "intput", "test1");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "inputTable" ,null);}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "intput" ,null);}catch (Exception ex){}
     }
 
     public static  EventMessageHandler handler = new EventMessageHandler() {
