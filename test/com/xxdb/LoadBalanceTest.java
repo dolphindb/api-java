@@ -38,6 +38,13 @@ public class LoadBalanceTest {
 
     @After
     public void tearDown() throws Exception {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host, controller_port, "admin", "123456");
+        for(int i = 0; i<ipports.length; i++){
+            String site = ipports[i];
+            controller_conn.run("try{startDataNode('" + site + "')}catch(ex){}");
+            System.out.println(site);
+        }
     }
 
     @Test(timeout = 120000)
