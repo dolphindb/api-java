@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ThreadedClient extends AbstractClient {
     private HashMap<String, HandlerLopper> handlerLoppers = new HashMap<>();
-    private HashMap<String, List<String>> users = new HashMap<>();
+    // private HashMap<String, List<String>> users = new HashMap<>();
 
     private static final Logger log = LoggerFactory.getLogger(ThreadedClient.class);
 
@@ -185,7 +185,7 @@ public class ThreadedClient extends AbstractClient {
         List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
     }
 
@@ -198,10 +198,10 @@ public class ThreadedClient extends AbstractClient {
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
-        List<String> usr = Arrays.asList(userName, password);
+        // List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
     }
 
@@ -217,7 +217,7 @@ public class ThreadedClient extends AbstractClient {
         List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
     }
 
@@ -233,7 +233,7 @@ public class ThreadedClient extends AbstractClient {
         List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
     }
 
@@ -253,7 +253,7 @@ public class ThreadedClient extends AbstractClient {
         List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
     }
 
@@ -269,7 +269,7 @@ public class ThreadedClient extends AbstractClient {
         List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
     }
 
@@ -391,55 +391,70 @@ public class ThreadedClient extends AbstractClient {
 
     @Override
     protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
-        DBConnection dbConn = new DBConnection();
-        String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
-        List<String> usr = users.get(fullTableName);
-        String user = usr.get(0);
-        String pwd = usr.get(1);
-        if (!user.equals(""))
-            dbConn.connect(host, port, user, pwd);
-        else
-            dbConn.connect(host, port);
-        try {
-            String localIP = this.listeningHost;
-            if(localIP.equals(""))
-                localIP = dbConn.getLocalAddress().getHostAddress();
-            List<Entity> params = new ArrayList<Entity>();
-            params.add(new BasicString(localIP));
-            params.add(new BasicInt(this.listeningPort));
-            params.add(new BasicString(tableName));
-            params.add(new BasicString(actionName));
+        String originHost = host;
+        int originPort = port;
 
-            dbConn.run("stopPublishTable", params);
-            String topic = null;
-            synchronized (tableNameToTrueTopic) {
-                topic = tableNameToTrueTopic.get(fullTableName);
+        synchronized (this) {
+            DBConnection dbConn = new DBConnection();
+
+            if (!currentSiteIndexMap.isEmpty()) {
+                String topic = tableNameToTrueTopic.get( host + ":" + port + "/" + tableName + "/" + actionName);
+                Integer currentSiteIndex = currentSiteIndexMap.get(topic);
+                Site[] sites = trueTopicToSites.get(topic);
+                host = sites[currentSiteIndex].host;
+                port = sites[currentSiteIndex].port;
             }
-            synchronized (trueTopicToSites) {
+
+            List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+            List<String> usr = users.get(tp);
+            String user = usr.get(0);
+            String pwd = usr.get(1);
+            if (!user.equals(""))
+                dbConn.connect(host, port, user, pwd);
+            else
+                dbConn.connect(host, port);
+            try {
+                String localIP = this.listeningHost;
+                if(localIP.equals(""))
+                    localIP = dbConn.getLocalAddress().getHostAddress();
+                List<Entity> params = new ArrayList<Entity>();
+                params.add(new BasicString(localIP));
+                params.add(new BasicInt(this.listeningPort));
+                params.add(new BasicString(tableName));
+                params.add(new BasicString(actionName));
+
+                dbConn.run("stopPublishTable", params);
+                String topic = null;
+                String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+                // synchronized (tableNameToTrueTopic) {
+                topic = tableNameToTrueTopic.get(fullTableName);
+                // }
+                // synchronized (trueTopicToSites) {
                 Site[] sites = trueTopicToSites.get(topic);
                 if (sites == null || sites.length == 0)
                     ;
                 for (int i = 0; i < sites.length; i++)
                     sites[i].closed = true;
-            }
-           synchronized (queueManager) {
-               queueManager.removeQueue(topic);
-           }
-            log.info("Successfully unsubscribed table " + fullTableName);
-        } catch (Exception ex) {
-            throw ex;
-        } finally {
-            dbConn.close();
-            String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
-            HandlerLopper handlerLopper = null;
-            synchronized (handlerLoppers) {
+                // }
+                // synchronized (queueManager) {
+                queueManager.removeQueue(topic);
+                // }
+                log.info("Successfully unsubscribed table " + fullTableName);
+            } catch (Exception ex) {
+                throw ex;
+            } finally {
+                dbConn.close();
+                String topicStr = originHost + ":" + originPort + "/" + tableName + "/" + actionName;
+                HandlerLopper handlerLopper = null;
+                // synchronized (handlerLoppers) {
                 handlerLopper = handlerLoppers.get(topicStr);
                 handlerLoppers.remove(topicStr);
                 handlerLopper.interrupt();
+                // }
             }
         }
-        return;
     }
+
     public void close(){
         synchronized (handlerLoppers) {
             Iterator<HandlerLopper> it = handlerLoppers.values().iterator();

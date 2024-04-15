@@ -129,47 +129,56 @@ public class PollingClient extends AbstractClient {
 
     @Override
     protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
-        DBConnection dbConn = new DBConnection();
-        List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
-        List<String> usr = users.get(tp);
-        String user = usr.get(0);
-        String pwd = usr.get(1);
-        if (!user.equals(""))
-            dbConn.connect(host, port, user, pwd);
-        else
-            dbConn.connect(host, port);
-        try {
-            String localIP = this.listeningHost;
-            if(localIP.equals(""))
-                localIP = dbConn.getLocalAddress().getHostAddress();
-            List<Entity> params = new ArrayList<Entity>();
-            params.add(new BasicString(localIP));
-            params.add(new BasicInt(this.listeningPort));
-            params.add(new BasicString(tableName));
-            params.add(new BasicString(actionName));
-
-            dbConn.run("stopPublishTable", params);
-            String topic = null;
-            String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
-            synchronized (tableNameToTrueTopic) {
-                topic = tableNameToTrueTopic.get(fullTableName);
+        synchronized (this) {
+            DBConnection dbConn = new DBConnection();
+            if (!currentSiteIndexMap.isEmpty()) {
+                String topic = tableNameToTrueTopic.get( host + ":" + port + "/" + tableName + "/" + actionName);
+                Integer currentSiteIndex = currentSiteIndexMap.get(topic);
+                Site[] sites = trueTopicToSites.get(topic);
+                host = sites[currentSiteIndex].host;
+                port = sites[currentSiteIndex].port;
             }
-            synchronized (trueTopicToSites) {
+
+            List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+            List<String> usr = users.get(tp);
+            String user = usr.get(0);
+            String pwd = usr.get(1);
+            if (!user.equals(""))
+                dbConn.connect(host, port, user, pwd);
+            else
+                dbConn.connect(host, port);
+            try {
+                String localIP = this.listeningHost;
+                if(localIP.equals(""))
+                    localIP = dbConn.getLocalAddress().getHostAddress();
+                List<Entity> params = new ArrayList<Entity>();
+                params.add(new BasicString(localIP));
+                params.add(new BasicInt(this.listeningPort));
+                params.add(new BasicString(tableName));
+                params.add(new BasicString(actionName));
+
+                dbConn.run("stopPublishTable", params);
+                String topic = null;
+                String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+                //synchronized (tableNameToTrueTopic) {
+                topic = tableNameToTrueTopic.get(fullTableName);
+                // }
+                // synchronized (trueTopicToSites) {
                 Site[] sites = trueTopicToSites.get(topic);
                 if (sites == null || sites.length == 0)
                     ;
                 for (int i = 0; i < sites.length; i++)
                     sites[i].closed = true;
-            }
-            synchronized (queueManager) {
+                // }
+                // synchronized (queueManager) {
                 queueManager.removeQueue(topic);
+                // }
+                log.info("Successfully unsubscribed table " + fullTableName);
+            } catch (Exception ex) {
+                throw ex;
+            } finally {
+                dbConn.close();
             }
-            log.info("Successfully unsubscribed table " + fullTableName);
-        } catch (Exception ex) {
-            throw ex;
-        } finally {
-            dbConn.close();
         }
-        return;
     }
 }
