@@ -159,7 +159,6 @@ public class StreamDeserializerTest {
         BasicTable bt3 = new BasicTable(colNames,cols3);
         bd.put(new BasicString("colDefs"),bt3);
         sd.checkSchema(bd);
-
     }
 
     @Test
