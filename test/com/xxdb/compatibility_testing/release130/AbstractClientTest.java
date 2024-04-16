@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 
 
 public class AbstractClientTest {
-    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/compatibility_testing/release130/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     //static int PORT=9002;

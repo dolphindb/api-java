@@ -24,7 +24,7 @@ public class ConnectionPoolTest {
     private static DBConnectionPool pool = null;
     private static PartitionedTableAppender appender;
     private static DBConnection conn;
-    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/compatibility_testing/release130/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     static String[] ipports = bundle.getString("SITES").split(",");

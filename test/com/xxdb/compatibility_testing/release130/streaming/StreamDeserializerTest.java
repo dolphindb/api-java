@@ -16,7 +16,7 @@ import java.util.ResourceBundle;
 import static com.xxdb.BehaviorTest.bundle;
 
 public class StreamDeserializerTest {
-    public static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    public static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/compatibility_testing/release130/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     @Test(expected = RuntimeException.class)
