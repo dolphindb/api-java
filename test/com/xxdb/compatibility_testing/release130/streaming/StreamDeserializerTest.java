@@ -11,10 +11,12 @@ import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import static com.xxdb.BehaviorTest.bundle;
 
 public class StreamDeserializerTest {
+    public static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     @Test(expected = RuntimeException.class)

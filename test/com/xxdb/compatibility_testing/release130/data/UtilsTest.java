@@ -18,6 +18,7 @@ import static com.xxdb.data.BasicArrayVectorTest.bundle;
 import static org.junit.Assert.*;
 
 public class UtilsTest {
+    public static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
 
