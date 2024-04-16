@@ -39,8 +39,8 @@ public class EventSenderTest {
         conn.close();
         try{client.unsubscribe(HOST, PORT, "inputTable", "test1");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "intput", "test1");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "inputTable" ,null);}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "intput" ,null);}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "inputTable" ,"javaStreamingApi");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "intput" ,"javaStreamingApi");}catch (Exception ex){}
     }
 
     public static void PrepareInputSerializer(String type,Entity.DATA_TYPE data_type) throws IOException {

@@ -41,8 +41,8 @@ public class EventClientTest {
         conn.close();
         try{client.unsubscribe(HOST, PORT, "inputTable", "test1");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "intput", "test1");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "inputTable" ,null);}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "intput" ,null);}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "inputTable" ,"javaStreamingApi");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "intput" ,"javaStreamingApi");}catch (Exception ex){}
     }
 
     public static  EventMessageHandler handler = new EventMessageHandler() {
@@ -921,24 +921,24 @@ public class EventClientTest {
         System.out.println(StreamLeaderPort);
         DBConnection conn1 = new DBConnection();
         conn1.connect(StreamLeaderHost, StreamLeaderPort, "admin", "123456");
-        String script = "try{\ndropStreamTable(`inputTable)\n}catch(ex){\n}\n"+
+        String script = "try{\ndropStreamTable(`inputTable_1)\n}catch(ex){\n}\n"+
             "table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]);\n"+
-            "haStreamTable("+GROUP_ID+", table, `inputTable, 100000);\n"+
-            "share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;;\n";
+            "haStreamTable("+GROUP_ID+", table, `inputTable_1, 100000);\n"+
+            "share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;\n";
         conn1.run(script);
         subscribePrepare();
 
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
-        client.subscribe(StreamLeaderHost, StreamLeaderPort, "inputTable", "test1", handler, -1, true, "user1", "123456");
+        client.subscribe(StreamLeaderHost, StreamLeaderPort, "inputTable_1", "test1", handler, -1, true, "user1", "123456");
         sender.sendEvent("MarketData", attributes);
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn1.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
         Assert.assertEquals("2024.03.22T10:45:03.100",re.getColumn(0).get(0).getString());
         Assert.assertEquals("123456",re.getColumn(1).get(0).getString());
-        client.unsubscribe(StreamLeaderHost, StreamLeaderPort, "inputTable", "test1");
+        client.unsubscribe(StreamLeaderHost, StreamLeaderPort, "inputTable_1", "test1");
     }
 
     @Test//not support
@@ -956,9 +956,9 @@ public class EventClientTest {
         System.out.println(StreamFollowerPort);
         DBConnection conn1 = new DBConnection();
         conn1.connect(StreamFollowerHost, StreamFollowerPort, "admin", "123456");
-        String script = "try{\ndropStreamTable(`inputTable)\n}catch(ex){\n}\n"+
+        String script = "try{\ndropStreamTable(`inputTable_1)\n}catch(ex){\n}\n"+
                 "table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]);\n"+
-                "haStreamTable("+GROUP_ID+", table, `inputTable, 100000);\n"+
+                "haStreamTable("+GROUP_ID+", table, `inputTable_1, 100000);\n"+
                 "share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;\n";
         conn1.run(script);
 
@@ -966,14 +966,14 @@ public class EventClientTest {
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
-        client.subscribe(StreamFollowerHost, StreamFollowerPort, "inputTable", "test1", handler, -1, true, "user1", "123456");
+        client.subscribe(StreamFollowerHost, StreamFollowerPort, "inputTable_1", "test1", handler, -1, true, "user1", "123456");
         sender.sendEvent("MarketData", attributes);
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn1.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
         Assert.assertEquals("2024.03.22T10:45:03.100",re.getColumn(0).get(0).getString());
         Assert.assertEquals("123456",re.getColumn(1).get(0).getString());
-        client.unsubscribe(StreamFollowerHost, StreamFollowerPort, "inputTable", "test1");
+        client.unsubscribe(StreamFollowerHost, StreamFollowerPort, "inputTable_1", "test1");
     }
 
     @Test
