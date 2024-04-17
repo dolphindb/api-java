@@ -912,7 +912,7 @@ public class ThreadedClientsubscribeTest {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' function: 'publishTable'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: No access to shared table [Trades]. function: publishTable",e.getMessage());
         }
     }
 

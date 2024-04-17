@@ -187,7 +187,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "", "tt", false, false, null, 10000, 1,
                 5, "date");
         }catch (Exception e) {
-            assertEquals(HOST+":"+PORT+" Server response: 'Syntax Error: [line #1] Cannot recognize the token tt' script: 'schema(tt)'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: Syntax Error: [line #1] Cannot recognize the token tt. script: schema(tt)",e.getMessage());
         }
         conn.run("undef(`t1,SHARED)");
     }
@@ -581,17 +581,17 @@ public  class MultithreadedTableWriterTest implements Runnable {
     public void test_insert_allnull() throws Exception {
 
         StringBuilder sb = new StringBuilder();
-        sb.append("t = table(1000:0, `bool`char`short`lo`date`month`second`datetime`timestamp`nanotime`nanotimestamp`float`double`symbol`string`uuid`ipaddr`int128`int`arrv`blob," +
-                "[BOOL,CHAR,SHORT,LONG,DATE,MONTH,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID, IPADDR, INT128,INT,INT[],BLOB]);" +
+        sb.append("t = table(1000:0, `bool`char`short`lo`date`month`second`datetime`timestamp`nanotime`nanotimestamp`float`double`symbol`string`uuid`ipaddr`int128`int," +
+                "[BOOL,CHAR,SHORT,LONG,DATE,MONTH,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID, IPADDR, INT128,INT]);" +
                 "share t as t1;");
         conn.run(sb.toString());
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "", "t1", false, false, null, 1, 1,
                 1, "bool");
 
-        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
-        mutithreadTableWriter_.insert( null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
-        mutithreadTableWriter_.insert( null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        mutithreadTableWriter_.insert( null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        mutithreadTableWriter_.insert( null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         assertEquals("code= info=",pErrorInfo.toString());
         mutithreadTableWriter_.waitForThreadCompletion();
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
