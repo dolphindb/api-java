@@ -119,6 +119,7 @@ public class ThreadPooledClient extends AbstractClient {
     }
 
     protected boolean doReconnect(Site site) {
+        log.info("ThreadPooledClient doReconnect: " + site.host + ":" + site.port);
         threadPool.shutdownNow();
         try {
             Thread.sleep(1000);
@@ -146,8 +147,12 @@ public class ThreadPooledClient extends AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord, boolean msgAsTable, List<String> backupSites) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, backupSites);
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord, boolean msgAsTable, List<String> backupSites, int resubTimeout, boolean subOnce) throws IOException {
+        if (resubTimeout < 0)
+            // resubTimeout default: 100ms
+            resubTimeout = 100;
+
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, backupSites, resubTimeout, subOnce);
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
         List<String> usr = Arrays.asList(userName, passWord);
         synchronized (queueHandlers) {

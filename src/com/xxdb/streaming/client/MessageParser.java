@@ -107,6 +107,7 @@ class MessageParser implements Runnable {
                 body = BasicEntityFactory.instance().createEntity(df, dt, in, extended);
                 if (body.isTable() && body.rows() == 0) {
                     for (String t : topic.split(",")) {
+                        AbstractClient.lastExceptionTopicTimeMap.put(topic, System.currentTimeMillis());
                         dispatcher.setNeedReconnect(t, 0);
                     }
                     assert (body.rows() == 0);
@@ -161,13 +162,16 @@ class MessageParser implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
             if (dispatcher.isClosed(topic)) {
-                log.error("check " + topic + " is unsubscribed");
+                if (!AbstractClient.ifUseBackupSite)
+                    log.error("check " + topic + " is unsubscribed");
                 return;
             } else {
+                AbstractClient.lastExceptionTopicTimeMap.put(topic, System.currentTimeMillis());
                 dispatcher.setNeedReconnect(topic, 1);
             }
         } catch (Throwable t) {
             t.printStackTrace();
+            AbstractClient.lastExceptionTopicTimeMap.put(topic, System.currentTimeMillis());
             dispatcher.setNeedReconnect(topic, 1);
         } finally {
             try {

@@ -37,7 +37,12 @@ public abstract class AbstractClient implements MessageDispatcher {
     protected HashMap<List<String>, List<String>> users = new HashMap<>();
     protected boolean isClose_ = false;
     protected LinkedBlockingQueue<DBConnection> connList = new LinkedBlockingQueue<>();
+    protected static boolean ifUseBackupSite;
+    protected String lastBackupSiteTopic = "";
     protected Map<String, Integer> currentSiteIndexMap = new ConcurrentHashMap<>();
+    protected static Map<String, Long> lastExceptionTopicTimeMap = new ConcurrentHashMap<>();
+    protected static Integer resubTimeout;
+    protected static boolean subOnce;
 
     private Daemon daemon = null;
 
@@ -166,6 +171,17 @@ public abstract class AbstractClient implements MessageDispatcher {
         return null;
     }
 
+    public Site getCurrentSiteByName(String site) {
+        List<String> topics = this.getAllTopicsBySite(site);
+        if (topics.size() > 0) {
+            Site[] sites = trueTopicToSites.get(topics.get(0));
+            Integer currentSiteIndex = currentSiteIndexMap.get(topics.get(0));
+            return sites[currentSiteIndex];
+        }
+
+        return null;
+    }
+
     public Map<String, StreamDeserializer> getSubInfos(){
         return subInfos_;
     }
@@ -227,32 +243,65 @@ public abstract class AbstractClient implements MessageDispatcher {
                 }
 
                 boolean reconnected = false;
-                for (int i = 0; i < sites.length; i ++) {
-                    Integer currentSiteIndex = currentSiteIndexMap.get(topic);
-                    if (currentSiteIndexMap.get(topic) != -1)
-                        i = currentSiteIndex;
-                    Site site = sites[i];
-                    boolean siteReconnected = false;
-                    for (int attempt = 0; attempt < 2; attempt++) {
-                        // try twice every site
-                        if (doReconnect(site)) {
-                            siteReconnected = true;
-                            // if site current connect successfully, break
+                Integer currentSiteIndex = currentSiteIndexMap.get(topic);
+                if (currentSiteIndex != null && currentSiteIndex != -1) {
+                    int totalSites = sites.length;
+                    // set successfulSiteIndex init value to -1.
+                    int successfulSiteIndex = -1;
+
+                    // Starting from currentSiteIndex, go around in a circle until you return to the position just before it (circular looping).
+                    for (int offset = 0; offset < totalSites; offset++) {
+                        // Implement wrapping around using modulo operation
+                        int i = (currentSiteIndex + offset) % totalSites;
+
+                        Site site = sites[i];
+                        boolean siteReconnected = false;
+
+                        for (int attempt = 0; attempt < 1; attempt++) {
+                            // try twice for every site.
+                            if (doReconnect(site)) {
+                                siteReconnected = true;
+                                // if site reconnect successfully, break.
+                                break;
+                            }
+                        }
+
+                        if (siteReconnected) {
+                            reconnected = true;
+                            successfulSiteIndex = i;
+                            // if current site reconnect successfully, no continue try other sites, break.
                             break;
                         }
                     }
-                    if (siteReconnected) {
-                        reconnected = true;
-                        currentSiteIndexMap.put(topic, i);
-                        // if current site connect successfully, no tryReconnect other site, break
-                        break;
+
+                    // Determine whether to delete the original currentSiteIndex node based on the subOnce parameter.
+                    if (subOnce && reconnected) {
+                        List<Site> siteList = new ArrayList<>(Arrays.asList(sites));
+                        // Remove the original currentSiteIndex node from the list.
+                        siteList.remove((int) currentSiteIndex);
+                        // update sites
+                        sites = siteList.toArray(new Site[0]);
+
+                        // Calculate the index of the newly successful connection node after a successful deletion.
+                        if (successfulSiteIndex > currentSiteIndex) {
+                            // If the successfully connected node is after the deleted node, reduce the index by 1.
+                            successfulSiteIndex -= 1;
+                        }
+                        // update currentSiteIndexMap to new successfully connected site's index;
+                        currentSiteIndexMap.put(topic, successfulSiteIndex);
+                    } else if (reconnected) {
+                        // not delete site, but update successfulSiteIndex.
+                        currentSiteIndexMap.put(topic, successfulSiteIndex);
                     }
                 }
+
+                log.info("Successfully switched to node: " + sites[currentSiteIndexMap.get(topic)].host + ":" + sites[currentSiteIndexMap.get(topic)].port);
 
                 if (!reconnected) {
                     waitReconnectTopic.add(topic);
                     return false;
                 } else {
+                    reconnectTable.remove(topic.substring(0, topic.indexOf("/")));
                     waitReconnectTopic.remove(topic);
                     return true;
                 }
@@ -438,13 +487,14 @@ public abstract class AbstractClient implements MessageDispatcher {
                                                               long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer,
                                                               boolean allowExistTopic, String userName, String passWord, boolean msgAsTable)
             throws IOException, RuntimeException {
-        return subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, null);
+        return subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, null, 100, false);
     }
 
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
                                                               String tableName, String actionName, MessageHandler handler,
                                                               long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer,
-                                                              boolean allowExistTopic, String userName, String passWord, boolean msgAsTable, List<String> backupSites) throws IOException, RuntimeException {
+                                                              boolean allowExistTopic, String userName, String passWord, boolean msgAsTable,
+                                                              List<String> backupSites, int resubTimeout, boolean subOnce) throws IOException, RuntimeException {
         Entity re;
         String topic = "";
         DBConnection dbConn;
@@ -455,6 +505,9 @@ public abstract class AbstractClient implements MessageDispatcher {
 
         List<Site> parsedBackupSites = new ArrayList<>();
         if (Objects.nonNull(backupSites) && !backupSites.isEmpty()) {
+            AbstractClient.resubTimeout = resubTimeout;
+            AbstractClient.subOnce = subOnce;
+            AbstractClient.ifUseBackupSite = true;
             // prepare backupSites
             for (int i = 0; i < backupSites.size() + 1; i++) {
                 if (i == 0) {
@@ -494,6 +547,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                     params.add(new BasicString(actionName));
                     re = dbConn.run("getSubscriptionTopic", params);
                     topic = ((BasicAnyVector) re).getEntity(0).getString();
+                    lastBackupSiteTopic = topic;
                     params.clear();
 
                     // set current site index
@@ -598,7 +652,20 @@ public abstract class AbstractClient implements MessageDispatcher {
 
                 re = dbConn.run("publishTable", params);
                 connList.add(dbConn);
-                if (re instanceof BasicAnyVector) {
+                if (ifUseBackupSite) {
+                    synchronized (subInfos_){
+                        subInfos_.put(topic, deserializer);
+                    }
+                    synchronized (tableNameToTrueTopic) {
+                        tableNameToTrueTopic.put(host + ":" + port + "/" + tableName + "/" + actionName, topic);
+                    }
+                    synchronized (HATopicToTrueTopic) {
+                        HATopicToTrueTopic.put(topic, topic);
+                    }
+                    synchronized (trueTopicToSites) {
+                        trueTopicToSites.put(topic, trueTopicToSites.get(lastBackupSiteTopic));
+                    }
+                } else if (re instanceof BasicAnyVector) {
                     BasicStringVector HASiteStrings = (BasicStringVector) (((BasicAnyVector) re).getEntity(1));
                     int HASiteNum = HASiteStrings.rows();
                     Site[] sites = new Site[HASiteNum];

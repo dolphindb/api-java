@@ -154,26 +154,32 @@ public class ThreadedClient extends AbstractClient {
 
     @Override
     protected boolean doReconnect(Site site) {
-        String topicStr = site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName;
-        Thread handlerLopper = null;
-        synchronized (handlerLoppers) {
-            if (!handlerLoppers.containsKey(topicStr))
-                throw new RuntimeException("Subscribe thread is not started");
-            handlerLopper = handlerLoppers.get(topicStr);
-        }
-        handlerLopper.interrupt();
-        try {
-            subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
-            Date d = new Date();
-            DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            log.info(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
-            return true;
-        } catch (Exception ex) {
-            Date d = new Date();
-            DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            log.error(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
-            ex.printStackTrace();
-            return false;
+        synchronized (this) {
+            log.info("ThreadedClient doReconnect: " + site.host + ":" + site.port);
+            String topicStr = site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName;
+            Thread handlerLopper = null;
+            if (!handlerLoppers.containsKey(topicStr)) {
+                if (!AbstractClient.ifUseBackupSite) {
+                    throw new RuntimeException("Subscribe thread is not started");
+                }
+            } else {
+                handlerLopper = handlerLoppers.get(topicStr);
+                handlerLopper.interrupt();
+            }
+
+            try {
+                subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
+                Date d = new Date();
+                DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                log.info(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
+                return true;
+            } catch (Exception ex) {
+                Date d = new Date();
+                DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                log.error(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
+                ex.printStackTrace();
+                return false;
+            }
         }
     }
 
@@ -205,12 +211,15 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites, int resubTimeout, boolean subOnce) throws IOException {
         if(batchSize<=0)
             throw new IllegalArgumentException("BatchSize must be greater than zero");
         if(throttle<0)
             throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, false, backupSites);
+        if (resubTimeout < 0)
+            // resubTimeout default: 100ms
+            resubTimeout = 100;
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, false, backupSites, resubTimeout, subOnce);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;

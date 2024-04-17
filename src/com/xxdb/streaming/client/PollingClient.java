@@ -37,6 +37,7 @@ public class PollingClient extends AbstractClient {
     @Override
     protected boolean doReconnect(Site site) {
         try {
+            log.info("PollingClient doReconnect: " + site.host + ":" + site.port);
             Thread.sleep(1000);
             BlockingQueue<List<IMessage>> queue = subscribeInternal(site.host, site.port, site.tableName, site.actionName, (MessageHandler) null, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord, site.msgAstable);
             log.info("Successfully reconnected and subscribed " + site.host + ":" + site.port + ":" + site.tableName);
@@ -62,8 +63,12 @@ public class PollingClient extends AbstractClient {
         return topicPoller;
     }
 
-    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord, boolean msgAsTable, List<String> backupSites) throws IOException {
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, (MessageHandler) null, offset, reconnect, filter, deserializer, false, userName, passWord, msgAsTable, backupSites);
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord, boolean msgAsTable, List<String> backupSites, int resubTimeout, boolean subOnce) throws IOException {
+        if (resubTimeout < 0)
+            // resubTimeout default: 100ms
+            resubTimeout = 100;
+
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, (MessageHandler) null, offset, reconnect, filter, deserializer, false, userName, passWord, msgAsTable, backupSites, resubTimeout, subOnce);
         List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
         List<String> usr = Arrays.asList(userName, passWord);
         users.put(tp, usr);
