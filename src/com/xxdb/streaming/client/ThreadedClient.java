@@ -230,6 +230,22 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
+        if(batchSize<=0)
+            throw new IllegalArgumentException("BatchSize must be greater than zero");
+        if(throttle<0)
+            throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, false, backupSites, 100, false);
+        HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
+        handlerLopper.start();
+        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = Arrays.asList(userName, password);
+        synchronized (handlerLoppers) {
+            handlerLoppers.put(topicStr, handlerLopper);
+            // users.put(topicStr, usr);
+        }
+    }
+
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, float throttle, String userName, String password) throws IOException {
         if(batchSize<=0)
             throw new IllegalArgumentException("BatchSize must be greater than zero");
