@@ -257,7 +257,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                         Site site = sites[i];
                         boolean siteReconnected = false;
 
-                        for (int attempt = 0; attempt < 1; attempt++) {
+                        for (int attempt = 0; attempt < 2; attempt++) {
                             // try twice for every site.
                             if (doReconnect(site)) {
                                 siteReconnected = true;
