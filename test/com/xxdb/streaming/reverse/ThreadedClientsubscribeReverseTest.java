@@ -37,10 +37,10 @@ public class ThreadedClientsubscribeReverseTest {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        try{client.unsubscribe(HOST, PORT, "Trades1");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades2");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades1");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades", "subTrades2");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades", "subTrades");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades", "subTrades");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
         clear_env();
@@ -48,10 +48,10 @@ public class ThreadedClientsubscribeReverseTest {
 
     @After
     public void after() throws IOException, InterruptedException {
-        try{client.unsubscribe(HOST, PORT, "Trades1");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades2");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades1");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades", "subTrades2");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades", "subTrades");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "Trades", "subTrades");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
         clear_env();
@@ -234,14 +234,14 @@ public class ThreadedClientsubscribeReverseTest {
     public void test_ThreadedClient_only_subscribePort() throws IOException {
         ThreadedClient client2 = new ThreadedClient(0);
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-                "share(st1,`Trades1)\t\n"
-                + "setStreamTableFilterColumn(objByName(`Trades1),`tag)";
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
         String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
-        client2.subscribe(HOST,PORT,"Trades1","subTrades1",MessageHandler_handler);
-        client2.unsubscribe(HOST,PORT,"Trades1","subTrades1");
+        client2.subscribe(HOST,PORT,"Trades","subTrades",MessageHandler_handler);
+        client2.unsubscribe(HOST,PORT,"Trades","subTrades");
         client2.close();
     }
 
@@ -250,17 +250,17 @@ public class ThreadedClientsubscribeReverseTest {
     @Test(timeout = 120000)
     public void test_subscribe_ex1() throws Exception {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-                "share(st1,`Trades1)\t\n"
-                + "setStreamTableFilterColumn(objByName(`Trades1),`tag)";
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
         String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
-        client.subscribe(HOST, PORT, "Trades1", MessageHandler_handler);
-        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
+        client.subscribe(HOST, PORT, "Trades", MessageHandler_handler);
+        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         wait_data("Receive",1000);
         BasicTable re = (BasicTable) conn.run("Receive");
-        BasicTable tra = (BasicTable) conn.run("Trades1");
+        BasicTable tra = (BasicTable) conn.run("Trades");
         assertEquals(re.rows(), tra.rows());
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -268,7 +268,7 @@ public class ThreadedClientsubscribeReverseTest {
             assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
         try {
-            client.unsubscribe(HOST, PORT, "Trades1", "subtrades");
+            client.unsubscribe(HOST, PORT, "Trades", "subtrades");
         }catch (Exception ex){
 
         }
@@ -446,7 +446,7 @@ public class ThreadedClientsubscribeReverseTest {
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        client.subscribe(HOST, PORT, "Trades","subTrades1",MessageHandler_handler);
+        client.subscribe(HOST, PORT, "Trades","subTrades",MessageHandler_handler);
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -459,7 +459,7 @@ public class ThreadedClientsubscribeReverseTest {
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i + 100));
             assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 100)).getNumber().doubleValue(),4);
         }
-        client.unsubscribe(HOST, PORT, "Trades","subTrades1");
+        client.unsubscribe(HOST, PORT, "Trades","subTrades");
     }
 
     @Test(timeout = 180000)
@@ -486,7 +486,7 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
-        assertEquals(true,row_num.getInt()<=row_num2.getInt());
+        assertEquals(true,row_num.getInt()<row_num2.getInt());
         write_data.interrupt();
         client.unsubscribe(HOST,PORT,"Trades");
     }
@@ -501,14 +501,14 @@ public class ThreadedClientsubscribeReverseTest {
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTrades1",MessageHandler_handler,true);
+        client.subscribe(HOST,PORT,"Trades","subTrades",MessageHandler_handler,true);
         System.out.println("Successful subscribe");
         MyThread write_data  = new MyThread ();
         write_data.start();
         Thread.sleep(2000);
-        conn.run("stopPublishTable('"+HOST+"',9055,'Trades',\"subTrades1\")");
+        conn.run("stopPublishTable('"+HOST+"',9055,'Trades',\"subTrades\")");
         Thread.sleep(2000);
-        conn.run("stopPublishTable('"+HOST+"',9055,'Trades',\"subTrades1\")");
+        conn.run("stopPublishTable('"+HOST+"',9055,'Trades',\"subTrades\")");
         Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
@@ -517,7 +517,7 @@ public class ThreadedClientsubscribeReverseTest {
         System.out.println(row_num2);
         assertEquals(true,row_num.getInt()<=row_num2.getInt());
         write_data.interrupt();
-        client.unsubscribe(HOST,PORT,"Trades","subTrades1");
+        client.unsubscribe(HOST,PORT,"Trades","subTrades");
     }
 
     @Test(timeout = 180000)
@@ -784,7 +784,7 @@ public class ThreadedClientsubscribeReverseTest {
         };
         int ofst = -1;
         Vector filter1 = (Vector) conn.run("1..1000");
-        client.subscribe(HOST, PORT, "Trades", "subTrades1", MessageHandler_handler, -1, filter1);
+        client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, filter1);
         Vector filter2 = (Vector) conn.run("2001..3000");
         client.subscribe(HOST, PORT, "Trades", "subTrades2", handler1, -1, filter2);
         conn.run("n=4000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -794,7 +794,7 @@ public class ThreadedClientsubscribeReverseTest {
         BasicTable tra = (BasicTable) conn.run("Trades");
         BasicTable fil = (BasicTable) conn.run("filter");
         client.unsubscribe(HOST, PORT, "Trades", "subTrades2");
-        client.unsubscribe(HOST, PORT, "Trades", "subTrades1");
+        client.unsubscribe(HOST, PORT, "Trades", "subTrades");
         conn.run("dropStreamTable(`filter)");
         assertEquals(1000, re.rows());
         assertEquals(1000, fil.rows());
@@ -876,11 +876,11 @@ public class ThreadedClientsubscribeReverseTest {
         conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..1000");
         for (int i=0;i<10;i++){
-            client.subscribe(HOST, PORT, "Trades", "subTrades1", MessageHandler_handler, -1, true, filter1, true, 10000, 5);
+            client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true, 10000, 5);
             client.subscribe(HOST, PORT, "Trades", "subTrades2", MessageHandler_handler, -1, true, filter1, true, 10000, 5);
             client.subscribe(HOST, PORT, "Trades", "subTrades3", MessageHandler_handler, -1, true, filter1, true, 10000, 5);
             conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            client.unsubscribe(HOST, PORT, "Trades", "subTrades1");
+            client.unsubscribe(HOST, PORT, "Trades", "subTrades");
             client.unsubscribe(HOST, PORT, "Trades", "subTrades2");
             client.unsubscribe(HOST, PORT, "Trades", "subTrades3");
         }
@@ -1237,7 +1237,7 @@ public class ThreadedClientsubscribeReverseTest {
         public void run() {
             try {
                 while (true) {
-                    conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
+                    conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
                     Thread.sleep(100);
                 }
             } catch (Exception e) {
@@ -1248,32 +1248,31 @@ public class ThreadedClientsubscribeReverseTest {
     @Test(timeout=120000)
     public void test_subscribe_reconnect_successful() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-                "share st1 as Trades1\t\n"
-                + "setStreamTableFilterColumn(objByName(`Trades1),`tag)";
+                "share st1 as Trades\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
         String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades1","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"admin","123456");
+        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"admin","123456");
         System.out.println("Successful subscribe");
-        conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
         Thread.sleep(100);
         MyThread write_data  = new MyThread ();
-//        write_data.start();
+        write_data.start();
         Thread.sleep(2000);
-        conn.run("stopPublishTable('"+HOST+"',0,'Trades1','subTread1')");
+        conn.run("stopPublishTable('"+HOST+"',0,'Trades','subTread1')");
         Thread.sleep(10000);
-        conn.run("stopPublishTable('"+HOST+"',0,'Trades1','subTread1')");
+        conn.run("stopPublishTable('"+HOST+"',0,'Trades','subTread1')");
         Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
         Thread.sleep(2000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
-        assertEquals(true,row_num.getInt()<=row_num2.getInt());
-//        write_data.interrupt();
-        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+        assertEquals(true,row_num.getInt()<row_num2.getInt());
+        write_data.interrupt();
+        client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
     @Test(timeout = 120000)
@@ -2281,15 +2280,15 @@ public class ThreadedClientsubscribeReverseTest {
     public void test_ThreadedClient_only_subscribePort1() throws IOException, InterruptedException {
         ThreadedClient client2 = new ThreadedClient(0);
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-                "share(st1,`Trades1)\t\n"
-                + "setStreamTableFilterColumn(objByName(`Trades1),`tag)";
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
         String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
-        client2.subscribe(HOST,PORT,"Trades1","subTrades1",MessageHandler_handler, -1, true);
+        client2.subscribe(HOST,PORT,"Trades","subTrades",MessageHandler_handler, -1, true);
         // Thread.sleep(100000000);
-        client2.unsubscribe(HOST,PORT,"Trades1","subTrades1");
+        client2.unsubscribe(HOST,PORT,"Trades","subTrades");
         client2.close();
     }
     public static MessageHandler Handler_array = new MessageHandler() {
