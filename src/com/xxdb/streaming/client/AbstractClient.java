@@ -236,7 +236,7 @@ public abstract class AbstractClient implements MessageDispatcher {
             }
         } else {
             // if set backupSites
-            synchronized (reconnectTable) {
+            synchronized (this) {
                 topic = HATopicToTrueTopic.get(topic);
                 queueManager.removeQueue(topic);
                 Site[] sites;
@@ -289,12 +289,22 @@ public abstract class AbstractClient implements MessageDispatcher {
                         siteList.remove((int) currentSiteIndex);
                         // update sites
                         sites = siteList.toArray(new Site[0]);
+                        trueTopicToSites.put(topic, sites);
 
                         // Calculate the index of the newly successful connection node after a successful deletion.
                         if (successfulSiteIndex > currentSiteIndex) {
                             // If the successfully connected node is after the deleted node, reduce the index by 1.
                             successfulSiteIndex -= 1;
                         }
+
+                        // put sites to new sub topic.
+                        for (String key : trueTopicToSites.keySet()) {
+                            // 重新为 key 赋值
+                            if (key.contains(sites[successfulSiteIndex].host+":"+sites[successfulSiteIndex].port)) {
+                                trueTopicToSites.put(key, sites); // 更新操作是安全的
+                            }
+                        }
+
                         // update currentSiteIndexMap to new successfully connected site's index;
                         currentSiteIndexMap.put(topic, successfulSiteIndex);
                     } else if (reconnected) {
