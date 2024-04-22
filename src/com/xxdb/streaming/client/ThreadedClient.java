@@ -168,7 +168,10 @@ public class ThreadedClient extends AbstractClient {
             }
 
             try {
-                subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
+//                System.out.println("doReconnect 尝试切换节点：" + site.host + ":" + site.port);
+//                System.out.println("site msg id: " +site.msgId);
+                subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord, false);
+                // System.out.println("doReconnect 尝试切换节点成功：" + site.host + ":" + site.port);
                 Date d = new Date();
                 DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 log.info(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
@@ -185,6 +188,18 @@ public class ThreadedClient extends AbstractClient {
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String password) throws IOException {
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, false);
+        HandlerLopper handlerLopper = new HandlerLopper(queue, handler);
+        handlerLopper.start();
+        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        List<String> usr = Arrays.asList(userName, password);
+        synchronized (handlerLoppers) {
+            handlerLoppers.put(topicStr, handlerLopper);
+            // users.put(topicStr, usr);
+        }
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String password, boolean createSubInfo) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, false, createSubInfo);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;

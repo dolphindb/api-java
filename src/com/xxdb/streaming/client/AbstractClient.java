@@ -43,6 +43,8 @@ public abstract class AbstractClient implements MessageDispatcher {
     protected static Map<String, Long> lastExceptionTopicTimeMap = new ConcurrentHashMap<>();
     protected static Integer resubTimeout;
     protected static boolean subOnce;
+    // protected static boolean createSubInfo;
+    protected BlockingQueue<List<IMessage>> lastQueue;
 
     private Daemon daemon = null;
 
@@ -175,7 +177,7 @@ public abstract class AbstractClient implements MessageDispatcher {
         List<String> topics = this.getAllTopicsBySite(site);
         if (topics.size() > 0) {
             Site[] sites = trueTopicToSites.get(topics.get(0));
-            Integer currentSiteIndex = currentSiteIndexMap.get(topics.get(0));
+            Integer currentSiteIndex = currentSiteIndexMap.get(lastBackupSiteTopic);
             return sites[currentSiteIndex];
         }
 
@@ -195,6 +197,12 @@ public abstract class AbstractClient implements MessageDispatcher {
                 return;
             if (sites.length == 1)
                 sites[0].msgId = msgId;
+
+            if (ifUseBackupSite) {
+                for (Site site : sites) {
+                    site.msgId = msgId;
+                }
+            }
         }
     }
 
@@ -243,7 +251,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                 }
 
                 boolean reconnected = false;
-                Integer currentSiteIndex = currentSiteIndexMap.get(topic);
+                Integer currentSiteIndex = currentSiteIndexMap.get(lastBackupSiteTopic);
                 if (currentSiteIndex != null && currentSiteIndex != -1) {
                     int totalSites = sites.length;
                     // set successfulSiteIndex init value to -1.
@@ -295,12 +303,13 @@ public abstract class AbstractClient implements MessageDispatcher {
                     }
                 }
 
-                log.info("Successfully switched to node: " + sites[currentSiteIndexMap.get(topic)].host + ":" + sites[currentSiteIndexMap.get(topic)].port);
+//                log.info("Successfully switched to node: " + sites[currentSiteIndexMap.get(topic)].host + ":" + sites[currentSiteIndexMap.get(topic)].port);
 
                 if (!reconnected) {
                     waitReconnectTopic.add(topic);
                     return false;
                 } else {
+                    log.info("Successfully switched to node: " + sites[currentSiteIndexMap.get(topic)].host + ":" + sites[currentSiteIndexMap.get(topic)].port);
                     reconnectTable.remove(topic.substring(0, topic.indexOf("/")));
                     waitReconnectTopic.remove(topic);
                     return true;
@@ -493,8 +502,16 @@ public abstract class AbstractClient implements MessageDispatcher {
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
                                                               String tableName, String actionName, MessageHandler handler,
                                                               long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer,
+                                                              boolean allowExistTopic, String userName, String passWord, boolean msgAsTable, boolean createSubInfo)
+            throws IOException, RuntimeException {
+        return subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, null, 100, false, createSubInfo);
+    }
+
+    protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
+                                                              String tableName, String actionName, MessageHandler handler,
+                                                              long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer,
                                                               boolean allowExistTopic, String userName, String passWord, boolean msgAsTable,
-                                                              List<String> backupSites, int resubTimeout, boolean subOnce) throws IOException, RuntimeException {
+                                                              List<String> backupSites, int resubTimeout, boolean subOnce, boolean createSubInfo) throws IOException, RuntimeException {
         Entity re;
         String topic = "";
         DBConnection dbConn;
@@ -508,6 +525,7 @@ public abstract class AbstractClient implements MessageDispatcher {
             AbstractClient.resubTimeout = resubTimeout;
             AbstractClient.subOnce = subOnce;
             AbstractClient.ifUseBackupSite = true;
+            // AbstractClient.createSubInfo = createSubInfo;
             // prepare backupSites
             for (int i = 0; i < backupSites.size() + 1; i++) {
                 if (i == 0) {
@@ -634,6 +652,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                 subscribeInternalConnect(dbConn, host, port, userName, passWord);
                 re = dbConn.run("getSubscriptionTopic", params);
                 topic = ((BasicAnyVector) re).getEntity(0).getString();
+                // lastBackupSiteTopic = topic;
                 params.clear();
 
                 params.add(new BasicString(localIP));
@@ -721,8 +740,23 @@ public abstract class AbstractClient implements MessageDispatcher {
             }
         }
 
-        BlockingQueue<List<IMessage>> queue = queueManager.addQueue(topic);
+        BlockingQueue<List<IMessage>> queue;
+        if (createSubInfo) {
+            queue = queueManager.addQueue(topic);
+            lastQueue = queue;
+        } else {
+            queue = lastQueue;
+        }
+
         return queue;
+    }
+
+    protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
+                                                              String tableName, String actionName, MessageHandler handler,
+                                                              long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer,
+                                                              boolean allowExistTopic, String userName, String passWord, boolean msgAsTable,
+                                                              List<String> backupSites, int resubTimeout, boolean subOnce) throws IOException, RuntimeException {
+        return subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, backupSites, resubTimeout, subOnce, true);
     }
 
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
