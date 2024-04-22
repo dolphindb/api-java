@@ -108,8 +108,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 			}
 			for (int i=0; i<count; ++i) {
 				DBConnection conn = new DBConnection(false, useSSL, compress, usePython);
-				conn.setLoadBalance(false);
-				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, initialScript, enableHighAvailability, highAvailabilitySites))
+				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, initialScript, enableHighAvailability, highAvailabilitySites,false,false))
 					throw new RuntimeException("Can't connect to the host " + nodes.getString(i));
 				workers_.add(new AsyncWorker(conn));
 			}
