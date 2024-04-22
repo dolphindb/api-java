@@ -415,6 +415,9 @@ public class LoadBalanceTest {
             DBConnection connection = new DBConnection();
             connection.connect(HOST, PORT, "admin", "123456",null,true,null,false,false);
             list.add(connection);
+           // BasicInt re = (BasicInt)connection.run("getNodePort()");
+           // System.out.println("current node is："+re);
+           // System.out.println("stop current node");
         }
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",false);
@@ -578,6 +581,45 @@ public class LoadBalanceTest {
                 assertEquals(true, Integer.valueOf(connectionNum) >= 100);
             }
         }
+    }
+    //@Test//The current node is unavailable
+    public void Test_DBConnectionPool_enableHighAvailability_true_loadBalance_false_2() throws SQLException, ClassNotFoundException, IOException, InterruptedException {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host, controller_port, "admin", "123456");
+        class MyThread extends Thread {
+            @Override
+            public void run() {
+                try {
+                    DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,false,true,null,null, false, false, false);
+                    Thread.sleep(1000);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        class MyThread1 extends Thread {
+            @Override
+            public void run() {
+                    try {
+                        controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+                        Thread.sleep(1000);
+                    } catch (Exception e) {
+                        // 捕获异常并打印错误信息
+                        System.err.println("Error executing task: " + e.getMessage());
+                    }
+            }
+        }
+        MyThread thread = new MyThread();
+        MyThread1 thread1 = new MyThread1();
+        thread.start();
+        Thread.sleep(15);
+        System.err.println("thread1开始运行 ");
+        thread1.start();
+        thread.join();
+        thread1.join();
+        controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
     }
     @Test
     public void Test_DBConnectionPool_enableHighAvailability_true_loadBalance_true_highAvailabilitySites_null() throws SQLException, ClassNotFoundException, IOException {
