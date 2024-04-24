@@ -790,12 +790,14 @@ public class DBConnection {
 
                 if (bt!=null) {
                     if (!loadBalance_) {
-                        BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
-                        BasicIntVector colPort = (BasicIntVector) bt.getColumn("port");
-                        for (int i = 0; i < colHost.rows(); i++) {
-                            Node curNode = new Node(colHost.getString(i), colPort.getInt(i));
-                            if (!(curNode.hostName.equals(hostName) && curNode.port == port))
-                                nodes_.add(curNode);
+                        if (highAvailabilitySites == null) {
+                            BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
+                            BasicIntVector colPort = (BasicIntVector) bt.getColumn("port");
+                            for (int i = 0; i < colHost.rows(); i++) {
+                                Node curNode = new Node(colHost.getString(i), colPort.getInt(i));
+                                if (!(curNode.hostName.equals(hostName) && curNode.port == port))
+                                    nodes_.add(curNode);
+                            }
                         }
                     } else {
                         // enable loadBalance
