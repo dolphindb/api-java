@@ -154,24 +154,18 @@ public class ThreadedClient extends AbstractClient {
 
     @Override
     protected boolean doReconnect(Site site) {
-        synchronized (this) {
-            log.info("ThreadedClient doReconnect: " + site.host + ":" + site.port);
+        if (!AbstractClient.ifUseBackupSite) {
+            // not enable backupSite, use original logic
             String topicStr = site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName;
             Thread handlerLopper = null;
-            if (!handlerLoppers.containsKey(topicStr)) {
-                if (!AbstractClient.ifUseBackupSite) {
+            synchronized (handlerLoppers) {
+                if (!handlerLoppers.containsKey(topicStr))
                     throw new RuntimeException("Subscribe thread is not started");
-                }
-            } else {
                 handlerLopper = handlerLoppers.get(topicStr);
-                handlerLopper.interrupt();
             }
-
+            handlerLopper.interrupt();
             try {
-//                System.out.println("doReconnect 尝试切换节点：" + site.host + ":" + site.port);
-//                System.out.println("site msg id: " +site.msgId);
-                subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord, false);
-                // System.out.println("doReconnect 尝试切换节点成功：" + site.host + ":" + site.port);
+                subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
                 Date d = new Date();
                 DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 log.info(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
@@ -182,6 +176,29 @@ public class ThreadedClient extends AbstractClient {
                 log.error(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
                 ex.printStackTrace();
                 return false;
+            }
+        } else {
+            // enable backupSite, try to switch site and subscribe.
+            synchronized (this) {
+                log.info("ThreadedClient doReconnect: " + site.host + ":" + site.port);
+                try {
+                    System.out.println("doReconnect 尝试切换节点：" + site.host + ":" + site.port);
+                    // System.out.println("site msg id: " +site.msgId);
+                    subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord, false);
+                    System.out.println("doReconnect 尝试切换节点成功：" + site.host + ":" + site.port);
+                    // System.out.println("切换后 handlerLoppers: " + handlerLoppers.get(topicStr).getName());
+                    // System.out.println("切换成功后，handlerLoppers size: " + handlerLoppers.size());
+                    Date d = new Date();
+                    DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                    log.info(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
+                    return true;
+                } catch (Exception ex) {
+                    Date d = new Date();
+                    DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                    log.error(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
+                    ex.printStackTrace();
+                    return false;
+                }
             }
         }
     }
@@ -198,16 +215,11 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String password, boolean createSubInfo) throws IOException {
+    /**
+     * This internal subscribe method only use for when enable backupSite, try to switch site and subscribe.
+     */
+    protected void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String password, boolean createSubInfo) throws IOException {
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, false, createSubInfo);
-        HandlerLopper handlerLopper = new HandlerLopper(queue, handler);
-        handlerLopper.start();
-        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
-        List<String> usr = Arrays.asList(userName, password);
-        synchronized (handlerLoppers) {
-            handlerLoppers.put(topicStr, handlerLopper);
-            // users.put(topicStr, usr);
-        }
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password) throws IOException {

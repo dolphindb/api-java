@@ -258,11 +258,14 @@ public abstract class AbstractClient implements MessageDispatcher {
                     int successfulSiteIndex = -1;
 
                     // Starting from currentSiteIndex, go around in a circle until you return to the position just before it (circular looping).
+                    Site lastSite = null;
                     for (int offset = 0; offset < totalSites; offset++) {
                         // Implement wrapping around using modulo operation
                         int i = (currentSiteIndex + offset) % totalSites;
 
                         Site site = sites[i];
+                        if (offset == 0)
+                            lastSite = site;
                         boolean siteReconnected = false;
 
                         for (int attempt = 0; attempt < 2; attempt++) {
@@ -286,7 +289,9 @@ public abstract class AbstractClient implements MessageDispatcher {
                     if (subOnce && reconnected) {
                         List<Site> siteList = new ArrayList<>(Arrays.asList(sites));
                         // Remove the original currentSiteIndex node from the list.
-                        siteList.remove((int) currentSiteIndex);
+                        if (!(siteList.get(successfulSiteIndex).host.equals(lastSite.host) && siteList.get(successfulSiteIndex).port == lastSite.port))
+                            siteList.remove((int) currentSiteIndex);
+
                         // update sites
                         sites = siteList.toArray(new Site[0]);
                         trueTopicToSites.put(topic, sites);
