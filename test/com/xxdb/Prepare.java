@@ -2,6 +2,7 @@ package com.xxdb;
 
 import com.xxdb.data.BasicTable;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
@@ -10,33 +11,36 @@ public class Prepare {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
 
     public static void clear_env() throws IOException {
-        DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT,"admin","123456");
-        conn.run("a = getStreamingStat().pubTables\n" +
-                "for(i in a){\n" +
-                "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
-                "}");
-        conn.run("def getAllShare(){\n" +
-                "\treturn select name from objs(true) where shared=1\n" +
-                "\t}\n" +
-                "\n" +
-                "def clearShare(){\n" +
-                "\tlogin(`admin,`123456)\n" +
-                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
-                "\tfor(i in allShare){\n" +
-                "\t\ttry{\n" +
-                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
-                "\t\t\t}catch(ex1){}\n" +
-                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
-                "\t}\n" +
-                "\ttry{\n" +
-                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
-                "\t}catch(ex1){}\n" +
-                "}\n" +
-                "clearShare()");
-        conn.run("try{dropStreamEngine(\"serInput\");\n}catch(ex){\n}\n");
+        for (int i = 0; i < port_list.length; i++) {
+            DBConnection conn = new DBConnection();
+            conn.connect(HOST, port_list[i], "admin", "123456");
+            conn.run("a = getStreamingStat().pubTables\n" +
+                    "for(i in a){\n" +
+                    "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
+                    "}");
+            conn.run("def getAllShare(){\n" +
+                    "\treturn select name from objs(true) where shared=1\n" +
+                    "\t}\n" +
+                    "\n" +
+                    "def clearShare(){\n" +
+                    "\tlogin(`admin,`123456)\n" +
+                    "\tallShare=exec name from pnodeRun(getAllShare)\n" +
+                    "\tfor(i in allShare){\n" +
+                    "\t\ttry{\n" +
+                    "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
+                    "\t\t\t}catch(ex1){}\n" +
+                    "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
+                    "\t}\n" +
+                    "\ttry{\n" +
+                    "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
+                    "\t}catch(ex1){}\n" +
+                    "}\n" +
+                    "clearShare()");
+            conn.run("try{dropStreamEngine(\"serInput\");\n}catch(ex){\n}\n");
+        }
     }
 
     public static void Preparedata(long count) throws IOException {
