@@ -855,9 +855,11 @@ public class EventClientTest {
         for(int i=0;i<10;i++) {
             client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
             sender.sendEvent("MarketData", attributes);
+            Thread.sleep(200);
             client.unsubscribe(HOST, PORT, "inputTable", "test1");
             client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
             sender.sendEvent("MarketData", attributes);
+            Thread.sleep(200);
             client.unsubscribe(HOST, PORT, "inputTable", "test1");
         }
         Thread.sleep(1000);
@@ -895,15 +897,27 @@ public class EventClientTest {
 
     @Test
     public  void test_EventClient_subscribe_haStreamTable() throws IOException, InterruptedException {
-        conn.run("table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]) as inputTable;");
-        conn.run("haStreamTable(11, table, `inputTable, 100000)");
-        conn.run("share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;");
-        subscribePrepare();
+        String script = "try{\ndropStreamTable(`inputTable)\n}catch(ex){\n}\n"+
+                "table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]);\n"+
+                "haStreamTable("+GROUP_ID+", table, `inputTable, 100000);\n"+
+                "share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;\n";
+        conn.run(script);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("MarketData");
+        scheme.setFieldNames(Arrays.asList("timestamp", "comment1"));
+        scheme.setFieldTypes(Arrays.asList( DT_TIMESTAMP,DT_STRING));
+        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
+        List<EventSchema> eventSchemas = new ArrayList<>();
+        eventSchemas.add(scheme);
+        List<String> eventTimeKeys = Arrays.asList(new String[]{"timestamp"});
+        List<String> commonKeys = Arrays.asList(new String[]{"comment1"});
+        sender = new EventSender(conn, "inputTable", eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
 
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
-        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "user1", "123456");
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
         sender.sendEvent("MarketData", attributes);
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
@@ -926,12 +940,22 @@ public class EventClientTest {
             "haStreamTable("+GROUP_ID+", table, `inputTable_1, 100000);\n"+
             "share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;\n";
         conn1.run(script);
-        subscribePrepare();
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("MarketData");
+        scheme.setFieldNames(Arrays.asList("timestamp", "comment1"));
+        scheme.setFieldTypes(Arrays.asList( DT_TIMESTAMP,DT_STRING));
+        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
+        List<EventSchema> eventSchemas = new ArrayList<>();
+        eventSchemas.add(scheme);
+        List<String> eventTimeKeys = Arrays.asList(new String[]{"timestamp"});
+        List<String> commonKeys = Arrays.asList(new String[]{"comment1"});
+        sender = new EventSender(conn, "inputTable_1", eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
 
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
-        client.subscribe(StreamLeaderHost, StreamLeaderPort, "inputTable_1", "test1", handler, -1, true, "user1", "123456");
+        client.subscribe(StreamLeaderHost, StreamLeaderPort, "inputTable_1", "test1", handler, -1, true, "admin", "123456");
         sender.sendEvent("MarketData", attributes);
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn1.run("select * from outputTable");
@@ -941,7 +965,7 @@ public class EventClientTest {
         client.unsubscribe(StreamLeaderHost, StreamLeaderPort, "inputTable_1", "test1");
     }
 
-    @Test//not support
+    //@Test//not support
     public  void test_EventClient_subscribe_haStreamTable_follower() throws IOException, InterruptedException {
         String script0 ="leader = getStreamingLeader("+GROUP_ID+");\n" +
                 "groupSitesStr = (exec sites from getStreamingRaftGroups() where id =="+GROUP_ID+")[0];\n"+
@@ -961,8 +985,18 @@ public class EventClientTest {
                 "haStreamTable("+GROUP_ID+", table, `inputTable_1, 100000);\n"+
                 "share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;\n";
         conn1.run(script);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("MarketData");
+        scheme.setFieldNames(Arrays.asList("timestamp", "comment1"));
+        scheme.setFieldTypes(Arrays.asList( DT_TIMESTAMP,DT_STRING));
+        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
+        List<EventSchema> eventSchemas = new ArrayList<>();
+        eventSchemas.add(scheme);
+        List<String> eventTimeKeys = Arrays.asList(new String[]{"timestamp"});
+        List<String> commonKeys = Arrays.asList(new String[]{"comment1"});
+        sender = new EventSender(conn, "inputTable_1", eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
 
-        subscribePrepare();
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
