@@ -3483,11 +3483,11 @@ public class ThreadedClientsubscribeReverseTest {
         conn4.run(script1);
         conn4.run(script2);
         conn4.run("n=100000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(6000);
+        Thread.sleep(10000);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("100000",row_num.getColumn(0).get(0).getString());
-       // client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
+        client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
 
     @Test(timeout = 180000)
