@@ -78,11 +78,18 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 		if (count <= 0)
 			throw new RuntimeException("The thread count can not be less than 0");
 		if (!loadBalance) {
+			// not enable loadBalance
 			for (int i=0; i<count; ++i) {
 				DBConnection conn = new DBConnection(false, useSSL, compress, usePython);
-				conn.setLoadBalance(false);
-				if(!conn.connect(host, port, uid, pwd, initialScript, enableHighAvailability, highAvailabilitySites))
-					throw new RuntimeException("Can't connect to the specified host.");
+				try {
+					boolean isConnected = conn.connect(host, port, uid, pwd, initialScript, enableHighAvailability, highAvailabilitySites, false, loadBalance);
+					if (!isConnected) {
+						throw new RuntimeException("Can't connect to the specified host.");
+					}
+				} catch (Exception e) {
+					throw new RuntimeException("Can't connect to the specified host: ", e);
+				}
+
 				workers_.add(new AsyncWorker(conn));
 			}
 		} else {
@@ -108,8 +115,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 			}
 			for (int i=0; i<count; ++i) {
 				DBConnection conn = new DBConnection(false, useSSL, compress, usePython);
-				conn.setLoadBalance(false);
-				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, initialScript, enableHighAvailability, highAvailabilitySites))
+				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, initialScript, enableHighAvailability, highAvailabilitySites,false,false))
 					throw new RuntimeException("Can't connect to the host " + nodes.getString(i));
 				workers_.add(new AsyncWorker(conn));
 			}

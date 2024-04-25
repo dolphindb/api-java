@@ -43,6 +43,7 @@ public class EventClientTest {
         try{client.unsubscribe(HOST, PORT, "intput", "test1");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "inputTable" ,"javaStreamingApi");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "intput" ,"javaStreamingApi");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "inputTable_1" ,"test1");}catch (Exception ex){}
     }
 
     public static  EventMessageHandler handler = new EventMessageHandler() {
