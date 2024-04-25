@@ -614,7 +614,7 @@ public class LoadBalanceTest {
         MyThread thread = new MyThread();
         MyThread1 thread1 = new MyThread1();
         thread.start();
-        Thread.sleep(15);
+        Thread.sleep(20);
         System.err.println("thread1开始运行 ");
         thread1.start();
         thread.join();

@@ -14,9 +14,8 @@ public class Prepare {
     static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
 
     public static void clear_env() throws IOException {
-        for (int i = 0; i < port_list.length; i++) {
             DBConnection conn = new DBConnection();
-            conn.connect(HOST, port_list[i], "admin", "123456");
+            conn.connect(HOST, PORT, "admin", "123456");
             conn.run("a = getStreamingStat().pubTables\n" +
                     "for(i in a){\n" +
                     "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
@@ -40,7 +39,6 @@ public class Prepare {
                     "}\n" +
                     "clearShare()");
             conn.run("try{dropStreamEngine(\"serInput\");\n}catch(ex){\n}\n");
-        }
     }
 
     public static void Preparedata(long count) throws IOException {

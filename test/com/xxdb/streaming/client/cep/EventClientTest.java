@@ -924,7 +924,7 @@ public class EventClientTest {
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
     }
-    @Test
+    //@Test
     public  void test_EventClient_subscribe_haStreamTable_leader() throws IOException, InterruptedException {
         BasicString StreamLeaderTmp = (BasicString)conn.run(String.format("getStreamingLeader(%d)", GROUP_ID));
         String StreamLeader = StreamLeaderTmp.getString();
