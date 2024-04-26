@@ -2129,7 +2129,7 @@ public class EventSenderTest {
         BasicTable bt = (BasicTable)conn.run("select * from data");
 
         client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
-        client.subscribe(HOST, PORT, "inputTable", "test1", handler_array, -1, true, "admin", "123456");
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler_array_no_decimal, -1, true, "admin", "123456");
 
         for(int i=0;i<bt.rows();i++){
             List<Entity> attributes = new ArrayList<>();

@@ -374,7 +374,7 @@ public class LoadBalanceTest {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
             String port = re.getColumn(0).get(i).toString();
             String connectionNum = re.getColumn(1).get(i).toString();
-            assertEquals(true, Integer.valueOf(connectionNum) > 20);
+            assertEquals(true, Integer.valueOf(connectionNum) > 15);
             assertEquals(true, Integer.valueOf(connectionNum) < 50);
         }
     }

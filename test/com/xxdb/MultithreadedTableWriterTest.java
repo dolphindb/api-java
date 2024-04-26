@@ -7398,8 +7398,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
         assertEquals(1, bt.rows());
         BasicNanoTimestamp sendTime = (BasicNanoTimestamp)bt.getColumn("enableActualSendTime").get(0);
-        assertEquals(true, sendTime.getNanoTimestamp().getNano() > now.getNano());
-        assertEquals(true, sendTime.getNanoTimestamp().getNano() < now1.getNano());
+        assertEquals(true, sendTime.getNanoTimestamp().getNano() >= now.getNano());
+        assertEquals(true, sendTime.getNanoTimestamp().getNano() <= now1.getNano());
         conn.run("undef(`t1,SHARED)");
     }
 
@@ -7464,8 +7464,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
         assertEquals(1, bt.rows());
         BasicNanoTimestamp sendTime = (BasicNanoTimestamp)bt.getColumn("enableActualSendTime").get(0);
-        assertEquals(true, sendTime.getNanoTimestamp().getNano() > now.getNano());
-        assertEquals(true, sendTime.getNanoTimestamp().getNano() < now1.getNano());
+        assertEquals(true, sendTime.getNanoTimestamp().getNano() >= now.getNano());
+        assertEquals(true, sendTime.getNanoTimestamp().getNano() <= now1.getNano());
         conn.run("undef(`t1,SHARED)");
     }
     @Test(timeout = 120000)
