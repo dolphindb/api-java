@@ -195,15 +195,20 @@ class Daemon implements Runnable {
                         }
                     }
 
-                    Set<String> waitReconnectTopic = dispatcher.getAllReconnectTopic();
-                    synchronized (waitReconnectTopic) {
-                        for (String topic : waitReconnectTopic) {
-                            // reconnect every info.resubTimeout ms
-                            if (System.currentTimeMillis() - AbstractClient.lastExceptionTopicTimeMap.get(topic) <= AbstractClient.resubTimeout)
-                                continue;
-                            dispatcher.tryReconnect(topic);
-                        }
-                    }
+                    // not need to put and get from waitReconnectTopic.
+//                    Set<String> waitReconnectTopic = dispatcher.getAllReconnectTopic();
+//                    synchronized (waitReconnectTopic) {
+//                        for (String topic : waitReconnectTopic) {
+//                            // reconnect every info.resubTimeout ms
+////                            if (System.currentTimeMillis() - AbstractClient.lastExceptionTopicTimeMap.get(topic) <= AbstractClient.resubTimeout)
+////                                continue;
+//                            long subTime = System.currentTimeMillis() - AbstractClient.lastExceptionTopicTimeMap.get(topic);
+//                            System.out.println("flag3 subTime: " + subTime);
+//                            if (subTime <= AbstractClient.resubTimeout)
+//                                continue;
+//                            dispatcher.tryReconnect(topic);
+//                        }
+//                    }
 
                     try {
                         // check reconnected interval time

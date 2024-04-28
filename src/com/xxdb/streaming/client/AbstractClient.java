@@ -321,7 +321,7 @@ public abstract class AbstractClient implements MessageDispatcher {
 //                log.info("Successfully switched to node: " + sites[currentSiteIndexMap.get(topic)].host + ":" + sites[currentSiteIndexMap.get(topic)].port);
 
                 if (!reconnected) {
-                    waitReconnectTopic.add(topic);
+                    // waitReconnectTopic.add(topic);
                     return false;
                 } else {
                     log.info("Successfully switched to node: " + sites[currentSiteIndexMap.get(topic)].host + ":" + sites[currentSiteIndexMap.get(topic)].port);
