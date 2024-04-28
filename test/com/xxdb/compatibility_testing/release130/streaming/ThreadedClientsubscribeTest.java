@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 
 public class ThreadedClientsubscribeTest {
     public static DBConnection conn;
-    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/compatibility_testing/release130/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     //static int PORT = 9002;
@@ -912,7 +912,7 @@ public class ThreadedClientsubscribeTest {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' function: 'publishTable'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: No access to shared table [Trades]. function: publishTable",e.getMessage());
         }
     }
 
@@ -937,13 +937,13 @@ public class ThreadedClientsubscribeTest {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' function: 'publishTable'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: No access to shared table [Trades]. function: publishTable",e.getMessage());
         }
         try {
             client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test3", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(HOST+":"+PORT+" Server response: 'No access to shared table [Trades]' function: 'publishTable'",e.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: No access to shared table [Trades]. function: publishTable",e.getMessage());
         }
         client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, false, filter1, true, 100, 5, "test2", "123456");
         client.unsubscribe(HOST, PORT, "Trades", "subTread1");
@@ -1381,7 +1381,7 @@ public class ThreadedClientsubscribeTest {
             StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
             fail("no exception thrown");
         }catch(Exception ex){
-            assertEquals(HOST+":"+PORT+" Server response: 'schema() => The function [schema] expects 1 argument(s), but the actual number of arguments is: 0' script: 'schema()'",ex.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: schema() => The function [schema] expects 1 argument(s), but the actual number of arguments is: 0. script: schema()",ex.getMessage());
         }
     }
 
@@ -1407,7 +1407,7 @@ public class ThreadedClientsubscribeTest {
             StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
             fail("no exception thrown");
         }catch(Exception ex){
-            assertEquals(HOST+":"+PORT+" Server response: 'Syntax Error: [line #1] Cannot recognize the token test2' script: 'schema(test2)'",ex.getMessage());
+            assertEquals(HOST+":"+PORT+" Server response: Syntax Error: [line #1] Cannot recognize the token test2. script: schema(test2)",ex.getMessage());
         }
     }
 

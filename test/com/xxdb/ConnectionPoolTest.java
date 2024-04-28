@@ -63,7 +63,7 @@ public class ConnectionPoolTest {
         DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,1,"admin","123456",5,false,false);
     }
 
-    @Test(expected = IOException.class)
+    @Test(expected = RuntimeException.class)
     public void test_DBConnectionPool_uid_error() throws IOException {
         DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"error","123456",5,false,false);
     }
@@ -73,7 +73,7 @@ public class ConnectionPoolTest {
         DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,null,"123456",5,false,false);
     }
 
-    @Test(expected = IOException.class)
+    @Test(expected = RuntimeException.class)
     public void test_DBConnectionPool_password_error() throws IOException {
         DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","error",5,false,false);
     }

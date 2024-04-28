@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 
 public class ThreadPooledClientTest {
     public static DBConnection conn;
-    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/compatibility_testing/release130/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     //static int PORT = 9002;
@@ -63,6 +63,7 @@ public class ThreadPooledClientTest {
 
     @Before
     public void setUp() throws IOException {
+        clear_env();
         try {
             String script0 = "login(`admin,`123456);" +
                     "try{undef(`Trades, SHARED);}catch(ex){};"+
@@ -80,7 +81,6 @@ public class ThreadPooledClientTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        clear_env();
     }
 
     @After

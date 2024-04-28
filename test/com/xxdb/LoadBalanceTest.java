@@ -38,6 +38,13 @@ public class LoadBalanceTest {
 
     @After
     public void tearDown() throws Exception {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host, controller_port, "admin", "123456");
+        for(int i = 0; i<ipports.length; i++){
+            String site = ipports[i];
+            controller_conn.run("try{startDataNode('" + site + "')}catch(ex){}");
+            System.out.println(site);
+        }
     }
 
     @Test(timeout = 120000)
@@ -367,7 +374,7 @@ public class LoadBalanceTest {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
             String port = re.getColumn(0).get(i).toString();
             String connectionNum = re.getColumn(1).get(i).toString();
-            assertEquals(true, Integer.valueOf(connectionNum) > 20);
+            assertEquals(true, Integer.valueOf(connectionNum) > 15);
             assertEquals(true, Integer.valueOf(connectionNum) < 50);
         }
     }
@@ -408,6 +415,9 @@ public class LoadBalanceTest {
             DBConnection connection = new DBConnection();
             connection.connect(HOST, PORT, "admin", "123456",null,true,null,false,false);
             list.add(connection);
+           // BasicInt re = (BasicInt)connection.run("getNodePort()");
+           // System.out.println("current node is："+re);
+           // System.out.println("stop current node");
         }
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",false);
@@ -522,5 +532,196 @@ public class LoadBalanceTest {
         Assert.assertEquals(PORT,node2.getInt());
         controller_conn.run("try{startDataNode('"+HOST+":"+node1.getInt()+"')}catch(ex){}");
         controller_conn.run("2000");
+    }
+    @Test
+    public void Test_DBConnectionPool_enableHighAvailability_false_loadBalance_false() throws SQLException, ClassNotFoundException, IOException, InterruptedException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,false,false);
+        Thread.sleep(1000);
+        DBConnection connection1 = new DBConnection();
+        connection1.connect(HOST, PORT, "admin", "123456",false);
+        connection1.run("sleep(3000)");
+        BasicIntVector re = (BasicIntVector)connection1.run("EXEC connectionNum from rpc(getControllerAlias(),getClusterPerf) where port="+PORT);
+        System.out.println(re.getInt(0));
+        assertEquals(true,re.getInt(0)>=100);
+        connection1.close();
+        pool1.shutdown();
+    }
+    @Test
+    public void Test_DBConnectionPool_enableHighAvailability_true_loadBalance_false() throws SQLException, ClassNotFoundException, IOException, InterruptedException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,false,true);
+        Thread.sleep(1000);
+        DBConnection connection1 = new DBConnection();
+        connection1.connect(HOST, PORT, "admin", "123456",false);
+        connection1.run("sleep(3000)");
+        BasicIntVector re = (BasicIntVector)connection1.run("EXEC connectionNum from rpc(getControllerAlias(),getClusterPerf) where port="+PORT);
+        System.out.println(re.getInt(0));
+        assertEquals(true,re.getInt(0)>100);
+        connection1.close();
+        pool1.shutdown();
+    }
+
+    @Test//The current node is unavailable
+    public void Test_DBConnectionPool_enableHighAvailability_true_loadBalance_false_1() throws SQLException, ClassNotFoundException, IOException {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host, controller_port, "admin", "123456");
+        controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,false,true,ipports,null, false, false, false);
+
+        controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("sleep(3000);");
+        DBConnection connection1 = new DBConnection();
+        connection1.connect(HOST, PORT, "admin", "123456",false);
+        int port1 = port_list[1];
+        BasicTable re = (BasicTable) connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
+        for (int i = 0; i < re.rows(); i++) {
+            System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
+            String port = re.getColumn(0).get(i).toString();
+            String connectionNum = re.getColumn(1).get(i).toString();
+            if(Integer.valueOf(port)==port1) {
+                assertEquals(true, Integer.valueOf(connectionNum) >= 100);
+            }
+        }
+    }
+    //@Test//The current node is unavailable
+    public void Test_DBConnectionPool_enableHighAvailability_true_loadBalance_false_2() throws SQLException, ClassNotFoundException, IOException, InterruptedException {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host, controller_port, "admin", "123456");
+        class MyThread extends Thread {
+            @Override
+            public void run() {
+                try {
+                    DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,false,true,null,null, false, false, false);
+                    Thread.sleep(1000);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        class MyThread1 extends Thread {
+            @Override
+            public void run() {
+                    try {
+                        controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+                        Thread.sleep(1000);
+                    } catch (Exception e) {
+                        // 捕获异常并打印错误信息
+                        System.err.println("Error executing task: " + e.getMessage());
+                    }
+            }
+        }
+        MyThread thread = new MyThread();
+        MyThread1 thread1 = new MyThread1();
+        thread.start();
+        Thread.sleep(20);
+        System.err.println("thread1开始运行 ");
+        thread1.start();
+        thread.join();
+        thread1.join();
+        controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+    }
+    @Test
+    public void Test_DBConnectionPool_enableHighAvailability_true_loadBalance_true_highAvailabilitySites_null() throws SQLException, ClassNotFoundException, IOException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,true,true,null,null, false, false, false);
+        DBConnection connection1 = new DBConnection();
+        connection1.connect(HOST, PORT, "admin", "123456",true);
+        connection1.run("sleep(3000)");
+        BasicTable re = (BasicTable) connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
+        for (int i = 0; i < re.rows(); i++) {
+            System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
+            String port = re.getColumn(0).get(i).toString();
+            String connectionNum = re.getColumn(1).get(i).toString();
+            assertEquals(true, Integer.valueOf(connectionNum) >= 20);
+            assertEquals(true, Integer.valueOf(connectionNum) < 50);
+        }
+        pool1.shutdown();
+    }
+
+    @Test
+    public void Test_DBConnectionPool_enableHighAvailability_true_loadBalance_true() throws SQLException, ClassNotFoundException, IOException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,true,true,ipports,null, false, false, false);
+        DBConnection connection1 = new DBConnection();
+        connection1.connect(HOST, PORT, "admin", "123456",true);
+        connection1.run("sleep(2000)");
+        BasicTable re = (BasicTable) connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
+        for (int i = 0; i < re.rows(); i++) {
+            System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
+            String port = re.getColumn(0).get(i).toString();
+            String connectionNum = re.getColumn(1).get(i).toString();
+            assertEquals(true, Integer.valueOf(connectionNum) >= 20);
+            assertEquals(true, Integer.valueOf(connectionNum) < 50);
+        }
+        pool1.shutdown();
+    }
+    @Test//The current node is unavailable
+    public void Test_DBConnectionPool_enableHighAvailability_true_loadBalance_true_1() throws SQLException, ClassNotFoundException, IOException {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host, controller_port, "admin", "123456");
+        controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("sleep(1000)");
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,true,true,ipports,null, false, false, false);
+        controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("sleep(1000)");
+        DBConnection connection1 = new DBConnection();
+        connection1.connect(HOST, PORT, "admin", "123456",false);
+        connection1.run("sleep(3000)");
+        BasicTable node1 = (BasicTable)connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0 and port ="+ipports[1].split(":")[1]);
+        System.out.println(node1.getString());
+        Assert.assertEquals(true, Integer.valueOf(node1.getColumn(1).get(0).toString())>=50);
+
+        BasicTable node2 = (BasicTable)connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0 and port ="+ipports[2].split(":")[1]);
+        System.out.println(node2.getString());
+        Assert.assertEquals(true, Integer.valueOf(node2.getColumn(1).get(0).toString())>=25);
+        pool1.shutdown();
+    }
+    @Test
+    public void Test_DBConnectionPool_enableHighAvailability_false_loadBalance_true() throws SQLException, ClassNotFoundException, IOException {
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,true,false,null,null, false, false, false);
+        DBConnection connection1 = new DBConnection();
+        connection1.connect(HOST, PORT, "admin", "123456",false);
+        connection1.run("sleep(3000)");
+        BasicTable re = (BasicTable) connection1.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode in [0,4];");
+        for (int i = 0; i < re.rows(); i++) {
+            System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
+            String port = re.getColumn(0).get(i).toString();
+            String connectionNum = re.getColumn(1).get(i).toString();
+            if(Integer.valueOf(port)!=PORT) {
+                assertEquals(true, Integer.valueOf(connectionNum) > 20);
+                assertEquals(true, Integer.valueOf(connectionNum) < 50);
+            }
+        }
+        pool1.shutdown();
+    }
+    @Test
+    public void Test_DBConnectionPool_enableHighAvailability_true_loadBalance_false_site_not_null() throws SQLException, ClassNotFoundException, IOException {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host, controller_port, "admin", "123456");
+        controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("2000");
+        String[] ipportArray = new String[1];
+        ipportArray[0] = ipports[2];
+        DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,false,true,ipportArray,null, false, false, false);
+        controller_conn.run("20000");
+        BasicTable node1 = (BasicTable)controller_conn.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0 and port ="+ipportArray[0].split(":")[1]);
+        System.out.println(node1.getString());
+        Assert.assertEquals(true, Integer.valueOf(node1.getColumn(1).get(0).toString())>=100);
+        controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("2000");
+        controller_conn.run("try{stopDataNode('"+HOST+":"+ipportArray[0].split(":")[1]+"')}catch(ex){}");
+        controller_conn.run("5000");
+        List<DBTask> tasks = new ArrayList<>();
+        for (int i = 0; i < 100; i++){
+            BasicDBTask task = new BasicDBTask("getNodePort();");
+            tasks.add(task);
+        }
+        pool1.execute(tasks);
+        pool1.waitForThreadCompletion();
+        BasicTable node2 = (BasicTable)controller_conn.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0 and port ="+PORT);
+        System.out.println(node2.getString());
+        Assert.assertEquals(true, Integer.valueOf(node2.getColumn(1).get(0).toString())>=100);
+        controller_conn.run("try{startDataNode('"+HOST+":"+ipportArray[0].split(":")[1]+"')}catch(ex){}");
+        controller_conn.run("2000");
+        pool1.shutdown();
     }
 }

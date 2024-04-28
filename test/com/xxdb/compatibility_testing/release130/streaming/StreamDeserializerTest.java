@@ -7,14 +7,13 @@ import com.xxdb.streaming.client.StreamDeserializer;
 import org.javatuples.Pair;
 import org.junit.Test;
 
-import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import static com.xxdb.BehaviorTest.bundle;
+import java.util.ResourceBundle;
 
 public class StreamDeserializerTest {
+    public static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/compatibility_testing/release130/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     @Test(expected = RuntimeException.class)

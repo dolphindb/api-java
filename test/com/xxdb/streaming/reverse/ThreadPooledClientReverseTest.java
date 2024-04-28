@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.xxdb.Prepare.*;
 import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static com.xxdb.data.Entity.DATA_TYPE.DT_DOUBLE;
 import static com.xxdb.streaming.reverse.ThreadedClientsubscribeReverseTest.*;
@@ -26,30 +27,7 @@ public class ThreadPooledClientReverseTest {
     //static int PORT = 9002;
 
     private static ThreadPooledClient client;
-    public void clear_env() throws IOException {
-        conn.run("a = getStreamingStat().pubTables\n" +
-                "for(i in a){\n" +
-                "\tstopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)\n" +
-                "}");
-        conn.run("def getAllShare(){\n" +
-                "\treturn select name from objs(true) where shared=1\n" +
-                "\t}\n" +
-                "\n" +
-                "def clearShare(){\n" +
-                "\tlogin(`admin,`123456)\n" +
-                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
-                "\tfor(i in allShare){\n" +
-                "\t\ttry{\n" +
-                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
-                "\t\t\t}catch(ex1){}\n" +
-                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
-                "\t}\n" +
-                "\ttry{\n" +
-                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
-                "\t}catch(ex1){}\n" +
-                "}\n" +
-                "clearShare()");
-    }
+
     @BeforeClass
     public static void setUp() throws IOException {
 
@@ -106,61 +84,7 @@ public class ThreadPooledClientReverseTest {
     @AfterClass
     public static void clear_conn() {
     }
-//    @BeforeClass
-//    public static void login() {
-//        conn = new DBConnection();
-//        try {
-//            if (!conn.connect(HOST, PORT, "admin", "123456")) {
-//                throw new IOException("Failed to connect to dolphindb server");
-//            }
-//            client = new ThreadPooledClient(HOST, 0,10);
-//        } catch (IOException ex) {
-//            ex.printStackTrace();
-//        }
-//    }
-//    @Before
-//    public void setUp() throws IOException {
-//        try {
-//            String script0 = "login(`admin,`123456);" +
-//                    "try{dropStreamTable('Trades')}catch(ex){};"+
-//                    "try{dropStreamTable('Receive')}catch(ex){};";
-//            conn.run(script0);
-//            String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-//                    "enableTableShareAndPersistence(table=st1, tableName=`Trades, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n"
-//                    + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
-//            conn.run(script1);
-//            String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-//                    "enableTableShareAndPersistence(table=st2, tableName=`Receive, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n";
-//            conn.run(script2);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-//    @After
-//    public void drop() throws IOException {
-//        save_batch_size.clear();
-//        try{client.unsubscribe(HOST,PORT,"Trades","subTread1");}catch (Exception e){}
-//        try{client.unsubscribe(HOST,PORT,"Trades","subTread2");}catch (Exception e){}
-//        try{client.unsubscribe(HOST,PORT,"Trades","subTread3");}catch (Exception e){}
-//        try {
-//            conn.run("login(`admin,`123456);" +
-//                    "try{dropStreamTable('Trades')}catch(ex){};"+
-//                    "try{dropStreamTable('Receive')}catch(ex){};"+
-//                    "try{deleteUser(`test1)}catch(ex){};" +
-//                    "userlist=getUserList();" +
-//                    "grouplist=getGroupList();" +
-//                    "loop(deleteUser,userlist);" +
-//                    "loop(deleteGroup,grouplist)");
-//        } catch (Exception e) {
-//        }
-//
-//    }
-//
-//    @AfterClass
-//    public static void after() throws IOException {
-//        client.close();
-//        conn.close();
-//    }
+
 public static void PrepareStreamTable() throws IOException {
     try {
         String script0 = "login(`admin,`123456);" +
@@ -178,49 +102,7 @@ public static void PrepareStreamTable() throws IOException {
         e.printStackTrace();
     }
 }
-public static void PrepareStreamTable_array(String dataType) throws IOException {
-    String script = "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType+"[]]) as Trades;\n"+
-            "permno = take(1..1000,1000); \n"+
-            "dateType_INT =  array(INT[]).append!(cut(take(-100..100 join NULL, 1000*10), 10)); \n"+
-            "dateType_BOOL =  array(BOOL[]).append!(cut(take([true, false, NULL], 1000*10), 10)); \n"+
-            "dateType_CHAR =  array(CHAR[]).append!(cut(take(char(-10..10 join NULL), 1000*10), 10)); \n"+
-            "dateType_SHORT =  array(SHORT[]).append!(cut(take(short(-100..100 join NULL), 1000*10), 10)); \n"+
-            "dateType_LONG =  array(LONG[]).append!(cut(take(long(-100..100 join NULL), 1000*10), 10)); \n"+"" +
-            "dateType_DOUBLE =  array(DOUBLE[]).append!(cut(take(-100..100 join NULL, 1000*10) + 0.254, 10)); \n"+
-            "dateType_FLOAT =  array(FLOAT[]).append!(cut(take(-100..100 join NULL, 1000*10) + 0.254f, 10)); \n"+
-            "dateType_DATE =  array(DATE[]).append!(cut(take(2012.01.01..2012.02.29, 1000*10), 10)); \n"+
-            "dateType_MONTH =   array(MONTH[]).append!(cut(take(2012.01M..2013.12M, 1000*10), 10)); \n"+
-            "dateType_TIME =  array(TIME[]).append!(cut(take(09:00:00.000 + 0..99 * 1000, 1000*10), 10)); \n"+
-            "dateType_MINUTE =  array(MINUTE[]).append!(cut(take(09:00m..15:59m, 1000*10), 10)); \n"+
-            "dateType_SECOND =  array(SECOND[]).append!(cut(take(09:00:00 + 0..999, 1000*10), 10)); \n"+
-            "dateType_DATETIME =  array(DATETIME[]).append!(cut(take(2012.01.01T09:00:00 + 0..999, 1000*10), 10)); \n"+
-            "dateType_TIMESTAMP =  array(TIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000 + 0..999 * 1000, 1000*10), 10)); \n"+
-            "dateType_NANOTIME =  array(NANOTIME[]).append!(cut(take(09:00:00.000000000 + 0..999 * 1000000000, 1000*10), 10)); \n"+
-            "dateType_NANOTIMESTAMP =  array(NANOTIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000000000 + 0..999 * 1000000000, 1000*10), 10)); \n"+
-            "dateType_UUID =  array(UUID[]).append!(cut(take(uuid([\"5d212a78-cc48-e3b1-4235-b4d91473ee87\", \"5d212a78-cc48-e3b1-4235-b4d91473ee88\", \"5d212a78-cc48-e3b1-4235-b4d91473ee89\", \"\"]), 1000*10), 10)); \n"+
-            "dateType_DATEHOUR =  array(DATEHOUR[]).append!(cut(take(datehour(1..10 join NULL), 1000*10), 10)); \n"+
-            "dateType_IPADDR =  array(IPADDR[]).append!(cut(take(ipaddr([\"192.168.100.10\", \"192.168.100.11\", \"192.168.100.14\", \"\"]), 1000*10), 10)); \n"+
-            "dateType_INT128 =  array(INT128[]).append!(cut(take(int128([\"e1671797c52e15f763380b45e841ec32\", \"e1671797c52e15f763380b45e841ec33\", \"e1671797c52e15f763380b45e841ec35\", \"\"]), 1000*10), 10)); \n"+
-            "dateType_COMPLEX =   array(COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, 1000*10), 10));; \n"+
-            "dateType_POINT =  array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, 1000*10), 10)); \n"+
-            "share table(permno,dateType_"+dataType +") as pub_t\n"+
-            "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType +"[]]) as sub1;\n";
-    DBConnection conn1 = new DBConnection();
-    conn1.connect(HOST, PORT,"admin","123456");
-    conn1.run(script);
-}
-    public static void PrepareStreamTableDecimal_array(String dataType, int scale) throws IOException {
-        String script = "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType+"("+scale+")[]]) as Trades;\n"+
-                "permno = take(1..1000,1000); \n"+
-                "dateType_DECIMAL32 =   array(DECIMAL64(4)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000*10) + 0.254, 3), 10)); \n"+
-                "dateType_DECIMAL64 =   array(DECIMAL64(4)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000*10) + 0.254, 3), 10)); \n"+
-                "dateType_DECIMAL128 =   array(DECIMAL128(8)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000*10) + 0.254, 3), 10)); \n"+
-                "share table(permno,dateType_"+dataType +") as pub_t\n"+
-                "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType +"("+scale+")[]]) as sub1;\n";
-        DBConnection conn1 = new DBConnection();
-        conn1.connect(HOST, PORT,"admin","123456");
-        conn1.run(script);
-    }
+
     public static void checkResult() throws IOException, InterruptedException {
         for (int i = 0; i < 10; i++)
         {
@@ -624,8 +506,7 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
     @Test
     public void test_subscribe_other_user() throws IOException, InterruptedException {
         PrepareStreamTable();
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
-                "rpc(getControllerAlias(),create_user);");
+        PrepareUser("test1","123456");
         Vector filter1 = (Vector) conn.run("1..100000");
         client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"test1","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
@@ -638,9 +519,8 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
     @Test
     public void test_subscribe_other_user_unallow() throws IOException {
         PrepareStreamTable();
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
-                "rpc(getControllerAlias(),create_user);" +
-                "colNames =`id`timestamp`sym`qty`price;" +
+        PrepareUser("test1","123456");
+        conn.run("colNames =`id`timestamp`sym`qty`price;" +
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
                 "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades\"});");
@@ -657,9 +537,10 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
     @Test
     public void test_subscribe_other_some_user() throws IOException {
         PrepareStreamTable();
-        conn.run("def create_user(){try{deleteUser(`test1)}catch(ex){};try{deleteUser(`test2)}catch(ex){};try{deleteUser(`test3)}catch(ex){};createUser(`test1, '123456');createUser(`test2, '123456');createUser(`test3, '123456');};"+
-                "rpc(getControllerAlias(),create_user);" +
-                "colNames =`id`timestamp`sym`qty`price;" +
+        PrepareUser("test1","123456");
+        PrepareUser("test2","123456");
+        PrepareUser("test3","123456");
+        conn.run("colNames =`id`timestamp`sym`qty`price;" +
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
                 "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades\"});"+
@@ -686,9 +567,8 @@ public static void PrepareStreamTable_array(String dataType) throws IOException 
     @Test
     public void test_subscribe_one_user_some_table() throws IOException, InterruptedException {
         PrepareStreamTable();
-        conn.run("login('admin','123456');def create_user(){try{deleteUser(`test1)}catch(ex){};createUser(`test1, '123456');};"+
-                "rpc(getControllerAlias(),create_user);" +
-                "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
+        PrepareUser("test1","123456");
+        conn.run("share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st2;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st3;");
         client.subscribe(HOST,PORT,"tmp_st1","subTread1",MessageHandler_handler,-1,true,null,true,"test1","123456");

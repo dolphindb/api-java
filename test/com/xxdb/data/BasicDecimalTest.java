@@ -11,6 +11,7 @@ import com.xxdb.streaming.client.TopicPoller;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 
+import static com.xxdb.Prepare.clear_env;
 import static org.junit.Assert.*;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -32,30 +33,6 @@ public class BasicDecimalTest {
     //private final int id;
     private static MultithreadedTableWriter mutithreadTableWriter_ = null;
 
-    public void clear_env() throws IOException {
-        conn.run("a = getStreamingStat().pubTables\n" +
-                "for(i in a){\n" +
-                "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
-                "}");
-        conn.run("def getAllShare(){\n" +
-                "\treturn select name from objs(true) where shared=1\n" +
-                "\t}\n" +
-                "\n" +
-                "def clearShare(){\n" +
-                "\tlogin(`admin,`123456)\n" +
-                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
-                "\tfor(i in allShare){\n" +
-                "\t\ttry{\n" +
-                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
-                "\t\t\t}catch(ex1){}\n" +
-                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
-                "\t}\n" +
-                "\ttry{\n" +
-                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
-                "\t}catch(ex1){}\n" +
-                "}\n" +
-                "clearShare()");
-    }
     @Test
     public void test_BasicDecimal_readMemoryTable() throws IOException {
         conn = new DBConnection();
@@ -112,6 +89,7 @@ public class BasicDecimalTest {
 
     @Test
     public void test_BasicDecimal_readStreamingTable() throws IOException {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script = "rt = streamTable(1000:0,`sym`x`de`ci,[SYMBOL,INT,DECIMAL32(2),DECIMAL64(4)]);" +
@@ -127,6 +105,7 @@ public class BasicDecimalTest {
 
     @Test
     public void test_BasicDecimal_normalWriteMemoryTable() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         conn.run("it=table([1,2,3] as a,[4,5,6] as b,[7,8,9] as c)");
@@ -148,6 +127,7 @@ public class BasicDecimalTest {
 
     @Test
     public void test_BasicDecimal_normalWriteStreamingTable() throws IOException {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script = "rt = streamTable(2000:0,`sym`x`de`ci,[SYMBOL,INT,DECIMAL32(2),DECIMAL64(4)]);" +
@@ -279,6 +259,7 @@ public class BasicDecimalTest {
 
     @Test
     public void test_BasicDecimal_PoolReadStreamingTable() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script = "rt = streamTable(1000:0,`sym`x`de`ci,[SYMBOL,INT,DECIMAL32(2),DECIMAL64(4)]);" +
@@ -363,6 +344,7 @@ public class BasicDecimalTest {
     }
     @Test
     public void test_BasicDecimal_MultiThreadWriteMemoryTable() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         StringBuilder sb = new StringBuilder();
@@ -385,6 +367,7 @@ public class BasicDecimalTest {
 
     @Test
     public void test_BasicDecimal_MultiThreadWriteStreamTable() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script ="t=streamTable(1:0, `sym`tradeDate`tradePrice`vwap`volume`vol`valueTrade, [SYMBOL,DATEHOUR, DOUBLE, DOUBLE, DECIMAL32(2), DECIMAL64(4), DOUBLE])\n;share t as t1;" +
@@ -419,6 +402,7 @@ public class BasicDecimalTest {
 
     @Test(timeout = 600000)
     public void test_BasicDecimal_MultiThreadWritePartitionTable() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script1 = "n = 1048576;\n" +
@@ -452,6 +436,7 @@ public class BasicDecimalTest {
 
     @Test(timeout = 600000)
     public void test_BasicDecimal_MultiThreadedWriteDimensionTable() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script1 = "n = 1048576;\n" +
@@ -608,6 +593,7 @@ public class BasicDecimalTest {
 
     @Test
     public void test_BasicDecimal_readStreamingTable_decimal128() throws IOException {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script = "rt = streamTable(1000:0,`sym`x`de`ci,[SYMBOL,INT,DECIMAL128(2),DECIMAL128(4)]);" +
@@ -623,6 +609,7 @@ public class BasicDecimalTest {
 
     @Test
     public void test_BasicDecimal_normalWriteMemoryTable_decimal128() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         conn.run("it=table([1,2,3] as a,[4,5,6] as b,[7,8,9] as c)");
@@ -644,6 +631,7 @@ public class BasicDecimalTest {
 
     @Test
     public void test_BasicDecimal_normalWriteStreamingTable_decimal128() throws IOException {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script = "rt = streamTable(2000:0,`sym`x`de`ci,[SYMBOL,INT,DECIMAL128(2),DECIMAL128(4)]);" +
@@ -775,6 +763,7 @@ public class BasicDecimalTest {
 
     @Test
     public void test_BasicDecimal_PoolReadStreamingTable_decimal128() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script = "rt = streamTable(1000:0,`sym`x`de`ci,[SYMBOL,INT,DECIMAL128(2),DECIMAL128(4)]);" +
@@ -851,6 +840,7 @@ public class BasicDecimalTest {
     }
     @Test
     public void test_BasicDecimal_MultiThreadWriteMemoryTable_decimal128() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         StringBuilder sb = new StringBuilder();
@@ -873,6 +863,7 @@ public class BasicDecimalTest {
 
     @Test
     public void test_BasicDecimal_MultiThreadWriteStreamTable_decimal128() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script ="t=streamTable(1:0, `sym`tradeDate`tradePrice`vwap`volume`vol`valueTrade, [SYMBOL,DATEHOUR, DOUBLE, DOUBLE, DECIMAL128(2), DECIMAL128(4), DOUBLE])\n;share t as t1;" +
@@ -909,6 +900,7 @@ public class BasicDecimalTest {
 
     @Test(timeout = 600000)
     public void test_BasicDecimal_MultiThreadWritePartitionTable_decimal128() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script1 = "n = 1048576;\n" +
@@ -942,6 +934,7 @@ public class BasicDecimalTest {
 
     @Test(timeout = 600000)
     public void test_BasicDecimal_MultiThreadedWriteDimensionTable_decimal128() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script1 = "n = 1048576;\n" +
@@ -974,6 +967,7 @@ public class BasicDecimalTest {
     }
     @Test(timeout = 600000)
     public void test_BasicDecimal128_dfs_tableInsert() throws Exception {
+        clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script1 = "n = 1048576;\n" +

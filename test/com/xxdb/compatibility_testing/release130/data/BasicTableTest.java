@@ -18,7 +18,7 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 public class BasicTableTest {
-    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/compatibility_testing/release130/setup/settings");
     public static String HOST = bundle.getString("HOST");
     public static int PORT = Integer.parseInt(bundle.getString("PORT"));
     @Test(timeout = 70000)

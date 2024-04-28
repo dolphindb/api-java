@@ -788,51 +788,64 @@ public class DBConnection {
                 if ( bt!=null && bt.getDataForm() != Entity.DATA_FORM.DF_TABLE)
                     throw new IOException("Run getClusterPerf() failed.");
 
-                if (bt!=null && loadBalance_) {
-                    //ignore very high load nodes, rand one in low load nodes
-                    List<Node> lowLoadNodes=new ArrayList<>();
-                    BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
-                    BasicIntVector colPort = (BasicIntVector) bt.getColumn("port");
-                    BasicDoubleVector memLoad = (BasicDoubleVector) bt.getColumn("memLoad");
-                    BasicDoubleVector connLoad = (BasicDoubleVector) bt.getColumn("connLoad");
-                    BasicDoubleVector avgLoad = (BasicDoubleVector) bt.getColumn("avgLoad");
-                    for (int i = 0; i < colHost.rows(); i++) {
-                        Node nodex = new Node(colHost.getString(i), colPort.getInt(i));
-                        Node pexistNode = null;
-                        if (highAvailabilitySites != null) {
-                            for (Node node : nodes_) {
-                                if ((node.hostName.equals(nodex.hostName) || nodex.hostName.equals("localhost")) && node.port == nodex.port){
-                                    pexistNode = node;
-                                    break;
-                                }
+                if (bt!=null) {
+                    if (!loadBalance_) {
+                        if (highAvailabilitySites == null) {
+                            BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
+                            BasicIntVector colPort = (BasicIntVector) bt.getColumn("port");
+                            for (int i = 0; i < colHost.rows(); i++) {
+                                Node curNode = new Node(colHost.getString(i), colPort.getInt(i));
+                                if (!(curNode.hostName.equals(hostName) && curNode.port == port))
+                                    nodes_.add(curNode);
                             }
-                            //node is out of highAvailabilitySites
-                            if (pexistNode == null)
-                                continue;
                         }
-                        double load=(memLoad.getDouble(i)+connLoad.getDouble(i)+avgLoad.getDouble(i))/3.0;
-                        if (pexistNode != null) {
-                            pexistNode.load = load;
-                        } else {
-                            pexistNode=new Node(colHost.getString(i), colPort.getInt(i), load);
-                            nodes_.add(pexistNode);
-                        }
-                        // low load
-                        if (memLoad.getDouble(i)<0.8 && connLoad.getDouble(i)<0.9 && avgLoad.getDouble(i)<0.8)
-                            lowLoadNodes.add(pexistNode);
-                    }
-
-                    Node pMinNode;
-                    if (!lowLoadNodes.isEmpty()) {
-                        pMinNode=lowLoadNodes.get(nodeRandom_.nextInt(lowLoadNodes.size()));
                     } else {
-                        pMinNode=nodes_.get(nodeRandom_.nextInt(nodes_.size()));
-                    }
+                        // enable loadBalance
+                        //ignore very high load nodes, rand one in low load nodes
+                        List<Node> lowLoadNodes=new ArrayList<>();
+                        BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
+                        BasicIntVector colPort = (BasicIntVector) bt.getColumn("port");
+                        BasicDoubleVector memLoad = (BasicDoubleVector) bt.getColumn("memLoad");
+                        BasicDoubleVector connLoad = (BasicDoubleVector) bt.getColumn("connLoad");
+                        BasicDoubleVector avgLoad = (BasicDoubleVector) bt.getColumn("avgLoad");
+                        for (int i = 0; i < colHost.rows(); i++) {
+                            Node nodex = new Node(colHost.getString(i), colPort.getInt(i));
+                            Node pexistNode = null;
+                            if (highAvailabilitySites != null) {
+                                for (Node node : nodes_) {
+                                    if ((node.hostName.equals(nodex.hostName) || nodex.hostName.equals("localhost")) && node.port == nodex.port){
+                                        pexistNode = node;
+                                        break;
+                                    }
+                                }
+                                //node is out of highAvailabilitySites
+                                if (pexistNode == null)
+                                    continue;
+                            }
+                            double load=(memLoad.getDouble(i)+connLoad.getDouble(i)+avgLoad.getDouble(i))/3.0;
+                            if (pexistNode != null) {
+                                pexistNode.load = load;
+                            } else {
+                                pexistNode=new Node(colHost.getString(i), colPort.getInt(i), load);
+                                nodes_.add(pexistNode);
+                            }
+                            // low load
+                            if (memLoad.getDouble(i)<0.8 && connLoad.getDouble(i)<0.9 && avgLoad.getDouble(i)<0.8)
+                                lowLoadNodes.add(pexistNode);
+                        }
 
-                    if (pMinNode != null && !pMinNode.equals(connectedNode)){
-                        log.info("Switch to node: " + pMinNode.hostName + ":" + pMinNode.port);
-                        conn_.close();
-                        switchDataNode(pMinNode);
+                        Node pMinNode;
+                        if (!lowLoadNodes.isEmpty()) {
+                            pMinNode=lowLoadNodes.get(nodeRandom_.nextInt(lowLoadNodes.size()));
+                        } else {
+                            pMinNode=nodes_.get(nodeRandom_.nextInt(nodes_.size()));
+                        }
+
+                        if (pMinNode != null && !pMinNode.equals(connectedNode)){
+                            log.info("Switch to node: " + pMinNode.hostName + ":" + pMinNode.port);
+                            conn_.close();
+                            switchDataNode(pMinNode);
+                        }
                     }
                 }
             } else {

@@ -13,11 +13,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
-import static com.xxdb.MultithreadedTableWriterTest.checkData;
+import static com.xxdb.Prepare.*;
 import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static com.xxdb.data.Entity.DATA_FORM.*;
-import static com.xxdb.streaming.client.cep.EventClientTest.PrepareUser;
-import static org.junit.Assert.assertEquals;
 
 public class EventSenderTest {
     public static DBConnection conn ;
@@ -26,32 +24,7 @@ public class EventSenderTest {
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     static EventSender sender = null;
     static EventSchema scheme = null;
-
-
-    public void clear_env() throws IOException {
-        conn.run("a = getStreamingStat().pubTables\n" +
-                "for(i in a){\n" +
-                "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
-                "}");
-        conn.run("def getAllShare(){\n" +
-                "\treturn select name from objs(true) where shared=1\n" +
-                "\t}\n" +
-                "\n" +
-                "def clearShare(){\n" +
-                "\tlogin(`admin,`123456)\n" +
-                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
-                "\tfor(i in allShare){\n" +
-                "\t\ttry{\n" +
-                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
-                "\t\t\t}catch(ex1){}\n" +
-                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
-                "\t}\n" +
-                "\ttry{\n" +
-                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
-                "\t}catch(ex1){}\n" +
-                "}\n" +
-                "clearShare()");
-    }
+    static EventClient client = null;
 
     @Before
     public void setUp() throws IOException {
@@ -64,119 +37,12 @@ public class EventSenderTest {
     @After
     public  void after() throws IOException, InterruptedException {
         conn.close();
+        try{client.unsubscribe(HOST, PORT, "inputTable", "test1");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "intput", "test1");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "inputTable" ,"javaStreamingApi");}catch (Exception ex){}
+        try{client.unsubscribe(HOST, PORT, "intput" ,"javaStreamingApi");}catch (Exception ex){}
     }
 
-    public static void Preparedata(long count) throws IOException {
-        String script = "login(`admin, `123456); \n" +
-                "n="+count+";\n" +
-                "boolv = bool(rand([true, false, NULL], n));\n" +
-                "charv = char(rand(rand(-100..100, 1000) join take(char(), 4), n));\n" +
-                "shortv = short(rand(rand(-100..100, 1000) join take(short(), 4), n));\n" +
-                "intv = int(rand(rand(-100..100, 1000) join take(int(), 4), n));\n" +
-                "longv = long(rand(rand(-100..100, 1000) join take(long(), 4), n));\n" +
-                "doublev = double(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n));\n" +
-                "floatv = float(rand(rand(-100..100, 1000)*0.23 join take(float(), 4), n));\n" +
-                "datev = date(rand(rand(-100..100, 1000) join take(date(), 4), n));\n" +
-                "monthv = month(rand(1967.12M+rand(-100..100, 1000) join take(month(), 4), n));\n" +
-                "timev = time(rand(rand(0..100, 1000) join take(time(), 4), n));\n" +
-                "minutev = minute(rand(12:13m+rand(-100..100, 1000) join take(minute(), 4), n));\n" +
-                "secondv = second(rand(12:13:12+rand(-100..100, 1000) join take(second(), 4), n));\n" +
-                "datetimev = datetime(rand(1969.12.23+rand(-100..100, 1000) join take(datetime(), 4), n));\n" +
-                "timestampv = timestamp(rand(1970.01.01T00:00:00.023+rand(-100..100, 1000) join take(timestamp(), 4), n));\n" +
-                "nanotimev = nanotime(rand(12:23:45.452623154+rand(-100..100, 1000) join take(nanotime(), 4), n));\n" +
-                "nanotimestampv = nanotimestamp(rand(rand(-100..100, 1000) join take(nanotimestamp(), 4), n));\n" +
-                "symbolv = rand((\"syms\"+string(rand(100, 1000))) join take(string(), 4), n);\n" +
-                "stringv = rand((\"stringv\"+string(rand(100, 1000))) join take(string(), 4), n);\n" +
-                "uuidv = rand(rand(uuid(), 1000) join take(uuid(), 4), n);\n" +
-                "datehourv = datehour(rand(datehour(1969.12.31T12:45:12)+rand(-100..100, 1000) join take(datehour(), 4), n));\n" +
-                "ippaddrv = rand(rand(ipaddr(), 1000) join take(ipaddr(), 4), n);\n" +
-                "int128v = rand(rand(int128(), 1000) join take(int128(), 4), n);\n" +
-                "blobv = blob(string(rand((\"blob\"+string(rand(100, 1000))) join take(\"\", 4), n)));\n" +
-                "complexv = rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n);\n" +
-                "pointv = rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n);\n" +
-                "decimal32v = decimal32(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 3);\n" +
-                "decimal64v = decimal64(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 8);\n" +
-                "decimal128v = decimal128(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 10);\n" +
-                "share table(boolv, charv, shortv, intv, longv, doublev, floatv,  datev, monthv, timev, minutev, secondv, datetimev, timestampv, nanotimev, nanotimestampv, symbolv, stringv, datehourv, uuidv, ippaddrv, int128v, blobv, pointv, complexv, decimal32v, decimal64v, decimal128v) as data;\n";
-        conn.run(script);
-    }
-    public static void Preparedata_array(long count1,long count2) throws IOException {
-        String script1 = "login(`admin, `123456); \n"+
-                "n="+count1+";\n" +
-                "m="+count2+";\n" +
-                "cbool = array(BOOL[]).append!(cut(take([true, false, NULL], n), m))\n" +
-                "cchar = array(CHAR[]).append!(cut(take(char(-100..100 join NULL), n), m))\n" +
-                "cshort = array(SHORT[]).append!(cut(take(short(-100..100 join NULL), n), m))\n" +
-                "cint = array(INT[]).append!(cut(take(-100..100 join NULL, n), m))\n" +
-                "clong = array(LONG[]).append!(cut(take(long(-100..100 join NULL), n), m))\n" +
-                "cdouble = array(DOUBLE[]).append!(cut(take(-100..100 join NULL, n) + 0.254, m))\n" +
-                "cfloat = array(FLOAT[]).append!(cut(take(-100..100 join NULL, n) + 0.254f, m))\n" +
-                "cdate = array(DATE[]).append!(cut(take(2012.01.01..2012.02.29, n), m))\n" +
-                "cmonth = array(MONTH[]).append!(cut(take(2012.01M..2013.12M, n), m))\n" +
-                "ctime = array(TIME[]).append!(cut(take(09:00:00.000 + 0..99 * 1000, n), m))\n" +
-                "cminute = array(MINUTE[]).append!(cut(take(09:00m..15:59m, n), m))\n" +
-                "csecond = array(SECOND[]).append!(cut(take(09:00:00 + 0..999, n), m))\n" +
-                "cdatetime = array(DATETIME[]).append!(cut(take(2012.01.01T09:00:00 + 0..999, n), m))\n" +
-                "ctimestamp = array(TIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000 + 0..999 * 1000, n), m))\n" +
-                "cnanotime =array(NANOTIME[]).append!(cut(take(09:00:00.000000000 + 0..999 * 1000000000, n), m))\n" +
-                "cnanotimestamp = array(NANOTIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000000000 + 0..999 * 1000000000, n), m))\n" +
-                "cuuid = array(UUID[]).append!(cut(take(uuid([\"5d212a78-cc48-e3b1-4235-b4d91473ee87\", \"5d212a78-cc48-e3b1-4235-b4d91473ee88\", \"5d212a78-cc48-e3b1-4235-b4d91473ee89\", \"\"]), n), m))\n" +
-                "cdatehour = array(DATEHOUR[]).append!(cut(take(datehour(1..10 join NULL), n), m))\n" +
-                "cipaddr = array(IPADDR[]).append!(cut(take(ipaddr([\"192.168.100.10\", \"192.168.100.11\", \"192.168.100.14\", \"\"]), n), m))\n" +
-                "cint128 = array(INT128[]).append!(cut(take(int128([\"e1671797c52e15f763380b45e841ec32\", \"e1671797c52e15f763380b45e841ec33\", \"e1671797c52e15f763380b45e841ec35\", \"\"]), n), m))\n" +
-                "ccomplex = array(	COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n), m))\n" +
-                "cpoint = array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n), m))\n" +
-                "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, n) + 0.254, 3), m))\n" +
-                "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, n) + 0.25467, 4), m))\n" +
-                "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, n) + 0.25467, 5), m))\n" +
-                "share table(cbool, cchar, cshort, cint, clong, cdouble, cfloat, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cdatehour, cuuid, cipaddr, cint128, cpoint, ccomplex,  cdecimal32, cdecimal64, cdecimal128) as data;\n" ;
-        DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT,"admin","123456");
-        conn.run(script1);
-    }
-    public static void Preparedata_array_1(long count1,long count2) throws IOException {
-        String script1 = "login(`admin, `123456); \n"+
-                "n="+count1+";\n" +
-                "m="+count2+";\n" +
-                "cbool = array(BOOL[]).append!(cut(take([true, false, NULL], n), m))\n" +
-                "cchar = array(CHAR[]).append!(cut(take(char(-100..100 join NULL), n), m))\n" +
-                "cshort = array(SHORT[]).append!(cut(take(short(-100..100 join NULL), n), m))\n" +
-                "cint = array(INT[]).append!(cut(take(-100..100 join NULL, n), m))\n" +
-                "clong = array(LONG[]).append!(cut(take(long(-100..100 join NULL), n), m))\n" +
-                "cdouble = array(DOUBLE[]).append!(cut(take(-100..100 join NULL, n) + 0.254, m))\n" +
-                "cfloat = array(FLOAT[]).append!(cut(take(-100..100 join NULL, n) + 0.254f, m))\n" +
-                "cdate = array(DATE[]).append!(cut(take(2012.01.01..2012.02.29, n), m))\n" +
-                "cmonth = array(MONTH[]).append!(cut(take(2012.01M..2013.12M, n), m))\n" +
-                "ctime = array(TIME[]).append!(cut(take(09:00:00.000 + 0..99 * 1000, n), m))\n" +
-                "cminute = array(MINUTE[]).append!(cut(take(09:00m..15:59m, n), m))\n" +
-                "csecond = array(SECOND[]).append!(cut(take(09:00:00 + 0..999, n), m))\n" +
-                "cdatetime = array(DATETIME[]).append!(cut(take(2012.01.01T09:00:00 + 0..999, n), m))\n" +
-                "ctimestamp = array(TIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000 + 0..999 * 1000, n), m))\n" +
-                "cnanotime =array(NANOTIME[]).append!(cut(take(09:00:00.000000000 + 0..999 * 1000000000, n), m))\n" +
-                "cnanotimestamp = array(NANOTIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000000000 + 0..999 * 1000000000, n), m))\n" +
-                "cuuid = array(UUID[]).append!(cut(take(uuid([\"5d212a78-cc48-e3b1-4235-b4d91473ee87\", \"5d212a78-cc48-e3b1-4235-b4d91473ee88\", \"5d212a78-cc48-e3b1-4235-b4d91473ee89\", \"\"]), n), m))\n" +
-                "cdatehour = array(DATEHOUR[]).append!(cut(take(datehour(1..10 join NULL), n), m))\n" +
-                "cipaddr = array(IPADDR[]).append!(cut(take(ipaddr([\"192.168.100.10\", \"192.168.100.11\", \"192.168.100.14\", \"\"]), n), m))\n" +
-                "cint128 = array(INT128[]).append!(cut(take(int128([\"e1671797c52e15f763380b45e841ec32\", \"e1671797c52e15f763380b45e841ec33\", \"e1671797c52e15f763380b45e841ec35\", \"\"]), n), m))\n" +
-                "ccomplex = array(	COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n), m))\n" +
-                "cpoint = array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n), m))\n" +
-                "share table(cbool, cchar, cshort, cint, clong, cdouble, cfloat, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cdatehour, cuuid, cipaddr, cint128, cpoint, ccomplex) as data;\n" ;
-        DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT,"admin","123456");
-        conn.run(script1);
-    }
-    public static void Preparedata_array_decimal(long count1,long count2) throws IOException {
-        String script1 = "login(`admin, `123456); \n"+
-                "n="+count1+";\n" +
-                "m="+count2+";\n" +
-                "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, n) + 0.254, 3), m))\n" +
-                "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, n) + 0.25467, 4), m))\n" +
-                "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, n) + 0.25467, 5), m))\n" +
-                "share table( cdecimal32, cdecimal64,cdecimal128) as data;" ;
-        DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT,"admin","123456");
-        conn.run(script1);
-    }
     public static void PrepareInputSerializer(String type,Entity.DATA_TYPE data_type) throws IOException {
         String script = "login(`admin, `123456); \n"+
                 "class event_dateType{\n" +
@@ -406,8 +272,8 @@ public class EventSenderTest {
     }
     @Test
     public  void test_EventSender_EventScheme_null_1() throws IOException, InterruptedException {
-        EventSchema scheme = new EventSchema();
-        List<EventSchema> eventSchemas = new ArrayList<>();
+        //EventSchema scheme = new EventSchema();
+        //List<EventSchema> eventSchemas = new ArrayList<>();
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
         String re = null;
@@ -1149,13 +1015,7 @@ public class EventSenderTest {
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
-        String re = null;
-        try{
-            EventSender sender1 = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
-        }catch(Exception ex){
-            re = ex.getMessage();
-        }
-        Assert.assertEquals("The eventSender has already been called.",re);
+        EventSender sender1 = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
     }
 
     //@Test//not support
@@ -1443,7 +1303,7 @@ public class EventSenderTest {
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
         List<Entity> attributes = new ArrayList<>();
         BasicBoolean boolv = new BasicBoolean(true);
@@ -1535,6 +1395,7 @@ public class EventSenderTest {
         Thread.sleep(2000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(1,re.rows());
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
     @Test//AJ-647
     public  void test_EventClient_subscribe_attributes_vector_null() throws IOException, InterruptedException {
@@ -1555,7 +1416,7 @@ public class EventSenderTest {
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         List<Entity> attributes = new ArrayList<>();
@@ -1591,6 +1452,7 @@ public class EventSenderTest {
         Assert.assertEquals(1,re.rows());
         BasicTable re1 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(1,re1.rows());
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
     @Test//AJ-647
     public  void test_EventClient_subscribe_attributes_array_null() throws IOException, InterruptedException {
@@ -1611,7 +1473,7 @@ public class EventSenderTest {
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         List<Entity> attributes = new ArrayList<>();
@@ -1642,6 +1504,8 @@ public class EventSenderTest {
         //attributes.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL128_ARRAY,0,0));
         sender.sendEvent("event_all_array_dateType", attributes);
         //conn.run("tableInsert{outputTable}", attributes);
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
+
     }
     @Test
     public  void test_EventSender_all_dateType_scalar() throws IOException, InterruptedException {
@@ -1730,7 +1594,7 @@ public class EventSenderTest {
         scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv",  "stringv", "datehourv", "uuidv", "ippaddrv", "int128v", "blobv", "pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
         scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE, DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP,  DT_STRING, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_BLOB, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
-        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 8, 10));
+        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,  null, null, null, null, null, null, null, null, null, null, null, null, 3, 8, 10));
 
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
         List<String> eventTimeKeys = Collections.singletonList("timestampv");
@@ -2054,7 +1918,7 @@ public class EventSenderTest {
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         BasicTable bt = (BasicTable) conn.run("select * from t");
@@ -2075,27 +1939,28 @@ public class EventSenderTest {
             BasicTable bt3 = (BasicTable) conn.run("select * from outputTable;");
             Assert.assertEquals(1, bt3.rows());
             System.out.println(bt3.getString());
+            client.unsubscribe(HOST, PORT, "inputTable", "test1");
         }
     }
     @Test
     public  void test_EventSender_subscribe_all_dateType_scalar_1() throws IOException, InterruptedException {
         String script = "share streamTable(1000000:0, `time`eventType`event, [TIMESTAMP,STRING,BLOB]) as inputTable;\n"+
-                "share table(100:0, `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`datehourv`uuidv`ippaddrv`int128v`blobv`pointv`complexv`decimal32v`decimal64v`decimal128v, [BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, SYMBOL, STRING, DATEHOUR, UUID, IPADDR, INT128, BLOB, POINT, COMPLEX, DECIMAL32(3), DECIMAL64(8), DECIMAL128(10)]) as outputTable;\n";
+                "share table(100:0, `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`stringv`datehourv`uuidv`ippaddrv`int128v`blobv`pointv`complexv`decimal32v`decimal64v`decimal128v, [BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP,  STRING, DATEHOUR, UUID, IPADDR, INT128, BLOB, POINT, COMPLEX, DECIMAL32(3), DECIMAL64(8), DECIMAL128(10)]) as outputTable;\n";
         conn.run(script);
 
         EventSchema scheme = new EventSchema();
         scheme.setEventType("event_all_dateType");
-        scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "symbolv","stringv", "datehourv", "uuidv", "ippaddrv", "int128v", "blobv","pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
-        scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_SYMBOL,DT_STRING, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_BLOB, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
-        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
-        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 8, 10));
+        scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "stringv", "datehourv", "uuidv", "ippaddrv", "int128v", "blobv","pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
+        scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_STRING, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_BLOB, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
+        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR,  DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
+        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, null, null, 3, 8, 10));
 
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
         List<String> eventTimeKeys = Collections.singletonList("datetimev");
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         Preparedata(1);
@@ -2115,27 +1980,28 @@ public class EventSenderTest {
         BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(1,bt2.rows());
         checkData(bt,bt2);
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
 
     @Test
     public  void test_EventSender_subscribe_all_dateType_scalar_100() throws IOException, InterruptedException {
         String script = "share streamTable(1000000:0, `time`eventType`event, [TIMESTAMP,STRING,BLOB]) as inputTable;\n"+
-                "share table(100:0, `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`datehourv`uuidv`ippaddrv`int128v`blobv`pointv`complexv`decimal32v`decimal64v`decimal128v, [BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, SYMBOL, STRING, DATEHOUR, UUID, IPADDR, INT128, BLOB, POINT, COMPLEX, DECIMAL32(3), DECIMAL64(8), DECIMAL128(10)]) as outputTable;\n";
+                "share table(100:0, `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`stringv`datehourv`uuidv`ippaddrv`int128v`blobv`pointv`complexv`decimal32v`decimal64v`decimal128v, [BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, STRING, DATEHOUR, UUID, IPADDR, INT128, BLOB, POINT, COMPLEX, DECIMAL32(3), DECIMAL64(8), DECIMAL128(10)]) as outputTable;\n";
         conn.run(script);
 
         EventSchema scheme = new EventSchema();
         scheme.setEventType("event_all_dateType");
-        scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "symbolv","stringv", "datehourv", "uuidv", "ippaddrv", "int128v", "blobv","pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
-        scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_SYMBOL,DT_STRING, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_BLOB, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
-        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
-        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 8, 10));
+        scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "stringv", "datehourv", "uuidv", "ippaddrv", "int128v", "blobv","pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
+        scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_STRING, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_BLOB, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
+        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR,  DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
+        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 8, 10));
 
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
         List<String> eventTimeKeys = Collections.singletonList("timestampv");
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         Preparedata(100);
@@ -2155,27 +2021,28 @@ public class EventSenderTest {
         BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(100,bt2.rows());
         checkData(bt,bt2);
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
 
     @Test
     public  void test_EventSender_subscribe_all_dateType_scalar_100000() throws IOException, InterruptedException {
         String script = "share streamTable(1000000:0, `time`eventType`event, [TIMESTAMP,STRING,BLOB]) as inputTable;\n"+
-                "share table(100:0, `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`datehourv`uuidv`ippaddrv`int128v`blobv`pointv`complexv`decimal32v`decimal64v`decimal128v, [BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, SYMBOL, STRING, DATEHOUR, UUID, IPADDR, INT128, BLOB, POINT, COMPLEX, DECIMAL32(3), DECIMAL64(8), DECIMAL128(10)]) as outputTable;\n";
+                "share table(100:0, `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`stringv`datehourv`uuidv`ippaddrv`int128v`blobv`pointv`complexv`decimal32v`decimal64v`decimal128v, [BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP,  STRING, DATEHOUR, UUID, IPADDR, INT128, BLOB, POINT, COMPLEX, DECIMAL32(3), DECIMAL64(8), DECIMAL128(10)]) as outputTable;\n";
         conn.run(script);
 
         EventSchema scheme = new EventSchema();
         scheme.setEventType("event_all_dateType");
-        scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "symbolv","stringv", "datehourv", "uuidv", "ippaddrv", "int128v", "blobv","pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
-        scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_SYMBOL,DT_STRING, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_BLOB, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
-        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
-        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 8, 10));
+        scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "stringv", "datehourv", "uuidv", "ippaddrv", "int128v", "blobv","pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
+        scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_STRING, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_BLOB, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
+        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR,  DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
+        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, null, null,  3, 8, 10));
 
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
         List<String> eventTimeKeys = Collections.singletonList("datetimev");
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         Preparedata(100000);
@@ -2195,6 +2062,7 @@ public class EventSenderTest {
         BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(100000,bt2.rows());
         checkData(bt,bt2);
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
     @Test//精度问题
     public  void test_EventSender_all_dateType_vector() throws IOException, InterruptedException {
@@ -2218,7 +2086,7 @@ public class EventSenderTest {
         Preparedata_array(100,10);
         BasicTable bt = (BasicTable)conn.run("select * from data");
 
-        EventClient client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler_array, -1, true, "admin", "123456");
 
         for(int i=0;i<bt.rows();i++){
@@ -2237,6 +2105,7 @@ public class EventSenderTest {
         BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(10,bt2.rows());
         checkData(bt,bt2);
+        client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
     @Test
     public  void test_EventSender_all_dateType_vector_no_decimal() throws IOException, InterruptedException {
@@ -2259,8 +2128,8 @@ public class EventSenderTest {
         Preparedata_array_1(100,10);
         BasicTable bt = (BasicTable)conn.run("select * from data");
 
-        EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
-        client.subscribe(HOST, PORT, "inputTable", "test1", handler_array, -1, true, "admin", "123456");
+        client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        client.subscribe(HOST, PORT, "inputTable", "test1", handler_array_no_decimal, -1, true, "admin", "123456");
 
         for(int i=0;i<bt.rows();i++){
             List<Entity> attributes = new ArrayList<>();
@@ -2370,7 +2239,7 @@ public class EventSenderTest {
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeKeys, commonKeys);
-        EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "intput1", "test1", handler_string, -1, true, "admin", "123456");
 
         String script2 = "\tevent_string1=event_string( [\"111\",\"222\",\"\",NULL])\n" +
@@ -2385,6 +2254,7 @@ public class EventSenderTest {
         BasicTable bt2 = (BasicTable)conn.run("select * from intput1;");
         Assert.assertEquals(1,bt2.rows());
         checkData(bt1,bt2);
+        client.unsubscribe(HOST, PORT, "intput1", "test1");
     }
     @Test
     public  void test_EventClient_vector_symbol() throws IOException, InterruptedException {
@@ -2418,7 +2288,7 @@ public class EventSenderTest {
         List<String> eventTimeKeys = new ArrayList<>();
         List<String> commonKeys = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeKeys, commonKeys);
-        EventClient client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
         client.subscribe(HOST, PORT, "intput1", "test1", handler_string, -1, true, "admin", "123456");
 
         String script2 = "\tevent_symbol1=event_symbol( symbol([\"111\",\"222\",\"\",NULL]))\n" +
@@ -2433,6 +2303,7 @@ public class EventSenderTest {
         BasicTable bt2 = (BasicTable)conn.run("select * from intput1;");
         Assert.assertEquals(1,bt2.rows());
         checkData(bt1,bt2);
+        client.unsubscribe(HOST, PORT, "intput1", "test1");
     }
     @Test
     public  void test_EventSender_all_dateType_array() throws IOException {

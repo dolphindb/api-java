@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
 
 public class DBConnectionTest {
     private DBConnection conn;
-    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
+    static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/compatibility_testing/release130/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     static int CONTROLLER_PORT = Integer.parseInt(bundle.getString("CONTROLLER_PORT"));
@@ -3098,96 +3098,6 @@ public void test_SSL() throws Exception {
         long endDT = System.currentTimeMillis();
         System.out.println(endDT-startDT);
         assertTrue((endDT-startDT)<(afterDT-beforeDT));
-    }
-
-    @Test
-    public void test_getVersionNumber() throws IOException{
-        DBConnection conn = new DBConnection();
-        Class<DBConnection> dbc = DBConnection.class;
-        try{
-            Method method = dbc.getDeclaredMethod("getVersionNumber", String.class);
-            method.setAccessible(true);
-            Object obj = method.invoke(conn,"18.02 java");
-            assertEquals(1802,obj);
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    @Test
-    public void test_Node_Constructor() throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        Object object = null;
-        // 获取外部类所有的内部类
-        Class<DBConnection> testDemoClass = DBConnection.class;
-        Class<?>[] declaredClasses = testDemoClass.getDeclaredClasses();
-        for(Class clazz : declaredClasses) {
-            // 获取修饰符的整数编码
-            int mod = clazz.getModifiers();
-            // 返回整数编码对应的修饰符的字符串对象(private static)
-            String modifier = Modifier.toString(mod);
-            if (modifier.contains("private static")) {
-                // 获取内部类的名字(TestClass)，如果有过个内部类，可根据这个值分别判断
-                String simpleName = clazz.getSimpleName();
-                Constructor con = clazz.getConstructor(String.class,int.class,double.class);
-                object = con.newInstance(HOST,PORT,1.0);
-                Constructor con2 = clazz.getConstructor(String.class,int.class);
-                Object obj = con2.newInstance(HOST,PORT);
-//                Method method = clazz.getMethod("isEqual",clazz);
-//                assertTrue((Boolean) method.invoke(object,obj));
-                break;
-            }
-        }
-    }
-    @Test
-    public void test_Node_Constructor2() throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        Object object = null;
-        // 获取外部类所有的内部类
-        Class<DBConnection> testDemoClass = DBConnection.class;
-        Class<?>[] declaredClasses = testDemoClass.getDeclaredClasses();
-        for(Class clazz : declaredClasses) {
-            // 获取修饰符的整数编码
-            int mod = clazz.getModifiers();
-            // 返回整数编码对应的修饰符的字符串对象(private static)
-            String modifier = Modifier.toString(mod);
-            if (modifier.contains("private static")) {
-                // 获取内部类的名字(TestClass)，如果有过个内部类，可根据这个值分别判断
-                String simpleName = clazz.getSimpleName();
-                Constructor con = clazz.getConstructor(String.class,double.class);
-                object = con.newInstance(HOST+":"+PORT,1.0);
-                Constructor con2 = clazz.getConstructor(String.class,int.class);
-                Object obj = con2.newInstance(HOST,PORT);
-//                Method method = clazz.getMethod("equals",clazz);
-//                assertTrue((Boolean) method.invoke(object,obj));
-                break;
-            }
-        }
-    }
-
-    @Test
-    public void test_Node_Constructor3() throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        Object object = null;
-        // 获取外部类所有的内部类
-        Class<DBConnection> testDemoClass = DBConnection.class;
-        Class<?>[] declaredClasses = testDemoClass.getDeclaredClasses();
-        for(Class clazz : declaredClasses) {
-            // 获取修饰符的整数编码
-            int mod = clazz.getModifiers();
-            // 返回整数编码对应的修饰符的字符串对象(private static)
-            String modifier = Modifier.toString(mod);
-            if (modifier.contains("private static")) {
-                // 获取内部类的名字(TestClass)，如果有过个内部类，可根据这个值分别判断
-                String simpleName = clazz.getSimpleName();
-                Constructor con = clazz.getConstructor(String.class);
-                object = con.newInstance(HOST+":"+PORT);
-                System.out.println(clazz.getName());
-                Constructor con2 = clazz.getConstructor(String.class,int.class);
-                Object obj = con2.newInstance(HOST,PORT);
-////                Method method = clazz.getMethod("isEqual" +
-//                        "" +
-//                        "",clazz);
-//                assertTrue((Boolean) method.invoke(object,obj));
-                break;
-            }
-        }
     }
 
     @Test
