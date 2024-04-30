@@ -186,6 +186,10 @@ public class ThreadedClient extends AbstractClient {
                     // System.out.println("site msg id: " +site.msgId);
                     subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord, false);
                     System.out.println("doReconnect 尝试切换节点成功：" + site.host + ":" + site.port);
+                    String topicStr = site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName;
+                    String curTopic = tableNameToTrueTopic.get(topicStr);
+                    BlockingQueue<List<IMessage>> queue = queueManager.addQueue(curTopic);
+                    queueManager.changeQueue(curTopic, lastQueue);
                     // System.out.println("切换后 handlerLoppers: " + handlerLoppers.get(topicStr).getName());
                     // System.out.println("切换成功后，handlerLoppers size: " + handlerLoppers.size());
                     Date d = new Date();
