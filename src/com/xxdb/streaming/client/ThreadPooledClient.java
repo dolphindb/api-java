@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 public class ThreadPooledClient extends AbstractClient {
     private static int CORES = Runtime.getRuntime().availableProcessors();
     private ExecutorService threadPool;
-    private HashMap<String, List<String>> users = new HashMap<>();
+    // private HashMap<String, List<String>> users = new HashMap<>();
     private Object lock = new Object();
 
     private static final Logger log = LoggerFactory.getLogger(ThreadPooledClient.class);
@@ -143,7 +143,7 @@ public class ThreadPooledClient extends AbstractClient {
         List<String> usr = Arrays.asList(userName, passWord);
         synchronized (queueHandlers) {
             queueHandlers.put(tableNameToTrueTopic.get(topicStr), new QueueHandlerBinder(queue, handler));
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
     }
 
@@ -157,7 +157,7 @@ public class ThreadPooledClient extends AbstractClient {
         List<String> usr = Arrays.asList(userName, passWord);
         synchronized (queueHandlers) {
             queueHandlers.put(tableNameToTrueTopic.get(topicStr), new QueueHandlerBinder(queue, handler));
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
     }
 
@@ -167,7 +167,7 @@ public class ThreadPooledClient extends AbstractClient {
         List<String> usr = Arrays.asList(userName, passWord);
         synchronized (queueHandlers) {
             queueHandlers.put(tableNameToTrueTopic.get(topicStr), new QueueHandlerBinder(queue, handler));
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
     }
 
@@ -236,8 +236,10 @@ public class ThreadPooledClient extends AbstractClient {
         if (!ifUseBackupSite) {
             // original logic:
             DBConnection dbConn = new DBConnection();
-            String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
-            List<String> usr = users.get(fullTableName);
+//            String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+//            List<String> usr = users.get(fullTableName);
+            List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+            List<String> usr = users.get(tp);
             String user = usr.get(0);
             String pwd = usr.get(1);
             if (!user.equals(""))
@@ -256,6 +258,7 @@ public class ThreadPooledClient extends AbstractClient {
 
                 dbConn.run("stopPublishTable", params);
                 String topic = null;
+                String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
                 synchronized (tableNameToTrueTopic) {
                     topic = tableNameToTrueTopic.get(fullTableName);
                 }
