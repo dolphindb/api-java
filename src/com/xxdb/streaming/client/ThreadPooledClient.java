@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 
 public class ThreadPooledClient extends AbstractClient {
@@ -22,6 +23,7 @@ public class ThreadPooledClient extends AbstractClient {
     private ExecutorService threadPool;
     // private HashMap<String, List<String>> users = new HashMap<>();
     private Object lock = new Object();
+    private int threadCount = -1;
 
     private static final Logger log = LoggerFactory.getLogger(ThreadPooledClient.class);
 
@@ -54,6 +56,7 @@ public class ThreadPooledClient extends AbstractClient {
         if (threadCount <= 0)
             throw new RuntimeException("The 'threadCount' parameter cannot be less than or equal to zero.");
 
+        this.threadCount = threadCount;
         threadPool = Executors.newFixedThreadPool(threadCount);
         new Thread() {
             private LinkedList<IMessage> backlog = new LinkedList<>();
@@ -119,18 +122,63 @@ public class ThreadPooledClient extends AbstractClient {
     }
 
     protected boolean doReconnect(Site site) {
-        log.info("ThreadPooledClient doReconnect: " + site.host + ":" + site.port);
-        threadPool.shutdownNow();
-        try {
-            Thread.sleep(1000);
-            subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
-            log.info("Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + site.actionName);
-            return true;
-        } catch (Exception ex) {
-            log.error("Unable to subscribe table. Will try again after 1 seconds.");
-            ex.printStackTrace();
-            return false;
+        if (!AbstractClient.ifUseBackupSite) {
+            // not enable backupSite, use original logic
+            threadPool.shutdownNow();
+            try {
+                Thread.sleep(1000);
+                subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
+                log.info("Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + site.actionName);
+                return true;
+            } catch (Exception ex) {
+                log.error("Unable to subscribe table. Will try again after 1 seconds.");
+                ex.printStackTrace();
+                return false;
+            }
+        } else {
+            // enable backupSite, try to switch site and subscribe.
+            log.info("ThreadPooledClient doReconnect: " + site.host + ":" + site.port);
+            try {
+                Thread.sleep(1000);
+                backupSitesSubscribeInternal(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord, false);
+                String topicStr = site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName;
+                String curTopic = tableNameToTrueTopic.get(topicStr);
+                BlockingQueue<List<IMessage>> queue = queueManager.addQueue(curTopic);
+                queueManager.changeQueue(curTopic, lastQueue);
+
+                QueueHandlerBinder queueHandlerBinder = queueHandlers.get(lastBackupSiteTopic);
+                queueHandlers.put(curTopic, queueHandlerBinder);
+
+                // shutdown last threadPool, and wait all tasks to finish.
+                threadPool.shutdown();
+                try {
+                    if (!threadPool.awaitTermination(60, TimeUnit.SECONDS)) {
+                        threadPool.shutdownNow();
+                        if (!threadPool.awaitTermination(60, TimeUnit.SECONDS)) {
+                            log.error("last threadPool did not terminate.");
+                        }
+                    }
+                } catch (InterruptedException ie) {
+                    threadPool.shutdownNow();
+                    Thread.currentThread().interrupt();
+                }
+
+                // after last threadPool completely shutdown，create a new threadPool（because ExecutorService lifecycle is unidirectional）.
+                if (threadPool.isTerminated())
+                    threadPool = Executors.newFixedThreadPool(threadCount);
+
+                log.info("Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + site.actionName);
+                return true;
+            } catch (Exception ex) {
+                log.error("Unable to subscribe table. Will try again after 1 seconds.");
+                ex.printStackTrace();
+                return false;
+            }
         }
+    }
+
+    protected void backupSitesSubscribeInternal(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String password, boolean createSubInfo) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, false, createSubInfo);
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord) throws IOException {
