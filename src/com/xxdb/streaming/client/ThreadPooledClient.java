@@ -382,6 +382,13 @@ public class ThreadPooledClient extends AbstractClient {
                     // synchronized (queueManager) {
                     queueManager.removeQueue(topic);
                     // }
+
+                    // init backupSites related params.
+                    if (AbstractClient.ifUseBackupSite) {
+                        AbstractClient.ifUseBackupSite = false;
+                        AbstractClient.subOnce = false;
+                        AbstractClient.resubTimeout = 100;
+                    }
                     log.info("Successfully unsubscribed table " + fullTableName);
                 } catch (Exception ex) {
                     throw ex;
