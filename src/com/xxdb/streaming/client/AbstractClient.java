@@ -532,11 +532,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                                                               List<String> backupSites, int resubTimeout, boolean subOnce, boolean createSubInfo) throws IOException, RuntimeException {
         Entity re;
         String topic = "";
-        DBConnection dbConn;
-        if (listeningPort > 0)
-            dbConn = new DBConnection();
-        else
-            dbConn = DBConnection.internalCreateEnableReverseStreamingDBConnection(false, false, false, false, false, SqlStdEnum.DolphinDB);
+        DBConnection dbConn = null;
 
         List<Site> parsedBackupSites = new ArrayList<>();
         if (Objects.nonNull(backupSites) && !backupSites.isEmpty()) {
@@ -563,6 +559,8 @@ public abstract class AbstractClient implements MessageDispatcher {
             for (int i = 0; i < parsedBackupSites.size() && !isConnected; i++) {
                 Site site = parsedBackupSites.get(i);
                 try {
+                    checkServerVersion(site.host, site.port);
+                    dbConn = createSubscribeInternalDBConnection();
                     subscribeInternalConnect(dbConn, site.host, site.port, site.userName, site.passWord);
                     if (deserializer!=null&&!deserializer.isInited())
                         deserializer.init(dbConn);
@@ -610,20 +608,21 @@ public abstract class AbstractClient implements MessageDispatcher {
                     }
 
                     re = dbConn.run("publishTable", params);
+                    connList.add(dbConn);
                 } catch (IOException e) {
                     log.error("Connect to site " + site.host + ":" + site.port + " failed: " + e.getMessage());
                 }
             }
 
-            Site curConnectedSite = parsedBackupSites.get(currentSiteIndexMap.get(topic));
-            checkServerVersion(curConnectedSite.host, curConnectedSite.port);
+//            Site curConnectedSite = parsedBackupSites.get(currentSiteIndexMap.get(topic));
+//            checkServerVersion(curConnectedSite.host, curConnectedSite.port);
 
             if (!isConnected)
                 throw new IOException("All sites try connect failed.");
         }
 
         if (parsedBackupSites.size() != 0) {
-            connList.add(dbConn);
+            // connList.add(dbConn);
 
             // prepare parsedBackupSites
             for (int i = 0; i < parsedBackupSites.size(); i++) {
@@ -658,6 +657,16 @@ public abstract class AbstractClient implements MessageDispatcher {
                 List<String> usr = Arrays.asList(userName, passWord);
                 users.put(tp, usr);
 
+                dbConn = createSubscribeInternalDBConnection();
+                subscribeInternalConnect(dbConn, host, port, userName, passWord);
+
+                if (deserializer!=null&&!deserializer.isInited())
+                    deserializer.init(dbConn);
+                if (deserializer != null){
+                    BasicDictionary schema = (BasicDictionary) dbConn.run(tableName + ".schema()");
+                    deserializer.checkSchema(schema);
+                }
+
                 String localIP = this.listeningHost;
                 if (localIP.equals(""))
                     localIP = dbConn.getLocalAddress().getHostAddress();
@@ -668,7 +677,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                 List<Entity> params = new ArrayList<Entity>();
                 params.add(new BasicString(tableName));
                 params.add(new BasicString(actionName));
-                subscribeInternalConnect(dbConn, host, port, userName, passWord);
+                // subscribeInternalConnect(dbConn, host, port, userName, passWord);
                 re = dbConn.run("getSubscriptionTopic", params);
                 topic = ((BasicAnyVector) re).getEntity(0).getString();
                 // lastBackupSiteTopic = topic;
@@ -920,5 +929,15 @@ public abstract class AbstractClient implements MessageDispatcher {
             dbConn.connect(host, port, userName, passWord);
         else
             dbConn.connect(host, port);
+    }
+
+    private DBConnection createSubscribeInternalDBConnection() {
+        DBConnection dbConn;
+        if (listeningPort > 0)
+            dbConn = new DBConnection();
+        else
+            dbConn = DBConnection.internalCreateEnableReverseStreamingDBConnection(false, false, false, false, false, SqlStdEnum.DolphinDB);
+
+        return dbConn;
     }
 }
