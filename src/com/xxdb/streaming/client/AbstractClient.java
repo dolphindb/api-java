@@ -540,10 +540,6 @@ public abstract class AbstractClient implements MessageDispatcher {
 
         List<Site> parsedBackupSites = new ArrayList<>();
         if (Objects.nonNull(backupSites) && !backupSites.isEmpty()) {
-            AbstractClient.resubTimeout = resubTimeout;
-            AbstractClient.subOnce = subOnce;
-            AbstractClient.ifUseBackupSite = true;
-            // AbstractClient.createSubInfo = createSubInfo;
             // prepare backupSites
             for (int i = 0; i < backupSites.size() + 1; i++) {
                 if (i == 0) {
@@ -558,6 +554,10 @@ public abstract class AbstractClient implements MessageDispatcher {
                     parsedBackupSites.add(new Site(backupIP, backupPort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable));
                 }
             }
+
+            AbstractClient.resubTimeout = resubTimeout;
+            AbstractClient.subOnce = subOnce;
+            AbstractClient.ifUseBackupSite = true;
 
             boolean isConnected = false;
             for (int i = 0; i < parsedBackupSites.size() && !isConnected; i++) {
