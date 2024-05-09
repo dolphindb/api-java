@@ -63,6 +63,7 @@ public class ThreadPooledClientTest {
 
     @Before
     public void setUp() throws IOException {
+        try{clear_env();}catch (Exception e){}
         try {
             String script0 = "login(`admin,`123456);" +
                     "try{undef(`Trades, SHARED);}catch(ex){};"+
@@ -80,7 +81,6 @@ public class ThreadPooledClientTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        clear_env();
     }
 
     @After
