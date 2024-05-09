@@ -3435,10 +3435,6 @@ public class ThreadedClientsubscribeReverseTest {
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("3000",row_num.getColumn(0).get(0).getString());
-        DBConnection conn4 = new DBConnection();
-        conn4.connect(HOST,port_list[2],"admin","123456");
-        conn4.run(script1);
-        conn4.run(script2);
         client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
 

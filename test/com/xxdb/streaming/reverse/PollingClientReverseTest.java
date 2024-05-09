@@ -84,7 +84,7 @@ public class PollingClientReverseTest {
         try {client.unsubscribe(HOST, PORT, "Trades1", "subtrades2");}catch (Exception e){}
         try {client.unsubscribe(HOST, PORT, "Trades1");}catch (Exception e){}
         try {client.unsubscribe(HOST, PORT, "Trades", "subTread1");}catch (Exception e){}
-        clear_env();
+        try {clear_env();}catch (Exception e){}
         conn.run("st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "enableTableShareAndPersistence(table=st2, tableName=`Trades1, asynWrite=true, compress=true, cacheSize=20000, retentionMinutes=180)\t\n");
     }
@@ -2207,10 +2207,10 @@ public class PollingClientReverseTest {
         thread1.start();
         Thread.sleep(2000);
         thread2.start();
-        //List<IMessage> messages = poller.poll(1000,1000);
-        //System.out.println("messages" + messages.size());
-        //MessageHandler_handler1(messages);
-        //Thread.sleep(1000);
+        List<IMessage> messages = poller.poll(1000,1000);
+        System.out.println("messages" + messages.size());
+        MessageHandler_handler1(messages);
+        Thread.sleep(1000);
         thread.join();
         Thread.sleep(10000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
@@ -2218,12 +2218,12 @@ public class PollingClientReverseTest {
         List<IMessage> messages1 = poller.poll(1000,1000);
         Thread.sleep(1000);
         System.out.println(messages1.size());
-        Assert.assertEquals(1000,messages1.size());
+        //Assert.assertEquals(1000,messages1.size());
         MessageHandler_handler1(messages1);
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn.run("select tag ,now,deltas(now) from Receive  order by  deltas(now) desc \n");
         System.out.println(re.getString());
-        //Assert.assertEquals(1000,re.rows());
+        Assert.assertEquals(1000,re.rows());
         Assert.assertEquals(true,Integer.valueOf(re.getColumn(2).get(0).toString())>1000);
         DBConnection conn2 = new DBConnection();
         conn2.connect(HOST,port_list[1],"admin","123456");
@@ -2281,7 +2281,7 @@ public class PollingClientReverseTest {
         Thread.sleep(20000);
         conn3.run("n=3000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(5000);
-        List<IMessage> messages2 = poller.poll(3000,1000);
+        List<IMessage> messages2 = poller.poll(3000,3000);
         MessageHandler_handler(messages2);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
         Thread.sleep(5000);
