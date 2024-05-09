@@ -45,6 +45,7 @@ public abstract class AbstractClient implements MessageDispatcher {
     protected static boolean subOnce;
     // protected static boolean createSubInfo;
     protected BlockingQueue<List<IMessage>> lastQueue;
+    protected String lastSuccessSubscribeTopic = "";
 
     private Daemon daemon = null;
 
@@ -312,9 +313,11 @@ public abstract class AbstractClient implements MessageDispatcher {
 
                         // update currentSiteIndexMap to new successfully connected site's index;
                         currentSiteIndexMap.put(topic, successfulSiteIndex);
+                        currentSiteIndexMap.put(lastSuccessSubscribeTopic, successfulSiteIndex);
                     } else if (reconnected) {
                         // not delete site, but update successfulSiteIndex.
                         currentSiteIndexMap.put(topic, successfulSiteIndex);
+                        currentSiteIndexMap.put(lastSuccessSubscribeTopic, successfulSiteIndex);
                     }
                 }
 
@@ -581,6 +584,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                     re = dbConn.run("getSubscriptionTopic", params);
                     topic = ((BasicAnyVector) re).getEntity(0).getString();
                     lastBackupSiteTopic = topic;
+                    lastSuccessSubscribeTopic = topic;
                     params.clear();
 
                     // set current site index
@@ -668,6 +672,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                 re = dbConn.run("getSubscriptionTopic", params);
                 topic = ((BasicAnyVector) re).getEntity(0).getString();
                 // lastBackupSiteTopic = topic;
+                lastSuccessSubscribeTopic = topic;
                 params.clear();
 
                 params.add(new BasicString(localIP));
