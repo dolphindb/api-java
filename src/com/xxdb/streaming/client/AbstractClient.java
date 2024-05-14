@@ -591,7 +591,6 @@ public abstract class AbstractClient implements MessageDispatcher {
 
                     List<String> tp = Arrays.asList(site.host, String.valueOf(site.port), tableName, actionName);
                     List<String> usr = Arrays.asList(userName, passWord);
-                    users.put(tp, usr);
 
                     params.add(new BasicString(localIP));
                     params.add(new BasicInt(this.listeningPort));
@@ -609,6 +608,7 @@ public abstract class AbstractClient implements MessageDispatcher {
 
                     re = dbConn.run("publishTable", params);
                     connList.add(dbConn);
+                    users.put(tp, usr);
                 } catch (IOException e) {
                     log.error("Connect to site " + site.host + ":" + site.port + " failed: " + e.getMessage());
                 }
@@ -655,7 +655,6 @@ public abstract class AbstractClient implements MessageDispatcher {
                 checkServerVersion(host, port);
                 List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
                 List<String> usr = Arrays.asList(userName, passWord);
-                users.put(tp, usr);
 
                 dbConn = createSubscribeInternalDBConnection();
                 subscribeInternalConnect(dbConn, host, port, userName, passWord);
@@ -700,6 +699,7 @@ public abstract class AbstractClient implements MessageDispatcher {
 
                 re = dbConn.run("publishTable", params);
                 connList.add(dbConn);
+                users.put(tp, usr);
                 if (ifUseBackupSite) {
                     synchronized (subInfos_){
                         subInfos_.put(topic, deserializer);
