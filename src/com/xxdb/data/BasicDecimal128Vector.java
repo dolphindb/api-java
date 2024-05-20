@@ -503,5 +503,9 @@ public class BasicDecimal128Vector extends AbstractVector {
         numElementAndPartial.partial = 0;
         return targetNumElement * unitLength;
     }
+
+    public BigInteger[] getUnscaledValues() {
+        return unscaledValues;
+    }
 }
 

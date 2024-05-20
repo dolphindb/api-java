@@ -392,4 +392,8 @@ public class BasicDecimal64Vector extends AbstractVector{
     private boolean checkDecimal64Range(BigDecimal value) {
         return value.compareTo(DECIMAL64_MIN_VALUE) > 0 && value.compareTo(DECIMAL64_MAX_VALUE) < 0;
     }
+
+    public long[] getValues() {
+        return values;
+    }
 }

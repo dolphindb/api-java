@@ -381,4 +381,8 @@ public class BasicDecimal32Vector extends AbstractVector{
     private boolean checkDecimal32Range(int value) {
         return value > Integer.MIN_VALUE && value < Integer.MAX_VALUE;
     }
+
+    public int[] getValues() {
+        return values;
+    }
 }

@@ -188,4 +188,8 @@ public class BasicDurationVector extends AbstractVector{
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 4;
 	}
+
+	public int[] getValues() {
+		return values;
+	}
 }

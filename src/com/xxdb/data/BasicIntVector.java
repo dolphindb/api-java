@@ -290,4 +290,8 @@ public class BasicIntVector extends AbstractVector{
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 4;
 	}
+
+	public int[] getValues() {
+		return values;
+	}
 }

@@ -241,4 +241,8 @@ public class BasicBooleanVector extends AbstractVector{
 		numElementAndPartial.partial = 0;
 		return targetNumElement;
 	}
+
+	public byte[] getValues() {
+		return values;
+	}
 }

@@ -281,4 +281,8 @@ public class BasicComplexVector extends AbstractVector{
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 16;
 	}
+
+	public Double2[] getValues() {
+		return values;
+	}
 }

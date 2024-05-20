@@ -305,5 +305,9 @@ public class BasicInt128Vector extends AbstractVector{
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 16;
 	}
+
+	public Long2[] getValues() {
+		return values;
+	}
 }
 
