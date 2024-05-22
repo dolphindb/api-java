@@ -118,6 +118,8 @@ class Daemon implements Runnable {
         @Override
         public void run() {
             while (!pThread.isInterrupted()) {
+                if (!AbstractClient.ifUseBackupSite) {
+                    // original logic:
                     for (String site : this.dispatcher.getAllReconnectSites()) {
                         if (dispatcher.getNeedReconnect(site) == 1) {
                             Site s = dispatcher.getSiteByName(site);
@@ -150,10 +152,70 @@ class Daemon implements Runnable {
                         }
                     }
 
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    break;
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                } else {
+                    // if set backupSite
+                    for (String site : this.dispatcher.getAllReconnectSites()) {
+                        if (dispatcher.getNeedReconnect(site) == 1) {
+                            System.out.println("flag site: " + site);
+                            Site s = dispatcher.getCurrentSiteByName(site);
+                            dispatcher.activeCloseConnection(s);
+                            String lastTopic = "";
+                            for (String topic : dispatcher.getAllTopicsBySite(site)) {
+                                System.out.println("Daemon need reconnect: " + topic);
+                                // reconnect every info.resubTimeout ms
+                                if (System.currentTimeMillis() - AbstractClient.lastExceptionTopicTimeMap.get(topic) <= AbstractClient.resubTimeout)
+                                    continue;
+
+                                log.info("flag1 try to reconnect topic " + topic);
+                                dispatcher.tryReconnect(topic);
+                                // lastTopic = topic;
+                            }
+                            // dispatcher.setNeedReconnect(lastTopic, 2);
+                        } else {
+                            // try reconnect after 3 second when reconnecting stat
+                            // long ts = dispatcher.getReconnectTimestamp(site);
+                            // if (System.currentTimeMillis() >= ts + 3000) {
+                            Site s = dispatcher.getSiteByName(site);
+                            dispatcher.activeCloseConnection(s);
+                            for (String topic : dispatcher.getAllTopicsBySite(site)) {
+                                // reconnect every info.resubTimeout ms
+                                if (System.currentTimeMillis() - AbstractClient.lastExceptionTopicTimeMap.get(topic) <= AbstractClient.resubTimeout)
+                                    continue;
+
+                                log.info("flag2 try to reconnect topic " + topic);
+                                dispatcher.tryReconnect(topic);
+                                // }
+                                dispatcher.setReconnectTimestamp(site, System.currentTimeMillis());
+                            }
+                        }
+                    }
+
+                    // not need to put and get from waitReconnectTopic.
+//                    Set<String> waitReconnectTopic = dispatcher.getAllReconnectTopic();
+//                    synchronized (waitReconnectTopic) {
+//                        for (String topic : waitReconnectTopic) {
+//                            // reconnect every info.resubTimeout ms
+////                            if (System.currentTimeMillis() - AbstractClient.lastExceptionTopicTimeMap.get(topic) <= AbstractClient.resubTimeout)
+////                                continue;
+//                            long subTime = System.currentTimeMillis() - AbstractClient.lastExceptionTopicTimeMap.get(topic);
+//                            System.out.println("flag3 subTime: " + subTime);
+//                            if (subTime <= AbstractClient.resubTimeout)
+//                                continue;
+//                            dispatcher.tryReconnect(topic);
+//                        }
+//                    }
+
+                    try {
+                        // check reconnected interval time
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
                 }
             }
         }
