@@ -202,20 +202,16 @@ public class ThreadPooledClient extends AbstractClient {
 
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, backupSites, resubTimeout, subOnce);
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
-        List<String> usr = Arrays.asList(userName, passWord);
         synchronized (queueHandlers) {
             queueHandlers.put(tableNameToTrueTopic.get(topicStr), new QueueHandlerBinder(queue, handler));
-            // users.put(topicStr, usr);
         }
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord, boolean msgAsTable, List<String> backupSites) throws IOException {
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, backupSites, 100, false);
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
-        List<String> usr = Arrays.asList(userName, passWord);
         synchronized (queueHandlers) {
             queueHandlers.put(tableNameToTrueTopic.get(topicStr), new QueueHandlerBinder(queue, handler));
-            // users.put(topicStr, usr);
         }
     }
 
@@ -284,8 +280,6 @@ public class ThreadPooledClient extends AbstractClient {
         if (!ifUseBackupSite) {
             // original logic:
             DBConnection dbConn = new DBConnection();
-//            String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
-//            List<String> usr = users.get(fullTableName);
             List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
             List<String> usr = users.get(tp);
             String user = usr.get(0);
@@ -369,19 +363,15 @@ public class ThreadPooledClient extends AbstractClient {
                     dbConn.run("stopPublishTable", params);
                     String topic = null;
                     String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
-                    // synchronized (tableNameToTrueTopic) {
                     topic = tableNameToTrueTopic.get(fullTableName);
-                    // }
-                    // synchronized (trueTopicToSites) {
+
                     Site[] sites = trueTopicToSites.get(topic);
                     if (sites == null || sites.length == 0)
                         ;
                     for (int i = 0; i < sites.length; i++)
                         sites[i].closed = true;
-                    // }
-                    // synchronized (queueManager) {
+
                     queueManager.removeQueue(topic);
-                    // }
 
                     // init backupSites related params.
                     if (AbstractClient.ifUseBackupSite) {

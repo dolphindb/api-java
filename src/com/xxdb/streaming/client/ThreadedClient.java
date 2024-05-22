@@ -182,16 +182,11 @@ public class ThreadedClient extends AbstractClient {
             synchronized (this) {
                 log.info("ThreadedClient doReconnect: " + site.host + ":" + site.port);
                 try {
-                    System.out.println("doReconnect 尝试切换节点：" + site.host + ":" + site.port);
-                    // System.out.println("site msg id: " +site.msgId);
                     subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord, false);
-                    System.out.println("doReconnect 尝试切换节点成功：" + site.host + ":" + site.port);
                     String topicStr = site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName;
                     String curTopic = tableNameToTrueTopic.get(topicStr);
                     BlockingQueue<List<IMessage>> queue = queueManager.addQueue(curTopic);
                     queueManager.changeQueue(curTopic, lastQueue);
-                    // System.out.println("切换后 handlerLoppers: " + handlerLoppers.get(topicStr).getName());
-                    // System.out.println("切换成功后，handlerLoppers size: " + handlerLoppers.size());
                     Date d = new Date();
                     DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                     log.info(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
@@ -254,10 +249,8 @@ public class ThreadedClient extends AbstractClient {
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
-        List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            // users.put(topicStr, usr);
         }
     }
 
@@ -270,10 +263,8 @@ public class ThreadedClient extends AbstractClient {
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
-        List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            // users.put(topicStr, usr);
         }
     }
 
@@ -533,19 +524,15 @@ public class ThreadedClient extends AbstractClient {
                     dbConn.run("stopPublishTable", params);
                     String topic = null;
                     String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
-                    // synchronized (tableNameToTrueTopic) {
                     topic = tableNameToTrueTopic.get(fullTableName);
-                    // }
-                    // synchronized (trueTopicToSites) {
+
                     Site[] sites = trueTopicToSites.get(topic);
                     if (sites == null || sites.length == 0)
                         ;
                     for (int i = 0; i < sites.length; i++)
                         sites[i].closed = true;
-                    // }
-                    // synchronized (queueManager) {
+
                     queueManager.removeQueue(lastBackupSiteTopic);
-                    // }
 
                     // init backupSites related params.
                     if (AbstractClient.ifUseBackupSite) {
@@ -560,11 +547,9 @@ public class ThreadedClient extends AbstractClient {
                     dbConn.close();
                     String topicStr = originHost + ":" + originPort + "/" + tableName + "/" + actionName;
                     HandlerLopper handlerLopper = null;
-                    // synchronized (handlerLoppers) {
                     handlerLopper = handlerLoppers.get(topicStr);
                     handlerLoppers.remove(topicStr);
                     handlerLopper.interrupt();
-                    // }
                 }
             }
         }

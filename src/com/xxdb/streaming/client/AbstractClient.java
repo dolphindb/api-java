@@ -43,7 +43,6 @@ public abstract class AbstractClient implements MessageDispatcher {
     protected static Map<String, Long> lastExceptionTopicTimeMap = new ConcurrentHashMap<>();
     protected static Integer resubTimeout;
     protected static boolean subOnce;
-    // protected static boolean createSubInfo;
     protected BlockingQueue<List<IMessage>> lastQueue;
     protected String lastSuccessSubscribeTopic = "";
 
@@ -305,9 +304,9 @@ public abstract class AbstractClient implements MessageDispatcher {
 
                         // put sites to new sub topic.
                         for (String key : trueTopicToSites.keySet()) {
-                            // 重新为 key 赋值
+                            // reassign the value to key.
                             if (key.contains(sites[successfulSiteIndex].host+":"+sites[successfulSiteIndex].port)) {
-                                trueTopicToSites.put(key, sites); // 更新操作是安全的
+                                trueTopicToSites.put(key, sites);
                             }
                         }
 
@@ -321,10 +320,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                     }
                 }
 
-//                log.info("Successfully switched to node: " + sites[currentSiteIndexMap.get(topic)].host + ":" + sites[currentSiteIndexMap.get(topic)].port);
-
                 if (!reconnected) {
-                    // waitReconnectTopic.add(topic);
                     return false;
                 } else {
                     log.info("Successfully switched to node: " + sites[currentSiteIndexMap.get(topic)].host + ":" + sites[currentSiteIndexMap.get(topic)].port);
@@ -498,10 +494,6 @@ public abstract class AbstractClient implements MessageDispatcher {
         return String.format("%s:%d:%s/%s/%s", host, port, alias, tableName, actionName);
     }
 
-    private String getTopic(String host, int port, String tableName, String actionName) {
-        return String.format("%s:%d:%s/%s", host, port, tableName, actionName);
-    }
-
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
                                                               String tableName, String actionName, MessageHandler handler,
                                                               long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer, boolean allowExistTopic)
@@ -614,16 +606,11 @@ public abstract class AbstractClient implements MessageDispatcher {
                 }
             }
 
-//            Site curConnectedSite = parsedBackupSites.get(currentSiteIndexMap.get(topic));
-//            checkServerVersion(curConnectedSite.host, curConnectedSite.port);
-
             if (!isConnected)
                 throw new IOException("All sites try connect failed.");
         }
 
         if (parsedBackupSites.size() != 0) {
-            // connList.add(dbConn);
-
             // prepare parsedBackupSites
             for (int i = 0; i < parsedBackupSites.size(); i++) {
                 String backupIP = parsedBackupSites.get(i).host;
@@ -639,11 +626,13 @@ public abstract class AbstractClient implements MessageDispatcher {
                     HATopicToTrueTopic.put(topic, topic);
                 }
             }
-            if (subInfos_.containsKey(topic)){
+
+            if (subInfos_.containsKey(topic)) {
                 throw new RuntimeException("Subscription with topic " + topic + " exist. ");
-            }else {
+            } else {
                 subInfos_.put(topic, deserializer);
             }
+
             synchronized (trueTopicToSites) {
                 Site[] sitesArray = new Site[parsedBackupSites.size()];
                 parsedBackupSites.toArray(sitesArray);
@@ -676,10 +665,8 @@ public abstract class AbstractClient implements MessageDispatcher {
                 List<Entity> params = new ArrayList<Entity>();
                 params.add(new BasicString(tableName));
                 params.add(new BasicString(actionName));
-                // subscribeInternalConnect(dbConn, host, port, userName, passWord);
                 re = dbConn.run("getSubscriptionTopic", params);
                 topic = ((BasicAnyVector) re).getEntity(0).getString();
-                // lastBackupSiteTopic = topic;
                 lastSuccessSubscribeTopic = topic;
                 params.clear();
 
@@ -805,7 +792,6 @@ public abstract class AbstractClient implements MessageDispatcher {
     protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
         synchronized (this) {
             DBConnection dbConn = new DBConnection();
-
             if (!currentSiteIndexMap.isEmpty()) {
                 String topic = tableNameToTrueTopic.get( host + ":" + port + "/" + tableName + "/" + actionName);
                 Integer currentSiteIndex = currentSiteIndexMap.get(topic);
@@ -837,17 +823,13 @@ public abstract class AbstractClient implements MessageDispatcher {
                 String topic = null;
                 String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
 
-                // synchronized (tableNameToTrueTopic) {
                 topic = tableNameToTrueTopic.get(fullTableName);
-                // }
 
-                // synchronized (trueTopicToSites) {
                 Site[] sites = trueTopicToSites.get(topic);
                 if (sites == null || sites.length == 0)
                     ;
                 for (int i = 0; i < sites.length; i++)
                     sites[i].closed = true;
-                // }
 
                 log.info("Successfully unsubscribed table " + fullTableName);
             } catch (Exception ex) {

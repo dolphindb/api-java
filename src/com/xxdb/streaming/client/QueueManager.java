@@ -16,12 +16,12 @@ public class QueueManager {
         throw new RuntimeException("Topic " + topic + " already subscribed");
     }
 
-    public synchronized BlockingQueue<List<IMessage>> changeQueue(String topic, BlockingQueue<List<IMessage>> q) {
+    public synchronized void changeQueue(String topic, BlockingQueue<List<IMessage>> q) {
         if (queueMap.containsKey(topic)) {
             queueMap.put(topic, q);
-            return q;
+        } else {
+            throw new RuntimeException("Topic " + topic + " doesn't subscribed");
         }
-        throw new RuntimeException("Topic " + topic + " doesn't subscribed");
     }
 
     public synchronized BlockingQueue<List<IMessage>> getQueue(String topic) {
