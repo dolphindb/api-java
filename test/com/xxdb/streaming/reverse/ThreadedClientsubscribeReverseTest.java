@@ -35,7 +35,7 @@ public class ThreadedClientsubscribeReverseTest {
 
     @BeforeClass
     public static void setUp() throws IOException {
-
+        try {clear_env_1();}catch (Exception e){}
     }
     @Before
     public void clear() throws IOException {
@@ -54,7 +54,7 @@ public class ThreadedClientsubscribeReverseTest {
         try{client.unsubscribe(HOST, PORT, "Trades", "subTrades");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
-        clear_env();
+        try {clear_env();}catch (Exception e){}
     }
 
     @After
@@ -65,7 +65,7 @@ public class ThreadedClientsubscribeReverseTest {
         try{client.unsubscribe(HOST, PORT, "Trades", "subTrades");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
-        clear_env();
+        try {clear_env();}catch (Exception e){}
         Thread.sleep(2000);
         client.close();
         conn.close();
@@ -74,6 +74,7 @@ public class ThreadedClientsubscribeReverseTest {
 
     @AfterClass
     public static void clear_conn() {
+        try {clear_env_1();}catch (Exception e){}
     }
     public static MessageHandler MessageHandler_handler = new MessageHandler() {
         @Override

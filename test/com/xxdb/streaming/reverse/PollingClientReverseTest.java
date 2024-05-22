@@ -49,8 +49,12 @@ public class PollingClientReverseTest {
     public static PollingClient client;
     private StreamDeserializer deserializer_;
 
+    @BeforeClass
+    public static void setUp() throws IOException {
+        try {clear_env_1();}catch (Exception e){}
+    }
     @Before
-    public void setUp() throws IOException {
+    public void clear() throws IOException {
         conn = new DBConnection();
         conn.connect(HOST, PORT, "admin", "123456");
         try {
@@ -92,10 +96,15 @@ public class PollingClientReverseTest {
         } catch (Exception e) {
         }
         try{conn.run("dropStreamTable(`Trades1)");}catch (Exception e){}
-       // clear_env();
+        try {clear_env();}catch (Exception e){}
         //client.close();
         conn.close();
         Thread.sleep(2000);
+    }
+
+    @AfterClass
+    public static void clear_conn() {
+        try {clear_env_1();}catch (Exception e){}
     }
 
     public void wait_data(String table_name,int data_row) throws IOException, InterruptedException {

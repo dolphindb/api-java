@@ -30,7 +30,7 @@ public class ThreadPooledClientReverseTest {
 
     @BeforeClass
     public static void setUp() throws IOException {
-
+        try {clear_env_1();}catch (Exception e){}
     }
     @Before
     public void clear() throws IOException {
@@ -50,7 +50,7 @@ public class ThreadPooledClientReverseTest {
         try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "Trades1", "javaStreamingApi");}catch (Exception ex){}
-        clear_env();
+        try {clear_env();}catch (Exception e){}
     }
 
     @After
@@ -83,6 +83,7 @@ public class ThreadPooledClientReverseTest {
 
     @AfterClass
     public static void clear_conn() {
+        try {clear_env_1();}catch (Exception e){}
     }
 
 public static void PrepareStreamTable() throws IOException {
