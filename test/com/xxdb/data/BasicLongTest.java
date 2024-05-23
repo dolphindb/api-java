@@ -192,7 +192,7 @@ public class BasicLongTest {
         BasicLongVector blv = new BasicLongVector(new long[]{600,615,617});
         String re = JSONObject.toJSONString(blv);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[600,615,617],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_LONG\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicLong\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[600,615,617]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[600,615,617],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_LONG\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicLong\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[600,615,617]\",\"table\":false,\"unitLength\":16,\"values\":[600,615,617],\"vector\":true}", re);
     }
     @Test
     public void test_BasicLongMatrix_toJSONString() throws Exception {

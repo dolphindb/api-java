@@ -533,6 +533,6 @@ public class BasicComplexTest {
         BasicComplexVector bcv = new BasicComplexVector(list);
         String re = JSONObject.toJSONString(bcv);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[{\"null\":false,\"x\":1.0,\"y\":9.2},{\"null\":false,\"x\":3.8,\"y\":7.4},{\"null\":false,\"x\":5.6,\"y\":6.5},{\"null\":true,\"x\":-1.7976931348623157E308,\"y\":-1.7976931348623157E308}],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_COMPLEX\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicComplex\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[1.0+9.2i,3.8+7.4i,5.6+6.5i,]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[{\"null\":false,\"x\":1.0,\"y\":9.2},{\"null\":false,\"x\":3.8,\"y\":7.4},{\"null\":false,\"x\":5.6,\"y\":6.5},{\"null\":true,\"x\":-1.7976931348623157E308,\"y\":-1.7976931348623157E308}],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_COMPLEX\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicComplex\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[1.0+9.2i,3.8+7.4i,5.6+6.5i,]\",\"table\":false,\"unitLength\":16,\"values\":[{\"null\":false,\"x\":1.0,\"y\":9.2},{\"null\":false,\"x\":3.8,\"y\":7.4},{\"null\":false,\"x\":5.6,\"y\":6.5},{\"null\":true,\"x\":-1.7976931348623157E308,\"y\":-1.7976931348623157E308}],\"vector\":true}", re);
     }
 }

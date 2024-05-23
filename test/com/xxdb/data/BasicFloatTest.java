@@ -152,7 +152,7 @@ public class BasicFloatTest {
         BasicFloatVector bfv = new BasicFloatVector(arr,false);
         String re = JSONObject.toJSONString(bfv);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[47.47,52.38,66.45,71.89],\"dataCategory\":\"FLOATING\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_FLOAT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicFloat\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[47.47000122,52.38000107,66.44999695,71.88999939]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[47.47,52.38,66.45,71.89],\"dataCategory\":\"FLOATING\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_FLOAT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicFloat\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[47.47000122,52.38000107,66.44999695,71.88999939]\",\"table\":false,\"unitLength\":4,\"values\":[47.47,52.38,66.45,71.89],\"vector\":true}", re);
     }
     @Test
     public void test_BasicFloatMatrix_toJSONString() throws Exception {

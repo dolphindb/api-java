@@ -590,6 +590,6 @@ public class BasicByteTest {
         BasicByteVector bbv = new BasicByteVector(new byte[]{'d','o','l','p','h','i','n'});
         String re = JSONObject.toJSONString(bbv);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[100,111,108,112,104,105,110],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_BYTE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicByte\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"['d','o','l','p','h','i','n']\",\"table\":false,\"unitLength\":1,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[100,111,108,112,104,105,110],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_BYTE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicByte\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"['d','o','l','p','h','i','n']\",\"table\":false,\"unitLength\":1,\"values\":[100,111,108,112,104,105,110],\"vector\":true}", re);
     }
 }
