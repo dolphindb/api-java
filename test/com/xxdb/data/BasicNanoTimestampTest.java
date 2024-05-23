@@ -139,6 +139,8 @@ public class BasicNanoTimestampTest {
         assertEquals(bntsv.size,bntsv.capaticy);
         bntsv.Append(new BasicNanoTimestampVector(new long[]{36273293,3749284,73859372,47593902}));
         assertEquals(capacity*4,bntsv.size);
+        String re = JSONObject.toJSONString(bntsv);
+        System.out.println(re);
     }
     @Test
     public void test_BasicNanoTimeStamp_toJSONString() throws Exception {
@@ -146,6 +148,13 @@ public class BasicNanoTimestampTest {
         String re = JSONObject.toJSONString(date);
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_NANOTIMESTAMP\",\"dictionary\":false,\"jsonString\":\"\\\"1970.01.01T00:00:00.000000100\\\"\",\"long\":100,\"matrix\":false,\"nanoTimestamp\":\"1970-01-01 00:00:00.000000100\",\"null\":false,\"number\":100,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"1970.01.01T00:00:00.000000100\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test
+    public void test_BasicNanoTimeStampVector_toJSONString() throws Exception {
+        BasicNanoTimestampVector bntsv = new BasicNanoTimestampVector(new long[]{7554784040L,46274927491L});
+        String re = JSONObject.toJSONString(bntsv);
+        System.out.println(re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[7554784040,46274927491],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_NANOTIMESTAMP\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicNanoTimestamp\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[1970.01.01T00:00:07.554784040,1970.01.01T00:00:46.274927491]\",\"table\":false,\"unitLength\":16,\"values\":[7554784040,46274927491],\"vector\":true}", re);
     }
     @Test
     public void test_BasicNanoTimeStampMatrix_toJSONString() throws Exception {

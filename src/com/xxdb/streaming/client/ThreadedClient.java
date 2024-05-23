@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ThreadedClient extends AbstractClient {
     private HashMap<String, HandlerLopper> handlerLoppers = new HashMap<>();
-    private HashMap<String, List<String>> users = new HashMap<>();
+    // private HashMap<String, List<String>> users = new HashMap<>();
 
     private static final Logger log = LoggerFactory.getLogger(ThreadedClient.class);
 
@@ -154,26 +154,51 @@ public class ThreadedClient extends AbstractClient {
 
     @Override
     protected boolean doReconnect(Site site) {
-        String topicStr = site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName;
-        Thread handlerLopper = null;
-        synchronized (handlerLoppers) {
-            if (!handlerLoppers.containsKey(topicStr))
-                throw new RuntimeException("Subscribe thread is not started");
-            handlerLopper = handlerLoppers.get(topicStr);
-        }
-        handlerLopper.interrupt();
-        try {
-            subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
-            Date d = new Date();
-            DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            log.info(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
-            return true;
-        } catch (Exception ex) {
-            Date d = new Date();
-            DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            log.error(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
-            ex.printStackTrace();
-            return false;
+        if (!AbstractClient.ifUseBackupSite) {
+            // not enable backupSite, use original logic
+            String topicStr = site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName;
+            Thread handlerLopper = null;
+            synchronized (handlerLoppers) {
+                if (!handlerLoppers.containsKey(topicStr))
+                    throw new RuntimeException("Subscribe thread is not started");
+                handlerLopper = handlerLoppers.get(topicStr);
+            }
+            handlerLopper.interrupt();
+            try {
+                subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord);
+                Date d = new Date();
+                DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                log.info(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
+                return true;
+            } catch (Exception ex) {
+                Date d = new Date();
+                DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                log.error(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
+                ex.printStackTrace();
+                return false;
+            }
+        } else {
+            // enable backupSite, try to switch site and subscribe.
+            synchronized (this) {
+                log.info("ThreadedClient doReconnect: " + site.host + ":" + site.port);
+                try {
+                    subscribe(site.host, site.port, site.tableName, site.actionName, site.handler, site.msgId + 1, true, site.filter, site.deserializer, site.allowExistTopic, site.userName, site.passWord, false);
+                    String topicStr = site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName;
+                    String curTopic = tableNameToTrueTopic.get(topicStr);
+                    BlockingQueue<List<IMessage>> queue = queueManager.addQueue(curTopic);
+                    queueManager.changeQueue(curTopic, lastQueue);
+                    Date d = new Date();
+                    DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                    log.info(df.format(d) + " Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
+                    return true;
+                } catch (Exception ex) {
+                    Date d = new Date();
+                    DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                    log.error(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.host + ":" + site.port + "/" + site.tableName + "/" + site.actionName);
+                    ex.printStackTrace();
+                    return false;
+                }
+            }
         }
     }
 
@@ -185,8 +210,15 @@ public class ThreadedClient extends AbstractClient {
         List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
+    }
+
+    /**
+     * This internal subscribe method only use for when enable backupSite, try to switch site and subscribe.
+     */
+    protected void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String password, boolean createSubInfo) throws IOException {
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, false, createSubInfo);
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password) throws IOException {
@@ -198,10 +230,41 @@ public class ThreadedClient extends AbstractClient {
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
-        List<String> usr = Arrays.asList(userName, password);
+        // List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
+        }
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites, int resubTimeout, boolean subOnce) throws IOException {
+        if(batchSize<=0)
+            throw new IllegalArgumentException("BatchSize must be greater than zero");
+        if(throttle<0)
+            throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
+        if (resubTimeout < 0)
+            // resubTimeout default: 100ms
+            resubTimeout = 100;
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, false, backupSites, resubTimeout, subOnce);
+        HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
+        handlerLopper.start();
+        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        synchronized (handlerLoppers) {
+            handlerLoppers.put(topicStr, handlerLopper);
+        }
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites) throws IOException {
+        if(batchSize<=0)
+            throw new IllegalArgumentException("BatchSize must be greater than zero");
+        if(throttle<0)
+            throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, false, backupSites, 100, false);
+        HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
+        handlerLopper.start();
+        String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+        synchronized (handlerLoppers) {
+            handlerLoppers.put(topicStr, handlerLopper);
         }
     }
 
@@ -217,7 +280,7 @@ public class ThreadedClient extends AbstractClient {
         List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
     }
 
@@ -237,7 +300,7 @@ public class ThreadedClient extends AbstractClient {
         List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
     }
 
@@ -253,7 +316,7 @@ public class ThreadedClient extends AbstractClient {
         List<String> usr = Arrays.asList(userName, password);
         synchronized (handlerLoppers) {
             handlerLoppers.put(topicStr, handlerLopper);
-            users.put(topicStr, usr);
+            // users.put(topicStr, usr);
         }
     }
 
@@ -375,55 +438,123 @@ public class ThreadedClient extends AbstractClient {
 
     @Override
     protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
-        DBConnection dbConn = new DBConnection();
-        String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
-        List<String> usr = users.get(fullTableName);
-        String user = usr.get(0);
-        String pwd = usr.get(1);
-        if (!user.equals(""))
-            dbConn.connect(host, port, user, pwd);
-        else
-            dbConn.connect(host, port);
-        try {
-            String localIP = this.listeningHost;
-            if(localIP.equals(""))
-                localIP = dbConn.getLocalAddress().getHostAddress();
-            List<Entity> params = new ArrayList<Entity>();
-            params.add(new BasicString(localIP));
-            params.add(new BasicInt(this.listeningPort));
-            params.add(new BasicString(tableName));
-            params.add(new BasicString(actionName));
+        if (!AbstractClient.ifUseBackupSite) {
+            // original logic
+            DBConnection dbConn = new DBConnection();
+            List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+            List<String> usr = users.get(tp);
+            String user = usr.get(0);
+            String pwd = usr.get(1);
+            if (!user.equals(""))
+                dbConn.connect(host, port, user, pwd);
+            else
+                dbConn.connect(host, port);
+            try {
+                String localIP = this.listeningHost;
+                if(localIP.equals(""))
+                    localIP = dbConn.getLocalAddress().getHostAddress();
+                List<Entity> params = new ArrayList<Entity>();
+                params.add(new BasicString(localIP));
+                params.add(new BasicInt(this.listeningPort));
+                params.add(new BasicString(tableName));
+                params.add(new BasicString(actionName));
 
-            dbConn.run("stopPublishTable", params);
-            String topic = null;
-            synchronized (tableNameToTrueTopic) {
-                topic = tableNameToTrueTopic.get(fullTableName);
+                dbConn.run("stopPublishTable", params);
+                String topic = null;
+                String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+                synchronized (tableNameToTrueTopic) {
+                    topic = tableNameToTrueTopic.get(fullTableName);
+                }
+                synchronized (trueTopicToSites) {
+                    Site[] sites = trueTopicToSites.get(topic);
+                    if (sites == null || sites.length == 0)
+                        ;
+                    for (int i = 0; i < sites.length; i++)
+                        sites[i].closed = true;
+                }
+                synchronized (queueManager) {
+                    queueManager.removeQueue(topic);
+                }
+                log.info("Successfully unsubscribed table " + fullTableName);
+            } catch (Exception ex) {
+                throw ex;
+            } finally {
+                dbConn.close();
+                String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
+                HandlerLopper handlerLopper = null;
+                synchronized (handlerLoppers) {
+                    handlerLopper = handlerLoppers.get(topicStr);
+                    handlerLoppers.remove(topicStr);
+                    handlerLopper.interrupt();
+                }
             }
-            synchronized (trueTopicToSites) {
-                Site[] sites = trueTopicToSites.get(topic);
-                if (sites == null || sites.length == 0)
-                    ;
-                for (int i = 0; i < sites.length; i++)
-                    sites[i].closed = true;
-            }
-           synchronized (queueManager) {
-               queueManager.removeQueue(topic);
-           }
-            log.info("Successfully unsubscribed table " + fullTableName);
-        } catch (Exception ex) {
-            throw ex;
-        } finally {
-            dbConn.close();
-            String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
-            HandlerLopper handlerLopper = null;
-            synchronized (handlerLoppers) {
-                handlerLopper = handlerLoppers.get(topicStr);
-                handlerLoppers.remove(topicStr);
-                handlerLopper.interrupt();
+        } else {
+            // use backBackSite
+            String originHost = host;
+            int originPort = port;
+
+            synchronized (this) {
+                DBConnection dbConn = new DBConnection();
+
+                if (!currentSiteIndexMap.isEmpty()) {
+                    Integer currentSiteIndex = currentSiteIndexMap.get(lastSuccessSubscribeTopic);
+                    Site[] sites = trueTopicToSites.get(lastSuccessSubscribeTopic);
+                    host = sites[currentSiteIndex].host;
+                    port = sites[currentSiteIndex].port;
+                }
+
+                List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+                List<String> usr = users.get(tp);
+                String user = usr.get(0);
+                String pwd = usr.get(1);
+                if (!user.equals(""))
+                    dbConn.connect(host, port, user, pwd);
+                else
+                    dbConn.connect(host, port);
+                try {
+                    String localIP = this.listeningHost;
+                    if(localIP.equals(""))
+                        localIP = dbConn.getLocalAddress().getHostAddress();
+                    List<Entity> params = new ArrayList<Entity>();
+                    params.add(new BasicString(localIP));
+                    params.add(new BasicInt(this.listeningPort));
+                    params.add(new BasicString(tableName));
+                    params.add(new BasicString(actionName));
+
+                    dbConn.run("stopPublishTable", params);
+                    String topic = null;
+                    String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+                    topic = tableNameToTrueTopic.get(fullTableName);
+
+                    Site[] sites = trueTopicToSites.get(topic);
+                    if (sites == null || sites.length == 0)
+                        ;
+                    for (int i = 0; i < sites.length; i++)
+                        sites[i].closed = true;
+
+                    queueManager.removeQueue(lastBackupSiteTopic);
+
+                    // init backupSites related params.
+                    if (AbstractClient.ifUseBackupSite) {
+                        AbstractClient.ifUseBackupSite = false;
+                        AbstractClient.subOnce = false;
+                        AbstractClient.resubTimeout = 100;
+                    }
+                    log.info("Successfully unsubscribed table " + fullTableName);
+                } catch (Exception ex) {
+                    throw ex;
+                } finally {
+                    dbConn.close();
+                    String topicStr = originHost + ":" + originPort + "/" + tableName + "/" + actionName;
+                    HandlerLopper handlerLopper = null;
+                    handlerLopper = handlerLoppers.get(topicStr);
+                    handlerLoppers.remove(topicStr);
+                    handlerLopper.interrupt();
+                }
             }
         }
-        return;
     }
+
     public void close(){
         synchronized (handlerLoppers) {
             Iterator<HandlerLopper> it = handlerLoppers.values().iterator();

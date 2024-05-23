@@ -132,7 +132,7 @@ public class BasicDoubleTest {
         BasicDoubleVector bdv = new BasicDoubleVector(arr,false);
         String re = JSONObject.toJSONString(bdv);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[6.2,6.28,7.26],\"dataCategory\":\"FLOATING\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DOUBLE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDouble\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[6.2,6.28,7.26]\",\"table\":false,\"unitLength\":8,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[6.2,6.28,7.26],\"dataCategory\":\"FLOATING\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DOUBLE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDouble\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[6.2,6.28,7.26]\",\"table\":false,\"unitLength\":8,\"values\":[6.2,6.28,7.26],\"vector\":true}", re);
     }
     @Test
     public void testBasicDoubleMatrix_toJSONString(){

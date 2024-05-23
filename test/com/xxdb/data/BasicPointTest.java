@@ -733,6 +733,6 @@ public class BasicPointTest {
         BasicPointVector bpv = new BasicPointVector(new Double2[]{});
         String re = JSONObject.toJSONString(bpv);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_POINT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicPoint\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_POINT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicPoint\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[]\",\"table\":false,\"unitLength\":16,\"values\":[],\"vector\":true}", re);
     }
 }

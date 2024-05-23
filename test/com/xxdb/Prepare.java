@@ -40,6 +40,35 @@ public class Prepare {
                     "clearShare()");
             conn.run("try{dropStreamEngine(\"serInput\");\n}catch(ex){\n}\n");
     }
+    public static void clear_env_1() throws IOException {
+        for (int i = 0; i < port_list.length; i++) {
+            DBConnection conn = new DBConnection();
+            conn.connect(HOST, port_list[i], "admin", "123456");
+            conn.run("a = getStreamingStat().pubTables\n" +
+                    "for(i in a){\n" +
+                    "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
+                    "}");
+            conn.run("def getAllShare(){\n" +
+                    "\treturn select name from objs(true) where shared=1\n" +
+                    "\t}\n" +
+                    "\n" +
+                    "def clearShare(){\n" +
+                    "\tlogin(`admin,`123456)\n" +
+                    "\tallShare=exec name from pnodeRun(getAllShare)\n" +
+                    "\tfor(i in allShare){\n" +
+                    "\t\ttry{\n" +
+                    "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
+                    "\t\t\t}catch(ex1){}\n" +
+                    "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
+                    "\t}\n" +
+                    "\ttry{\n" +
+                    "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
+                    "\t}catch(ex1){}\n" +
+                    "}\n" +
+                    "clearShare()");
+            conn.run("try{dropStreamEngine(\"serInput\");\n}catch(ex){\n}\n");
+        }
+    }
 
     public static void Preparedata(long count) throws IOException {
         String script = "login(`admin, `123456); \n" +

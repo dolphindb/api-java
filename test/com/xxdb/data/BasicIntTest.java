@@ -191,7 +191,7 @@ public class BasicIntTest {
         BasicIntVector biv = new BasicIntVector(new int[]{5,11,23});
         String re = JSONObject.toJSONString(biv);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[5,11,23],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_INT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicInt\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[5,11,23]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[5,11,23],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_INT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicInt\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[5,11,23]\",\"table\":false,\"unitLength\":4,\"values\":[5,11,23],\"vector\":true}", re);
     }
     @Test
     public void test_BasicIntMatrix_toJSONString() throws Exception {

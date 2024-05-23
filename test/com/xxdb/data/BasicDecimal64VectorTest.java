@@ -442,13 +442,21 @@ public class BasicDecimal64VectorTest {
         BasicDecimal64Vector re1 = new BasicDecimal64Vector(tmp_string_v,4);
         String re = JSONObject.toJSONString(re1);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DECIMAL64\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDecimal64\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"scale\":4,\"string\":\"[0.0000,-123.0043,132.2042,100.0000]\",\"table\":false,\"unitLength\":8,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DECIMAL64\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDecimal64\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"scale\":4,\"string\":\"[0.0000,-123.0043,132.2042,100.0000]\",\"table\":false,\"unitLength\":8,\"values\":[0,-1230043,1322042,1000000],\"vector\":true}", re);
     }
     @Test
     public void testBasicDecimal64Vector_toJsonString_null() throws IOException {
         BasicDecimal64Vector re1 = new BasicDecimal64Vector(2,2);
         String re = JSONObject.toJSONString(re1);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DECIMAL64\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDecimal64\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"scale\":2,\"string\":\"[0.00,0.00]\",\"table\":false,\"unitLength\":8,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"DENARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_DECIMAL64\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDecimal64\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"scale\":2,\"string\":\"[0.00,0.00]\",\"table\":false,\"unitLength\":8,\"values\":[0,0],\"vector\":true}", re);
+    }
+    @Test
+    public void testBasicDecimal64Vector_getValue() throws IOException {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal64Vector re1 = new BasicDecimal64Vector(tmp_string_v,4);
+        long[] re = re1.getValues();
+        System.out.println(Arrays.toString(re));
+        assertEquals("[0, -1230043, 1322042, 1000000]",Arrays.toString(re));
     }
 }
