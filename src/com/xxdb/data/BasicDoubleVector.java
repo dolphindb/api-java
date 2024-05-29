@@ -273,4 +273,8 @@ public class BasicDoubleVector extends AbstractVector{
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 8;
 	}
+
+	public double[] getValues() {
+		return values;
+	}
 }

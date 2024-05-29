@@ -550,7 +550,7 @@ public class BasicSymbolTest {
         BasicSymbolVector bsv = new BasicSymbolVector(list);
         String re = JSONObject.toJSONString(bsv);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_SYMBOL\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicString\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[GaussDB,GoldenDB]\",\"table\":false,\"unitLength\":4,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"LITERAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_SYMBOL\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicString\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[GaussDB,GoldenDB]\",\"table\":false,\"unitLength\":4,\"values\":[1,2],\"vector\":true}", re);
     }
     @Test
     public void test_BasicSymbolVector_setNull() throws Exception {

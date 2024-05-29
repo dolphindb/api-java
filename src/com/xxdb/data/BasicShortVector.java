@@ -287,4 +287,8 @@ public class BasicShortVector extends AbstractVector{
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 2;
 	}
+
+	public short[] getValues() {
+		return values;
+	}
 }

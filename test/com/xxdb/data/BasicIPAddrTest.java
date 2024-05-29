@@ -179,6 +179,6 @@ public class BasicIPAddrTest {
         BasicIPAddrVector biav = new BasicIPAddrVector(list);
         String re = JSONObject.toJSONString(biav);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[{\"high\":473849509537,\"low\":2234859305,\"null\":false},{\"high\":55887799882,\"low\":110044556,\"null\":false}],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_IPADDR\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicIPAddr\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[0:6e:53a1:b6a1::8535:3f29,0:d:32c:264a::68f:258c]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[{\"high\":473849509537,\"low\":2234859305,\"null\":false},{\"high\":55887799882,\"low\":110044556,\"null\":false}],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_IPADDR\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicIPAddr\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[0:6e:53a1:b6a1::8535:3f29,0:d:32c:264a::68f:258c]\",\"table\":false,\"unitLength\":16,\"values\":[{\"high\":473849509537,\"low\":2234859305,\"null\":false},{\"high\":55887799882,\"low\":110044556,\"null\":false}],\"vector\":true}", re);
     }
 }

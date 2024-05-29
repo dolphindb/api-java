@@ -618,4 +618,8 @@ public class BasicStringVector extends AbstractVector{
 			throw new RuntimeException("too large data. ");
 		return readByte;
 	}
+
+	public String[] getValues() {
+		return values;
+	}
 }

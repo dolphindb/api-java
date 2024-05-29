@@ -250,6 +250,6 @@ public class BasicInt128Test {
         BasicInt128Vector bi128v = new BasicInt128Vector(new Long2[]{new Long2(17L,6L),new Long2(29L,2L)});
         String re = JSONObject.toJSONString(bi128v);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[{\"high\":17,\"low\":6,\"null\":false},{\"high\":29,\"low\":2,\"null\":false}],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_INT128\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicInt128\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[00000000000000110000000000000006,000000000000001d0000000000000002]\",\"table\":false,\"unitLength\":16,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[{\"high\":17,\"low\":6,\"null\":false},{\"high\":29,\"low\":2,\"null\":false}],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_INT128\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicInt128\",\"jsonString\":\"[00000000000000110000000000000006,000000000000001d0000000000000002]\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[00000000000000110000000000000006,000000000000001d0000000000000002]\",\"table\":false,\"unitLength\":16,\"values\":[{\"high\":17,\"low\":6,\"null\":false},{\"high\":29,\"low\":2,\"null\":false}],\"vector\":true}", re);
     }
 }

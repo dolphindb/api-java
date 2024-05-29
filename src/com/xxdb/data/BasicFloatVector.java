@@ -274,4 +274,8 @@ public class BasicFloatVector extends AbstractVector{
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 4;
 	}
+
+	public float[] getValues() {
+		return values;
+	}
 }

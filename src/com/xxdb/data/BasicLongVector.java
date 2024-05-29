@@ -292,4 +292,8 @@ public class BasicLongVector extends AbstractVector{
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 8;
 	}
+
+	public long[] getValues() {
+		return values;
+	}
 }

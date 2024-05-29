@@ -207,7 +207,7 @@ public class BasicShortTest {
         BasicShortVector bsv = new BasicShortVector(new short[]{55,11,46});
         String re = JSONObject.toJSONString(bsv);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[55,11,46],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_SHORT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicShort\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[55,11,46]\",\"table\":false,\"unitLength\":2,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[55,11,46],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_SHORT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicShort\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[55,11,46]\",\"table\":false,\"unitLength\":2,\"values\":[55,11,46],\"vector\":true}", re);
     }
     @Test
     public void test_BasicShortMatrix_toJSONString() throws Exception {

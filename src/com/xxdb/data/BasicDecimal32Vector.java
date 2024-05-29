@@ -14,7 +14,7 @@ import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL32;
 
 public class BasicDecimal32Vector extends AbstractVector{
     private int scale_ = -1;
-    private int[] values;
+    private int[] unscaledValues;
     private int size;
     private int capacity;
 
@@ -27,18 +27,18 @@ public class BasicDecimal32Vector extends AbstractVector{
         if (scale < 0 || scale > 9)
             throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,9].");
         this.scale_ = scale;
-        this.values = new int[size];
+        this.unscaledValues = new int[size];
 
-        this.size = values.length;
-        capacity = values.length;
+        this.size = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     BasicDecimal32Vector(DATA_FORM df, int size){
         super(df);
-        values = new int[size];
+        unscaledValues = new int[size];
 
-        this.size = values.length;
-        capacity = values.length;
+        this.size = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     public BasicDecimal32Vector(String[] data, int scale) {
@@ -48,12 +48,12 @@ public class BasicDecimal32Vector extends AbstractVector{
         this.scale_ = scale;
 
         int length = data.length;
-        values = new int[length];
+        unscaledValues = new int[length];
         for (int i = 0; i < length; i++) {
             BigDecimal bd = new BigDecimal(data[i]);
             BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
             if (multipliedValue.intValue() > Integer.MIN_VALUE && multipliedValue.intValue() < Integer.MAX_VALUE)
-                values[i] = multipliedValue.intValue();
+                unscaledValues[i] = multipliedValue.intValue();
         }
 
         size = length;
@@ -65,9 +65,9 @@ public class BasicDecimal32Vector extends AbstractVector{
         if (scale < 0 || scale > 9)
             throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,9].");
         this.scale_ = scale;
-        this.values = dataValue;
-        this.size = values.length;
-        capacity = values.length;
+        this.unscaledValues = dataValue;
+        this.size = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     public BasicDecimal32Vector(DATA_FORM df, ExtendedDataInput in, int extra) throws IOException{
@@ -75,7 +75,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         int rows = in.readInt();
         int cols = in.readInt();
         int size = rows * cols;
-        values = new int[size];
+        unscaledValues = new int[size];
         if (extra != -1)
             scale_ = extra;
         else
@@ -92,13 +92,13 @@ public class BasicDecimal32Vector extends AbstractVector{
             ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
             for (int i = 0; i < end; i++){
                 int value = byteBuffer.getInt(i * 4);
-                values[i + start] = value;
+                unscaledValues[i + start] = value;
             }
             off += len;
         }
 
-        this.size = values.length;
-        capacity = values.length;
+        this.size = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     @Deprecated
@@ -116,9 +116,9 @@ public class BasicDecimal32Vector extends AbstractVector{
             BigDecimal dbvalue = new BigDecimal(Double.toString(data[i]));
             newIntValue[i] = (dbvalue.multiply(pow)).intValue();
         }
-        values = newIntValue;
-        this.size = values.length;
-        capacity = values.length;
+        unscaledValues = newIntValue;
+        this.size = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     @Override
@@ -132,19 +132,19 @@ public class BasicDecimal32Vector extends AbstractVector{
             int end = len / 4;
             ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
             for (int i = 0; i < end; i++)
-                values[i + start] = byteBuffer.getInt(i * 4);
+                unscaledValues[i + start] = byteBuffer.getInt(i * 4);
             off += len;
             start += end;
         }
 
-        this.size = values.length;
-        capacity = values.length;
+        this.size = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     @Override
     protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
         int[] data = new int[size];
-        System.arraycopy(values, 0, data, 0, size);
+        System.arraycopy(unscaledValues, 0, data, 0, size);
         out.writeInt(scale_);
         out.writeIntArray(data);
     }
@@ -159,7 +159,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         int length = indices.length;
         int[] sub = new int[length];
         for(int i=0; i<length; ++i)
-            sub[i] = values[indices[i]];
+            sub[i] = unscaledValues[indices[i]];
         return new BasicDecimal32Vector(sub, scale_);
     }
 
@@ -170,17 +170,17 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public boolean isNull(int index) {
-        return values[index] == Integer.MIN_VALUE;
+        return unscaledValues[index] == Integer.MIN_VALUE;
     }
 
     @Override
     public void setNull(int index) {
-        values[index] = Integer.MIN_VALUE;
+        unscaledValues[index] = Integer.MIN_VALUE;
     }
 
     @Override
     public Entity get(int index) {
-        return new BasicDecimal32(new int[]{scale_, values[index]});
+        return new BasicDecimal32(new int[]{scale_, unscaledValues[index]});
     }
 
     @Override
@@ -193,7 +193,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         DATA_TYPE type = value.getDataType();
         if(scale_ < 0) scale_ = newScale;
         if(((Scalar)value).isNull())
-            values[index] = Integer.MIN_VALUE;
+            unscaledValues[index] = Integer.MIN_VALUE;
         else{
             if(scale_ != newScale) {
                 BigInteger newValue = BigInteger.valueOf(((BasicDecimal32) (value)).getInt());
@@ -205,9 +205,9 @@ public class BasicDecimal32Vector extends AbstractVector{
                     pow = pow.pow(scale_ - newScale);
                     newValue = newValue.multiply(pow);
                 }
-                values[index] = newValue.intValue();
+                unscaledValues[index] = newValue.intValue();
             }else{
-                values[index] = ((BasicDecimal32) value).getInt();
+                unscaledValues[index] = ((BasicDecimal32) value).getInt();
             }
         }
     }
@@ -220,7 +220,7 @@ public class BasicDecimal32Vector extends AbstractVector{
     @Override
     public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
         for (int i = 0; i < count; i++){
-            out.writeInt(values[start + i]);
+            out.writeInt(unscaledValues[start + i]);
         }
     }
 
@@ -230,52 +230,52 @@ public class BasicDecimal32Vector extends AbstractVector{
     }
 
     public void add(String value) {
-        if (size + 1 > capacity && values.length > 0) {
-            values = Arrays.copyOf(values, values.length * 2);
-        } else if (values.length <= 0){
-            values = new int[1];
+        if (size + 1 > capacity && unscaledValues.length > 0) {
+            unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length * 2);
+        } else if (unscaledValues.length <= 0){
+            unscaledValues = new int[1];
         }
 
-        capacity = values.length;
+        capacity = unscaledValues.length;
         if (value.equals("0.0"))
-            values[size] = 0;
+            unscaledValues[size] = 0;
         else if(value.equals(""))
-            values[size] = Integer.MIN_VALUE;
+            unscaledValues[size] = Integer.MIN_VALUE;
         else {
             BigDecimal pow = BigDecimal.TEN.pow(scale_);
             BigDecimal bd = new BigDecimal(value);
             if (checkDecimal32Range(bd.multiply(pow).intValue()))
-                values[size] = bd.multiply(pow).intValue();
+                unscaledValues[size] = bd.multiply(pow).intValue();
         }
         size++;
     }
 
     @Deprecated
     public void add(double value) {
-        if (size + 1 > capacity && values.length > 0){
-            values = Arrays.copyOf(values, values.length * 2);
-        }else if (values.length <= 0){
-            values = Arrays.copyOf(values, values.length + 1);
+        if (size + 1 > capacity && unscaledValues.length > 0){
+            unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length * 2);
+        }else if (unscaledValues.length <= 0){
+            unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length + 1);
         }
-        capacity = values.length;
+        capacity = unscaledValues.length;
         if (value == 0.0)
-            values[size] = 0;
+            unscaledValues[size] = 0;
         else {
             BigDecimal pow = new BigDecimal(1);
             for (long i = 0; i < scale_; i++) {
                 pow = pow.multiply(new BigDecimal(10));
             }
             BigDecimal dbvalue = new BigDecimal(Double.toString(value));
-            values[size] = (dbvalue.multiply(pow)).intValue();
+            unscaledValues[size] = (dbvalue.multiply(pow)).intValue();
         }
         size++;
     }
 
     void addRange(int[] valueList) {
-        values = Arrays.copyOf(values, valueList.length + values.length);
-        System.arraycopy(valueList, 0, values, size, valueList.length);
+        unscaledValues = Arrays.copyOf(unscaledValues, valueList.length + unscaledValues.length);
+        System.arraycopy(valueList, 0, unscaledValues, size, valueList.length);
         size += valueList.length;
-        capacity = values.length;
+        capacity = unscaledValues.length;
     }
 
     public void addRange(String[] valueList) {
@@ -287,10 +287,10 @@ public class BasicDecimal32Vector extends AbstractVector{
                 newIntValue[i] = bd.multiply(pow).intValue();
 
         }
-        values = Arrays.copyOf(values, newIntValue.length + values.length);
-        System.arraycopy(newIntValue, 0, values, size, newIntValue.length);
+        unscaledValues = Arrays.copyOf(unscaledValues, newIntValue.length + unscaledValues.length);
+        System.arraycopy(newIntValue, 0, unscaledValues, size, newIntValue.length);
         size += newIntValue.length;
-        capacity = values.length;
+        capacity = unscaledValues.length;
     }
 
     @Deprecated
@@ -304,10 +304,10 @@ public class BasicDecimal32Vector extends AbstractVector{
             BigDecimal dbvalue = new BigDecimal(Double.toString(valueList[i]));
             newIntValue[i] = (dbvalue.multiply(pow)).intValue();
         }
-        values = Arrays.copyOf(values, newIntValue.length + values.length);
-        System.arraycopy(newIntValue, 0, values, size, newIntValue.length);
+        unscaledValues = Arrays.copyOf(unscaledValues, newIntValue.length + unscaledValues.length);
+        System.arraycopy(newIntValue, 0, unscaledValues, size, newIntValue.length);
         size += newIntValue.length;
-        capacity = values.length;
+        capacity = unscaledValues.length;
     }
 
     @Override
@@ -337,7 +337,7 @@ public class BasicDecimal32Vector extends AbstractVector{
     @JsonIgnore
     public int[] getdataArray(){
         int[] data = new int[size];
-        System.arraycopy(values, 0, data, 0, size);
+        System.arraycopy(unscaledValues, 0, data, 0, size);
         return data;
     }
 
@@ -371,7 +371,7 @@ public class BasicDecimal32Vector extends AbstractVector{
         targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
         for (int i = 0; i < targetNumElement; ++i)
         {
-            out.putInt(values[indexStart + i]);
+            out.putInt(unscaledValues[indexStart + i]);
         }
         numElementAndPartial.numElement = targetNumElement;
         numElementAndPartial.partial = 0;
@@ -380,5 +380,9 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     private boolean checkDecimal32Range(int value) {
         return value > Integer.MIN_VALUE && value < Integer.MAX_VALUE;
+    }
+
+    public int[] getUnscaledValues() {
+        return unscaledValues;
     }
 }

@@ -32,6 +32,8 @@ interface MessageDispatcher {
 
     Site getSiteByName(String site);
 
+    Site getCurrentSiteByName(String site);
+
     void activeCloseConnection(Site site);
 
     List<String> getAllTopicsBySite(String site);

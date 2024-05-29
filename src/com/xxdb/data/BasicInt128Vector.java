@@ -14,7 +14,7 @@ public class BasicInt128Vector extends AbstractVector{
 	protected Long2[] values;
 	protected int size;
 	protected int capaticy;
-	
+
 	public BasicInt128Vector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
 	}
@@ -304,6 +304,14 @@ public class BasicInt128Vector extends AbstractVector{
 		numElementAndPartial.numElement = targetNumElement;
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 16;
+	}
+
+	public Long2[] getValues() {
+		return values;
+	}
+
+	public String getJsonString() {
+		return getString();
 	}
 }
 
