@@ -459,4 +459,22 @@ public class BasicDecimal64VectorTest {
         System.out.println(Arrays.toString(re));
         assertEquals("[0, -1230043, 1322042, 1000000]",Arrays.toString(re));
     }
+
+    @Test
+    public void test_BasicDecimal64Vector_combine() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00464","164.204234","100.0"};
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,4);
+        BasicDecimal64Vector tmp_64_v1 = new BasicDecimal64Vector(0,4);
+        BasicDecimal64Vector tmp_64_v2 = new BasicDecimal64Vector(0,5);
+
+        assertEquals("[0.0000,-123.0046,164.2042,100.0000,0.0000,-123.0046,164.2042,100.0000]",tmp_64_v.combine(tmp_64_v).getString());
+        assertEquals("[0.0000,-123.0046,164.2042,100.0000]",tmp_64_v.combine(tmp_64_v1).getString());
+        String re = null;
+        try{
+            tmp_64_v.combine(tmp_64_v2);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("The scale of the vector to be combine does not match the scale of the current vector.",re);
+    }
 }

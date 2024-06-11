@@ -107,6 +107,46 @@ public class Prepare {
         conn.run(script);
     }
 
+    public static void Preparedata1(long count) throws IOException {
+        String script = "login(`admin, `123456); \n" +
+                "n="+count+";\n" +
+                "colNames = `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`datehourv`uuidv`ippaddrv`int128v`blobv`pointv`complexv`decimal32v`decimal64v`decimal128v ;\n" +
+                "colTypes=[BOOL,CHAR,SHORT,INT,LONG,DOUBLE,FLOAT,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,SYMBOL,STRING,DATEHOUR,UUID,IPADDR,INT128,BLOB,POINT,COMPLEX,DECIMAL32(2),DECIMAL64(7),DECIMAL128(18)]\n" +
+                "share table(1:0,colNames,colTypes) as data;\n" +
+                "boolv = bool(rand([true, false, NULL], n));\n" +
+                "charv = char(rand(rand(-100..100, 1000) join take(char(), 4), n));\n" +
+                "shortv = short(rand(rand(-100..100, 1000) join take(short(), 4), n));\n" +
+                "intv = int(rand(rand(-100..100, 1000) join take(int(), 4), n));\n" +
+                "longv = long(rand(rand(-100..100, 1000) join take(long(), 4), n));\n" +
+                "doublev = double(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n));\n" +
+                "floatv = float(rand(rand(-100..100, 1000)*0.23 join take(float(), 4), n));\n" +
+                "datev = date(rand(rand(-100..100, 1000) join take(date(), 4), n));\n" +
+                "monthv = month(rand(1967.12M+rand(-100..100, 1000) join take(month(), 4), n));\n" +
+                "timev = time(rand(rand(0..100, 1000) join take(time(), 4), n));\n" +
+                "minutev = minute(rand(12:13m+rand(-100..100, 1000) join take(minute(), 4), n));\n" +
+                "secondv = second(rand(12:13:12+rand(-100..100, 1000) join take(second(), 4), n));\n" +
+                "datetimev = datetime(rand(1969.12.23+rand(-100..100, 1000) join take(datetime(), 4), n));\n" +
+                "timestampv = timestamp(rand(1970.01.01T00:00:00.023+rand(-100..100, 1000) join take(timestamp(), 4), n));\n" +
+                "nanotimev = nanotime(rand(12:23:45.452623154+rand(-100..100, 1000) join take(nanotime(), 4), n));\n" +
+                "nanotimestampv = nanotimestamp(rand(rand(-100..100, 1000) join take(nanotimestamp(), 4), n));\n" +
+                "symbolv = rand((\"syms\"+string(rand(100, 1000))) join take(string(), 4), n);\n" +
+                "stringv = rand((\"stringv\"+string(rand(100, 1000))) join take(string(), 4), n);\n" +
+                "uuidv = rand(rand(uuid(), 1000) join take(uuid(), 4), n);\n" +
+                "datehourv = datehour(rand(datehour(1969.12.31T12:45:12)+rand(-100..100, 1000) join take(datehour(), 4), n));\n" +
+                "ippaddrv = rand(rand(ipaddr(), 1000) join take(ipaddr(), 4), n);\n" +
+                "int128v = rand(rand(int128(), 1000) join take(int128(), 4), n);\n" +
+                "blobv = blob(string(rand((\"blob\"+string(rand(100, 1000))) join take(\"\", 4), n)));\n" +
+                "complexv = rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n);\n" +
+                "pointv = rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n);\n" +
+                "decimal32v = decimal32(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 3);\n" +
+                "decimal64v = decimal64(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 8);\n" +
+                "decimal128v = decimal128(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 10);\n" +
+                "data.append!(table(boolv, charv, shortv, intv, longv, doublev, floatv,  datev, monthv, timev, minutev, secondv, datetimev, timestampv, nanotimev, nanotimestampv,  symbolv, stringv, datehourv, uuidv, ippaddrv, int128v, blobv, pointv, complexv, decimal32v, decimal64v,decimal128v)) ;\n";
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run(script);
+    }
+
     public static void Preparedata_array(long count1,long count2) throws IOException {
         String script1 = "login(`admin, `123456); \n"+
                 "n="+count1+";\n" +

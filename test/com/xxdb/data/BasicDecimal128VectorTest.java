@@ -535,4 +535,27 @@ public class BasicDecimal128VectorTest {
         Scalar sc = new BasicDecimal128("1",2);
         assertEquals(0,tmp_128_v.asof(sc));
     }
+    @Test
+    public void test_BasicDecimal128Vector_combine() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.004128","1128.204234","100.0"};
+        BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
+        BasicDecimal128Vector tmp_128_v1 = new BasicDecimal128Vector(0,4);
+        BasicDecimal128Vector tmp_128_v2 = new BasicDecimal128Vector(0,5);
+        BigInteger[] tmp_string_v1 = {new BigInteger("17014118346046923173168730371588410")};
+        BasicDecimal128Vector tmp_128_v3 = new BasicDecimal128Vector(tmp_string_v1,4);
+
+        assertEquals("[0.0000,-123.0041,1128.2042,100.0000,0.0000,-123.0041,1128.2042,100.0000]",tmp_128_v.combine(tmp_128_v).getString());
+        assertEquals("[0.0000,-123.0041,1128.2042,100.0000]",tmp_128_v.combine(tmp_128_v1).getString());
+        assertEquals("[0.0000,-123.0041,1128.2042,100.0000]",tmp_128_v1.combine(tmp_128_v).getString());
+        assertEquals("[0.0000,-123.0041,1128.2042,100.0000,1701411834604692317316873037158.8410]",tmp_128_v.combine(tmp_128_v3).getString());
+        tmp_128_v.setNull(0);
+        assertEquals("[,-123.0041,1128.2042,100.0000,,-123.0041,1128.2042,100.0000]",tmp_128_v.combine(tmp_128_v).getString());
+        String re = null;
+        try{
+            tmp_128_v.combine(tmp_128_v2);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("The scale of the vector to be combine does not match the scale of the current vector.",re);
+    }
 }
