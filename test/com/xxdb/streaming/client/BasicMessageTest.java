@@ -25,6 +25,6 @@ public class BasicMessageTest {
         assertEquals("(6.4, 9.2)",bm.getValue(1).toString());
         assertEquals("China",bm.getValue("mongoDB").toString());
         assertEquals("(5,(6.4, 9.2),China,15.48)",bm.getMsg().getString());
+        assertEquals(0,bm.getOffset());
     }
-
 }
