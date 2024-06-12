@@ -2103,21 +2103,19 @@ public static void PrepareStreamTable() throws IOException {
         System.out.println("这里可以手工断掉这个集群下所有可用节点http://192.168.0.69:18920/?view=overview-old");
         Thread.sleep(1000000);
     }
-
     public static MessageHandler MessageHandler_handler_getOffset = new MessageHandler() {
         @Override
         public void doEvent(IMessage msg) {
-            System.out.println(msg.getOffset());
             try {
                 String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
                 conn.run(script);
+                System.out.println("msg.getOffset is :" + msg.getOffset());
+                System.out.println("total is :" + total);
                 assertEquals(total, msg.getOffset());
                 total++;
-                System.out.println("msg.getOffset is :" + msg.getOffset());
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            total=total++;
         }
     };
     @Test(timeout = 180000)
@@ -2142,6 +2140,31 @@ public static void PrepareStreamTable() throws IOException {
             assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
         client1.unsubscribe(HOST, PORT, "Trades");
+    }
+
+    @Test(timeout = 180000)
+    public void test_subscribe_filter_getOffset() throws Exception{
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        ThreadPooledClient client1 = new ThreadPooledClient(HOST, 0,1);
+        BasicIntVector filter = new BasicIntVector(new int[]{1,2,3,4,5});
+        client1.subscribe(HOST, PORT, "Trades","ACTION1", MessageHandler_handler_getOffset, -1,filter);
+        conn.run("n=7;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(5000);
+        BasicTable re = (BasicTable) conn.run("Receive");
+        BasicTable tra = (BasicTable) conn.run("Trades");
+        assertEquals(5, re.rows());
+        for (int i = 0; i < re.rows(); i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
+        }
+        client1.unsubscribe(HOST, PORT, "Trades","ACTION1");
     }
 
 }
