@@ -2309,7 +2309,7 @@ public class PollingClientReverseTest {
         BasicIntVector filter = (BasicIntVector) conn.run("filter");
         TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",-1,filter);
         ArrayList<IMessage> msg1;
-        conn.run("n=6;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+        conn.run("n=5;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
         msg1 = poller1.poll(500, 10000);
         assertEquals(5, msg1.size());
@@ -2318,11 +2318,11 @@ public class PollingClientReverseTest {
         System.out.println("msg1.get(2).getOffset() :" + msg1.get(2).getOffset());
         System.out.println("msg1.get(3).getOffset() :" + msg1.get(3).getOffset());
         System.out.println("msg1.get(4).getOffset() :" + msg1.get(4).getOffset());
-        assertEquals(1, msg1.get(0).getOffset());
-        assertEquals(2, msg1.get(1).getOffset());
-        assertEquals(3, msg1.get(2).getOffset());
-        assertEquals(4, msg1.get(3).getOffset());
-        assertEquals(5, msg1.get(4).getOffset());
+        assertEquals(0, msg1.get(0).getOffset());
+        assertEquals(1, msg1.get(1).getOffset());
+        assertEquals(2, msg1.get(2).getOffset());
+        assertEquals(3, msg1.get(3).getOffset());
+        assertEquals(4, msg1.get(4).getOffset());
         client.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
 }

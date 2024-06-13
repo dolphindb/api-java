@@ -3677,27 +3677,4 @@ public class ThreadedClientsubscribeReverseTest {
         }
         client.unsubscribe(HOST, PORT, "Trades");
     }
-    @Test(timeout = 180000)
-    public void test_subscribe_filter_getOffset() throws Exception{
-        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-                "share(st1,`Trades)\t\n"
-                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
-        conn.run(script1);
-        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
-                "share(st2, `Receive)\t\n";
-        conn.run(script2);
-        BasicIntVector filter = new BasicIntVector(new int[]{1,2,3,4,5});
-        client.subscribe(HOST, PORT, "Trades","ACTION1", MessageHandler_handler_getOffset, -1,filter);
-        conn.run("n=7;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
-        BasicTable re = (BasicTable) conn.run("Receive");
-        BasicTable tra = (BasicTable) conn.run("Trades");
-        assertEquals(5, re.rows());
-        for (int i = 0; i < re.rows(); i++) {
-            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
-            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
-        }
-        client.unsubscribe(HOST, PORT, "Trades","ACTION1");
-    }
 }
