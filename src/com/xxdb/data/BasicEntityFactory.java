@@ -1006,6 +1006,10 @@ public class BasicEntityFactory implements EntityFactory{
 			}
 			case DT_STRING:
 				return new BasicString(val);
+			case DT_DECIMAL32:
+				return new BasicDecimal32(val, extraParam);
+			case DT_DECIMAL64:
+				return new BasicDecimal64(val, extraParam);
 			case DT_DECIMAL128:
 				return new BasicDecimal128(val, extraParam);
 			default:
