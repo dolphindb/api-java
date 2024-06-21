@@ -115,7 +115,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 
 	@Override
 	public boolean put(Scalar key, Entity value) {
-		if(key.getDataType() != getKeyDataType() || (value.getDataType() != getDataType()))
+		if(key.getDataType() != getKeyDataType() || ((value.getDataType() == DATA_TYPE.DT_ANY) &&  (value.getDataType() != getDataType())))
 			return false;
 		else{
 			dict.put(key, value);
@@ -198,8 +198,14 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 			throw new IOException("Can't streamlize the dictionary with value type " + valueType.name());
 		
 		BasicEntityFactory factory = new BasicEntityFactory();
-		Vector keys = (Vector)factory.createVectorWithDefaultValue(keyType, dict.size(), -1);
-		Vector values = (Vector)factory.createVectorWithDefaultValue(valueType, dict.size(), -1);
+		Vector keys = factory.createVectorWithDefaultValue(keyType, dict.size(), -1);
+		Vector values;
+		if (valueType == DATA_TYPE.DT_ANY) {
+			 values = new BasicAnyVector(dict.size());
+		} else {
+			 values = factory.createVectorWithDefaultValue(valueType, dict.size(), -1);
+		}
+
 		int index = 0;
 		try{
 			for(Map.Entry<Entity, Entity> entry : dict.entrySet()){
