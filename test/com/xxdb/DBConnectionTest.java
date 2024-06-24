@@ -1,6 +1,7 @@
 package com.xxdb;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.xxdb.data.Dictionary;
 import com.xxdb.data.Vector;
 import com.xxdb.data.*;
 import com.xxdb.io.Double2;
@@ -1408,6 +1409,24 @@ public class DBConnectionTest {
         conn.upload(map);
         Entity dict1 = conn.run("dict");
         assertEquals(3, dict1.rows());
+    }
+    @Test
+    public void testDictionaryUpload_1() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_ANY);
+        Map<String,Entity> data = new HashMap<>();
+        data.put("bd",bd);
+        conn.upload(data);
+        Dictionary re= (Dictionary) conn.run("bd");
+        System.out.println(re.getString());
+        assertEquals("", re.getString());
+        bd.put(new BasicInt(1),new BasicInt(1));
+        data.put("bd",bd);
+        conn.upload(data);
+        Dictionary re1= (Dictionary) conn.run("bd");
+        System.out.println(re1.getString());
+        assertEquals("1->1\n", re1.getString());
     }
     @Test
     public void testDurationUpload() throws IOException {
