@@ -123,7 +123,7 @@ public class BasicTensor extends AbstractTensor {
         long size = shapes[depth];
         for (int i = 0; i < size; i++) {
             indices[depth] = i;
-            if (depth == dimensions - 1 && size > 5 && i == 5) {
+            if (depth == dimensions - 1 && size > 11 && i == 11) {
                 sb.append("...");
                 break;
             } else {
