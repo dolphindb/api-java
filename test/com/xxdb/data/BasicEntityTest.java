@@ -493,6 +493,33 @@ public class BasicEntityTest {
         assertEquals("Failed to insert data. invalid data type for DT_LONG.",ex);
     }
     @Test
+    public void test_BasicEntityFactory_createScalar_decimal() throws Exception {
+        BasicEntityFactory factory = new BasicEntityFactory();
+        BasicDecimal32 re = (BasicDecimal32) factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL32, "1.0000", 1);
+        assertEquals("1.0", re.getString());
+
+        BasicDecimal32 re1 = (BasicDecimal32) factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL32, "-1.2345", 8);
+        assertEquals("-1.23450000", re1.getString());
+
+        BasicDecimal32 re2 = (BasicDecimal32) factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL32, "-1.2345", 3);
+        assertEquals("-1.235", re2.getString());
+
+        BasicDecimal32 re3 = (BasicDecimal32) factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL32, "0", 0);
+        assertEquals("0", re3.getString());
+
+        BasicDecimal64 re4 = (BasicDecimal64) factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL64, "1.0000", 1);
+        assertEquals("1.0", re4.getString());
+
+        BasicDecimal64 re5 = (BasicDecimal64) factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL64, "-1.2345", 17);
+        assertEquals("-1.23450000000000000", re5.getString());
+
+        BasicDecimal64 re6 = (BasicDecimal64) factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL64, "-1.2345", 3);
+        assertEquals("-1.235", re6.getString());
+
+        BasicDecimal64 re7 = (BasicDecimal64) factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL64, "0", 0);
+        assertEquals("0", re7.getString());
+    }
+    @Test
     public void test_BasicEntityFactory_createScalar_createAnyVector_T() throws Exception {
         BasicEntityFactory factory = new BasicEntityFactory();
         Float[]  Float1 = new Float[]{-1f,0f,2f};
