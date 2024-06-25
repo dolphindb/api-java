@@ -2023,6 +2023,20 @@ public class DBConnectionTest {
         assertEquals("\n", decimal128matrix2Res.getString());
     }
     @Test
+    public void testTensorUpload() throws Exception {
+        HashMap<String, Entity> map = new HashMap<String, Entity>();
+        Entity bc = conn.run("tensor(100)");
+        map.put("tensor1", bc);
+        String re = null;
+        try{
+            conn.upload(map);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("BasicTensor not support write method.", re);
+    }
+
+    @Test
     public void testUserDefineFunction() throws IOException {
         conn.run("def f(a,b) {return a+b};");
         List<Entity> args = new ArrayList<Entity>(2);
