@@ -500,7 +500,7 @@ public class EventClientTest {
         Assert.assertEquals(re2.getColumn(0).get(0).getString(),re.getColumn(0).get(0).getString());
         Assert.assertEquals("00:00:00.001",re.getColumn(1).get(0).getString());
         Assert.assertEquals("tesrtttt",re1.getColumn(0).get(0).getString());
-        Assert.assertEquals(re2.getColumn(0).get(0).getString(),re1.getColumn(1).get(0).getString());
+        Assert.assertEquals(re2.getColumn(0).get(1).getString(),re1.getColumn(1).get(0).getString());
         client.unsubscribe(HOST, PORT, "intput", "test1");
     }
 
@@ -635,7 +635,6 @@ public class EventClientTest {
     public  void test_EventClient_subscribe_actionName_exist() throws IOException, InterruptedException {
         subscribePrepare();
         conn.run("share streamTable(1000000:0, `eventType`event`comment1`comment2, [STRING,BLOB,TIME,STRING]) as inputTable1;");
-        String re = null;
         client.subscribe(HOST, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
         client.subscribe(HOST, PORT, "inputTable1", "test1", handler1, -1, true, "admin", "123456");
         client.unsubscribe(HOST, PORT, "inputTable", "test1");
