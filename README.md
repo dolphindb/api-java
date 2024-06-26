@@ -1,5 +1,7 @@
 # DolphinDB Java API
 
+**Note**: This README documents DolphinDB Java API version 1.30.20.1 and earlier. As of version 1.30.20.1, this README is no longer maintained. For documentation on the latest DolphinDB Java API, please refer to [DolphinDB Documentation](https://docs.dolphindb.com/en/API/Java.html).
+
 - [DolphinDB Java API](#dolphindb-java-api)
   - [1. Introduction](#1-introduction)
   - [2. Establish DolphinDB Connection](#2-establish-dolphindb-connection)
