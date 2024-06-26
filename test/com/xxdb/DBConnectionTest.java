@@ -1,6 +1,7 @@
 package com.xxdb;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.xxdb.data.Dictionary;
 import com.xxdb.data.Vector;
 import com.xxdb.data.*;
 import com.xxdb.io.Double2;
@@ -25,6 +26,7 @@ import java.util.Date;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
+import static com.xxdb.Prepare.*;
 import static com.xxdb.comm.SqlStdEnum.*;
 import static org.junit.Assert.*;
 
@@ -1409,6 +1411,24 @@ public class DBConnectionTest {
         assertEquals(3, dict1.rows());
     }
     @Test
+    public void testDictionaryUpload_1() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_ANY);
+        Map<String,Entity> data = new HashMap<>();
+        data.put("bd",bd);
+        conn.upload(data);
+        Dictionary re= (Dictionary) conn.run("bd");
+        System.out.println(re.getString());
+        assertEquals("", re.getString());
+        bd.put(new BasicInt(1),new BasicInt(1));
+        data.put("bd",bd);
+        conn.upload(data);
+        Dictionary re1= (Dictionary) conn.run("bd");
+        System.out.println(re1.getString());
+        assertEquals("1->1\n", re1.getString());
+    }
+    @Test
     public void testDurationUpload() throws IOException {
         Entity duration = conn.run("duration(3XNYS)");
         Map<String, Entity> map = new HashMap<String, Entity>();
@@ -2002,6 +2022,20 @@ public class DBConnectionTest {
         assertEquals(decimal128matrix2.getString(), decimal128matrix2Res.getString());
         assertEquals("\n", decimal128matrix2Res.getString());
     }
+    @Test
+    public void testTensorUpload() throws Exception {
+        HashMap<String, Entity> map = new HashMap<String, Entity>();
+        Entity bc = conn.run("tensor(100)");
+        map.put("tensor1", bc);
+        String re = null;
+        try{
+            conn.upload(map);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("BasicTensor not support write method.", re);
+    }
+
     @Test
     public void testUserDefineFunction() throws IOException {
         conn.run("def f(a,b) {return a+b};");
@@ -4046,9 +4080,8 @@ public void test_SSL() throws Exception {
         assertEquals("[[1.0000,3.0000,100000.0000],[-1.0000,0.0000,0.1235],[1.0000,3.0000,100000.0000],[-1.0000,0.0000,0.1235]]",res.getColumn(5).getString());
         assertEquals("[[1.00000000,3.00001000,100000.00000000],[-1.00000000,0.00000000,0.12345679],[1.00000000,3.00001000,100000.00000000],[-1.00000000,0.00000000,0.12345679]]",res.getColumn(6).getString());
         System.out.println(res.getColumn(0).getString());
-
     }
-
+    
     @Test
     public void test_tableInsert_decimal128_arrayvector() throws Exception {
         DBConnection connection = new DBConnection(false, false, false);
@@ -4899,5 +4932,38 @@ public void test_SSL() throws Exception {
             re = e.getMessage();
         }
         assertEquals(true, re.contains("Can't recognize function name C. function: C"));
+    }
+    @Test
+    public void test_allDateType_combine() throws IOException {
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        Preparedata1(10000);
+        EntityBlockReader blockReader  = (EntityBlockReader) conn.run("select * from data;", (ProgressListener) null,4,4,9999);
+        BasicTable data = (BasicTable) blockReader.read();
+        assertEquals(9999, data.rows());
+        while (blockReader.hasNext()) {
+            System.out.println(data.rows());
+            BasicTable t = (BasicTable) blockReader.read();
+            data = data.combine(t);
+        }
+        System.out.println(data.rows());
+        assertEquals(10000, data.rows());
+    }
+
+    @Test
+    public void test_allDateTyp_array_combine() throws IOException {
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        Preparedata_array(100000,10);
+        EntityBlockReader blockReader  = (EntityBlockReader) conn.run("select * from data;", (ProgressListener) null,4,4,9999);
+        BasicTable data = (BasicTable) blockReader.read();
+        assertEquals(9999, data.rows());
+        while (blockReader.hasNext()) {
+            System.out.println(data.rows());
+            BasicTable t = (BasicTable) blockReader.read();
+            data = data.combine(t);
+        }
+        System.out.println(data.rows());
+        assertEquals(10000, data.rows());
     }
 }

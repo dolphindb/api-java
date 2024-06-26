@@ -8,9 +8,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.ResourceBundle;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -76,6 +74,41 @@ public class BasicDictionaryTest {
 
         bd.put(new BasicInt(1),new BasicAnyVector(arr,true));
         assertEquals("1->(0,1,2,3,4,5,6,7,8,9)\n",bd.getString());
+    }
+    @Test
+    public void test_BasicDictionary_upload() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_ANY);
+        Map<String,Entity> data = new HashMap<>();
+        data.put("bd",bd);
+        conn.upload(data);
+        Dictionary re= (Dictionary) conn.run("bd");
+        System.out.println(re.getString());
+        assertEquals("", re.getString());
+        Entity[] arr = new Entity[10];
+        for (int i = 0; i < 10; i++) {
+            arr[i] = conn.run(""+i);
+        }
+
+        bd.put(new BasicInt(1),new BasicAnyVector(arr,true));
+        data.put("bd",bd);
+        conn.upload(data);
+        Dictionary re1= (Dictionary) conn.run("bd");
+        System.out.println(re1.getString());
+        assertEquals("1->(0,1,2,3,4,5,6,7,8,9)", re1.getString());
+    }
+    @Test
+    public void test_BasicDictionary_valueType_DT_ANY() throws IOException {
+        BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_ANY,1);
+        conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        bd.put(new BasicInt(1),new BasicInt(1));
+        assertEquals("1->1\n",bd.getString());
+        bd.put(new BasicInt(1),new BasicString("1121!@#$%^&*()_+-=`~{}[]|\":;',.ldfdf中文"));
+        assertEquals("1->1121!@#$%^&*()_+-=`~{}[]|\":;',.ldfdf中文\n",bd.getString());
+        bd.put(new BasicInt(1),new BasicDouble(1.666));
+        assertEquals("1->1.666\n",bd.getString());
     }
 
     @Test(expected = IOException.class)

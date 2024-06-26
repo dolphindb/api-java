@@ -32,6 +32,7 @@ public class ThreadedClientsubscribeReverseTest {
     static int controller_port = Integer.parseInt(bundle.getString("CONTROLLER_PORT"));
     //static int PORT = 9002;
     private static ThreadedClient client;
+    static long total = 0;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -114,7 +115,7 @@ public class ThreadedClientsubscribeReverseTest {
         }
     };
 
-    public void wait_data(String table_name,int data_row) throws IOException, InterruptedException {
+    public static void wait_data(String table_name, int data_row) throws IOException, InterruptedException {
         BasicInt row_num;
         while(true){
             row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
@@ -243,7 +244,7 @@ public class ThreadedClientsubscribeReverseTest {
     }
 
     @Test
-    public void test_ThreadedClient_only_subscribePort() throws IOException {
+    public void test_ThreadedClient_only_subscribePort() throws IOException, InterruptedException {
         ThreadedClient client2 = new ThreadedClient(0);
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
@@ -3638,5 +3639,42 @@ public class ThreadedClientsubscribeReverseTest {
         client.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,1000, 1,"admin","123456",backupSites);
         System.out.println("这里可以手工断掉这个集群下所有可用节点http://192.168.0.69:18920/?view=overview-old");
         Thread.sleep(1000000);
+    }
+    public static MessageHandler MessageHandler_handler_getOffset = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+                try {
+                    String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
+                    conn.run(script);
+                    System.out.println("msg.getOffset is :" + msg.getOffset());
+                    System.out.println("total is :" + total);
+                    assertEquals(total, msg.getOffset());
+                    total++;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+    };
+    @Test(timeout = 180000)
+    public void test_subscribe_getOffset() throws Exception{
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        client.subscribe(HOST, PORT, "Trades", MessageHandler_handler_getOffset, true);
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",5000);
+        BasicTable re = (BasicTable) conn.run("Receive");
+        BasicTable tra = (BasicTable) conn.run("Trades");
+        assertEquals(5000, re.rows());
+        for (int i = 0; i < re.rows(); i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
+        }
+        client.unsubscribe(HOST, PORT, "Trades");
     }
 }

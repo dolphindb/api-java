@@ -77,6 +77,8 @@ public class BasicEntityFactory implements EntityFactory{
 			return new BasicSet(type, in);
 		else if(form == Entity.DATA_FORM.DF_CHUNK)
 			return new BasicChunkMeta(in);
+		else if (form == Entity.DATA_FORM.DF_TENSOR)
+			return new BasicTensor(type, in);
 		else if(type == Entity.DATA_TYPE.DT_ANY && (form == Entity.DATA_FORM.DF_VECTOR || form == Entity.DATA_FORM.DF_PAIR))
 			return new BasicAnyVector(in);
 		else if(type.getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && type.getValue() <= DT_DECIMAL128_ARRAY.getValue())
@@ -1004,6 +1006,10 @@ public class BasicEntityFactory implements EntityFactory{
 			}
 			case DT_STRING:
 				return new BasicString(val);
+			case DT_DECIMAL32:
+				return new BasicDecimal32(val, extraParam);
+			case DT_DECIMAL64:
+				return new BasicDecimal64(val, extraParam);
 			case DT_DECIMAL128:
 				return new BasicDecimal128(val, extraParam);
 			default:

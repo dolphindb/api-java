@@ -159,7 +159,15 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public Vector combine(Vector vector) {
-        return null;
+        BasicDecimal64Vector v = (BasicDecimal64Vector)vector;
+        if (v.getScale() != this.scale_)
+            throw new RuntimeException("The scale of the vector to be combine does not match the scale of the current vector.");
+        int newSize = this.rows() + v.rows();
+        long[] newValue = new long[newSize];
+        System.arraycopy(this.unscaledValues,0, newValue,0,this.rows());
+        System.arraycopy(v.unscaledValues,0, newValue,this.rows(),v.rows());
+
+        return new BasicDecimal64Vector(newValue, this.scale_);
     }
 
     @Override

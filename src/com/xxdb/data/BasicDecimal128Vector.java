@@ -231,7 +231,15 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public Vector combine(Vector vector) {
-        throw new RuntimeException("BasicDecimal128Vector not support combine yet!");
+        BasicDecimal128Vector v = (BasicDecimal128Vector)vector;
+        if (v.getScale() != this.scale_)
+            throw new RuntimeException("The scale of the vector to be combine does not match the scale of the current vector.");
+        int newSize = this.rows() + v.rows();
+        BigInteger[] newValue = new BigInteger[newSize];
+        System.arraycopy(this.unscaledValues,0, newValue,0,this.rows());
+        System.arraycopy(v.unscaledValues,0, newValue,this.rows(),v.rows());
+
+        return new BasicDecimal128Vector(newValue, this.scale_);
     }
 
     @Override

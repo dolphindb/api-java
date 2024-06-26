@@ -130,6 +130,6 @@ public class BasicUuidTest {
         BasicUuidVector buv = new BasicUuidVector(Entity.DATA_FORM.DF_VECTOR,2);
         String re = JSONObject.toJSONString(buv);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[{\"high\":0,\"low\":0,\"null\":true},{\"high\":0,\"low\":0,\"null\":true}],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_UUID\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicUuid\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[,]\",\"table\":false,\"unitLength\":16,\"values\":[{\"high\":0,\"low\":0,\"null\":true},{\"high\":0,\"low\":0,\"null\":true}],\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[{\"high\":0,\"low\":0,\"null\":true},{\"high\":0,\"low\":0,\"null\":true}],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_UUID\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicUuid\",\"jsonString\":\"[,]\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[,]\",\"table\":false,\"unitLength\":16,\"values\":[{\"high\":0,\"low\":0,\"null\":true},{\"high\":0,\"low\":0,\"null\":true}],\"vector\":true}", re);
     }
 }

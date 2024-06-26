@@ -514,4 +514,29 @@ public class BasicDecimal32VectorTest {
         Scalar sc = new BasicDecimal32("1",2);
         assertEquals(0,tmp_32_v.asof(sc));
     }
+    @Test
+    public void test_BasicDecimal32Vector_combine() throws Exception {
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
+        BasicDecimal32Vector tmp_32_v1 = new BasicDecimal32Vector(0,4);
+        BasicDecimal32Vector tmp_32_v2 = new BasicDecimal32Vector(0,5);
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(0,4);
+
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000,0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.combine(tmp_32_v).getString());
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.combine(tmp_32_v1).getString());
+        String re = null;
+        try{
+            tmp_32_v.combine(tmp_32_v2);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("The scale of the vector to be combine does not match the scale of the current vector.",re);
+        String re1 = null;
+        try{
+            tmp_32_v.combine(tmp_64_v);
+        }catch(Exception ex){
+            re1 = ex.getMessage();
+        }
+        assertEquals("com.xxdb.data.BasicDecimal64Vector cannot be cast to com.xxdb.data.BasicDecimal32Vector",re1);
+    }
 }
