@@ -115,7 +115,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 
 	@Override
 	public boolean put(Scalar key, Entity value) {
-		if(key.getDataType() != getKeyDataType() || ((value.getDataType() == DATA_TYPE.DT_ANY) &&  (value.getDataType() != getDataType())))
+		if(key.getDataType() != getKeyDataType() || ((getDataType() != DATA_TYPE.DT_ANY) && (value.getDataType() != getDataType())))
 			return false;
 		else{
 			dict.put(key, value);
