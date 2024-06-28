@@ -726,9 +726,12 @@ public class DBConnection {
     }
 
     public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance, int tryReconnectNums) throws IOException {
-        if (tryReconnectNums < 0)
-            throw new RuntimeException("The param 'tryReconnectNums' cannot less than 0.");
-        this.tryReconnectNums = tryReconnectNums;
+        if (tryReconnectNums <= 0) {
+            this.tryReconnectNums = -1;
+            log.warn("If the param 'tryReconnectNums' less than or equal to 0, when reconnect will be unlimited attempts.");
+        } else {
+            this.tryReconnectNums = tryReconnectNums;
+        }
 
         return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, enableLoadBalance);
     }

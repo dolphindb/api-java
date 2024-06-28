@@ -33,6 +33,8 @@ public class SimpleDBConnectionPool {
     private boolean enableHighAvailability;
     private String[] highAvailabilitySites;
     private boolean reconnect = true;
+    private int tryReconnectNums;
+
     private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
     private final Queue<PoolEntry> poolEntries = new ConcurrentLinkedQueue<>();
@@ -57,6 +59,7 @@ public class SimpleDBConnectionPool {
         this.loadBalance = simpleDBConnectionPoolConfig.isLoadBalance();
         this.enableHighAvailability = simpleDBConnectionPoolConfig.isEnableHighAvailability();
         this.highAvailabilitySites = simpleDBConnectionPoolConfig.getHighAvailabilitySites();
+        this.tryReconnectNums = simpleDBConnectionPoolConfig.getTryReconnectNums();
 
         initPool();
     }
@@ -65,7 +68,7 @@ public class SimpleDBConnectionPool {
         for (int i = 0; i < minimumPoolSize; i++) {
             try {
                 PoolEntry poolEntry = new PoolEntry(useSSL, compress, usePython, String.format("DolphinDBConnection_%d", i + 1));
-                if (poolEntry.entryConnect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, loadBalance)) {
+                if (poolEntry.entryConnect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, loadBalance, tryReconnectNums)) {
                     poolEntries.add(poolEntry);
                 } else {
                     throw new RuntimeException(String.format("Connection %s connect failure.", poolEntry.connectionName));
@@ -109,7 +112,7 @@ public class SimpleDBConnectionPool {
             if (poolEntries.size() < maximumPoolSize) {
                 try {
                     PoolEntry poolEntry = new PoolEntry(useSSL, compress, usePython, String.format("DolphinDBConnection_%d", poolEntries.size() + 1));
-                    if (poolEntry.entryConnect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, loadBalance)) {
+                    if (poolEntry.entryConnect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, loadBalance, tryReconnectNums)) {
                         poolEntries.add(poolEntry);
                         if (poolEntry.inUse.compareAndSet(false, true)) {
                             return poolEntry;
@@ -216,8 +219,8 @@ public class SimpleDBConnectionPool {
             this.connectionName = connectionName;
         }
 
-        private boolean entryConnect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance) throws IOException {
-            boolean isConnected = super.connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, enableLoadBalance);
+        private boolean entryConnect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance, int tryReconnectNums) throws IOException {
+            boolean isConnected = super.connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, enableLoadBalance, tryReconnectNums);
             if (isConnected) {
                 this.lastUsedTime = System.currentTimeMillis();
             }

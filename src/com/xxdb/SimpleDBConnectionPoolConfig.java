@@ -26,6 +26,7 @@ public class SimpleDBConnectionPoolConfig {
     private boolean loadBalance = false;
     private boolean enableHighAvailability = false;
     private String[] highAvailabilitySites = null;
+    private int tryReconnectNums = -1;
 
     private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
@@ -160,6 +161,14 @@ public class SimpleDBConnectionPoolConfig {
 
     public void setHighAvailabilitySites(String[] highAvailabilitySites) {
         this.highAvailabilitySites = highAvailabilitySites;
+    }
+
+    public void setTryReconnectNums(int tryReconnectNums) {
+        this.tryReconnectNums = tryReconnectNums;
+    }
+
+    public int getTryReconnectNums() {
+        return tryReconnectNums;
     }
 
     /**
