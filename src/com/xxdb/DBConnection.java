@@ -5,6 +5,7 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.rmi.RemoteException;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -55,6 +56,7 @@ public class DBConnection {
     private long runSeqNo_ = 0;
     private int[] serverVersion_;
     private boolean isReverseStreaming_ = false;
+    private int tryReconnectNums = -1;
 
     private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
@@ -723,6 +725,14 @@ public class DBConnection {
             return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, false);
     }
 
+    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance, int tryReconnectNums) throws IOException {
+        if (tryReconnectNums < 0)
+            throw new RuntimeException("The param 'tryReconnectNums' cannot less than 0.");
+        this.tryReconnectNums = tryReconnectNums;
+
+        return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, enableLoadBalance);
+    }
+
     public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance) throws IOException {
         mutex_.lock();
         try {
@@ -882,7 +892,10 @@ public class DBConnection {
     }
 
     public void switchDataNode(Node node) throws IOException{
+        int attempt = 0;
         do {
+            attempt ++;
+            System.out.println("第 " + attempt + " 次尝试！");
             if (node.hostName != null && node.hostName.length() > 0){
                 if (connectNode(node)){
                     log.info("Switch to node: " + node.hostName + ":" + node.port + " successfully.");
@@ -905,7 +918,11 @@ public class DBConnection {
                 e.printStackTrace();
                 return;
             }
-        }while (!closed_);
+        } while (!closed_ && (tryReconnectNums == -1 || attempt < tryReconnectNums));
+
+        if (!closed_)
+            throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed after " + attempt + " reconnect attemps.");
+
         if (initialScript_!=null && initialScript_.length() > 0){
             run(initialScript_);
         }
