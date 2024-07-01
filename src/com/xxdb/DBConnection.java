@@ -725,18 +725,11 @@ public class DBConnection {
             return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, false);
     }
 
-    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance, int tryReconnectNums) throws IOException {
-        if (tryReconnectNums <= 0) {
-            this.tryReconnectNums = -1;
-            log.warn("If the param 'tryReconnectNums' less than or equal to 0, when reconnect will be unlimited attempts.");
-        } else {
-            this.tryReconnectNums = tryReconnectNums;
-        }
-
-        return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, enableLoadBalance);
+    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance) throws IOException {
+        return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, enableLoadBalance, -1);
     }
 
-    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance) throws IOException {
+    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance, int tryReconnectNums) throws IOException {
         mutex_.lock();
         try {
             this.uid_ = userId;
@@ -744,6 +737,13 @@ public class DBConnection {
             this.initialScript_ = initialScript;
             this.enableHighAvailability_ = enableHighAvailability;
             this.loadBalance_ = enableLoadBalance;
+            if (tryReconnectNums <= 0) {
+                this.tryReconnectNums = -1;
+                log.warn("If the param 'tryReconnectNums' less than or equal to 0, when reconnect will be unlimited attempts.");
+            } else {
+                this.tryReconnectNums = tryReconnectNums;
+            }
+
             if (this.loadBalance_ && !this.enableHighAvailability_)
                 throw new RuntimeException("Cannot only enable loadbalance but not enable highAvailablity.");
 
@@ -923,7 +923,7 @@ public class DBConnection {
             }
         } while (!closed_ && (tryReconnectNums == -1 || attempt < tryReconnectNums));
 
-        if (!closed_)
+        if (!closed_ && tryReconnectNums > 0)
             throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed after " + attempt + " reconnect attemps.");
 
         if (initialScript_!=null && initialScript_.length() > 0){
