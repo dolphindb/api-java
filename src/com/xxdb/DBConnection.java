@@ -898,7 +898,6 @@ public class DBConnection {
         int attempt = 0;
         do {
             attempt ++;
-            System.out.println("第 " + attempt + " 次尝试！");
             if (node.hostName != null && node.hostName.length() > 0){
                 if (connectNode(node)){
                     log.info("Switch to node: " + node.hostName + ":" + node.port + " successfully.");
