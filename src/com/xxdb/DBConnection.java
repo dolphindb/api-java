@@ -670,6 +670,11 @@ public class DBConnection {
         return connect(hostName, port, "", "", null, false, null, reconnect);
     }
 
+    public boolean connect(String hostName, int port, int timeout, boolean reconnect, int tryReconnectNums) throws IOException {
+        this.connTimeout_ = timeout;
+        return connect(hostName, port, "", "", null, false, null, reconnect, tryReconnectNums);
+    }
+
     public boolean connect(String hostName, int port, String initialScript) throws IOException {
         return connect(hostName, port, "", "", initialScript, false, null);
     }
@@ -723,6 +728,13 @@ public class DBConnection {
             return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, true);
         else
             return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, false);
+    }
+
+    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, int tryReconnectNums) throws IOException {
+        if (enableHighAvailability)
+            return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, true, tryReconnectNums);
+        else
+            return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, false, tryReconnectNums);
     }
 
     public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance) throws IOException {
