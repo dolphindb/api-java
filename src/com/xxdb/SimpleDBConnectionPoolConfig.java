@@ -178,7 +178,7 @@ public class SimpleDBConnectionPoolConfig {
         hostName = getNullIfEmpty(hostName);
         if (Objects.isNull(hostName)) {
             hostName = "localhost";
-            log.warn("The param hostName not set, use the default value 'localhost'");
+            log.warn("The param hostName not set, will use the default value 'localhost'");
         }
 
         if (!checkHostNameValid(hostName))
@@ -186,7 +186,7 @@ public class SimpleDBConnectionPoolConfig {
 
         if (port <= 0) {
             port = 8848;
-            log.warn("Invalid port, use the default value 8848.");
+            log.warn("Invalid port, will use the default value 8848.");
         }
 
         userId = getNullIfEmpty(userId);
@@ -203,7 +203,7 @@ public class SimpleDBConnectionPoolConfig {
 
         if (initialPoolSize <= 0) {
             initialPoolSize = 5;
-            log.warn("The number of connection pools is invalid, use the default value 5.");
+            log.warn("The number of connection pools is invalid, will use the default value 5.");
         }
 
         if (initialPoolSize > 0 && minimumPoolSize == -1 && maximumPoolSize == -1) {
@@ -214,12 +214,12 @@ public class SimpleDBConnectionPoolConfig {
 
         if (initialPoolSize < 0) {
             // 新逻辑（不填init，如果mini、max也不填，这俩参数给默认值，填了照常取值但是要做判断）：mini、max 不填的话，自动设置默认值
-            if (minimumPoolSize < 0 && maximumPoolSize < 0) {
+            if (minimumPoolSize <= 0 && maximumPoolSize <= 0) {
                 minimumPoolSize = 5;
-                log.warn("The param 'minimumIdle' cannot less than or equal to 0, use the default value 5.");
+                log.warn("The param 'minimumIdle' cannot less than or equal to 0, will use the default value 5.");
 
                 maximumPoolSize = 5;
-                log.warn("The param 'maximumPoolSize' cannot less than or equal to 0, use the default value 5.");
+                log.warn("The param 'maximumPoolSize' cannot less than or equal to 0, will use the default value 5.");
             } else if (minimumPoolSize > 0 && maximumPoolSize > 0) {
                 if (maximumPoolSize < minimumPoolSize) {
                     maximumPoolSize = minimumPoolSize;
@@ -227,23 +227,21 @@ public class SimpleDBConnectionPoolConfig {
                 }
             }
         } else {
-            if (minimumPoolSize < 0 && maximumPoolSize < 0) {
+            if (minimumPoolSize <= 0) {
                 minimumPoolSize = 5;
-                log.warn("The param 'minimumIdle' cannot less than or equal to 0, use the default value 5.");
-
+                log.warn("The param 'minimumIdle' cannot less than or equal to 0, will use the default value 5.");
+            } else if (maximumPoolSize <= 0) {
                 maximumPoolSize = 5;
-                log.warn("The param 'maximumPoolSize' cannot less than or equal to 0, use the default value 5.");
-            } else if (minimumPoolSize > 0 && maximumPoolSize > 0) {
-                if (maximumPoolSize < minimumPoolSize) {
+                log.warn("The param 'maximumPoolSize' cannot less than or equal to 0, will use the default value 5.");
+            } else if (maximumPoolSize < minimumPoolSize) {
                     maximumPoolSize = minimumPoolSize;
                     log.warn("The param 'maximumPoolSize' cannot less than 'minimumIdle', 'maximumPoolSize' will be set equal to 'minimumIdle' value.");
-                }
             }
         }
 
         if (idleTimeout < 10000) {
             idleTimeout = 600000;
-            log.warn("The param 'idleTimeout' cannot less than 10000ms， use the default value 600000ms(10min)");
+            log.warn("The param 'idleTimeout' cannot less than 10000ms， will use the default value 600000ms(10min)");
         }
     }
 
