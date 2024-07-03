@@ -212,10 +212,14 @@ public class SimpleDBConnectionPoolConfig {
             if (minimumPoolSize <= 0) {
                 minimumPoolSize = 5;
                 log.warn("The param 'minimumIdle' cannot less than or equal to 0, will use the default value 5.");
-            } else if (maximumPoolSize <= 0) {
+            }
+
+            if (maximumPoolSize <= 0) {
                 maximumPoolSize = 5;
                 log.warn("The param 'maximumPoolSize' cannot less than or equal to 0, will use the default value 5.");
-            } else if (maximumPoolSize < minimumPoolSize) {
+            }
+
+            if (maximumPoolSize < minimumPoolSize) {
                     maximumPoolSize = minimumPoolSize;
                     log.warn("The param 'maximumPoolSize' cannot less than 'minimumIdle', 'maximumPoolSize' will be set equal to 'minimumIdle' value.");
             }
@@ -223,10 +227,14 @@ public class SimpleDBConnectionPoolConfig {
             if (minimumPoolSize <= 0) {
                 minimumPoolSize = 5;
                 log.warn("The param 'minimumIdle' cannot less than or equal to 0, will use the default value 5.");
-            } else if (maximumPoolSize <= 0) {
+            }
+
+            if (maximumPoolSize <= 0) {
                 maximumPoolSize = 5;
                 log.warn("The param 'maximumPoolSize' cannot less than or equal to 0, will use the default value 5.");
-            } else if (maximumPoolSize < minimumPoolSize) {
+            }
+
+            if (maximumPoolSize < minimumPoolSize) {
                     maximumPoolSize = minimumPoolSize;
                     log.warn("The param 'maximumPoolSize' cannot less than 'minimumIdle', 'maximumPoolSize' will be set equal to 'minimumIdle' value.");
             }
