@@ -918,7 +918,10 @@ public class DBConnection {
                 return conn_.connect(node.hostName, node.port, uid_, pwd_, connTimeout_);
             }catch (Exception e){
                 if (isConnected()){
-                    ExceptionType type = parseException(e.getMessage(), node);
+                    Node tmpNode = new Node();
+                    tmpNode.hostName = node.hostName;
+                    tmpNode.port = node.port;
+                    ExceptionType type = parseException(e.getMessage(), tmpNode);
                     if (type != ExceptionType.ET_NEWLEADER){
                         if (type == ExceptionType.ET_IGNORE)
                             return true;
