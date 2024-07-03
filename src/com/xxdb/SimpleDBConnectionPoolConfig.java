@@ -201,11 +201,6 @@ public class SimpleDBConnectionPoolConfig {
             log.warn("Login needs password.");
         }
 
-        if (initialPoolSize <= 0) {
-            initialPoolSize = 5;
-            log.warn("The number of connection pools is invalid, will use the default value 5.");
-        }
-
         if (initialPoolSize > 0 && minimumPoolSize == -1 && maximumPoolSize == -1) {
             // 兼容旧版逻辑（只填init，不填mini、max的场景）：将最小、最大设置为 initialPoolSize 的值
             minimumPoolSize = initialPoolSize;
