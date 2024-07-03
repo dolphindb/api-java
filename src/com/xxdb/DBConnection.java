@@ -908,33 +908,39 @@ public class DBConnection {
 
     public void switchDataNode(Node node) throws IOException{
         int attempt = 0;
+        boolean isConnected = false;
         do {
             attempt ++;
-            if (node.hostName != null && node.hostName.length() > 0){
-                if (connectNode(node)){
+            if (node.hostName != null && node.hostName.length() > 0) {
+                if (connectNode(node)) {
                     log.info("Switch to node: " + node.hostName + ":" + node.port + " successfully.");
+                    isConnected = true;
                     break;
                 }
             }
+
             if (nodes_.isEmpty()){
                 log.error("com.xxdb.DBConnection.switchDataNode nodes_ is empty. Current node hostName: " + node.hostName + ", port: " + node.port);
                 log.error("Connect to " + node.hostName + ":" + node.port + " failed.");
                 throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed.");
             }
+
             int index = nodeRandom_.nextInt(nodes_.size());
             if (connectNode(nodes_.get(index))){
                 log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
+                isConnected = true;
                 break;
             }
+
             try {
                 Thread.sleep(1000);
-            }catch (Exception e){
+            } catch (Exception e){
                 e.printStackTrace();
                 return;
             }
         } while (!closed_ && (tryReconnectNums == -1 || attempt < tryReconnectNums));
 
-        if (!closed_ && tryReconnectNums > 0)
+        if (!closed_ && !isConnected)
             throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed after " + attempt + " reconnect attemps.");
 
         if (initialScript_!=null && initialScript_.length() > 0){
