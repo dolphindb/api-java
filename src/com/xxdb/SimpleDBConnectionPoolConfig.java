@@ -209,17 +209,15 @@ public class SimpleDBConnectionPoolConfig {
 
         if (initialPoolSize < 0) {
             // 新逻辑（不填init，如果mini、max也不填，这俩参数给默认值，填了照常取值但是要做判断）：mini、max 不填的话，自动设置默认值
-            if (minimumPoolSize <= 0 && maximumPoolSize <= 0) {
+            if (minimumPoolSize <= 0) {
                 minimumPoolSize = 5;
                 log.warn("The param 'minimumIdle' cannot less than or equal to 0, will use the default value 5.");
-
+            } else if (maximumPoolSize <= 0) {
                 maximumPoolSize = 5;
                 log.warn("The param 'maximumPoolSize' cannot less than or equal to 0, will use the default value 5.");
-            } else if (minimumPoolSize > 0 && maximumPoolSize > 0) {
-                if (maximumPoolSize < minimumPoolSize) {
+            } else if (maximumPoolSize < minimumPoolSize) {
                     maximumPoolSize = minimumPoolSize;
                     log.warn("The param 'maximumPoolSize' cannot less than 'minimumIdle', 'maximumPoolSize' will be set equal to 'minimumIdle' value.");
-                }
             }
         } else {
             if (minimumPoolSize <= 0) {
