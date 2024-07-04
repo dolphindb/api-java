@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -99,4 +99,9 @@ public class BasicLongMatrix extends AbstractMatrix{
 			out.writeLong(value);
 	}
 
+	@JsonIgnore
+	@Override
+	public int getScale() {
+		return super.getScale();
+	}
 }

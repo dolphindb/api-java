@@ -237,4 +237,9 @@ public abstract class AbstractMatrix extends AbstractEntity implements Matrix{
 		out.writeInt(columns());
 		writeVectorToOutputStream(out);
 	}
+
+	@Override
+	public int getScale(){
+		throw new RuntimeException("Not suppprt");
+	}
 }
