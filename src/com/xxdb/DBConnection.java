@@ -191,7 +191,6 @@ public class DBConnection {
                     socket_.connect(new InetSocketAddress(hostName_,port_), 3000);
                 }
             } catch (ConnectException ex) {
-                log.error("com.xxdb.DBConnection.DBConnectionImpl.connect() has exception. Current node hostName: " + this.hostName_ + ", port: " + this.port_);
                 log.error("Connect to " + this.hostName_ + ":" + this.port_ + " failed.");
                 throw ex;
             }
@@ -771,19 +770,45 @@ public class DBConnection {
 
                 Node connectedNode = new Node();
                 BasicTable bt = null;
+
                 while (!closed_) {
+                    int totalConnectAttemptNums = this.tryReconnectNums * nodes_.size();
+                    int attempt = 0;
                     while (!conn_.isConnected() && !closed_) {
-                        for (Node one : nodes_) {
-                            if (connectNode(one)) {
-                                connectedNode = one;
-                                break;
+                        if (this.tryReconnectNums > 0) {
+                            // finite try to connect.
+                            for (Node one : nodes_) {
+                                attempt ++;
+                                // System.out.println("Current init connect node: " + one.hostName + ":" + one.port);
+                                if (connectNode(one)) {
+                                    connectedNode = one;
+                                    break;
+                                }
+
+                                try {
+                                    Thread.sleep(100);
+                                } catch (Exception e){
+                                    e.printStackTrace();
+                                    return false;
+                                }
                             }
 
-                            try {
-                                Thread.sleep(100);
-                            } catch (Exception e){
-                                e.printStackTrace();
+                            if (attempt == totalConnectAttemptNums)
                                 return false;
+                        } else {
+                            // infinite try to connect.
+                            for (Node one : nodes_) {
+                                if (connectNode(one)) {
+                                    connectedNode = one;
+                                    break;
+                                }
+
+                                try {
+                                    Thread.sleep(100);
+                                } catch (Exception e){
+                                    e.printStackTrace();
+                                    return false;
+                                }
                             }
                         }
                     }
