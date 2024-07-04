@@ -793,8 +793,10 @@ public class DBConnection {
                                 }
                             }
 
-                            if (attempt == totalConnectAttemptNums)
+                            if (attempt == totalConnectAttemptNums) {
+                                log.error("Connect failed after " + attempt + " reconnect attemps for every node in high availability sites.");
                                 return false;
+                            }
                         } else {
                             // infinite try to connect.
                             for (Node one : nodes_) {
@@ -950,11 +952,13 @@ public class DBConnection {
                 throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed.");
             }
 
-            int index = nodeRandom_.nextInt(nodes_.size());
-            if (connectNode(nodes_.get(index))){
-                log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
-                isConnected = true;
-                break;
+            if (nodes_.size() > 1) {
+                int index = nodeRandom_.nextInt(nodes_.size());
+                if (connectNode(nodes_.get(index))){
+                    log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
+                    isConnected = true;
+                    break;
+                }
             }
 
             try {
