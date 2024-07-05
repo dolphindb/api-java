@@ -8,7 +8,10 @@ import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SimpleDBConnectionPoolTest {
     private static SimpleDBConnectionPoolConfig config;
@@ -1201,6 +1205,87 @@ public class SimpleDBConnectionPoolTest {
         }
         assertEquals("The loadBalance configuration of connection in connection pool can only be set in SimpleDBConnectionPoolConfig.",re);
         pool.close();
+    }
+    @Test
+    public void test_SimpleDBConnectionPool_getConnection_Failed_TryReconnectNums_enableHighAvailability_false_enableLoadBalance_false(){
+        int port=7100;
+        int trynums=3;
+        config.setMinimumPoolSize(1);
+        config.setTryReconnectNums(trynums);
+        config.setPort(port);
+        String s="";
+        try
+        {
+            pool = new SimpleDBConnectionPool(config);
+        }
+        catch (Exception e)
+        {
+            s=e.toString();
+        }
+        assertEquals("java.lang.RuntimeException: Create connection pool failure, because Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attemps.",s);
+    }
+    @Test(expected =RuntimeException.class)
+    public void test_SimpleDBConnectionPool_getConnection_Failed_TryReconnectNums_enableHighAvailability_true_enableLoadBalance_false(){
+        class LogCapture {
+            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            private final PrintStream originalErr = System.err;
+            public void start() {
+                System.setErr(new PrintStream(baos));
+            }
+            public void stop() {
+                System.setErr(originalErr);
+            }
+            public String getLogMessages() {
+                return baos.toString();
+            }
+        }
+        int port=7100;
+        int trynums=3;
+        config.setTryReconnectNums(trynums);
+        config.setMinimumPoolSize(2);
+        config.setPort(port);
+        config.setEnableHighAvailability(true);
+        config.setLoadBalance(false);
+        String []highAvailabilitySites={"localhost:7200"};
+        config.setHighAvailabilitySites(highAvailabilitySites);
+        LogCapture logCapture = new LogCapture();
+        logCapture.start();
+        pool = new SimpleDBConnectionPool(config);
+        logCapture.stop();
+        String s=logCapture.getLogMessages();
+        int temp=trynums*(1+highAvailabilitySites.length);
+        assertTrue(s.contains("Connect failed after "+temp+" reconnect attemps for every node in high availability sites."));
+    }
+    @Test(expected = RuntimeException.class)
+    public void test_SimpleDBConnectionPool_getConnection_Failed_TryReconnectNums_enableHighAvailability_true_enableLoadBalance_true(){
+        class LogCapture {
+            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            private final PrintStream originalErr = System.err;
+            public void start() {
+                System.setErr(new PrintStream(baos));
+            }
+            public void stop() {
+                System.setErr(originalErr);
+            }
+            public String getLogMessages() {
+                return baos.toString();
+            }
+        }
+        int port=7100;
+        int trynums=3;
+        config.setTryReconnectNums(trynums);
+        config.setMinimumPoolSize(1);
+        config.setPort(port);
+        config.setEnableHighAvailability(true);
+        config.setLoadBalance(true);
+        String []highAvailabilitySites={"localhost:7200","localhost:7300"};
+        config.setHighAvailabilitySites(highAvailabilitySites);
+        LogCapture logCapture = new LogCapture();
+        logCapture.start();
+        pool = new SimpleDBConnectionPool(config);
+        String s=logCapture.getLogMessages();
+        int temp=trynums*(1+highAvailabilitySites.length);
+        assertTrue(s.contains("Connect failed after "+temp+" reconnect attemps for every node in high availability sites."));
     }
 
     @Test
