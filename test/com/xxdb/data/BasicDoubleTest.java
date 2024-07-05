@@ -145,4 +145,14 @@ public class BasicDoubleTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"FLOATING\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_DOUBLE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDouble\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0  #1 \\n2.4 5.2\\n2.7 3.8\\n\",\"table\":false,\"vector\":false}", re);
     }
+
+    @Test(expected = RuntimeException.class)
+    public void test_BasicDoubleMatrix_getScale() throws Exception {
+        BasicDoubleMatrix bdm = new BasicDoubleMatrix(2,2);
+        bdm.setDouble(0,0,2.4);
+        bdm.setDouble(0,1,5.2);
+        bdm.setDouble(1,0,2.7);
+        bdm.setDouble(1,1,3.8);
+        bdm.getScale();
+    }
 }
