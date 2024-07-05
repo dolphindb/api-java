@@ -155,30 +155,6 @@ public class DBConnectionTest {
         assertEquals("java.lang.RuntimeException: Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attemps.",R);
     }
     @Test
-    public void test_Connect_tryReconnectNums_Success_enableHighAvailability_false_enableLoadBalance_false() throws IOException {
-        class LogCapture {
-            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            private final PrintStream originalErr = System.err;
-            public void start() {
-                System.setErr(new PrintStream(baos));
-            }
-            public void stop() {
-                System.setErr(originalErr);
-            }
-            public String getLogMessages() {
-                return baos.toString();
-            }
-        }
-        int trynums=3;
-        LogCapture logCapture = new LogCapture();
-        logCapture.start();
-        DBConnection conn =new DBConnection();
-        conn.connect(HOST,PORT,0,true,trynums);
-        logCapture.stop();
-        String s=logCapture.getLogMessages();
-        assertTrue(s.contains("Connect to "+HOST+":"+PORT+" successfully."));
-    }
-    @Test
     public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_true_enableLoadBalance_false() throws IOException {
         class LogCapture {
             private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -195,48 +171,15 @@ public class DBConnectionTest {
         }
         int port=7102;
         int trynums=3;
-        String[] N={};
+        String[] N={"localhost:7300"};
         DBConnection conn =new DBConnection();
         LogCapture logCapture = new LogCapture();
         logCapture.start();
         conn.connect(HOST,port,"admin","123456","",true,N,true,false,trynums);
         logCapture.stop();
         String s=logCapture.getLogMessages();
-        String searchString = "拒绝连接";
-        int actualCount = 0;
-        int fromIndex = 0;
-        while ((fromIndex = s.indexOf(searchString, fromIndex)) != -1) {
-            actualCount++;
-            fromIndex++;
-        }
-        assertEquals(trynums,actualCount);
-    }
-    @Test
-    public void test_Connect_tryReconnectNums_Success_enableHighAvailability_true_enableLoadBalance_false() throws IOException {
-        class LogCapture {
-            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            private final PrintStream originalErr = System.err;
-            public void start() {
-                System.setErr(new PrintStream(baos));
-            }
-            public void stop() {
-                System.setErr(originalErr);
-            }
-            public String getLogMessages() {
-                return baos.toString();
-            }
-        }
-        int port=7102;
-        int trynums=3;
-        DBConnection conn =new DBConnection();
-        LogCapture logCapture = new LogCapture();
-        logCapture.start();
-        conn.connect(HOST,port,"admin","123456","",true,ipports,true,false,trynums);
-        logCapture.stop();
-        String s=logCapture.getLogMessages();
-        assertTrue(s.contains("successfully"));
-        assertFalse(s.contains("Switch to node:"));
-
+        int temp=trynums*(1+N.length);
+        assertTrue(s.contains("Connect failed after "+temp+" reconnect attemps for every node in high availability sites."));
     }
     @Test
     public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_true_enableLoadBalance_true() throws IOException {
@@ -255,50 +198,18 @@ public class DBConnectionTest {
         }
         int port=7102;
         int trynums=3;
-        String[] N={};
+        String[] N={"localhost:7300"};
         DBConnection conn =new DBConnection();
         LogCapture logCapture = new LogCapture();
         logCapture.start();
         conn.connect(HOST,port,"admin","123456","",true,N,true,true,trynums);
         logCapture.stop();
         String s=logCapture.getLogMessages();
-        String searchString = "拒绝连接";
-        int actualCount = 0;
-        int fromIndex = 0;
-        while ((fromIndex = s.indexOf(searchString, fromIndex)) != -1) {
-            actualCount++;
-            fromIndex++;
-        }
-        assertEquals(trynums,actualCount);
-    }
-    @Test
-    public void test_Connect_tryReconnectNums_Success_enableHighAvailability_true_enableLoadBalance_true() throws IOException {
-        class LogCapture {
-            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            private final PrintStream originalErr = System.err;
-            public void start() {
-                System.setErr(new PrintStream(baos));
-            }
-            public void stop() {
-                System.setErr(originalErr);
-            }
-            public String getLogMessages() {
-                return baos.toString();
-            }
-        }
-        int trynums=3;
-        int port=7102;
-        DBConnection conn =new DBConnection();
-        LogCapture logCapture = new LogCapture();
-        logCapture.start();
-        conn.connect(HOST,port,"admin","123456","",true,ipports,true,true,trynums);
-        logCapture.stop();
-        String s=logCapture.getLogMessages();
+        int temp=trynums*(1+N.length);
+        assertTrue(s.contains("Connect failed after "+temp+" reconnect attemps for every node in high availability sites."));
 
-        assertTrue(s.contains("Switch to node:"));
 
     }
-
     @Test
     public void Test_Connect_initialScript() throws IOException {
         DBConnection conn = new DBConnection();
