@@ -15,8 +15,8 @@ public class SimpleDBConnectionPoolConfig {
      */
     @Deprecated
     private int initialPoolSize = -1;
-    private int minimumPoolSize = -1;
-    private int maximumPoolSize = -1;
+    private int minimumPoolSize = 5;
+    private int maximumPoolSize = 5;
     private int idleTimeout;
 
     private String initialScript = null;
