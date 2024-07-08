@@ -284,5 +284,18 @@ public class BasicDecimal64MatrixTest {
         }
         assertEquals("The value type is not BasicDecimal64!", exception1);
     }
+    @Test
+    public void test_BasicDecimal64Matrix_getScale() throws Exception {
+        for(int i=1;i<=18;i++){
+            int scale=i;
+            List<long[]> list = new ArrayList<>();
+            list.add(new long[]{1, 2, 3});
+            list.add(new long[]{4, 5, 6});
+            BasicDecimal64Matrix re = new BasicDecimal64Matrix(3, 2,list,scale);
+            assertEquals(scale,re.getScale());
+        }
+
+    }
+
 
 }

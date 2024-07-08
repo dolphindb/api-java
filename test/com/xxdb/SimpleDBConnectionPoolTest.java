@@ -72,41 +72,45 @@ public class SimpleDBConnectionPoolTest {
         assertEquals(5,config.getMaximumPoolSize());
     }
     @Test
-    public void test_SimpleDBConnectionPool_config_MinimumandPoolSize_error() {
+    public void test_SimpleDBConnectionPool_config_MinimumandPoolSize_and_MaximumPoolSize_null() {
+        pool = new SimpleDBConnectionPool(config);
+        assertEquals(5, config.getMinimumPoolSize());
+        assertEquals(5, config.getMaximumPoolSize());
+    }
+    @Test
+    public void test_SimpleDBConnectionPool_config_maxpoolsize_minpoolsize_realtion() {
+        config.setMaximumPoolSize(6);
         config.setMinimumPoolSize(-1);
         pool = new SimpleDBConnectionPool(config);
         assertEquals(5, config.getMinimumPoolSize());
-
-        config.setMinimumPoolSize(0);
-        pool = new SimpleDBConnectionPool(config);
-        assertEquals(5, config.getMinimumPoolSize());
-
-        config.setMinimumPoolSize(6);
-        pool = new SimpleDBConnectionPool(config);
-        assertEquals(6, config.getMinimumPoolSize());
         assertEquals(6, config.getMaximumPoolSize());
 
-    }
-    @Test
-    public void test_SimpleDBConnectionPool_config_MinimumandPoolSize_null() {
+        config.setMaximumPoolSize(-4);
+        config.setMinimumPoolSize(-6);
         pool = new SimpleDBConnectionPool(config);
         assertEquals(5, config.getMinimumPoolSize());
+        assertEquals(5, config.getMaximumPoolSize());
     }
     @Test
-    public void test_SimpleDBConnectionPool_config_MaximumPoolSize_error() {
-        config.setMaximumPoolSize(0);
+    public void test_SimpleDBConnectionPool_config_maxpoolsize_minpoolsize_realtion_error() {
+        config.setMaximumPoolSize(4);
+        config.setMinimumPoolSize(6);
         pool = new SimpleDBConnectionPool(config);
-        assertEquals(5, config.getMaximumPoolSize());
+        assertEquals(6, config.getMaximumPoolSize());
+        assertEquals(6, config.getMaximumPoolSize());
 
         config.setMaximumPoolSize(-5);
+        config.setMinimumPoolSize(6);
         pool = new SimpleDBConnectionPool(config);
+        assertEquals(6, config.getMaximumPoolSize());
+        assertEquals(6, config.getMaximumPoolSize());
+
+        config.setMaximumPoolSize(-4);
+        config.setMinimumPoolSize(-2);
+        pool = new SimpleDBConnectionPool(config);
+        assertEquals(5, config.getMaximumPoolSize());
         assertEquals(5, config.getMaximumPoolSize());
 
-    }
-    @Test
-    public void test_SimpleDBConnectionPool_config_MaximumPoolSize_null() {
-        pool = new SimpleDBConnectionPool(config);
-        assertEquals(5, config.getMaximumPoolSize());
     }
     @Test
     public void test_SimpleDBConnectionPool_config_InvalididleTimeout_error() {

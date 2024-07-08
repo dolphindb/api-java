@@ -535,4 +535,13 @@ public class BasicComplexTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[{\"null\":false,\"x\":1.0,\"y\":9.2},{\"null\":false,\"x\":3.8,\"y\":7.4},{\"null\":false,\"x\":5.6,\"y\":6.5},{\"null\":true,\"x\":-1.7976931348623157E308,\"y\":-1.7976931348623157E308}],\"dataCategory\":\"BINARY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_COMPLEX\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicComplex\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[1.0+9.2i,3.8+7.4i,5.6+6.5i,]\",\"table\":false,\"unitLength\":16,\"values\":[{\"null\":false,\"x\":1.0,\"y\":9.2},{\"null\":false,\"x\":3.8,\"y\":7.4},{\"null\":false,\"x\":5.6,\"y\":6.5},{\"null\":true,\"x\":-1.7976931348623157E308,\"y\":-1.7976931348623157E308}],\"vector\":true}", re);
     }
+    @Test(expected = RuntimeException.class)
+    public void test_BasicComplexMartix_getScale() throws Exception {
+        BasicComplexMatrix bcm = new BasicComplexMatrix(2, 2);
+        bcm.setComplex(0,0,1.1,2.2);
+        bcm.setComplex(0,1,3.3,4.4);
+        bcm.setComplex(1,0,5.5,6.6);
+        bcm.setComplex(1,1,7.7,8.8);
+        bcm.getScale();
+    }
 }

@@ -161,4 +161,13 @@ public class BasicFloatTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"FLOATING\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_FLOAT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicFloat\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0\\n0 \\n0 \\n0 \\n\",\"table\":false,\"vector\":false}", re);
     }
+    @Test(expected = RuntimeException.class)
+    public void test_BasicFloatMatrix_getScale() throws Exception {
+        BasicFloatMatrix bdm = new BasicFloatMatrix(2,2);
+        bdm.setFloat(0,0, 2.4F);
+        bdm.setFloat(0,1, 5.2F);
+        bdm.setFloat(1,0, 2.7F);
+        bdm.setFloat(1,1, 3.8F);
+        bdm.getScale();
+    }
 }
