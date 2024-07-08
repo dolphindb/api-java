@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.Double2;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
@@ -93,5 +93,11 @@ public class BasicComplexMatrix extends AbstractMatrix{
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		for(Double2 value : values)
 			out.writeDouble2(value);
+	}
+
+	@JsonIgnore
+	@Override
+	public int getScale() {
+		return super.getScale();
 	}
 }

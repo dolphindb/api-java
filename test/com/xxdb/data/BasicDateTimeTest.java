@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -215,5 +216,14 @@ public class BasicDateTimeTest {
         String re = JSONObject.toJSONString(bdhm2);
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_DATETIME\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDateTime\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0                  #1                 \\n1970.01.01T00:00:01 1970.01.01T00:00:03\\n1970.01.01T00:00:02 1970.01.01T00:00:04\\n\",\"table\":false,\"vector\":false}", re);
+    }
+    @Test(expected = RuntimeException.class)
+    public void test_BasicDateTimeMartix_getScale() throws Exception {
+        BasicDateTimeMatrix bdtm = new BasicDateTimeMatrix(2,2);
+        bdtm.setDateTime(0,0,LocalDateTime.of(2022,8,10,15,55));
+        bdtm.setDateTime(0,1,LocalDateTime.of(1978,12,13,17,58));
+        bdtm.setDateTime(1,0,LocalDateTime.MIN);
+        bdtm.setDateTime(1,1,LocalDateTime.MAX);
+        bdtm.getScale();
     }
 }

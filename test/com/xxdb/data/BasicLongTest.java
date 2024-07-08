@@ -201,4 +201,13 @@ public class BasicLongTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_LONG\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicLong\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0 #1\\n0  0 \\n0  0 \\n\",\"table\":false,\"vector\":false}", re);
     }
+    @Test(expected = RuntimeException.class)
+    public void test_BasicLongMatrix_getScale() throws Exception {
+        BasicLongMatrix bdm = new BasicLongMatrix(2,2);
+        bdm.setLong(0,0, 2);
+        bdm.setLong(0,1, 5);
+        bdm.setLong(1,0, 2);
+        bdm.setLong(1,1, 3);
+        bdm.getScale();
+    }
 }

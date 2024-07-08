@@ -277,5 +277,17 @@ public class BasicDecimal128MatrixTest {
         }
         assertEquals("The value type is not BasicDecimal128!", exception1);
     }
+    @Test
+    public void test_BasicDecimal128Matrix_getScale() throws Exception {
+        for(int i=1;i<=38;i++){
+            int scale=i;
+            List<String[]> list1 = new ArrayList<>();
+            list1.add(new String[]{"1", "1", "1"});
+            list1.add(new String[]{"1", "1", "1"});
+            BasicDecimal128Matrix re = new BasicDecimal128Matrix(3, 2,list1,scale);
+            assertEquals(scale,re.getScale());
+        }
+
+    }
 
 }

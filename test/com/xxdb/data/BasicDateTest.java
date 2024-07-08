@@ -158,4 +158,13 @@ public class BasicDateTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_DATE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDate\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0         #1        \\n1977.11.01 1982.07.02\\n1991.10.21 1976.10.03\\n\",\"table\":false,\"vector\":false}", re);
     }
+    @Test(expected = RuntimeException.class)
+    public void test_BasicDateMartix_getScale() throws Exception {
+        BasicDateMatrix bdhm = new BasicDateMatrix(2,2);
+        bdhm.setDate(0,0,LocalDate.of(2022,7,29));
+        bdhm.setDate(0,1,LocalDate.of(1970,1,1));
+        bdhm.setDate(1,0,LocalDate.of(1993,6,23));
+        bdhm.setDate(1,1,LocalDate.MIN);
+        bdhm.getScale();
+    }
 }

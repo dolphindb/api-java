@@ -3,7 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 
 /**
@@ -51,5 +51,11 @@ public class BasicDateHourMatrix extends BasicIntMatrix {
 	@Override
 	public DATA_TYPE getDataType() {
 		return DATA_TYPE.DT_DATEHOUR;
+	}
+
+	@JsonIgnore
+	@Override
+	public int getScale() {
+		return super.getScale();
 	}
 }

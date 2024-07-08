@@ -5,6 +5,7 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.rmi.RemoteException;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -55,6 +56,7 @@ public class DBConnection {
     private long runSeqNo_ = 0;
     private int[] serverVersion_;
     private boolean isReverseStreaming_ = false;
+    private int tryReconnectNums = -1;
 
     private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
@@ -189,7 +191,6 @@ public class DBConnection {
                     socket_.connect(new InetSocketAddress(hostName_,port_), 3000);
                 }
             } catch (ConnectException ex) {
-                log.error("com.xxdb.DBConnection.DBConnectionImpl.connect() has exception. Current node hostName: " + this.hostName_ + ", port: " + this.port_);
                 log.error("Connect to " + this.hostName_ + ":" + this.port_ + " failed.");
                 throw ex;
             }
@@ -668,6 +669,11 @@ public class DBConnection {
         return connect(hostName, port, "", "", null, false, null, reconnect);
     }
 
+    public boolean connect(String hostName, int port, int timeout, boolean reconnect, int tryReconnectNums) throws IOException {
+        this.connTimeout_ = timeout;
+        return connect(hostName, port, "", "", null, false, null, reconnect, tryReconnectNums);
+    }
+
     public boolean connect(String hostName, int port, String initialScript) throws IOException {
         return connect(hostName, port, "", "", initialScript, false, null);
     }
@@ -723,7 +729,18 @@ public class DBConnection {
             return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, false);
     }
 
+    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, int tryReconnectNums) throws IOException {
+        if (enableHighAvailability)
+            return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, true, tryReconnectNums);
+        else
+            return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, false, tryReconnectNums);
+    }
+
     public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance) throws IOException {
+        return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, enableLoadBalance, -1);
+    }
+
+    public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance, int tryReconnectNums) throws IOException {
         mutex_.lock();
         try {
             this.uid_ = userId;
@@ -731,6 +748,13 @@ public class DBConnection {
             this.initialScript_ = initialScript;
             this.enableHighAvailability_ = enableHighAvailability;
             this.loadBalance_ = enableLoadBalance;
+            if (tryReconnectNums <= 0) {
+                this.tryReconnectNums = -1;
+                log.warn("If the param 'tryReconnectNums' less than or equal to 0, when reconnect will be unlimited attempts.");
+            } else {
+                this.tryReconnectNums = tryReconnectNums;
+            }
+
             if (this.loadBalance_ && !this.enableHighAvailability_)
                 throw new RuntimeException("Cannot only enable loadbalance but not enable highAvailablity.");
 
@@ -746,19 +770,47 @@ public class DBConnection {
 
                 Node connectedNode = new Node();
                 BasicTable bt = null;
+
                 while (!closed_) {
+                    int totalConnectAttemptNums = this.tryReconnectNums * nodes_.size();
+                    int attempt = 0;
                     while (!conn_.isConnected() && !closed_) {
-                        for (Node one : nodes_) {
-                            if (connectNode(one)) {
-                                connectedNode = one;
-                                break;
+                        if (this.tryReconnectNums > 0) {
+                            // finite try to connect.
+                            for (Node one : nodes_) {
+                                attempt ++;
+                                // System.out.println("Current init connect node: " + one.hostName + ":" + one.port);
+                                if (connectNode(one)) {
+                                    connectedNode = one;
+                                    break;
+                                }
+
+                                try {
+                                    Thread.sleep(100);
+                                } catch (Exception e){
+                                    e.printStackTrace();
+                                    return false;
+                                }
                             }
 
-                            try {
-                                Thread.sleep(100);
-                            } catch (Exception e){
-                                e.printStackTrace();
+                            if (attempt == totalConnectAttemptNums) {
+                                log.error("Connect failed after " + tryReconnectNums + " reconnect attemps for every node in high availability sites.");
                                 return false;
+                            }
+                        } else {
+                            // infinite try to connect.
+                            for (Node one : nodes_) {
+                                if (connectNode(one)) {
+                                    connectedNode = one;
+                                    break;
+                                }
+
+                                try {
+                                    Thread.sleep(100);
+                                } catch (Exception e){
+                                    e.printStackTrace();
+                                    return false;
+                                }
                             }
                         }
                     }
@@ -882,30 +934,44 @@ public class DBConnection {
     }
 
     public void switchDataNode(Node node) throws IOException{
+        int attempt = 0;
+        boolean isConnected = false;
         do {
-            if (node.hostName != null && node.hostName.length() > 0){
-                if (connectNode(node)){
+            attempt ++;
+            if (node.hostName != null && node.hostName.length() > 0) {
+                if (connectNode(node)) {
                     log.info("Switch to node: " + node.hostName + ":" + node.port + " successfully.");
+                    isConnected = true;
                     break;
                 }
             }
+
             if (nodes_.isEmpty()){
                 log.error("com.xxdb.DBConnection.switchDataNode nodes_ is empty. Current node hostName: " + node.hostName + ", port: " + node.port);
                 log.error("Connect to " + node.hostName + ":" + node.port + " failed.");
                 throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed.");
             }
-            int index = nodeRandom_.nextInt(nodes_.size());
-            if (connectNode(nodes_.get(index))){
-                log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
-                break;
+
+            if (nodes_.size() > 1) {
+                int index = nodeRandom_.nextInt(nodes_.size());
+                if (connectNode(nodes_.get(index))){
+                    log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
+                    isConnected = true;
+                    break;
+                }
             }
+
             try {
                 Thread.sleep(1000);
-            }catch (Exception e){
+            } catch (Exception e){
                 e.printStackTrace();
                 return;
             }
-        }while (!closed_);
+        } while (!closed_ && (tryReconnectNums == -1 || attempt < tryReconnectNums));
+
+        if (!closed_ && !isConnected)
+            throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed after " + attempt + " reconnect attemps.");
+
         if (initialScript_!=null && initialScript_.length() > 0){
             run(initialScript_);
         }

@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 import java.io.IOException;
@@ -114,6 +115,8 @@ public class BasicDecimal32Matrix extends AbstractMatrix {
         this.scale = scale;
     }
 
+    @JsonIgnore
+    @Override
     public int getScale() {
         return this.scale;
     }

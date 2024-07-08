@@ -9,11 +9,10 @@ import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.Long2;
 import com.xxdb.io.ProgressListener;
 import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.net.InetAddress;
@@ -47,7 +46,7 @@ public class DBConnectionTest {
     static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
     private double load = -1.0;
     public int getConnCount() throws IOException {
-        return ((BasicInt) conn.run("(exec connectionNum from rpc(getControllerAlias(),getClusterPerf) where port = getNodePort())[0]")).getInt();
+        return ((BasicInt) conn.run("(exec connectionNum from rpc(getControllerAlias(),getClusterPerf) where PORT = getNodePort())[0]")).getInt();
     }
     static void compareBasicTable(BasicTable table, BasicTable newTable)
     {
@@ -143,7 +142,73 @@ public class DBConnectionTest {
         boolean re = conn.connect(HOST,PORT,"","",ipports);
         Assert.assertEquals(true,re);
     }
+    @Test
+    public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_false_enableLoadBalance_false() throws IOException {
+        int port=7102;
+        int trynums=3;
+        DBConnection conn =new DBConnection();
+        String R="";
+        try {
+            conn.connect(HOST,port,0,true,trynums);
+        }catch (Exception e){
+            R=e.toString();
+        }
+        assertEquals("java.lang.RuntimeException: Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attemps.",R);
+    }
+    @Test
+    public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_true_enableLoadBalance_false() throws IOException {
+        class LogCapture {
+            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            private final PrintStream originalErr = System.err;
+            public void start() {
+                System.setErr(new PrintStream(baos));
+            }
+            public void stop() {
+                System.setErr(originalErr);
+            }
+            public String getLogMessages() {
+                return baos.toString();
+            }
+        }
+        int port=7102;
+        int trynums=3;
+        String[] N={"localhost:7300"};
+        DBConnection conn =new DBConnection();
+        LogCapture logCapture = new LogCapture();
+        logCapture.start();
+        conn.connect(HOST,port,"admin","123456","",true,N,true,false,trynums);
+        logCapture.stop();
+        String s=logCapture.getLogMessages();
+        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attemps for every node in high availability sites."));
+    }
+    @Test
+    public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_true_enableLoadBalance_true() throws IOException {
+        class LogCapture {
+            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            private final PrintStream originalErr = System.err;
+            public void start() {
+                System.setErr(new PrintStream(baos));
+            }
+            public void stop() {
+                System.setErr(originalErr);
+            }
+            public String getLogMessages() {
+                return baos.toString();
+            }
+        }
+        int port=7102;
+        int trynums=3;
+        String[] N={"localhost:7300"};
+        DBConnection conn =new DBConnection();
+        LogCapture logCapture = new LogCapture();
+        logCapture.start();
+        conn.connect(HOST,port,"admin","123456","",true,N,true,true,trynums);
+        logCapture.stop();
+        String s=logCapture.getLogMessages();
+        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attemps for every node in high availability sites."));
 
+
+    }
     @Test
     public void Test_Connect_initialScript() throws IOException {
         DBConnection conn = new DBConnection();

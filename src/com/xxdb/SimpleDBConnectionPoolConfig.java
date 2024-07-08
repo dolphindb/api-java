@@ -9,7 +9,16 @@ public class SimpleDBConnectionPoolConfig {
     private int port;
     private String userId;
     private String password;
-    private int initialPoolSize;
+
+    /**
+     * @deprecated Use {@link #minimumPoolSize} instead.
+     */
+    @Deprecated
+    private int initialPoolSize = -1;
+    private int minimumPoolSize = 5;
+    private int maximumPoolSize = 5;
+    private int idleTimeout;
+
     private String initialScript = null;
     private boolean compress = false;
     private boolean useSSL = false;
@@ -17,6 +26,8 @@ public class SimpleDBConnectionPoolConfig {
     private boolean loadBalance = false;
     private boolean enableHighAvailability = false;
     private String[] highAvailabilitySites = null;
+    private int tryReconnectNums = -1;
+
     private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
     public SimpleDBConnectionPoolConfig() {
@@ -56,14 +67,44 @@ public class SimpleDBConnectionPoolConfig {
         this.password = password;
     }
 
+    @Deprecated
     public int getInitialPoolSize() {
         return initialPoolSize;
     }
 
+    /**
+     * @deprecated This method is deprecated and should not be used.
+     * Use {@link #setMinimumPoolSize(int)} ()} instead.
+     */
+    @Deprecated
     public void setInitialPoolSize(int initialPoolSize) {
         if (initialPoolSize <= 0)
             throw new RuntimeException("The number of connection pools should be positive.");
         this.initialPoolSize = initialPoolSize;
+    }
+
+    public void setMinimumPoolSize(int minimumPoolSize) {
+        this.minimumPoolSize = minimumPoolSize;
+    }
+
+    public int getMinimumPoolSize() {
+        return minimumPoolSize;
+    }
+
+    public void setMaximumPoolSize(int maximumPoolSize) {
+        this.maximumPoolSize = maximumPoolSize;
+    }
+
+    public int getMaximumPoolSize() {
+        return maximumPoolSize;
+    }
+
+    public void setIdleTimeout(int idleTimeout) {
+        this.idleTimeout = idleTimeout;
+    }
+
+    public int getIdleTimeout() {
+        return idleTimeout;
     }
 
     public String getInitialScript() {
@@ -122,31 +163,86 @@ public class SimpleDBConnectionPoolConfig {
         this.highAvailabilitySites = highAvailabilitySites;
     }
 
+    public void setTryReconnectNums(int tryReconnectNums) {
+        this.tryReconnectNums = tryReconnectNums;
+    }
+
+    public int getTryReconnectNums() {
+        return tryReconnectNums;
+    }
+
+    /**
+     * add param check when pool init start.
+     */
     protected void validate() {
         hostName = getNullIfEmpty(hostName);
         if (Objects.isNull(hostName)) {
             hostName = "localhost";
-            log.warn("The param hostName not set, use the default value 'localhost'");
+            log.warn("The param hostName not set, will use the default value 'localhost'");
         }
+
         if (!checkHostNameValid(hostName))
             throw new RuntimeException(String.format("Invalid hostName: %s", hostName));
+
         if (port <= 0) {
             port = 8848;
-            log.warn("Invalid port, use the default value 8848.");
+            log.warn("Invalid port, will use the default value 8848.");
         }
+
         userId = getNullIfEmpty(userId);
         if (Objects.isNull(userId)){
             userId = "";
             log.warn("Login needs userId.");
         }
+
         password = getNullIfEmpty(password);
         if (Objects.isNull(password)){
             password = "";
             log.warn("Login needs password.");
         }
-        if (initialPoolSize <= 0) {
-            initialPoolSize = 5;
-            log.warn("The number of connection pools is invalid, use the default value 5.");
+
+        if (initialPoolSize > 0 && minimumPoolSize == -1 && maximumPoolSize == -1) {
+            // 兼容旧版逻辑（只填init，不填mini、max的场景）：将最小、最大设置为 initialPoolSize 的值
+            minimumPoolSize = initialPoolSize;
+            maximumPoolSize = initialPoolSize;
+        }
+
+        if (initialPoolSize < 0) {
+            // 新逻辑（不填init，如果mini、max也不填，这俩参数给默认值，填了照常取值但是要做判断）：mini、max 不填的话，自动设置默认值
+            if (minimumPoolSize <= 0) {
+                minimumPoolSize = 5;
+                log.warn("The param 'minimumIdle' cannot less than or equal to 0, will use the default value 5.");
+            }
+
+            if (maximumPoolSize <= 0) {
+                maximumPoolSize = 5;
+                log.warn("The param 'maximumPoolSize' cannot less than or equal to 0, will use the default value 5.");
+            }
+
+            if (maximumPoolSize < minimumPoolSize) {
+                    maximumPoolSize = minimumPoolSize;
+                    log.warn("The param 'maximumPoolSize' cannot less than 'minimumIdle', 'maximumPoolSize' will be set equal to 'minimumIdle' value.");
+            }
+        } else {
+            if (minimumPoolSize <= 0) {
+                minimumPoolSize = 5;
+                log.warn("The param 'minimumIdle' cannot less than or equal to 0, will use the default value 5.");
+            }
+
+            if (maximumPoolSize <= 0) {
+                maximumPoolSize = 5;
+                log.warn("The param 'maximumPoolSize' cannot less than or equal to 0, will use the default value 5.");
+            }
+
+            if (maximumPoolSize < minimumPoolSize) {
+                    maximumPoolSize = minimumPoolSize;
+                    log.warn("The param 'maximumPoolSize' cannot less than 'minimumIdle', 'maximumPoolSize' will be set equal to 'minimumIdle' value.");
+            }
+        }
+
+        if (idleTimeout < 10000) {
+            idleTimeout = 600000;
+            log.warn("The param 'idleTimeout' cannot less than 10000ms， will use the default value 600000ms(10min)");
         }
     }
 
