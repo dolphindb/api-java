@@ -794,7 +794,7 @@ public class DBConnection {
                             }
 
                             if (attempt == totalConnectAttemptNums) {
-                                log.error("Connect failed after " + attempt + " reconnect attemps for every node in high availability sites.");
+                                log.error("Connect failed after " + tryReconnectNums + " reconnect attemps for every node in high availability sites.");
                                 return false;
                             }
                         } else {
