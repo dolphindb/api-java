@@ -178,8 +178,7 @@ public class DBConnectionTest {
         conn.connect(HOST,port,"admin","123456","",true,N,true,false,trynums);
         logCapture.stop();
         String s=logCapture.getLogMessages();
-        int temp=trynums*(1+N.length);
-        assertTrue(s.contains("Connect failed after "+temp+" reconnect attemps for every node in high availability sites."));
+        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attemps for every node in high availability sites."));
     }
     @Test
     public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_true_enableLoadBalance_true() throws IOException {
@@ -205,8 +204,7 @@ public class DBConnectionTest {
         conn.connect(HOST,port,"admin","123456","",true,N,true,true,trynums);
         logCapture.stop();
         String s=logCapture.getLogMessages();
-        int temp=trynums*(1+N.length);
-        assertTrue(s.contains("Connect failed after "+temp+" reconnect attemps for every node in high availability sites."));
+        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attemps for every node in high availability sites."));
 
 
     }
