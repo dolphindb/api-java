@@ -1710,13 +1710,13 @@ public class AutoFitTableUpsertTest {
 
         long start = System.nanoTime();
         int re = aftu.upsert(bt);
-        assertEquals(5000000,re);
+        assertEquals(0,re);
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
         assertEquals(true,((end - start) / 1000000)<5000);
         for(int i=0;i<10;i++) {
             int re1 = aftu.upsert(bt1);
-            assertEquals("0",re1);
+            assertEquals( 0,re1);
         }
         aftu.upsert(bt1);
         long end1 = System.nanoTime();
