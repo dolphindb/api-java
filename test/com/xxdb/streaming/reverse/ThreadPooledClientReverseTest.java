@@ -1703,7 +1703,7 @@ public static void PrepareStreamTable() throws IOException {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("The format of backupSite 192.168.0.69,18921 is incorrect, should be host:port, e.g. 192.168.1.1:8848", re);
+        Assert.assertEquals("The format of backupSite "+HOST+","+PORT+" is incorrect, should be host:port, e.g. 192.168.1.1:8848", re);
     }
 
     @Test(timeout = 120000)
