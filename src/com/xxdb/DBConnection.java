@@ -947,7 +947,6 @@ public class DBConnection {
             }
 
             if (nodes_.isEmpty()){
-                log.error("com.xxdb.DBConnection.switchDataNode nodes_ is empty. Current node hostName: " + node.hostName + ", port: " + node.port);
                 log.error("Connect to " + node.hostName + ":" + node.port + " failed.");
                 throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed.");
             }

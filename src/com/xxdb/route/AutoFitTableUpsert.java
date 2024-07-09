@@ -2,7 +2,6 @@ package com.xxdb.route;
 
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,44 +18,17 @@ public class AutoFitTableUpsert {
         connection_ = connection;
         BasicTable colDefs;
         BasicIntVector colTypesInt;
-        BasicDictionary tableInfo;
+        BasicDictionary schema;
         BasicStringVector colNames;
         try {
-            String task;
-            if (dbUrl.equals("")){
-                task = "schema(" + tableName+ ")";
-                upsertScript_ =  "upsert!{" + tableName + "";
-            }else {
-                task = "schema(loadTable(\"" + dbUrl + "\", \"" + tableName + "\"))";
-                upsertScript_ = "upsert!{loadTable('" + dbUrl + "', '" + tableName + "')";
-            }
-            upsertScript_+=",";
-            if(!ignoreNull)
-                upsertScript_+=",ignoreNull=false";
+            this.upsertScript_ = defineInsertScript(dbUrl,tableName, ignoreNull, pkeyColNames, psortColumns);
+            String runSchemaScript;
+            if (dbUrl.equals(""))
+                runSchemaScript = "schema(" + tableName+ ")";
             else
-                upsertScript_+=",ignoreNull=true";
-            int ignoreParamCount=0;
-            if (pkeyColNames != null && pkeyColNames.length > 0){
-                upsertScript_+=",keyColNames=";
-                for (String one : pkeyColNames){
-                    upsertScript_ += "`"+one;
-                }
-            }else {
-                ignoreParamCount++;
-            }
-            if (psortColumns != null && psortColumns.length > 0){
-                while (ignoreParamCount > 0){
-                    upsertScript_ += ",";
-                    ignoreParamCount--;
-                }
-                upsertScript_ += ",sortColumns=";
-                for (String one : psortColumns){
-                    upsertScript_ += "`"+one;
-                }
-            }
-            upsertScript_+="}";
-            tableInfo = (BasicDictionary) connection_.run(task);
-            colDefs = (BasicTable) tableInfo.get(new BasicString("colDefs"));
+                runSchemaScript = "schema(loadTable(\"" + dbUrl + "\", \"" + tableName + "\"))";
+            schema = (BasicDictionary) connection_.run(runSchemaScript);
+            colDefs = (BasicTable) schema.get(new BasicString("colDefs"));
             cols_ = colDefs.rows();
             colTypesInt = (BasicIntVector) colDefs.getColumn("typeInt");
             colNames = (BasicStringVector) colDefs.getColumn("name");
@@ -65,7 +37,7 @@ public class AutoFitTableUpsert {
                 columnCategories_.add(Utils.getCategory(columnTypes_.get(i)));
                 colNames_.add(colNames.getString(i));
             }
-        }catch (IOException e){
+        } catch (IOException e){
             throw e;
         }
     }
@@ -87,10 +59,38 @@ public class AutoFitTableUpsert {
         List<Entity> args = new ArrayList<>();
         args.add(tableToInsert);
         Entity res = connection_.run(upsertScript_, args);
-        if (res.getDataType() == Entity.DATA_TYPE.DT_INT && res.getDataForm() == Entity.DATA_FORM.DF_SCALAR){
-            return ((BasicInt) res).getInt();
-        }else
-            return 0;
+
+        return ((BasicInt) res).getInt();
+    }
+
+    private String defineInsertScript (String dbUrl, String tableName, boolean ignoreNull, String[] pkeyColNames, String[] psortColumns) {
+        StringBuilder script = new StringBuilder("(def(mutable tb, data){upsert!(tb, data");
+
+        if (!ignoreNull)
+            script.append(",ignoreNull=false");
+        else
+            script.append(",ignoreNull=true");
+
+        if (pkeyColNames != null && pkeyColNames.length > 0) {
+            script.append(",keyColNames=");
+            for (String colName : pkeyColNames)
+                script.append("`").append(colName);
+        }
+
+        if (psortColumns != null && psortColumns.length > 0) {
+            script.append(",sortColumns=");
+            for (String colName : psortColumns)
+                script.append("`").append(colName);
+        }
+
+        script.append(");return 0;}){");
+
+        if (dbUrl == null || dbUrl.isEmpty())
+            script.append(tableName).append("}");
+        else
+            script.append("loadTable('").append(dbUrl).append("','").append(tableName).append("')}");
+
+        return script.toString();
     }
 
     private void checkColumnType(int col, Entity.DATA_CATEGORY category, Entity.DATA_TYPE type){
