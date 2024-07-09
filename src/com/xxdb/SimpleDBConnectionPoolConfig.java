@@ -28,6 +28,9 @@ public class SimpleDBConnectionPoolConfig {
     private String[] highAvailabilitySites = null;
     private int tryReconnectNums = -1;
 
+    private boolean isMinimumPoolSizeUserSet = false;
+    private boolean isMaximumPoolSizeUserSet = false;
+
     private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
     public SimpleDBConnectionPoolConfig() {
@@ -85,6 +88,7 @@ public class SimpleDBConnectionPoolConfig {
 
     public void setMinimumPoolSize(int minimumPoolSize) {
         this.minimumPoolSize = minimumPoolSize;
+        this.isMinimumPoolSizeUserSet = true;
     }
 
     public int getMinimumPoolSize() {
@@ -93,6 +97,7 @@ public class SimpleDBConnectionPoolConfig {
 
     public void setMaximumPoolSize(int maximumPoolSize) {
         this.maximumPoolSize = maximumPoolSize;
+        this.isMaximumPoolSizeUserSet = true;
     }
 
     public int getMaximumPoolSize() {
@@ -201,7 +206,7 @@ public class SimpleDBConnectionPoolConfig {
             log.warn("Login needs password.");
         }
 
-        if (initialPoolSize > 0 && minimumPoolSize == -1 && maximumPoolSize == -1) {
+        if (initialPoolSize > 0 && !isMinimumPoolSizeUserSet && !isMaximumPoolSizeUserSet) {
             // 兼容旧版逻辑（只填init，不填mini、max的场景）：将最小、最大设置为 initialPoolSize 的值
             minimumPoolSize = initialPoolSize;
             maximumPoolSize = initialPoolSize;
