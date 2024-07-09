@@ -1,61 +1,65 @@
 # DolphinDB Java API
 
-**Note**: This README documents DolphinDB Java API version 1.30.20.1 and earlier. As of version 1.30.20.1, this README is no longer maintained. For documentation on the latest DolphinDB Java API, please refer to [DolphinDB Documentation](https://docs.dolphindb.com/en/API/Java.html).
+**Note: This README documents DolphinDB Java API versions prior to 3.00.0.0. As of version 3.00.0.0, this README is no longer maintained. For documentation on the latest DolphinDB Java API, please refer to [DolphinDB Documentation](https://docs.dolphindb.com/en/javadoc/overview.html).**
+
+---
 
 - [DolphinDB Java API](#dolphindb-java-api)
   - [1. Introduction](#1-introduction)
   - [2. Establish DolphinDB Connection](#2-establish-dolphindb-connection)
-    - [2.1 DBConnection](#21-dbconnection)
-    - [2.2 ExclusiveDBConnectionPool](#22-exclusivedbconnectionpool)
+    - [2.1. DBConnection](#21-dbconnection)
+    - [2.2. SimpleDBConnectionPool](#22-simpledbconnectionpool)
+    - [2.3. ExclusiveDBConnectionPool](#23-exclusivedbconnectionpool)
   - [3. Run DolphinDB Scripts](#3-run-dolphindb-scripts)
   - [4. Execute DolphinDB Functions](#4-execute-dolphindb-functions)
-  - [5. Upload data to DolphinDB server](#5-upload-data-to-dolphindb-server)
+  - [5. Upload Data to DolphinDB Server](#5-upload-data-to-dolphindb-server)
   - [6. Read Data](#6-read-data)
   - [7. Read From and Write to DolphinDB Tables](#7-read-from-and-write-to-dolphindb-tables)
-    - [7.1 Write to an In-Memory Table](#71-write-to-an-in-memory-table)
-    - [7.2 Write to a DFS Table](#72-write-to-a-dfs-table)
-    - [7.3 Load and Query Tables](#73-load-and-query-tables)
-    - [7.4 Append Data Asynchronously](#74-append-data-asynchronously)
+    - [7.1. Write to an In-Memory Table](#71-write-to-an-in-memory-table)
+    - [7.2. Write to a DFS Table](#72-write-to-a-dfs-table)
+    - [7.3. Load and Query Tables](#73-load-and-query-tables)
+    - [7.4. Append Data Asynchronously](#74-append-data-asynchronously)
   - [8. Data Type Conversion](#8-data-type-conversion)
   - [9. Java Streaming API](#9-java-streaming-api)
-    - [9.1 Interfaces](#91-interfaces)
-    - [9.2 Code Examples](#92-code-examples)
-    - [9.3 Reconnect](#93-reconnect)
-    - [9.4 Filter](#94-filter)
-    - [9.5 Subscribe to a Heterogeneous Table](#95-subscribe-to-a-heterogeneous-table)
-    - [9.6 Unsubscribe](#96-unsubscribe)
-
+    - [9.1. Interfaces](#91-interfaces)
+    - [9.2. Code Examples](#92-code-examples)
+    - [9.3. Reconnect](#93-reconnect)
+    - [9.4. Filter](#94-filter)
+    - [9.5. Subscribe to a Heterogeneous Table](#95-subscribe-to-a-heterogeneous-table)
+    - [9.6. Unsubscribe](#96-unsubscribe)
 
 ## 1. Introduction
 
-DolphinDB Java API requires Java 1.8 or higher environment. Please first declare the following Maven Dependency (version 1.30.20.1 in this example) in your project.
+DolphinDB Java API requires Java 1.8 or higher environment. Please first declare the following Maven Dependency (version 3.00.0.0 in this example) in your project.
 
 ```java
 <!-- https://mvnrepository.com/artifact/com.dolphindb/dolphindb-javaapi -->
 <dependency>
     <groupId>com.dolphindb</groupId>
     <artifactId>dolphindb-javaapi</artifactId>
-    <version>1.30.20.1</version>
+    <version>3.00.0.0</version>
 </dependency>
 ```
+
+As of 3.00.0.0, the method `Utils.getJavaApiVersion()` is provided to get the current Java API version.
 
 Java API adopts interface-oriented programming. It uses the interface "Entity" to represent all data types returned from DolphinDB. Based on "Entity" and DolphinDB data forms, Java API provides the following types of extended interfaces: scalar, vector, matrix, set, dictionary, table, and chart. They are included in the package of com.xxdb.data.
 
 | Extended interface classes | Naming rules              | Examples                                                |
 | :------------------------- | :------------------------ | :------------------------------------------------------ |
-| scalar                     | Basic<DataType>           | BasicInt, BasicDouble, BasicDate, etc.                  |
-| vector, matrix             | Basic<DataType><DataForm> | BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc. |
-| set, dictionary, table     | Basic<DataForm>           | BasicSet, BasicDictionary, BasicTable                  |
+| scalar                     | Basic\<DataType>           | BasicInt, BasicDouble, BasicDate, etc.                  |
+| vector, matrix             | Basic\<DataType>\<DataForm> | BasicIntVector, BasicDoubleMatrix, BasicAnyVector, etc. |
+| set, dictionary, table     | Basic\<DataForm>           | BasicSet, BasicDictionary, BasicTable                  |
 | chart                      |                           | BasicChart                                              |
 
-"Basic" indicates the basic implementation of a data form interface, <DataType> indicates a DolphinDB data type, and <DataForm> indicates a DolphinDB data form.
+"Basic" indicates the basic implementation of a data form interface, \<DataType\> indicates a DolphinDB data type, and \<DataForm\> indicates a DolphinDB data form.
 
 The most important object provided by DolphinDB Java API is `DBConnection`. It allows Java applications to execute scripts and functions on DolphinDB servers and transfer data between Java applications and DolphinDB servers in both directions. The DBConnection class provides the following main methods:
 
 | Method Name                                                  | Details                                  |
 | :----------------------------------------------------------- | :--------------------------------------- |
-| DBConnection([asynchronousTask, useSSL, compress, usePython, sqlStd]) | Construct an object                      |
-| connect(host, port, [username, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect]) | Connect the session to DolphinDB server  |
+| DBConnection( \[asynchronousTask, useSSL, compress, usePython, sqlStd\]) | Construct an object                      |
+| connect(host, port, \[username, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, enableLoadBalance\]) | Connect the session to DolphinDB server  |
 | login(username,password,enableEncryption)                    | Log in to DolphinDB server               |
 | run(script)                                                  | Run script on DolphinDB server           |
 | run(functionName,args)                                       | Call a function on DolphinDB server      |
@@ -73,11 +77,9 @@ DBConnection conn = new DBConnection(false, false, false, false, false, true, Sq
 
 Note: If the current session is no longer in use, Java API will automatically close the connection after a while. You can close the session by calling `close()` to release the connection. Otherwise, other sessions may be unable to connect to the server due to too many connections.
 
-For a detailed example, you can refer to the [example directory](./example).
-
 ## 2. Establish DolphinDB Connection
 
-### 2.1 DBConnection
+### 2.1. DBConnection
 
 The Java API connects to the DolphinDB server via TCP/IP protocol. To connect to a local DolphinDB server with port number 8848:
 
@@ -109,28 +111,129 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 
 If the connection is established without a username and password, you only have guest privileges. To be granted with more privileges, we can log in by executing `conn.login('admin', '123456', true)`.
 
-To define and use user-defined functions in a Java program, you can pass in the user-defined scripts to the parameter initialScript. The advantages are: 
-(1) These functions don't need to be defined repeatedly every time `run` is called; 
+To define and use user-defined functions in a Java program, you can pass in the user-defined scripts to the parameter initialScript. The advantages are:
+(1) These functions don't need to be defined repeatedly every time `run` is called;
 (2) The API client can automatically connect to the server after disconnection. If the parameter *initialScript* is specified, the Java API will automatically execute the script and register the functions. The parameter can be very useful for scenarios where the network is not stable but the program needs to run continuously.
 
 ```java
 boolean success = conn.connect("localhost", 8848, "admin", "123456", "");
 ```
 
-### 2.2 ExclusiveDBConnectionPool
+To enable high availability, set the parameter *enableHighAvailability* to true.
 
-Multiple DBconnection objects can be reused by ExclusiveDBConnectionPool. You can either execute command `ExclusiveDBConnectionPool.run`, or execute a task with `execute` and then obtain the results with `getResult` method of `BasicDBTask`.
+As of version 1.30.22.2, load balancing is automatically enabled for HA mode. Since 2.00.11.0, the `connect` method supports a new parameter *enableLoadBalance* which allows users to enable/disable load balancing in HA mode. Load balancing is only supported in HA mode and it is disabled by default.
 
-| Method Name                                                  | Details                                                      |
+If load balancing is disabled in HA mode, the API establishes connection to a random node. You can specify a group of nodes for connection for *highAvailabilitySites*, and the API will establish the connection to a random node from the group. If load balancing is enabled in HA mode, the API establishes connection to a low-load node. A low-load node is selected based on: memory usage<80%, connections<90%, and node load<80%.
+
+**Note**: If a disconnection occurs, the API automatically reconnects following the above rules.
+
+For example:
+To enable high availability and load balancing before version 2.00.11.0:
+```java
+sites=["192.168.1.2:24120", "192.168.1.3:24120", "192.168.1.4:24120"]
+boolean success = conn.connect("192.168.1.2", 24120, "admin", "123456", enableHighAvailability=true, highAvailabilitySites=sites);
+```
+
+To enable high availability and load balancing since version 2.00.11.0:
+```java
+boolean success = conn.connect("192.168.1.2", 24120, "admin", "123456", enableHighAvailability=true, highAvailabilitySites=sites, enableLoadBalance=true);
+```
+
+### 2.2. SimpleDBConnectionPool
+
+Starting from version 2.00.11.1, the Java API provides connection pool `SimpleDBConnectionPool` for managing and reusing connections.
+
+First configure the parameters with `SimpleDBConnectionPoolConfig`, and pass the `SimpleDBConnectionPoolConfig` as the configuration for `SimpleDBConnectionPool`. After the connection pool is constructed, users can obtain a connection with `getConnection`, and release a connection with `DBConnection.close()`. When a connection is returned to the pool, it becomes idle and can be utilized later.
+
+#### 2.2.1. SimpleDBConnectionPoolConfig
+
+The configuration can only be specified with `setXxx` method, for example:
+
+```java
+SimpleDBConnectionPoolConfig config = new SimpleDBConnectionPoolConfig();
+        config.setHostName("1sss");
+        config.setPort(PORT);
+        config.setUserId("admin");
+        config.setPassword("123456");
+        config.setInitialPoolSize(5);
+        config.setEnableHighAvailability(false);
+```
+
+The following parameters can be configured:
+
+- hostName: IP address. The default value is localhost.
+- port: Port number. The default value is 8848.
+- userId: User ID. The default value is "".
+- password: Password for the user. The default value is "". Only with both *userId* and *password* correctly specified can the connection log in the user. If only one of *userId* or *password* is specified, the connection will not log in the user. If the *userId* or *password* is incorrect, the connection fails.
+- initialPoolSize: Initial pool size. The default value is 5.
+- initialScript: Initial script. The default value is empty.
+- compress: Whether to compress data when downloading. The default value is false. The compress mode is more suitable for queries on large volume of data. Transferring compressed data can save network cost, but increase workloads of compression and decompression.
+- useSSL: Whether to enable SSL connection. The default value is false. To enable SSL connection, the configuration parameter *enableHTTPS* must be set to true on server.
+- usePython: Whether to enable Python Parser. The default value is false.
+- loadBalance: Whether to enable load balancing. The default value is false. If set to true, the API will perform load balancing in a polling manner across nodes specified in the *highAvailabilitySites* (or across all nodes if *highAvailabilitySites* is not specified).
+- enableHighAvailability: Whether to enable high availability. The default value is false.
+- highAvailabilitySites: A list of ip:port of all available nodes.
+
+#### 2.2.2. Methods
+
+The following methods are provided in the `SimpleDBConnectionPool` class:
+
+| Method 	| Description 	|
+|---	|---	|
+| SimpleDBConnectionPool(simpleDBConnectionPoolConfig) 	| Constructor. 	|
+| DBConnection getConnection() 	| Get a connection from the pool. 	|
+| close() 	| Close a connection pool. 	|
+| isClosed() 	| Check whether the pool is closed. 	|
+| getActiveConnectionsCount() 	| Get the number of active connections. 	|
+| getIdleConnectionsCount() 	| Get the number of idle connections. 	|
+| getTotalConnectionsCount() 	| Get the size of the pool. 	|
+| DBConnection.close() 	| Release a connection from the pool. 	|
+
+**Note**: The `DBConnection.close()` method is specifically used to release a connection obtained by `getConnection`, which is different from close() of DBConnection that closes the current session.
+
+```
+// Configure the connection pool
+SimpleDBConnectionPoolConfig config = new SimpleDBConnectionPoolConfig();
+        config.setHostName("1sss");
+        config.setPort(PORT);
+        config.setUserId("admin");
+        config.setPassword("123456");
+        config.setInitialPoolSize(5);
+        config.setEnableHighAvailability(false);
+ 
+// Initialize a connection pool       
+SimpleDBConnectionPool pool = new SimpleDBConnectionPool(config);
+
+// Get a connection
+DBConnection conn = pool.getConnection();
+conn.run("..."); // Execute scripts
+
+// Release the connection
+conn.close();
+
+// Get the number of active connections
+int activeConns = pool.getActiveConnectionsCount();
+
+// Get the number of idle connections
+int idleConns = pool.getIdleConnectionsCount();
+
+// Close the connection pool
+pool.close();
+```
+
+### 2.3. ExclusiveDBConnectionPool
+
+The Java API provides connection pool `ExclusiveDBConnectionPool`. Users can execute a task with `execute` and then obtain the results with `getResult` method of `BasicDBTask`.
+
+| Method                                                       | Details                                                      |
 | :----------------------------------------------------------- | :----------------------------------------------------------- |
-| ExclusiveDBConnectionPool(string host, int port, string uid,string pwd, int count, bool loadBalance,bool enableHighAvailability, string[] highAvailabilitySites = null, string initialScript, bool compress = false, bool useSSL = false, bool usePython = false) | Constructor. The parameter count indicates the number of connections to be used. If loadBalance is set to true, different nodes are connected. |
+| ExclusiveDBConnectionPool(string host, int port, string uid,string pwd, int count, bool loadBalance,bool enableHighAvailability, string\[\] highAvailabilitySites = null, string initialScript, bool compress = false, bool useSSL = false, bool usePython = false) | Constructor. The parameter count indicates the number of connections to be used. If loadBalance is set to true, different nodes are connected. |
 | execute(IDBTask task)                                        | Execute the task.                                            |
 | execute(List tasks)                                          | Execute tasks in batches.                                    |
 | getConnectionCount()                                         | Get the number of connections.                               |
 | shutdown()                                                   | Shut down the connection pool.                               |
 
-Note: If the current `ExclusiveDBConnectionPool` is no longer in use, Java API will automatically close the connection after a while. To release the connection resources, call `shutdown()`upon the completion of thread tasks. 
-
+**Note**: If the current `ExclusiveDBConnectionPool` is no longer in use, Java API will automatically close the connection after a while. To release the connection resources, call `shutdown()`upon the completion of thread tasks.
 
 `BasicDBTask` wraps the functions and arguments to be executed.
 
@@ -225,9 +328,24 @@ To run DolphinDB script in Java:
 conn.run("script");
 ```
 
+Before version 2.00.11.0, the `run` method automatically enables sequence number. The number is a LONG integer that represents the task sequence number for a client. If a write task fails, the task will be resubmitted. However, in cases like writing multiple tables at once, data loss may occur.
+
+Since version 2.00.11.0, the `run` method supports a new parameter enableSeqNo which allows users to enable/disable the sequence number feature. For example:
+
+```java
+public Entity run(String script, ProgressListener listener, int priority, int 
+parallelism, int fetchSize, boolean clearSessionMemory, String tableName, boolean enableSeqNo)
+```
+
 ## 4. Execute DolphinDB Functions
 
 Other than running script, method `run` can also execute DolphinDB built-in functions or user-defined functions on a remote DolphinDB server. If method `run` has only one parameter, the parameter is a script. If method `run` has 2 parameters, the first parameter is a DolphinDB function name and the second parameter is the function's arguments.
+
+Note: Please make sure that there are no extra spaces before and after the *function* parameter, and the specified function must exist. Otherwise, the following error will occur when executing `DBConnection.run(String function, List<Entity> arguments)`:
+
+```java
+Server response: 'Can't recognize function name functionA ' function: 'functionA '
+```
 
 The following examples illustrate 3 ways to call DolphinDB's built-in function `add` in Java, depending on the locations of the parameters "x" and "y" of function `add`.
 
@@ -294,8 +412,13 @@ public void testFunction() throws IOException{
 }
 ```
 
+Before version 2.00.11.0, the `run` method automatically enables sequence number. Since version 2.00.11.0, the `run` method supports a new parameter enableSeqNo which allows users to enable/disable the sequence number feature. For example:
 
-## 5. Upload data to DolphinDB server
+```
+public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize, boolean enableSeqNo)
+```
+
+## 5. Upload Data to DolphinDB Server
 
 We can upload a data object to DolphinDB server and assign it to a variable for future use. Variable names can use 3 types of characters: letters, numbers and underscores. The first character must be a letter.
 
@@ -355,7 +478,7 @@ public void testDoubleVector() throws IOException{
 }
 ```
 
-For the tuple [`GS, 2, [1,3,5],[0.9, [0.8]]], the following script gets the data form, data type and contents of the third element:
+For the tuple \[`GS, 2, \[1,3,5\],\[0.9, \[0.8\]\]\], the following script gets the data form, data type and contents of the third element:
 
 ```java
 public void testAnyVector() throws IOException{
@@ -440,9 +563,9 @@ public void testVoid() throws IOException{
 There are 2 types of DolphinDB tables:
 
 - In-memory table: it has the fastest access speed, but if the node shuts down the data will be lost.
-- DFS table: data are distributed across disks of multiple nodes. 
+- DFS table: data are distributed across disks of multiple nodes.
 
-### 7.1 Write to an In-Memory Table
+### 7.1. Write to an In-Memory Table
 
 DolphinDB offers several ways to write to an in-memory table:
 
@@ -461,7 +584,7 @@ share t as sharedTable
 
 By default, an in-memory table is not shared among sessions. To access it in a different session, share it among sessions with `share`.
 
-#### 7.1.1 Insert a Single Record with `insert into`
+#### 7.1.1. Insert a Single Record with `insert into`
 
 To insert a single record to a DolphinDB in-memory table, you can use the `insert into` statement.
 
@@ -471,7 +594,7 @@ public void test_save_Insert(String str,int i, long ts,double dbl) throws IOExce
 }
 ```
 
-#### 7.1.2 Insert Multiple Records in Bulk with `tableInsert`
+#### 7.1.2. Insert Multiple Records in Bulk with `tableInsert`
 
 Function `tableInsert` can save records in batches. If data in Java can be organized as a List, it can be saved with function `tableInsert`.
 
@@ -485,9 +608,9 @@ public void test_save_TableInsert(List<String> strArray,List<Integer> intArray,L
 
 The example above uses partial application in DolphinDB to embed a table in `tableInsert{sharedTable}` as a function. For details about partial application, please refer to [Partial Application Documentation](https://www.dolphindb.com/help/Functionalprogramming/PartialApplication.html).
 
-#### 7.1.3 Save BasicTable Objects With Function `tableInsert`
+#### 7.1.3. Save BasicTable Objects With Function `tableInsert`
 
-Function `tableInsert` can also accept a BasicTable object in Java as a parameter to append data to a table in batches. 
+Function `tableInsert` can also accept a BasicTable object in Java as a parameter to append data to a table in batches.
 
 ```java
 public void test_save_table(BasicTable table1) throws IOException {
@@ -496,11 +619,11 @@ public void test_save_table(BasicTable table1) throws IOException {
 }
 ```
 
-### 7.2 Write to a DFS Table
+### 7.2. Write to a DFS Table
 
 DFS table is recommended by DolphinDB in production environment. It supports snapshot isolation and ensures data consistency. With data replication, DFS tables offers fault tolerance and load balancing.
 
-#### 7.2.1 Save BasicTable Objects With Function `tableInsert`
+#### 7.2.1. Save BasicTable Objects With Function `tableInsert`
 
 
 ```java
@@ -531,11 +654,11 @@ BasicTable table1 = new BasicTable(colNames,cols);
 ```
 
 
-#### 7.2.2 Append to DFS Tables
+#### 7.2.2. Append to DFS Tables
 
 DolphinDB DFS tables support concurrent reads and writes. This section introduces how to write data concurrently to DolphinDB DFS tables in Java.
 
-> Please note that multiple writers are not allowed to write to one partition at the same time in DolphinDB. Therefore, please make sure that each thread writes to a different partition separately when the client uses multiple writer threads.
+Please note that multiple writers are not allowed to write to one partition at the same time in DolphinDB. Therefore, please make sure that each thread writes to a different partition separately when the client uses multiple writer threads.
 
 DolphinDB's Java API offers a convenient way to separate data by partition and write concurrently:
 
@@ -577,9 +700,9 @@ BasicTable table1 = createTable();
 appender.append(table1);                   
 ```
 
-### 7.3 Load and Query Tables
+### 7.3. Load and Query Tables
 
-#### 7.3.1 Load Tables
+#### 7.3.1. Load Tables
 
 To load a DFS table in Java API, you can execute the following code to read the table as a whole.
 
@@ -615,7 +738,7 @@ When using the above method to read data in blocks, if not all blocks are read, 
   BasicTable t1 = (BasicTable)conn.run("table(1..100 as id1)");  
 ```
 
-#### 7.3.2 Use BasicTable Object
+#### 7.3.2. Use BasicTable Object
 
 In Java API, a table is saved as a BasicTable object. Since BasicTable is column-based, to retrieve rows via the Java API, you need to access the columns first and then get the rows.
 
@@ -637,28 +760,29 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 }
 ```
 
-### 7.4 Append Data Asynchronously
+### 7.4. Append Data Asynchronously
 
-You can use methods of `MultithreadedTableWriter` class to asynchronously append data to a DolphinDB in-memory table, dimension table, or a DFS table. The class maintains a buffer queue. Even when the server is fully occupied with network I/O operations, the writing threads of the API client will not be blocked. 
+You can use methods of `MultithreadedTableWriter` class to asynchronously append data to a DolphinDB in-memory table, dimension table, or a DFS table. The class maintains a buffer queue. Even when the server is fully occupied with network I/O operations, the writing threads of the API client will not be blocked.
 
 For asynchronous writes:
 
 - When the API client submits the task to the buffer queue, the task is considered as completed.
 - You can check the status with `getStatus`.
 
-#### 7.4.1 MultithreadedTableWriter
+#### 7.4.1. MultithreadedTableWriter
 
 `MultithreadedTableWriter` supports concurrent writes in multiple threads.
 
 The methods of `MultithreadedTableWriter` object are introduced as follows:
 
 ```java
-MultithreadedTableWriter(String hostName, int port, String userId, String password,
-        String dbName, String tableName, boolean useSSL,
-        boolean enableHighAvailability, String[] highAvailabilitySites,
-        int batchSize, float throttle,
-        int threadCount, String partitionCol,
-        int[] compressTypes)
+public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+    String dbName, String tableName, boolean useSSL,
+    boolean enableHighAvailability, String[] highAvailabilitySites,
+    int batchSize, float throttle,
+    int threadCount, String partitionCol,
+    int[] compressTypes, Mode mode, String[] pModeOption,
+    boolean enableActualSendTime)
 ```
 
 Parameters:
@@ -667,9 +791,9 @@ Parameters:
 - **port**: port number
 - **userId** / **password**: username and password
 - **dbPath**: a STRING indicating the DFS database path. Leave it unspecified for an in-memory table.
-- **tableName**: a STRING indicating the in-memory or DFS table name. 
+- **tableName**: a STRING indicating the in-memory or DFS table name.
 
-> **Note:** For API 1.30.17 or lower versions, when writing to an in-memory table, please specify the in-memory table name for *dbPath* and leave *tableName* empty.
+**Note:** For API 1.30.17 or lower versions, when writing to an in-memory table, please specify the in-memory table name for *dbPath* and leave *tableName* empty.
 
 - **useSSL**: a Boolean value indicating whether to enable SSL. The default value is false.
 - **enableHighAvailability**: a Boolean value indicating whether to enable high availability. The default value is false.
@@ -678,10 +802,10 @@ Parameters:
 - **throttle**: a positive floating-point number indicating the waiting time (in seconds) before the server processes the incoming data if the number of data written from the client does not reach *batchSize*.
 - **threadCount**: an integer indicating the number of working threads to be created. The default value is 1, indicating single-threaded process. It must be 1 for a dimension table.
 - **partitionCol**: a STRING indicating the partitioning column. It is None by default, and only takes effect when *threadCount* is greater than 1. For a partitioned table, it must be the partitioning column; for a stream table, it must be a column name; for a dimension table, the parameter does not take effect.
-- **compressMethods** an array of the compression methods used for each column. If unspecified, the columns are not compressed. The compression methods (case-insensitive) include:
+- **compressMethods**: an array of the compression methods used for each column. If unspecified, the columns are not compressed. The compression methods (case-insensitive) include:
   - "Vector.COMPRESS_LZ4": LZ4 algorithm
   - "Vector.COMPRESS_DELTA": Delta-of-delta encoding
-
+- **enableActualSendTime**: a Boolean value that specifies whether to record the send time for each message. Note that the last column of tableName must be of NANOTIMESTAMP type.
 
 The following part introduces methods of `MultithreadedTableWriter` object.
 
@@ -693,7 +817,7 @@ ErrorCodeInfo insert(Object... args)
 
 Details:
 
-Insert a single record. Return a class `ErrorCodeInfo` containing *errorCode* and *errorInfo*. If *errorCode* is not ““, `MultithreadedTableWriter` has failed to insert the data, and *errorInfo* displays the error message.
+Insert a single record. Return a class `ErrorCodeInfo` containing *errorCode* and *errorInfo*. If *errorCode* is not "", `MultithreadedTableWriter` has failed to insert the data, and *errorInfo* displays the error message.
 
 The class `ErrorCodeInfo` provides methods `hasError()` and `succeed()` to check whether the data is written properly. `hasError()` returns true if an error occurred, false otherwise. `succeed()` returns true if the data is written successfully, false otherwise.
 
@@ -733,7 +857,7 @@ List<List<Entity>> unwrittenData = multithreadedTableWriter_.getUnwrittenData();
 ErrorCodeInfo insertUnwrittenData(List<List<Entity>> records)
 ```
 
-**Details:** 
+**Details:**
 
 Insert unwritten data. The result is in the same format as `insert`. The difference is that `insertUnwrittenData` can insert multiple records at a time.
 
@@ -753,7 +877,7 @@ ErrorCodeInfo ret = multithreadedTableWriter_.insertUnwrittenData(unwrittenData)
 Status getStatus()
 ```
 
-**Details:** 
+**Details:**
 
 Get the current status of the `MultithreadedTableWriter` object.
 
@@ -787,14 +911,14 @@ writeStatus = multithreadedTableWriter_.getStatus();
 - `hasError()`: return true if an error occurred, false otherwise.
 - `succeed()`: return true if the data is written successfully, false otherwise.
 
- 
+
 (5) waitForThreadCompletion
 
 ```java
 waitForThreadCompletion()
 ```
 
-**Details:** 
+**Details:**
 
 After calling the method, `MultithreadedTableWriter` will wait until all working threads complete their tasks. If you call `insert` or `insertUnwrittenData` after the execution of `waitForThreadCompletion`, an error "thread is exiting" will be raised.
 
@@ -876,8 +1000,8 @@ Output:
 The above example calls method `writer.insert()` to write data to writer, and obtains the status with `writer.getStatus()`. Please note that the method `writer.waitForThreadCompletion()` will wait for `MultithreadedTableWriter` to finish the data writes, and then terminate all working threads with the last status retained. A new MTW object must be created to write data again.
 
 As shown in the above example, `MultithreadedTableWriter` applies multiple threads to data conversion and writes. The API client also uses multiple threads to call `MultithreadedTableWriter`, and the implementation is thread-safe.
- 
-#### 7.4.2 Exceptions Raised by MultithreadedTableWriter
+
+#### 7.4.2. Exceptions Raised by MultithreadedTableWriter
 
 When calling method `insert` of class `MultithreadedTableWriter`:
 
@@ -1010,19 +1134,18 @@ Output:
 
 ## 8. Data Type Conversion
 
-Java API provides objects that correspond to DolphinDB data types. They are usually named as Basic+ <DataType>, such as BasicInt, BasicDate, etc.
+Java API provides objects that correspond to DolphinDB data types. They are usually named as Basic+ \<DataType\>, such as BasicInt, BasicDate, etc.
 
 Data Types
 
 | Java Primitive Data Type 	| Example 	| Java API Data Type 	| Example 	| DolphinDB Data Type 	| Example 	|
 |---	|---	|---	|---	|---	|---	|
 | Boolean 	| Boolean var = true; 	| BasicBoolean 	| BasicBoolean basicBoolean = new BasicBoolean(true); 	| BOOL 	| 1b, 0b, true, false 	|
-| Byte 	| byte number = 10; 	| BasicByte 	| BasicByte basicByte = new BasicByte((byte) 13); 	| CHAR 	| ‘a’, 97c 	|
+| Byte 	| byte number = 10; 	| BasicByte 	| BasicByte basicByte = new BasicByte((byte) 13); 	| CHAR 	| 'a', 97c 	|
 | LocalDate 	| LocalDate specificDate = LocalDate.of(2023, 6, 30); 	| BasicDate 	| BasicDate basicDate = new BasicDate(LocalDate.of(2021, 12, 9)); 	| DATE 	| 2023.06.13 	|
 | Calendar 	| // create a Calendar object with specified date and time<br>Calendar specificCalendar = Calendar.getInstance();<br>specificCalendar.set(2023, Calendar.JUNE, 30, 12, 0, 0); 	| BasicDate 	| BasicDate basicDate = new BasicDate(specificCalendar); 	| DATE 	| 2023.06.13 	|
 |   	| same as above 	| BasicDateHour 	| Calendar calendar = Calendar.getInstance();<br>calendar.set(2022,0,31,2,2,2);<br>BasicDateHour date = new BasicDateHour(calendar); 	| DATEHOUR 	| 2012.06.13T13 	|
 |   	| same as above 	| BasicDateTime 	| BasicDateTime basicDateTime = new BasicDateTime(new GregorianCalendar()); 	| DATETIME 	| 2012.06.13 13:30:10 or 2012.06.13T13:30:10 	|
-|   	| same as above 	| BasicMinute 	| BasicMinute basicMinute = new BasicMinute(new GregorianCalendar()); 	| MINUTE 	| 13:30m 	|
 |   	| same as above 	| BasicTime 	| BasicTime basicTime = new BasicTime(new GregorianCalendar()); 	| TIME 	| 13:30:10.008 	|
 |   	| same as above 	| BasicTimestamp 	| BasicTimestamp basicTimestamp = new BasicTimestamp(new GregorianCalendar()); 	| TIMESTAMP 	| 2012.06.13 13:30:10.008 or 2012.06.13T13:30:10.008 	|
 | LocalDateTime 	| LocalDateTime currentDateTime = LocalDateTime.now(); 	| BasicDateHour 	| BasicDateHour basicDateHour = new BasicDateHour(LocalDateTime.now()); 	| DATEHOUR 	| 2012.06.13T13 	|
@@ -1044,24 +1167,25 @@ Data Types
 | YearMonth 	| YearMonth yearMonth = YearMonth.of(2023, 6); 	| BasicMonth 	| BasicMonth basicMonth = new BasicMonth(YearMonth.of(2022, 7)); 	| MONTH 	| 2012.06M 	|
 | LocalTime 	| LocalTime specificTime = LocalTime.of(10, 30, 0);  	| BasicNanoTime 	| BasicNanoTime basicNanoTime = new BasicNanoTime(LocalTime.of(1, 1, 1, 1323433)); 	| NANOTIME 	| 13:30:10.008007006 	|
 |   	| same as above 	| BasicSecond 	| BasicSecond basicSecond = new BasicSecond(LocalTime.of(2, 2, 2)); 	| SECOND 	| 13:30:10 	|
+|   	| same as above 	| BasicMinute 	| BasicMinute basicMinute = new BasicMinute(new GregorianCalendar()); 	| MINUTE 	| 13:30m 	|
 |   	| same as above 	| BasicTime 	| BasicTime basicTime = new BasicTime(LocalTime.of(13, 7, 55)); 	| TIME 	| 13:30:10.008 	|
 | - 	| - 	| BasicPoint 	| BasicPoint basicPoint = new BasicPoint(6.4, 9.2); 	| POINT 	| (117.60972, 24.118418) 	|
 | short 	| short number = 100;  	| BasicShort 	| BasicShort basicShort = new BasicShort((short) 21); 	| SHORT 	| 122h 	|
-| String 	| String s = “abcd“; 	| BasicString 	| BasicString basicString = new BasicString("colDefs"); 	| STRING 	| “Hello” or ‘Hello’ or `Hello 	|
+| String 	| String s = "abcd"; 	| BasicString 	| BasicString basicString = new BasicString("colDefs"); 	| STRING 	| "Hello" or 'Hello' or `Hello 	|
 | - 	| - 	| BasicString 	| BasicString basicString = new BasicString("Jmeter", true); 	| BLOB 	| - 	|
-| UUID 	| UUID uuid = UUID.randomUUID(); 	| BasicUuid 	| BasicUuid.fromString(“5d212a78-cc48-e3b1-4235-b4d91473ee87“) 	| UUID 	| 5d212a78-cc48-e3b1-4235-b4d91473ee87 	|
+| UUID 	| UUID uuid = UUID.randomUUID(); 	| BasicUuid 	| BasicUuid.fromString("5d212a78-cc48-e3b1-4235-b4d91473ee87") 	| UUID 	| 5d212a78-cc48-e3b1-4235-b4d91473ee87 	|
 
 Data forms
 
 |  	|  	|  	|  	|  	|  	|
 |---	|---	|---	|---	|---	|---	|
-| Set 	| - 	| BasicSet 	| BasicSet bs = new BasicSet(Entity.DATA_TYPE.DT_INT,4); 	| set 	| x=set([5,5,3,4]);<br>x; 	|
+| Set 	| - 	| BasicSet 	| BasicSet bs = new BasicSet(Entity.DATA_TYPE.DT_INT,4); 	| set 	| x=set(\[5,5,3,4\]);<br>x; 	|
 | - 	| - 	| BasicDictionary 	| BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_STRING, Entity.DATA_TYPE.DT_DATETIME,2); 	| DICTIONARY 	| x=1 2 3 1;<br>y=2.3 4.6 5.3 6.4;<br>z=dict(x, y); 	|
 
 The majority of DolphinDB data types can be constructed from corresponding Java data types. For examples, INT in DolphinDB from 'new BasicInt(4)', DOUBLE in DolphinDB from 'new BasicDouble(1.23)'. The following DolphinDB data types, however, need to be constructed in different ways:
 
 - CHAR type: as the CHAR type in DolphinDB is stored as a byte, we can use the BasicByte type to construct CHAR in Java API, for example 'new BasicByte((byte)'c')'.
-- SYMBOL type: the SYMBOL type in DolphinDB is stored as INT to improve the efficiency of storage and query of strings. Java doesn't have this data type, so Java API does not provide BasicSymbol. SYMBOL type can be processed directly with BasicString.
+- SYMBOL type: the SYMBOL type in DolphinDB is stored as INT to improve the efficiency of storage and query of STRING vectors (especially for vectors containing multiple duplicate strings). Java API does not provide BasicSymbol object. It uses BasicString to deal with strings. The Java API has provided the BasicSymbolVector type for handling STRING vectors since version 1.30.17.1. Note that when downloading data to Java, it is recommended to use AbstractVector and the `getString` method to access downloaded SYMBOL data, instead of casting to BasicSymbolVector or BasicStringVector.
 - Temporal types: temporal data types are stored as INT or LONG in DolphinDB. DolphinDB provides 9 temporal data types: date, month, time, minute, second, datetime, timestamp, nanotime and nanotimestamp. For detailed description, please refer to [DolphinDB Temporal Type and Conversion](https://www.dolphindb.com/help/DataManipulation/TemporalObjects/TemporalTypeandConversion.html). Since Java also provides data types such as LocalDate, LocalTime, LocalDateTime and YearMonth, Java API provides conversion functions in the `Utils` class between all Java temporal types and INT or LONG.
 
 The following script shows the correspondence between DolphinDB temporal types and Java primitive temporal types:
@@ -1123,7 +1247,7 @@ The `Utils` class provides the following methods to handle a variety of timestam
 
 A Java program can subscribe to streaming data via API. Java API can acquire streaming data in the following 3 ways: ThreadedClient, ThreadPooledClient, and PollingClient.
 
-### 9.1 Interfaces
+### 9.1. Interfaces
 
 The corresponding interfaces of `subscribe` are:
 
@@ -1161,7 +1285,7 @@ subscribe(string host, int port, string tableName, string actionName, MessageHan
 subscribe(string host, int port, string tableName, string actionName, long offset, bool reconnect, IVector filter, StreamDeserializer deserializer = null, string user = "", string password = "")
 ```
 
-### 9.2 Code Examples
+### 9.2. Code Examples
 
 The following example introduces how to subscribe to stream table:
 
@@ -1212,7 +1336,7 @@ ThreadPooledClient client = new ThreadPooledClient(10000,10);
 client.subscribe(serverIP, serverPort, tableName, new MyHandler(), offsetInt);
 ```
 
-### 9.3 Reconnect
+### 9.3. Reconnect
 
 Parameter *reconnect* is a Boolean value indicating whether to automatically resubscribe after the subscription experiences an unexpected interruption. The default value is false.
 
@@ -1231,11 +1355,11 @@ PollingClient client = new PollingClient(subscribePort);
 TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, offset, true);
 ```
 
-### 9.4 Filter
+### 9.4. Filter
 
 Parameter *filter* is a vector. It is used together with function `setStreamTableFilterColumn` at the publisher node. Function `setStreamTableFilterColumn` specifies the filtering column in the streaming table. Only the rows with filtering column values in *filter* are published.
 
-In the following example, parameter *filter* is assigned an INT vector [1,2]:
+In the following example, parameter *filter* is assigned an INT vector \[1,2\]:
 
 ```java
 BasicIntVector filter = new BasicIntVector(2);
@@ -1246,11 +1370,11 @@ PollingClient client = new PollingClient(subscribePort);
 TopicPoller poller1 = client.subscribe(serverIP, serverPort, tableName, actionName, offset, filter);
 ```
 
-### 9.5 Subscribe to a Heterogeneous Table
+### 9.5. Subscribe to a Heterogeneous Table
 
-Since DolphinDB server version 1.30.17/2.00.5, the [replay](https://dolphindb.com/help/FunctionsandCommands/FunctionReferences/r/replay.html) function supports replaying (serializing) multiple stream tables with different schemata into a single stream table (known as “heterogeneous stream table“). Starting from DolphinDB Java API version 1.30.19, a new class `streamDeserializer` has been introduced for the subscription and deserialization of heterogeneous stream table.
+Since DolphinDB server version 1.30.17/2.00.5, the [replay](https://dolphindb.com/help/FunctionsandCommands/FunctionReferences/r/replay.html) function supports replaying (serializing) multiple stream tables with different schemata into a single stream table (known as "heterogeneous stream table"). Starting from DolphinDB Java API version 1.30.19, a new class `streamDeserializer` has been introduced for the subscription and deserialization of heterogeneous stream table.
 
-#### 9.5.1 Construct Deserializer for Heterogeneous Stream Table
+#### 9.5.1. Construct Deserializer for Heterogeneous Stream Table
 
 You can construct a deserializer for heterogeneous table with `streamDeserializer`.
 
@@ -1310,7 +1434,7 @@ Code example:
 }
 ```
 
-#### 9.5.1 Subscribe to a Heterogeneous Table
+#### 9.5.2. Subscribe to a Heterogeneous Table
 
 (1) subscribe to a heterogeneous table using ThreadedClient:
 
@@ -1385,7 +1509,7 @@ PollingClient client = new PollingClient(listenport);
 TopicPoller poller = subscribe(hostName, port, tableName, actionName, 0, true, null, streamFilter);
 ```
 
-### 9.6 Unsubscribe
+### 9.6. Unsubscribe
 
 Each subscription is identified with a subscription topic. Subscription fails if a topic with the same name already exists. You can cancel the subscription with `unsubscribe`.
 
