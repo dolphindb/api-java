@@ -102,6 +102,9 @@ public class SimpleDBConnectionPool {
      * Get an Idle Connection from the Connection Pool.
      */
     public DBConnection getConnection() {
+        if (isClosed())
+            throw new RuntimeException("The connection pool has been closed.");
+
         for (PoolEntry poolEntry : poolEntries) {
             if (poolEntry.inUse.compareAndSet(false, true)) {
                 return poolEntry;
