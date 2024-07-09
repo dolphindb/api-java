@@ -1000,7 +1000,7 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("The connection to dolphindb has not been established.",re);
+        Assert.assertEquals("Couldn't send script/function to the remote host because the connection has been closed",re);
     }
     @Test
     public  void test_EventSender_connect_duplicated() throws IOException, InterruptedException {
