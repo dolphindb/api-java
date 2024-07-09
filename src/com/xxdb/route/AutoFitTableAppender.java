@@ -414,7 +414,9 @@ public class AutoFitTableAppender {
             e.printStackTrace();
         }
 
-        log.info("AutoFitTableAppender.append() insert value rows: " + res.getString() + ".");
+        if (Objects.nonNull(res))
+            log.info("AutoFitTableAppender.append() insert value rows: " + res.getString() + ".");
+
         return res;
     }
 
