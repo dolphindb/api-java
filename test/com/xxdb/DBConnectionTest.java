@@ -5031,4 +5031,67 @@ public void test_SSL() throws Exception {
         System.out.println(data.rows());
         assertEquals(10000, data.rows());
     }
+//    @Test
+//    public void test_node_disConnect() throws IOException, InterruptedException {
+//        DBConnection contr = new DBConnection();
+//        contr.connect("192.168.0.69",28920,"admin","123456");
+//        List<DBTask> tasks = new ArrayList<>();
+//        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,18921, "admin", "123456", 20, false, true);
+//        class MyThread extends Thread {
+//            @Override
+//            public void run() {
+//                while (true) {
+//                    try {
+//                        // 创建任务
+//                        BasicDBTask task = new BasicDBTask("1..10");
+//                        // 执行任务
+//                        pool.execute(task);
+//                        BasicIntVector data = null;
+//                        if (task.isSuccessful()) {
+//                            data = (BasicIntVector)task.getResult();
+//                        } else {
+//                            throw new Exception(task.getErrorMsg());
+//                        }
+//                        System.out.print(data.getString()+"\n");
+//
+//                        // 等待1秒
+//                        Thread.sleep(1000);
+//                    } catch (Exception e) {
+//                        // 捕获异常并打印错误信息
+//                        System.err.println("Error executing task: " + e.getMessage());
+//                    }
+//                }
+//            }
+//        }
+//        class MyThread1 extends Thread {
+//            @Override
+//            public void run() {
+//                while (true) {
+//                    try {
+//                        contr.run("try{stopDataNode('"+HOST+":18921')}catch(ex){}");
+//                        contr.run("try{stopDataNode('"+HOST+":18922')}catch(ex){}");
+//                        contr.run("try{stopDataNode('"+HOST+":18923')}catch(ex){}");
+//                        Thread.sleep(1000);
+//                        contr.run("try{stopDataNode('"+HOST+":18924')}catch(ex){}");
+//                        Thread.sleep(5000);
+//                        contr.run("try{startDataNode('"+HOST+":18921')}catch(ex){}");
+//                        contr.run("try{startDataNode('"+HOST+":18922')}catch(ex){}");
+//                        contr.run("try{startDataNode('"+HOST+":18923')}catch(ex){}");
+//                        contr.run("try{startDataNode('"+HOST+":18924')}catch(ex){}");
+//                        Thread.sleep(5000);
+//                    } catch (Exception e) {
+//                        // 捕获异常并打印错误信息
+//                        System.err.println(e.getMessage());
+//                    }
+//                }
+//            }
+//        }
+//
+//        MyThread thread = new MyThread();
+//        MyThread1 thread1 = new MyThread1();
+//        thread.start();
+//        Thread.sleep(5000);
+//        thread1.start();
+//        thread.join();
+//    }
 }

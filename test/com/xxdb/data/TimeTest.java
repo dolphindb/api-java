@@ -1,5 +1,6 @@
 package com.xxdb.data;
 
+import org.junit.Assert;
 import org.junit.Test;
 import java.time.*;
 import static com.xxdb.data.Utils.countMilliseconds;
@@ -167,6 +168,13 @@ public class TimeTest{
                 throw new RuntimeException(dt + " != " + dt2);
             }
         }
+        {
+            LocalDateTime dt = LocalDateTime.of(2039,1,1,1,1);
+            long ret = Utils.countMilliseconds(dt);
+            System.out.println(ret);
+            Assert.assertEquals(2177456460000l, ret);
+        }
+
     }
 }
 

@@ -368,7 +368,7 @@ public class EventSenderTest {
     }
 
     @Test
-    public  void test_EventSender_AttrKeys_null() throws IOException, InterruptedException {
+    public  void test_EventSender_fieldNames_null() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
         //scheme.setAttrKeys(Arrays.asList("market", "code", "price", "qty", "eventTime"));
@@ -387,7 +387,7 @@ public class EventSenderTest {
     }
 
     @Test
-    public  void test_EventSender_AttrKeys_null_1() throws IOException, InterruptedException {
+    public  void test_EventSender_fieldNames_null_1() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
         scheme.setFieldNames(Arrays.asList("", "code", "price", "qty", "eventTime"));
@@ -402,11 +402,11 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("attrKey must be non-null and non-empty.",re);
+        Assert.assertEquals("fieldName must be non-null and non-empty.",re);
     }
 
     @Test
-    public  void test_EventSender_AttrKeys_repetition() throws IOException, InterruptedException {
+    public  void test_EventSender_fieldNames_repetition() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `time`eventType`event, [TIME,STRING,BLOB]) as inputTable;");
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
@@ -422,11 +422,11 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("EventSchema cannot has duplicated attrKey in attrKeys.",re);
+        Assert.assertEquals("EventSchema cannot has duplicated fieldName in fieldNames.",re);
     }
 
     @Test
-    public  void test_EventSender_AttrKeys_one_colume() throws IOException, InterruptedException {
+    public  void test_EventSender_EventType_one_colume() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `time`eventType`event, [TIME,STRING,BLOB]) as inputTable;");
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
@@ -446,7 +446,7 @@ public class EventSenderTest {
     }
 
     @Test
-    public  void test_EventSender_AttrTypes_null() throws IOException, InterruptedException {
+    public  void test_EventSender_FieldTypes_null() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
         scheme.setFieldNames(Arrays.asList("market", "code", "price", "qty", "eventTime"));
@@ -464,7 +464,7 @@ public class EventSenderTest {
         Assert.assertEquals("the number of eventKey, eventTypes, eventForms and eventExtraParams (if set) must have the same length.",re);
     }
     @Test
-    public  void test_EventSender_AttrTypes_null_1() throws IOException, InterruptedException {
+    public  void test_EventSender_fieldTypes_null_1() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
         scheme.setFieldNames(Arrays.asList("market", "code", "price", "qty", "eventTime"));
@@ -479,10 +479,10 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("attrType must be non-null.",re);
+        Assert.assertEquals("fieldType must be non-null.",re);
     }
     @Test
-    public  void test_EventSender_AttrTypes_not_support() throws IOException, InterruptedException {
+    public  void test_EventSender_FieldTypes_not_support() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
         scheme.setFieldNames(Arrays.asList("market", "code", "price", "qty", "eventTime"));
@@ -501,7 +501,7 @@ public class EventSenderTest {
     }
 
     @Test
-    public  void test_EventSender_AttrForms_null() throws IOException, InterruptedException {
+    public  void test_EventSender_fieldForms_null() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
         scheme.setFieldNames(Arrays.asList("market", "code", "price", "qty", "eventTime"));
@@ -519,7 +519,7 @@ public class EventSenderTest {
         Assert.assertEquals("the number of eventKey, eventTypes, eventForms and eventExtraParams (if set) must have the same length.",re);
     }
     @Test
-    public  void test_EventSender_AttrForms_null_1() throws IOException, InterruptedException {
+    public  void test_EventSender_fieldForms_null_1() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
         scheme.setFieldNames(Arrays.asList("market", "code", "price", "qty", "eventTime"));
@@ -534,11 +534,11 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("attrForm must be non-null.",re);
+        Assert.assertEquals("fieldForm must be non-null.",re);
     }
 
     @Test
-    public  void test_EventSender_AttrForms_not_support() throws IOException, InterruptedException {
+    public  void test_EventSender_fieldForms_not_support() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
         scheme.setFieldNames(Arrays.asList("market", "code", "price", "qty", "eventTime"));
@@ -553,10 +553,10 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("attrForm only can be DF_SCALAR or DF_VECTOR.",re);
+        Assert.assertEquals("fieldForm only can be DF_SCALAR or DF_VECTOR.",re);
     }
     @Test
-    public  void test_EventSender_attrExtraParams_null() throws IOException, InterruptedException {
+    public  void test_EventSender_fieldExtraParams_null() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `eventType`event`market`code`decimal32`decimal64`decimal128, [STRING,BLOB,STRING,STRING,DECIMAL32(0),DECIMAL64(1),DECIMAL128(2)]) as inputTable;");
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
@@ -581,7 +581,7 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("The decimal attribute' scale doesn't match to schema attrExtraParams scale.",re);
+        Assert.assertEquals("The decimal attribute' scale doesn't match to schema fieldExtraParams scale.",re);
     }
     @Test
     public  void test_EventSender_attrExtraParams_null_1() throws IOException, InterruptedException {
@@ -1151,7 +1151,7 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals(true,re.contains("FROM clause must return a table."));
+        Assert.assertEquals(true,re.contains("FROM clause must be followed by a table."));
         String re1 = null;
         try{
             EventSender sender = new EventSender(conn, "",eventSchemas, eventTimeKeys, commonKeys);

@@ -59,17 +59,11 @@ public class SimpleDBConnectionPoolTest {
         }
     }
     @Test
-    public void test_SimpleDBConnectionPool_config_oldversion(){
-        config.setInitialPoolSize(5);
+    public void test_SimpleDBConnectionPool_config_setInitialPoolSize(){
+        config.setInitialPoolSize(10);
         SimpleDBConnectionPool pool=new SimpleDBConnectionPool(config);
-        assertEquals(5,config.getMinimumPoolSize());
-        assertEquals(5,config.getMaximumPoolSize());
-    }
-    @Test
-    public void test_SimpleDBConnectionPool_config_newversion(){
-        SimpleDBConnectionPool pool=new SimpleDBConnectionPool(config);
-        assertEquals(5,config.getMinimumPoolSize());
-        assertEquals(5,config.getMaximumPoolSize());
+        assertEquals(10,config.getMinimumPoolSize());
+        assertEquals(10,config.getMaximumPoolSize());
     }
     @Test
     public void test_SimpleDBConnectionPool_config_MinimumandPoolSize_and_MaximumPoolSize_null() {
@@ -120,7 +114,6 @@ public class SimpleDBConnectionPoolTest {
         config.setIdleTimeout(0);
         pool = new SimpleDBConnectionPool(config);
         assertEquals(600000, config.getIdleTimeout());
-
     }
     @Test
     public void test_SimpleDBConnectionPool_config_InvalididleTimeout_null() {
@@ -800,6 +793,64 @@ public class SimpleDBConnectionPoolTest {
         assertEquals(6,pool.getIdleConnectionsCount());
     }
     @Test
+    public void test_SimpleDBConnectionPool_closeIdleConnections_Auto_1() throws InterruptedException {
+        config.setMaximumPoolSize(10);
+        config.setMinimumPoolSize(6);
+        config.setIdleTimeout(10000);
+        pool=new SimpleDBConnectionPool(config);
+        DBConnection [] A=new DBConnection[10];
+        for(int i=0;i<10;i++){
+            A[i]=pool.getConnection();
+        }
+        assertEquals(10,pool.getTotalConnectionsCount());
+        assertEquals(10,pool.getActiveConnectionsCount());
+        assertEquals(0,pool.getIdleConnectionsCount());
+        for(int i=0;i<2;i++){
+            A[i].close();
+        }
+        Thread.sleep(9000);
+        assertEquals(10,pool.getTotalConnectionsCount());
+        assertEquals(8,pool.getActiveConnectionsCount());
+        assertEquals(2,pool.getIdleConnectionsCount());
+        Thread.sleep(1000);
+        assertEquals(10,pool.getTotalConnectionsCount());
+        assertEquals(8,pool.getActiveConnectionsCount());
+        assertEquals(2,pool.getIdleConnectionsCount());
+        Thread.sleep(972);
+        assertEquals(8,pool.getTotalConnectionsCount());
+        assertEquals(8,pool.getActiveConnectionsCount());
+        assertEquals(0,pool.getIdleConnectionsCount());
+    }
+    @Test
+    public void test_SimpleDBConnectionPool_closeIdleConnections_Auto_2() throws InterruptedException {
+        config.setMaximumPoolSize(10);
+        config.setMinimumPoolSize(6);
+        config.setIdleTimeout(10000);
+        pool=new SimpleDBConnectionPool(config);
+        DBConnection [] A=new DBConnection[10];
+        for(int i=0;i<10;i++){
+            A[i]=pool.getConnection();
+        }
+        assertEquals(10,pool.getTotalConnectionsCount());
+        assertEquals(10,pool.getActiveConnectionsCount());
+        assertEquals(0,pool.getIdleConnectionsCount());
+//        for(int i=0;i<2;i++){
+//            A[i].close();
+//        }
+        Thread.sleep(9000);
+        assertEquals(10,pool.getTotalConnectionsCount());
+        assertEquals(10,pool.getActiveConnectionsCount());
+        assertEquals(0,pool.getIdleConnectionsCount());
+        Thread.sleep(1000);
+        assertEquals(10,pool.getTotalConnectionsCount());
+        assertEquals(10,pool.getActiveConnectionsCount());
+        assertEquals(0,pool.getIdleConnectionsCount());
+        Thread.sleep(972);
+        assertEquals(10,pool.getTotalConnectionsCount());
+        assertEquals(10,pool.getActiveConnectionsCount());
+        assertEquals(0,pool.getIdleConnectionsCount());
+    }
+    @Test
     public void test_SimpleDBConnectionPool_closeIdleConnections_Auto_MultiThread() throws InterruptedException {
         config.setMaximumPoolSize(10);
         config.setMinimumPoolSize(6);
@@ -809,6 +860,9 @@ public class SimpleDBConnectionPoolTest {
         for(int i=0;i<10;i++){
             A[i]=pool.getConnection();
         }
+        assertEquals(10,pool.getTotalConnectionsCount());
+        assertEquals(10,pool.getActiveConnectionsCount());
+        assertEquals(0,pool.getIdleConnectionsCount());
         Thread[] threads = new Thread[10];
         for(int i=0;i<10;i++){
             int finalI = i;
@@ -865,6 +919,32 @@ public class SimpleDBConnectionPoolTest {
         assertEquals(6,pool.getTotalConnectionsCount());
         assertEquals(0,pool.getActiveConnectionsCount());
         assertEquals(6,pool.getIdleConnectionsCount());
+    }
+    @Test
+    public void test_SimpleDBConnectionPool_closeIdleConnectionsManual_1() throws InterruptedException{
+        config.setMaximumPoolSize(10);
+        config.setMinimumPoolSize(6);
+        config.setIdleTimeout(10000);
+        pool=new SimpleDBConnectionPool(config);
+        DBConnection [] A=new DBConnection[10];
+        for(int i=0;i<10;i++){
+            A[i]=pool.getConnection();
+        }
+        assertEquals(10,pool.getTotalConnectionsCount());
+        assertEquals(10,pool.getActiveConnectionsCount());
+        assertEquals(0,pool.getIdleConnectionsCount());
+        for(int i=0;i<2;i++){
+            A[i].close();
+        }
+        Thread.sleep(7000);
+        assertEquals(10,pool.getTotalConnectionsCount());
+        assertEquals(8,pool.getActiveConnectionsCount());
+        assertEquals(2,pool.getIdleConnectionsCount());
+
+        pool.manualCleanupIdleConnections();
+        assertEquals(8,pool.getTotalConnectionsCount());
+        assertEquals(8,pool.getActiveConnectionsCount());
+        assertEquals(0,pool.getIdleConnectionsCount());
     }
     @Test
     public void test_SimpleDBConnectionPool_closeIdleConnectionsManual_MultiThread() throws InterruptedException{

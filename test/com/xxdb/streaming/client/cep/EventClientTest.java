@@ -181,7 +181,7 @@ public class EventClientTest {
     }
 
     @Test
-    public  void test_EventClient_AttrKeys_repetition() throws IOException, InterruptedException {
+    public  void test_EventClient_fieldNames_repetition() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `time`eventType`event, [TIME,STRING,BLOB]) as inputTable;");
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
@@ -198,7 +198,7 @@ public class EventClientTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("EventSchema cannot has duplicated attrKey in attrKeys.",re);
+        Assert.assertEquals("EventSchema cannot has duplicated fieldName in fieldNames.",re);
     }
 
     @Test
@@ -242,7 +242,7 @@ public class EventClientTest {
     }
 
     @Test
-    public  void test_EventClient_AttrTypes_null() throws IOException, InterruptedException {
+    public  void test_EventClient_fieldTypes_null() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
         scheme.setFieldNames(Arrays.asList("market", "code", "price", "qty", "eventTime"));
@@ -262,7 +262,7 @@ public class EventClientTest {
     }
 
     @Test
-    public  void test_EventClient_AttrForms_null() throws IOException, InterruptedException {
+    public  void test_EventClient_fieldForms_null() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
         scheme.setFieldNames(Arrays.asList("market", "code", "price", "qty", "eventTime"));

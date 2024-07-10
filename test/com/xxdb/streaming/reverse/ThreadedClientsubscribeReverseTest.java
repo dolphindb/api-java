@@ -2720,7 +2720,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2733,7 +2733,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2746,7 +2746,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2759,7 +2759,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2772,7 +2772,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2785,7 +2785,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2798,7 +2798,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2811,7 +2811,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2824,7 +2824,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2837,7 +2837,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2850,7 +2850,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2863,7 +2863,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2876,7 +2876,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2889,7 +2889,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2924,7 +2924,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array_UUID handler = new Handler_StreamDeserializer_array_UUID(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2959,7 +2959,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array_DATEHOUR handler = new Handler_StreamDeserializer_array_DATEHOUR(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -2994,7 +2994,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array_IPADDR handler = new Handler_StreamDeserializer_array_IPADDR(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -3029,7 +3029,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array_INT128 handler = new Handler_StreamDeserializer_array_INT128(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -3080,7 +3080,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array_COMPLEX handler = new Handler_StreamDeserializer_array_COMPLEX(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -3130,7 +3130,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array_POINT handler = new Handler_StreamDeserializer_array_POINT(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -3143,7 +3143,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -3156,7 +3156,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -3169,7 +3169,7 @@ public class ThreadedClientsubscribeReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -3221,7 +3221,7 @@ public class ThreadedClientsubscribeReverseTest {
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
         client.subscribe(HOST, 11111, "outTables", "mutiSchema", handler, 0,false, null,null,false,1000,0,"admin","123456",backupSites,10,true);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, 11111, "outTables", "mutiSchema");
     }
@@ -3609,13 +3609,14 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(10000);
         conn3.run("n=3000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
-        Thread.sleep(30000);
+        Thread.sleep(20000);
 
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("3000",row_num.getColumn(0).get(0).getString());
         client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
+
     //@Test(timeout = 180000)//该case为了验证重连次数和遍历测试（人工检查日志）
     public void test_ThreadClient_subscribe_backupSites_server_disconnect_1() throws IOException, InterruptedException {
         DBConnection controller_conn = new DBConnection();

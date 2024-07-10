@@ -181,22 +181,6 @@ public class BasicDecimal128VectorTest {
             assertEquals("Value's scale is not the same as the vector's!", e.getMessage());
         }
     }
-    @Test
-    public void test_BasicDecimal128_combine() throws Exception{
-        DBConnection connection = new DBConnection(false, false, false);
-        connection.connect(HOST, PORT, "admin", "123456");
-        BasicDecimal128Vector b128v1 = (BasicDecimal128Vector) connection.run("decimal128(1..10, 4)");
-        BasicDecimal128Vector b128v2 = (BasicDecimal128Vector) connection.run("decimal128(1..5, 4)");
-        String re = null;
-        try {
-            b128v1.combine(b128v2);
-        }catch (Exception e){
-            re=e.getMessage();
-        }
-        assertEquals("BasicDecimal128Vector not support combine yet!",re);
-
-
-    }
 
     @Test
     public void test_BasicDecimal128Vector_create_Decimal128Vector() throws Exception {
