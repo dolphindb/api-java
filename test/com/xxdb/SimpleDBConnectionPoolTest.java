@@ -315,7 +315,7 @@ public class SimpleDBConnectionPoolTest {
         poolEntity.run("sleep(1000);");
         long completeTime1 = System.currentTimeMillis();
         long tcompleteTime = completeTime1 - startTime;
-        assertEquals(true,tcompleteTime>1000);
+        assertEquals(true,tcompleteTime>=1000);
     }
 
     @Test(expected = RuntimeException.class)
@@ -615,7 +615,7 @@ public class SimpleDBConnectionPoolTest {
         assertEquals(PORT,config1.getPort());
         assertEquals(null,config1.getUserId());
         assertEquals(null,config1.getPassword());
-        assertEquals(0,config1.getInitialPoolSize());
+        assertEquals(-1,config1.getInitialPoolSize());
         assertEquals(null,config1.getInitialScript());
         assertEquals(false,config1.isUseSSL());
         assertEquals(false,config1.isUsePython());

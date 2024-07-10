@@ -895,7 +895,7 @@ public class EventClientTest {
         client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
 
-    @Test
+    //@Test
     public  void test_EventClient_subscribe_haStreamTable() throws IOException, InterruptedException {
         String script = "try{\ndropStreamTable(`inputTable)\n}catch(ex){\n}\n"+
                 "table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]);\n"+

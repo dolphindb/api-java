@@ -5014,7 +5014,7 @@ public void test_SSL() throws Exception {
     }
 
     @Test
-    public void test_allDateTyp_array_combine() throws IOException {
+    public void test_allDateType_array_combine() throws IOException {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         Preparedata_array(100000,10);
