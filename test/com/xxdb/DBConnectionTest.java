@@ -8,6 +8,7 @@ import com.xxdb.io.Double2;
 import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.Long2;
 import com.xxdb.io.ProgressListener;
+import com.xxdb.streaming.client.Site;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,8 +207,6 @@ public class DBConnectionTest {
         logCapture.stop();
         String s=logCapture.getLogMessages();
         assertTrue(s.contains("Connect failed after "+trynums+" reconnect attemps for every node in high availability sites."));
-
-
     }
     @Test
     public void Test_Connect_initialScript() throws IOException {
@@ -406,7 +405,6 @@ public class DBConnectionTest {
         BasicMonth data = (BasicMonth)conn.run("month(0)");
         System.out.println(data.getString());
         assertEquals("0000.01M",data.getString());
-
     }
 
     @Test
