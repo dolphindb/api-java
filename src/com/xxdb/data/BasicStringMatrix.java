@@ -109,4 +109,10 @@ public class BasicStringMatrix extends AbstractMatrix{
 		for(String value : values)
 			out.writeString(value);
 	}
+
+	@JsonIgnore
+	@Override
+	public int getScale() {
+		return super.getScale();
+	}
 }

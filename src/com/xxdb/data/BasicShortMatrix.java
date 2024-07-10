@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
-
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * 
@@ -97,5 +97,11 @@ public class BasicShortMatrix extends AbstractMatrix{
 	protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException{
 		for(short value : values)
 			out.writeShort(value);
+	}
+
+	@JsonIgnore
+	@Override
+	public int getScale() {
+		return super.getScale();
 	}
 }
