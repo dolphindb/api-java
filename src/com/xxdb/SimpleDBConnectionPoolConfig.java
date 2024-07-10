@@ -207,13 +207,14 @@ public class SimpleDBConnectionPoolConfig {
         }
 
         if (initialPoolSize > 0 && !isMinimumPoolSizeUserSet && !isMaximumPoolSizeUserSet) {
-            // 兼容旧版逻辑（只填init，不填mini、max的场景）：将最小、最大设置为 initialPoolSize 的值
+            // Compatible with the old logic (only filling init, not mini and max scenarios): set the minimum and maximum to the value of initialPoolSize.
             minimumPoolSize = initialPoolSize;
             maximumPoolSize = initialPoolSize;
         }
 
         if (initialPoolSize < 0) {
-            // 新逻辑（不填init，如果mini、max也不填，这俩参数给默认值，填了照常取值但是要做判断）：mini、max 不填的话，自动设置默认值
+            // New logic (if init is not filled, and if mini and max are also not filled, these two parameters will be given default values;
+            // if filled, they will be taken as usual but with validation): if mini and max are not filled, default values will be automatically set.
             if (minimumPoolSize <= 0) {
                 minimumPoolSize = 5;
                 log.warn("The param 'minimumIdle' cannot less than or equal to 0, will use the default value 5.");

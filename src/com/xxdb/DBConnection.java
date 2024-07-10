@@ -748,12 +748,10 @@ public class DBConnection {
             this.initialScript_ = initialScript;
             this.enableHighAvailability_ = enableHighAvailability;
             this.loadBalance_ = enableLoadBalance;
-            if (tryReconnectNums <= 0) {
+            if (tryReconnectNums <= 0)
                 this.tryReconnectNums = -1;
-                log.warn("If the param 'tryReconnectNums' less than or equal to 0, when reconnect will be unlimited attempts.");
-            } else {
+            else
                 this.tryReconnectNums = tryReconnectNums;
-            }
 
             if (this.loadBalance_ && !this.enableHighAvailability_)
                 throw new RuntimeException("Cannot only enable loadbalance but not enable highAvailablity.");
