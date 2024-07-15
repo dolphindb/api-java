@@ -204,5 +204,14 @@ public class BasicIntTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_INT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicInt\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0 #1         #2\\n1             5 \\n4  0          2 \\n5  2147483647 1 \\n\",\"table\":false,\"vector\":false}", re);
     }
+    @Test(expected = RuntimeException.class)
+    public void test_BasicIntMatrix_getScale() throws Exception {
+        BasicIntMatrix bdm = new BasicIntMatrix(2,2);
+        bdm.setInt(0,0, 2);
+        bdm.setInt(0,1, 5);
+        bdm.setInt(1,0, 2);
+        bdm.setInt(1,1, 3);
+        bdm.getScale();
+    }
 
 }

@@ -111,15 +111,15 @@ boolean success = conn.connect("localhost", 8848, "admin", "123456");
 
 If the connection is established without a username and password, you only have guest privileges. To be granted with more privileges, we can log in by executing `conn.login('admin', '123456', true)`.
 
-To define and use user-defined functions in a Java program, you can pass in the user-defined scripts to the parameter initialScript. The advantages are:
-(1) These functions don't need to be defined repeatedly every time `run` is called;
+To define and use user-defined functions in a Java program, you can pass in the user-defined scripts to the parameter initialScript. The advantages are: 
+(1) These functions don't need to be defined repeatedly every time `run` is called; 
 (2) The API client can automatically connect to the server after disconnection. If the parameter *initialScript* is specified, the Java API will automatically execute the script and register the functions. The parameter can be very useful for scenarios where the network is not stable but the program needs to run continuously.
 
 ```java
 boolean success = conn.connect("localhost", 8848, "admin", "123456", "");
 ```
 
-To enable high availability, set the parameter *enableHighAvailability* to true.
+To enable high availability, set the parameter *enableHighAvailability* to true. 
 
 As of version 1.30.22.2, load balancing is automatically enabled for HA mode. Since 2.00.11.0, the `connect` method supports a new parameter *enableLoadBalance* which allows users to enable/disable load balancing in HA mode. Load balancing is only supported in HA mode and it is disabled by default.
 
@@ -233,7 +233,7 @@ The Java API provides connection pool `ExclusiveDBConnectionPool`. Users can exe
 | getConnectionCount()                                         | Get the number of connections.                               |
 | shutdown()                                                   | Shut down the connection pool.                               |
 
-**Note**: If the current `ExclusiveDBConnectionPool` is no longer in use, Java API will automatically close the connection after a while. To release the connection resources, call `shutdown()`upon the completion of thread tasks.
+**Note**: If the current `ExclusiveDBConnectionPool` is no longer in use, Java API will automatically close the connection after a while. To release the connection resources, call `shutdown()`upon the completion of thread tasks. 
 
 `BasicDBTask` wraps the functions and arguments to be executed.
 
@@ -563,7 +563,7 @@ public void testVoid() throws IOException{
 There are 2 types of DolphinDB tables:
 
 - In-memory table: it has the fastest access speed, but if the node shuts down the data will be lost.
-- DFS table: data are distributed across disks of multiple nodes.
+- DFS table: data are distributed across disks of multiple nodes. 
 
 ### 7.1. Write to an In-Memory Table
 
@@ -610,7 +610,7 @@ The example above uses partial application in DolphinDB to embed a table in `tab
 
 #### 7.1.3. Save BasicTable Objects With Function `tableInsert`
 
-Function `tableInsert` can also accept a BasicTable object in Java as a parameter to append data to a table in batches.
+Function `tableInsert` can also accept a BasicTable object in Java as a parameter to append data to a table in batches. 
 
 ```java
 public void test_save_table(BasicTable table1) throws IOException {
@@ -762,7 +762,7 @@ public void test_loop_basicTable(BasicTable table1) throws Exception{
 
 ### 7.4. Append Data Asynchronously
 
-You can use methods of `MultithreadedTableWriter` class to asynchronously append data to a DolphinDB in-memory table, dimension table, or a DFS table. The class maintains a buffer queue. Even when the server is fully occupied with network I/O operations, the writing threads of the API client will not be blocked.
+You can use methods of `MultithreadedTableWriter` class to asynchronously append data to a DolphinDB in-memory table, dimension table, or a DFS table. The class maintains a buffer queue. Even when the server is fully occupied with network I/O operations, the writing threads of the API client will not be blocked. 
 
 For asynchronous writes:
 
@@ -791,7 +791,7 @@ Parameters:
 - **port**: port number
 - **userId** / **password**: username and password
 - **dbPath**: a STRING indicating the DFS database path. Leave it unspecified for an in-memory table.
-- **tableName**: a STRING indicating the in-memory or DFS table name.
+- **tableName**: a STRING indicating the in-memory or DFS table name. 
 
 **Note:** For API 1.30.17 or lower versions, when writing to an in-memory table, please specify the in-memory table name for *dbPath* and leave *tableName* empty.
 
@@ -857,7 +857,7 @@ List<List<Entity>> unwrittenData = multithreadedTableWriter_.getUnwrittenData();
 ErrorCodeInfo insertUnwrittenData(List<List<Entity>> records)
 ```
 
-**Details:**
+**Details:** 
 
 Insert unwritten data. The result is in the same format as `insert`. The difference is that `insertUnwrittenData` can insert multiple records at a time.
 
@@ -877,7 +877,7 @@ ErrorCodeInfo ret = multithreadedTableWriter_.insertUnwrittenData(unwrittenData)
 Status getStatus()
 ```
 
-**Details:**
+**Details:** 
 
 Get the current status of the `MultithreadedTableWriter` object.
 
@@ -911,14 +911,14 @@ writeStatus = multithreadedTableWriter_.getStatus();
 - `hasError()`: return true if an error occurred, false otherwise.
 - `succeed()`: return true if the data is written successfully, false otherwise.
 
-
+ 
 (5) waitForThreadCompletion
 
 ```java
 waitForThreadCompletion()
 ```
 
-**Details:**
+**Details:** 
 
 After calling the method, `MultithreadedTableWriter` will wait until all working threads complete their tasks. If you call `insert` or `insertUnwrittenData` after the execution of `waitForThreadCompletion`, an error "thread is exiting" will be raised.
 
@@ -1000,7 +1000,7 @@ Output:
 The above example calls method `writer.insert()` to write data to writer, and obtains the status with `writer.getStatus()`. Please note that the method `writer.waitForThreadCompletion()` will wait for `MultithreadedTableWriter` to finish the data writes, and then terminate all working threads with the last status retained. A new MTW object must be created to write data again.
 
 As shown in the above example, `MultithreadedTableWriter` applies multiple threads to data conversion and writes. The API client also uses multiple threads to call `MultithreadedTableWriter`, and the implementation is thread-safe.
-
+ 
 #### 7.4.2. Exceptions Raised by MultithreadedTableWriter
 
 When calling method `insert` of class `MultithreadedTableWriter`:

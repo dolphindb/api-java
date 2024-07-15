@@ -592,4 +592,11 @@ public class BasicByteTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[100,111,108,112,104,105,110],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_BYTE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicByte\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"['d','o','l','p','h','i','n']\",\"table\":false,\"unitLength\":1,\"values\":[100,111,108,112,104,105,110],\"vector\":true}", re);
     }
+    @Test(expected = RuntimeException.class)
+    public void test_BasicByteMartix_getScale() throws Exception {
+        byte [] a={1,2,3};
+        byte [] b={1,2,3};
+        BasicByteMatrix bm=new BasicByteMatrix(3,2,Arrays.asList(a,b));
+        bm.getScale();
+    }
 }

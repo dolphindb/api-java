@@ -1114,7 +1114,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1135,7 +1135,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1156,7 +1156,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1177,7 +1177,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1198,7 +1198,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1219,7 +1219,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1240,7 +1240,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1261,7 +1261,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1282,7 +1282,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1303,7 +1303,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1324,7 +1324,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1345,7 +1345,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1366,7 +1366,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1387,7 +1387,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1432,7 +1432,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array_UUID handler = new Handler_StreamDeserializer_array_UUID(streamFilter);
@@ -1477,7 +1477,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array_DATEHOUR handler = new Handler_StreamDeserializer_array_DATEHOUR(streamFilter);
@@ -1522,7 +1522,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(2000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array_IPADDR handler = new Handler_StreamDeserializer_array_IPADDR(streamFilter);
@@ -1568,7 +1568,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array_INT128 handler = new Handler_StreamDeserializer_array_INT128(streamFilter);
@@ -1629,7 +1629,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array_COMPLEX handler = new Handler_StreamDeserializer_array_COMPLEX(streamFilter);
@@ -1690,7 +1690,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array_POINT handler = new Handler_StreamDeserializer_array_POINT(streamFilter);
@@ -1711,7 +1711,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1732,7 +1732,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1753,7 +1753,7 @@ public class PollingClientReverseTest {
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
         TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1838,7 +1838,7 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
         TopicPoller poller = client.subscribe(HOST, 11111, "outTables", "mutiSchema", 0,false, null,null,"admin","123456",false,backupSites,100, false);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1865,7 +1865,7 @@ public class PollingClientReverseTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("The format of backupSite 192.168.0.69,18921 is incorrect, should be host:port, e.g. 192.168.1.1:8848", re);
+        Assert.assertEquals("The format of backupSite "+HOST+","+PORT+" is incorrect, should be host:port, e.g. 192.168.1.1:8848", re);
     }
 
     @Test(timeout = 120000)

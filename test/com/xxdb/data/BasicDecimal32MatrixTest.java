@@ -277,4 +277,18 @@ public class BasicDecimal32MatrixTest {
         assertEquals("The value type is not BasicDecimal32!", exception1);
     }
 
+    @Test
+    public void test_BasicDecimal32Matrix_getScale() throws Exception {
+        for(int i=1;i<=9;i++ ){
+            int scale=i;
+            List<int[]> list = new ArrayList<>();
+            list.add(new int[]{1, 2, 3});
+            list.add(new int[]{4, 5, 6});
+            BasicDecimal32Matrix re = new BasicDecimal32Matrix(3, 2,list,scale);
+            assertEquals(scale,re.getScale());
+        }
+
+    }
+
+
 }

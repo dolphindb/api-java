@@ -17,4 +17,5 @@ public interface Matrix extends Entity{
 	boolean hasRowLabel();
 	boolean hasColumnLabel();
 	Class<?> getElementClass();
+	int getScale();
 }

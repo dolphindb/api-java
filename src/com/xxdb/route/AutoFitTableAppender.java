@@ -2,11 +2,14 @@ package com.xxdb.route;
 
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class AutoFitTableAppender {
     enum APPEND_ACTION {fitColumnType}
@@ -15,6 +18,8 @@ public class AutoFitTableAppender {
     boolean async_;
     DBConnection con_;
     APPEND_ACTION _action;
+
+    private static final Logger log = LoggerFactory.getLogger(AutoFitTableAppender.class);
 
     public AutoFitTableAppender(String dbUrl, String tableName, DBConnection conn) {
         this.dbUrl_ = dbUrl;
@@ -30,98 +35,23 @@ public class AutoFitTableAppender {
         this._action = action;
     }
 
-    public String getDTString(Entity.DATA_TYPE type) {
-        switch (type) {
-            case DT_ANY:
-                return "ANY";
-            case DT_BLOB:
-                return "BLOB";
-            case DT_BOOL:
-                return "BOOL";
-            case DT_BYTE:
-                return "BYTE";
-            case DT_CODE:
-                return "CODE";
-            case DT_COMPRESS:
-                return "COMPRESSED";
-            case DT_DATASOURCE:
-                return "DATASOURCE";
-            case DT_DATE:
-                return "DATE";
-            case DT_DATEHOUR:
-                return "DATEHOUR";
-            case DT_DATEMINUTE:
-                return "DATEMINUTE";
-            case DT_DATETIME:
-                return "DATETIME";
-            case DT_DICTIONARY:
-                return "DICTIONARY";
-            case DT_DOUBLE:
-                return "DOUBLE";
-            case DT_FLOAT:
-                return "FLOAT";
-            case DT_FUNCTIONDEF:
-                return "FUNCTIONDEF";
-            case DT_HANDLE:
-                return "HANDLE";
-            case DT_INT:
-                return "INT";
-            case DT_INT128:
-                return "INT128";
-            case DT_IPADDR:
-                return "IPADDR";
-            case DT_LONG:
-                return "LONG";
-            case DT_MINUTE:
-                return "MINUTE";
-            case DT_MONTH:
-                return "MONTH";
-            case DT_NANOTIME:
-                return "NANOTIME";
-            case DT_NANOTIMESTAMP:
-                return "NANOTIMESTAMP";
-            case DT_OBJECT:
-                return "OBJECT";
-            case DT_STRING:
-                return "STRING";
-            case DT_RESOURCE:
-                return "RESOURCE";
-            case DT_SECOND:
-                return "SECOND";
-            case DT_SHORT:
-                return "SHORT";
-            case DT_SYMBOL:
-                return "SYMBOL";
-            case DT_TIME:
-                return "TIME";
-            case DT_TIMESTAMP:
-                return "TIMESTAMP";
-            case DT_UUID:
-                return "UUID";
-            case DT_VOID:
-                return "VOID";
-        }
-        return "Unrecognized type";
-    }
-
     public Entity append(BasicTable table) {
-        Entity ret=new BasicBoolean(false);
+        Entity res = null;
         try {
             String runScript;
-            if(dbUrl_=="")
+            if(Objects.equals(dbUrl_, ""))
                 runScript="schema(" + tableName_ + ")";
             else
                 runScript="schema(loadTable(\"" + dbUrl_ + "\",\"" + tableName_ + "\"))";
-            ret = con_.run(runScript);
+
+            Entity schema = con_.run(runScript);
             int columns = table.columns();
-            BasicTable schema = (BasicTable)((BasicDictionary)ret).get(new BasicString("colDefs"));
-            BasicStringVector typeList = (BasicStringVector) schema.getColumn("typeString");
-            BasicStringVector nameList = (BasicStringVector) schema.getColumn("name");
-            List<String> colName = new ArrayList<>();
+            BasicTable colDefs = (BasicTable) ((BasicDictionary) schema).get(new BasicString("colDefs"));
+            BasicStringVector typeList = (BasicStringVector) colDefs.getColumn("typeString");
+            BasicStringVector nameList = (BasicStringVector) colDefs.getColumn("name");
+            List<String> colName =  Arrays.asList(nameList.getValues());
             List<Vector> cols = new ArrayList<>();
-            for(int i=0;i<columns;++i){
-                colName.add(nameList.getString(i));
-            }
+
             int rowSize = table.rows();
             for (int i = 0; i < columns; ++i) {
                 String name = nameList.getString(i);
@@ -476,15 +406,92 @@ public class AutoFitTableAppender {
             List<Entity> param = new ArrayList<Entity>();
             BasicTable paramTable = new BasicTable(colName, cols);
             param.add(paramTable);
-            if(dbUrl_=="")
-                ret = con_.run("append!{" + tableName_ + "}", param);
+            if(Objects.equals(dbUrl_, ""))
+                res = con_.run("tableInsert{" + tableName_ + "}", param);
             else
-                ret = con_.run("append!{loadTable(\"" + dbUrl_ + "\",\"" + tableName_ + "\"), }", param);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+                res = con_.run("tableInsert{loadTable(\"" + dbUrl_ + "\",\"" + tableName_ + "\"), }", param);
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
-        return ret;
+
+        if (Objects.nonNull(res))
+            log.info("AutoFitTableAppender.append() insert value rows: " + res.getString() + ".");
+
+        return res;
+    }
+
+    public String getDTString(Entity.DATA_TYPE type) {
+        switch (type) {
+            case DT_ANY:
+                return "ANY";
+            case DT_BLOB:
+                return "BLOB";
+            case DT_BOOL:
+                return "BOOL";
+            case DT_BYTE:
+                return "BYTE";
+            case DT_CODE:
+                return "CODE";
+            case DT_COMPRESS:
+                return "COMPRESSED";
+            case DT_DATASOURCE:
+                return "DATASOURCE";
+            case DT_DATE:
+                return "DATE";
+            case DT_DATEHOUR:
+                return "DATEHOUR";
+            case DT_DATEMINUTE:
+                return "DATEMINUTE";
+            case DT_DATETIME:
+                return "DATETIME";
+            case DT_DICTIONARY:
+                return "DICTIONARY";
+            case DT_DOUBLE:
+                return "DOUBLE";
+            case DT_FLOAT:
+                return "FLOAT";
+            case DT_FUNCTIONDEF:
+                return "FUNCTIONDEF";
+            case DT_HANDLE:
+                return "HANDLE";
+            case DT_INT:
+                return "INT";
+            case DT_INT128:
+                return "INT128";
+            case DT_IPADDR:
+                return "IPADDR";
+            case DT_LONG:
+                return "LONG";
+            case DT_MINUTE:
+                return "MINUTE";
+            case DT_MONTH:
+                return "MONTH";
+            case DT_NANOTIME:
+                return "NANOTIME";
+            case DT_NANOTIMESTAMP:
+                return "NANOTIMESTAMP";
+            case DT_OBJECT:
+                return "OBJECT";
+            case DT_STRING:
+                return "STRING";
+            case DT_RESOURCE:
+                return "RESOURCE";
+            case DT_SECOND:
+                return "SECOND";
+            case DT_SHORT:
+                return "SHORT";
+            case DT_SYMBOL:
+                return "SYMBOL";
+            case DT_TIME:
+                return "TIME";
+            case DT_TIMESTAMP:
+                return "TIMESTAMP";
+            case DT_UUID:
+                return "UUID";
+            case DT_VOID:
+                return "VOID";
+        }
+
+        return "Unrecognized type";
     }
 }

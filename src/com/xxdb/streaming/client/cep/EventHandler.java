@@ -36,21 +36,21 @@ public class EventHandler {
 
             // check schema fieldNames
             Set<String> set = new HashSet<>();
-            for (String attrKey : event.getFieldNames()) {
-                if (Utils.isEmpty(attrKey))
-                    throw new IllegalArgumentException("attrKey must be non-null and non-empty.");
+            for (String fieldName : event.getFieldNames()) {
+                if (Utils.isEmpty(fieldName))
+                    throw new IllegalArgumentException("fieldName must be non-null and non-empty.");
 
-                // check if has duplicate key in attrKeys
-                if (!set.add(attrKey))
-                    throw new IllegalArgumentException("EventSchema cannot has duplicated attrKey in attrKeys.");
+                // check if has duplicate key in fieldName
+                if (!set.add(fieldName))
+                    throw new IllegalArgumentException("EventSchema cannot has duplicated fieldName in fieldNames.");
             }
 
             // check schema fieldForms
-            for (Entity.DATA_FORM attrForm : event.getFieldForms()) {
-                if (Objects.isNull(attrForm))
-                    throw new IllegalArgumentException("attrForm must be non-null.");
-                if (attrForm != Entity.DATA_FORM.DF_SCALAR && attrForm != Entity.DATA_FORM.DF_VECTOR)
-                    throw new IllegalArgumentException("attrForm only can be DF_SCALAR or DF_VECTOR.");
+            for (Entity.DATA_FORM fieldForm : event.getFieldForms()) {
+                if (Objects.isNull(fieldForm))
+                    throw new IllegalArgumentException("fieldForm must be non-null.");
+                if (fieldForm != Entity.DATA_FORM.DF_SCALAR && fieldForm != Entity.DATA_FORM.DF_VECTOR)
+                    throw new IllegalArgumentException("fieldForm only can be DF_SCALAR or DF_VECTOR.");
             }
 
             int length = event.getFieldNames().size();
@@ -67,14 +67,14 @@ public class EventHandler {
             // check if fieldExtraParams valid
             if (Objects.nonNull(event.getFieldExtraParams()) && !event.getFieldExtraParams().isEmpty()) {
                 for (int i = 0; i < event.getFieldTypes().size(); i++) {
-                    Entity.DATA_TYPE attrType = event.getFieldTypes().get(i);
+                    Entity.DATA_TYPE fieldType = event.getFieldTypes().get(i);
                     Integer scale = event.getFieldExtraParams().get(i);
-                    if (attrType == Entity.DATA_TYPE.DT_DECIMAL32 && (scale < 0 || scale > 9))
-                        throw new IllegalArgumentException(attrType + " scale " + scale + " is out of bounds, it must be in [0,9].");
-                    else if (attrType == Entity.DATA_TYPE.DT_DECIMAL64 && (scale < 0 || scale > 18))
-                        throw new IllegalArgumentException(attrType + " scale " + scale + " is out of bounds, it must be in [0,18].");
-                    else if (attrType == Entity.DATA_TYPE.DT_DECIMAL128 && (scale < 0 || scale > 38))
-                        throw new IllegalArgumentException(attrType + " scale " + scale + " is out of bounds, it must be in [0,38].");
+                    if (fieldType == Entity.DATA_TYPE.DT_DECIMAL32 && (scale < 0 || scale > 9))
+                        throw new IllegalArgumentException(fieldType + " scale " + scale + " is out of bounds, it must be in [0,9].");
+                    else if (fieldType == Entity.DATA_TYPE.DT_DECIMAL64 && (scale < 0 || scale > 18))
+                        throw new IllegalArgumentException(fieldType + " scale " + scale + " is out of bounds, it must be in [0,18].");
+                    else if (fieldType == Entity.DATA_TYPE.DT_DECIMAL128 && (scale < 0 || scale > 38))
+                        throw new IllegalArgumentException(fieldType + " scale " + scale + " is out of bounds, it must be in [0,38].");
                 }
             }
         }
@@ -169,23 +169,23 @@ public class EventHandler {
                 return false;
             }
 
-            // check schema attrExtraParams with decimal attribute.
+            // check schema fieldExtraParams with decimal attribute.
             EventInfo eventInfo = this.eventInfos.get(eventType);
             EventSchemaEx eventSchema = eventInfo.getEventSchema();
             EventSchema schema = eventSchema.getSchema();
-            List<Integer> attrExtraParams = schema.getFieldExtraParams();
-            if (!attrExtraParams.isEmpty()) {
+            List<Integer> fieldExtraParams = schema.getFieldExtraParams();
+            if (!fieldExtraParams.isEmpty()) {
                 Entity attribute = attributes.get(i);
                 if (attribute.isScalar()) {
-                    if ((attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL32 && ((BasicDecimal32) attribute).getScale() != attrExtraParams.get(i))
-                            || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL64 && ((BasicDecimal64) attribute).getScale() != attrExtraParams.get(i))
-                            || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL128 && ((BasicDecimal128) attribute).getScale() != attrExtraParams.get(i)))
-                        throw new IllegalArgumentException("The decimal attribute' scale doesn't match to schema attrExtraParams scale.");
+                    if ((attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL32 && ((BasicDecimal32) attribute).getScale() != fieldExtraParams.get(i))
+                            || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL64 && ((BasicDecimal64) attribute).getScale() != fieldExtraParams.get(i))
+                            || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL128 && ((BasicDecimal128) attribute).getScale() != fieldExtraParams.get(i)))
+                        throw new IllegalArgumentException("The decimal attribute' scale doesn't match to schema fieldExtraParams scale.");
                 } else if (attribute.isVector()) {
-                    if ((attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL32 && ((BasicDecimal32Vector) attribute).getScale() != attrExtraParams.get(i))
-                            || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL64 && ((BasicDecimal64Vector) attribute).getScale() != attrExtraParams.get(i))
-                            || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL128 && ((BasicDecimal128Vector) attribute).getScale() != attrExtraParams.get(i)))
-                        throw new IllegalArgumentException("The decimal attribute' scale doesn't match to schema attrExtraParams scale.");
+                    if ((attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL32 && ((BasicDecimal32Vector) attribute).getScale() != fieldExtraParams.get(i))
+                            || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL64 && ((BasicDecimal64Vector) attribute).getScale() != fieldExtraParams.get(i))
+                            || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL128 && ((BasicDecimal128Vector) attribute).getScale() != fieldExtraParams.get(i)))
+                        throw new IllegalArgumentException("The decimal attribute' scale doesn't match to schema fieldExtraParams scale.");
                 }
             }
         }
@@ -336,7 +336,7 @@ public class EventHandler {
                 Entity.DATA_FORM form = schema.getFieldForms().get(j);
 
                 if (Objects.isNull(type)) {
-                    errMsg.append("attrType must be non-null.");
+                    errMsg.append("fieldType must be non-null.");
                     return false;
                 }
 

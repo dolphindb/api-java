@@ -8,12 +8,12 @@ import com.xxdb.io.Double2;
 import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.Long2;
 import com.xxdb.io.ProgressListener;
+import com.xxdb.streaming.client.Site;
 import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.net.InetAddress;
@@ -47,7 +47,7 @@ public class DBConnectionTest {
     static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
     private double load = -1.0;
     public int getConnCount() throws IOException {
-        return ((BasicInt) conn.run("(exec connectionNum from rpc(getControllerAlias(),getClusterPerf) where port = getNodePort())[0]")).getInt();
+        return ((BasicInt) conn.run("(exec connectionNum from rpc(getControllerAlias(),getClusterPerf) where PORT = getNodePort())[0]")).getInt();
     }
     static void compareBasicTable(BasicTable table, BasicTable newTable)
     {
@@ -143,7 +143,71 @@ public class DBConnectionTest {
         boolean re = conn.connect(HOST,PORT,"","",ipports);
         Assert.assertEquals(true,re);
     }
-
+    @Test
+    public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_false_enableLoadBalance_false() throws IOException {
+        int port=7102;
+        int trynums=3;
+        DBConnection conn =new DBConnection();
+        String R="";
+        try {
+            conn.connect(HOST,port,0,true,trynums);
+        }catch (Exception e){
+            R=e.toString();
+        }
+        assertEquals("java.lang.RuntimeException: Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attemps.",R);
+    }
+    @Test
+    public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_true_enableLoadBalance_false() throws IOException {
+        class LogCapture {
+            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            private final PrintStream originalErr = System.err;
+            public void start() {
+                System.setErr(new PrintStream(baos));
+            }
+            public void stop() {
+                System.setErr(originalErr);
+            }
+            public String getLogMessages() {
+                return baos.toString();
+            }
+        }
+        int port=7102;
+        int trynums=3;
+        String[] N={"localhost:7300"};
+        DBConnection conn =new DBConnection();
+        LogCapture logCapture = new LogCapture();
+        logCapture.start();
+        conn.connect(HOST,port,"admin","123456","",true,N,true,false,trynums);
+        logCapture.stop();
+        String s=logCapture.getLogMessages();
+        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attemps for every node in high availability sites."));
+    }
+    @Test
+    public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_true_enableLoadBalance_true() throws IOException {
+        class LogCapture {
+            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            private final PrintStream originalErr = System.err;
+            public void start() {
+                System.setErr(new PrintStream(baos));
+            }
+            public void stop() {
+                System.setErr(originalErr);
+            }
+            public String getLogMessages() {
+                return baos.toString();
+            }
+        }
+        int port=7102;
+        int trynums=3;
+        String[] N={"localhost:7300"};
+        DBConnection conn =new DBConnection();
+        LogCapture logCapture = new LogCapture();
+        logCapture.start();
+        conn.connect(HOST,port,"admin","123456","",true,N,true,true,trynums);
+        logCapture.stop();
+        String s=logCapture.getLogMessages();
+        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attemps for every node in high availability sites."));
+    }
     @Test
     public void Test_Connect_initialScript() throws IOException {
         DBConnection conn = new DBConnection();
@@ -341,7 +405,6 @@ public class DBConnectionTest {
         BasicMonth data = (BasicMonth)conn.run("month(0)");
         System.out.println(data.getString());
         assertEquals("0000.01M",data.getString());
-
     }
 
     @Test
@@ -4951,7 +5014,7 @@ public void test_SSL() throws Exception {
     }
 
     @Test
-    public void test_allDateTyp_array_combine() throws IOException {
+    public void test_allDateType_array_combine() throws IOException {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         Preparedata_array(100000,10);
@@ -4966,4 +5029,67 @@ public void test_SSL() throws Exception {
         System.out.println(data.rows());
         assertEquals(10000, data.rows());
     }
+//    @Test
+//    public void test_node_disConnect() throws IOException, InterruptedException {
+//        DBConnection contr = new DBConnection();
+//        contr.connect("192.168.0.69",28920,"admin","123456");
+//        List<DBTask> tasks = new ArrayList<>();
+//        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,18921, "admin", "123456", 20, false, true);
+//        class MyThread extends Thread {
+//            @Override
+//            public void run() {
+//                while (true) {
+//                    try {
+//                        // 创建任务
+//                        BasicDBTask task = new BasicDBTask("1..10");
+//                        // 执行任务
+//                        pool.execute(task);
+//                        BasicIntVector data = null;
+//                        if (task.isSuccessful()) {
+//                            data = (BasicIntVector)task.getResult();
+//                        } else {
+//                            throw new Exception(task.getErrorMsg());
+//                        }
+//                        System.out.print(data.getString()+"\n");
+//
+//                        // 等待1秒
+//                        Thread.sleep(1000);
+//                    } catch (Exception e) {
+//                        // 捕获异常并打印错误信息
+//                        System.err.println("Error executing task: " + e.getMessage());
+//                    }
+//                }
+//            }
+//        }
+//        class MyThread1 extends Thread {
+//            @Override
+//            public void run() {
+//                while (true) {
+//                    try {
+//                        contr.run("try{stopDataNode('"+HOST+":18921')}catch(ex){}");
+//                        contr.run("try{stopDataNode('"+HOST+":18922')}catch(ex){}");
+//                        contr.run("try{stopDataNode('"+HOST+":18923')}catch(ex){}");
+//                        Thread.sleep(1000);
+//                        contr.run("try{stopDataNode('"+HOST+":18924')}catch(ex){}");
+//                        Thread.sleep(5000);
+//                        contr.run("try{startDataNode('"+HOST+":18921')}catch(ex){}");
+//                        contr.run("try{startDataNode('"+HOST+":18922')}catch(ex){}");
+//                        contr.run("try{startDataNode('"+HOST+":18923')}catch(ex){}");
+//                        contr.run("try{startDataNode('"+HOST+":18924')}catch(ex){}");
+//                        Thread.sleep(5000);
+//                    } catch (Exception e) {
+//                        // 捕获异常并打印错误信息
+//                        System.err.println(e.getMessage());
+//                    }
+//                }
+//            }
+//        }
+//
+//        MyThread thread = new MyThread();
+//        MyThread1 thread1 = new MyThread1();
+//        thread.start();
+//        Thread.sleep(5000);
+//        thread1.start();
+//        thread.join();
+//    }
 }

@@ -140,4 +140,13 @@ public class BasicDateHourTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_DATEHOUR\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicDateHour\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0            #1           \\n1970.01.01T01 1970.01.01T03\\n1970.01.01T02 1970.01.01T04\\n\",\"table\":false,\"vector\":false}", re);
     }
+    @Test(expected = RuntimeException.class)
+    public void test_BasicDateHourMartix_getScale() throws Exception {
+        BasicDateHourMatrix bdhm = new BasicDateHourMatrix(2,2);
+        bdhm.setDateHour(0,0,LocalDateTime.of(2022,7,29,11,07));
+        bdhm.setDateHour(0,1,LocalDateTime.of(1970,1,1,11,11));
+        bdhm.setDateHour(1,0,LocalDateTime.of(1993,6,23,15,36));
+        bdhm.setDateHour(1,1,LocalDateTime.MIN);
+        bdhm.getScale();
+    }
 }

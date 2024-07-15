@@ -1691,4 +1691,39 @@ public class AutoFitTableUpsertTest {
         assertEquals(0, bt.rows());
         conn.close();
     }
+    @Test
+    public void Test_AutoFitTableAppender_streamTable_allDateType_11() throws Exception {
+        String script = "n=5000000;\n";
+        script += "intv = 1..5000000;\n";
+        script += "uuidv = rand(rand(uuid(), 10) join take(uuid(), 4), n);\n";
+        script += "ippaddrv = rand(rand(ipaddr(), 1000) join take(ipaddr(), 4), n)\n";
+        script += "int128v = rand(rand(int128(), 1000) join take(int128(), 4), n);\n";
+        script += "complexv = rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n);\n";
+        script += "pointv = rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n);\n";
+        script += " share table(intv,uuidv,ippaddrv,int128v,complexv,pointv) as tt\n";
+        script += "t1=keyedTable(`intv,100:0,`intv`uuidv`ippaddrv`int128v`complexv`pointv,[INT,UUID,IPADDR,INT128,COMPLEX,POINT])\n";
+
+        conn.run(script);
+        BasicTable bt = (BasicTable)conn.run("select * from tt");
+        BasicTable bt1 = (BasicTable)conn.run("select top 10 *  from tt");
+        AutoFitTableUpsert aftu = new AutoFitTableUpsert("","t1",conn,true,null,null);
+
+        long start = System.nanoTime();
+        int re = aftu.upsert(bt);
+        assertEquals(0,re);
+        long end = System.nanoTime();
+        System.out.println((end - start) / 1000000);
+        assertEquals(true,((end - start) / 1000000)<5000);
+        for(int i=0;i<10;i++) {
+            int re1 = aftu.upsert(bt1);
+            assertEquals( 0,re1);
+        }
+        aftu.upsert(bt1);
+        long end1 = System.nanoTime();
+        System.out.println((end1 - end));
+        assertEquals(true,((end1 - end)/ 10000000)<2);
+
+        BasicTable ua = (BasicTable)conn.run("select * from t1;");
+        assertEquals(5000000, ua.rows());
+    }
 }

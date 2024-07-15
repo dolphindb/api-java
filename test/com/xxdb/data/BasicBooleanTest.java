@@ -1,9 +1,6 @@
 package com.xxdb.data;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.xxdb.io.Double2;
-import com.xxdb.io.ExtendedDataOutput;
-import com.xxdb.io.Long2;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -194,5 +191,13 @@ public class BasicBooleanTest {
         String re = JSONObject.toJSONString(bb);
         System.out.println(re);
         assertEquals("{\"boolean\":true,\"chart\":false,\"chunk\":false,\"dataCategory\":\"LOGICAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_BOOL\",\"dictionary\":false,\"jsonString\":\"null\",\"matrix\":false,\"number\":-128,\"pair\":false,\"scalar\":true,\"string\":\"\",\"table\":false,\"value\":-128,\"vector\":false}", re);
+    }
+    @Test(expected = RuntimeException.class)
+    public void test_BasicBooleanMartix_getScale() throws Exception {
+        byte [] a={1,2,3};
+        byte [] b={1,2,3};
+        BasicBooleanMatrix bm=new BasicBooleanMatrix(3,2,Arrays.asList(a,b));
+        bm.getScale();
+
     }
 }
