@@ -272,7 +272,7 @@ public class Prepare {
     public static void PrepareUser(String userName,String password) throws IOException {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        conn.run("def create_user(){try{deleteUser(`"+userName+")}catch(ex){};createUser(`"+userName+", '"+password+"');};"+
+        conn.run("def create_user(){try{deleteUser(`"+userName+")}catch(ex){};createUser(`"+userName+", '"+password+"',,true);};"+
                 "rpc(getControllerAlias(),create_user);" );
     }
 
