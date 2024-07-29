@@ -5099,9 +5099,7 @@ public void test_SSL() throws Exception {
         PrepareUser("parallelism_test","123456");
         conn = new DBConnection();
         conn.connect(HOST,PORT,"parallelism_test","123456");
-        String script2 ="setMaxJobParallelism(\"parallelism_test\",22);\n sleep(20);\n getConsoleJobs();";
-        BasicTable re = (BasicTable)conn.run(script2,4,5,false);
-        System.out.println(re.getString());
+        conn.run("setMaxJobParallelism(\"parallelism_test\",22);",4,5,false);
 
         DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"parallelism_test","123456");
@@ -5113,13 +5111,11 @@ public void test_SSL() throws Exception {
         PrepareUser("parallelism_test","123456");
         conn = new DBConnection();
         conn.connect(HOST,PORT,"parallelism_test","123456");
-        String script2 ="setMaxJobParallelism(\"parallelism_test\",22);\n sleep(100);\n getConsoleJobs();";
-        BasicTable re = (BasicTable)conn.run(script2,5,30,false);
-        System.out.println(re.getColumn(6).get(0).getString());
+        conn.run("setMaxJobParallelism(\"parallelism_test\",22);",4,30,false);
 
         DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"parallelism_test","123456");
-        BasicTable re1 = (BasicTable)conn1.run(script2,5,30,false);
+        BasicTable re1 = (BasicTable)conn1.run("getConsoleJobs();",5,30,false);
         Assert.assertEquals("22",re1.getColumn(6).get(0).getString());
     }
 
