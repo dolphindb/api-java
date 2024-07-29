@@ -28,6 +28,7 @@ import java.util.stream.IntStream;
 
 import static com.xxdb.Prepare.*;
 import static com.xxdb.comm.SqlStdEnum.*;
+import static java.lang.Thread.sleep;
 import static org.junit.Assert.*;
 
 public class DBConnectionTest {
@@ -2544,7 +2545,7 @@ public class DBConnectionTest {
         sb.append("pt.append!(t1);");
         conn.run(sb.toString());
         conn.run("pnodeRun(purgeCacheEngine)");
-        Thread.sleep(5000);
+        sleep(5000);
         BasicLong res_x = (BasicLong) conn.run("exec count(*) from pt where x=1");
         assertEquals(true, res_x.getLong() > 0);
         //PartitionTableJoin
@@ -2636,10 +2637,10 @@ public class DBConnectionTest {
         DBConnection connClose = new DBConnection();
         //连接一次
         connClose.connect(HOST, PORT, "admin", "123456");
-        Thread.sleep(5000);
+        sleep(5000);
         int connCount = getConnCount();
         connClose.close();
-        Thread.sleep(5000);
+        sleep(5000);
         int connCount1 = getConnCount();
         assertEquals(connCount - 1, connCount1);
     }
@@ -2658,10 +2659,10 @@ public class DBConnectionTest {
             }
 
         }
-        Thread.sleep(2000);
+        sleep(2000);
         int connCount = getConnCount();
         connNew.close();
-        Thread.sleep(2000);
+        sleep(2000);
         int connCount1 = getConnCount();
         assertEquals(connCount - 1, connCount1);
     }
@@ -3457,7 +3458,7 @@ public class DBConnectionTest {
         Timer timer = new Timer("Timer");
         TimerTask rec = new reconnect();
         timer.scheduleAtFixedRate(rec, 0L, 500L);
-        Thread.sleep(500L);
+        sleep(500L);
         timer.cancel();
     }
 
@@ -3553,7 +3554,7 @@ public class DBConnectionTest {
         conn.tryRun("x;",1,1,8192,true);
         long afterDT = System.currentTimeMillis();
         System.out.println(afterDT-beforeDT);
-        Thread.sleep(5000);
+        sleep(5000);
         conn.run("y=1..10000000");
         long startDT = System.currentTimeMillis();
         conn.tryRun("y;",1,1,1000000,true);
@@ -3686,7 +3687,7 @@ public void test_SSL() throws Exception {
         conn.tryRun("sum",argus1,1,1,8192);
         long afterDT = System.currentTimeMillis();
         System.out.println(afterDT-beforeDT);
-        Thread.sleep(10000);
+        sleep(10000);
         List<Entity> argus2 = new ArrayList<>();
         conn.run("y=1..10000000");
         argus2.add(conn.run("y;"));
@@ -4289,7 +4290,7 @@ public void test_SSL() throws Exception {
     public void TestConnectWithoutUserid() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT);
-        Thread.sleep(500);
+        sleep(500);
         assertEquals(true, conn.isConnected());
     }
     @Test
@@ -4308,7 +4309,7 @@ public void test_SSL() throws Exception {
         }
         //DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"admin","123456",null,false);
-        Thread.sleep(500);
+        sleep(500);
         String e = null;
         try{
             conn1.run("a=1;\n a");
@@ -4318,14 +4319,14 @@ public void test_SSL() throws Exception {
             System.out.println(ex);
         }
         assertNotNull(e);
-        Thread.sleep(1000);
+        sleep(1000);
         try{
             conn.run("startDataNode(\""+nodeAlias+"\")");
         }catch(Exception ex)
         {
             System.out.println(ex);
         }
-        Thread.sleep(1000);
+        sleep(1000);
         conn1.connect(HOST,PORT,"admin","123456",null,false);
         conn1.run("a=1;\n a");
         assertEquals(true, conn1.isConnected());
@@ -4345,7 +4346,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
-        Thread.sleep(1000);
+        sleep(1000);
         conn1.run("a=1;\n a");
         //The connection switches to a different node to execute the code
         try{
@@ -4354,7 +4355,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
-        Thread.sleep(1000);
+        sleep(1000);
         assertEquals(true, conn1.isConnected());
     }
     //@Test //AJ-287
@@ -4393,7 +4394,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
-        Thread.sleep(1000);
+        sleep(1000);
         conn1.run("a=1;\n a");
         //The connection switches to a different node to execute the code
         try{
@@ -4402,7 +4403,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
-        Thread.sleep(1000);
+        sleep(1000);
         assertEquals(true, conn1.isConnected());
     }
     @Test
@@ -4417,7 +4418,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
-        Thread.sleep(1000);
+        sleep(1000);
         conn1.run("a=1;\n a");
         //The connection switches to a different node to execute the code
         try{
@@ -4426,7 +4427,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
-        Thread.sleep(1000);
+        sleep(1000);
         assertEquals(true, conn1.isConnected());
     }
     @Test //reConnect is not valid
@@ -4441,7 +4442,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
-        Thread.sleep(1000);
+        sleep(1000);
         conn1.run("a=1;\n a");
         //The connection switches to a different node to execute the code
         try{
@@ -4450,7 +4451,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
-        Thread.sleep(1000);
+        sleep(1000);
         assertEquals(true, conn1.isConnected());
     }
     //@Test
@@ -4492,7 +4493,7 @@ public void test_SSL() throws Exception {
     public void Test_Connect_SqlStdEnum_DolphinDB() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection(DolphinDB);
         conn.connect(HOST,PORT);
-        Thread.sleep(500);
+        sleep(500);
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("cumavg(1 2 3);");
         System.out.println(ba.getString());
@@ -4510,7 +4511,7 @@ public void test_SSL() throws Exception {
     public void Test_Connect_SqlStdEnum_DolphinDB_1() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT);
-        Thread.sleep(500);
+        sleep(500);
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb')");
         System.out.println(ba.getString());
@@ -4528,7 +4529,7 @@ public void test_SSL() throws Exception {
     public void Test_Connect_SqlStdEnum_DolphinDB_2() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection(DolphinDB);
         conn.connect(HOST,PORT);
-        Thread.sleep(500);
+        sleep(500);
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb')");
         System.out.println(ba.getString());
@@ -4567,7 +4568,7 @@ public void test_SSL() throws Exception {
         DBConnection conn = new DBConnection(Oracle);
         conn.connect(HOST,PORT);
         conn.connect(HOST,PORT);
-        Thread.sleep(500);
+        sleep(500);
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("cumavg(1 2 3);");
         System.out.println(ba.getString());
@@ -4589,7 +4590,7 @@ public void test_SSL() throws Exception {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT);
         conn.connect(HOST,PORT);
-        Thread.sleep(500);
+        sleep(500);
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'oracle');");
         System.out.println(ba.getString());
@@ -4611,7 +4612,7 @@ public void test_SSL() throws Exception {
         DBConnection conn = new DBConnection(Oracle);
         conn.connect(HOST,PORT);
         conn.connect(HOST,PORT);
-        Thread.sleep(500);
+        sleep(500);
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb');");
         System.out.println(ba.getString());
@@ -4632,7 +4633,7 @@ public void test_SSL() throws Exception {
     public void Test_Connect_SqlStdEnum_MySQL() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection(MySQL);
         conn.connect(HOST,PORT);
-        Thread.sleep(500);
+        sleep(500);
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("cumavg(1 2 3);");
         System.out.println(ba.getString());
@@ -4658,7 +4659,7 @@ public void test_SSL() throws Exception {
     public void Test_Connect_SqlStdEnum_MySQL_1() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT);
-        Thread.sleep(500);
+        sleep(500);
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'mysql');");
         System.out.println(ba.getString());
@@ -4685,7 +4686,7 @@ public void test_SSL() throws Exception {
         DBConnection conn = new DBConnection(MySQL);
         conn.connect(HOST,PORT);
         conn.connect(HOST,PORT);
-        Thread.sleep(500);
+        sleep(500);
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb');");
         System.out.println(ba.getString());
@@ -4717,7 +4718,7 @@ public void test_SSL() throws Exception {
         DBConnection conn = new DBConnection( getByName("MySQL"));
         conn.connect(HOST,PORT);
         conn.connect(HOST,PORT);
-        Thread.sleep(500);
+        sleep(500);
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb');");
         System.out.println(ba.getString());
@@ -5092,4 +5093,46 @@ public void test_SSL() throws Exception {
 //        thread1.start();
 //        thread.join();
 //    }
+
+    @Test//api设置的parallelism小于server的setMaxJobParallelism
+    public void test_DBConnection_run_parallelism_1() throws IOException {
+        PrepareUser("parallelism_test","123456");
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"parallelism_test","123456");
+        String script2 ="setMaxJobParallelism(\"parallelism_test\",22);\n sleep(20);\n getConsoleJobs();";
+        BasicTable re = (BasicTable)conn.run(script2,4,5,false);
+        System.out.println(re.getString());
+        Assert.assertEquals("5",re.getColumn(6).get(0).getString());
+    }
+    @Test//api设置的parallelism大于server的setMaxJobParallelism
+    public void test_DBConnection_run_parallelism_2() throws IOException {
+        PrepareUser("parallelism_test","123456");
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"parallelism_test","123456");
+        String script2 ="setMaxJobParallelism(\"parallelism_test\",22);\n sleep(100);\n getConsoleJobs();";
+        BasicTable re = (BasicTable)conn.run(script2,5,30,false);
+        System.out.println(re.getColumn(6).get(0).getString());
+        //Assert.assertEquals("22",re.getColumn(6).get(0).getString());
+
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,PORT,"parallelism_test","123456");
+        BasicTable re1 = (BasicTable)conn1.run(script2,5,30,false);
+        Assert.assertEquals("22",re1.getColumn(6).get(0).getString());
+    }
+
+    @Test//api没有设置parallelism，取默认值64，大于server的setMaxJobParallelism
+    public void test_DBConnection_run_parallelism_3() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        PrepareUser("parallelism_test","123456");
+        conn.connect(HOST,PORT,"parallelism_test","123456");
+        conn.run("setMaxJobParallelism(\"parallelism_test\",22);");
+        BasicTable re = (BasicTable)conn.run("getConsoleJobs();");
+        System.out.println(re.getString());
+
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,PORT,"parallelism_test","123456");
+        BasicTable re1 = (BasicTable)conn1.run("getConsoleJobs();");
+        System.out.println(re1.getString());
+        Assert.assertEquals("22",re1.getColumn(6).get(0).getString());
+    }
 }
