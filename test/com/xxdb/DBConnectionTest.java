@@ -5102,7 +5102,11 @@ public void test_SSL() throws Exception {
         String script2 ="setMaxJobParallelism(\"parallelism_test\",22);\n sleep(20);\n getConsoleJobs();";
         BasicTable re = (BasicTable)conn.run(script2,4,5,false);
         System.out.println(re.getString());
-        Assert.assertEquals("5",re.getColumn(6).get(0).getString());
+
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,PORT,"parallelism_test","123456");
+        BasicTable re1 = (BasicTable)conn.run("getConsoleJobs();",4,5,false);
+        Assert.assertEquals("5",re1.getColumn(6).get(0).getString());
     }
     @Test//api设置的parallelism大于server的setMaxJobParallelism
     public void test_DBConnection_run_parallelism_2() throws IOException {
@@ -5112,7 +5116,6 @@ public void test_SSL() throws Exception {
         String script2 ="setMaxJobParallelism(\"parallelism_test\",22);\n sleep(100);\n getConsoleJobs();";
         BasicTable re = (BasicTable)conn.run(script2,5,30,false);
         System.out.println(re.getColumn(6).get(0).getString());
-        //Assert.assertEquals("22",re.getColumn(6).get(0).getString());
 
         DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"parallelism_test","123456");
