@@ -50,6 +50,8 @@ public class DBConnection {
     private List<Node> nodes_ = new ArrayList<>();
     private Random nodeRandom_ = new Random();
     private int connTimeout_ = 0;
+    private int connectTimeout_ = 0;
+    private int readTimeout_ = 0;
     private boolean closed_ = false;
     private boolean loadBalance_ = false;
     private String runClientId_ = null;
@@ -147,6 +149,8 @@ public class DBConnection {
         private boolean compress_ = false;
         private boolean ifUrgent_ = false;
         private int connTimeout_ = 0;
+        private int connectTimeout_ = 0;
+        private int readTimeout_ = 0;
         private ExtendedDataInput in_;
         private ExtendedDataOutput out_;
         private boolean remoteLittleEndian_;
@@ -168,35 +172,49 @@ public class DBConnection {
             this.lock_ = new ReentrantLock();
         }
 
-        private boolean connect(String hostName, int port, String userId, String password, int connTimeout) throws IOException{
+        private boolean connect(String hostName, int port, String userId, String password, int connTimeout, int connectTimeout, int readTimeout) throws IOException{
             this.hostName_ = hostName;
             this.port_ = port;
             this.userId_ = userId;
             this.pwd_ = password;
             this.connTimeout_ = connTimeout;
+            this.connectTimeout_ = connectTimeout;
+            this.readTimeout_ = readTimeout;
             return connect();
         }
 
-        private boolean connect()throws IOException{
+        private boolean connect() throws IOException {
             this.isConnected_ = false;
 
             try {
-                if(sslEnable_)
+                if (sslEnable_)
                     socket_ = getSSLSocketFactory().createSocket();
                 else
                     socket_ = new Socket();
-                if (this.connTimeout_ > 0){
-                    socket_.connect(new InetSocketAddress(hostName_,port_), connTimeout_);
-                }else {
-                    socket_.connect(new InetSocketAddress(hostName_,port_), 3000);
-                }
-            } catch (ConnectException ex) {
+
+                // set 'connectTimeout' param to connect()
+                if (this.connTimeout_ > 0 && this.connectTimeout_ == 0)
+                    socket_.connect(new InetSocketAddress(hostName_, port_), connTimeout_);
+                else if (this.connTimeout_ > 0 && this.connectTimeout_ > 0)
+                    socket_.connect(new InetSocketAddress(hostName_, port_), readTimeout_);
+                else if (this.connTimeout_ == 0 && this.connectTimeout_ > 0)
+                    socket_.connect(new InetSocketAddress(hostName_, port_), readTimeout_);
+                else if (this.connTimeout_ == 0 && this.connectTimeout_ == 0)
+                    socket_.connect(new InetSocketAddress(hostName_, port_), 3000);
+            } catch (IOException ex) {
                 log.error("Connect to " + this.hostName_ + ":" + this.port_ + " failed.");
                 throw ex;
             }
-            if (this.connTimeout_ > 0) {
+
+            // set 'readTimeout' param to setSoTimeout
+            if (this.connTimeout_ > 0 && this.readTimeout_ == 0)
                 socket_.setSoTimeout(this.connTimeout_);
-            }
+            else if (this.connTimeout_ > 0 && this.readTimeout_ > 0)
+                socket_.setSoTimeout(this.readTimeout_);
+            else if (this.connTimeout_ == 0 && this.readTimeout_ > 0)
+                socket_.setSoTimeout(this.readTimeout_);
+
+
             socket_.setKeepAlive(true);
             socket_.setTcpNoDelay(true);
             out_ = new LittleEndianDataOutputStream(new BufferedOutputStream(socket_.getOutputStream()));
@@ -664,13 +682,31 @@ public class DBConnection {
         return connect(hostName, port, "", "", null, false, null);
     }
 
+    public boolean connect(String hostName, int port, int connectTimeout, int readTimeout) throws IOException {
+        this.connectTimeout_ = connectTimeout;
+        this.readTimeout_ = readTimeout;
+        return connect(hostName, port, "", "", null, false, null);
+    }
+
     public boolean connect(String hostName, int port, int timeout, boolean reconnect) throws IOException {
         this.connTimeout_ = timeout;
         return connect(hostName, port, "", "", null, false, null, reconnect);
     }
 
+    public boolean connect(String hostName, int port, int connectTimeout, int readTimeout, boolean reconnect) throws IOException {
+        this.connectTimeout_ = connectTimeout;
+        this.readTimeout_ = readTimeout;
+        return connect(hostName, port, "", "", null, false, null, reconnect);
+    }
+
     public boolean connect(String hostName, int port, int timeout, boolean reconnect, int tryReconnectNums) throws IOException {
         this.connTimeout_ = timeout;
+        return connect(hostName, port, "", "", null, false, null, reconnect, tryReconnectNums);
+    }
+
+    public boolean connect(String hostName, int port, int connectTimeout, int readTimeout, boolean reconnect, int tryReconnectNums) throws IOException {
+        this.connectTimeout_ = connectTimeout;
+        this.readTimeout_ = readTimeout;
         return connect(hostName, port, "", "", null, false, null, reconnect, tryReconnectNums);
     }
 
@@ -974,12 +1010,12 @@ public class DBConnection {
         }
     }
 
-    public boolean connectNode(Node node) throws IOException{
+    public boolean connectNode(Node node) throws IOException {
         log.info("Connect to " + node.hostName + ":" + node.port + ".");
         while (!closed_){
             try {
-                return conn_.connect(node.hostName, node.port, uid_, pwd_, connTimeout_);
-            }catch (Exception e){
+                return conn_.connect(node.hostName, node.port, uid_, pwd_, connTimeout_, connectTimeout_, readTimeout_);
+            } catch (Exception e) {
                 if (isConnected()){
                     Node tmpNode = new Node();
                     tmpNode.hostName = node.hostName;
@@ -993,11 +1029,12 @@ public class DBConnection {
                         else
                             throw e;
                     }
-                }else {
+                } else {
                     log.error(e.getMessage());
                     return false;
                 }
             }
+
             try {
                 Thread.sleep(100);
             }catch (Exception e){
@@ -1009,7 +1046,6 @@ public class DBConnection {
     }
 
     public ExceptionType parseException(String msg, Node node){
-        log.info("com.xxdb.DBConnection.parseException msg: " + msg);
         if(msg==null){
             node.hostName = "";
             node.port = 0;
