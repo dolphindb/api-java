@@ -196,9 +196,9 @@ public class DBConnection {
                 if (this.connTimeout_ > 0 && this.connectTimeout_ == 0)
                     socket_.connect(new InetSocketAddress(hostName_, port_), connTimeout_);
                 else if (this.connTimeout_ > 0 && this.connectTimeout_ > 0)
-                    socket_.connect(new InetSocketAddress(hostName_, port_), connTimeout_);
+                    socket_.connect(new InetSocketAddress(hostName_, port_), connectTimeout_);
                 else if (this.connTimeout_ == 0 && this.connectTimeout_ > 0)
-                    socket_.connect(new InetSocketAddress(hostName_, port_), connTimeout_);
+                    socket_.connect(new InetSocketAddress(hostName_, port_), connectTimeout_);
                 else if (this.connTimeout_ == 0 && this.connectTimeout_ == 0)
                     socket_.connect(new InetSocketAddress(hostName_, port_), 3000);
             } catch (IOException ex) {
