@@ -6,6 +6,7 @@ import com.xxdb.data.*;
 import com.xxdb.multithreadedtablewriter.Callback;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 import com.xxdb.route.AutoFitTableAppender;
+import com.xxdb.route.AutoFitTableUpsert;
 import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
@@ -314,7 +315,20 @@ public  class MultithreadedTableWriterTest implements Runnable {
             assertEquals(ex.getMessage(),"The number of elements in parameter compressMethods does not match the column size 3");
         }
         conn.run("undef(`t1,SHARED)");
-
+    }
+    @Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_colType_not_match() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `date`idDFSDF121212中文`values_中文,[TIMESTAMP,INT,INT]);share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false, null, 10,2,5, "date");
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( System.currentTimeMillis(), "A", "A");
+        assertEquals("code=A1 info=Invalid object error when create scalar for column 'idDFSDF121212中文': Failed to insert data. Cannot convert String to DT_INT.",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt = (BasicTable) conn.run("select * from t1;");
+        assertEquals(0, bt.rows());
+        conn.run("undef(`t1,SHARED)");
     }
 
     @Test(timeout = 120000)
@@ -6640,7 +6654,6 @@ public  class MultithreadedTableWriterTest implements Runnable {
         //Assert.assertEquals(true,mtw.getStatus().unsentRows==0);
         mtw.waitForThreadCompletion();
         try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
-
         }
         catch(IOException ex) {
             System.out.println(ex.getMessage());
@@ -7061,7 +7074,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
             }
         }
         //mtw.waitForThreadCompletion();
-        conn.run("sleep(2000)");
+        conn.run("sleep(5000)");
         System.out.println("callback rows");
 
 
@@ -7671,6 +7684,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.close();
     }
 
+
 //    @Test(timeout = 120000)
 //    public void test_insert_haStreamTable() throws Exception {
 //        conn.run("haTableName='ha_stream'; " +
@@ -7689,5 +7703,33 @@ public  class MultithreadedTableWriterTest implements Runnable {
 //        assertEquals(10000,ex.rows());
 //        mutithreadTableWriter_.waitForThreadCompletion();
 //    }
+
+//    @Test(timeout = 120000)
+//    public void test_mtw_enableHighAvailability_true() throws Exception {
+//        DBConnection conn1 = new DBConnection();
+//        conn1.connect(HOST,8802,"admin","123456");
+//        conn1.run("share table(10:0,`id`price`val,[INT,DOUBLE,INT]) as table1;\n");
+//
+//        DBConnection conn2 = new DBConnection();
+//        conn2.connect(HOST,8803,"admin","123456");
+//        conn2.run("share table(10:0,`id`price`val,[INT,DOUBLE,INT]) as table1;\n");
+//
+//        //System.out.println("节点断掉");
+//        //Thread.sleep(10000);
+//        MultithreadedTableWriter mtw1 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "", "table1",
+//                false, true, ipports, 1000, 0.001f, 10, "id");
+//        //检查线程连接情况
+//        for(int i = 0;i <10000;i++) {
+//            int tmp =5;
+//            mtw1.insert(tmp, (double) tmp, 1);
+//            Thread.sleep(100);
+//        }
+//        mtw1.waitForThreadCompletion();
+//        //BasicInt writedData1 = (BasicInt) conn1.run("(exec count(*) from table1 where val = 1)[0]");
+//        BasicInt writedData2 = (BasicInt) conn2.run("(exec count(*) from table1 where val = 1)[0]");
+//        //System.out.println(writedData1);
+//        System.out.println(writedData2);
+//    }
+
 }
 
