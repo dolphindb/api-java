@@ -683,6 +683,11 @@ public class DBConnection {
     }
 
     public boolean connect(String hostName, int port, int connectTimeout, int readTimeout) throws IOException {
+        if (connectTimeout < 0 || readTimeout < 0) {
+            log.error("The param connectTimeout or readTimeout cannot less than zero.");
+            return false;
+        }
+
         this.connectTimeout_ = connectTimeout;
         this.readTimeout_ = readTimeout;
         return connect(hostName, port, "", "", null, false, null);
@@ -694,6 +699,11 @@ public class DBConnection {
     }
 
     public boolean connect(String hostName, int port, int connectTimeout, int readTimeout, boolean reconnect) throws IOException {
+        if (connectTimeout < 0 || readTimeout < 0) {
+            log.error("The param connectTimeout or readTimeout cannot less than zero.");
+            return false;
+        }
+
         this.connectTimeout_ = connectTimeout;
         this.readTimeout_ = readTimeout;
         return connect(hostName, port, "", "", null, false, null, reconnect);
@@ -705,6 +715,11 @@ public class DBConnection {
     }
 
     public boolean connect(String hostName, int port, int connectTimeout, int readTimeout, boolean reconnect, int tryReconnectNums) throws IOException {
+        if (connectTimeout < 0 || readTimeout < 0) {
+            log.error("The param connectTimeout or readTimeout cannot less than zero.");
+            return false;
+        }
+
         this.connectTimeout_ = connectTimeout;
         this.readTimeout_ = readTimeout;
         return connect(hostName, port, "", "", null, false, null, reconnect, tryReconnectNums);
