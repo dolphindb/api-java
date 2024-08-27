@@ -1,11 +1,7 @@
 package com.xxdb;
 
 import java.io.*;
-import java.net.ConnectException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.rmi.RemoteException;
+import java.net.*;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -460,9 +456,14 @@ public class DBConnection {
                     header = in_.readLine();
                 }
             }catch (IOException ex){
-                isConnected_ = false;
-                socket_ = null;
-                throw new IOException("Failed to read response header from the socket with IO error " + ex.getMessage());
+                if (ex instanceof SocketTimeoutException) {
+                    // isConnected_ = true;
+                    throw ex;
+                } else {
+                    isConnected_ = false;
+                    socket_ = null;
+                    throw new IOException("Failed to read response header from the socket with IO error " + ex.getMessage());
+                }
             }
 
             String[] headers = header.split(" ");
@@ -1062,7 +1063,7 @@ public class DBConnection {
         return false;
     }
 
-    public ExceptionType parseException(String msg, Node node){
+    public ExceptionType parseException(String msg, Node node) {
         if(msg==null){
             node.hostName = "";
             node.port = 0;
@@ -1095,7 +1096,7 @@ public class DBConnection {
             node.hostName = "";
             node.port = 0;
             return ExceptionType.ET_NOINITIALIZED;
-        } else if (msg.contains("Failed to read response header from the socket with IO error Read timed out")) {
+        } else if (msg.contains("Read timed out")) {
             conn_.getNode(node);
             return ExceptionType.ET_READTIMEDOUT;
         } else {
@@ -1240,9 +1241,14 @@ public class DBConnection {
                                 return new Void();
                             else if (type == ExceptionType.ET_UNKNOW)
                                 throw e;
-                        }else {
-                            parseException(e.getMessage(), node);
+                            else if (type == ExceptionType.ET_READTIMEDOUT)
+                                cancelConsoleJob(enableSeqNo, currentSeqNo, e);
+                        } else {
+                            ExceptionType type = parseException(e.getMessage(), node);
+                            if (type == ExceptionType.ET_READTIMEDOUT)
+                                cancelConsoleJob(enableSeqNo, currentSeqNo, e);
                         }
+
                         switchDataNode(node);
                     }
                 }
@@ -1253,6 +1259,29 @@ public class DBConnection {
         } finally {
             mutex_.unlock();
         }
+    }
+
+    private void cancelConsoleJob(boolean enableSeqNo, long currentSeqNo, IOException e) throws IOException {
+        String cancelConsoleJobScript =
+                "jobs = exec rootJobId from getConsoleJobs() where sessionId = " + conn_.sessionID_ + "\n" +
+                        (conn_.python_ ? "if size(jobs):\n" : "if (size(jobs))\n") +
+                        "    cancelConsoleJob(jobs)\n";
+        conn_.ifUrgent_ = true;
+        // conn_.asynTask_ = true;
+
+        if (enableSeqNo)
+            currentSeqNo = newSeqNo();
+
+        try {
+            conn_.run(cancelConsoleJobScript, currentSeqNo);
+            conn_.ifUrgent_ = false;
+        } catch (IOException ioe) {
+            conn_.ifUrgent_ = false;
+            throw new RuntimeException("Execute cancelConsoleJob failed after current connnection read timed out. ");
+        }
+
+        log.error(e.getMessage());
+        throw e;
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory, String tableName) throws IOException{
