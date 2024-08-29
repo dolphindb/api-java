@@ -65,7 +65,8 @@ public class DBConnection {
         ET_NODENOTAVAIL(3),
         ET_NOINITIALIZED(4),
         ET_NOTLEADER(5),
-        ET_READTIMEDOUT(6);
+        ET_READTIMEDOUT(6),
+        ET_NORESPONSEHEADER(7);
 
         public int value;
         ExceptionType(int value){
@@ -1048,7 +1049,8 @@ public class DBConnection {
                             throw e;
                     }
                 } else {
-                    log.error(e.getMessage());
+                    if (Objects.nonNull(e.getMessage()))
+                        log.error(e.getMessage());
                     return false;
                 }
             }
@@ -1099,6 +1101,9 @@ public class DBConnection {
         } else if (msg.contains("Read timed out")) {
             conn_.getNode(node);
             return ExceptionType.ET_READTIMEDOUT;
+        } else if (msg.contains("Failed to read response header from the socket with IO error null")) {
+            conn_.getNode(node);
+            return ExceptionType.ET_NORESPONSEHEADER;
         } else {
             node.hostName = "";
             node.port = 0;
