@@ -1,11 +1,7 @@
 package com.xxdb;
 
 import java.io.*;
-import java.net.ConnectException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.rmi.RemoteException;
+import java.net.*;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -50,6 +46,8 @@ public class DBConnection {
     private List<Node> nodes_ = new ArrayList<>();
     private Random nodeRandom_ = new Random();
     private int connTimeout_ = 0;
+    private int connectTimeout_ = 0;
+    private int readTimeout_ = 0;
     private boolean closed_ = false;
     private boolean loadBalance_ = false;
     private String runClientId_ = null;
@@ -66,7 +64,9 @@ public class DBConnection {
         ET_NEWLEADER(2),
         ET_NODENOTAVAIL(3),
         ET_NOINITIALIZED(4),
-        ET_NOTLEADER(5);
+        ET_NOTLEADER(5),
+        ET_READTIMEDOUT(6),
+        ET_NORESPONSEHEADER(7);
 
         public int value;
         ExceptionType(int value){
@@ -147,6 +147,8 @@ public class DBConnection {
         private boolean compress_ = false;
         private boolean ifUrgent_ = false;
         private int connTimeout_ = 0;
+        private int connectTimeout_ = 0;
+        private int readTimeout_ = 0;
         private ExtendedDataInput in_;
         private ExtendedDataOutput out_;
         private boolean remoteLittleEndian_;
@@ -168,35 +170,49 @@ public class DBConnection {
             this.lock_ = new ReentrantLock();
         }
 
-        private boolean connect(String hostName, int port, String userId, String password, int connTimeout) throws IOException{
+        private boolean connect(String hostName, int port, String userId, String password, int connTimeout, int connectTimeout, int readTimeout) throws IOException{
             this.hostName_ = hostName;
             this.port_ = port;
             this.userId_ = userId;
             this.pwd_ = password;
             this.connTimeout_ = connTimeout;
+            this.connectTimeout_ = connectTimeout;
+            this.readTimeout_ = readTimeout;
             return connect();
         }
 
-        private boolean connect()throws IOException{
+        private boolean connect() throws IOException {
             this.isConnected_ = false;
 
             try {
-                if(sslEnable_)
+                if (sslEnable_)
                     socket_ = getSSLSocketFactory().createSocket();
                 else
                     socket_ = new Socket();
-                if (this.connTimeout_ > 0){
-                    socket_.connect(new InetSocketAddress(hostName_,port_), connTimeout_);
-                }else {
-                    socket_.connect(new InetSocketAddress(hostName_,port_), 3000);
-                }
-            } catch (ConnectException ex) {
+
+                // set 'connectTimeout' param to connect()
+                if (this.connTimeout_ > 0 && this.connectTimeout_ == 0)
+                    socket_.connect(new InetSocketAddress(hostName_, port_), connTimeout_);
+                else if (this.connTimeout_ > 0 && this.connectTimeout_ > 0)
+                    socket_.connect(new InetSocketAddress(hostName_, port_), connectTimeout_);
+                else if (this.connTimeout_ == 0 && this.connectTimeout_ > 0)
+                    socket_.connect(new InetSocketAddress(hostName_, port_), connectTimeout_);
+                else if (this.connTimeout_ == 0 && this.connectTimeout_ == 0)
+                    socket_.connect(new InetSocketAddress(hostName_, port_), 3000);
+            } catch (IOException ex) {
                 log.error("Connect to " + this.hostName_ + ":" + this.port_ + " failed.");
                 throw ex;
             }
-            if (this.connTimeout_ > 0) {
+
+            // set 'readTimeout' param to setSoTimeout
+            if (this.connTimeout_ > 0 && this.readTimeout_ == 0)
                 socket_.setSoTimeout(this.connTimeout_);
-            }
+            else if (this.connTimeout_ > 0 && this.readTimeout_ > 0)
+                socket_.setSoTimeout(this.readTimeout_);
+            else if (this.connTimeout_ == 0 && this.readTimeout_ > 0)
+                socket_.setSoTimeout(this.readTimeout_);
+
+
             socket_.setKeepAlive(true);
             socket_.setTcpNoDelay(true);
             out_ = new LittleEndianDataOutputStream(new BufferedOutputStream(socket_.getOutputStream()));
@@ -441,9 +457,14 @@ public class DBConnection {
                     header = in_.readLine();
                 }
             }catch (IOException ex){
-                isConnected_ = false;
-                socket_ = null;
-                throw new IOException("Failed to read response header from the socket with IO error " + ex.getMessage());
+                if (ex instanceof SocketTimeoutException) {
+                    // isConnected_ = true;
+                    throw ex;
+                } else {
+                    isConnected_ = false;
+                    socket_ = null;
+                    throw new IOException("Failed to read response header from the socket with IO error " + ex.getMessage());
+                }
             }
 
             String[] headers = header.split(" ");
@@ -664,13 +685,46 @@ public class DBConnection {
         return connect(hostName, port, "", "", null, false, null);
     }
 
+    public boolean connect(String hostName, int port, int connectTimeout, int readTimeout) throws IOException {
+        if (connectTimeout < 0 || readTimeout < 0) {
+            log.error("The param connectTimeout or readTimeout cannot less than zero.");
+            return false;
+        }
+
+        this.connectTimeout_ = connectTimeout;
+        this.readTimeout_ = readTimeout;
+        return connect(hostName, port, "", "", null, false, null);
+    }
+
     public boolean connect(String hostName, int port, int timeout, boolean reconnect) throws IOException {
         this.connTimeout_ = timeout;
         return connect(hostName, port, "", "", null, false, null, reconnect);
     }
 
+    public boolean connect(String hostName, int port, int connectTimeout, int readTimeout, boolean reconnect) throws IOException {
+        if (connectTimeout < 0 || readTimeout < 0) {
+            log.error("The param connectTimeout or readTimeout cannot less than zero.");
+            return false;
+        }
+
+        this.connectTimeout_ = connectTimeout;
+        this.readTimeout_ = readTimeout;
+        return connect(hostName, port, "", "", null, false, null, reconnect);
+    }
+
     public boolean connect(String hostName, int port, int timeout, boolean reconnect, int tryReconnectNums) throws IOException {
         this.connTimeout_ = timeout;
+        return connect(hostName, port, "", "", null, false, null, reconnect, tryReconnectNums);
+    }
+
+    public boolean connect(String hostName, int port, int connectTimeout, int readTimeout, boolean reconnect, int tryReconnectNums) throws IOException {
+        if (connectTimeout < 0 || readTimeout < 0) {
+            log.error("The param connectTimeout or readTimeout cannot less than zero.");
+            return false;
+        }
+
+        this.connectTimeout_ = connectTimeout;
+        this.readTimeout_ = readTimeout;
         return connect(hostName, port, "", "", null, false, null, reconnect, tryReconnectNums);
     }
 
@@ -900,6 +954,7 @@ public class DBConnection {
                 }
             } else {
                 if (reconnect) {
+                    nodes_.clear();
                     nodes_.add(new Node(hostName, port));
                     switchDataNode(new Node(hostName, port));
                 } else {
@@ -938,7 +993,8 @@ public class DBConnection {
             attempt ++;
             if (node.hostName != null && node.hostName.length() > 0) {
                 if (connectNode(node)) {
-                    log.info("Switch to node: " + node.hostName + ":" + node.port + " successfully.");
+                    if (nodes_.size() > 1)
+                        log.info("Switch to node: " + node.hostName + ":" + node.port + " successfully.");
                     isConnected = true;
                     break;
                 }
@@ -974,12 +1030,12 @@ public class DBConnection {
         }
     }
 
-    public boolean connectNode(Node node) throws IOException{
+    public boolean connectNode(Node node) throws IOException {
         log.info("Connect to " + node.hostName + ":" + node.port + ".");
         while (!closed_){
             try {
-                return conn_.connect(node.hostName, node.port, uid_, pwd_, connTimeout_);
-            }catch (Exception e){
+                return conn_.connect(node.hostName, node.port, uid_, pwd_, connTimeout_, connectTimeout_, readTimeout_);
+            } catch (Exception e) {
                 if (isConnected()){
                     Node tmpNode = new Node();
                     tmpNode.hostName = node.hostName;
@@ -993,11 +1049,13 @@ public class DBConnection {
                         else
                             throw e;
                     }
-                }else {
-                    log.error(e.getMessage());
+                } else {
+                    if (Objects.nonNull(e.getMessage()))
+                        log.error(e.getMessage());
                     return false;
                 }
             }
+
             try {
                 Thread.sleep(100);
             }catch (Exception e){
@@ -1008,8 +1066,7 @@ public class DBConnection {
         return false;
     }
 
-    public ExceptionType parseException(String msg, Node node){
-        log.info("com.xxdb.DBConnection.parseException msg: " + msg);
+    public ExceptionType parseException(String msg, Node node) {
         if(msg==null){
             node.hostName = "";
             node.port = 0;
@@ -1042,7 +1099,13 @@ public class DBConnection {
             node.hostName = "";
             node.port = 0;
             return ExceptionType.ET_NOINITIALIZED;
-        }else {
+        } else if (msg.contains("Read timed out")) {
+            conn_.getNode(node);
+            return ExceptionType.ET_READTIMEDOUT;
+        } else if (msg.contains("Failed to read response header from the socket with IO error null")) {
+            conn_.getNode(node);
+            return ExceptionType.ET_NORESPONSEHEADER;
+        } else {
             node.hostName = "";
             node.port = 0;
             return ExceptionType.ET_UNKNOW;
@@ -1184,9 +1247,14 @@ public class DBConnection {
                                 return new Void();
                             else if (type == ExceptionType.ET_UNKNOW)
                                 throw e;
-                        }else {
-                            parseException(e.getMessage(), node);
+                            else if (type == ExceptionType.ET_READTIMEDOUT)
+                                cancelConsoleJob(enableSeqNo, currentSeqNo, e);
+                        } else {
+                            ExceptionType type = parseException(e.getMessage(), node);
+                            if (type == ExceptionType.ET_READTIMEDOUT)
+                                cancelConsoleJob(enableSeqNo, currentSeqNo, e);
                         }
+
                         switchDataNode(node);
                     }
                 }
@@ -1197,6 +1265,29 @@ public class DBConnection {
         } finally {
             mutex_.unlock();
         }
+    }
+
+    private void cancelConsoleJob(boolean enableSeqNo, long currentSeqNo, IOException e) throws IOException {
+        String cancelConsoleJobScript =
+                "jobs = exec rootJobId from getConsoleJobs() where sessionId = " + conn_.sessionID_ + "\n" +
+                        (conn_.python_ ? "if size(jobs):\n" : "if (size(jobs))\n") +
+                        "    cancelConsoleJob(jobs)\n";
+        conn_.ifUrgent_ = true;
+        // conn_.asynTask_ = true;
+
+        if (enableSeqNo)
+            currentSeqNo = newSeqNo();
+
+        try {
+            conn_.run(cancelConsoleJobScript, currentSeqNo);
+            conn_.ifUrgent_ = false;
+        } catch (IOException ioe) {
+            conn_.ifUrgent_ = false;
+            throw new RuntimeException("Execute cancelConsoleJob failed after current connnection read timed out. ");
+        }
+
+        log.error(e.getMessage());
+        throw e;
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory, String tableName) throws IOException{

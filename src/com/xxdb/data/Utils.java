@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public class Utils {
 
-	public static final String JAVA_API_VERSION = "3.00.1.2";
+	public static final String JAVA_API_VERSION = "3.00.1.3";
 
 	public static final int DISPLAY_ROWS = 20;
 	public static final int DISPLAY_COLS = 100;

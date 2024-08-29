@@ -5,17 +5,16 @@ import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.*;
 import com.xxdb.route.Domain;
 import com.xxdb.route.DomainFactory;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Logger;
-
 import static com.xxdb.data.Entity.DATA_TYPE.*;
 
 public class MultithreadedTableWriter {
-    private Logger logger_=Logger.getLogger(getClass().getName());
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(MultithreadedTableWriter.class);
     public static class ThreadStatus{
         public long threadId;
         public long sentRows, unsentRows, sendFailedRows;
@@ -173,7 +172,7 @@ public class MultithreadedTableWriter {
                     writeTable = new BasicTable(colNames, items);
                 }catch (Exception e){
                     e.printStackTrace();
-                    tableWriter_.logger_.warning("threadid=" + writeThread_.getId() + " sendindex=" + sentRows_ + " create table error: " + e);
+                    tableWriter_.log.warn("threadid=" + writeThread_.getId() + " sendindex=" + sentRows_ + " create table error: " + e);
                     tableWriter_.setError(ErrorCodeInfo.Code.EC_Server, "Failed to createTable: " + e);
                     isWriteDone = false;
                 }
@@ -200,7 +199,7 @@ public class MultithreadedTableWriter {
                         sentRows_ += addRowCount;
                     } catch (Exception e) {
                         e.printStackTrace();
-                        tableWriter_.logger_.warning("threadid=" + writeThread_.getId() + " sendindex=" + sentRows_ + " Save table error: " + e + " script:" + runscript);
+                        tableWriter_.log.warn("threadid=" + writeThread_.getId() + " sendindex=" + sentRows_ + " Save table error: " + e + " script:" + runscript);
                         tableWriter_.setError(ErrorCodeInfo.Code.EC_Server, "Failed to save the inserted data: " + e + " script: " + runscript);
                         isWriteDone = false;
                         tableWriter_.hasError_ = true;
@@ -770,7 +769,7 @@ public class MultithreadedTableWriter {
                 (enableActualSendTime_ && args.length != colInfos_.length - 1)) {
             return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter, "Column counts don't match.");
         }
-        try {
+
             List<Entity> prow=new ArrayList<>();
             int colindex = 0;
             Entity.DATA_TYPE dataType;
@@ -779,25 +778,43 @@ public class MultithreadedTableWriter {
                 dataType = colInfos_[colindex].type_;
                 Entity entity;
                 isAllNull = false;
-                entity = BasicEntityFactory.createScalar(dataType, one, colInfos_[colindex].extra_);
+                try {
+                    entity = BasicEntityFactory.createScalar(dataType, one, colInfos_[colindex].extra_);
+                } catch (Exception e) {
+                    String errorMsg = "Invalid object error when create scalar for column '" + colInfos_[colindex].name_ + "': " + e.getMessage();
+                    log.error(errorMsg);
+                    return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, errorMsg);
+                }
+
                 if (entity == null) {
                     return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, "Data conversion error: " + dataType);
                 }
+
                 prow.add(entity);
                 colindex++;
             }
+
             if (enableActualSendTime_) {
                 dataType = colInfos_[colindex].type_;
                 if (dataType != DT_NANOTIMESTAMP)
                     return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, String.format("Data type error: %s,should be NANOTIMESTAMP.", dataType));
                 Entity entity;
                 isAllNull = false;
-                entity = BasicEntityFactory.createScalar(dataType, null, colInfos_[colindex].extra_);
+                try {
+                    entity = BasicEntityFactory.createScalar(dataType, null, colInfos_[colindex].extra_);
+                } catch (Exception e) {
+                    String errorMsg = "Invalid object error when create scalar for column '" + colInfos_[colindex].name_ + "': " + e.getMessage();
+                    log.error(errorMsg);
+                    return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, errorMsg);
+                }
+
                 prow.add(entity);
             }
-            if(isAllNull){
+
+        try {
+            if(isAllNull)
                 return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, "Can't insert a Null row.");
-            }
+
             int threadindex;
             if(threads_.size() > 1){
                 if(isPartionedTable_){
@@ -820,7 +837,7 @@ public class MultithreadedTableWriter {
             insertThreadWrite(threadindex, prow);
             return new ErrorCodeInfo();
         }catch (Exception e){
-            e.printStackTrace();
+            log.error(e.getMessage());
             return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidObject, "Invalid object error " + e);
         }
     }

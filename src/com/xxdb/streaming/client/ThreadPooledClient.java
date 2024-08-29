@@ -16,6 +16,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 
 public class ThreadPooledClient extends AbstractClient {
@@ -58,14 +59,14 @@ public class ThreadPooledClient extends AbstractClient {
 
         this.threadCount = threadCount;
         threadPool = Executors.newFixedThreadPool(threadCount);
+
         new Thread() {
             private LinkedList<IMessage> backlog = new LinkedList<>();
 
             private boolean fillBacklog() {
                 boolean filled = false;
                 synchronized (queueHandlers) {
-                    Set<String> keySet = queueHandlers.keySet();
-                    for (String topic : keySet) {
+                    for (String topic : queueHandlers.keySet()) {
                         List<IMessage> messages = queueHandlers.get(topic).queue.poll();
                         if (messages != null) {
                             backlog.addAll(messages);
@@ -79,20 +80,17 @@ public class ThreadPooledClient extends AbstractClient {
             private void refill() {
                 int count = 200;
                 while (!fillBacklog()) {
-                    if (count > 100) {
-                        ;
-                    } else if (count > 0) {
+                    if (count > 0)
                         Thread.yield();
-                    } else {
-                        Thread.yield();
-                        //LockSupport.park();
-                    }
+                    else
+                        // Pause for 1 millisecond
+                        LockSupport.parkNanos(1000 * 1000);
                     count = count - 1;
                 }
             }
 
             public void run() {
-                while (true) {
+                while (!Thread.currentThread().isInterrupted()) {
                     IMessage msg;
                     while ((msg = backlog.poll()) != null) {
                         QueueHandlerBinder binder;

@@ -16,8 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.time.*;
@@ -120,6 +119,16 @@ public class DBConnectionTest {
         DBConnection conn = new DBConnection();
         boolean re = conn.connect(HOST,111,1,true);
     }
+    //@Test AJ-770
+    public void Test_Connect_timeout_111() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        boolean re = conn.connect(HOST,PORT,1,true,10);
+        System.out.println("停止停止节点 ");
+        //手工停止节点
+        Thread.sleep(10000);
+        System.out.println("run.....");
+        conn.run("re=1");
+    }
     @Test
     public void Test_Connect_2() throws IOException {
         DBConnection conn = new DBConnection();
@@ -143,6 +152,261 @@ public class DBConnectionTest {
         DBConnection conn = new DBConnection();
         boolean re = conn.connect(HOST,PORT,"","",ipports);
         Assert.assertEquals(true,re);
+    }
+    @Test
+    public void Test_Connect_connectTimeout_negative() throws IOException {
+        class LogCapture {
+            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            private final PrintStream originalErr = System.err;
+            public void start() {
+                System.setErr(new PrintStream(baos));
+            }
+            public void stop() {
+                System.setErr(originalErr);
+            }
+            public String getLogMessages() {
+                return baos.toString();
+            }
+        }
+        DBConnection conn = new DBConnection();
+        LogCapture logCapture = new LogCapture();
+        logCapture.start();
+        conn.connect(HOST,PORT,-1,100);
+        logCapture.stop();
+        String s=logCapture.getLogMessages();
+        assertTrue(s.contains("The param connectTimeout or readTimeout cannot less than zero."));
+
+        LogCapture logCapture1 = new LogCapture();
+        logCapture1.start();
+        conn.connect(HOST,PORT,-1,100,true);
+        logCapture1.stop();
+        String s1=logCapture1.getLogMessages();
+        assertTrue(s1.contains("The param connectTimeout or readTimeout cannot less than zero."));
+
+        LogCapture logCapture2 = new LogCapture();
+        logCapture2.start();
+        conn.connect(HOST,PORT,-1,100,true,10);
+        logCapture2.stop();
+        String s2=logCapture2.getLogMessages();
+        assertTrue(s2.contains("The param connectTimeout or readTimeout cannot less than zero."));
+    }
+    @Test
+    public void Test_Connect_readTimeout_negative() throws IOException {
+        class LogCapture {
+            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            private final PrintStream originalErr = System.err;
+            public void start() {
+                System.setErr(new PrintStream(baos));
+            }
+            public void stop() {
+                System.setErr(originalErr);
+            }
+            public String getLogMessages() {
+                return baos.toString();
+            }
+        }
+        DBConnection conn = new DBConnection();
+        LogCapture logCapture = new LogCapture();
+        logCapture.start();
+        conn.connect(HOST,PORT,200,-100);
+        logCapture.stop();
+        String s=logCapture.getLogMessages();
+        assertTrue(s.contains("The param connectTimeout or readTimeout cannot less than zero."));
+
+        LogCapture logCapture1 = new LogCapture();
+        logCapture1.start();
+        conn.connect(HOST,PORT,500,-100,true);
+        logCapture1.stop();
+        String s1=logCapture1.getLogMessages();
+        assertTrue(s1.contains("The param connectTimeout or readTimeout cannot less than zero."));
+
+        LogCapture logCapture2 = new LogCapture();
+        logCapture2.start();
+        conn.connect(HOST,PORT,500,-100,true,10);
+        logCapture2.stop();
+        String s2=logCapture2.getLogMessages();
+        assertTrue(s2.contains("The param connectTimeout or readTimeout cannot less than zero."));
+    }
+    @Test
+    public void Test_Connect_connectTimeout_success() throws IOException {
+        DBConnection conn = new DBConnection();
+        boolean re = conn.connect(HOST,PORT,100,100);
+        Assert.assertEquals(true,re);
+
+        boolean re1 = conn.connect(HOST,PORT,0,100);
+        Assert.assertEquals(true,re1);
+    }
+
+    @Test
+    public void Test_Connect_connectTimeout_success_1() throws IOException {
+        DBConnection conn = new DBConnection();
+        boolean re = conn.connect(HOST,PORT,100,100,true);
+        Assert.assertEquals(true,re);
+
+        boolean re1 = conn.connect(HOST,PORT,0,100,true);
+        Assert.assertEquals(true,re1);
+    }
+
+    @Test
+    public void Test_Connect_connectTimeout_success_2() throws IOException {
+        DBConnection conn = new DBConnection();
+        boolean re = conn.connect(HOST,PORT,100,100,true,10);
+        Assert.assertEquals(true,re);
+
+        boolean re1 = conn.connect(HOST,PORT,0,100,true,10);
+        Assert.assertEquals(true,re1);
+    }
+    @Test
+    public void Test_Connect_connectTimeout_fail() throws IOException {
+        DBConnection conn = new DBConnection();
+        long startTime = System.currentTimeMillis();
+        boolean re = conn.connect(HOST,111,1000,100);
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        System.out.println("Timeout after " + elapsedTime + " ms");
+        Assert.assertEquals(false,re);
+        Assert.assertEquals(true,elapsedTime>1000 && elapsedTime<1050);
+
+        long startTime1 = System.currentTimeMillis();
+        boolean re1 = conn.connect(HOST,111,2000,100);
+        long elapsedTime1 = System.currentTimeMillis() - startTime1;
+        System.out.println("Timeout after " + elapsedTime1 + " ms");
+        Assert.assertEquals(false,re1);
+        Assert.assertEquals(true,elapsedTime1>2000 && elapsedTime1<2050);
+
+        long startTime2 = System.currentTimeMillis();
+        boolean re2 = conn.connect(HOST,111,5,100);
+        long elapsedTime2 = System.currentTimeMillis() - startTime2;
+        System.out.println("Timeout after " + elapsedTime2 + " ms");
+        Assert.assertEquals(false,re2);
+        Assert.assertEquals(true,elapsedTime2>5 && elapsedTime2<50);
+    }
+
+    @Test
+    public void Test_Connect_connectTimeout_fail_1() throws IOException {
+        DBConnection conn = new DBConnection();
+        long startTime1 = System.currentTimeMillis();
+        String re1 = null;
+        try{
+            conn.connect(HOST,111,500,100,true,2);
+        }catch(Exception e){
+            re1 = e.getMessage();
+        }
+        long elapsedTime1 = System.currentTimeMillis() - startTime1;
+        System.out.println("Timeout after " + elapsedTime1 + " ms");
+        Assert.assertEquals(true,elapsedTime1>1500 && elapsedTime1<4000);
+
+        //DBConnection conn1 = new DBConnection();
+        long startTime = System.currentTimeMillis();
+        String re = null;
+        try{
+            conn.connect(HOST,111,2000,100,true,2);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        System.out.println("Timeout after " + elapsedTime + " ms");
+        Assert.assertEquals(true,elapsedTime>6000 && elapsedTime<8000);
+    }
+    //@Test//没有设置重连次数，会一直重连
+    public void Test_Connect_connectTimeout_fail_2() throws IOException {
+        DBConnection conn = new DBConnection();
+        long startTime1 = System.currentTimeMillis();
+        String re1 = null;
+        try{
+            conn.connect(HOST,111,500,100,true);
+        }catch(Exception e){
+            re1 = e.getMessage();
+        }
+        long elapsedTime1 = System.currentTimeMillis() - startTime1;
+        System.out.println("Timeout after " + elapsedTime1 + " ms");
+        Assert.assertEquals(true,elapsedTime1>1500 && elapsedTime1<4000);
+    }
+
+    @Test
+    public void Test_Connect_readTimeout_fail() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,8000,2000);
+        String re = null;
+        long startTime = System.currentTimeMillis();
+        try{
+            conn.run("re = time(now())\n" +
+                    "do{\n" +
+                    "sleep(1000)\n" +
+                    "re1=time(now())\n" +
+                    "}\n" +
+                    "while ((re1-re)/1000<5);");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        System.out.println("Timeout after " + elapsedTime + " ms");
+        Assert.assertEquals(true,elapsedTime>2000 && elapsedTime<2050);
+        Assert.assertEquals("Read timed out",re);
+        conn.connect(HOST,PORT,8000,4000);
+        String re1 = null;
+        long startTime1 = System.currentTimeMillis();
+        try{
+            conn.run("re = time(now())\n" +
+                    "do{\n" +
+                    "sleep(1000)\n" +
+                    "re1=time(now())\n" +
+                    "}\n" +
+                    "while ((re1-re)/1000<5);");
+        }catch(Exception e){
+            re1 = e.getMessage();
+        }
+        long elapsedTime2 = System.currentTimeMillis() - startTime1;
+        System.out.println("Timeout after " + elapsedTime2 + " ms");
+        Assert.assertEquals(true,elapsedTime2>4000 && elapsedTime2<4050);
+        Assert.assertEquals("Read timed out",re1);
+    }
+
+    @Test
+    public void Test_Connect_readTimeout_fail_1() throws IOException, InterruptedException {
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,PORT,8000,2000,true,2);
+        String re = null;
+        System.out.println("TESTFFFFFF");
+        long startTime = System.currentTimeMillis();
+        try{
+            conn1.run("re = time(now())\n" +
+                    "do{\n" +
+                    "sleep(1000)\n" +
+                    "re1=time(now())\n" +
+                    "}\n" +
+                    "while ((re1-re)/1000<10);");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        System.out.println("Timeout after " + elapsedTime + " ms");
+        Assert.assertEquals(true,elapsedTime>2000);
+        Assert.assertEquals(true,re.contains("read timed out."));
+        System.out.println(re);
+    }
+
+    @Test
+    public void Test_Connect_readTimeout_fail_2() throws IOException, InterruptedException {
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,PORT,8000,2000,true);
+        String re = null;
+        System.out.println("TESTFFFFFF");
+        long startTime = System.currentTimeMillis();
+        try{
+            conn1.run("re = time(now())\n" +
+                    "do{\n" +
+                    "sleep(1000)\n" +
+                    "re1=time(now())\n" +
+                    "}\n" +
+                    "while ((re1-re)/1000<10);");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        System.out.println("Timeout after " + elapsedTime + " ms");
+        Assert.assertEquals(true,elapsedTime>2000);
+        Assert.assertEquals(true,re.contains("read timed out."));
+        System.out.println(re);
     }
     @Test
     public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_false_enableLoadBalance_false() throws IOException {
