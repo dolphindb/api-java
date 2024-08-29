@@ -954,6 +954,7 @@ public class DBConnection {
                 }
             } else {
                 if (reconnect) {
+                    nodes_.clear();
                     nodes_.add(new Node(hostName, port));
                     switchDataNode(new Node(hostName, port));
                 } else {
