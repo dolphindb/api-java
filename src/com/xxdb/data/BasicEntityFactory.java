@@ -81,7 +81,7 @@ public class BasicEntityFactory implements EntityFactory{
 			return new BasicTensor(type, in);
 		else if(type == Entity.DATA_TYPE.DT_ANY && (form == Entity.DATA_FORM.DF_VECTOR || form == Entity.DATA_FORM.DF_PAIR))
 			return new BasicAnyVector(in);
-		else if (type == Entity.DATA_TYPE.DT_ANYIOT)
+		else if (type == DT_IOTANY)
 			return new BasicIotAnyVector(in);
 		else if(type.getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue() && type.getValue() <= DT_DECIMAL128_ARRAY.getValue())
 			return new BasicArrayVector(type, in);
