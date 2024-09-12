@@ -93,7 +93,7 @@ public class BasicIotAnyVector extends AbstractVector {
 
     @Override
     public DATA_TYPE getDataType() {
-        return Entity.DATA_TYPE.DT_ANYIOT;
+        return DATA_TYPE.DT_IOTANY;
     }
 
     @Override
