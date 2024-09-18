@@ -130,8 +130,8 @@ public class BasicIotAnyVector extends AbstractVector {
 
     public String getString(){
         StringBuilder sb = new StringBuilder("[");
-        for (Entity value : subVector.values())
-            sb.append(value.getString()).append(",");
+        for (int i = 0; i < rows(); i++)
+            sb.append(getString(i)).append(",");
 
         sb.setLength(sb.length() - 1);
         sb.append("]");
