@@ -15,7 +15,7 @@ public class BasicIotAnyVector extends AbstractVector {
     private BasicIntVector indexsDataType;
     private BasicIntVector indexs;
 
-    protected BasicIotAnyVector(Entity[] array) {
+    public BasicIotAnyVector(Entity[] array) {
         super(DATA_FORM.DF_VECTOR);
         subVector = new HashMap<>();
         indexsDataType = new BasicIntVector(0);
