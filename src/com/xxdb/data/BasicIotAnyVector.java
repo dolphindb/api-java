@@ -33,7 +33,7 @@ public class BasicIotAnyVector extends AbstractVector {
         super(DATA_FORM.DF_VECTOR);
         int rows = in.readInt();
         int cols = in.readInt(); // 1
-        long size = in.readLong();
+        long size = in.readInt();
 
         indexsDataType = new BasicIntVector(0);
         indexs = new BasicIntVector(0);
@@ -155,8 +155,8 @@ public class BasicIotAnyVector extends AbstractVector {
 
     @Override
     protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
-        long size = indexs.rows();
-        out.writeLong(size);
+        int size = indexs.rows();
+        out.writeInt(size);
 
         for (int i = 0; i < size; i++) {
             out.writeInt(indexsDataType.getInt(i));
