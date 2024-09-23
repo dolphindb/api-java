@@ -115,7 +115,7 @@ public class BasicIotAnyVector extends AbstractVector {
     }
 
     public void addRange(Object[] valueList) {
-        throw new RuntimeException("IotAnyVector not support addRange");
+        throw new RuntimeException("IotAnyVector not support addRange.");
     }
 
     @Override
@@ -125,7 +125,7 @@ public class BasicIotAnyVector extends AbstractVector {
 
     @Override
     public void Append(Vector value) {
-        throw new RuntimeException("IotAnyVector not support append");
+        throw new RuntimeException("IotAnyVector not support append.");
     }
 
     public String getString(){
