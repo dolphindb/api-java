@@ -59,15 +59,14 @@ public class BasicIotAnyVector extends AbstractVector {
     }
 
     public Entity get(int index) {
-        BasicInt dataType = (BasicInt) indexsDataType.get(index);
-        return subVector.get(dataType.getInt());
-    }
-
-    public String getString(int index) {
         BasicInt curDataType = (BasicInt) indexsDataType.get(index);
         BasicInt curIndex = (BasicInt) indexs.get(index);
 
-        return ((Vector) subVector.get(curDataType.getInt())).get(curIndex.getInt()).getString();
+        return ((Vector) subVector.get(curDataType.getInt())).get(curIndex.getInt());
+    }
+
+    public String getString(int index) {
+        return get(index).getString();
     }
 
     public Vector getSubVector(int[] indices){
