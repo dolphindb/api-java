@@ -408,7 +408,7 @@ public class Utils {
 			return DATA_CATEGORY.LITERAL;
 		else if(type==DATA_TYPE.DT_INT128 || type==DATA_TYPE.DT_UUID || type==DATA_TYPE.DT_IPADDR)
 			return DATA_CATEGORY.BINARY;
-		else if(type==DATA_TYPE.DT_ANY)
+		else if(type==DATA_TYPE.DT_ANY || type == DATA_TYPE.DT_IOTANY)
 			return DATA_CATEGORY.MIXED;
 		else if(type==DATA_TYPE.DT_VOID)
 			return DATA_CATEGORY.NOTHING;
