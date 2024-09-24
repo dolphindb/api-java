@@ -102,7 +102,7 @@ public interface Entity {
 			return Entity.DATA_CATEGORY.LITERAL;
 		else if(type==Entity.DATA_TYPE.DT_INT128 || type==Entity.DATA_TYPE.DT_UUID || type==Entity.DATA_TYPE.DT_IPADDR)
 			return Entity.DATA_CATEGORY.BINARY;
-		else if(type == Entity.DATA_TYPE.DT_ANY)
+		else if(type == Entity.DATA_TYPE.DT_ANY || type == DATA_TYPE.DT_IOTANY)
 			return Entity.DATA_CATEGORY.MIXED;
 		else if(type == Entity.DATA_TYPE.DT_VOID)
 			return Entity.DATA_CATEGORY.NOTHING;

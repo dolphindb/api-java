@@ -160,7 +160,7 @@ public class PartitionedTableAppender {
     private void checkColumnType(int col, Entity.DATA_CATEGORY category, Entity.DATA_TYPE type) {
         Entity.DATA_CATEGORY expectCategory = this.columnCategories[col];
         Entity.DATA_TYPE expectType = this.columnTypes[col];
-        if (category != expectCategory) {
+        if (category != expectCategory && expectCategory != Entity.DATA_CATEGORY.MIXED) {
             throw new RuntimeException("column " + col + ", expect category " + expectCategory.name() + ", got category " + category.name());
         } else if (category == Entity.DATA_CATEGORY.TEMPORAL && type != expectType) {
             throw new RuntimeException("column " + col + ", temporal column must have exactly the same type, expect " + expectType.name() + ", got " + type.name() );
