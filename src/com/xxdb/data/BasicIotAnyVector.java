@@ -59,6 +59,9 @@ public class BasicIotAnyVector extends AbstractVector {
     }
 
     public Entity get(int index) {
+        if (index > rows())
+            throw new RuntimeException(String.format("index %s out of rows %s.", index, rows()));
+
         BasicInt curDataType = (BasicInt) indexsDataType.get(index);
         BasicInt curIndex = (BasicInt) indexs.get(index);
 
