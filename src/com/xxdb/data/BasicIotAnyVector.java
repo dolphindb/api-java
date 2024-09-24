@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -15,17 +17,36 @@ public class BasicIotAnyVector extends AbstractVector {
     private BasicIntVector indexsDataType;
     private BasicIntVector indexs;
 
-    public BasicIotAnyVector(Entity[] array) {
+    private static final Logger log = LoggerFactory.getLogger(BasicIotAnyVector.class);
+
+
+    public BasicIotAnyVector(Scalar[] scalars) {
         super(DATA_FORM.DF_VECTOR);
+
+        if (Objects.isNull(scalars) || scalars.length == 0)
+            throw new RuntimeException("The param 'scalars' cannot be null or empty.");
+
         subVector = new HashMap<>();
         indexsDataType = new BasicIntVector(0);
         indexs = new BasicIntVector(0);
-        for (int i = 0; i < array.length; i++) {
-            subVector.put(array[i].getDataType().getValue(), array[i]);
-            for (int j = 0; j < array[i].rows(); j++ ) {
-                indexsDataType.add(array[i].getDataType().getValue());
-                indexs.add(j);
+
+        try {
+            for (Scalar scalar : scalars) {
+                int curDataTypeValue = scalar.getDataType().getValue();
+
+                if (Objects.isNull(subVector.get(curDataTypeValue))) {
+                    Vector curVector = BasicEntityFactory.instance().createVectorWithDefaultValue(scalar.getDataType(), 0, -1);
+                    curVector.Append(scalar);
+                    subVector.put(curDataTypeValue, curVector);
+                } else {
+                    ((Vector) subVector.get(curDataTypeValue)).Append(scalar);
+                }
+
+                indexsDataType.add(curDataTypeValue);
+                indexs.add(subVector.get(curDataTypeValue).rows() - 1);
             }
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 
