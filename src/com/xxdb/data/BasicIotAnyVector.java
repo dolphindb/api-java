@@ -143,12 +143,12 @@ public class BasicIotAnyVector extends AbstractVector {
 
     @Override
     public void Append(Scalar value) {
-        throw new RuntimeException("IotAnyVector not support append");
+        throw new RuntimeException("IotAnyVector.Append not supported.");
     }
 
     @Override
     public void Append(Vector value) {
-        throw new RuntimeException("IotAnyVector not support append.");
+        throw new RuntimeException("IotAnyVector.Append not supported.");
     }
 
     public String getString(){
