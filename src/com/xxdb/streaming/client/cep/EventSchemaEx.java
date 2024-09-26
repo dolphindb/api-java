@@ -7,11 +7,11 @@ public class EventSchemaEx {
 
     private EventSchema schema;
     private int timeIndex;
-    private List<Integer> commonKeyIndex;
+    private List<Integer> commonFieldIndex;
 
     public EventSchemaEx() {
         this.schema = new EventSchema();
-        this.commonKeyIndex = new ArrayList<>();
+        this.commonFieldIndex = new ArrayList<>();
     }
 
     public EventSchema getSchema() {
@@ -30,7 +30,7 @@ public class EventSchemaEx {
         this.timeIndex = timeIndex;
     }
 
-    public List<Integer> getCommonKeyIndex() {
-        return this.commonKeyIndex;
+    public List<Integer> getCommonFieldIndex() {
+        return this.commonFieldIndex;
     }
 }

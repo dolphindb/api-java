@@ -13,8 +13,8 @@ public class EventSender {
     private EventHandler eventHandler;
     private DBConnection conn;
 
-    public EventSender(DBConnection conn, String tableName, List<EventSchema> eventSchemas, List<String> eventTimeKeys, List<String> commonKeys) throws IOException {
-        this.eventHandler = new EventHandler(eventSchemas, eventTimeKeys, commonKeys);
+    public EventSender(DBConnection conn, String tableName, List<EventSchema> eventSchemas, List<String> eventTimeFields, List<String> commonFields) throws IOException {
+        this.eventHandler = new EventHandler(eventSchemas, eventTimeFields, commonFields);
         this.conn = conn;
 
         String sql = "select top 0 * from " + tableName;
