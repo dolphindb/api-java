@@ -52,36 +52,27 @@ public class BasicIotAnyVector extends AbstractVector {
 
     protected BasicIotAnyVector(ExtendedDataInput in) throws IOException {
         super(DATA_FORM.DF_VECTOR);
-        int rows = in.readInt();
-        int cols = in.readInt(); // 1
-        long size = in.readInt();
+        BasicAnyVector anyVector = new BasicAnyVector(in);
+        BasicIntVector intVector = (BasicIntVector) anyVector.get(0);
+        int indexsLen = ((BasicInt) intVector.get(0)).getInt();
+        int subVecNum = ((BasicInt) intVector.get(1)).getInt();
+        int[] tmpIntArray = new int[indexsLen];
+        System.arraycopy(intVector.getdataArray(), 2, tmpIntArray,0, indexsLen);
+        indexs = new BasicIntVector(tmpIntArray);
+        tmpIntArray = new int[indexsLen];
+        System.arraycopy(intVector.getdataArray(), (indexsLen) + 2, tmpIntArray,0, indexsLen);
+        indexsDataType = new BasicIntVector(tmpIntArray);
 
-        indexsDataType = new BasicIntVector(0);
-        indexs = new BasicIntVector(0);
-        for(long i = 0; i < size; i++){
-            int type = in.readInt();
-            int idx = in.readInt();
-            indexsDataType.add(type);
-            indexs.add(idx);
-        }
-
-        int typeSize = in.readInt();
         subVector = new HashMap<>();
-        for (int i = 0; i < typeSize; i++) {
-            short flag = in.readShort();
-            int form = flag>>8;
-            int type = flag & 0xff;
-            boolean extended = type >= 128;
-            if(type >= 128)
-                type -= 128;
-            Entity obj = BasicEntityFactory.instance().createEntity(DATA_FORM.values()[form], DATA_TYPE.valueOf(type), in, extended);
-            subVector.put(type, obj);
+        for (int i = 1; i <= subVecNum; i++) {
+            DATA_TYPE dataType = anyVector.get(i).getDataType();
+            subVector.put(dataType.getValue(), anyVector.get(i));
         }
     }
 
     public Entity get(int index) {
-        if (index >= rows())
-            throw new RuntimeException(String.format("index %s out of rows %s.", index, rows()));
+        if (index >= indexs.rows())
+            throw new RuntimeException(String.format("index %s out of %s.", index, indexs.rows()));
 
         BasicInt curDataType = (BasicInt) indexsDataType.get(index);
         BasicInt curIndex = (BasicInt) indexs.get(index);
@@ -128,7 +119,7 @@ public class BasicIotAnyVector extends AbstractVector {
 
     @Override
     public int rows() {
-        return indexs.rows();
+        return subVector.size() + 1;
     }
 
     @JsonIgnore
@@ -153,7 +144,7 @@ public class BasicIotAnyVector extends AbstractVector {
 
     public String getString(){
         StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < rows(); i++)
+        for (int i = 0; i < indexs.rows(); i++)
             sb.append(getString(i)).append(",");
 
         sb.setLength(sb.length() - 1);
@@ -178,20 +169,26 @@ public class BasicIotAnyVector extends AbstractVector {
 
     @Override
     protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
-        int size = indexs.rows();
-        out.writeInt(size);
+        int[] tmpIntArray = new int[indexs.rows() * 2 + 2];
 
-        for (int i = 0; i < size; i++) {
-            out.writeInt(indexsDataType.getInt(i));
-            out.writeInt(indexs.getInt(i));
-        }
+        tmpIntArray[0] = indexs.rows();
+        tmpIntArray[1] = subVector.size();
 
-        out.writeInt(subVector.size());
+        System.arraycopy(indexs.getdataArray(), 0, tmpIntArray,2, indexs.rows());
+        System.arraycopy(indexsDataType.getdataArray(), 0, tmpIntArray, indexs.rows() + 2, indexsDataType.size);
+        BasicIntVector intVector = new BasicIntVector(tmpIntArray);
 
+        Entity[] entities = new Entity[1 + subVector.size()];
+        entities[0] = intVector;
+
+        int index = 1;
         for (Entity value : subVector.values()) {
-            if (Objects.nonNull(value))
-                value.write(out);
+            entities[index] = value;
+            index++;
         }
+
+        BasicAnyVector anyVector = new BasicAnyVector(entities, false);
+        anyVector.writeVectorToOutputStream(out);
     }
 
     @Override
