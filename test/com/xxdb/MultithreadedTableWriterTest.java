@@ -7,6 +7,7 @@ import com.xxdb.multithreadedtablewriter.Callback;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 import com.xxdb.route.AutoFitTableAppender;
 import com.xxdb.route.AutoFitTableUpsert;
+import com.xxdb.route.PartitionedTableAppender;
 import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
@@ -7731,5 +7732,49 @@ public  class MultithreadedTableWriterTest implements Runnable {
 //        System.out.println(writedData2);
 //    }
 
+//    @Test not support
+//    public void Test_MultithreadedTableWriter_iotAnyVector() throws Exception {
+//        String script = "if(existsDatabase(\"dfs://testIOT_allDateType\")) dropDatabase(\"dfs://testIOT_allDateType\")\n" +
+//                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+//                "     create table \"dfs://testIOT_allDateType\".\"pt\"(\n" +
+//                "     deviceId INT,\n" +
+//                "     timestamp TIMESTAMP,\n" +
+//                "     location SYMBOL,\n" +
+//                "     value IOTANY,\n" +
+//                " )\n" +
+//                "partitioned by deviceId, timestamp,\n" +
+//                "sortColumns=[`deviceId, `location, `timestamp],\n" +
+//                "latestKeyCache=true;\n" +
+//                "pt = loadTable(\"dfs://testIOT_allDateType\",\"pt\");\n" ;
+//        conn.run(script);
+//        BasicTable bt = (BasicTable)conn.run("t=table([1] as deviceId, [now()]  as timestamp,  [`loc1] as location, [char('Q')] as value);\n select * from t");
+//        BasicTable bt1 = (BasicTable)conn.run("t=table([2] as deviceId, [now()]  as timestamp,  [`loc1] as location, [short(233)] as value);\n select * from t");
+//        BasicTable bt2 = (BasicTable)conn.run("t=table([3] as deviceId, [now()]  as timestamp,  [`loc1] as location, [int(-233)] as value);\n select * from t");
+//        BasicTable bt3 = (BasicTable)conn.run("t=table([4] as deviceId, [now()]  as timestamp,  [`loc1] as location, [long(233121)] as value);\n select * from t");
+//        BasicTable bt4 = (BasicTable)conn.run("t=table([5] as deviceId, [now()]  as timestamp,  [`loc1] as location, [true] as value);\n select * from t");
+//        BasicTable bt5 = (BasicTable)conn.run("t=table([6] as deviceId, [now()]  as timestamp,  [`loc1] as location, [233.34f] as value);\n select * from t");
+//        BasicTable bt6 = (BasicTable)conn.run("t=table([7] as deviceId, [now()]  as timestamp,  [`loc1] as location, [233.34] as value);\n select * from t");
+//        BasicTable bt7 = (BasicTable)conn.run("t=table([8] as deviceId, [now()]  as timestamp,  [`loc1] as location, [`loc1] as value);\n select * from t");
+//        BasicTable bt8 = (BasicTable)conn.run("t=table(12..14 as deviceId, [now(),2022.06.13 13:30:10.008,2020.06.13 13:30:10.008]  as timestamp,  [`loc1`loc2`loc3] as location, [symbol(`AAA`bbb`xxx)] as value);\n select * from t limit 1");
+//        System.out.println(bt8.getString());
+//
+//        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://testIOT_allDateType", "pt", false, false, null, 1, 1, 1, "deviceId");
+//        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1,System.currentTimeMillis(),"loc1",(byte)1);
+//        ErrorCodeInfo pErrorInfo1 = mutithreadTableWriter_.insert( 2,System.currentTimeMillis(),"loc1",(short) 0);
+//        ErrorCodeInfo pErrorInfo2 = mutithreadTableWriter_.insert( 3,System.currentTimeMillis(),"loc1",(int)-233);
+//        ErrorCodeInfo pErrorInfo3 = mutithreadTableWriter_.insert( 4,System.currentTimeMillis(),"loc1",(long)-233);
+//        ErrorCodeInfo pErrorInfo4 = mutithreadTableWriter_.insert( 5,System.currentTimeMillis(),"loc1",true);
+//        ErrorCodeInfo pErrorInfo5 = mutithreadTableWriter_.insert( 6,System.currentTimeMillis(),"loc1",233.34f);
+//        ErrorCodeInfo pErrorInfo6 = mutithreadTableWriter_.insert( 7,System.currentTimeMillis(),"loc1",-233.34);
+//        ErrorCodeInfo pErrorInfo7 = mutithreadTableWriter_.insert( 8,System.currentTimeMillis(),"loc1","loc1");
+//        List<String> list = new ArrayList<>();
+//        list.add(null);
+//        list.add("OceanBase");
+//        BasicSymbolVector bsymbolv = new BasicSymbolVector(list);
+//        ErrorCodeInfo pErrorInfo8 = mutithreadTableWriter_.insert(new BasicIntVector( new int[]{9,10}),new BasicTimestampVector(Arrays.asList(new Long[]{Long.valueOf(9), Long.valueOf(10)})),new BasicStringVector(new String[]{"GOOG","MS"}),bsymbolv);
+//        BasicTable bt10 = (BasicTable) conn.run("select * from loadTable(\"dfs://testIOT_allDateType\",`pt);");
+//        //assertEquals(11, bt10.rows());
+//        System.out.println(bt10.getString());
+//    }
 }
 

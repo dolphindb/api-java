@@ -5,6 +5,7 @@ import com.xxdb.data.*;
 import com.xxdb.io.Double2;
 import com.xxdb.io.Long2;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
+import com.xxdb.route.AutoFitTableUpsert;
 import com.xxdb.route.PartitionedTableAppender;
 import org.junit.After;
 import org.junit.Before;
@@ -2288,6 +2289,245 @@ public class ConnectionPoolTest {
         assertEquals(0, bt.rows());
         pool.shutdown();
         conn.close();
+    }
+
+    @Test
+    public void Test_PartitionedTableAppender_iotAnyVector() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testIOT_allDateType\")) dropDatabase(\"dfs://testIOT_allDateType\")\n" +
+                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create table \"dfs://testIOT_allDateType\".\"pt\"(\n" +
+                "     deviceId INT,\n" +
+                "     timestamp TIMESTAMP,\n" +
+                "     location SYMBOL,\n" +
+                "     value IOTANY,\n" +
+                " )\n" +
+                "partitioned by deviceId, timestamp,\n" +
+                "sortColumns=[`deviceId, `location, `timestamp],\n" +
+                "latestKeyCache=true;\n" +
+                "pt = loadTable(\"dfs://testIOT_allDateType\",\"pt\");\n" ;
+        conn.run(script);
+        BasicTable bt = (BasicTable)conn.run("t=table([1] as deviceId, [now()]  as timestamp,  [`loc1] as location, [char('Q')] as value);\n select * from t");
+        BasicTable bt1 = (BasicTable)conn.run("t=table([2] as deviceId, [now()]  as timestamp,  [`loc1] as location, [short(233)] as value);\n select * from t");
+        BasicTable bt2 = (BasicTable)conn.run("t=table([3] as deviceId, [now()]  as timestamp,  [`loc1] as location, [int(-233)] as value);\n select * from t");
+        BasicTable bt3 = (BasicTable)conn.run("t=table([4] as deviceId, [now()]  as timestamp,  [`loc1] as location, [long(233121)] as value);\n select * from t");
+        BasicTable bt4 = (BasicTable)conn.run("t=table([5] as deviceId, [now()]  as timestamp,  [`loc1] as location, [true] as value);\n select * from t");
+        BasicTable bt5 = (BasicTable)conn.run("t=table([6] as deviceId, [now()]  as timestamp,  [`loc1] as location, [233.34f] as value);\n select * from t");
+        BasicTable bt6 = (BasicTable)conn.run("t=table([7] as deviceId, [now()]  as timestamp,  [`loc1] as location, [233.34] as value);\n select * from t");
+        BasicTable bt7 = (BasicTable)conn.run("t=table([8] as deviceId, [now()]  as timestamp,  [`loc1] as location, [`loc1] as value);\n select * from t");
+        BasicTable bt8 = (BasicTable)conn.run("t=table(12..14 as deviceId, [now(),2022.06.13 13:30:10.008,2020.06.13 13:30:10.008]  as timestamp,  [`loc1`loc2`loc3] as location, [symbol(`AAA`bbb`xxx)] as value);\n select * from t");
+        System.out.println(bt8.getString());
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testIOT_allDateType","pt","deviceId", pool);
+        appender.append(bt);
+        appender.append(bt1);
+        appender.append(bt2);
+        appender.append(bt3);
+        appender.append(bt4);
+        appender.append(bt5);
+        appender.append(bt6);
+        appender.append(bt7);
+        appender.append(bt8);
+        BasicTable bt10 = (BasicTable) conn.run("select * from loadTable(\"dfs://testIOT_allDateType\",`pt);");
+        assertEquals(11, bt10.rows());
+        System.out.println(bt10.getString());
+        assertEquals("['Q',233,-233,233121,true,233.33999634,233.34,loc1,AAA,bbb,xxx]", bt10.getColumn(3).getString());
+        pool.shutdown();
+    }
+
+    @Test
+    public void Test_PartitionedTableAppender_iotAnyVector_compress_true() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testIOT_allDateType\")) dropDatabase(\"dfs://testIOT_allDateType\")\n" +
+                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create table \"dfs://testIOT_allDateType\".\"pt\"(\n" +
+                "     deviceId INT,\n" +
+                "     timestamp TIMESTAMP,\n" +
+                "     location SYMBOL,\n" +
+                "     value IOTANY,\n" +
+                " )\n" +
+                "partitioned by deviceId, timestamp,\n" +
+                "sortColumns=[`deviceId, `location, `timestamp],\n" +
+                "latestKeyCache=true;\n" +
+                "pt = loadTable(\"dfs://testIOT_allDateType\",\"pt\");\n" ;
+        conn.run(script);
+        BasicTable bt = (BasicTable)conn.run("t=table([1] as deviceId, [now()]  as timestamp,  [`loc1] as location, [char('Q')] as value);\n select * from t");
+        BasicTable bt1 = (BasicTable)conn.run("t=table([2] as deviceId, [now()]  as timestamp,  [`loc1] as location, [short(233)] as value);\n select * from t");
+        BasicTable bt2 = (BasicTable)conn.run("t=table([3] as deviceId, [now()]  as timestamp,  [`loc1] as location, [int(-233)] as value);\n select * from t");
+        BasicTable bt3 = (BasicTable)conn.run("t=table([4] as deviceId, [now()]  as timestamp,  [`loc1] as location, [long(233121)] as value);\n select * from t");
+        BasicTable bt4 = (BasicTable)conn.run("t=table([5] as deviceId, [now()]  as timestamp,  [`loc1] as location, [true] as value);\n select * from t");
+        BasicTable bt5 = (BasicTable)conn.run("t=table([6] as deviceId, [now()]  as timestamp,  [`loc1] as location, [233.34f] as value);\n select * from t");
+        BasicTable bt6 = (BasicTable)conn.run("t=table([7] as deviceId, [now()]  as timestamp,  [`loc1] as location, [233.34] as value);\n select * from t");
+        BasicTable bt7 = (BasicTable)conn.run("t=table([8] as deviceId, [now()]  as timestamp,  [`loc1] as location, [`loc1] as value);\n select * from t");
+        BasicTable bt8 = (BasicTable)conn.run("t=table(12..14 as deviceId, [now(),2022.06.13 13:30:10.008,2020.06.13 13:30:10.008]  as timestamp,  [`loc1`loc2`loc3] as location, [symbol(`AAA`bbb`xxx)] as value);\n select * from t");
+        System.out.println(bt8.getString());
+        DBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456", 10, true, true, null,null,true,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testIOT_allDateType","pt","deviceId", pool);
+        appender.append(bt);
+        appender.append(bt1);
+        appender.append(bt2);
+        appender.append(bt3);
+        appender.append(bt4);
+        appender.append(bt5);
+        appender.append(bt6);
+        appender.append(bt7);
+        appender.append(bt8);
+        BasicTable bt10 = (BasicTable) conn.run("select * from loadTable(\"dfs://testIOT_allDateType\",`pt);");
+        assertEquals(11, bt10.rows());
+        System.out.println(bt10.getString());
+        assertEquals("['Q',233,-233,233121,true,233.33999634,233.34,loc1,AAA,bbb,xxx]", bt10.getColumn(3).getString());
+        pool.shutdown();
+    }
+    @Test
+    public void Test_PartitionedTableAppender_iotAnyVector_null() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testIOT_allDateType\")) dropDatabase(\"dfs://testIOT_allDateType\")\n" +
+                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create table \"dfs://testIOT_allDateType\".\"pt\"(\n" +
+                "     deviceId INT,\n" +
+                "     timestamp TIMESTAMP,\n" +
+                "     location SYMBOL,\n" +
+                "     value IOTANY,\n" +
+                " )\n" +
+                "partitioned by deviceId, timestamp,\n" +
+                "sortColumns=[`deviceId, `location, `timestamp],\n" +
+                "latestKeyCache=true;\n" +
+                "pt = loadTable(\"dfs://testIOT_allDateType\",\"pt\");\n" ;
+        conn.run(script);
+        BasicTable bt = (BasicTable)conn.run("t=table([1] as deviceId, [now()]  as timestamp,  [`loc1] as location, [char(NULL)] as value);\n select * from t");
+        BasicTable bt1 = (BasicTable)conn.run("t=table([2] as deviceId, [now()]  as timestamp,  [`loc1] as location, [short(NULL)] as value);\n select * from t");
+        BasicTable bt2 = (BasicTable)conn.run("t=table([3] as deviceId, [now()]  as timestamp,  [`loc1] as location, [int(NULL)] as value);\n select * from t");
+        BasicTable bt3 = (BasicTable)conn.run("t=table([4] as deviceId, [now()]  as timestamp,  [`loc1] as location, [long(NULL)] as value);\n select * from t");
+        BasicTable bt4 = (BasicTable)conn.run("t=table([5] as deviceId, [now()]  as timestamp,  [`loc1] as location, [bool(NULL)] as value);\n select * from t");
+        BasicTable bt5 = (BasicTable)conn.run("t=table([6] as deviceId, [now()]  as timestamp,  [`loc1] as location, [float(NULL)] as value);\n select * from t");
+        BasicTable bt6 = (BasicTable)conn.run("t=table([7] as deviceId, [now()]  as timestamp,  [`loc1] as location, [double(NULL)] as value);\n select * from t");
+        BasicTable bt7 = (BasicTable)conn.run("t=table([8] as deviceId, [now()]  as timestamp,  [`loc1] as location, [string(NULL)] as value);\n select * from t");
+        BasicTable bt8 = (BasicTable)conn.run("t=table(12..14 as deviceId, [now(),2022.06.13 13:30:10.008,2020.06.13 13:30:10.008]  as timestamp,  `loc1`loc2`loc3 as location, symbol([NULL,`bbb,`AAA]) as value);\n select * from t limit 1 ");
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("deviceId");
+        colNames.add("timestamp");
+        colNames.add("location");
+        colNames.add("value");
+        List<Vector> cols = new ArrayList<Vector>();
+        cols.add(new BasicIntVector(0));
+        cols.add(new BasicTimestampVector(0));
+        cols.add(new BasicStringVector(0));
+        cols.add(new BasicIntVector(0));
+        BasicTable bt9 = new BasicTable(colNames,cols);
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testIOT_allDateType","pt","deviceId", pool);
+
+        appender.append(bt);
+        appender.append(bt1);
+        appender.append(bt2);
+        appender.append(bt3);
+        appender.append(bt4);
+        appender.append(bt5);
+        appender.append(bt6);
+        appender.append(bt7);
+        appender.append(bt8);
+        appender.append(bt9);
+        BasicTable bt10 = (BasicTable) conn.run("select * from loadTable(\"dfs://testIOT_allDateType\",`pt);");
+        assertEquals(9, bt10.rows());
+        System.out.println(bt10.getColumn(3).getString());
+        assertEquals("[,,,,,,,,]", bt10.getColumn(3).getString());
+        pool.shutdown();
+    }
+
+    @Test
+    public void Test_PartitionedTableAppender_iotAnyVector_null_compress_true() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testIOT_allDateType\")) dropDatabase(\"dfs://testIOT_allDateType\")\n" +
+                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create table \"dfs://testIOT_allDateType\".\"pt\"(\n" +
+                "     deviceId INT,\n" +
+                "     timestamp TIMESTAMP,\n" +
+                "     location SYMBOL,\n" +
+                "     value IOTANY,\n" +
+                " )\n" +
+                "partitioned by deviceId, timestamp,\n" +
+                "sortColumns=[`deviceId, `location, `timestamp],\n" +
+                "latestKeyCache=true;\n" +
+                "pt = loadTable(\"dfs://testIOT_allDateType\",\"pt\");\n" ;
+        conn.run(script);
+        BasicTable bt = (BasicTable)conn.run("t=table([1] as deviceId, [now()]  as timestamp,  [`loc1] as location, [char(NULL)] as value);\n select * from t");
+        BasicTable bt1 = (BasicTable)conn.run("t=table([2] as deviceId, [now()]  as timestamp,  [`loc1] as location, [short(NULL)] as value);\n select * from t");
+        BasicTable bt2 = (BasicTable)conn.run("t=table([3] as deviceId, [now()]  as timestamp,  [`loc1] as location, [int(NULL)] as value);\n select * from t");
+        BasicTable bt3 = (BasicTable)conn.run("t=table([4] as deviceId, [now()]  as timestamp,  [`loc1] as location, [long(NULL)] as value);\n select * from t");
+        BasicTable bt4 = (BasicTable)conn.run("t=table([5] as deviceId, [now()]  as timestamp,  [`loc1] as location, [bool(NULL)] as value);\n select * from t");
+        BasicTable bt5 = (BasicTable)conn.run("t=table([6] as deviceId, [now()]  as timestamp,  [`loc1] as location, [float(NULL)] as value);\n select * from t");
+        BasicTable bt6 = (BasicTable)conn.run("t=table([7] as deviceId, [now()]  as timestamp,  [`loc1] as location, [double(NULL)] as value);\n select * from t");
+        BasicTable bt7 = (BasicTable)conn.run("t=table([8] as deviceId, [now()]  as timestamp,  [`loc1] as location, [string(NULL)] as value);\n select * from t");
+        BasicTable bt8 = (BasicTable)conn.run("t=table(12..14 as deviceId, [now(),2022.06.13 13:30:10.008,2020.06.13 13:30:10.008]  as timestamp,  `loc1`loc2`loc3 as location, symbol([NULL,`bbb,`AAA]) as value);\n select * from t limit 1 ");
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("deviceId");
+        colNames.add("timestamp");
+        colNames.add("location");
+        colNames.add("value");
+        List<Vector> cols = new ArrayList<Vector>();
+        cols.add(new BasicIntVector(0));
+        cols.add(new BasicTimestampVector(0));
+        cols.add(new BasicStringVector(0));
+        cols.add(new BasicIntVector(0));
+        BasicTable bt9 = new BasicTable(colNames,cols);
+        DBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456", 10, true, true, null,null,true,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testIOT_allDateType","pt","deviceId", pool);
+        appender.append(bt);
+        appender.append(bt1);
+        appender.append(bt2);
+        appender.append(bt3);
+        appender.append(bt4);
+        appender.append(bt5);
+        appender.append(bt6);
+        appender.append(bt7);
+        appender.append(bt8);
+        appender.append(bt9);
+        BasicTable bt10 = (BasicTable) conn.run("select * from loadTable(\"dfs://testIOT_allDateType\",`pt);");
+        assertEquals(9, bt10.rows());
+        System.out.println(bt10.getColumn(3).getString());
+        assertEquals("[,,,,,,,,]", bt10.getColumn(3).getString());
+        pool.shutdown();
+    }
+
+    @Test
+    public void Test_PartitionedTableAppender_iotAnyVector_big_data() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testIOT_allDateType1\")) dropDatabase(\"dfs://testIOT_allDateType1\")\n" +
+                "     create database \"dfs://testIOT_allDateType1\" partitioned by   RANGE(100000*(0..10)),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create table \"dfs://testIOT_allDateType1\".\"pt\"(\n" +
+                "     deviceId INT,\n" +
+                "     timestamp TIMESTAMP,\n" +
+                "     location SYMBOL,\n" +
+                "     value IOTANY,\n" +
+                " )\n" +
+                "partitioned by deviceId, timestamp,\n" +
+                "sortColumns=[`deviceId, `location, `timestamp],\n" +
+                "latestKeyCache=true;\n" +
+                "pt = loadTable(\"dfs://testIOT_allDateType1\",\"pt\");\n" ;
+        conn.run(script);
+        BasicTable bt = (BasicTable)conn.run("t=table(take(1..100000,1000000) as deviceId, take(now()+(0..100), 1000000)  as timestamp,  take(\"bb\"+string(0..100), 1000000) as location, take(char(1..100000),1000000) as value);\n select * from t");
+        BasicTable bt1 = (BasicTable)conn.run("t=table(take(100001..200000,1000000) as deviceId, take(now()+(0..100), 1000000)  as timestamp,  take(\"bb\"+string(0..100), 1000000) as location, take(short(1..100000),1000000) as value);\n select * from t");
+        BasicTable bt2 = (BasicTable)conn.run("t=table(take(200001..300000,1000000) as deviceId, take(now()+(0..100), 1000000)  as timestamp,  take(\"bb\"+string(0..100), 1000000) as location, take(int(1..100000),1000000) as value);\n select * from t");
+        BasicTable bt3 = (BasicTable)conn.run("t=table(take(300001..400000,1000000) as deviceId, take(now()+(0..100), 1000000)  as timestamp,  take(\"bb\"+string(0..100), 1000000) as location, take(long(1..100000),1000000) as value);\n select * from t");
+        BasicTable bt4 = (BasicTable)conn.run("t=table(take(400001..500000,1000000) as deviceId, take(now()+(0..100), 1000000)  as timestamp,  take(\"bb\"+string(0..100), 1000000) as location, take(true false null,1000000) as value);\n select * from t");
+        BasicTable bt5 = (BasicTable)conn.run("t=table(take(500001..600000,1000000) as deviceId, take(now()+(0..100), 1000000)  as timestamp,  take(\"bb\"+string(0..100), 1000000) as location, take(-2.33f 0 4.44f,1000000) as value);\n select * from t");
+        BasicTable bt6 = (BasicTable)conn.run("t=table(take(600001..700000,1000000) as deviceId, take(now()+(0..100), 1000000)  as timestamp,  take(\"bb\"+string(0..100), 1000000) as location, take(-2.33 0 4.44,1000000) as value);\n select * from t");
+        BasicTable bt7 = (BasicTable)conn.run("t=table(take(700001..800000,1000000) as deviceId, take(now()+(0..100), 1000000)  as timestamp,  take(\"bb\"+string(0..100), 1000000) as location, take(\"bb\"+string(0..100000), 1000000) as value);\n select * from t");
+        BasicTable bt8 = (BasicTable)conn.run("t=table(take(800001..900000,1000000) as deviceId, take(now()+(0..100), 1000000)  as timestamp,  take(\"bb\"+string(0..100), 1000000) as location, symbol(take(NULL`bbb`AAA,1000000)) as value);\n select * from t");
+        System.out.println(bt8.getString());
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testIOT_allDateType1","pt","deviceId", pool);
+        long start = System.nanoTime();
+        appender.append(bt);
+        appender.append(bt1);
+        appender.append(bt2);
+        appender.append(bt3);
+        appender.append(bt4);
+        appender.append(bt5);
+        appender.append(bt6);
+        appender.append(bt7);
+        appender.append(bt8);
+        long end = System.nanoTime();
+        System.out.println((end - start) / 1000000);
+
+        BasicTable bt10 = (BasicTable) conn.run("select count(*) from loadTable(\"dfs://testIOT_allDateType1\",`pt);");
+        assertEquals(9000000, bt10.rows());
+        pool.shutdown();
     }
 }
 

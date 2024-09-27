@@ -421,6 +421,23 @@ public class DBConnectionTest {
         }
         assertEquals("java.lang.RuntimeException: Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attemps.",R);
     }
+
+//    @Test
+//    public void test_Connect_tryReconnectNums() throws IOException {
+//        DBConnection conn = new DBConnection();
+//        try {
+//            conn.connect(HOST,111,100,true,3);
+//        }catch (Exception e){
+//            System.out.println(e.toString());
+//        }
+//        System.out.println("1212-------");
+//        try {
+//            conn.connect(HOST,111,100,true,3);
+//        }catch (Exception e){
+//            System.out.println(e.toString());
+//        }
+//        System.out.println("1212");
+//    }
     @Test
     public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_true_enableLoadBalance_false() throws IOException {
         class LogCapture {
@@ -5398,4 +5415,5 @@ public void test_SSL() throws Exception {
         System.out.println(re1.getString());
         Assert.assertEquals("22",re1.getColumn(6).get(0).getString());
     }
+
 }
