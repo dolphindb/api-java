@@ -71,8 +71,8 @@ public class BasicIotAnyVector extends AbstractVector {
     }
 
     public Entity get(int index) {
-        if (index >= indexs.rows())
-            throw new RuntimeException(String.format("index %s out of %s.", index, indexs.rows()));
+        if (index >=rows())
+            throw new RuntimeException(String.format("index %s out of rows %s.", index, rows()));
 
         BasicInt curDataType = (BasicInt) indexsDataType.get(index);
         BasicInt curIndex = (BasicInt) indexs.get(index);
@@ -119,7 +119,7 @@ public class BasicIotAnyVector extends AbstractVector {
 
     @Override
     public int rows() {
-        return subVector.size() + 1;
+        return indexs.rows();
     }
 
     @JsonIgnore
@@ -144,7 +144,7 @@ public class BasicIotAnyVector extends AbstractVector {
 
     public String getString(){
         StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < indexs.rows(); i++)
+        for (int i = 0; i < rows(); i++)
             sb.append(getString(i)).append(",");
 
         sb.setLength(sb.length() - 1);
@@ -169,13 +169,13 @@ public class BasicIotAnyVector extends AbstractVector {
 
     @Override
     protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
-        int[] tmpIntArray = new int[indexs.rows() * 2 + 2];
+        int[] tmpIntArray = new int[rows() * 2 + 2];
 
-        tmpIntArray[0] = indexs.rows();
+        tmpIntArray[0] = rows();
         tmpIntArray[1] = subVector.size();
 
-        System.arraycopy(indexs.getdataArray(), 0, tmpIntArray,2, indexs.rows());
-        System.arraycopy(indexsDataType.getdataArray(), 0, tmpIntArray, indexs.rows() + 2, indexsDataType.size);
+        System.arraycopy(indexs.getdataArray(), 0, tmpIntArray,2, rows());
+        System.arraycopy(indexsDataType.getdataArray(), 0, tmpIntArray, rows() + 2, indexsDataType.size);
         BasicIntVector intVector = new BasicIntVector(tmpIntArray);
 
         Entity[] entities = new Entity[1 + subVector.size()];
