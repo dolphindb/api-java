@@ -122,6 +122,10 @@ public class BasicIotAnyVector extends AbstractVector {
         return indexs.rows();
     }
 
+    protected int serializeAnyVectorRows() {
+        return subVector.size() + 1;
+    }
+
     @JsonIgnore
     @Override
     public int getUnitLength(){
