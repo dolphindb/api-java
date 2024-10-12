@@ -419,7 +419,7 @@ public class DBConnectionTest {
         }catch (Exception e){
             R=e.toString();
         }
-        assertEquals("java.lang.RuntimeException: Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attemps.",R);
+        assertEquals("java.lang.RuntimeException: Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attempts.",R);
     }
 
 //    @Test
@@ -462,7 +462,7 @@ public class DBConnectionTest {
         conn.connect(HOST,port,"admin","123456","",true,N,true,false,trynums);
         logCapture.stop();
         String s=logCapture.getLogMessages();
-        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attemps for every node in high availability sites."));
+        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attempts for every node in high availability sites."));
     }
     @Test
     public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_true_enableLoadBalance_true() throws IOException {
@@ -488,7 +488,7 @@ public class DBConnectionTest {
         conn.connect(HOST,port,"admin","123456","",true,N,true,true,trynums);
         logCapture.stop();
         String s=logCapture.getLogMessages();
-        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attemps for every node in high availability sites."));
+        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attempts for every node in high availability sites."));
     }
     @Test
     public void Test_Connect_initialScript() throws IOException {
@@ -4588,6 +4588,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
+        sleep(10000);
         //DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"admin","123456",null,false);
         sleep(500);

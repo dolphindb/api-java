@@ -890,9 +890,13 @@ public class EventClientTest {
         subscribePrepare();
         client.subscribe(HOST, PORT, "inputTable", "test1", handler1, -1, true, "admin", "123456");
         client.unsubscribe(HOST, PORT, "inputTable", "test1");
-        client.unsubscribe(HOST, PORT, "inputTable", "test1");
-        client.unsubscribe(HOST, PORT, "inputTable", "test1");
-        client.unsubscribe(HOST, PORT, "inputTable", "test1");
+        String re = null;
+        try{
+            client.unsubscribe(HOST, PORT, "inputTable", "test1");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals(true, re.contains("doesn't exist.. function: stopPublishTable"));
     }
 
     //@Test

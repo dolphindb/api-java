@@ -2526,7 +2526,7 @@ public class ConnectionPoolTest {
         System.out.println((end - start) / 1000000);
 
         BasicTable bt10 = (BasicTable) conn.run("select count(*) from loadTable(\"dfs://testIOT_allDateType1\",`pt);");
-        assertEquals(9000000, bt10.rows());
+        assertEquals("9000000", bt10.getColumn(0).getString(0));
         pool.shutdown();
     }
 }
