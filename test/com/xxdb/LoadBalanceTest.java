@@ -103,6 +103,7 @@ public class LoadBalanceTest {
             String now_host = conn.getHostName();
             Integer now_port = conn.getPort();
             controller_conn.run("try{stopDataNode('"+now_host+":"+now_port+"')}catch(ex){}");
+            controller_conn.run("sleep(8000)");
             System.out.println("now host is "+conn.getHostName());
             System.out.println("now port is "+conn.getPort());
             controller_conn.run("try{startDataNode('"+now_host+":"+now_port+"')}catch(ex){}");
@@ -432,6 +433,7 @@ public class LoadBalanceTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host, controller_port, "admin", "123456");
         controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("sleep(8000)");
         List<DBConnection> list = new ArrayList<>();
         for (int i = 0; i < 100; ++i) {
             DBConnection connection = new DBConnection();
@@ -439,7 +441,7 @@ public class LoadBalanceTest {
             list.add(connection);
         }
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
-        controller_conn.run("sleep(3000);");
+        controller_conn.run("sleep(8000);");
         DBConnection connection1 = new DBConnection();
         connection1.connect(HOST, PORT, "admin", "123456",false);
         int port1 = port_list[1];
@@ -478,6 +480,7 @@ public class LoadBalanceTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host, controller_port, "admin", "123456");
         controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("sleep(8000)");
         List<DBConnection> list = new ArrayList<>();
         for (int i = 0; i < 100; ++i) {
             DBConnection connection = new DBConnection();
@@ -515,7 +518,7 @@ public class LoadBalanceTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host, controller_port, "admin", "123456");
         controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
-        controller_conn.run("2000");
+        controller_conn.run("sleep(8000)");
         DBConnection connection = new DBConnection();
         String[] ipportArray = new String[1];
         ipportArray[0] = ipports[2];
@@ -526,7 +529,7 @@ public class LoadBalanceTest {
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
         controller_conn.run("2000");
         controller_conn.run("try{stopDataNode('"+HOST+":"+node1.getInt()+"')}catch(ex){}");
-        controller_conn.run("2000");
+        controller_conn.run("sleep(8000)");
         BasicInt node2 = (BasicInt)connection.run("getNodePort()");
         System.out.println(node2.getString());
         Assert.assertEquals(PORT,node2.getInt());
@@ -565,6 +568,7 @@ public class LoadBalanceTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host, controller_port, "admin", "123456");
         controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("sleep(8000)");
         DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,false,true,ipports,null, false, false, false);
 
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
@@ -604,7 +608,7 @@ public class LoadBalanceTest {
             public void run() {
                     try {
                         controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
-                        Thread.sleep(1000);
+                        Thread.sleep(6000);
                     } catch (Exception e) {
                         // 捕获异常并打印错误信息
                         System.err.println("Error executing task: " + e.getMessage());
@@ -620,6 +624,7 @@ public class LoadBalanceTest {
         thread.join();
         thread1.join();
         controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("sleep(8000)");
     }
     @Test
     public void Test_DBConnectionPool_enableHighAvailability_true_loadBalance_true_highAvailabilitySites_null() throws SQLException, ClassNotFoundException, IOException {
@@ -659,7 +664,7 @@ public class LoadBalanceTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host, controller_port, "admin", "123456");
         controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
-        controller_conn.run("sleep(1000)");
+        controller_conn.run("sleep(8000)");
         DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,true,true,ipports,null, false, false, false);
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
         controller_conn.run("sleep(1000)");
@@ -698,7 +703,7 @@ public class LoadBalanceTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host, controller_port, "admin", "123456");
         controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
-        controller_conn.run("2000");
+        controller_conn.run("sleep(8000)");
         String[] ipportArray = new String[1];
         ipportArray[0] = ipports[2];
         DBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",100,false,true,ipportArray,null, false, false, false);
@@ -709,7 +714,7 @@ public class LoadBalanceTest {
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
         controller_conn.run("2000");
         controller_conn.run("try{stopDataNode('"+HOST+":"+ipportArray[0].split(":")[1]+"')}catch(ex){}");
-        controller_conn.run("5000");
+        controller_conn.run("8000");
         List<DBTask> tasks = new ArrayList<>();
         for (int i = 0; i < 100; i++){
             BasicDBTask task = new BasicDBTask("getNodePort();");

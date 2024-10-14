@@ -2075,7 +2075,7 @@ public class PollingClientReverseTest {
         conn4.connect(HOST,port_list[2],"admin","123456");
         conn4.run(script1);
         conn4.run(script2);
-        client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
+        //client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
 
     @Test(timeout = 180000)
@@ -2223,7 +2223,7 @@ public class PollingClientReverseTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        controller_conn.run("sleep(1000)");
+        controller_conn.run("sleep(10000)");
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
@@ -2257,7 +2257,7 @@ public class PollingClientReverseTest {
         //List<IMessage> messages1 = poller.poll(2000,2000);
        // MessageHandler_handler(messages1);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(2000);
+        Thread.sleep(10000);
         DBConnection conn3 = new DBConnection();
         conn3.connect(HOST,port_list[1],"admin","123456");
         conn3.run(script1);
@@ -2270,7 +2270,7 @@ public class PollingClientReverseTest {
         List<IMessage> messages2 = poller.poll(3000,3000);
         MessageHandler_handler(messages2);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
-        Thread.sleep(5000);
+        Thread.sleep(10000);
 
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));

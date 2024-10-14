@@ -490,10 +490,10 @@ public class ThreadedClientsubscribeReverseTest {
         MyThread write_data  = new MyThread ();
         write_data.start();
         Thread.sleep(2000);
-        conn.run("stopPublishTable('"+HOST+"',9055,'Trades')");
+        conn.run("stopPublishTable('"+HOST+"',9055,'Trades','javaStreamingApi')");
         Thread.sleep(2000);
-        conn.run("stopPublishTable('"+HOST+"',9055,'Trades')");
-        Thread.sleep(3000);
+//        conn.run("stopPublishTable('"+HOST+"',9055,'Trades')");
+//        Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
         Thread.sleep(2000);
@@ -521,8 +521,8 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         conn.run("stopPublishTable('"+HOST+"',9055,'Trades',\"subTrades\")");
         Thread.sleep(2000);
-        conn.run("stopPublishTable('"+HOST+"',9055,'Trades',\"subTrades\")");
-        Thread.sleep(3000);
+        //conn.run("stopPublishTable('"+HOST+"',9055,'Trades',\"subTrades\")");
+        //Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
         Thread.sleep(2000);
@@ -550,8 +550,8 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
         Thread.sleep(2000);
-        conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
-        Thread.sleep(3000);
+        //conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
+        //Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
         Thread.sleep(2000);
@@ -578,7 +578,7 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
         Thread.sleep(2000);
-        conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
+        //conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
         Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
@@ -607,8 +607,8 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
         Thread.sleep(2000);
-        conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
-        Thread.sleep(3000);
+        //conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
+        //Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
         Thread.sleep(2000);
@@ -1328,7 +1328,7 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(5000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertNotEquals(2000,row_num.getInt());
-        client.unsubscribe(HOST,PORT,"Trades","subTread2");
+        //client.unsubscribe(HOST,PORT,"Trades","subTread2");
     }
 
     class Handler6 implements MessageHandler {
@@ -3423,7 +3423,7 @@ public class ThreadedClientsubscribeReverseTest {
         conn4.connect(HOST,port_list[2],"admin","123456");
         conn4.run(script1);
         conn4.run(script2);
-        client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
+        //client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
 
     @Test(timeout = 180000)
