@@ -514,6 +514,7 @@ public class SimpleDBConnectionPoolTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host, controller_port, "admin", "123456");
         controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        Thread.sleep(10000);
         SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
         config1.setHostName(HOST);
         config1.setPort(PORT);
@@ -546,6 +547,7 @@ public class SimpleDBConnectionPoolTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host, controller_port, "admin", "123456");
         controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
+        controller_conn.run("5000");
         SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
         config1.setHostName(HOST);
         config1.setPort(PORT);
@@ -1306,7 +1308,7 @@ public class SimpleDBConnectionPoolTest {
         {
             s=e.toString();
         }
-        assertEquals("java.lang.RuntimeException: Create connection pool failure, because Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attemps.",s);
+        assertEquals("java.lang.RuntimeException: Create connection pool failure, because Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attempts.",s);
     }
     @Test(expected =RuntimeException.class)
     public void test_SimpleDBConnectionPool_getConnection_Failed_TryReconnectNums_enableHighAvailability_true_enableLoadBalance_false(){

@@ -54,9 +54,8 @@ public class AutoFitTableAppender {
 
             int rowSize = table.rows();
             for (int i = 0; i < columns; ++i) {
-                String name = nameList.getString(i);
                 String dstType = typeList.get(i).getString();
-                Vector colOrigin = table.getColumn(name);
+                Vector colOrigin = table.getColumn(i);
                 Vector dstVector;
                 switch (dstType) {
                     case "DATE": {

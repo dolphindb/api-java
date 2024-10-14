@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public class Utils {
 
-	public static final String JAVA_API_VERSION = "3.00.1.3";
+	public static final String JAVA_API_VERSION = "3.00.2.0";
 
 	public static final int DISPLAY_ROWS = 20;
 	public static final int DISPLAY_COLS = 100;
@@ -408,7 +408,7 @@ public class Utils {
 			return DATA_CATEGORY.LITERAL;
 		else if(type==DATA_TYPE.DT_INT128 || type==DATA_TYPE.DT_UUID || type==DATA_TYPE.DT_IPADDR)
 			return DATA_CATEGORY.BINARY;
-		else if(type==DATA_TYPE.DT_ANY)
+		else if(type==DATA_TYPE.DT_ANY || type == DATA_TYPE.DT_IOTANY)
 			return DATA_CATEGORY.MIXED;
 		else if(type==DATA_TYPE.DT_VOID)
 			return DATA_CATEGORY.NOTHING;

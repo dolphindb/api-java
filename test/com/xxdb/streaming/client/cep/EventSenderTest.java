@@ -70,9 +70,9 @@ public class EventSenderTest {
         //scheme.setAttrExtraParams(Arrays.asList(null));
 
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>(Arrays.asList("t_type"));
-        sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>(Arrays.asList("t_type"));
+        sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
     }
     public static  EventMessageHandler handler = new EventMessageHandler() {
         @Override
@@ -260,11 +260,11 @@ public class EventSenderTest {
     @Test
     public  void test_EventSender_EventScheme_null() throws IOException, InterruptedException {
         List<EventSchema> eventSchemas = new ArrayList<>();
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -274,11 +274,11 @@ public class EventSenderTest {
     public  void test_EventSender_EventScheme_null_1() throws IOException, InterruptedException {
         //EventSchema scheme = new EventSchema();
         //List<EventSchema> eventSchemas = new ArrayList<>();
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",null, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",null, eventTimeFields, commonFields);
 
         }catch(Exception ex){
             re = ex.getMessage();
@@ -293,11 +293,11 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_STRING, DT_STRING, DT_DOUBLE, DT_INT, DT_TIMESTAMP));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         }catch(Exception ex){
             re = ex.getMessage();
@@ -313,11 +313,11 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_STRING, DT_STRING, DT_DOUBLE, DT_INT, DT_TIMESTAMP));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         }catch(Exception ex){
             re = ex.getMessage();
@@ -335,9 +335,9 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_STRING, DT_STRING, DT_DOUBLE, DT_INT, DT_TIMESTAMP));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         Assert.assertEquals("!@#$%&*()_+QWERTYUIOP{}[]-=';./,~`1^;中文 ",scheme.getEventType());
     }
 
@@ -356,11 +356,11 @@ public class EventSenderTest {
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
         eventSchemas.add(scheme1);
-        List<String> eventTimeKeys = Collections.singletonList("market");
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = Collections.singletonList("market");
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -371,19 +371,19 @@ public class EventSenderTest {
     public  void test_EventSender_fieldNames_null() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
-        //scheme.setAttrKeys(Arrays.asList("market", "code", "price", "qty", "eventTime"));
+        //scheme.setFieldNames(Arrays.asList("market", "code", "price", "qty", "eventTime"));
         scheme.setFieldTypes(Arrays.asList(DT_STRING, DT_STRING, DT_DOUBLE, DT_INT, DT_TIMESTAMP));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("eventKey in eventSchema must be non-empty.",re);
+        Assert.assertEquals("fieldName in eventSchema must be non-empty.",re);
     }
 
     @Test
@@ -394,11 +394,11 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_STRING, DT_STRING, DT_DOUBLE, DT_INT, DT_TIMESTAMP));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -414,11 +414,11 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_TIME,DT_TIME));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR,DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = Collections.singletonList("time");
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = Collections.singletonList("time");
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -434,9 +434,9 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_TIME));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = Collections.singletonList("time");
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = Collections.singletonList("time");
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,10,45,3,100000000))));
         sender.sendEvent("market", attributes);
@@ -453,15 +453,15 @@ public class EventSenderTest {
         //scheme.setAttrTypes(Arrays.asList(DT_STRING, DT_STRING, DT_DOUBLE, DT_INT, DT_TIMESTAMP));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("the number of eventKey, eventTypes, eventForms and eventExtraParams (if set) must have the same length.",re);
+        Assert.assertEquals("the number of fieldName, fieldTypes, fieldForms and fieldExtraParams (if set) must have the same length.",re);
     }
     @Test
     public  void test_EventSender_fieldTypes_null_1() throws IOException, InterruptedException {
@@ -471,11 +471,11 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(null, DT_STRING, DT_DOUBLE, DT_INT, DT_TIMESTAMP));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -489,11 +489,11 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_VOID, DT_STRING, DT_DOUBLE, DT_INT, DT_TIMESTAMP));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -508,15 +508,15 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_STRING, DT_STRING, DT_DOUBLE, DT_INT, DT_TIMESTAMP));
         //scheme.setAttrForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("the number of eventKey, eventTypes, eventForms and eventExtraParams (if set) must have the same length.",re);
+        Assert.assertEquals("the number of fieldName, fieldTypes, fieldForms and fieldExtraParams (if set) must have the same length.",re);
     }
     @Test
     public  void test_EventSender_fieldForms_null_1() throws IOException, InterruptedException {
@@ -526,11 +526,11 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_STRING, DT_STRING, DT_DOUBLE, DT_INT, DT_TIMESTAMP));
         scheme.setFieldForms(Arrays.asList(null, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -545,11 +545,11 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_STRING, DT_STRING, DT_DOUBLE, DT_INT, DT_TIMESTAMP));
         scheme.setFieldForms(Arrays.asList(DF_PAIR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -565,9 +565,9 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         //scheme.setAttrExtraParams(Arrays.asList( 0, 0, 0, 1, 2));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>(Arrays.asList("market", "code", "decimal32", "decimal64", "decimal128"));
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>(Arrays.asList("market", "code", "decimal32", "decimal64", "decimal128"));
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicString("1"));
         attributes.add(new BasicString("2"));
@@ -593,9 +593,9 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         //scheme.setAttrExtraParams(Arrays.asList( 0, 0));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicString("1"));
         attributes.add(new BasicString("2"));
@@ -613,15 +613,15 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         scheme.setFieldExtraParams(Arrays.asList( 0));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("the number of eventKey, eventTypes, eventForms and eventExtraParams (if set) must have the same length.",re);
+        Assert.assertEquals("the number of fieldName, fieldTypes, fieldForms and fieldExtraParams (if set) must have the same length.",re);
     }
     @Test
     public  void test_EventSender_attrExtraParams_set_not_true() throws IOException, InterruptedException {
@@ -632,11 +632,11 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR));
         scheme.setFieldExtraParams(Arrays.asList( 10, 19, 39));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         }catch(Exception ex){
             re = ex.getMessage();
@@ -646,7 +646,7 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList( 1, 19, 39));
         String re1 = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         }catch(Exception ex){
             re1 = ex.getMessage();
@@ -656,7 +656,7 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList( 1, 18, 39));
         String re2 = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         }catch(Exception ex){
             re2 = ex.getMessage();
@@ -666,7 +666,7 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList( -1, 10, 10));
         String re3 = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         }catch(Exception ex){
             re3 = ex.getMessage();
@@ -676,7 +676,7 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList( 1, -1, 0));
         String re4 = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         }catch(Exception ex){
             re4 = ex.getMessage();
@@ -686,7 +686,7 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList( 0, 0, -1));
         String re5 = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         }catch(Exception ex){
             re5 = ex.getMessage();
@@ -703,9 +703,9 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         scheme.setFieldExtraParams(Arrays.asList( 0, 0, 0, 1, 2));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>(Arrays.asList("market", "code", "decimal32", "decimal64", "decimal128"));
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>(Arrays.asList("market", "code", "decimal32", "decimal64", "decimal128"));
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicString("1"));
         attributes.add(new BasicString("2"));
@@ -723,25 +723,25 @@ public class EventSenderTest {
     }
 
     @Test
-    public  void test_EventSender_eventTimeKeys_not_exist() throws IOException, InterruptedException {
+    public  void test_EventSender_eventTimeFields_not_exist() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
         scheme.setFieldNames(Arrays.asList("market", "code", "decimal32", "decimal64", "decimal128"));
         scheme.setFieldTypes(Arrays.asList(DT_STRING, DT_STRING, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = Collections.singletonList("datetimev");
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = Collections.singletonList("datetimev");
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("Event market doesn't contain eventTimeKey datetimev.",re);
+        Assert.assertEquals("Event market doesn't contain eventTimeField datetimev.",re);
     }
     @Test
-    public  void test_EventSender_eventTimeKeys_not_time_column() throws IOException, InterruptedException {
+    public  void test_EventSender_eventTimeFields_not_time_column() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `string`eventType`event, [STRING,STRING,BLOB]) as inputTable;");
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
@@ -749,19 +749,19 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_STRING, DT_STRING));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = Collections.singletonList("market");
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = Collections.singletonList("market");
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("First column of outputTable should be temporal if specified eventTimeKey.",re);
+        Assert.assertEquals("First column of outputTable should be temporal if specified eventTimeField.",re);
     }
 
     @Test
-    public  void test_EventSender_eventTimeKeys_one_column() throws IOException, InterruptedException {
+    public  void test_EventSender_eventTimeFields_one_column() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `time`eventType`event, [TIME,STRING,BLOB]) as inputTable;");
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
@@ -776,9 +776,9 @@ public class EventSenderTest {
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
         eventSchemas.add(scheme1);
-        List<String> eventTimeKeys = Arrays.asList(new String[]{"time"});
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = Arrays.asList(new String[]{"time"});
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicString("123456"));
         attributes.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,10,45,3,100000000))));
@@ -795,7 +795,7 @@ public class EventSenderTest {
         Assert.assertEquals("11:45:03.100",re.getColumn(0).get(1).getString());
     }
     @Test
-    public  void test_EventSender_eventTimeKeys_one_column_1() throws IOException, InterruptedException {
+    public  void test_EventSender_eventTimeFields_one_column_1() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `time`eventType`event, [TIME,STRING,BLOB]) as inputTable;");
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
@@ -810,18 +810,18 @@ public class EventSenderTest {
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
         eventSchemas.add(scheme1);
-        List<String> eventTimeKeys = Arrays.asList(new String[]{"time1"});
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = Arrays.asList(new String[]{"time1"});
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("Event market doesn't contain eventTimeKey time1.",re);
+        Assert.assertEquals("Event market doesn't contain eventTimeField time1.",re);
     }
     @Test
-    public  void test_EventSender_eventTimeKeys_two_column() throws IOException, InterruptedException {
+    public  void test_EventSender_eventTimeFields_two_column() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `time`eventType`event, [TIME,STRING,BLOB]) as inputTable;");
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
@@ -836,9 +836,9 @@ public class EventSenderTest {
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
         eventSchemas.add(scheme1);
-        List<String> eventTimeKeys = Arrays.asList(new String[]{"time", "time1"});
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = Arrays.asList(new String[]{"time", "time1"});
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicString("123456"));
         attributes.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,10,45,3,100000000))));
@@ -855,7 +855,7 @@ public class EventSenderTest {
         Assert.assertEquals("12:45:03.100",re.getColumn(0).get(1).getString());
     }
     @Test
-    public  void test_EventSender_commonKeys_not_exist() throws IOException, InterruptedException {
+    public  void test_EventSender_commonFields_not_exist() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `time`eventType`event`comment, [TIME,STRING,BLOB,TIME]) as inputTable;");
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
@@ -870,19 +870,19 @@ public class EventSenderTest {
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
         eventSchemas.add(scheme1);
-        List<String> eventTimeKeys = Arrays.asList(new String[]{"time", "time1"});
-        List<String> commonKeys = Arrays.asList(new String[]{"time123"});
+        List<String> eventTimeFields = Arrays.asList(new String[]{"time", "time1"});
+        List<String> commonFields = Arrays.asList(new String[]{"time123"});
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("Event market doesn't contain commonKey time123",re);
+        Assert.assertEquals("Event market doesn't contain commonField time123",re);
     }
 
     @Test
-    public  void test_EventSender_commonKeys_one_column() throws IOException, InterruptedException {
+    public  void test_EventSender_commonFields_one_column() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `time`eventType`event`comment, [TIME,STRING,BLOB,TIME]) as inputTable;");
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
@@ -897,9 +897,9 @@ public class EventSenderTest {
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
         eventSchemas.add(scheme1);
-        List<String> eventTimeKeys = Arrays.asList(new String[]{"time", "time1"});
-        List<String> commonKeys = Arrays.asList(new String[]{"time"});
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = Arrays.asList(new String[]{"time", "time1"});
+        List<String> commonFields = Arrays.asList(new String[]{"time"});
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicString("123456"));
         attributes.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,10,45,3,100000000))));
@@ -918,7 +918,7 @@ public class EventSenderTest {
         Assert.assertEquals("11:45:03.100",re.getColumn(3).get(1).getString());
     }
     @Test
-    public  void test_EventSender_commonKeys_one_column_1() throws IOException, InterruptedException {
+    public  void test_EventSender_commonFields_one_column_1() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `time`eventType`event`comment, [TIME,STRING,BLOB,TIME]) as inputTable;");
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
@@ -933,19 +933,19 @@ public class EventSenderTest {
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
         eventSchemas.add(scheme1);
-        List<String> eventTimeKeys = Arrays.asList(new String[]{"time", "time1"});
-        List<String> commonKeys = Arrays.asList(new String[]{"time1"});
+        List<String> eventTimeFields = Arrays.asList(new String[]{"time", "time1"});
+        List<String> commonFields = Arrays.asList(new String[]{"time1"});
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("Event market doesn't contain commonKey time1",re);
+        Assert.assertEquals("Event market doesn't contain commonField time1",re);
     }
 
     @Test
-    public  void test_EventSender_commonKeys_two_column() throws IOException, InterruptedException {
+    public  void test_EventSender_commonFields_two_column() throws IOException, InterruptedException {
         conn.run("share streamTable(1000000:0, `eventType`event`comment1`comment2, [STRING,BLOB,TIME,STRING]) as inputTable;");
         EventSchema scheme = new EventSchema();
         scheme.setEventType("market");
@@ -960,9 +960,9 @@ public class EventSenderTest {
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
         eventSchemas.add(scheme1);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicString("123456"));
         attributes.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,10,45,3,100000000))));
@@ -991,12 +991,12 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
         DBConnection conn1 = new DBConnection();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn1, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn1, "inputTable",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -1012,10 +1012,10 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
-        EventSender sender1 = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
+        EventSender sender1 = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
     }
 
     //@Test//not support
@@ -1028,11 +1028,11 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
         DBConnection conn1 = new DBConnection(true);
         conn1.connect(HOST,PORT);
-        EventSender sender = new EventSender(conn1, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        EventSender sender = new EventSender(conn1, "inputTable",eventSchemas, eventTimeFields, commonFields);
     }
     @Test
     public  void test_EventSender_conn_ssl_true() throws IOException, InterruptedException {
@@ -1044,11 +1044,11 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
         DBConnection conn1 = new DBConnection(false,true);
         conn1.connect(HOST,PORT);
-        EventSender sender = new EventSender(conn1, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        EventSender sender = new EventSender(conn1, "inputTable",eventSchemas, eventTimeFields, commonFields);
         List<Entity> attributes1 = new ArrayList<>();
         attributes1.add(new BasicString("tesrtrrr"));
         attributes1.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,12,45,3,100000000))));
@@ -1069,11 +1069,11 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
         DBConnection conn1 = new DBConnection(false,true,true);
         conn1.connect(HOST,PORT);
-        EventSender sender = new EventSender(conn1, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        EventSender sender = new EventSender(conn1, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         List<Entity> attributes1 = new ArrayList<>();
         attributes1.add(new BasicString("tesrtrrr"));
@@ -1097,11 +1097,11 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
         DBConnection conn1 = new DBConnection(false,true,true);
         conn1.connect(HOST,PORT,"user1","123456");
-        EventSender sender = new EventSender(conn1, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        EventSender sender = new EventSender(conn1, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         List<Entity> attributes1 = new ArrayList<>();
         attributes1.add(new BasicString("tesrtrrr"));
@@ -1123,11 +1123,11 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable11",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable11",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -1143,18 +1143,18 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, null,eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, null,eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
         Assert.assertEquals(true,re.contains("FROM clause must be followed by a table."));
         String re1 = null;
         try{
-            EventSender sender = new EventSender(conn, "",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re1 = ex.getMessage();
         }
@@ -1170,11 +1170,11 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64));
         scheme.setFieldForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String re = null;
         try{
-            EventSender sender = new EventSender(conn, "inputTable1",eventSchemas, eventTimeKeys, commonKeys);
+            EventSender sender = new EventSender(conn, "inputTable1",eventSchemas, eventTimeFields, commonFields);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -1191,9 +1191,9 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         List<Entity> attributes1 = new ArrayList<>();
         attributes1.add(new BasicString("tesrtrrr"));
         attributes1.add(new BasicTime(LocalTime.from(LocalDateTime.of(2024,3,22,12,45,3,100000000))));
@@ -1215,9 +1215,9 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         List<Entity> attributes1 = new ArrayList<>();
         attributes1.add(new BasicString("tesrtrrr"));
@@ -1248,9 +1248,9 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         List<Entity> attributes1 = new ArrayList<>();
         attributes1.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,12,45,3,100000000)));
@@ -1273,9 +1273,9 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = new ArrayList<>();
         eventSchemas.add(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = Arrays.asList(new String[]{"time","market"});
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = Arrays.asList(new String[]{"time","market"});
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         List<Entity> attributes1 = new ArrayList<>();
         attributes1.add(new BasicString("12"));
@@ -1299,11 +1299,11 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_SYMBOL,DT_STRING, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_BLOB, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
         scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = Collections.singletonList("datetimev");
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = Collections.singletonList("datetimev");
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
-        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeFields, commonFields);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
         List<Entity> attributes = new ArrayList<>();
         BasicBoolean boolv = new BasicBoolean(true);
@@ -1412,11 +1412,11 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
 
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
-        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeFields, commonFields);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         List<Entity> attributes = new ArrayList<>();
@@ -1469,11 +1469,11 @@ public class EventSenderTest {
 
         scheme.setFieldForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
-        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeFields, commonFields);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         List<Entity> attributes = new ArrayList<>();
@@ -1597,9 +1597,9 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,  null, null, null, null, null, null, null, null, null, null, null, null, 3, 8, 10));
 
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = Collections.singletonList("timestampv");
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = Collections.singletonList("timestampv");
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
         BasicTable bt = (BasicTable) conn.run("select * from t");
         for (int i = 0; i < bt.rows(); i++) {
@@ -1915,10 +1915,10 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList( 3, 8, 10));
 
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
-        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
+        client = new EventClient(eventSchemas, eventTimeFields, commonFields);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         BasicTable bt = (BasicTable) conn.run("select * from t");
@@ -1956,11 +1956,11 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, null, null, 3, 8, 10));
 
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = Collections.singletonList("datetimev");
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = Collections.singletonList("datetimev");
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
-        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeFields, commonFields);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         Preparedata(1);
@@ -1997,11 +1997,11 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 8, 10));
 
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = Collections.singletonList("timestampv");
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = Collections.singletonList("timestampv");
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
-        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeFields, commonFields);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         Preparedata(100);
@@ -2038,11 +2038,11 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, null, null,  3, 8, 10));
 
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = Collections.singletonList("datetimev");
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = Collections.singletonList("datetimev");
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
 
-        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeFields, commonFields);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
 
         Preparedata(100000);
@@ -2078,15 +2078,15 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_POINT, DT_COMPLEX, DT_DECIMAL32, DT_DECIMAL64, DT_DECIMAL128));
         scheme.setFieldForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, 2, 7,19));
 
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         Preparedata_array(100,10);
         BasicTable bt = (BasicTable)conn.run("select * from data");
 
-        client = new EventClient(eventSchemas, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemas, eventTimeFields, commonFields);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler_array, -1, true, "admin", "123456");
 
         for(int i=0;i<bt.rows();i++){
@@ -2120,15 +2120,15 @@ public class EventSenderTest {
         scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_BYTE, DT_SHORT, DT_INT, DT_LONG, DT_DOUBLE, DT_FLOAT, DT_DATE,DT_MONTH, DT_TIME, DT_MINUTE, DT_SECOND, DT_DATETIME, DT_TIMESTAMP, DT_NANOTIME, DT_NANOTIMESTAMP, DT_DATEHOUR, DT_UUID, DT_IPADDR, DT_INT128, DT_POINT, DT_COMPLEX));
         scheme.setFieldForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
         List<EventSchema> eventSchemes = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null));
 
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeKeys, commonKeys);
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeFields, commonFields);
         Preparedata_array_1(100,10);
         BasicTable bt = (BasicTable)conn.run("select * from data");
 
-        client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        client = new EventClient(eventSchemes, eventTimeFields, commonFields);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler_array_no_decimal, -1, true, "admin", "123456");
 
         for(int i=0;i<bt.rows();i++){
@@ -2179,9 +2179,9 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList( 2));
 
         List<EventSchema> eventSchemes = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeFields, commonFields);
         String script2 = "\tevent_all_array_dateType1=event_all_array_dateType( decimal32(1 2.001,2))\n" +
                 "\tappendEvent(inputSerializer, event_all_array_dateType1)\n" ;
         conn.run(script2);
@@ -2236,10 +2236,10 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList( 2));
 
         List<EventSchema> eventSchemes = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeKeys, commonKeys);
-        client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeFields, commonFields);
+        client = new EventClient(eventSchemes, eventTimeFields, commonFields);
         client.subscribe(HOST, PORT, "intput1", "test1", handler_string, -1, true, "admin", "123456");
 
         String script2 = "\tevent_string1=event_string( [\"111\",\"222\",\"\",NULL])\n" +
@@ -2285,10 +2285,10 @@ public class EventSenderTest {
         scheme.setFieldExtraParams(Arrays.asList( 2));
 
         List<EventSchema> eventSchemes = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeKeys, commonKeys);
-        client = new EventClient(eventSchemes, eventTimeKeys, commonKeys);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeFields, commonFields);
+        client = new EventClient(eventSchemes, eventTimeFields, commonFields);
         client.subscribe(HOST, PORT, "intput1", "test1", handler_string, -1, true, "admin", "123456");
 
         String script2 = "\tevent_symbol1=event_symbol( symbol([\"111\",\"222\",\"\",NULL]))\n" +
@@ -2314,11 +2314,11 @@ public class EventSenderTest {
         scheme.setFieldForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
         scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, 2, 7,19));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
-        List<String> eventTimeKeys = new ArrayList<>();
-        List<String> commonKeys = new ArrayList<>();
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
         String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n";
         conn.run(script);
-        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeKeys, commonKeys);
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         Preparedata_array(100,10);
         BasicTable bt = (BasicTable)conn.run("select * from data");
         List<Entity> attributes = new ArrayList<>();

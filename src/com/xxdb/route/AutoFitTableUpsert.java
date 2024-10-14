@@ -94,10 +94,13 @@ public class AutoFitTableUpsert {
     }
 
     private void checkColumnType(int col, Entity.DATA_CATEGORY category, Entity.DATA_TYPE type){
-        if (columnTypes_.get(col) != type){
-            Entity.DATA_CATEGORY expectCateGory = columnCategories_.get(col);
-            if (category != expectCateGory)
-                throw new RuntimeException("column " + col + ", expect category " + expectCateGory + ", got category " + category);
-        }
+        Entity.DATA_TYPE expectedType = columnTypes_.get(col);
+        Entity.DATA_CATEGORY expectedCategory = columnCategories_.get(col);
+
+        if (expectedType == type || (expectedType == Entity.DATA_TYPE.DT_IOTANY && expectedCategory == Entity.DATA_CATEGORY.MIXED))
+            return;
+
+        if (category != expectedCategory)
+            throw new RuntimeException(String.format("Column %d: expected category %s, got %s", col, expectedCategory, category));
     }
 }

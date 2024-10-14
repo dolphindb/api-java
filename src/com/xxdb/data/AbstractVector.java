@@ -92,7 +92,10 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 		if(this instanceof BasicSymbolVector)
 			flag += 128;
 		out.writeShort(flag);
-		out.writeInt(rows());
+		if (getDataType() == DATA_TYPE.DT_IOTANY)
+			out.writeInt(((BasicIotAnyVector) this).serializeAnyVectorRows());
+		else
+			out.writeInt(rows());
 		out.writeInt(columns());
 		if (Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL32_ARRAY
 				|| Entity.DATA_TYPE.valueOf(dataType) == DATA_TYPE.DT_DECIMAL64_ARRAY

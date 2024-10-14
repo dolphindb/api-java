@@ -16,12 +16,12 @@ public class EventHandler {
     private Map<String, EventInfo> eventInfos;
     private boolean isNeedEventTime;
     private int outputColNums;
-    private int commonKeySize;
+    private int commonFieldsSize;
 
-    public EventHandler(List<EventSchema> eventSchemas, List<String> eventTimeKeys, List<String> commonKeys) {
+    public EventHandler(List<EventSchema> eventSchemas, List<String> eventTimeFields, List<String> commonFields) {
         this.isNeedEventTime = false;
         this.outputColNums = 0;
-        this.commonKeySize = 0;
+        this.commonFieldsSize = 0;
         this.eventInfos = new HashMap<>();
 
         String funcName = "createEventSender";
@@ -40,7 +40,7 @@ public class EventHandler {
                 if (Utils.isEmpty(fieldName))
                     throw new IllegalArgumentException("fieldName must be non-null and non-empty.");
 
-                // check if has duplicate key in fieldName
+                // check if has duplicate field in fieldName
                 if (!set.add(fieldName))
                     throw new IllegalArgumentException("EventSchema cannot has duplicated fieldName in fieldNames.");
             }
@@ -54,15 +54,14 @@ public class EventHandler {
             }
 
             int length = event.getFieldNames().size();
-            if (event.getFieldExtraParams().isEmpty()) {
+            if (event.getFieldExtraParams().isEmpty())
                 event.setFieldExtraParams(Collections.nCopies(length, 0));
-            }
-            if (length == 0) {
-                throw new IllegalArgumentException("eventKey in eventSchema must be non-empty.");
-            }
-            if ((!event.getFieldExtraParams().isEmpty() && length != event.getFieldExtraParams().size()) || length != event.getFieldForms().size() || length != event.getFieldTypes().size()) {
-                throw new IllegalArgumentException("the number of eventKey, eventTypes, eventForms and eventExtraParams (if set) must have the same length.");
-            }
+
+            if (length == 0)
+                throw new IllegalArgumentException("fieldName in eventSchema must be non-empty.");
+
+            if ((!event.getFieldExtraParams().isEmpty() && length != event.getFieldExtraParams().size()) || length != event.getFieldForms().size() || length != event.getFieldTypes().size())
+                throw new IllegalArgumentException("the number of fieldName, fieldTypes, fieldForms and fieldExtraParams (if set) must have the same length.");
 
             // check if fieldExtraParams valid
             if (Objects.nonNull(event.getFieldExtraParams()) && !event.getFieldExtraParams().isEmpty()) {
@@ -80,31 +79,30 @@ public class EventHandler {
         }
         int eventNum = eventSchemas.size();
 
-        // check eventTimeKeys
-        List<String> expandTimeKeys = new ArrayList<>();
-        if (!eventTimeKeys.isEmpty()) {
-            // if eventTimeKeys only contain one element, it means every event has this key
-            if (eventTimeKeys.size() == 1) {
-                expandTimeKeys = Collections.nCopies(eventNum, eventTimeKeys.get(0));
+        // check eventTimeFields
+        List<String> expandTimeFields = new ArrayList<>();
+        if (!eventTimeFields.isEmpty()) {
+            // if eventTimeFields only contain one element, it means every event has this field
+            if (eventTimeFields.size() == 1) {
+                expandTimeFields = Collections.nCopies(eventNum, eventTimeFields.get(0));
             } else {
-                if (eventTimeKeys.size() != eventNum) {
-                    throw new IllegalArgumentException(funcName + "the number of eventTimeKey is inconsistent with the number of events in eventSchemas.");
-                }
-                expandTimeKeys = new ArrayList<>(eventTimeKeys);
+                if (eventTimeFields.size() != eventNum)
+                    throw new IllegalArgumentException(funcName + "the number of eventTimeField is inconsistent with the number of events in eventSchemas.");
+                expandTimeFields = new ArrayList<>(eventTimeFields);
             }
             isNeedEventTime = true;
         }
 
         // prepare eventInfos
         StringBuilder errMsg = new StringBuilder();
-        if (!checkSchema(expandEventSchemas, expandTimeKeys, commonKeys, errMsg))
+        if (!checkSchema(expandEventSchemas, expandTimeFields, commonFields, errMsg))
             throw new IllegalArgumentException(errMsg.toString());
 
-        this.commonKeySize = commonKeys.size();
+        this.commonFieldsSize = commonFields.size();
     }
 
     public boolean checkInputTable(String tableName, BasicTable outputTable, StringBuilder errMsg) {
-        outputColNums = isNeedEventTime ? (3 + commonKeySize) : (2 + commonKeySize);
+        outputColNums = isNeedEventTime ? (3 + commonFieldsSize) : (2 + commonFieldsSize);
         if (outputColNums != outputTable.columns()) {
             errMsg.append("Incompatible ")
                     .append(tableName)
@@ -117,7 +115,7 @@ public class EventHandler {
         int colIdx = 0;
         if (this.isNeedEventTime) {
             if (Entity.typeToCategory(outputTable.getColumn(0).getDataType()) != Entity.DATA_CATEGORY.TEMPORAL) {
-                errMsg.append("First column of outputTable should be temporal if specified eventTimeKey.");
+                errMsg.append("First column of outputTable should be temporal if specified eventTimeField.");
                 return false;
             }
             colIdx++;
@@ -223,7 +221,7 @@ public class EventHandler {
             throw new RuntimeException(e);
         }
 
-        for (int commonIndex : info.getEventSchema().getCommonKeyIndex()) {
+        for (int commonIndex : info.getEventSchema().getCommonFieldIndex()) {
             try {
                 serializedEvent.add(attributes.get(commonIndex));
             } catch (Exception e) {
@@ -300,7 +298,7 @@ public class EventHandler {
         return true;
     }
 
-    private boolean checkSchema(List<EventSchema> eventSchemas, List<String> expandTimeKeys, List<String> commonKeys, StringBuilder errMsg) {
+    private boolean checkSchema(List<EventSchema> eventSchemas, List<String> expandTimeFields, List<String> commonFields, StringBuilder errMsg) {
         int index = 0;
         for (EventSchema schema : eventSchemas) {
             if (eventInfos.containsKey(schema.getEventType())) {
@@ -312,21 +310,21 @@ public class EventHandler {
             schemaEx.setSchema(schema);
 
             if (isNeedEventTime) {
-                int timeIndex = schema.getFieldNames().indexOf(expandTimeKeys.get(index));
+                int timeIndex = schema.getFieldNames().indexOf(expandTimeFields.get(index));
                 if (timeIndex == -1) {
-                    errMsg.append("Event ").append(schema.getEventType()).append(" doesn't contain eventTimeKey ").append(expandTimeKeys.get(index)).append(".");
+                    errMsg.append("Event ").append(schema.getEventType()).append(" doesn't contain eventTimeField ").append(expandTimeFields.get(index)).append(".");
                     return false;
                 }
                 schemaEx.setTimeIndex(timeIndex);
             }
 
-            for (String commonKey : commonKeys) {
-                int commonKeyIndex = schema.getFieldNames().indexOf(commonKey);
-                if (commonKeyIndex == -1) {
-                    errMsg.append("Event ").append(schema.getEventType()).append(" doesn't contain commonKey ").append(commonKey);
+            for (String commonField : commonFields) {
+                int commonFieldIndex = schema.getFieldNames().indexOf(commonField);
+                if (commonFieldIndex == -1) {
+                    errMsg.append("Event ").append(schema.getEventType()).append(" doesn't contain commonField ").append(commonField);
                     return false;
                 }
-                schemaEx.getCommonKeyIndex().add(commonKeyIndex);
+                schemaEx.getCommonFieldIndex().add(commonFieldIndex);
             }
 
             List<AttributeSerializer> serls = new ArrayList<>();

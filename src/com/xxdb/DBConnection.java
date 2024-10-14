@@ -846,7 +846,7 @@ public class DBConnection {
                             }
 
                             if (attempt == totalConnectAttemptNums) {
-                                log.error("Connect failed after " + tryReconnectNums + " reconnect attemps for every node in high availability sites.");
+                                log.error("Connect failed after " + tryReconnectNums + " reconnect attempts for every node in high availability sites.");
                                 return false;
                             }
                         } else {
@@ -1023,7 +1023,7 @@ public class DBConnection {
         } while (!closed_ && (tryReconnectNums == -1 || attempt < tryReconnectNums));
 
         if (!closed_ && !isConnected)
-            throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed after " + attempt + " reconnect attemps.");
+            throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed after " + attempt + " reconnect attempts.");
 
         if (initialScript_!=null && initialScript_.length() > 0){
             run(initialScript_);
