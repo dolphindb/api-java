@@ -148,7 +148,7 @@ public class BasicIotAnyVectorTest {
     @Test
     public void test_BasicIotAnyVector_2() throws IOException {
         String script = "if(existsDatabase(\"dfs://testIOT222\")) dropDatabase(\"dfs://testIOT222\")\n" +
-                "     create database \"dfs://testIOT222\" partitioned by  HASH([INT, 40]),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create database \"dfs://testIOT222\" partitioned by  HASH([INT, 40]),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT222\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -273,7 +273,7 @@ public class BasicIotAnyVectorTest {
     @Test
     public void test_iotAnyVector_bigData() throws IOException {
         String script = "if(existsDatabase(\"dfs://testIOT123\")) dropDatabase(\"dfs://testIOT123\")\n" +
-                "     create database \"dfs://testIOT123\" partitioned by  HASH([INT, 40]),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create database \"dfs://testIOT123\" partitioned by  HASH([INT, 40]),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT123\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -300,9 +300,9 @@ public class BasicIotAnyVectorTest {
 
     @Test
     public void test_iotAnyVector_allDateType() throws IOException {
-        String script = "if(existsDatabase(\"dfs://testIOT333\")) dropDatabase(\"dfs://testIOT333\")\n" +
-                "     create database \"dfs://testIOT333\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
-                "     create table \"dfs://testIOT333\".\"pt\"(\n" +
+        String script = "if(existsDatabase(\"dfs://testIOT\")) dropDatabase(\"dfs://testIOT\")\n" +
+                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
+                "     create table \"dfs://testIOT\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
                 "     location SYMBOL,\n" +
@@ -311,7 +311,7 @@ public class BasicIotAnyVectorTest {
                 "partitioned by deviceId, timestamp,\n" +
                 "sortColumns=[`deviceId, `location, `timestamp],\n" +
                 "latestKeyCache=true;\n" +
-                "pt = loadTable(\"dfs://testIOT333\",\"pt\");\n" +
+                "pt = loadTable(\"dfs://testIOT\",\"pt\");\n" +
                 "t=table([1] as deviceId, [now()]  as timestamp,  [`loc1] as location, [char('Q')] as value)\n" +
                 "pt.append!(t)\n" +
                 "flushTSDBCache()\n" +
@@ -340,9 +340,9 @@ public class BasicIotAnyVectorTest {
                 "pt.append!(t)\n" +
                 "flushTSDBCache()\n"  ;
         conn.run(script);
-        BasicTable entity1 = (BasicTable)conn.run("select *  from loadTable( \"dfs://testIOT333\", `pt) order by deviceId;");
+        BasicTable entity1 = (BasicTable)conn.run("select *  from loadTable( \"dfs://testIOT\", `pt) order by deviceId;");
         Assert.assertEquals("['Q',233,-233,233121,true,233.33999634,233.34,loc1,AAA,bbb,xxx]", entity1.getColumn("value").getString());
-        BasicIotAnyVector entity2 = (BasicIotAnyVector)conn.run("  exee=exec value from loadTable( \"dfs://testIOT333\", `pt) order by deviceId;exee");
+        BasicIotAnyVector entity2 = (BasicIotAnyVector)conn.run("  exee=exec value from loadTable( \"dfs://testIOT\", `pt) order by deviceId;exee");
         Assert.assertEquals("['Q',233,-233,233121,true,233.33999634,233.34,loc1,AAA,bbb,xxx]", entity2.getString());
         BasicIotAnyVector BIV = (BasicIotAnyVector)entity1.getColumn("value");
         Assert.assertEquals("['Q',233,-233,233121,true,233.33999634,233.34,loc1,AAA,bbb,xxx]", BIV.getString());
@@ -372,9 +372,9 @@ public class BasicIotAnyVectorTest {
 
     @Test
     public void test_iotAnyVector_allDateType_null() throws IOException {
-        String script = "if(existsDatabase(\"dfs://testIOT333\")) dropDatabase(\"dfs://testIOT333\")\n" +
-                "     create database \"dfs://testIOT333\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
-                "     create table \"dfs://testIOT333\".\"pt\"(\n" +
+        String script = "if(existsDatabase(\"dfs://testIOT\")) dropDatabase(\"dfs://testIOT\")\n" +
+                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
+                "     create table \"dfs://testIOT\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
                 "     location SYMBOL,\n" +
@@ -383,7 +383,7 @@ public class BasicIotAnyVectorTest {
                 "partitioned by deviceId, timestamp,\n" +
                 "sortColumns=[`deviceId, `location, `timestamp],\n" +
                 "latestKeyCache=true;\n" +
-                "pt = loadTable(\"dfs://testIOT333\",\"pt\");\n" +
+                "pt = loadTable(\"dfs://testIOT\",\"pt\");\n" +
                 "t=table([1] as deviceId, [now()]  as timestamp,  [`loc1] as location, [char(NULL)] as value)\n" +
                 "pt.append!(t)\n" +
                 "flushTSDBCache()\n" +
@@ -412,9 +412,9 @@ public class BasicIotAnyVectorTest {
                 "pt.append!(t)\n" +
                 "flushTSDBCache()\n"  ;
         conn.run(script);
-        BasicTable entity1 = (BasicTable)conn.run("select *  from loadTable( \"dfs://testIOT333\", `pt) order by deviceId;");
+        BasicTable entity1 = (BasicTable)conn.run("select *  from loadTable( \"dfs://testIOT\", `pt) order by deviceId;");
         Assert.assertEquals("[,,,,,,,,AAA,AAA,]", entity1.getColumn("value").getString());
-        BasicIotAnyVector entity2 = (BasicIotAnyVector)conn.run("  exec value from loadTable( \"dfs://testIOT333\", `pt) order by deviceId;");
+        BasicIotAnyVector entity2 = (BasicIotAnyVector)conn.run("  exec value from loadTable( \"dfs://testIOT\", `pt) order by deviceId;");
         Assert.assertEquals("[,,,,,,,,AAA,AAA,]", entity2.getString());
         BasicIotAnyVector BIV = (BasicIotAnyVector)entity1.getColumn("value");
         Assert.assertEquals("[,,,,,,,,AAA,AAA,]", BIV.getString());
@@ -443,9 +443,9 @@ public class BasicIotAnyVectorTest {
     }
     @Test
     public void test_iotAnyVector_allDateType_upload() throws IOException {
-        String script = "if(existsDatabase(\"dfs://testIOT333\")) dropDatabase(\"dfs://testIOT333\")\n" +
-                "     create database \"dfs://testIOT333\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
-                "     create table \"dfs://testIOT333\".\"pt\"(\n" +
+        String script = "if(existsDatabase(\"dfs://testIOT\")) dropDatabase(\"dfs://testIOT\")\n" +
+                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
+                "     create table \"dfs://testIOT\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
                 "     location SYMBOL,\n" +
@@ -454,7 +454,7 @@ public class BasicIotAnyVectorTest {
                 "partitioned by deviceId, timestamp,\n" +
                 "sortColumns=[`deviceId, `location, `timestamp],\n" +
                 "latestKeyCache=true;\n" +
-                "pt = loadTable(\"dfs://testIOT333\",\"pt\");\n" +
+                "pt = loadTable(\"dfs://testIOT\",\"pt\");\n" +
                 "t=table([1] as deviceId, [now()]  as timestamp,  [`loc1] as location, [char('Q')] as value)\n" +
                 "pt.append!(t)\n" +
                 "flushTSDBCache()\n" +
@@ -483,7 +483,7 @@ public class BasicIotAnyVectorTest {
                 "pt.append!(t)\n" +
                 "flushTSDBCache()\n"  ;
         conn.run(script);
-        BasicTable entity1 = (BasicTable)conn.run("select *  from loadTable( \"dfs://testIOT333\", `pt) order by deviceId;");
+        BasicTable entity1 = (BasicTable)conn.run("select *  from loadTable( \"dfs://testIOT\", `pt) order by deviceId;");
         Assert.assertEquals("['Q',233,-233,233121,true,233.33999634,233.34,loc1,AAA,bbb,xxx]", entity1.getColumn("value").getString());
         BasicIotAnyVector BIV = (BasicIotAnyVector)entity1.getColumn("value");
         System.out.println(BIV.getString());
@@ -497,9 +497,9 @@ public class BasicIotAnyVectorTest {
 
     @Test
     public void test_iotAnyVector_allDateType_upload_null() throws IOException {
-        String script = "if(existsDatabase(\"dfs://testIOT333\")) dropDatabase(\"dfs://testIOT333\")\n" +
-                "     create database \"dfs://testIOT333\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
-                "     create table \"dfs://testIOT333\".\"pt\"(\n" +
+        String script = "if(existsDatabase(\"dfs://testIOT\")) dropDatabase(\"dfs://testIOT\")\n" +
+                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
+                "     create table \"dfs://testIOT\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
                 "     location SYMBOL,\n" +
@@ -508,7 +508,7 @@ public class BasicIotAnyVectorTest {
                 "partitioned by deviceId, timestamp,\n" +
                 "sortColumns=[`deviceId, `location, `timestamp],\n" +
                 "latestKeyCache=true;\n" +
-                "pt = loadTable(\"dfs://testIOT333\",\"pt\");\n" +
+                "pt = loadTable(\"dfs://testIOT\",\"pt\");\n" +
                 "t=table([1] as deviceId, [now()]  as timestamp,  [`loc1] as location, [char(NULL)] as value)\n" +
                 "pt.append!(t)\n" +
                 "flushTSDBCache()\n" +
@@ -537,7 +537,7 @@ public class BasicIotAnyVectorTest {
                 "pt.append!(t)\n" +
                 "flushTSDBCache()\n"  ;
         conn.run(script);
-        BasicTable entity1 = (BasicTable)conn.run("select *  from loadTable( \"dfs://testIOT333\", `pt) order by deviceId;");
+        BasicTable entity1 = (BasicTable)conn.run("select *  from loadTable( \"dfs://testIOT\", `pt) order by deviceId;");
         Assert.assertEquals("[,,,,,,,,,AAA,AAA]", entity1.getColumn("value").getString());
         BasicIotAnyVector BIV = (BasicIotAnyVector)entity1.getColumn("value");
         System.out.println(BIV.getString());
@@ -563,7 +563,7 @@ public class BasicIotAnyVectorTest {
         System.out.println(entity33.getString());
         Assert.assertEquals("IOTANY", entity33.getColumn(0).getString(0));
 
-        BasicTable entity4 = (BasicTable)conn.run("select *  from loadTable( \"dfs://testIOT333\", `pt) order by deviceId limit 9 ;");
+        BasicTable entity4 = (BasicTable)conn.run("select *  from loadTable( \"dfs://testIOT\", `pt) order by deviceId limit 9 ;");
         System.out.println(entity4.getColumn("value"));
         BasicIotAnyVector entity44 = (BasicIotAnyVector)entity4.getColumn("value");
         Map<String, Entity> map2 = new HashMap<>();

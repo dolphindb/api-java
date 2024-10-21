@@ -1732,7 +1732,7 @@ public class AutoFitTableUpsertTest {
     @Test
     public void Test_AutoFitTableUpsert_iotAnyVector() throws Exception {
         String script = "if(existsDatabase(\"dfs://testIOT_allDateType\")) dropDatabase(\"dfs://testIOT_allDateType\")\n" +
-                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT_allDateType\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -1773,7 +1773,7 @@ public class AutoFitTableUpsertTest {
     @Test
     public void Test_AutoFitTableUpsert_iotAnyVector_compress_true() throws Exception {
         String script = "if(existsDatabase(\"dfs://testIOT_allDateType\")) dropDatabase(\"dfs://testIOT_allDateType\")\n" +
-                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT_allDateType\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -1817,7 +1817,7 @@ public class AutoFitTableUpsertTest {
     //@Test SERVER有问题，后续再增加case
     public void Test_AutoFitTableUpsert_iotAnyVector_upsert() throws Exception {
         String script = "if(existsDatabase(\"dfs://testIOT_allDateType\")) dropDatabase(\"dfs://testIOT_allDateType\")\n" +
-                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT_allDateType\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -1845,7 +1845,7 @@ public class AutoFitTableUpsertTest {
     @Test
     public void Test_AutoFitTableUpsert_iotAnyVector_null() throws Exception {
         String script = "if(existsDatabase(\"dfs://testIOT_allDateType\")) dropDatabase(\"dfs://testIOT_allDateType\")\n" +
-                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT_allDateType\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -1897,7 +1897,7 @@ public class AutoFitTableUpsertTest {
     @Test
     public void Test_AutoFitTableUpsert_iotAnyVector_null_compress_true() throws Exception {
         String script = "if(existsDatabase(\"dfs://testIOT_allDateType\")) dropDatabase(\"dfs://testIOT_allDateType\")\n" +
-                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT_allDateType\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -1954,7 +1954,7 @@ public class AutoFitTableUpsertTest {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script = "if(existsDatabase(\"dfs://testIOT_allDateType\")) dropDatabase(\"dfs://testIOT_allDateType\")\n" +
-                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create database \"dfs://testIOT_allDateType\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT_allDateType\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -2006,7 +2006,7 @@ public class AutoFitTableUpsertTest {
     @Test
     public void Test_AutoFitTableUpsert_iotAnyVector_big_data() throws Exception {
         String script = "if(existsDatabase(\"dfs://testIOT_allDateType1\")) dropDatabase(\"dfs://testIOT_allDateType1\")\n" +
-                "     create database \"dfs://testIOT_allDateType1\" partitioned by   RANGE(1000000*(0..10)),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='TSDB'\n" +
+                "     create database \"dfs://testIOT_allDateType1\" partitioned by   RANGE(1000000*(0..10)),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT_allDateType1\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
