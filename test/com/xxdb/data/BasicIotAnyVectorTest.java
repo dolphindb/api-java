@@ -8,6 +8,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.*;
 
+import static com.xxdb.data.Entity.DATA_TYPE.DT_IOTANY;
+import static com.xxdb.data.Entity.DATA_TYPE.DT_VOID;
+
 public class BasicIotAnyVectorTest {
     private DBConnection conn;
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
@@ -42,7 +45,7 @@ public class BasicIotAnyVectorTest {
         Scalar[] scalar = new Scalar[]{bbyte,bshort,bint,blong,bbool,bfloat,bdouble,bsting};
         BasicIotAnyVector BIV = new BasicIotAnyVector(scalar);
         Assert.assertEquals(Entity.DATA_CATEGORY.MIXED,BIV.getDataCategory());
-        Assert.assertEquals(Entity.DATA_TYPE.DT_IOTANY,BIV.getDataType());
+        Assert.assertEquals(DT_IOTANY,BIV.getDataType());
         Assert.assertEquals(8,BIV.rows());
         Assert.assertEquals(1,BIV.columns());
         System.out.println(BIV.getString());
@@ -159,20 +162,20 @@ public class BasicIotAnyVectorTest {
                 "sortColumns=[`deviceId, `location, `timestamp],\n" +
                 "latestKeyCache=true;\n" +
                 "pt = loadTable(\"dfs://testIOT222\",\"pt\");\n" +
-                "t = table([1] as deviceId,\n" +
-                "  [now()] as timestamp,\n" +
-                "  [`loc1] as location,\n" +
-                "  [long(233)] as value)\n" +
+                "t = table([1,2] as deviceId,\n" +
+                "  [now(),now()] as timestamp,\n" +
+                "  [`loc1`loc2] as location,\n" +
+                "  [long(233),string(234)] as value)\n" +
                 "pt.append!(t)";
         conn.run(script);
         BasicTable entity1 = (BasicTable)conn.run("select * from loadTable( \"dfs://testIOT222\", `pt) ;");
         System.out.println(entity1.getString());
         BasicIotAnyVector BIV = (BasicIotAnyVector)entity1.getColumn("value");
         Assert.assertEquals(Entity.DATA_CATEGORY.MIXED,BIV.getDataCategory());
-        Assert.assertEquals(Entity.DATA_TYPE.DT_IOTANY,BIV.getDataType());
-        Assert.assertEquals(1,BIV.rows());
+        Assert.assertEquals(DT_IOTANY,BIV.getDataType());
+        Assert.assertEquals(2,BIV.rows());
         Assert.assertEquals(1,BIV.columns());
-        Assert.assertEquals("[233]",BIV.getString());
+        Assert.assertEquals("[233,234]",BIV.getString());
         Assert.assertEquals("233",BIV.get(0).getString());
         Assert.assertEquals("233",BIV.getString(0));
         String re = null;
@@ -590,5 +593,107 @@ public class BasicIotAnyVectorTest {
         BasicTable iotAnyTable = (BasicTable)conn.run("iotAnyTable");
         System.out.println(iotAnyTable.getString());
         Assert.assertEquals(0, iotAnyTable.rows());
+    }
+
+    @Test
+    public void test_iotAnyVector_allDateType_void() throws IOException {
+        String script = "if(existsDatabase(\"dfs://testIOT\")) dropDatabase(\"dfs://testIOT\")\n" +
+                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
+                "     create table \"dfs://testIOT\".\"pt\"(\n" +
+                "     deviceId INT,\n" +
+                "     timestamp TIMESTAMP,\n" +
+                "     location SYMBOL,\n" +
+                "     value IOTANY,\n" +
+                " )\n" +
+                "partitioned by deviceId, timestamp,\n" +
+                "sortColumns=[`deviceId, `location, `timestamp],\n" +
+                "latestKeyCache=true;\n" +
+                "pt = loadTable(\"dfs://testIOT\",\"pt\");\n" +
+                "t=table([1] as deviceId, [now()]  as timestamp,  [`loc1] as location, [char('Q')] as value)\n" +
+                "pt.append!(t)\n" +
+                "flushTSDBCache()\n" +
+                "t=table([2] as deviceId, [now()]  as timestamp,  [`loc1] as location, [short(233)] as value)\n" +
+                "pt.append!(t)\n" +
+                "flushTSDBCache()\n" +
+                "t=table([3] as deviceId, [now()]  as timestamp,  [`loc1] as location, [int(-233)] as value)\n" +
+                "pt.append!(t)\n" +
+                "flushTSDBCache()\n" +
+                "t=table([4] as deviceId, [now()]  as timestamp,  [`loc1] as location, [long(233121)] as value)\n" +
+                "pt.append!(t)\n" +
+                "flushTSDBCache()\n" +
+                "t=table([5] as deviceId, [now()]  as timestamp,  [`loc1] as location, [true] as value)\n" +
+                "pt.append!(t)\n" +
+                "flushTSDBCache()\n" +
+                "t=table([6] as deviceId, [now()]  as timestamp,  [`loc1] as location, [233.34f] as value)\n" +
+                "pt.append!(t)\n" +
+                "flushTSDBCache()\n" +
+                "t=table([7] as deviceId, [now()]  as timestamp,  [`loc1] as location, [233.34] as value)\n" +
+                "pt.append!(t)\n" +
+                "flushTSDBCache()\n" +
+                "t=table([8] as deviceId, [now()]  as timestamp,  [`loc1] as location, [`loc1] as value)\n" +
+                "pt.append!(t)\n" +
+                "flushTSDBCache()\n"  +
+                "t=table(12..14 as deviceId, [now(),2022.06.13 13:30:10.008,2020.06.13 13:30:10.008]  as timestamp,  [`loc1`loc2`loc3] as location, [symbol(`AAA`bbb`xxx)] as value)\n" +
+                "pt.append!(t)\n" +
+                "flushTSDBCache()\n"  ;
+        conn.run(script);
+        BasicIotAnyVector entity1 = (BasicIotAnyVector)conn.run("exec value  from loadTable( \"dfs://testIOT\", `pt) order by deviceId;");
+        Assert.assertEquals("['Q',233,-233,233121,true,233.33999634,233.34,loc1,AAA,bbb,xxx]", entity1.getString());
+        BasicIotAnyVector entity2 = (BasicIotAnyVector)conn.run("pt = exec value  from loadTable( \"dfs://testIOT\", `pt) order by deviceId; subarray(pt,0:20)");
+        System.out.println(entity2.getString());
+        Assert.assertEquals("['Q',233,-233,233121,true,233.33999634,233.34,loc1,AAA,bbb,xxx,,,,,,,,,]",entity2.getString());
+        Assert.assertEquals("", entity2.getString(11));
+        Assert.assertEquals(DT_VOID, entity2.get(11).getDataType());
+        Assert.assertEquals("", entity2.get(11).getString());
+        Assert.assertEquals("", entity2.get(19).getString());
+        Map<String, Entity> map = new HashMap<>();
+        map.put("iotAny1", entity2);
+        conn.upload(map);
+        Entity entity3 = conn.run("iotAny1");
+        System.out.println(entity3.getString());
+        Assert.assertEquals("['Q',233,-233,233121,true,233.33999634,233.34,loc1,AAA,bbb,xxx,,,,,,,,,]",entity3.getString());
+        BasicIotAnyVector entity4= (BasicIotAnyVector)conn.run("pt = exec value  from loadTable( \"dfs://testIOT\", `pt) order by deviceId; subarray(pt,11:20)");
+        System.out.println(entity4.getString());
+        Assert.assertEquals("[,,,,,,,,]",entity4.getString());
+    }
+
+    @Test
+    public void test_iotAnyVector_allDateType_void_1() throws IOException {
+        String script = "if(existsDatabase(\"dfs://IOTDB\")) dropDatabase(\"dfs://IOTDB\")\n" +
+                "create database \"dfs://IOTDB\" partitioned by HASH([SYMBOL,10]),VALUE([today()]),engine = \"IOTDB\";\n" +
+                "create table \"dfs://IOTDB\".\"data\" (\n" +
+                "        Time TIMESTAMP,\n" +
+                "        systemID SYMBOL,\n" +
+                "        TagName SYMBOL,\n" +
+                "        Value IOTANY,\n" +
+                ")\n" +
+                "partitioned by systemID, Time,\n" +
+                "sortColumns = [\"systemID\",\"TagName\",\"Time\"],\n" +
+                "latestKeyCache = true\n" +
+                "pt = loadTable(\"dfs://IOTDB\",\"data\")\n" +
+                "Time = take(2024.01.01T00:00:00,2)\n" +
+                "systemID = `0x001`0x002\n" +
+                "TagName = `value1`value1\n" +
+                "Value = [4,6]\n" +
+                "t = table(Time,systemID,TagName,Value)\n" +
+                "pt.append!(t)\n" +
+                "Time = take(2024.01.01T00:00:00,1)\n" +
+                "systemID = [`0x001]\n" +
+                "TagName = [`value2]\n" +
+                "Value = [true]\n" +
+                "t = table(Time,systemID,TagName,Value)\n" +
+                "pt.append!(t)\n"  ;
+        conn.run(script);
+        BasicTable entity1 = (BasicTable)conn.run("select Value from pt pivot by Time,sysTemID,TagName;");
+        Assert.assertEquals("[true,]", entity1.getColumn(3).getString());
+        Assert.assertEquals("", entity1.getColumn(3).get(1).getString());
+        Assert.assertEquals(DT_IOTANY, entity1.getColumn(3).getDataType());
+        Assert.assertEquals(DT_VOID, entity1.getColumn(3).get(1).getDataType());
+        Map<String, Entity> map = new HashMap<>();
+        map.put("iotAny1", entity1);
+        conn.upload(map);
+        Entity entity3 = conn.run("iotAny1");
+        System.out.println(entity3.getString());
+        Assert.assertEquals(entity1.getString(),entity3.getString());
     }
 }
