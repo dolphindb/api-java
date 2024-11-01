@@ -77,7 +77,10 @@ public class BasicIotAnyVector extends AbstractVector {
         BasicInt curDataType = (BasicInt) indexsDataType.get(index);
         BasicInt curIndex = (BasicInt) indexs.get(index);
 
-        return ((Vector) subVector.get(curDataType.getInt())).get(curIndex.getInt());
+        if (curDataType.getInt() == 0)
+            return new Void();
+        else
+            return ((Vector) subVector.get(curDataType.getInt())).get(curIndex.getInt());
     }
 
     public String getString(int index) {
