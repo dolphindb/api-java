@@ -177,10 +177,10 @@ public class BasicPointVector extends AbstractVector{
 
 
 	public void addRange(Double2[] valueList) {
-		values = Arrays.copyOf(values, valueList.length + values.length);
+		int requiredCapacity = size + valueList.length;
+		checkCapacity(requiredCapacity);
 		System.arraycopy(valueList, 0, values, size, valueList.length);
 		size += valueList.length;
-		capaticy = values.length;
 	}
 
 	@Override
@@ -191,6 +191,18 @@ public class BasicPointVector extends AbstractVector{
 	@Override
 	public void Append(Vector value) throws Exception{
 		addRange(((BasicPointVector)value).getdataArray());
+	}
+
+	@Override
+	public void checkCapacity(int requiredCapacity) {
+		if (requiredCapacity > values.length) {
+			int newCapacity = Math.max(
+					(int)(values.length * GROWTH_FACTOR),
+					requiredCapacity
+			);
+			values = Arrays.copyOf(values, newCapacity);
+			capaticy = newCapacity;
+		}
 	}
 
 	public Double2[] getdataArray(){

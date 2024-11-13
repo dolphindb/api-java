@@ -334,6 +334,11 @@ public class BasicDecimal32Vector extends AbstractVector{
         }
     }
 
+    @Override
+    public void checkCapacity(int requiredCapacity) {
+        throw new RuntimeException("BasicDecimal32Vector not support checkCapacity.");
+    }
+
     public void setScale(int scale){
         this.scale_ = scale;
     }

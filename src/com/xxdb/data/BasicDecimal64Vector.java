@@ -350,6 +350,11 @@ public class BasicDecimal64Vector extends AbstractVector{
         }
     }
 
+    @Override
+    public void checkCapacity(int requiredCapacity) {
+        throw new RuntimeException("BasicDecimal64Vector not support checkCapacity.");
+    }
+
     @JsonIgnore
     public long[] getdataArray(){
         long[] data = new long[size];

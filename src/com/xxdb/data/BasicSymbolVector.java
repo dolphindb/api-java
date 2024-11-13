@@ -162,6 +162,11 @@ public class BasicSymbolVector extends AbstractVector {
 		throw new RuntimeException("SymbolVector does not support append a vector");
 	}
 
+	@Override
+	public void checkCapacity(int requiredCapacity) {
+		throw new RuntimeException("BasicSymbolVector not support checkCapacity.");
+	}
+
 	public void set(int index, Entity value) throws Exception {
 		values[index] = base.find(value.getString(), true);
 	}

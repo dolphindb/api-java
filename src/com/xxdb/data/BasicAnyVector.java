@@ -122,6 +122,11 @@ public class BasicAnyVector extends AbstractVector{
 		throw new RuntimeException("AnyVector not support append");
 	}
 
+	@Override
+	public void checkCapacity(int requiredCapacity) {
+		throw new RuntimeException("BasicAnyVector not support checkCapacity.");
+	}
+
 	public String getString(){
 		StringBuilder sb = new StringBuilder("(");
 		int size = Math.min(10, rows());
