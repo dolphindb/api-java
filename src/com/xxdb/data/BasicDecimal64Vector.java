@@ -16,7 +16,7 @@ public class BasicDecimal64Vector extends AbstractVector{
     private int scale_ = -1;
     private long[] unscaledValues;
     private int size;
-    private int capaticy;
+    private int capacity;
 
     private static final BigDecimal DECIMAL64_MIN_VALUE = new BigDecimal("-9223372036854775808");
     private static final BigDecimal DECIMAL64_MAX_VALUE = new BigDecimal("9223372036854775807");
@@ -33,7 +33,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         unscaledValues = new long[size];
 
         this.size = unscaledValues.length;
-        capaticy = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     BasicDecimal64Vector(DATA_FORM df, int size){
@@ -41,7 +41,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         unscaledValues = new long[size];
 
         this.size = unscaledValues.length;
-        capaticy = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     BasicDecimal64Vector(long[] dataValue, int scale){
@@ -51,7 +51,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         this.scale_ = scale;
         this.unscaledValues = dataValue;
         this.size = unscaledValues.length;
-        capaticy = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     public BasicDecimal64Vector(String[] data, int scale) {
@@ -70,7 +70,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         }
 
         size = length;
-        capaticy = length;
+        capacity = length;
     }
 
     public BasicDecimal64Vector(DATA_FORM df, ExtendedDataInput in, int extra) throws IOException{
@@ -101,7 +101,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         }
 
         this.size = unscaledValues.length;
-        capaticy = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     @Deprecated
@@ -121,7 +121,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         }
         unscaledValues = newIntValue;
         this.size = unscaledValues.length;
-        capaticy = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     @Override
@@ -141,7 +141,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         }
 
         this.size = unscaledValues.length;
-        capaticy = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     @Override
@@ -254,13 +254,13 @@ public class BasicDecimal64Vector extends AbstractVector{
     }
 
     public void add(String value) {
-        if (size + 1 > capaticy && unscaledValues.length > 0) {
+        if (size + 1 > capacity && unscaledValues.length > 0) {
             unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length * 2);
         } else if (unscaledValues.length <= 0) {
             unscaledValues = new long[1];
         }
 
-        capaticy = unscaledValues.length;
+        capacity = unscaledValues.length;
         if (value.equals("0.0"))
             unscaledValues[size] = 0;
         else if(value.equals(""))
@@ -276,12 +276,12 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Deprecated
     public void add(double value) {
-        if (size + 1 > capaticy && unscaledValues.length > 0){
+        if (size + 1 > capacity && unscaledValues.length > 0){
             unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length * 2);
         }else if (unscaledValues.length <= 0){
             unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length + 1);
         }
-        capaticy = unscaledValues.length;
+        capacity = unscaledValues.length;
         if (value == 0.0)
             unscaledValues[size] = 0;
         else {
@@ -297,10 +297,10 @@ public class BasicDecimal64Vector extends AbstractVector{
 
 
     void addRange(long[] valueList) {
-        unscaledValues = Arrays.copyOf(unscaledValues, valueList.length + unscaledValues.length);
+        int requiredCapacity = size + valueList.length;
+        checkCapacity(requiredCapacity);
         System.arraycopy(valueList, 0, unscaledValues, size, valueList.length);
         size += valueList.length;
-        capaticy = unscaledValues.length;
     }
 
     public void addRange(String[] valueList) {
@@ -314,7 +314,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         unscaledValues = Arrays.copyOf(unscaledValues, newLongValue.length + unscaledValues.length);
         System.arraycopy(newLongValue, 0, unscaledValues, size, newLongValue.length);
         size += newLongValue.length;
-        capaticy = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     @Deprecated
@@ -331,7 +331,7 @@ public class BasicDecimal64Vector extends AbstractVector{
         unscaledValues = Arrays.copyOf(unscaledValues, newLongValue.length + unscaledValues.length);
         System.arraycopy(newLongValue, 0, unscaledValues, size, newLongValue.length);
         size += newLongValue.length;
-        capaticy = unscaledValues.length;
+        capacity = unscaledValues.length;
     }
 
     @Override
@@ -341,18 +341,24 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public void Append(Vector value) throws Exception{
-        if(((BasicDecimal64Vector)value).getScale() == scale_)
-            addRange(((BasicDecimal64Vector)value).getdataArray());
-        else{
-            for(int i = 0; i < value.rows(); ++i){
+        if (((BasicDecimal64Vector)value).getScale() == scale_)
+            addRange(((BasicDecimal64Vector) value).getdataArray());
+        else {
+            for(int i = 0; i < value.rows(); ++i)
                 Append((Scalar)value.get(i));
-            }
         }
     }
 
     @Override
     public void checkCapacity(int requiredCapacity) {
-        throw new RuntimeException("BasicDecimal64Vector not support checkCapacity.");
+        if (requiredCapacity > unscaledValues.length) {
+            int newCapacity = Math.max(
+                    (int)(unscaledValues.length * GROWTH_FACTOR),
+                    requiredCapacity
+            );
+            unscaledValues = Arrays.copyOf(unscaledValues, newCapacity);
+            capacity = newCapacity;
+        }
     }
 
     @JsonIgnore

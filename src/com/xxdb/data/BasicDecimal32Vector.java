@@ -280,10 +280,10 @@ public class BasicDecimal32Vector extends AbstractVector{
     }
 
     void addRange(int[] valueList) {
-        unscaledValues = Arrays.copyOf(unscaledValues, valueList.length + unscaledValues.length);
+        int requiredCapacity = size + valueList.length;
+        checkCapacity(requiredCapacity);
         System.arraycopy(valueList, 0, unscaledValues, size, valueList.length);
         size += valueList.length;
-        capacity = unscaledValues.length;
     }
 
     public void addRange(String[] valueList) {
@@ -325,18 +325,24 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void Append(Vector value) throws Exception{
-        if(((BasicDecimal32Vector)value).getScale() == scale_)
-            addRange(((BasicDecimal32Vector)value).getdataArray());
-        else{
-            for(int i = 0; i < value.rows(); ++i){
+        if (((BasicDecimal32Vector)value).getScale() == scale_)
+            addRange(((BasicDecimal32Vector) value).getdataArray());
+        else {
+            for(int i = 0; i < value.rows(); ++i)
                 Append((Scalar)value.get(i));
-            }
         }
     }
 
     @Override
     public void checkCapacity(int requiredCapacity) {
-        throw new RuntimeException("BasicDecimal32Vector not support checkCapacity.");
+        if (requiredCapacity > unscaledValues.length) {
+            int newCapacity = Math.max(
+                    (int)(unscaledValues.length * GROWTH_FACTOR),
+                    requiredCapacity
+            );
+            unscaledValues = Arrays.copyOf(unscaledValues, newCapacity);
+            capacity = newCapacity;
+        }
     }
 
     public void setScale(int scale){
