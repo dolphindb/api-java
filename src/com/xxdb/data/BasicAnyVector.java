@@ -35,7 +35,7 @@ public class BasicAnyVector extends AbstractVector{
 		int cols = in.readInt();
 		int size = rows * cols;
 		values = new Entity[size];
-		assert(rows <= 1024);
+//		assert(rows <= 1024);
 		for(int i=0; i<size; ++i){
 			short flag = in.readShort();
 			int form = flag>>8;
