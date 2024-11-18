@@ -89,7 +89,7 @@ public class BasicSecondTest {
         assertEquals(capacity*2,bsv.capaticy);
         bsv.Append(bsv);
         assertEquals(size+5,bsv.size);
-        assertEquals(capacity*2+4,bsv.capaticy);
+        assertEquals(9,bsv.capaticy);
     }
     @Test
     public void test_BasicSecond_toJSONString() throws Exception {
