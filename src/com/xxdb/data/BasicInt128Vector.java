@@ -213,6 +213,11 @@ public class BasicInt128Vector extends AbstractVector{
 		addRange(((BasicInt128Vector)value).getdataArray());
 	}
 
+	@Override
+	public void checkCapacity(int requiredCapacity) {
+		throw new RuntimeException("BasicInt128Vector not support checkCapacity.");
+	}
+
 	public Long2[] getdataArray(){
 		Long2[] data = new Long2[size];
 		System.arraycopy(values, 0, data, 0, size);

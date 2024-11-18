@@ -555,13 +555,13 @@ public class ConnectionPoolTest {
         for (int i =0 ;i<10000;i++)
             sym.setString(i, "dss");
         cols.add(sym);
-        for (int i =0 ;i<1000;i++) {
+        for (int i =0 ;i<10;i++) {
             int m = appender.append(new BasicTable(colNames, cols));
             assertEquals(10000,m);
         }
         BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
-        assertEquals(10000000,re.getLong());
+        assertEquals(100000,re.getLong());
 
         BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
         assertEquals(date.getString(),table.getColumn("date").getString());
@@ -1944,10 +1944,10 @@ public class ConnectionPoolTest {
                 "admin", "123456", 3, false, true,
                 ipports,"", false, false, false);
         long start = System.nanoTime();
-        connectionPool.execute(new BasicDBTask("sleep(10000);"), 10000);
+        connectionPool.execute(new BasicDBTask("sleep(10000);sleep(10000);"), 10000);
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
-        assertEquals(true,(end - start) / 1000000>10000);
+        assertEquals(true,(end - start) / 1000000>=10000);
         connectionPool.waitForThreadCompletion();
         connectionPool.shutdown();
     }

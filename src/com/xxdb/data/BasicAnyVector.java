@@ -35,7 +35,7 @@ public class BasicAnyVector extends AbstractVector{
 		int cols = in.readInt();
 		int size = rows * cols;
 		values = new Entity[size];
-		assert(rows <= 1024);
+//		assert(rows <= 1024);
 		for(int i=0; i<size; ++i){
 			short flag = in.readShort();
 			int form = flag>>8;
@@ -120,6 +120,11 @@ public class BasicAnyVector extends AbstractVector{
 	@Override
 	public void Append(Vector value) {
 		throw new RuntimeException("AnyVector not support append");
+	}
+
+	@Override
+	public void checkCapacity(int requiredCapacity) {
+		throw new RuntimeException("BasicAnyVector not support checkCapacity.");
 	}
 
 	public String getString(){

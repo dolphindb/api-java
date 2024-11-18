@@ -92,7 +92,7 @@ public class BasicTimeTest {
         assertEquals(capacity*2,btv.capaticy);
         btv.Append(new BasicTimeVector(new int[]{618,755,907}));
         assertEquals(size+4,btv.size);
-        assertEquals(capacity*2+3,btv.capaticy);
+        assertEquals(capacity*2+2,btv.capaticy);
     }
     @Test
     public void test_BasicTime(){

@@ -309,16 +309,15 @@ public class BasicStringVector extends AbstractVector{
 
 	public void addRange(String[] valueList) {
 		if (isBlob) {
-			for (int i = 0; i < valueList.length; i++){
+			for (int i = 0; i < valueList.length; i++)
 				blobValues.add(valueList[i].getBytes(StandardCharsets.UTF_8));
-			}
+
 			size += valueList.length;
 			capaticy = blobValues.size();
 		} else {
-			values = Arrays.copyOf(values, valueList.length + values.length);
+			checkCapacity(size + valueList.length);
 			System.arraycopy(valueList, 0, values, size, valueList.length);
 			size += valueList.length;
-			capaticy = values.length;
 		}
 	}
 
@@ -341,6 +340,18 @@ public class BasicStringVector extends AbstractVector{
 			capaticy = blobValues.size();
 		} else {
 			addRange(((BasicStringVector)value).getdataArray());
+		}
+	}
+
+	@Override
+	public void checkCapacity(int requiredCapacity) {
+		if (requiredCapacity > values.length) {
+			int newCapacity = Math.max(
+					(int)(values.length * GROWTH_FACTOR),
+					requiredCapacity
+			);
+			values = Arrays.copyOf(values, newCapacity);
+			capaticy = newCapacity;
 		}
 	}
 

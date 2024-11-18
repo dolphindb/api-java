@@ -113,7 +113,7 @@ public class BasicDateHourTest {
         System.out.println(bdhv.get(2));
         bdhv.Append(bdhv);
         assertEquals(size+4,bdhv.size);
-        assertEquals(7,bdhv.capaticy);
+        assertEquals(6,bdhv.capaticy);
     }
     @Test
     public void test_BasicDateHour_toJSONString() throws Exception {

@@ -12,6 +12,7 @@ import com.xxdb.io.LittleEndianDataOutputStream;
 public abstract class AbstractVector extends AbstractEntity implements Vector{
 	private DATA_FORM df_;
 	protected int compressedMethod = Vector.COMPRESS_LZ4;
+	protected static final double GROWTH_FACTOR = 1.5;
 
 	public static class NumElementAndPartial{
 		public 	int numElement;
@@ -107,6 +108,7 @@ public abstract class AbstractVector extends AbstractEntity implements Vector{
 	public abstract int getUnitLength();
 	public abstract void Append(Scalar value) throws Exception;
 	public abstract void Append(Vector value) throws Exception;
+	public abstract void checkCapacity(int requiredCapacity);
 
 	public static boolean checkCompressedMethod(DATA_TYPE type, int compressedMethod) {
 		if(compressedMethod==COMPRESS_DELTA) {

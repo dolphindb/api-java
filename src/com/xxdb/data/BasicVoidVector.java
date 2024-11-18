@@ -101,6 +101,11 @@ public class BasicVoidVector extends AbstractVector {
     }
 
     @Override
+    public void checkCapacity(int requiredCapacity) {
+        throw new RuntimeException("BasicVoidVector not support checkCapacity.");
+    }
+
+    @Override
     public ByteBuffer writeVectorToBuffer(ByteBuffer buffer) throws IOException {
         return buffer;
     }

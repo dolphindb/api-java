@@ -149,6 +149,11 @@ public class BasicIotAnyVector extends AbstractVector {
         throw new RuntimeException("IotAnyVector.Append not supported.");
     }
 
+    @Override
+    public void checkCapacity(int requiredCapacity) {
+        throw new RuntimeException("BasicIotAnyVector not support checkCapacity.");
+    }
+
     public String getString(){
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < rows(); i++)

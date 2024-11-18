@@ -382,6 +382,11 @@ public class BasicArrayVector extends AbstractVector {
 	}
 
 	@Override
+	public void checkCapacity(int requiredCapacity) {
+		throw new RuntimeException("BasicArrayVector not support checkCapacity.");
+	}
+
+	@Override
 	public String getJsonString(int rowIndex) {
 		StringBuilder sb = new StringBuilder("[");
 		Vector value = (Vector) get(rowIndex);

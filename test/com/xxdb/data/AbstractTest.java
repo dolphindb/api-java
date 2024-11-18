@@ -301,6 +301,11 @@ public class AbstractTest{
             }
 
             @Override
+            public void checkCapacity(int requiredCapacity) {
+
+            }
+
+            @Override
             public DATA_CATEGORY getDataCategory() {
                 return null;
             }
@@ -400,6 +405,11 @@ public class AbstractTest{
             }
 
             @Override
+            public void checkCapacity(int requiredCapacity) {
+
+            }
+
+            @Override
             public DATA_CATEGORY getDataCategory() {
                 return null;
             }
@@ -490,6 +500,11 @@ public class AbstractTest{
 
             @Override
             public void Append(Vector value) throws Exception {
+
+            }
+
+            @Override
+            public void checkCapacity(int requiredCapacity) {
 
             }
 
@@ -587,6 +602,11 @@ public class AbstractTest{
             }
 
             @Override
+            public void checkCapacity(int requiredCapacity) {
+
+            }
+
+            @Override
             public DATA_CATEGORY getDataCategory() {
                 return null;
             }
@@ -677,6 +697,11 @@ public class AbstractTest{
 
             @Override
             public void Append(Vector value) throws Exception {
+
+            }
+
+            @Override
+            public void checkCapacity(int requiredCapacity) {
 
             }
 

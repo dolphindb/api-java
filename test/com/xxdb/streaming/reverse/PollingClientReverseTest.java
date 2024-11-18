@@ -625,9 +625,9 @@ public class PollingClientReverseTest {
                 }
 
             }
-            client.unsubscribe(HOST, PORT, "Trades1","subTrades1");
-            client.unsubscribe(HOST, PORT, "Trades1","subTrades2");
         }
+        client.unsubscribe(HOST, PORT, "Trades1","subTrades1");
+        client.unsubscribe(HOST, PORT, "Trades1","subTrades2");
     }
 
     @Test(timeout = 60000)

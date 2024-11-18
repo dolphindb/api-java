@@ -547,7 +547,7 @@ public class SimpleDBConnectionPoolTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host, controller_port, "admin", "123456");
         controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
-        controller_conn.run("5000");
+        controller_conn.run("8000");
         SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
         config1.setHostName(HOST);
         config1.setPort(PORT);
@@ -563,7 +563,7 @@ public class SimpleDBConnectionPoolTest {
         DBConnection poolEntity = pool.getConnection();
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
         int port1 = port_list[1];
-        poolEntity.run("sleep(2000)");
+        poolEntity.run("sleep(8000)");
         BasicTable re = (BasicTable) poolEntity.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re.rows(); i++) {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));

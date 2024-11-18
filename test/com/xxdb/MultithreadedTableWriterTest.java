@@ -675,7 +675,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "", "t1", false, false, null, 1, 1,
                 1, "date");
         ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, "2012.01.02");
-        assertEquals("Invalid object error java.lang.RuntimeException: Failed to insert data. Cannot convert String to DT_DATE.",pErrorInfo.getErrorInfo());
+        assertEquals("Invalid object error when create scalar for column 'date': Failed to insert data. Cannot convert String to DT_DATE.",pErrorInfo.getErrorInfo());
         assertEquals("A1",pErrorInfo.getErrorCode());
         assertEquals(true,pErrorInfo.hasError());
         assertEquals(false,pErrorInfo.succeed());
@@ -1605,7 +1605,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 1, "date");
         for (int i = 0; i < 8; i++) {
             ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( DT, DT);
-            assertEquals("code=A1 info=Invalid object error java.lang.RuntimeException: Failed to insert data. Cannot convert Calendar to DT_NANOTIME.",pErrorInfo.toString());
+            assertEquals("code=A1 info=Invalid object error when create scalar for column 'nanotime': Failed to insert data. Cannot convert Calendar to DT_NANOTIME.",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
         conn.run("undef(`t1,SHARED)");
@@ -1626,7 +1626,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 1, "date");
         for (int i = 0; i < 8; i++) {
             ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( DT, DT);
-            assertEquals("code=A1 info=Invalid object error java.lang.RuntimeException: Failed to insert data. Cannot convert Calendar to DT_NANOTIMESTAMP.",pErrorInfo.toString());
+            assertEquals("code=A1 info=Invalid object error when create scalar for column 'nanotimestamp': Failed to insert data. Cannot convert Calendar to DT_NANOTIMESTAMP.",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
         conn.run("undef(`t1,SHARED)");
@@ -6494,13 +6494,14 @@ public  class MultithreadedTableWriterTest implements Runnable {
         }
         System.out.println(mtw.getStatus().toString());
         mtw.waitForThreadCompletion();
+        conn1.run("sleep(5000)");
         try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
 
         }
         catch(IOException ex) {
             System.out.println(ex.getMessage());
         }
-        conn1.run("sleep(1000)");
+        conn1.run("sleep(8000)");
         DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
         conn1.run("sleep(1000)");
@@ -6654,12 +6655,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
         Assert.assertEquals(true,mtw.getStatus().sendFailedRows>0);
         //Assert.assertEquals(true,mtw.getStatus().unsentRows==0);
         mtw.waitForThreadCompletion();
+        conn1.run("sleep(5000)");
         try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
         }
         catch(IOException ex) {
             System.out.println(ex.getMessage());
         }
-        conn1.run("sleep(5000)");
+        conn1.run("sleep(8000)");
         DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
         conn1.run("sleep(1000)");
@@ -6814,13 +6816,14 @@ public  class MultithreadedTableWriterTest implements Runnable {
             }
         }
         mtw.waitForThreadCompletion();
+        conn1.run("sleep(5000)");
         try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
 
         }
         catch(IOException ex) {
             System.out.println(ex.getMessage());
         }
-        conn1.run("sleep(2000)");
+        conn1.run("sleep(8000)");
         DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
         conn1.run("sleep(2000)");
@@ -6836,7 +6839,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
         for (int i = 0; i < ex.rows(); i++){
             assertEquals(ex.getColumn(0).get(i).getString(), act.getColumn(0).get(i).getString());
-            System.out.println(ex.getColumn(0).get(i).getString());
+            //System.out.println(ex.getColumn(0).get(i).getString());
             //System.out.println("callback rows"+callback.rows());
         }
         conn.close();
@@ -6905,13 +6908,14 @@ public  class MultithreadedTableWriterTest implements Runnable {
             }
         }
         mtw.waitForThreadCompletion();
+        conn1.run("sleep(5000)");
         try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
 
         }
         catch(IOException ex) {
             System.out.println(ex.getMessage());
         }
-        conn1.run("sleep(1000)");
+        conn1.run("sleep(8000)");
         DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
         conn1.run("sleep(1000)");

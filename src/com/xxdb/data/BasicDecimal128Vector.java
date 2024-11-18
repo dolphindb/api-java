@@ -439,6 +439,11 @@ public class BasicDecimal128Vector extends AbstractVector {
         }
     }
 
+    @Override
+    public void checkCapacity(int requiredCapacity) {
+        throw new RuntimeException("BasicDecimal128Vector not support checkCapacity.");
+    }
+
     @JsonIgnore
     public BigInteger[] getdataArray() {
         BigInteger[] data = new BigInteger[size];
