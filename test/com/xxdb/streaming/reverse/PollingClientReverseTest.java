@@ -43,7 +43,7 @@ public class PollingClientReverseTest {
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     //static int PORT=9002;
-    public static PollingClient client;
+    public static PollingClient pollingClient;
     private StreamDeserializer deserializer_;
 
     @BeforeClass
@@ -58,15 +58,15 @@ public class PollingClientReverseTest {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
                 throw new IOException("Failed to connect to 2xdb server");
             }
-           client = new PollingClient(HOST,0);
+            pollingClient = new PollingClient(HOST,0);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        try {client.unsubscribe(HOST, PORT, "Trades1", "subtrades");}catch (Exception e){}
-        try {client.unsubscribe(HOST, PORT, "Trades1", "subtrades1");}catch (Exception e){}
-        try {client.unsubscribe(HOST, PORT, "Trades1", "subtrades2");}catch (Exception e){}
-        try {client.unsubscribe(HOST, PORT, "Trades1");}catch (Exception e){}
-        try {client.unsubscribe(HOST, PORT, "Trades", "subTread1");}catch (Exception e){}
+        try {pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades");}catch (Exception e){}
+        try {pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades1");}catch (Exception e){}
+        try {pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades2");}catch (Exception e){}
+        try {pollingClient.unsubscribe(HOST, PORT, "Trades1");}catch (Exception e){}
+        try {pollingClient.unsubscribe(HOST, PORT, "Trades", "subTread1");}catch (Exception e){}
         try {clear_env();}catch (Exception e){}
         conn.run("st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "enableTableShareAndPersistence(table=st2, tableName=`Trades1, asynWrite=true, compress=true, cacheSize=20000, retentionMinutes=180)\t\n");
@@ -74,13 +74,11 @@ public class PollingClientReverseTest {
 
     @After
     public  void after() throws IOException, InterruptedException {
-        try {
-            client.unsubscribe(HOST, PORT, "Trades1", "subtrades");
-            client.unsubscribe(HOST, PORT, "Trades1", "subtrades1");
-            client.unsubscribe(HOST, PORT, "Trades1", "subtrades2");
-            client.unsubscribe(HOST, PORT, "Trades1");
-        }catch (Exception e){
-        }
+        try {pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades");}catch (Exception e){}
+        try {pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades1");}catch (Exception e){}
+        try {pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades2");}catch (Exception e){}
+        try {pollingClient.unsubscribe(HOST, PORT, "Trades1");}catch (Exception e){}
+        try {pollingClient.unsubscribe(HOST, PORT, "Trades", "subTread1");}catch (Exception e){}
         try {
             conn.run("login(`admin,`123456);" +
                     "try{dropStreamTable('Trades1')}catch(ex){};"+
@@ -111,7 +109,7 @@ public class PollingClientReverseTest {
             {
                 break;
             }
-            Thread.sleep(200);
+            Thread.sleep(100);
         }
         BasicTable except = (BasicTable)conn.run("select * from  Trades order by permno");
         BasicTable res = (BasicTable)conn.run("select * from  sub1 order by permno");
@@ -146,19 +144,19 @@ public class PollingClientReverseTest {
     }
     @Test(expected = IOException.class)
     public  void error_size1() throws IOException {
-        TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades","subtrades",-1,true);
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades","subtrades",-1,true);
         ArrayList<IMessage> msgs;
         msgs = poller1.poll(1000,0);
        }
     @Test(expected = IOException.class)
     public  void error_size2() throws IOException {
-        TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades","subtrades",-1,true);
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades","subtrades",-1,true);
         ArrayList<IMessage> msgs = poller1.poll(1000,-10);
     }
 
     @Test(timeout = 120000)
     public  void test_size() throws IOException {
-        TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1","subtrades",-1,true);
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1","subtrades",-1,true);
         ArrayList<IMessage> msgs;
         try {
             for (int i=0;i<10;i++){//data<size
@@ -253,14 +251,14 @@ public class PollingClientReverseTest {
         }catch (Exception e){
             e.printStackTrace();
         }
-        client.unsubscribe(HOST, PORT, "Trades1","subtrades");
+        pollingClient.unsubscribe(HOST, PORT, "Trades1","subtrades");
     }
 
     @Test(timeout = 120000)
     public  void test_size_resubscribe() throws IOException {
         for (int j=0;j<10;j++) {
-            TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1", "subtrades1", -1, true);
-            TopicPoller poller2 = client.subscribe(HOST, PORT, "Trades1", "subtrades2", -1, true);
+            TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1", "subtrades1", -1, true);
+            TopicPoller poller2 = pollingClient.subscribe(HOST, PORT, "Trades1", "subtrades2", -1, true);
             ArrayList<IMessage> msgs1;
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
@@ -287,51 +285,51 @@ public class PollingClientReverseTest {
                 }
 
             }
-            client.unsubscribe(HOST, PORT, "Trades1", "subtrades1");
-            client.unsubscribe(HOST, PORT, "Trades1", "subtrades2");
+            pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades1");
+            pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades2");
         }
     }
     @Test(timeout = 120000)
     public void test_subscribe_admin_login() throws IOException {
-        TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1", "subtrades1", -1, true,null,"admin","123456");
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1", "subtrades1", -1, true,null,"admin","123456");
         ArrayList<IMessage> msgs1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
         msgs1 = poller1.poll(1000, 10000);
         assertEquals(5000, msgs1.size());
-        client.unsubscribe(HOST, PORT, "Trades1", "subtrades1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades1");
     }
 
     @Test(expected = IOException.class)
     public void test_subscribe_user_error() throws IOException {
-            TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"admin_error","123456");
+            TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"admin_error","123456");
     }
 
     @Test(expected = IOException.class)
     public void test_subscribe_password_error() throws IOException {
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"admin","error_password");
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"admin","error_password");
 
     }
 
     @Test(timeout = 120000)
     public void test_subscribe_admin() throws IOException, InterruptedException {
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",-1,true,null,"admin","123456");
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",-1,true,null,"admin","123456");
         ArrayList<IMessage> msgs1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
         msgs1 = poller1.poll(100, 10000);
         assertEquals(5000, msgs1.size());
-        client.unsubscribe(HOST, PORT, "Trades1", "subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades1", "subTread1");
     }
     @Test(timeout = 120000)
     public void test_subscribe_other_user() throws IOException, InterruptedException {
         PrepareUser("test1","123456");
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",-1,true,null,"test1","123456");
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",-1,true,null,"test1","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
         //Thread.sleep(5000);
         ArrayList<IMessage> msgs1 = poller1.poll(500, 10000);
         assertEquals(10000, msgs1.size());
-        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
 
     @Test(timeout = 120000)
@@ -342,7 +340,7 @@ public class PollingClientReverseTest {
                 "t2=streamTable(1:0,colNames,colTypes);"+
                 "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades1\"});");
         try {
-            TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1", "subTread1", -1, true, null, "test1", "123456");
+            TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1", "subTread1", -1, true, null, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
             System.out.println(e.getMessage());
@@ -360,15 +358,15 @@ public class PollingClientReverseTest {
                 "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades1\"});"+
                 "rpc(getControllerAlias(),grant{`test2,TABLE_READ,getNodeAlias()+\":Trades1\"});");
         try {
-            TopicPoller poller2 = client.subscribe(HOST, PORT, "Trades1", "subTread1",  -1, true, null, "test1", "123456");
+            TopicPoller poller2 = pollingClient.subscribe(HOST, PORT, "Trades1", "subTread1",  -1, true, null, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
             System.out.println(111+e.getMessage());
         }
-        TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1", "subTread1",-1, true, null, "test2", "123456");
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1", "subTread1",-1, true, null, "test2", "123456");
 
         try {
-            TopicPoller poller2 = client.subscribe(HOST, PORT, "Trades1", "subTread1", -1, true,null, "test3", "123456");
+            TopicPoller poller2 = pollingClient.subscribe(HOST, PORT, "Trades1", "subTread1", -1, true,null, "test3", "123456");
             fail("no exception thrown");
         }catch (Exception e){
             System.out.println(e.getMessage());
@@ -376,7 +374,7 @@ public class PollingClientReverseTest {
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
         ArrayList<IMessage> msgs1 = poller1.poll(10000, 10000);
         assertEquals(10000, msgs1.size());
-        client.unsubscribe(HOST, PORT, "Trades1", "subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades1", "subTread1");
     }
 
     @Test(timeout = 120000)
@@ -385,10 +383,10 @@ public class PollingClientReverseTest {
         conn.run("share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st2;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st3;");
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"tmp_st1","subTread1",-1,true,null,"test1","123456");
-        TopicPoller poller2 = client.subscribe(HOST,PORT,"tmp_st2","subTread1",-1,true,null,"test1","123456");
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"tmp_st1","subTread1",-1,true,null,"test1","123456");
+        TopicPoller poller2 = pollingClient.subscribe(HOST,PORT,"tmp_st2","subTread1",-1,true,null,"test1","123456");
         try {
-            TopicPoller poller3 = client.subscribe(HOST, PORT, "tmp_st3", "subTread1",-1, true, null, "test1", "123456_error");
+            TopicPoller poller3 = pollingClient.subscribe(HOST, PORT, "tmp_st3", "subTread1",-1, true, null, "test1", "123456_error");
             fail("no exception thrown");
         }catch (Exception e){
             System.out.println(e.getMessage());
@@ -403,46 +401,46 @@ public class PollingClientReverseTest {
 
     @Test(timeout = 60000)
     public void test_subscribe_offset() throws IOException {
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",0);
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",0);
         ArrayList<IMessage> msg1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
         msg1 = poller1.poll(500, 10000);
         assertEquals(5000, msg1.size());
-        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
 
     @Test(timeout = 60000)
     public void test_subscribe_defaultActionName_offset() throws IOException {
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1",-1);
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1",-1);
         ArrayList<IMessage> msg1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
         msg1 = poller1.poll(1000, 10000);
         assertEquals(5000, msg1.size());
-        client.unsubscribe(HOST,PORT,"Trades1");
+        pollingClient.unsubscribe(HOST,PORT,"Trades1");
     }
 
     @Test(timeout = 60000)
     public void test_subscribe_TableName() throws IOException {
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1");
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1");
         ArrayList<IMessage> msg1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
         msg1 = poller1.poll(500, 10000);
         assertEquals(5000, msg1.size());
-        client.unsubscribe(HOST,PORT,"Trades1");
+        pollingClient.unsubscribe(HOST,PORT,"Trades1");
     }
 
     @Test(timeout = 60000)
     public void test_subscribe_tableName_ActionName() throws IOException {
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1");
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1");
         ArrayList<IMessage> msg1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
         msg1 = poller1.poll(1000, 10000);
         assertEquals(5000, msg1.size());
-        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
 
     @Test(timeout = 60000)
@@ -450,21 +448,21 @@ public class PollingClientReverseTest {
         conn.run("setStreamTableFilterColumn(Trades1,`tag);" +
                 "filter=1 2 3 4 5");
         BasicIntVector filter = (BasicIntVector) conn.run("filter");
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",-1,filter);
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",-1,filter);
         ArrayList<IMessage> msg1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
         msg1 = poller1.poll(500, 10000);
         assertEquals(5, msg1.size());
-        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
 
     @Test(timeout = 120000)
     public void test_subscribe_tableName_reconnect() throws IOException {
         for (int j=0;j<10;j++) {
-            TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1",true);
-            //PollingClient client1 = new PollingClient(HOST,9069);
-            //TopicPoller poller2 = client1.subscribe(HOST, PORT, "Trades1",true);
+            TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1",true);
+            //PollingClient pollingClient1 = new PollingClient(HOST,9069);
+            //TopicPoller poller2 = pollingClient.subscribe(HOST, PORT, "Trades1",true);
             ArrayList<IMessage> msgs1;
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
@@ -491,8 +489,8 @@ public class PollingClientReverseTest {
 //                }
 
             }
-            client.unsubscribe(HOST, PORT, "Trades1");
-          //  client1.unsubscribe(HOST, PORT, "Trades1");
+            pollingClient.unsubscribe(HOST, PORT, "Trades1");
+          //  pollingClient1.unsubscribe(HOST, PORT, "Trades1");
         }
 
     }
@@ -500,9 +498,9 @@ public class PollingClientReverseTest {
     @Test(timeout = 200000)
     public void test_subscribe_offset_reconnect() throws IOException {
         for (int j=0;j<10;j++) {
-            TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1",-1,true);
-            PollingClient client1 = new PollingClient(HOST,0);
-            //TopicPoller poller2 = client.subscribe(HOST, PORT, "Trades1",-1,true);
+            TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1",-1,true);
+            PollingClient pollingClient1 = new PollingClient(HOST,0);
+            //TopicPoller poller2 = pollingClient.subscribe(HOST, PORT, "Trades1",-1,true);
             ArrayList<IMessage> msgs1;
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
@@ -529,16 +527,16 @@ public class PollingClientReverseTest {
 //                }
 
             }
-            client.unsubscribe(HOST, PORT, "Trades1");
-//            client1.unsubscribe(HOST, PORT, "Trades1");
+            pollingClient1.unsubscribe(HOST, PORT, "Trades1");
+//            pollingClient.unsubscribe(HOST, PORT, "Trades1");
         }
     }
 
     @Test(timeout = 200000)
     public void test_subscribe_tableName_actionName_offset_reconnect() throws IOException {
         for (int j=0;j<10;j++) {
-            TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1","subTrades1",-1,true);
-            TopicPoller poller2 = client.subscribe(HOST, PORT, "Trades1","subTrades2",-1,true);
+            TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1","subTrades1",-1,true);
+            TopicPoller poller2 = pollingClient.subscribe(HOST, PORT, "Trades1","subTrades2",-1,true);
             ArrayList<IMessage> msgs1;
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
@@ -563,19 +561,18 @@ public class PollingClientReverseTest {
                     BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
                     assertEquals(1000, msgs1.size());
                 }
-
             }
-            client.unsubscribe(HOST, PORT, "Trades1","subTrades1");
-            client.unsubscribe(HOST, PORT, "Trades1","subTrades2");
+            pollingClient.unsubscribe(HOST, PORT, "Trades1","subTrades1");
+            pollingClient.unsubscribe(HOST, PORT, "Trades1","subTrades2");
             conn.run("sleep(5000)");
         }
     }
 
     @Test(timeout = 120000)
     public void test_subscribe_tableName_actionName_reconnect() throws IOException {
-        TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1","subTrades1",true);
-        PollingClient client1 = new PollingClient(HOST,0);
-        TopicPoller poller2 = client.subscribe(HOST, PORT, "Trades1","subTrades2",true);
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1","subTrades1",true);
+        PollingClient pollingClient1 = new PollingClient(HOST,0);
+        TopicPoller poller2 = pollingClient.subscribe(HOST, PORT, "Trades1","subTrades2",true);
         for (int j=0;j<10;j++) {
 
             ArrayList<IMessage> msgs1;
@@ -610,8 +607,8 @@ public class PollingClientReverseTest {
 
             }
         }
-        client.unsubscribe(HOST, PORT, "Trades1","subTrades1");
-        client.unsubscribe(HOST, PORT, "Trades1","subTrades2");
+        pollingClient.unsubscribe(HOST, PORT, "Trades1","subTrades1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades1","subTrades2");
     }
 
     @Test(timeout = 60000)
@@ -641,7 +638,7 @@ public class PollingClientReverseTest {
 
     @Test
     public void test_TopicPoller_poll() throws IOException {
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",true);
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",true);
         ArrayList<IMessage> msg1;
         conn.run("n=1;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
@@ -649,13 +646,13 @@ public class PollingClientReverseTest {
         assertEquals(1, msg1.size());
         BasicTable bt = (BasicTable) conn.run("getStreamingStat().pubTables;");
         System.out.println(bt.getString());
-        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
 
     @Test(expected = NullPointerException.class)
     public void test_TopicPoller_setQueue() throws IOException {
-        TopicPoller poller1 = client.subscribe(HOST, PORT, "Trades1", "subTread1", true);
-        client.unsubscribe(HOST, PORT, "Trades", "subTread1");
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1", "subTread1", true);
+        pollingClient.unsubscribe(HOST, PORT, "Trades", "subTread1");
         poller1.setQueue(null);
         ArrayList<IMessage> msg1;
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
@@ -682,8 +679,8 @@ public class PollingClientReverseTest {
     }
     @Test
     public void test_PollingClient_no_parameter() throws IOException {
-        client = new PollingClient();
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",true);
+        pollingClient = new PollingClient();
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",true);
         ArrayList<IMessage> msg1;
         conn.run("n=1;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
@@ -691,7 +688,7 @@ public class PollingClientReverseTest {
         assertEquals(1, msg1.size());
         BasicTable bt = (BasicTable) conn.run("getStreamingStat().pubTables;");
         System.out.println(bt.getString());
-        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
     public void Handler_array(List<IMessage> messages) throws IOException {
         for(int i=0;i<messages.size();i++){
@@ -709,156 +706,156 @@ public class PollingClientReverseTest {
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_INT() throws IOException, InterruptedException {
         PrepareStreamTable_array("INT");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_BOOL() throws IOException, InterruptedException {
         PrepareStreamTable_array("BOOL");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_CHAR() throws IOException, InterruptedException {
         PrepareStreamTable_array("CHAR");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_SHORT() throws IOException, InterruptedException {
         PrepareStreamTable_array("SHORT");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_LONG() throws IOException, InterruptedException {
         PrepareStreamTable_array("LONG");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_DOUBLE() throws IOException, InterruptedException {
         PrepareStreamTable_array("DOUBLE");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_FLOAT() throws IOException, InterruptedException {
         PrepareStreamTable_array("FLOAT");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_TIME() throws IOException, InterruptedException {
         PrepareStreamTable_array("TIME");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_MINUTE() throws IOException, InterruptedException {
         PrepareStreamTable_array("MINUTE");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_SECOND() throws IOException, InterruptedException {
         PrepareStreamTable_array("SECOND");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_DATETIME() throws IOException, InterruptedException {
         PrepareStreamTable_array("DATETIME");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_TIMESTAMP() throws IOException, InterruptedException {
         PrepareStreamTable_array("TIMESTAMP");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_NANOTIME() throws IOException, InterruptedException {
         PrepareStreamTable_array("NANOTIME");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_NANOTIMESTAMP() throws IOException, InterruptedException {
         PrepareStreamTable_array("NANOTIMESTAMP");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     public void Handler_array_UUID(List<IMessage> messages) throws IOException {
         for(int i=0;i<messages.size();i++){
@@ -875,13 +872,13 @@ public class PollingClientReverseTest {
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_UUID() throws IOException, InterruptedException {
         PrepareStreamTable_array("UUID");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array_UUID(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     public void Handler_array_DATEHOUR(List<IMessage> messages) throws IOException {
         for(int i=0;i<messages.size();i++){
@@ -898,13 +895,13 @@ public class PollingClientReverseTest {
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_DATEHOUR() throws IOException, InterruptedException {
         PrepareStreamTable_array("DATEHOUR");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array_DATEHOUR(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     public void Handler_array_IPADDR(List<IMessage> messages) throws IOException {
         for(int i=0;i<messages.size();i++){
@@ -921,13 +918,13 @@ public class PollingClientReverseTest {
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_IPADDR() throws IOException, InterruptedException {
         PrepareStreamTable_array("IPADDR");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array_IPADDR(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     public void Handler_array_INT128(List<IMessage> messages) throws IOException {
         for(int i=0;i<messages.size();i++){
@@ -944,13 +941,13 @@ public class PollingClientReverseTest {
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_INT128() throws IOException, InterruptedException {
         PrepareStreamTable_array("INT128");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array_INT128(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     public void Handler_array_COMPLEX(List<IMessage> messages) throws IOException {
         for(int j=0;j<messages.size();j++){
@@ -984,13 +981,13 @@ public class PollingClientReverseTest {
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_COMPLEX() throws IOException, InterruptedException {
         PrepareStreamTable_array("COMPLEX");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array_COMPLEX(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     public void Handler_array_POINT(List<IMessage> messages) throws IOException {
         for(int j=0;j<messages.size();j++){
@@ -1022,46 +1019,46 @@ public class PollingClientReverseTest {
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_POINT() throws IOException, InterruptedException {
         PrepareStreamTable_array("POINT");
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array_POINT(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_DECIMAL32() throws IOException, InterruptedException {
         PrepareStreamTableDecimal_array("DECIMAL32",3);
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_DECIMAL64() throws IOException, InterruptedException {
         PrepareStreamTableDecimal_array("DECIMAL64",4);
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
     @Test(timeout = 60000)
     public void Test_PollingClient_subscribe_arrayVector_DECIMAL128() throws IOException, InterruptedException {
         PrepareStreamTableDecimal_array("DECIMAL128",7);
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1",0);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",0);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
-        List<IMessage> messages = poller.poll(1000,1000);
+        List<IMessage> messages = poller.poll(500,1000);
         Handler_array(messages);
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades","subTread1");
+        pollingClient.unsubscribe(HOST, PORT, "Trades","subTread1");
     }
 
     class Handler_StreamDeserializer_array implements MessageHandler {
@@ -1097,9 +1094,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1107,7 +1104,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_CHAR()throws IOException, InterruptedException {
@@ -1118,9 +1115,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1128,7 +1125,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_SHORT()throws IOException, InterruptedException {
@@ -1139,9 +1136,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1149,7 +1146,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_LONG()throws IOException, InterruptedException {
@@ -1160,9 +1157,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1170,7 +1167,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_DOUBLE()throws IOException, InterruptedException {
@@ -1181,9 +1178,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1191,7 +1188,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_FLOAT()throws IOException, InterruptedException {
@@ -1202,9 +1199,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1212,7 +1209,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_MONTH()throws IOException, InterruptedException {
@@ -1223,9 +1220,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1233,7 +1230,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_TIME()throws IOException, InterruptedException {
@@ -1244,9 +1241,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1254,7 +1251,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_MINUTE()throws IOException, InterruptedException {
@@ -1265,9 +1262,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1275,7 +1272,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_SECOND()throws IOException, InterruptedException {
@@ -1286,9 +1283,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1296,7 +1293,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_DATETIME()throws IOException, InterruptedException {
@@ -1307,9 +1304,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1317,7 +1314,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_TIMESTAMP()throws IOException, InterruptedException {
@@ -1328,9 +1325,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1338,7 +1335,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_NANOTIME()throws IOException, InterruptedException {
@@ -1349,9 +1346,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1359,7 +1356,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_NANOTIMESTAMP()throws IOException, InterruptedException {
@@ -1370,9 +1367,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1380,7 +1377,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     class Handler_StreamDeserializer_array_UUID implements MessageHandler {
         private StreamDeserializer deserializer_;
@@ -1415,9 +1412,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array_UUID handler = new Handler_StreamDeserializer_array_UUID(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1425,7 +1422,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     class Handler_StreamDeserializer_array_DATEHOUR implements MessageHandler {
         private StreamDeserializer deserializer_;
@@ -1460,9 +1457,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array_DATEHOUR handler = new Handler_StreamDeserializer_array_DATEHOUR(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1470,7 +1467,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     class Handler_StreamDeserializer_array_IPADDR implements MessageHandler {
         private StreamDeserializer deserializer_;
@@ -1505,9 +1502,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(2000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array_IPADDR handler = new Handler_StreamDeserializer_array_IPADDR(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1515,7 +1512,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     class Handler_StreamDeserializer_array_INT128 implements MessageHandler {
@@ -1551,9 +1548,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array_INT128 handler = new Handler_StreamDeserializer_array_INT128(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1561,7 +1558,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     class Handler_StreamDeserializer_array_COMPLEX implements MessageHandler {
@@ -1612,9 +1609,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array_COMPLEX handler = new Handler_StreamDeserializer_array_COMPLEX(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1622,7 +1619,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     class Handler_StreamDeserializer_array_POINT implements MessageHandler {
@@ -1673,9 +1670,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array_POINT handler = new Handler_StreamDeserializer_array_POINT(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1683,7 +1680,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     //@Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_DECIMAL32()throws IOException, InterruptedException {
@@ -1694,9 +1691,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1704,7 +1701,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     //@Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_DECIMAL64()throws IOException, InterruptedException {
@@ -1715,9 +1712,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1725,7 +1722,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     //@Test(timeout = 120000)
     public void test_PollingClient_subscribe_StreamDeserializer_streamTable_arrayVector_DECIMAL128()throws IOException, InterruptedException {
@@ -1736,9 +1733,9 @@ public class PollingClientReverseTest {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         BasicInt re = (BasicInt)conn.run("exec count(*) from outTables");
         System.out.println(re.getString());
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0);
         //Thread.sleep(30000);
-        List<IMessage> messages = poller.poll(1000, 2000);
+        List<IMessage> messages = poller.poll(500, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         for (int i = 0; i < messages.size(); i++) {
@@ -1746,14 +1743,14 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 //    @Test
 //    public void test_subscribe_msgAsTable_true() throws IOException {
 //        //public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer
 //        //deserializer, String userName, String passWord, boolean msgAsTable) throws IOException {
 //
-//        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",0,true,null,null,"","",true);
+//        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",0,true,null,null,"","",true);
 //        ArrayList<IMessage> msg1;
 //        List<String> colNames =  Arrays.asList("tag","ts","data");
 //        List<Vector> colData = Arrays.asList(new BasicIntVector(0),new BasicTimestampVector(0),new BasicDoubleVector(0));
@@ -1763,14 +1760,14 @@ public class PollingClientReverseTest {
 //        msg1 = poller1.poll(1000, 10000);
 //        System.out.println(bt.rows());
 //        assertEquals(5000, msg1.size());
-//        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+//        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
 //    }
 //    @Test
 //    public void test_subscribe_msgAsTable_false() throws IOException {
 //        //public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer
 //        //deserializer, String userName, String passWord, boolean msgAsTable) throws IOException {
 //
-//        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",0,true,null,null,"","",false);
+//        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",0,true,null,null,"","",false);
 //        ArrayList<IMessage> msg1;
 //        List<String> colNames =  Arrays.asList("tag","ts","data");
 //        List<Vector> colData = Arrays.asList(new BasicIntVector(0),new BasicTimestampVector(0),new BasicDoubleVector(0));
@@ -1780,7 +1777,7 @@ public class PollingClientReverseTest {
 //        msg1 = poller1.poll(1000, 10000);
 //        System.out.println(bt.rows());
 //        assertEquals(5000, msg1.size());
-//        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+//        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
 //    }
 //    @Test
 //    public void test_subscribe_msgAsTable_true_allDataType() throws IOException {
@@ -1821,7 +1818,7 @@ public class PollingClientReverseTest {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
-        TopicPoller poller = client.subscribe(HOST, 11111, "outTables", "mutiSchema", 0,false, null,null,"admin","123456",false,backupSites,100, false);
+        TopicPoller poller = pollingClient.subscribe(HOST, 11111, "outTables", "mutiSchema", 0,false, null,null,"admin","123456",false,backupSites,100, false);
         //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
@@ -1831,7 +1828,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, 11111, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, 11111, "outTables", "mutiSchema");
     }
 
     @Test(timeout = 120000)
@@ -1845,7 +1842,7 @@ public class PollingClientReverseTest {
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+","+PORT));
         String re = null;
         try{
-            TopicPoller poller = client.subscribe(HOST, 11111, "outTables", "mutiSchema", 0,false, null,null,"admin","123456",false,backupSites,10,true);
+            TopicPoller poller = pollingClient.subscribe(HOST, 11111, "outTables", "mutiSchema", 0,false, null,null,"admin","123456",false,backupSites,10,true);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -1860,8 +1857,8 @@ public class PollingClientReverseTest {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
-        TopicPoller poller = client.subscribe(HOST, PORT, "outTables", "mutiSchema", 0,false, null,null,"admin","123456",false,backupSites,10,true);
-        Thread.sleep(30000);
+        TopicPoller poller = pollingClient.subscribe(HOST, PORT, "outTables", "mutiSchema", 0,false, null,null,"admin","123456",false,backupSites,10,true);
+        //Thread.sleep(30000);
         List<IMessage> messages = poller.poll(1000, 2000);
         System.out.println(messages.size());
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
@@ -1870,7 +1867,7 @@ public class PollingClientReverseTest {
             handler.doEvent(msg);
         }
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     @Test(timeout = 180000)
@@ -1884,16 +1881,16 @@ public class PollingClientReverseTest {
         conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+111));
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,10,true);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,10,true);
         System.out.println("Successful subscribe");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        //Thread.sleep(5000);
         List<IMessage> messages = poller.poll(1000,1000);
         MessageHandler_handler(messages);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("1000",row_num.getColumn(0).get(0).getString());
-        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+        pollingClient.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
     @Test(timeout = 180000)
@@ -1916,26 +1913,26 @@ public class PollingClientReverseTest {
 
         Vector filter1 = (Vector) conn.run("1..6000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
-        TopicPoller poller = client.subscribe(HOST,port_list[1],"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,10,true);
+        TopicPoller poller = pollingClient.subscribe(HOST,port_list[1],"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,10,true);
         System.out.println("Successful subscribe");
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn1.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        Thread.sleep(1000);
         //List<IMessage> messages = poller.poll(5000,5000);
         //MessageHandler_handler(messages);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(10000);
+        Thread.sleep(5000);
         conn.run("t=table(5001..5500 as tag,now()+5001..5500 as ts,rand(100.0,500) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        Thread.sleep(1000);
         List<IMessage> messages1 = poller.poll(5000,5500);
         MessageHandler_handler(messages1);
-        Thread.sleep(5000);
+        //Thread.sleep(5000);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("5500",row_num.getColumn(0).get(0).getString());
-        client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
+        pollingClient.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
 
     @Test//(timeout = 180000)
@@ -1962,7 +1959,7 @@ public class PollingClientReverseTest {
         conn2.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+port_list[2]));
-        TopicPoller poller = client.subscribe(HOST,port_list[1],"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,10,false);
+        TopicPoller poller = pollingClient.subscribe(HOST,port_list[1],"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,10,false);
         System.out.println("Successful subscribe");
         conn1.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         conn2.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
@@ -1971,7 +1968,7 @@ public class PollingClientReverseTest {
         //MessageHandler_handler(messages);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         System.out.println(port_list[1]+"断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn2.run("n=2000;t=table(1001..n as tag,timestamp(1001..n) as ts,take(100.0,1000) as data);" + "Trades.append!(t)");
         Thread.sleep(2000);
         //List<IMessage> messages1 = poller.poll(2000,2000);
@@ -1984,7 +1981,7 @@ public class PollingClientReverseTest {
         conn3.run(script2);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
         System.out.println(port_list[2]+"节点断掉啦---------------------------------------------------");
-        Thread.sleep(20000);
+        Thread.sleep(10000);
         conn3.run("n=3000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(5000);
         List<IMessage> messages2 = poller.poll(3000,3000);
@@ -1995,7 +1992,7 @@ public class PollingClientReverseTest {
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("3000",row_num.getColumn(0).get(0).getString());
-        client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
+        pollingClient.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
 
     @Test(timeout = 180000)
@@ -2022,7 +2019,7 @@ public class PollingClientReverseTest {
         conn2.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+port_list[2]));
-        TopicPoller poller = client.subscribe(HOST,port_list[1],"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,10,true);
+        TopicPoller poller = pollingClient.subscribe(HOST,port_list[1],"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,10,true);
         System.out.println("Successful subscribe");
         conn1.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         conn2.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
@@ -2031,27 +2028,25 @@ public class PollingClientReverseTest {
         //MessageHandler_handler(messages);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         System.out.println(port_list[1]+"断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn2.run("n=2000;t=table(1001..n as tag,timestamp(1001..n) as ts,take(100.0,1000) as data);" + "Trades.append!(t)");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         //List<IMessage> messages1 = poller.poll(2000,2000);
         //MessageHandler_handler(messages1);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(2000);
+        Thread.sleep(5000);
         DBConnection conn3 = new DBConnection();
         conn3.connect(HOST,port_list[1],"admin","123456");
         conn3.run(script1);
         conn3.run(script2);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
         System.out.println(port_list[2]+"节点断掉啦---------------------------------------------------");
-        Thread.sleep(20000);
+        Thread.sleep(8000);
         conn3.run("n=3000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
         List<IMessage> messages2 = poller.poll(3000,3000);
         MessageHandler_handler(messages2);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
         Thread.sleep(5000);
-
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("2000",row_num.getColumn(0).get(0).getString());
@@ -2073,16 +2068,15 @@ public class PollingClientReverseTest {
         conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
-        TopicPoller poller = client.subscribe(HOST,11111,"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,10,false);
+        TopicPoller poller = pollingClient.subscribe(HOST,11111,"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,10,false);
         System.out.println("Successful subscribe");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
         List<IMessage> messages = poller.poll(5000,5000);
         MessageHandler_handler(messages);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("1000",row_num.getColumn(0).get(0).getString());
-        client.unsubscribe(HOST,11111,"Trades","subTread1");
+        pollingClient.unsubscribe(HOST,11111,"Trades","subTread1");
     }
     @Test(timeout = 180000)
     public void test_PollingClient_subscribe_resubTimeout_not_true() throws IOException, InterruptedException {
@@ -2095,16 +2089,15 @@ public class PollingClientReverseTest {
         conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+111));
-        TopicPoller poller = client.subscribe(HOST,PORT,"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,-10,true);
+        TopicPoller poller = pollingClient.subscribe(HOST,PORT,"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,-10,true);
         System.out.println("Successful subscribe");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
         List<IMessage> messages = poller.poll(1000,1000);
         MessageHandler_handler(messages);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("1000",row_num.getColumn(0).get(0).getString());
-        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+        pollingClient.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
     @Test(timeout = 180000)
     public void test_PollingClient_subscribe_backupSites_resubTimeout() throws Exception {
@@ -2129,7 +2122,7 @@ public class PollingClientReverseTest {
         conn3.run(script2);
         Vector filter1 = (Vector) conn.run("1..10000000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+port_list[2]));
-        TopicPoller poller = client.subscribe(HOST,port_list[1],"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,1000,true);
+        TopicPoller poller = pollingClient.subscribe(HOST,port_list[1],"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites,1000,true);
         System.out.println("Successful subscribe");
         class MyThread extends Thread {
             @Override
@@ -2137,7 +2130,7 @@ public class PollingClientReverseTest {
                 try {
                     conn3.run("for(n in 1..1000){\n" +
                             "    insert into Trades values(n,now()+n,n);\n" +
-                            "    sleep(100);\n" +
+                            "    sleep(50);\n" +
                             "}");
                 } catch (Exception e) {
                     // 捕获异常并打印错误信息
@@ -2151,7 +2144,7 @@ public class PollingClientReverseTest {
                 try {
                     conn1.run("for(n in 1..1000){\n" +
                             "    insert into Trades values(n,now()+n,n);\n" +
-                            "    sleep(100);\n" +
+                            "    sleep(50);\n" +
                             "}");
                 } catch (Exception e) {
                     // 捕获异常并打印错误信息
@@ -2175,14 +2168,14 @@ public class PollingClientReverseTest {
         MyThread2 thread2 = new MyThread2();
         thread.start();
         thread1.start();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         thread2.start();
         List<IMessage> messages = poller.poll(1000,1000);
         System.out.println("messages" + messages.size());
         MessageHandler_handler1(messages);
         Thread.sleep(1000);
         thread.join();
-        Thread.sleep(8000);
+        Thread.sleep(5000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         //Thread.sleep(1000);
         List<IMessage> messages1 = poller.poll(1000,1000);
@@ -2199,7 +2192,7 @@ public class PollingClientReverseTest {
         conn2.connect(HOST,port_list[1],"admin","123456");
         conn2.run(script1);
         conn2.run(script2);
-        client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
+        pollingClient.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
 
     @Test//(timeout = 180000)
@@ -2207,7 +2200,7 @@ public class PollingClientReverseTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        controller_conn.run("sleep(10000)");
+        controller_conn.run("sleep(5000)");
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
@@ -2226,7 +2219,7 @@ public class PollingClientReverseTest {
         conn2.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+port_list[2]));
-        TopicPoller poller = client.subscribe(HOST,port_list[1],"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites);
+        TopicPoller poller = pollingClient.subscribe(HOST,port_list[1],"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites);
         System.out.println("Successful subscribe");
         conn1.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         conn2.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
@@ -2237,11 +2230,11 @@ public class PollingClientReverseTest {
         System.out.println(port_list[1]+"断掉啦---------------------------------------------------");
         Thread.sleep(8000);
         conn2.run("n=2000;t=table(1001..n as tag,timestamp(1001..n) as ts,take(100.0,1000) as data);" + "Trades.append!(t)");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         //List<IMessage> messages1 = poller.poll(2000,2000);
        // MessageHandler_handler(messages1);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(8000);
+        Thread.sleep(5000);
         DBConnection conn3 = new DBConnection();
         conn3.connect(HOST,port_list[1],"admin","123456");
         conn3.run(script1);
@@ -2254,12 +2247,12 @@ public class PollingClientReverseTest {
         List<IMessage> messages2 = poller.poll(3000,3000);
         MessageHandler_handler(messages2);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
-        Thread.sleep(8000);
+        Thread.sleep(5000);
 
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("3000",row_num.getColumn(0).get(0).getString());
-        client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
+        pollingClient.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
 
     //@Test(timeout = 180000)
@@ -2282,7 +2275,7 @@ public class PollingClientReverseTest {
 
         Vector filter1 = (Vector) conn.run("1..50000");
         List<String> backupSites = Arrays.asList(new String[]{"192.168.0.69:18921", "192.168.0.69:18922", "192.168.0.69:18923"});
-        TopicPoller poller = client.subscribe(HOST,port_list[1],"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites);
+        TopicPoller poller = pollingClient.subscribe(HOST,port_list[1],"Trades","subTread1", -1,true,filter1, (StreamDeserializer) null,"admin","123456",false,backupSites);
         System.out.println("这里可以手工断掉这个集群下所有可用节点http://192.168.0.69:18920/?view=overview-old");
         Thread.sleep(1000000);
     }
@@ -2291,11 +2284,11 @@ public class PollingClientReverseTest {
         conn.run("setStreamTableFilterColumn(Trades1,`tag);" +
                 "filter=1..5");
         BasicIntVector filter = (BasicIntVector) conn.run("filter");
-        TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",-1,filter);
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",-1,filter);
         ArrayList<IMessage> msg1;
         conn.run("n=5;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
                 "Trades1.append!(t)");
-        msg1 = poller1.poll(500, 10000);
+        msg1 = poller1.poll(500, 5);
         assertEquals(5, msg1.size());
         System.out.println("msg1.get(0).getOffset() :" + msg1.get(0).getOffset());
         System.out.println("msg1.get(1).getOffset() :" + msg1.get(1).getOffset());
@@ -2307,6 +2300,6 @@ public class PollingClientReverseTest {
         assertEquals(2, msg1.get(2).getOffset());
         assertEquals(3, msg1.get(3).getOffset());
         assertEquals(4, msg1.get(4).getOffset());
-        client.unsubscribe(HOST,PORT,"Trades1","subTread1");
+        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
     }
 }
