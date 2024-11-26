@@ -1,5 +1,6 @@
 package com.xxdb;
 
+import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicTable;
 import java.io.IOException;
 import java.util.Arrays;
@@ -281,6 +282,20 @@ public class Prepare {
         for (int i = 0; i < exception.columns(); i++) {
             System.out.println("col" + resTable.getColumnName(i));
             assertEquals(exception.getColumn(i).getString(), resTable.getColumn(i).getString());
+        }
+    }
+    public static void wait_data(String table_name, int data_row) throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        BasicInt row_num;
+        for(int i=0;i<50;i++){
+            row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
+//            System.out.println(row_num.getInt());
+            if(row_num.getInt() == data_row){
+                break;
+            }
+            Thread.sleep(300);
+            i++;
         }
     }
 }

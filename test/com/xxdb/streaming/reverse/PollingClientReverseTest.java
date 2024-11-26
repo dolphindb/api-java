@@ -17,16 +17,13 @@
  */
 package com.xxdb.streaming.reverse;
 
-import com.xxdb.BasicDBTask;
+
 import com.xxdb.DBConnection;
-import com.xxdb.DBTask;
-import com.xxdb.ExclusiveDBConnectionPool;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
 import com.xxdb.streaming.client.*;
 import org.javatuples.Pair;
 import org.junit.*;
-
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.*;
@@ -99,7 +96,6 @@ public class PollingClientReverseTest {
         try {clear_env();}catch (Exception e){}
         //client.close();
         conn.close();
-        Thread.sleep(2000);
     }
 
     @AfterClass
@@ -107,27 +103,15 @@ public class PollingClientReverseTest {
         try {clear_env_1();}catch (Exception e){}
     }
 
-    public void wait_data(String table_name,int data_row) throws IOException, InterruptedException {
-        BasicInt row_num;
-        while(true){
-            row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
-//            System.out.println(row_num.getInt());
-            if(row_num.getInt() == data_row){
-                break;
-            }
-            Thread.sleep(100);
-        }
-    }
-
     public static void checkResult() throws IOException, InterruptedException {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 20; i++)
         {
             BasicInt tmpNum = (BasicInt)conn.run("exec count(*) from sub1");
             if (tmpNum.getInt()==(1000))
             {
                 break;
             }
-            Thread.sleep(1000);
+            Thread.sleep(200);
         }
         BasicTable except = (BasicTable)conn.run("select * from  Trades order by permno");
         BasicTable res = (BasicTable)conn.run("select * from  sub1 order by permno");
@@ -138,7 +122,7 @@ public class PollingClientReverseTest {
         }
     }
     public static void checkResult1() throws IOException, InterruptedException {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 20; i++)
         {
             BasicInt tmpNum = (BasicInt)conn.run("exec count(*) from sub1 ");
             BasicInt tmpNum1 = (BasicInt)conn.run("exec count(*) from sub2 ");
@@ -146,7 +130,7 @@ public class PollingClientReverseTest {
             {
                 break;
             }
-            Thread.sleep(3000);
+            Thread.sleep(100);
         }
         BasicTable except = (BasicTable)conn.run("select * from  pub_t1 order by timestampv");
         BasicTable res = (BasicTable)conn.run("select * from  sub1 order by timestampv");
@@ -179,7 +163,7 @@ public class PollingClientReverseTest {
         try {
             for (int i=0;i<10;i++){//data<size
                 conn.run("n=50;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
-                msgs = poller1.poll(100,1000);
+                msgs = poller1.poll(1000,1000);
                 if (msgs==null){
                     continue;
                 }
@@ -189,7 +173,7 @@ public class PollingClientReverseTest {
             }
             for (int i=0;i<10;i++){//data>size
                 conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
-                msgs = poller1.poll(100000,1000);
+                msgs = poller1.poll(1000,1000);
                 if (msgs==null){
                     continue;
                 }
@@ -200,7 +184,7 @@ public class PollingClientReverseTest {
             }
             for (int i=0;i<10;i++){//data=size
                 conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
-                msgs = poller1.poll(1000000,5000);
+                msgs = poller1.poll(5000,5000);
                 if (msgs==null){
                     continue;
                 }
@@ -344,7 +328,7 @@ public class PollingClientReverseTest {
         PrepareUser("test1","123456");
         TopicPoller poller1 = client.subscribe(HOST,PORT,"Trades1","subTread1",-1,true,null,"test1","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades1.append!(t)");
-        Thread.sleep(5000);
+        //Thread.sleep(5000);
         ArrayList<IMessage> msgs1 = poller1.poll(500, 10000);
         assertEquals(10000, msgs1.size());
         client.unsubscribe(HOST,PORT,"Trades1","subTread1");
@@ -2198,15 +2182,15 @@ public class PollingClientReverseTest {
         MessageHandler_handler1(messages);
         Thread.sleep(1000);
         thread.join();
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         //Thread.sleep(1000);
         List<IMessage> messages1 = poller.poll(1000,1000);
-        Thread.sleep(1000);
+        //Thread.sleep(1000);
         System.out.println(messages1.size());
         //Assert.assertEquals(1000,messages1.size());
         MessageHandler_handler1(messages1);
-        Thread.sleep(1000);
+        //Thread.sleep(1000);
         BasicTable re = (BasicTable)conn.run("select tag ,now,deltas(now) from Receive  order by  deltas(now) desc \n");
         System.out.println(re.getString());
         Assert.assertEquals(1000,re.rows());
@@ -2246,31 +2230,31 @@ public class PollingClientReverseTest {
         System.out.println("Successful subscribe");
         conn1.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         conn2.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(1000);
+        //Thread.sleep(1000);
         //List<IMessage> messages = poller.poll(1000,1000);
         //MessageHandler_handler(messages);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         System.out.println(port_list[1]+"断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn2.run("n=2000;t=table(1001..n as tag,timestamp(1001..n) as ts,take(100.0,1000) as data);" + "Trades.append!(t)");
         Thread.sleep(2000);
         //List<IMessage> messages1 = poller.poll(2000,2000);
        // MessageHandler_handler(messages1);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         DBConnection conn3 = new DBConnection();
         conn3.connect(HOST,port_list[1],"admin","123456");
         conn3.run(script1);
         conn3.run(script2);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
         System.out.println(port_list[2]+"节点断掉啦---------------------------------------------------");
-        Thread.sleep(20000);
+        Thread.sleep(8000);
         conn3.run("n=3000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(5000);
         List<IMessage> messages2 = poller.poll(3000,3000);
         MessageHandler_handler(messages2);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
 
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));

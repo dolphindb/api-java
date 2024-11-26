@@ -1,21 +1,13 @@
 package com.xxdb.streaming.reverse;
 
-import com.xxdb.BasicDBTask;
+
 import com.xxdb.DBConnection;
-import com.xxdb.DBTask;
-import com.xxdb.ExclusiveDBConnectionPool;
-import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.Vector;
 import com.xxdb.data.*;
-import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 import com.xxdb.streaming.client.*;
 import org.javatuples.Pair;
 import org.junit.*;
-
 import java.io.IOException;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.xxdb.Prepare.*;
@@ -67,10 +59,10 @@ public class ThreadedClientsubscribeReverseTest {
         try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
         try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
         try {clear_env();}catch (Exception e){}
-        Thread.sleep(2000);
+        //Thread.sleep(2000);
         client.close();
         conn.close();
-        Thread.sleep(2000);
+        //Thread.sleep(2000);
     }
 
     @AfterClass
@@ -114,18 +106,6 @@ public class ThreadedClientsubscribeReverseTest {
             }
         }
     };
-
-    public static void wait_data(String table_name, int data_row) throws IOException, InterruptedException {
-        BasicInt row_num;
-        while(true){
-            row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
-//            System.out.println(row_num.getInt());
-            if(row_num.getInt() == data_row){
-                break;
-            }
-            Thread.sleep(100);
-        }
-    }
 
     public static void PrepareStreamTable_StreamDeserializer(String dataType) throws IOException {
         String script = "share streamTable(1000000:0, `permno`sym`blob`dateType, [TIMESTAMP,SYMBOL,BLOB,"+dataType+"[]]) as outTables;\n"+
@@ -180,14 +160,14 @@ public class ThreadedClientsubscribeReverseTest {
         conn1.run(script);
     }
     public static void checkResult() throws IOException, InterruptedException {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 20; i++)
         {
             BasicInt tmpNum = (BasicInt)conn.run("exec count(*) from sub1");
             if (tmpNum.getInt()==(1000))
             {
                 break;
             }
-            Thread.sleep(2000);
+            Thread.sleep(200);
         }
         BasicTable except = (BasicTable)conn.run("select * from  Trades");
         BasicTable res = (BasicTable)conn.run("select * from  sub1");
@@ -198,7 +178,7 @@ public class ThreadedClientsubscribeReverseTest {
         }
     }
     public static void checkResult1() throws IOException, InterruptedException {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 20; i++)
         {
             BasicInt tmpNum = (BasicInt)conn.run("exec count(*) from sub1");
             BasicInt tmpNum1 = (BasicInt)conn.run("exec count(*) from sub2");
@@ -206,7 +186,7 @@ public class ThreadedClientsubscribeReverseTest {
             {
                 break;
             }
-            Thread.sleep(2000);
+            Thread.sleep(200);
         }
         BasicTable except = (BasicTable)conn.run("select * from  pub_t1");
         BasicTable res = (BasicTable)conn.run("select * from  sub1");
@@ -491,12 +471,12 @@ public class ThreadedClientsubscribeReverseTest {
         write_data.start();
         Thread.sleep(2000);
         conn.run("stopPublishTable('"+HOST+"',9055,'Trades','javaStreamingApi')");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 //        conn.run("stopPublishTable('"+HOST+"',9055,'Trades')");
 //        Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
-        System.out.println(row_num);
-        Thread.sleep(2000);
+        //System.out.println(row_num);
+        Thread.sleep(1000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
         assertEquals(true,row_num.getInt()<row_num2.getInt());
@@ -518,14 +498,14 @@ public class ThreadedClientsubscribeReverseTest {
         System.out.println("Successful subscribe");
         MyThread write_data  = new MyThread ();
         write_data.start();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         conn.run("stopPublishTable('"+HOST+"',9055,'Trades',\"subTrades\")");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         //conn.run("stopPublishTable('"+HOST+"',9055,'Trades',\"subTrades\")");
         //Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
         assertEquals(true,row_num.getInt()<=row_num2.getInt());
@@ -547,14 +527,14 @@ public class ThreadedClientsubscribeReverseTest {
         System.out.println("Successful subscribe");
         MyThread write_data  = new MyThread ();
         write_data.start();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         //conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
         //Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
         assertEquals(true,row_num.getInt()<=row_num2.getInt());
@@ -575,14 +555,13 @@ public class ThreadedClientsubscribeReverseTest {
         System.out.println("Successful subscribe");
         MyThread write_data  = new MyThread ();
         write_data.start();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         //conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
-        Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
         assertEquals(true,row_num.getInt()<=row_num2.getInt());
@@ -604,14 +583,14 @@ public class ThreadedClientsubscribeReverseTest {
         System.out.println("Successful subscribe");
         MyThread write_data  = new MyThread ();
         write_data.start();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
         Thread.sleep(2000);
         //conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
         //Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
-        System.out.println(row_num);
-        Thread.sleep(2000);
+        //System.out.println(row_num);
+        Thread.sleep(1000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
         assertEquals(true,row_num.getInt()<=row_num2.getInt());
@@ -633,14 +612,14 @@ public class ThreadedClientsubscribeReverseTest {
         System.out.println("Successful subscribe");
         MyThread write_data  = new MyThread ();
         write_data.start();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
         Thread.sleep(2000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
-        Thread.sleep(3000);
+        Thread.sleep(1000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
         assertEquals(true,row_num.getInt()<=row_num2.getInt());
@@ -662,14 +641,14 @@ public class ThreadedClientsubscribeReverseTest {
         System.out.println("Successful subscribe");
         MyThread write_data  = new MyThread ();
         write_data.start();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
         Thread.sleep(2000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread1')");
-        Thread.sleep(3000);
+        Thread.sleep(1000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
         assertEquals(true,row_num.getInt()<=row_num2.getInt());
@@ -706,8 +685,8 @@ public class ThreadedClientsubscribeReverseTest {
     public void test_subscribe_ofst_negative2() throws IOException, InterruptedException {
         int ofst = -2;
         client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
-        Thread.sleep(2000);
-        client.unsubscribe(HOST, PORT, "Trades");
+        //Thread.sleep(1000);
+        //client.unsubscribe(HOST, PORT, "Trades");
     }
 
     @Test(timeout=180000)
@@ -1105,13 +1084,14 @@ public class ThreadedClientsubscribeReverseTest {
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
-        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+        String script2 = "st2 = streamTable(100:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         client.subscribe(HOST,PORT,"Trades","single_msg",BatchMessageHandler_handler,-1,false,filter1,true,100,1);
         conn.run("n=1;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        //Thread.sleep(10000);
+        wait_data("Receive",1);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(1,row_num.getInt());
         client.unsubscribe(HOST,PORT,"Trades","single_msg");
@@ -1270,17 +1250,16 @@ public class ThreadedClientsubscribeReverseTest {
         Vector filter1 = (Vector) conn.run("1..100000");
         client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"admin","123456");
         System.out.println("Successful subscribe");
-        Thread.sleep(100);
         MyThread write_data  = new MyThread ();
         write_data.start();
+        Thread.sleep(1000);
+        conn.run("stopPublishTable('"+HOST+"',0,'Trades','subTread1')");
         Thread.sleep(2000);
         conn.run("stopPublishTable('"+HOST+"',0,'Trades','subTread1')");
-        Thread.sleep(10000);
-        conn.run("stopPublishTable('"+HOST+"',0,'Trades','subTread1')");
-        Thread.sleep(3000);
+        Thread.sleep(2000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num);
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         BasicInt row_num2 = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         System.out.println(row_num2);
         assertEquals(true,row_num.getInt()<row_num2.getInt());
@@ -1300,10 +1279,9 @@ public class ThreadedClientsubscribeReverseTest {
         Vector filter1 = (Vector) conn.run("1..100000");
         client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true, 100, 5, "admin", "123456");
         System.out.println("Successful subscribe");
-        Thread.sleep(2000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTrades');" +
                 "try{dropStreamTable('Trades')}catch(ex){};");
-        Thread.sleep(5000);
+        Thread.sleep(2000);
         try {
             client.unsubscribe(HOST, PORT, "Trades", "subTrades");
         }catch (Exception ex){}
@@ -1323,9 +1301,9 @@ public class ThreadedClientsubscribeReverseTest {
         System.out.println("Successful subscribe");
         MyThread write_data  = new MyThread ();
         write_data.start();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         conn.run("stopPublishTable('"+HOST+"',8676,'Trades','subTread2')");
-        Thread.sleep(5000);
+        Thread.sleep(2000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertNotEquals(2000,row_num.getInt());
         //client.unsubscribe(HOST,PORT,"Trades","subTread2");
@@ -1570,7 +1548,7 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler6 handler = new Handler6(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(5000);
+        Thread.sleep(500);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(0, msg1.size());
@@ -1652,9 +1630,17 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler_conn_null handler = new Handler_conn_null(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true,null,streamFilter,false,"admin","123456");
-        Thread.sleep(30000);
-        List<BasicMessage> msg1 = handler.getMsg1();
-        List<BasicMessage> msg2 = handler.getMsg2();
+        List<BasicMessage> msg1 = null;
+        List<BasicMessage> msg2 = null;
+        for(int i=0;i<10;i++){
+            msg1 = handler.getMsg1();
+            msg2 = handler.getMsg2();
+            if(msg1.size() == 10000){
+                break;
+            }
+            Thread.sleep(100);
+            i++;
+        }
         Assert.assertEquals(table1.rows(), msg1.size());
         Assert.assertEquals(table2.rows(), msg2.size());
         for (int i = 0; i < table1.columns(); ++i)
@@ -1710,9 +1696,17 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler6 handler = new Handler6(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
-        List<BasicMessage> msg1 = handler.getMsg1();
-        List<BasicMessage> msg2 = handler.getMsg2();
+        List<BasicMessage> msg1 = null;
+        List<BasicMessage> msg2 = null;
+        for(int i=0;i<10;i++){
+            msg1 = handler.getMsg1();
+            msg2 = handler.getMsg2();
+            if(msg1.size() == 10000){
+                break;
+            }
+            Thread.sleep(100);
+            i++;
+        }
         Assert.assertEquals(table1.rows(), msg1.size());
         Assert.assertEquals(table2.rows(), msg2.size());
         for (int i = 0; i < table1.columns(); ++i)
@@ -1776,9 +1770,17 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler6 handler = new Handler6(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(5000);
-        List<BasicMessage> msg1 = handler.getMsg1();
-        List<BasicMessage> msg2 = handler.getMsg2();
+        List<BasicMessage> msg1 = null;
+        List<BasicMessage> msg2 = null;
+        for(int i=0;i<10;i++){
+            msg1 = handler.getMsg1();
+            msg2 = handler.getMsg2();
+            if(msg1.size() == 10000){
+                break;
+            }
+            Thread.sleep(100);
+            i++;
+        }
         Assert.assertEquals(table1.rows(), msg1.size());
         Assert.assertEquals(table2.rows(), msg2.size());
         for (int i = 0; i < table1.columns(); ++i)
@@ -1837,9 +1839,17 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler6 handler = new Handler6(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(20000);
-        List<BasicMessage> msg1 = handler.getMsg1();
-        List<BasicMessage> msg2 = handler.getMsg2();
+        List<BasicMessage> msg1 = null;
+        List<BasicMessage> msg2 = null;
+        for(int i=0;i<10;i++){
+            msg1 = handler.getMsg1();
+            msg2 = handler.getMsg2();
+            if(msg1.size() == 10000){
+                break;
+            }
+            Thread.sleep(100);
+            i++;
+        }
         Assert.assertEquals(table1.rows(), msg1.size());
         Assert.assertEquals(table2.rows(), msg2.size());
         for (int i = 0; i < table1.columns(); ++i)
@@ -1911,7 +1921,6 @@ public class ThreadedClientsubscribeReverseTest {
                 "rpc(leader_node,replay,d,`outTables,`timestampv,`timestampv)";
 //        "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)"+
         conn.run(replayScript);
-        Thread.sleep(5000);
         System.out.println(conn.run("select count(*) from outTables ").getString());
         BasicTable table1 = (BasicTable)conn.run("table1");
         BasicTable table2 = (BasicTable)conn.run("table2");
@@ -1938,10 +1947,17 @@ public class ThreadedClientsubscribeReverseTest {
 //        DBConnection conn1 = new DBConnection();
 //        conn1.connect(HOST, 18922, "admin", "123456");
 //        conn1.run("streamCampaignForLeader(3)");
-        Thread.sleep(5000);
-        List<BasicMessage> msg1 = handler.getMsg1();
-        List<BasicMessage> msg2 = handler.getMsg2();
-        Thread.sleep(5000);
+        List<BasicMessage> msg1 = null;
+        List<BasicMessage> msg2 = null;
+        for(int i=0;i<10;i++){
+            msg1 = handler.getMsg1();
+            msg2 = handler.getMsg2();
+            if(msg1.size() == 10000){
+                break;
+            }
+            Thread.sleep(100);
+            i++;
+        }
         Assert.assertEquals(table1.rows(), msg1.size());
         Assert.assertEquals(table2.rows(), msg2.size());
         for (int i = 0; i < table1.columns(); ++i)
@@ -1999,9 +2015,17 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler7 handler = new Handler7(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(30000);
-        List<BasicMessage> msg1 = handler.getMsg1();
-        List<BasicMessage> msg2 = handler.getMsg2();
+        List<BasicMessage> msg1 = null;
+        List<BasicMessage> msg2 = null;
+        for(int i=0;i<10;i++){
+            msg1 = handler.getMsg1();
+            msg2 = handler.getMsg2();
+            if(msg1.size() == 10000){
+                break;
+            }
+            Thread.sleep(100);
+            i++;
+        }
         Assert.assertEquals(table1.rows(), msg1.size());
         Assert.assertEquals(table2.rows(), msg2.size());
         for (int i = 0; i < table1.columns(); ++i)
@@ -2060,9 +2084,17 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler7 handler = new Handler7(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(30000);
-        List<BasicMessage> msg1 = handler.getMsg1();
-        List<BasicMessage> msg2 = handler.getMsg2();
+        List<BasicMessage> msg1 = null;
+        List<BasicMessage> msg2 = null;
+        for(int i=0;i<10;i++){
+            msg1 = handler.getMsg1();
+            msg2 = handler.getMsg2();
+            if(msg1.size() == 10000){
+                break;
+            }
+            Thread.sleep(100);
+            i++;
+        }
         Assert.assertEquals(table1.rows(), msg1.size());
         Assert.assertEquals(table2.rows(), msg2.size());
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
@@ -2096,12 +2128,15 @@ public class ThreadedClientsubscribeReverseTest {
         HashMap<String, List<Entity.DATA_TYPE>> filter = new HashMap<>();
         filter.put("msg1",null);
         filter.put("msg2",null);
+        String re = null;
         try {
             StreamDeserializer streamFilter = new StreamDeserializer(filter);
             fail("no exception thrown");
         }catch (Exception ex){
-            assertEquals("The colTypes can not be null",ex.getMessage());
+            re = ex.getMessage();
         }
+        assertEquals("The colTypes can not be null",re);
+
     }
 
     @Test(timeout = 120000)
@@ -2139,7 +2174,7 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler7 handler = new Handler7(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(30000);
+        Thread.sleep(1000);
         List<BasicMessage> msg1 = handler.getMsg1();
         List<BasicMessage> msg2 = handler.getMsg2();
         Assert.assertEquals(0, msg1.size());
@@ -2173,12 +2208,14 @@ public class ThreadedClientsubscribeReverseTest {
         Map<String,BasicDictionary > tables = new HashMap<>();
         tables.put("msg1", null);
         tables.put("msg2", null);
+        String re = null;
         try {
             StreamDeserializer streamFilter = new StreamDeserializer(tables);
             fail("no exception thrown");
         }catch (Exception ex){
-            assertEquals("The schema can not be null",ex.getMessage());
+            re = ex.getMessage();
         }
+        assertEquals("The schema can not be null",re);
     }
 
     @Test(timeout = 120000)
@@ -2215,9 +2252,17 @@ public class ThreadedClientsubscribeReverseTest {
 
         Handler6 handler = new Handler6(streamFilter);
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0, true);
-        Thread.sleep(30000);
-        List<BasicMessage> msg1 = handler.getMsg1();
-        List<BasicMessage> msg2 = handler.getMsg2();
+        List<BasicMessage> msg1 = null;
+        List<BasicMessage> msg2 = null;
+        for(int i=0;i<10;i++){
+            msg1 = handler.getMsg1();
+            msg2 = handler.getMsg2();
+            if(msg1.size() == 10000){
+                break;
+            }
+            Thread.sleep(100);
+            i++;
+        }
         Assert.assertEquals(table1.rows(), msg1.size());
         Assert.assertEquals(table2.rows(), msg2.size());
         for (int i = 0; i < table1.columns(); ++i)
@@ -2281,9 +2326,17 @@ public class ThreadedClientsubscribeReverseTest {
                     "d = dict(['msg1','msg2'], [table1, table2]);" +
                     "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)");
         }
-        Thread.sleep(40000);
-        List<BasicMessage> msg1 = handler.getMsg1();
-        List<BasicMessage> msg2 = handler.getMsg2();
+        List<BasicMessage> msg1 = null;
+        List<BasicMessage> msg2 = null;
+        for(int i=0;i<10;i++){
+            msg1 = handler.getMsg1();
+            msg2 = handler.getMsg2();
+            if(msg1.size() == 20000){
+                break;
+            }
+            Thread.sleep(100);
+            i++;
+        }
         Assert.assertEquals(20000, msg1.size());
         Assert.assertEquals(20000, msg2.size());
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
@@ -3254,7 +3307,7 @@ public class ThreadedClientsubscribeReverseTest {
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
         client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0,false, null,null,false,1,0,"admin","123456",backupSites,10,true);
-        Thread.sleep(30000);
+        //Thread.sleep(30000);
         checkResult1();
         client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
@@ -3273,7 +3326,7 @@ public class ThreadedClientsubscribeReverseTest {
         client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,100, (int) 4.5,"admin","123456",backupSites,10,true);
         System.out.println("Successful subscribe");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",1000);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("1000",row_num.getColumn(0).get(0).getString());
@@ -3304,12 +3357,11 @@ public class ThreadedClientsubscribeReverseTest {
         System.out.println("Successful subscribe");
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn1.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(1000);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(15000);
+        Thread.sleep(8000);
         conn.run("t=table(5001..5500 as tag,now()+5001..5500 as ts,rand(100.0,500) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
+        Thread.sleep(1000);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("5500",row_num.getColumn(0).get(0).getString());
@@ -3344,24 +3396,23 @@ public class ThreadedClientsubscribeReverseTest {
         System.out.println("Successful subscribe");
         conn1.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         conn2.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(1000);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         System.out.println(port_list[1]+"断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn2.run("n=2000;t=table(1001..n as tag,timestamp(1001..n) as ts,take(100.0,1000) as data);" + "Trades.append!(t)");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(2000);
+        Thread.sleep(8000);
         DBConnection conn3 = new DBConnection();
         conn3.connect(HOST,port_list[1],"admin","123456");
         conn3.run(script1);
         conn3.run(script2);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
         System.out.println(port_list[2]+"节点断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn3.run("n=3000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
-        Thread.sleep(30000);
+        Thread.sleep(10000);
 
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
@@ -3400,24 +3451,23 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(1000);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         System.out.println(port_list[1]+"断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn2.run("n=2000;t=table(1001..n as tag,timestamp(1001..n) as ts,take(100.0,1000) as data);" + "Trades.append!(t)");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(2000);
+        Thread.sleep(5000);
         DBConnection conn3 = new DBConnection();
         conn3.connect(HOST,port_list[1],"admin","123456");
         conn3.run(script1);
         conn3.run(script2);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
         System.out.println(port_list[2]+"节点断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn3.run("n=3000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
-        Thread.sleep(30000);
+        Thread.sleep(8000);
 
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
-        System.out.println(row_num.getColumn(0).get(0));
         assertEquals("2000",row_num.getColumn(0).get(0).getString());
         DBConnection conn4 = new DBConnection();
         conn4.connect(HOST,port_list[2],"admin","123456");
@@ -3440,7 +3490,7 @@ public class ThreadedClientsubscribeReverseTest {
         client.subscribe(HOST,11111,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,100, (int) 4.5,"admin","123456",backupSites,10,false);
         System.out.println("Successful subscribe");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",1000);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("1000",row_num.getColumn(0).get(0).getString());
@@ -3460,9 +3510,8 @@ public class ThreadedClientsubscribeReverseTest {
         client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,100, (int) 4.5,"admin","123456",backupSites,-100,true);
         System.out.println("Successful subscribe");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",1000);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
-        System.out.println(row_num.getColumn(0).get(0));
         assertEquals("1000",row_num.getColumn(0).get(0).getString());
         client.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
@@ -3550,9 +3599,9 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(2000);
         thread2.start();
         thread.join();
-        Thread.sleep(10000);
+        Thread.sleep(5000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(1000);
+        Thread.sleep(5000);
         BasicTable re = (BasicTable)conn.run("select tag ,now,deltas(now) from Receive  order by  deltas(now) desc \n");
         System.out.println(re.getString());
         Assert.assertEquals(true,Integer.valueOf(re.getColumn(2).get(0).toString())>20000);
@@ -3595,24 +3644,23 @@ public class ThreadedClientsubscribeReverseTest {
         Thread.sleep(1000);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         System.out.println(port_list[1]+"断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn2.run("n=2000;t=table(1001..n as tag,timestamp(1001..n) as ts,take(100.0,1000) as data);" + "Trades.append!(t)");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(2000);
+        Thread.sleep(5000);
         DBConnection conn3 = new DBConnection();
         conn3.connect(HOST,port_list[1],"admin","123456");
         conn3.run(script1);
         conn3.run(script2);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
         System.out.println(port_list[2]+"节点断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(5000);
         conn3.run("n=3000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
-        Thread.sleep(20000);
-
+        Thread.sleep(5000);
+        wait_data("Receive",3000);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
-        System.out.println(row_num.getColumn(0).get(0));
         assertEquals("3000",row_num.getColumn(0).get(0).getString());
         client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
