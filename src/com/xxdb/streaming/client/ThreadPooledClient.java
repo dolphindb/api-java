@@ -193,12 +193,12 @@ public class ThreadPooledClient extends AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord, boolean msgAsTable, List<String> backupSites, int resubTimeout, boolean subOnce) throws IOException {
-        if (resubTimeout < 0)
-            // resubTimeout default: 100ms
-            resubTimeout = 100;
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord, boolean msgAsTable, List<String> backupSites, int resubscribeTimeout, boolean subOnce) throws IOException {
+        if (resubscribeTimeout < 0)
+            // resubscribeTimeout default: 100ms
+            resubscribeTimeout = 100;
 
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, backupSites, resubTimeout, subOnce);
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, backupSites, resubscribeTimeout, subOnce);
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
         synchronized (queueHandlers) {
             queueHandlers.put(tableNameToTrueTopic.get(topicStr), new QueueHandlerBinder(queue, handler));
@@ -375,7 +375,7 @@ public class ThreadPooledClient extends AbstractClient {
                     if (AbstractClient.ifUseBackupSite) {
                         AbstractClient.ifUseBackupSite = false;
                         AbstractClient.subOnce = false;
-                        AbstractClient.resubTimeout = 100;
+                        AbstractClient.resubscribeInterval = 100;
                     }
                     log.info("Successfully unsubscribed table " + fullTableName);
                 } catch (Exception ex) {

@@ -237,15 +237,15 @@ public class ThreadedClient extends AbstractClient {
         }
     }
 
-    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites, int resubTimeout, boolean subOnce) throws IOException {
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, int batchSize, int throttle, String userName, String password, List<String> backupSites, int resubscribeTimeout, boolean subOnce) throws IOException {
         if(batchSize<=0)
             throw new IllegalArgumentException("BatchSize must be greater than zero");
         if(throttle<0)
             throw new IllegalArgumentException("Throttle must be greater than or equal to zero");
-        if (resubTimeout < 0)
-            // resubTimeout default: 100ms
-            resubTimeout = 100;
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, false, backupSites, resubTimeout, subOnce);
+        if (resubscribeTimeout < 0)
+            // resubscribeTimeout default: 100ms
+            resubscribeTimeout = 100;
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, password, false, backupSites, resubscribeTimeout, subOnce);
         HandlerLopper handlerLopper = new HandlerLopper(queue, handler, batchSize, throttle == 0 ? -1 : throttle);
         handlerLopper.start();
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
@@ -538,7 +538,7 @@ public class ThreadedClient extends AbstractClient {
                     if (AbstractClient.ifUseBackupSite) {
                         AbstractClient.ifUseBackupSite = false;
                         AbstractClient.subOnce = false;
-                        AbstractClient.resubTimeout = 100;
+                        AbstractClient.resubscribeInterval = 100;
                     }
                     log.info("Successfully unsubscribed table " + fullTableName);
                 } catch (Exception ex) {
