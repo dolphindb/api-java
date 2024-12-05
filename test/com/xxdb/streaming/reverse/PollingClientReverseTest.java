@@ -2079,7 +2079,7 @@ public class PollingClientReverseTest {
         pollingClient.unsubscribe(HOST,11111,"Trades","subTread1");
     }
     @Test(timeout = 180000)
-    public void test_PollingClient_subscribe_resubTimeout_not_true() throws IOException, InterruptedException {
+    public void test_PollingClient_subscribe_resubscribeInterval_not_true() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
@@ -2100,7 +2100,7 @@ public class PollingClientReverseTest {
         pollingClient.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
     @Test(timeout = 180000)
-    public void test_PollingClient_subscribe_backupSites_resubTimeout() throws Exception {
+    public void test_PollingClient_subscribe_backupSites_resubscribeInterval() throws Exception {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
@@ -2196,7 +2196,7 @@ public class PollingClientReverseTest {
     }
 
     @Test//(timeout = 180000)
-    public void test_PollingClient_subscribe_resubTimeout_subOnce_not_set() throws IOException, InterruptedException {
+    public void test_PollingClient_subscribe_resubscribeInterval_subOnce_not_set() throws IOException, InterruptedException {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
