@@ -89,12 +89,12 @@ public class PollingClient extends AbstractClient {
         return topicPoller;
     }
 
-    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord, boolean msgAsTable, List<String> backupSites, int resubscribeTimeout, boolean subOnce) throws IOException {
-        if (resubscribeTimeout < 0)
-            // resubscribeTimeout default: 100ms
-            resubscribeTimeout = 100;
+    public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, String userName, String passWord, boolean msgAsTable, List<String> backupSites, int resubscribeInterval, boolean subOnce) throws IOException {
+        if (resubscribeInterval < 0)
+            // resubscribeInterval default: 100ms
+            resubscribeInterval = 100;
 
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, (MessageHandler) null, offset, reconnect, filter, deserializer, false, userName, passWord, msgAsTable, backupSites, resubscribeTimeout, subOnce);
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, (MessageHandler) null, offset, reconnect, filter, deserializer, false, userName, passWord, msgAsTable, backupSites, resubscribeInterval, subOnce);
         topicPoller = new TopicPoller(queue);
         return topicPoller;
     }

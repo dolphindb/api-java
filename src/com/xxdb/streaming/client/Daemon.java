@@ -165,7 +165,7 @@ class Daemon implements Runnable {
                             dispatcher.activeCloseConnection(s);
                             for (String topic : dispatcher.getAllTopicsBySite(site)) {
                                 System.out.println("Daemon need reconnect: " + topic);
-                                // reconnect every info.resubscribeTimeout ms
+                                // reconnect every info.resubscribeInterval ms
                                 if (System.currentTimeMillis() - AbstractClient.lastExceptionTopicTimeMap.get(topic) <= AbstractClient.resubscribeInterval)
                                     continue;
 
@@ -175,7 +175,7 @@ class Daemon implements Runnable {
                             Site s = dispatcher.getSiteByName(site);
                             dispatcher.activeCloseConnection(s);
                             for (String topic : dispatcher.getAllTopicsBySite(site)) {
-                                // reconnect every info.resubscribeTimeout ms
+                                // reconnect every info.resubscribeInterval ms
                                 if (System.currentTimeMillis() - AbstractClient.lastExceptionTopicTimeMap.get(topic) <= AbstractClient.resubscribeInterval)
                                     continue;
 
