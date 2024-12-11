@@ -41,7 +41,7 @@ public abstract class AbstractClient implements MessageDispatcher {
     protected String lastBackupSiteTopic = "";
     protected Map<String, Integer> currentSiteIndexMap = new ConcurrentHashMap<>();
     protected static Map<String, Long> lastExceptionTopicTimeMap = new ConcurrentHashMap<>();
-    protected static Integer resubTimeout;
+    protected static Integer resubscribeInterval;
     protected static boolean subOnce;
     protected BlockingQueue<List<IMessage>> lastQueue;
     protected String lastSuccessSubscribeTopic = "";
@@ -521,7 +521,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                                                               String tableName, String actionName, MessageHandler handler,
                                                               long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer,
                                                               boolean allowExistTopic, String userName, String passWord, boolean msgAsTable,
-                                                              List<String> backupSites, int resubTimeout, boolean subOnce, boolean createSubInfo) throws IOException, RuntimeException {
+                                                              List<String> backupSites, int resubscribeInterval, boolean subOnce, boolean createSubInfo) throws IOException, RuntimeException {
         Entity re;
         String topic = "";
         DBConnection dbConn = null;
@@ -543,7 +543,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                 }
             }
 
-            AbstractClient.resubTimeout = resubTimeout;
+            AbstractClient.resubscribeInterval = resubscribeInterval;
             AbstractClient.subOnce = subOnce;
             AbstractClient.ifUseBackupSite = true;
 
@@ -771,8 +771,8 @@ public abstract class AbstractClient implements MessageDispatcher {
                                                               String tableName, String actionName, MessageHandler handler,
                                                               long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer,
                                                               boolean allowExistTopic, String userName, String passWord, boolean msgAsTable,
-                                                              List<String> backupSites, int resubTimeout, boolean subOnce) throws IOException, RuntimeException {
-        return subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, backupSites, resubTimeout, subOnce, true);
+                                                              List<String> backupSites, int resubscribeInterval, boolean subOnce) throws IOException, RuntimeException {
+        return subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, backupSites, resubscribeInterval, subOnce, true);
     }
 
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,

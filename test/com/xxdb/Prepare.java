@@ -1,5 +1,6 @@
 package com.xxdb;
 
+import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicTable;
 import java.io.IOException;
 import java.util.Arrays;
@@ -252,7 +253,7 @@ public class Prepare {
                 "dateType_COMPLEX =   array(COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, 1000*10), 10));; \n"+
                 "dateType_POINT =  array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, 1000*10), 10)); \n"+
                 "share table(permno,dateType_"+dataType +") as pub_t\n"+
-                "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType +"[]]) as sub1;\n";
+                "share streamTable(10000:0, `permno`dateType, [INT,"+dataType +"[]]) as sub1;\n";
         DBConnection conn1 = new DBConnection();
         conn1.connect(HOST, PORT,"admin","123456");
         conn1.run(script);
@@ -264,7 +265,7 @@ public class Prepare {
                 "dateType_DECIMAL64 =   array(DECIMAL64(4)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000*10) + 0.254, 3), 10)); \n"+
                 "dateType_DECIMAL128 =   array(DECIMAL128(8)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000*10) + 0.254, 3), 10)); \n"+
                 "share table(permno,dateType_"+dataType +") as pub_t\n"+
-                "share streamTable(1000000:0, `permno`dateType, [INT,"+dataType +"("+scale+")[]]) as sub1;\n";
+                "share streamTable(10000:0, `permno`dateType, [INT,"+dataType +"("+scale+")[]]) as sub1;\n";
         DBConnection conn1 = new DBConnection();
         conn1.connect(HOST, PORT,"admin","123456");
         conn1.run(script);
@@ -281,6 +282,20 @@ public class Prepare {
         for (int i = 0; i < exception.columns(); i++) {
             System.out.println("col" + resTable.getColumnName(i));
             assertEquals(exception.getColumn(i).getString(), resTable.getColumn(i).getString());
+        }
+    }
+    public static void wait_data(String table_name, int data_row) throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        BasicInt row_num;
+        for(int i=0;i<200;i++){
+            row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
+//            System.out.println(row_num.getInt());
+            if(row_num.getInt() == data_row){
+                break;
+            }
+            Thread.sleep(300);
+            i++;
         }
     }
 }

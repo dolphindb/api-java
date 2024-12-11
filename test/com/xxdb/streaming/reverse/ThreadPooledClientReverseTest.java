@@ -27,7 +27,7 @@ public class ThreadPooledClientReverseTest {
     //static int PORT = 9002;
     static long total = 0;
 
-    private static ThreadPooledClient client;
+    private static ThreadPooledClient threadPooledClient;
 
     @BeforeClass
     public static void setUp() throws IOException {
@@ -40,32 +40,32 @@ public class ThreadPooledClientReverseTest {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
                 throw new IOException("Failed to connect to dolphindb server");
             }
-            client = new ThreadPooledClient(HOST, 0,10);
+            threadPooledClient = new ThreadPooledClient(HOST, 0,10);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        try{client.unsubscribe(HOST, PORT, "Trades1");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades2");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades1");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "Trades1", "javaStreamingApi");}catch (Exception ex){}
+        try{threadPooledClient.unsubscribe(HOST, PORT, "Trades1");}catch (Exception ex){}
+        try{threadPooledClient.unsubscribe(HOST, PORT, "Trades1", "subTrades2");}catch (Exception ex){}
+        try{threadPooledClient.unsubscribe(HOST, PORT, "Trades1", "subTrades1");}catch (Exception ex){}
+        try{threadPooledClient.unsubscribe(HOST, PORT, "Trades1", "subTrades");}catch (Exception ex){}
+        try{threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
+        try{threadPooledClient.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
+        try{threadPooledClient.unsubscribe(HOST, PORT, "Trades1", "javaStreamingApi");}catch (Exception ex){}
         try {clear_env();}catch (Exception e){}
     }
 
     @After
     public void after() throws IOException, InterruptedException {
         save_batch_size.clear();
-        try{client.unsubscribe(HOST,PORT,"Trades","subTread1");}catch (Exception e){}
-        try{client.unsubscribe(HOST,PORT,"Trades","subTread2");}catch (Exception e){}
-        try{client.unsubscribe(HOST,PORT,"Trades","subTread3");}catch (Exception e){}
-        try{client.unsubscribe(HOST,PORT,"Trades","subTrades1");}catch (Exception e){}
-        try{client.unsubscribe(HOST,PORT,"Trades","subTrades2");}catch (Exception e){}
-        try{client.unsubscribe(HOST,PORT,"Trades","subTrades3");}catch (Exception e){}
-        try{client.unsubscribe(HOST, PORT, "Trades1", "subTrades");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
-        try{client.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
+        try{threadPooledClient.unsubscribe(HOST,PORT,"Trades","subTread1");}catch (Exception e){}
+        try{threadPooledClient.unsubscribe(HOST,PORT,"Trades","subTread2");}catch (Exception e){}
+        try{threadPooledClient.unsubscribe(HOST,PORT,"Trades","subTread3");}catch (Exception e){}
+        try{threadPooledClient.unsubscribe(HOST,PORT,"Trades","subTrades1");}catch (Exception e){}
+        try{threadPooledClient.unsubscribe(HOST,PORT,"Trades","subTrades2");}catch (Exception e){}
+        try{threadPooledClient.unsubscribe(HOST,PORT,"Trades","subTrades3");}catch (Exception e){}
+        try{threadPooledClient.unsubscribe(HOST, PORT, "Trades1", "subTrades");}catch (Exception ex){}
+        try{threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
+        try{threadPooledClient.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
         try{clear_env();}catch (Exception ex){}
         try {
             conn.run("login(`admin,`123456);" +
@@ -78,7 +78,7 @@ public class ThreadPooledClientReverseTest {
                     "loop(deleteGroup,grouplist)");
         } catch (Exception e) {
         }
-        client.close();
+        threadPooledClient.close();
         conn.close();
     }
 
@@ -106,14 +106,14 @@ public static void PrepareStreamTable() throws IOException {
 }
 
     public static void checkResult() throws IOException, InterruptedException {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 20; i++)
         {
             BasicInt tmpNum = (BasicInt)conn.run("exec count(*) from sub1");
             if (tmpNum.getInt()==(1000))
             {
                 break;
             }
-            Thread.sleep(2000);
+            Thread.sleep(100);
         }
         BasicTable except = (BasicTable)conn.run("select * from  Trades order by permno");
         BasicTable res = (BasicTable)conn.run("select * from  sub1 order by permno");
@@ -124,7 +124,7 @@ public static void PrepareStreamTable() throws IOException {
         }
     }
     public static void checkResult1() throws IOException, InterruptedException {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 20; i++)
         {
             BasicInt tmpNum = (BasicInt)conn.run("exec count(*) from sub1 ");
             BasicInt tmpNum1 = (BasicInt)conn.run("exec count(*) from sub2 ");
@@ -132,7 +132,7 @@ public static void PrepareStreamTable() throws IOException {
             {
                 break;
             }
-            Thread.sleep(2000);
+            Thread.sleep(100);
         }
         BasicTable except = (BasicTable)conn.run("select * from  pub_t1 order by timestampv");
         BasicTable res = (BasicTable)conn.run("select * from  sub1 order by timestampv");
@@ -225,32 +225,32 @@ public static void PrepareStreamTable() throws IOException {
     };
     @Test
     public void test_ThreadPooledClient_host_error() throws IOException, InterruptedException {
-        ThreadPooledClient client2 = new ThreadPooledClient("host_error",10022,10);
-        client2.close();
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient("host_error",10022,10);
+        threadPooledClient.close();
     }
 
     @Test
     public void test_ThreadPooledClient_port_error() throws IOException {
-        ThreadPooledClient client2 = new ThreadPooledClient(121,10);
-        client2.close();
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(121,10);
+        threadPooledClient.close();
     }
 
     @Test
     public void test_ThreadPooledClient_HOST_subport() throws IOException {
-        ThreadPooledClient client2 = new ThreadPooledClient(HOST,10022,10);
-        client2.close();
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(HOST,10022,10);
+        threadPooledClient.close();
     }
 
     @Test
     public void test_ThreadPooledClient_only_subscribePort() throws IOException {
-        ThreadPooledClient client2 = new ThreadPooledClient(10012);
-        client2.close();
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10012);
+        threadPooledClient.close();
     }
     @Test
     public void test_ThreadPooledClient_threadCount_not_true() throws IOException {
         String re = null;
         try{
-            ThreadPooledClient client2 = new ThreadPooledClient(-1);
+            ThreadPooledClient threadPooledClient = new ThreadPooledClient(-1);
         }catch(Exception e){
             re = e.getMessage();
         }
@@ -258,20 +258,20 @@ public static void PrepareStreamTable() throws IOException {
     }
     @Test
     public void test_ThreadPooledClient_threadCount_0() throws IOException {
-        ThreadPooledClient client2 = new ThreadPooledClient(1000);
-        client2.close();
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(1000);
+        threadPooledClient.close();
     }
 
     @Test
     public void test_subscribe_ex1() throws Exception {
         PrepareStreamTable();
-        client.subscribe(HOST, PORT, "Trades", "subtrades", MessageHandler_handler);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subtrades", MessageHandler_handler);
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(40000);
+        Thread.sleep(100);
+        wait_data("Receive",1000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-        client.unsubscribe(HOST, PORT, "Trades", "subtrades");
-        conn.run("dropStreamTable('Trades');dropStreamTable('Receive')");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subtrades");
         assertEquals(re.rows(), tra.rows());
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -283,53 +283,52 @@ public static void PrepareStreamTable() throws IOException {
     @Test
     public void test_subscribe_ex2() throws Exception {
         PrepareStreamTable();
-        client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, true);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler, true);
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(20000);
-        client.unsubscribe(HOST, PORT, "Trades","javaStreamingApi");
+        Thread.sleep(500);
+        wait_data("Receive",5000);
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades","javaStreamingApi");
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-        Thread.sleep(20000);
         assertEquals(re.rows(), tra.rows());
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
             assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
-
     }
 
     @Test
     public void test_subscribe_ofst0() throws Exception {
         PrepareStreamTable();
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            int ofst = 0;
-            client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
-            conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(30000);
-            BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
-            BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-            client.unsubscribe(HOST, PORT, "Trades", "javaStreamingApi");
-            Thread.sleep(5000);
-            assertEquals(re.rows(), tra.rows());
-            for (int i = 0; i < re.rows(); i++) {
-                assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
-                assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
-                assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
-            }
+        int ofst = 0;
+        threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        Thread.sleep(1000);
+        wait_data("Receive",20000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "javaStreamingApi");
+        assertEquals(re.rows(), tra.rows());
+        for (int i = 0; i < re.rows(); i++) {
+             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+             assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
+        }
     }
 
-    @Test(expected = IOException.class)
+    @Test
     public void test_subscribe_ofst_negative2() throws IOException {
         PrepareStreamTable();
         int ofst = -2;
-        client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+        String re = null;
         try {
-            Thread.sleep(2000);
-            client.unsubscribe(HOST, PORT, "Trades");
-        } catch (Exception e) {
-            e.printStackTrace();
+            threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+        } catch (Exception ex) {
+            re = ex.getMessage();
         }
+        assertEquals(true, re.contains("Can't find the message with offset [-2]"));
     }
 
     @Test
@@ -337,15 +336,14 @@ public static void PrepareStreamTable() throws IOException {
         PrepareStreamTable();
         int ofst = -1;
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(2000);
-        client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        wait_data("Receive",3000);
         BasicTable re = (BasicTable) conn.run("Receive");
         BasicTable tra = (BasicTable) conn.run("Trades");
-        client.unsubscribe(HOST, PORT, "Trades", "javaStreamingApi");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "javaStreamingApi");
         assertEquals(3000, re.rows());
     }
 
@@ -354,24 +352,30 @@ public static void PrepareStreamTable() throws IOException {
         PrepareStreamTable();
         int ofst = 10;
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(2000);
-        client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        wait_data("Receive",3090);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
         assertEquals(3090, re.rows());
     }
 
-    @Test(expected = IOException.class)
+    @Test
     public void test_subscribe_ofst_morethan_tablecount() throws IOException {
         PrepareStreamTable();
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         int ofst = 1000;
-        client.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+        String re = null;
+        try {
+            threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+        } catch (Exception ex) {
+            re = ex.getMessage();
+        }
+        assertEquals(true, re.contains("Can't find the message with offset [1000]"));
+
     }
 
     @Test
@@ -394,16 +398,17 @@ public static void PrepareStreamTable() throws IOException {
         };
         int ofst = -1;
         Vector filter1 = (Vector) conn.run("1..1000");
-        client.subscribe(HOST, PORT, "Trades", "subTrades1", MessageHandler_handler, -1, filter1);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades1", MessageHandler_handler, -1, filter1);
         Vector filter2 = (Vector) conn.run("2001..3000");
-        client.subscribe(HOST, PORT, "Trades", "subTrades2", handler1, -1, filter2);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades2", handler1, -1, filter2);
         conn.run("n=4000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        wait_data("Receive", 1000);
+        wait_data("filter", 1000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
         BasicTable fil = (BasicTable) conn.run("select * from filter order by tag");
-        client.unsubscribe(HOST, PORT, "Trades", "subTrades2");
-        client.unsubscribe(HOST, PORT, "Trades", "subTrades1");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades2");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades1");
         conn.run("dropStreamTable(`filter)");
         assertEquals(1000, re.rows());
         assertEquals(1000, fil.rows());
@@ -425,13 +430,13 @@ public static void PrepareStreamTable() throws IOException {
     public void test_subscribe_batchSize_throttle() throws Exception {
         PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
-        client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        wait_data("Receive",2000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-        client.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades");
         System.out.println("行数：" + re.rows());
         assertEquals(2000, re.rows());
         for (int i = 0; i < 1000; i++) {
@@ -448,13 +453,13 @@ public static void PrepareStreamTable() throws IOException {
     public void test_subscribe_batchSize_throttle2() throws Exception {
         PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
-        client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true);
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        wait_data("Receive",200);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-        client.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades");
         assertEquals(200, re.rows());
         for (int i = 0; i <re.rows();i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -468,54 +473,66 @@ public static void PrepareStreamTable() throws IOException {
         PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
         for (int i=0;i<10;i++){
-            client.subscribe(HOST, PORT, "Trades", "subTrades1", MessageHandler_handler, -1, true, filter1, true);
-            client.subscribe(HOST, PORT, "Trades", "subTrades2", MessageHandler_handler, -1, true, filter1, true);
-            client.subscribe(HOST, PORT, "Trades", "subTrades3", MessageHandler_handler, -1, true, filter1, true);
-            conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(5200);
-            client.unsubscribe(HOST, PORT, "Trades", "subTrades1");
-            client.unsubscribe(HOST, PORT, "Trades", "subTrades2");
-            client.unsubscribe(HOST, PORT, "Trades", "subTrades3");
-            Thread.sleep(5200);
+            threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades1", MessageHandler_handler, -1, true, filter1, true);
+            threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades2", MessageHandler_handler, -1, true, filter1, true);
+            threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades3", MessageHandler_handler, -1, true, filter1, true);
+            conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+            Thread.sleep(1500);
+            threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades1");
+            threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades2");
+            threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades3");
+            Thread.sleep(1500);
         }
     }
 
-    @Test(expected = IOException.class)
+    @Test
     public void test_subscribe_user_error() throws IOException {
         PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"admin_error","123456");
+        String re = null;
+        try{
+            threadPooledClient.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"admin_error","123456");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals(true, re.contains("The user name or password is incorrect"));
     }
 
-    @Test(expected = IOException.class)
+    @Test
     public void test_subscribe_password_error() throws IOException {
         PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"admin","error_password");
+        String re = null;
+        try{
+            threadPooledClient.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"admin","error_password");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals(true, re.contains("The user name or password is incorrect"));
     }
 
     @Test
     public void test_subscribe_admin() throws IOException, InterruptedException {
         PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"admin","123456");
+        threadPooledClient.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"admin","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(20000);
+        wait_data("Receive",10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
-        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+        threadPooledClient.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
     @Test
     public void test_subscribe_other_user() throws IOException, InterruptedException {
         PrepareStreamTable();
         PrepareUser("test1","123456");
         Vector filter1 = (Vector) conn.run("1..100000");
-        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"test1","123456");
+        threadPooledClient.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"test1","123456");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(20000);
+        wait_data("Receive",10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
-        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+        threadPooledClient.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
     @Test
@@ -526,14 +543,14 @@ public static void PrepareStreamTable() throws IOException {
                 "colTypes = [INT,TIMESTAMP,SYMBOL,INT,DOUBLE];" +
                 "t2=streamTable(1:0,colNames,colTypes);"+
                 "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades\"});");
-
         Vector filter1 = (Vector) conn.run("1..100000");
+        String re = null;
         try {
-            client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, "test1", "123456");
-            fail("no exception thrown");
-        }catch (Exception e){
-            System.out.println(e.getMessage());
+            threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, "test1", "123456");
+        }catch (Exception ex){
+            re = ex.getMessage();
         }
+        Assert.assertEquals(true, re.contains("No access to shared table [Trades]"));
     }
 
     @Test
@@ -548,22 +565,23 @@ public static void PrepareStreamTable() throws IOException {
                 "rpc(getControllerAlias(),deny{`test1,TABLE_READ,getNodeAlias()+\":Trades\"});"+
                 "rpc(getControllerAlias(),grant{`test2,TABLE_READ,getNodeAlias()+\":Trades\"});");
         Vector filter1 = (Vector) conn.run("1..100000");
+        String re = null;
         try {
-            client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, "test1", "123456");
-            fail("no exception thrown");
-        }catch (Exception e){
-            System.out.println(e.getMessage());
+            threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, "test1", "123456");
+        }catch (Exception ex){
+            re = ex.getMessage();
         }
+        Assert.assertEquals(true, re.contains("No access to shared table [Trades]"));
 
-        client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, "test2", "123456");
-
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, "test2", "123456");
+        String re1 = null;
         try {
-            client.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, "test3", "123456");
-            fail("no exception thrown");
-        }catch (Exception e){
-            System.out.println(e.getMessage());
+            threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread2", MessageHandler_handler, -1, true, filter1, true, "test3", "123456");
+        }catch (Exception ex){
+            re1 = ex.getMessage();
         }
-        client.unsubscribe(HOST, PORT, "Trades", "subTread1");
+        Assert.assertEquals(true, re1.contains("No access to shared table [Trades]"));
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTread1");
     }
 
     @Test
@@ -573,45 +591,47 @@ public static void PrepareStreamTable() throws IOException {
         conn.run("share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st1;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st2;"+
                 "share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as tmp_st3;");
-        client.subscribe(HOST,PORT,"tmp_st1","subTread1",MessageHandler_handler,-1,true,null,true,"test1","123456");
-        client.subscribe(HOST,PORT,"tmp_st2","subTread1",MessageHandler_handler,-1,true,null,true,"test1","123456");
+        threadPooledClient.subscribe(HOST,PORT,"tmp_st1","subTread1",MessageHandler_handler,-1,true,null,true,"test1","123456");
+        threadPooledClient.subscribe(HOST,PORT,"tmp_st2","subTread1",MessageHandler_handler,-1,true,null,true,"test1","123456");
+        String re = null;
         try {
-            client.subscribe(HOST, PORT, "tmp_st3", "subTread1", MessageHandler_handler, -1, true, null, true, "test1", "123456_error");
-            fail("no exception thrown");
-        }catch (Exception e){
-            System.out.println(e.getMessage()+"12345666");
+            threadPooledClient.subscribe(HOST, PORT, "tmp_st3", "subTread1", MessageHandler_handler, -1, true, null, true, "test1", "123456_error");
+        }catch (Exception ex){
+            re = ex.getMessage();
         }
+        Assert.assertEquals(true, re.contains("The user name or password is incorrect."));
+
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st1.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "tmp_st2.append!(t)");
-        Thread.sleep(100000);
+        wait_data("Receive",20000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(20000,row_num.getInt());
-        client.unsubscribe(HOST,PORT,"tmp_st1","subTread1");
-        client.unsubscribe(HOST,PORT,"tmp_st2","subTread1");
+        threadPooledClient.unsubscribe(HOST,PORT,"tmp_st1","subTread1");
+        threadPooledClient.unsubscribe(HOST,PORT,"tmp_st2","subTread1");
     }
 
     @Test
     public void test_subscribe_tn_handler() throws IOException, InterruptedException {
         PrepareStreamTable();
-        client.subscribe(HOST,PORT,"Trades",MessageHandler_handler);
+        threadPooledClient.subscribe(HOST,PORT,"Trades",MessageHandler_handler);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(8000);
+        wait_data("Receive",10000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
-        client.unsubscribe(HOST,PORT,"Trades");
+        threadPooledClient.unsubscribe(HOST,PORT,"Trades");
     }
 
     @Test
     public void test_subscribe_tn_an_hd_offset_reconnect_filter_de() throws Exception {
         PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
-        client.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler, -1, true, filter1, null);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler, -1, true, filter1, null);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        wait_data("Receive",2000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-        client.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades");
         assertEquals(2000, re.rows());
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -626,13 +646,13 @@ public static void PrepareStreamTable() throws IOException {
     @Test
     public void test_subscribe_tn_an_handler_reconnect() throws Exception {
         PrepareStreamTable();
-        client.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(50000);
+        wait_data("Receive",20000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-        client.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades");
         assertEquals(20000, re.rows());
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -647,13 +667,13 @@ public static void PrepareStreamTable() throws IOException {
     @Test
     public void test_subscribe_tn_handler_ofst_reconnect() throws Exception {
         PrepareStreamTable();
-        client.subscribe(HOST, PORT, "Trades",MessageHandler_handler, -1,true);
+        threadPooledClient.subscribe(HOST, PORT, "Trades",MessageHandler_handler, -1,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(40000);
+        wait_data("Receive",20000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
         assertEquals(20000, re.rows());
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -668,14 +688,14 @@ public static void PrepareStreamTable() throws IOException {
     @Test
     public void test_ThreadPooledClient_null() throws Exception {
         PrepareStreamTable();
-        ThreadPooledClient client1 = new ThreadPooledClient();
-        client1.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient();
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(15000);
+        wait_data("Receive",20000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-        client1.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades");
         assertEquals(20000, re.rows());
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -685,21 +705,20 @@ public static void PrepareStreamTable() throws IOException {
             assertEquals(re.getColumn(1).get(i + 1000), tra.getColumn(1).get(i + 1000));
             assertEquals(((Scalar)re.getColumn(2).get(i + 1000)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i + 1000)).getNumber().doubleValue(), 4);
         }
-        client1.close();
+        threadPooledClient.close();
     }
 
     @Test
     public void test_ThreadPooledClient_subPort_thCount() throws Exception {
         PrepareStreamTable();
-        ThreadPooledClient client1 = new ThreadPooledClient(0,1);
-        client1.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(0,1);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades",MessageHandler_handler,true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(40000);
+        wait_data("Receive",20000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-        client1.unsubscribe(HOST, PORT, "Trades", "subTrades");
-
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades");
         assertEquals(20000, re.rows());
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -747,7 +766,6 @@ public static void PrepareStreamTable() throws IOException {
                 "rpc(leader_node,replay,d,`outTables,`timestampv,`timestampv)";
 //        "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestampv, timeColumn=`timestampv)"+
         conn.run(replayScript);
-        Thread.sleep(5000);
         System.out.println(conn.run("select count(*) from outTables ").getString());
         BasicTable table1 = (BasicTable)conn.run("table1");
         BasicTable table2 = (BasicTable)conn.run("table2");
@@ -769,30 +787,37 @@ public static void PrepareStreamTable() throws IOException {
         System.out.println(StreamLeaderHost);
         System.out.println(String.valueOf(StreamLeaderPort));
 
-        client.subscribe(StreamLeaderHost, StreamLeaderPort, "outTables", "mutiSchema", handler, 0, true);
+        threadPooledClient.subscribe(StreamLeaderHost, StreamLeaderPort, "outTables", "mutiSchema", handler, 0, true);
 //        DBConnection conn1 = new DBConnection();
 //        conn1.connect(HOST, 18922, "admin", "123456");
 //        conn1.run("streamCampaignForLeader(3)");
-        Thread.sleep(5000);
-        List<BasicMessage> msg1 = handler.getMsg1();
-        List<BasicMessage> msg2 = handler.getMsg2();
-        Thread.sleep(5000);
+        List<BasicMessage> msg1 = null;
+        List<BasicMessage> msg2 = null;
+        for(int i=0;i<10;i++){
+            msg1 = handler.getMsg1();
+            msg2 = handler.getMsg2();
+            if(msg1.size() == 10000){
+                break;
+            }
+            Thread.sleep(100);
+            i++;
+        }
         Assert.assertEquals(table1.rows(), msg1.size());
         Assert.assertEquals(table2.rows(), msg2.size());
-        client.unsubscribe(StreamLeaderHost, StreamLeaderPort, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(StreamLeaderHost, StreamLeaderPort, "outTables", "mutiSchema");
     }
     @Test
     public void test_ThreadPooledClient_threadCount() throws Exception {
         PrepareStreamTable();
-        client = new ThreadPooledClient(10);
+        threadPooledClient = new ThreadPooledClient(10);
         Vector filter1 = (Vector) conn.run("1..1000");
-        client.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades", MessageHandler_handler, -1, true, filter1, true);
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        wait_data("Receive",2000);
         BasicTable re = (BasicTable) conn.run("select * from Receive order by tag");
         BasicTable tra = (BasicTable) conn.run("select * from Trades order by tag");
-        client.unsubscribe(HOST, PORT, "Trades", "subTrades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades");
         assertEquals(2000, re.rows());
         for (int i = 0; i < 1000; i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
@@ -819,167 +844,167 @@ public static void PrepareStreamTable() throws IOException {
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_INT() throws IOException, InterruptedException {
         PrepareStreamTable_array("INT");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_BOOL() throws IOException, InterruptedException {
         PrepareStreamTable_array("BOOL");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_CHAR() throws IOException, InterruptedException {
         PrepareStreamTable_array("CHAR");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_SHORT() throws IOException, InterruptedException {
         PrepareStreamTable_array("SHORT");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_LONG() throws IOException, InterruptedException {
         PrepareStreamTable_array("LONG");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_DOUBLE() throws IOException, InterruptedException {
         PrepareStreamTable_array("DOUBLE");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_FLOAT() throws IOException, InterruptedException {
         PrepareStreamTable_array("FLOAT");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_DATE() throws IOException, InterruptedException {
         PrepareStreamTable_array("DATE");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_MONTH() throws IOException, InterruptedException {
         PrepareStreamTable_array("MONTH");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_TIME() throws IOException, InterruptedException {
         PrepareStreamTable_array("TIME");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_MINUTE() throws IOException, InterruptedException {
         PrepareStreamTable_array("MINUTE");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_SECOND() throws IOException, InterruptedException {
         PrepareStreamTable_array("SECOND");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_DATETIME() throws IOException, InterruptedException {
         PrepareStreamTable_array("DATETIME");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_NANOTIME() throws IOException, InterruptedException {
         PrepareStreamTable_array("NANOTIME");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_NANOTIMESTAMP() throws IOException, InterruptedException {
         PrepareStreamTable_array("NANOTIMESTAMP");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     public static MessageHandler Handler_array_UUID = new MessageHandler() {
         @Override
@@ -997,13 +1022,13 @@ public static void PrepareStreamTable() throws IOException {
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_UUID() throws IOException, InterruptedException {
         PrepareStreamTable_array("UUID");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array_UUID, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array_UUID, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     public static MessageHandler Handler_array_DATEHOUR = new MessageHandler() {
         @Override
@@ -1021,13 +1046,13 @@ public static void PrepareStreamTable() throws IOException {
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_DATEHOUR() throws IOException, InterruptedException {
         PrepareStreamTable_array("DATEHOUR");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array_DATEHOUR, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array_DATEHOUR, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     public static MessageHandler Handler_array_IPADDR = new MessageHandler() {
         @Override
@@ -1045,13 +1070,13 @@ public static void PrepareStreamTable() throws IOException {
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_IPADDR() throws IOException, InterruptedException {
         PrepareStreamTable_array("IPADDR");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array_IPADDR, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array_IPADDR, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     public static MessageHandler Handler_array_INT128 = new MessageHandler() {
         @Override
@@ -1069,13 +1094,13 @@ public static void PrepareStreamTable() throws IOException {
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_INT128() throws IOException, InterruptedException {
         PrepareStreamTable_array("INT128");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array_INT128, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array_INT128, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     public static MessageHandler Handler_array_COMPLEX = new MessageHandler() {
         @Override
@@ -1109,13 +1134,13 @@ public static void PrepareStreamTable() throws IOException {
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_COMPLEX() throws IOException, InterruptedException {
         PrepareStreamTable_array("COMPLEX");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array_COMPLEX, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array_COMPLEX, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     public static MessageHandler Handler_array_POINT = new MessageHandler() {
         @Override
@@ -1147,46 +1172,46 @@ public static void PrepareStreamTable() throws IOException {
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_POINT() throws IOException, InterruptedException {
         PrepareStreamTable_array("POINT");
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array_POINT, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array_POINT, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_DECIMAL32() throws IOException, InterruptedException {
         PrepareStreamTableDecimal_array("DECIMAL32",3);
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_TDECIMAL64() throws IOException, InterruptedException {
         PrepareStreamTableDecimal_array("DECIMAL64",4);
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     @Test(timeout = 120000)
     public void Test_ThreadPooledClient_subscribe_arrayVector_DECIMAL128() throws IOException, InterruptedException {
         PrepareStreamTableDecimal_array("DECIMAL128",7);
-        ThreadPooledClient client = new ThreadPooledClient(10);
-        client.subscribe(HOST, PORT, "Trades", Handler_array, -1);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(10);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", Handler_array, -1);
         String script2 = "Trades.append!(pub_t);";
         conn.run(script2);
         //write 1000 rows after subscribe
         checkResult();
-        client.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
     class Handler_StreamDeserializer_array implements MessageHandler {
         private StreamDeserializer deserializer_;
@@ -1218,10 +1243,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_CHAR()throws IOException, InterruptedException {
@@ -1231,10 +1256,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_SHORT()throws IOException, InterruptedException {
@@ -1244,10 +1269,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_LONG()throws IOException, InterruptedException {
@@ -1257,10 +1282,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_DOUBLE()throws IOException, InterruptedException {
@@ -1270,10 +1295,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_FLOAT()throws IOException, InterruptedException {
@@ -1283,10 +1308,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_MONTH()throws IOException, InterruptedException {
@@ -1296,10 +1321,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_TIME()throws IOException, InterruptedException {
@@ -1309,10 +1334,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_MINUTE()throws IOException, InterruptedException {
@@ -1322,10 +1347,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_SECOND()throws IOException, InterruptedException {
@@ -1335,10 +1360,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_DATETIME()throws IOException, InterruptedException {
@@ -1348,10 +1373,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_TIMESTAMP()throws IOException, InterruptedException {
@@ -1361,10 +1386,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_NANOTIME()throws IOException, InterruptedException {
@@ -1374,10 +1399,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     @Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_NANOTIMESTAMP()throws IOException, InterruptedException {
@@ -1387,10 +1412,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     class Handler_StreamDeserializer_array_UUID implements MessageHandler {
         private StreamDeserializer deserializer_;
@@ -1422,10 +1447,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array_UUID handler = new Handler_StreamDeserializer_array_UUID(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     class Handler_StreamDeserializer_array_DATEHOUR implements MessageHandler {
         private StreamDeserializer deserializer_;
@@ -1457,10 +1482,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array_DATEHOUR handler = new Handler_StreamDeserializer_array_DATEHOUR(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     class Handler_StreamDeserializer_array_IPADDR implements MessageHandler {
         private StreamDeserializer deserializer_;
@@ -1492,10 +1517,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array_IPADDR handler = new Handler_StreamDeserializer_array_IPADDR(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     class Handler_StreamDeserializer_array_INT128 implements MessageHandler {
         private StreamDeserializer deserializer_;
@@ -1527,10 +1552,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array_INT128 handler = new Handler_StreamDeserializer_array_INT128(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     class Handler_StreamDeserializer_array_COMPLEX implements MessageHandler {
@@ -1578,10 +1603,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array_COMPLEX handler = new Handler_StreamDeserializer_array_COMPLEX(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     class Handler_StreamDeserializer_array_POINT implements MessageHandler {
         private StreamDeserializer deserializer_;
@@ -1628,10 +1653,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array_POINT handler = new Handler_StreamDeserializer_array_POINT(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     //@Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_DECIMAL32()throws IOException, InterruptedException {
@@ -1641,10 +1666,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
-        Thread.sleep(30000);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     //@Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_DECIMAL64()throws IOException, InterruptedException {
@@ -1654,10 +1679,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
     //@Test(timeout = 120000)
     public void test_ThreadPooledClient_subscribe_StreamDeserializer_streamTable_arrayVector_DECIMAL128()throws IOException, InterruptedException {
@@ -1667,10 +1692,10 @@ public static void PrepareStreamTable() throws IOException {
         tables.put("msg2", new Pair<>("", "pub_t2"));
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     @Test(timeout = 120000)
@@ -1682,10 +1707,10 @@ public static void PrepareStreamTable() throws IOException {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
-        client.subscribe(HOST, 11111, "outTables", "mutiSchema", handler, 0,false, null,null,false,"admin","123456",false, backupSites,10,true);
+        threadPooledClient.subscribe(HOST, 11111, "outTables", "mutiSchema", handler, 0,false, null,null,false,"admin","123456",false, backupSites,10,true);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, 11111, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, 11111, "outTables", "mutiSchema");
     }
 
     @Test(timeout = 120000)
@@ -1699,7 +1724,7 @@ public static void PrepareStreamTable() throws IOException {
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+","+PORT));
         String re = null;
         try{
-            client.subscribe(HOST, 11111, "outTables", "mutiSchema", handler, 0,false, null,null,false,"admin","123456",false,backupSites,10,true);
+            threadPooledClient.subscribe(HOST, 11111, "outTables", "mutiSchema", handler, 0,false, null,null,false,"admin","123456",false,backupSites,10,true);
         }catch(Exception ex){
             re = ex.getMessage();
         }
@@ -1715,10 +1740,10 @@ public static void PrepareStreamTable() throws IOException {
         StreamDeserializer streamFilter = new StreamDeserializer(tables, conn);
         Handler_StreamDeserializer_array handler = new Handler_StreamDeserializer_array(streamFilter);
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
-        client.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0,false, null,null,false,"admin","123456",false,backupSites,10,true);
+        threadPooledClient.subscribe(HOST, PORT, "outTables", "mutiSchema", handler, 0,false, null,null,false,"admin","123456",false,backupSites,10,true);
         //Thread.sleep(30000);
         checkResult1();
-        client.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
+        threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
     @Test(timeout = 180000)
@@ -1732,14 +1757,14 @@ public static void PrepareStreamTable() throws IOException {
         conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+111));
-        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,10,true);
+        threadPooledClient.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,10,true);
         System.out.println("Successful subscribe");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",1000);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("1000",row_num.getColumn(0).get(0).getString());
-        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+        threadPooledClient.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
 
     @Test(timeout = 180000)
@@ -1762,20 +1787,21 @@ public static void PrepareStreamTable() throws IOException {
 
         Vector filter1 = (Vector) conn.run("1..50000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
-        client.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,10,true);
+        threadPooledClient.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,10,true);
         System.out.println("Successful subscribe");
         conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         conn1.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(1000);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(15000);
+        Thread.sleep(8000);
         conn.run("t=table(5001..5500 as tag,now()+5001..5500 as ts,rand(100.0,500) as data);" + "Trades.append!(t)");
-        Thread.sleep(10000);
+        Thread.sleep(1000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
+        Thread.sleep(5000);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("5500",row_num.getColumn(0).get(0).getString());
-        client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
+        threadPooledClient.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
 
     @Test(timeout = 180000)
@@ -1802,33 +1828,33 @@ public static void PrepareStreamTable() throws IOException {
         conn2.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+port_list[2]));
-        client.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,10,false);
+        threadPooledClient.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,10,false);
         System.out.println("Successful subscribe");
         conn1.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         conn2.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(1000);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         System.out.println(port_list[1]+"断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn2.run("n=2000;t=table(1001..n as tag,timestamp(1001..n) as ts,take(100.0,1000) as data);" + "Trades.append!(t)");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(2000);
+        Thread.sleep(5000);
         DBConnection conn3 = new DBConnection();
         conn3.connect(HOST,port_list[1],"admin","123456");
         conn3.run(script1);
         conn3.run(script2);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
         System.out.println(port_list[2]+"节点断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn3.run("n=3000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
-        Thread.sleep(30000);
+        Thread.sleep(8000);
 
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("3000",row_num.getColumn(0).get(0).getString());
-        client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
+        threadPooledClient.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
 
     @Test(timeout = 180000)
@@ -1855,18 +1881,18 @@ public static void PrepareStreamTable() throws IOException {
         conn2.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+port_list[2]));
-        client.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,10,true);
+        threadPooledClient.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,10,true);
         System.out.println("Successful subscribe");
         conn1.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         conn2.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(1000);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         System.out.println(port_list[1]+"断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn2.run("n=2000;t=table(1001..n as tag,timestamp(1001..n) as ts,take(100.0,1000) as data);" + "Trades.append!(t)");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(2000);
+        Thread.sleep(5000);
         DBConnection conn3 = new DBConnection();
         conn3.connect(HOST,port_list[1],"admin","123456");
         conn3.run(script1);
@@ -1876,7 +1902,7 @@ public static void PrepareStreamTable() throws IOException {
         Thread.sleep(10000);
         conn3.run("n=3000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
-        Thread.sleep(30000);
+        Thread.sleep(5000);
 
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
@@ -1899,17 +1925,17 @@ public static void PrepareStreamTable() throws IOException {
         conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+PORT));
-        client.subscribe(HOST,11111,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,10,false);
+        threadPooledClient.subscribe(HOST,11111,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,10,false);
         System.out.println("Successful subscribe");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",1000);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("1000",row_num.getColumn(0).get(0).getString());
-        client.unsubscribe(HOST,11111,"Trades","subTread1");
+        threadPooledClient.unsubscribe(HOST,11111,"Trades","subTread1");
     }
     @Test(timeout = 180000)
-    public void Test_ThreadPooledClient_subscribe_resubTimeout_not_true() throws IOException, InterruptedException {
+    public void Test_ThreadPooledClient_subscribe_resubscribeInterval_not_true() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
@@ -1919,14 +1945,14 @@ public static void PrepareStreamTable() throws IOException {
         conn.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+111));
-        client.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,-1,true);
+        threadPooledClient.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,-1,true);
         System.out.println("Successful subscribe");
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
+        wait_data("Receive",1000);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("1000",row_num.getColumn(0).get(0).getString());
-        client.unsubscribe(HOST,PORT,"Trades","subTread1");
+        threadPooledClient.unsubscribe(HOST,PORT,"Trades","subTread1");
     }
     public static MessageHandler MessageHandler_handler1 = new MessageHandler() {
         @Override
@@ -1942,7 +1968,7 @@ public static void PrepareStreamTable() throws IOException {
     };
 
     @Test(timeout = 180000)
-    public void Test_ThreadPooledClient_subscribe_backupSites_resubTimeout() throws Exception {
+    public void Test_ThreadPooledClient_subscribe_backupSites_resubscribeInterval() throws Exception {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
@@ -1964,7 +1990,7 @@ public static void PrepareStreamTable() throws IOException {
         conn3.run(script2);
         Vector filter1 = (Vector) conn.run("1..10000000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+port_list[2]));
-        client.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler1, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,1000,true);
+        threadPooledClient.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler1, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites,1000,true);
         System.out.println("Successful subscribe");
         class MyThread extends Thread {
             @Override
@@ -2013,7 +2039,7 @@ public static void PrepareStreamTable() throws IOException {
         Thread.sleep(2000);
         thread2.start();
         thread.join();
-        Thread.sleep(10000);
+        Thread.sleep(5000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         Thread.sleep(1000);
         BasicTable re = (BasicTable)conn.run("select tag ,now,deltas(now) from Receive  order by  deltas(now) desc \n");
@@ -2024,11 +2050,11 @@ public static void PrepareStreamTable() throws IOException {
         conn2.connect(HOST,port_list[1],"admin","123456");
         conn2.run(script1);
         conn2.run(script2);
-        client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
+        threadPooledClient.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
 
     @Test(timeout = 180000)
-    public void Test_ThreadPooledClient_subscribe_resubTimeout_subOnce_not_set() throws IOException, InterruptedException {
+    public void Test_ThreadPooledClient_subscribe_resubscribeInterval_subOnce_not_set() throws IOException, InterruptedException {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
@@ -2051,33 +2077,33 @@ public static void PrepareStreamTable() throws IOException {
         conn2.run(script2);
         Vector filter1 = (Vector) conn.run("1..100000");
         List<String> backupSites = new ArrayList<>(Collections.singleton(HOST+":"+port_list[2]));
-        client.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites);
+        threadPooledClient.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites);
         System.out.println("Successful subscribe");
         conn1.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         conn2.run("n=1000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(1000);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         System.out.println(port_list[1]+"断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn2.run("n=2000;t=table(1001..n as tag,timestamp(1001..n) as ts,take(100.0,1000) as data);" + "Trades.append!(t)");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(2000);
+        Thread.sleep(5000);
         DBConnection conn3 = new DBConnection();
         conn3.connect(HOST,port_list[1],"admin","123456");
         conn3.run(script1);
         conn3.run(script2);
         controller_conn.run("try{stopDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
         System.out.println(port_list[2]+"节点断掉啦---------------------------------------------------");
-        Thread.sleep(10000);
+        Thread.sleep(8000);
         conn3.run("n=3000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
-        Thread.sleep(30000);
+        Thread.sleep(5000);
 
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("3000",row_num.getColumn(0).get(0).getString());
-        client.unsubscribe(HOST,port_list[1],"Trades","subTread1");
+        threadPooledClient.unsubscribe(HOST,port_list[1],"Trades","subTread1");
     }
     //@Test(timeout = 180000)
     public void Test_ThreadPooledClient_subscribe_backupSites_server_disconnect_1() throws IOException, InterruptedException {
@@ -2099,7 +2125,7 @@ public static void PrepareStreamTable() throws IOException {
 
         Vector filter1 = (Vector) conn.run("1..50000");
         List<String> backupSites = Arrays.asList(new String[]{"192.168.0.69:18921", "192.168.0.69:18922", "192.168.0.69:18923"});
-        client.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites);
+        threadPooledClient.subscribe(HOST,port_list[1],"Trades","subTread1",MessageHandler_handler, -1,true,filter1, (StreamDeserializer) null,true,"admin","123456",false,backupSites);
         System.out.println("这里可以手工断掉这个集群下所有可用节点http://192.168.0.69:18920/?view=overview-old");
         Thread.sleep(1000000);
     }
@@ -2127,19 +2153,19 @@ public static void PrepareStreamTable() throws IOException {
         String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st2, `Receive)\t\n";
         conn.run(script2);
-        ThreadPooledClient client1 = new ThreadPooledClient(HOST, 0,1);
-        client1.subscribe(HOST, PORT, "Trades", MessageHandler_handler_getOffset, true);
+        ThreadPooledClient threadPooledClient = new ThreadPooledClient(HOST, 0,1);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler_getOffset, true);
         conn.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-        Thread.sleep(5000);
-        BasicTable re = (BasicTable) conn.run("Receive");
-        BasicTable tra = (BasicTable) conn.run("Trades");
+        wait_data("Receive",1000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades");
         assertEquals(1000, re.rows());
         for (int i = 0; i < re.rows(); i++) {
             assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
             assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
             assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
         }
-        client1.unsubscribe(HOST, PORT, "Trades");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades");
     }
 
 //    public static MessageHandler MessageHandler_handler_null = new MessageHandler() {
@@ -2172,11 +2198,9 @@ public static void PrepareStreamTable() throws IOException {
 //        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
 //                "enableTableShareAndPersistence(table=st2, tableName=`Receive, asynWrite=true, compress=true, cacheSize=200000, retentionMinutes=180)\t\n";
 //        conn.run(script2);
-//        ThreadPooledClient client = new ThreadPooledClient(HOST,PORT,3);
+//        ThreadPooledClient threadPooledClient = new ThreadPooledClient(HOST,PORT,3);
 //        System.out.println("client created");
-//        client.subscribe(HOST, PORT, "quote_commodity_stream", "subTrades", MessageHandler_handler_null, -1, true);
+//        threadPooledClient.subscribe(HOST, PORT, "quote_commodity_stream", "subTrades", MessageHandler_handler_null, -1, true);
 //        System.out.println("client created");
 //    }
-
-
 }
