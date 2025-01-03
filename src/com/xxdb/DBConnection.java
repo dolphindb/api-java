@@ -868,7 +868,7 @@ public class DBConnection {
                     }
 
                     try {
-                        bt = (BasicTable) conn_.run("select host,port,(memoryUsed/1024.0/1024.0/1024.0)/maxMemSize as memLoad,ratio(connectionNum,maxConnections) as connLoad,avgLoad from rpc(getControllerAlias(),getClusterPerf) where mode=0",0);
+                        bt = (BasicTable) conn_.run("getClusterPerf", new ArrayList<>(), 0);
                         break;
                     } catch (Exception e) {
                         log.error("ERROR getting other data nodes, exception: " + e.getMessage());
@@ -907,12 +907,18 @@ public class DBConnection {
                         // enable loadBalance
                         //ignore very high load nodes, rand one in low load nodes
                         List<Node> lowLoadNodes=new ArrayList<>();
+                        BasicIntVector mode = (BasicIntVector) bt.getColumn("mode");
                         BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
                         BasicIntVector colPort = (BasicIntVector) bt.getColumn("port");
-                        BasicDoubleVector memLoad = (BasicDoubleVector) bt.getColumn("memLoad");
-                        BasicDoubleVector connLoad = (BasicDoubleVector) bt.getColumn("connLoad");
+                        BasicLongVector memoryUsed = (BasicLongVector) bt.getColumn("memoryUsed");
+                        BasicDoubleVector maxMemSize = (BasicDoubleVector) bt.getColumn("maxMemSize");
+                        BasicIntVector connectionNum = (BasicIntVector) bt.getColumn("connectionNum");
+                        BasicIntVector maxConnections = (BasicIntVector) bt.getColumn("maxConnections");
                         BasicDoubleVector avgLoad = (BasicDoubleVector) bt.getColumn("avgLoad");
                         for (int i = 0; i < colHost.rows(); i++) {
+                            if (mode.getInt(i) != 0)
+                                continue;
+
                             Node nodex = new Node(colHost.getString(i), colPort.getInt(i));
                             Node pexistNode = null;
                             if (highAvailabilitySites != null) {
@@ -926,7 +932,9 @@ public class DBConnection {
                                 if (pexistNode == null)
                                     continue;
                             }
-                            double load=(memLoad.getDouble(i)+connLoad.getDouble(i)+avgLoad.getDouble(i))/3.0;
+                            double memLoad = (memoryUsed.getLong(i) / 1024.0 / 1024.0 /1024.0) / maxMemSize.getDouble(i);
+                            double connLoad = connectionNum.getInt(i) * 1.0 / maxConnections.getInt(i);
+                            double load=(memLoad + connLoad + avgLoad.getDouble(i)) / 3.0;
                             if (pexistNode != null) {
                                 pexistNode.load = load;
                             } else {
@@ -934,7 +942,7 @@ public class DBConnection {
                                 nodes_.add(pexistNode);
                             }
                             // low load
-                            if (memLoad.getDouble(i)<0.8 && connLoad.getDouble(i)<0.9 && avgLoad.getDouble(i)<0.8)
+                            if (memLoad < 0.8 && connLoad < 0.9 && avgLoad.getDouble(i) < 0.8)
                                 lowLoadNodes.add(pexistNode);
                         }
 
@@ -1514,7 +1522,7 @@ public class DBConnection {
 
     private boolean getServerVersion() throws IOException {
         try {
-            Entity ret = conn_.run("version()",0);
+            Entity ret = conn_.run("version", new ArrayList<>(), 0);
             if(ret==null){
                 throw new IOException("run version failed");
             }
