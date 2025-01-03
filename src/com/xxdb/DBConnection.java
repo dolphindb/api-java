@@ -66,7 +66,8 @@ public class DBConnection {
         ET_NOINITIALIZED(4),
         ET_NOTLEADER(5),
         ET_READTIMEDOUT(6),
-        ET_NORESPONSEHEADER(7);
+        ET_NORESPONSEHEADER(7),
+        ET_LOGINREQUIRED(8);
 
         public int value;
         ExceptionType(int value){
@@ -1113,6 +1114,9 @@ public class DBConnection {
         } else if (msg.contains("Failed to read response header from the socket with IO error null")) {
             conn_.getNode(node);
             return ExceptionType.ET_NORESPONSEHEADER;
+        } else if (msg.contains("Login is required for script execution with client authentication enabled")) {
+            conn_.getNode(node);
+            return ExceptionType.ET_LOGINREQUIRED;
         } else {
             node.hostName = "";
             node.port = 0;
@@ -1131,8 +1135,8 @@ public class DBConnection {
 
     public boolean connected(){
         try {
-            BasicInt ret= (BasicInt) conn_.run("1+1",0);
-            return !ret.isNull() && (ret.getInt() == 2);
+            conn_.run("version", new ArrayList<>(), 0);
+            return true;
         }catch (Exception e){
             return false;
         }
@@ -1253,7 +1257,7 @@ public class DBConnection {
                             ExceptionType type = parseException(e.getMessage(), node);
                             if (type == ExceptionType.ET_IGNORE)
                                 return new Void();
-                            else if (type == ExceptionType.ET_UNKNOW)
+                            else if (type == ExceptionType.ET_UNKNOW || type == ExceptionType.ET_LOGINREQUIRED)
                                 throw e;
                             else if (type == ExceptionType.ET_READTIMEDOUT)
                                 cancelConsoleJob(enableSeqNo, currentSeqNo, e);
