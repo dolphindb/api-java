@@ -56,6 +56,12 @@ public class DBConnection {
     private boolean isReverseStreaming_ = false;
     private int tryReconnectNums = -1;
 
+    private ProgressListener _listener;
+
+    public void set_listener(ProgressListener _listener) {
+        this._listener = _listener;
+    }
+
     private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
     private enum ExceptionType{
@@ -1357,7 +1363,7 @@ public class DBConnection {
 
                 while (!closed_) {
                     try {
-                        return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false, currentSeqNo);
+                        return conn_.run(function, this._listener == null?null:this._listener, arguments, priority, parallelism, fetchSize, false, currentSeqNo);
                     } catch (IOException e) {
                         if (currentSeqNo > 0)
                             currentSeqNo = -currentSeqNo;
@@ -1376,7 +1382,7 @@ public class DBConnection {
                 }
                 return null;
             } else {
-                return conn_.run(function, (ProgressListener)null, arguments, priority, parallelism, fetchSize, false, 0);
+                return conn_.run(function, this._listener==null?null:this._listener, arguments, priority, parallelism, fetchSize, false, 0);
             }
         } finally {
             mutex_.unlock();
