@@ -56,12 +56,6 @@ public class DBConnection {
     private boolean isReverseStreaming_ = false;
     private int tryReconnectNums = -1;
 
-    private ProgressListener _listener;
-
-    public void set_listener(ProgressListener _listener) {
-        this._listener = _listener;
-    }
-
     private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
 
     private enum ExceptionType{
@@ -1352,6 +1346,10 @@ public class DBConnection {
     }
 
     public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize, boolean enableSeqNo) throws IOException {
+        return run(function, arguments, priority, parallelism, fetchSize, enableSeqNo, null);
+    }
+
+    public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize, boolean enableSeqNo, ProgressListener listener) throws IOException {
         mutex_.lock();
         try {
             if (!nodes_.isEmpty()) {
@@ -1363,7 +1361,7 @@ public class DBConnection {
 
                 while (!closed_) {
                     try {
-                        return conn_.run(function, this._listener == null?null:this._listener, arguments, priority, parallelism, fetchSize, false, currentSeqNo);
+                        return conn_.run(function, listener, arguments, priority, parallelism, fetchSize, false, currentSeqNo);
                     } catch (IOException e) {
                         if (currentSeqNo > 0)
                             currentSeqNo = -currentSeqNo;
@@ -1382,7 +1380,7 @@ public class DBConnection {
                 }
                 return null;
             } else {
-                return conn_.run(function, this._listener==null?null:this._listener, arguments, priority, parallelism, fetchSize, false, 0);
+                return conn_.run(function, listener, arguments, priority, parallelism, fetchSize, false, 0);
             }
         } finally {
             mutex_.unlock();
