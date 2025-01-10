@@ -415,6 +415,49 @@ public class MultithreadedTableWriter {
                                     int batchSize, float throttle,
                                     int threadCount, String partitionCol,
                                     int[] compressTypes, Mode mode, String[] pModeOption,
+                                    boolean enableActualSendTime, boolean reconnect) throws Exception {
+        init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
+                batchSize, throttle, threadCount, partitionCol, compressTypes, mode, pModeOption, null, enableActualSendTime, reconnect, -1);
+    }
+
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean enableHighAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionCol,
+                                    int[] compressTypes,
+                                    boolean enableActualSendTime, boolean reconnect) throws Exception {
+        init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
+                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, null, enableActualSendTime, reconnect, -1);
+    }
+
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean enableHighAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionCol,
+                                    boolean enableActualSendTime, boolean reconnect) throws Exception {
+        init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
+                batchSize, throttle, threadCount, partitionCol, null, Mode.M_Append, null, null, enableActualSendTime, reconnect, -1);
+    }
+
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean enableHighAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionCol,
+                                    int[] compressTypes, Callback callbackHandler,
+                                    boolean enableActualSendTime, boolean reconnect) throws Exception {
+        init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
+                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, callbackHandler, enableActualSendTime, reconnect, -1);
+    }
+
+    public MultithreadedTableWriter(String hostName, int port, String userId, String password,
+                                    String dbName, String tableName, boolean useSSL,
+                                    boolean enableHighAvailability, String[] highAvailabilitySites,
+                                    int batchSize, float throttle,
+                                    int threadCount, String partitionCol,
+                                    int[] compressTypes, Mode mode, String[] pModeOption,
                                     boolean enableActualSendTime, boolean reconnect, int tryReconnectNums) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
                 batchSize, throttle, threadCount, partitionCol, compressTypes, mode, pModeOption, null, enableActualSendTime, reconnect, tryReconnectNums);
