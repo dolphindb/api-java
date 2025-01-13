@@ -869,7 +869,11 @@ public class DBConnection {
                     }
 
                     try {
-                        bt = (BasicTable) conn_.run("getClusterPerf", new ArrayList<>(), 0);
+                        BasicBoolean isClientAuth = (BasicBoolean) conn_.run("isClientAuth", new ArrayList<>(), 0);
+                        if (isClientAuth.getBoolean())
+                            bt = (BasicTable) conn_.run("getClusterPerf", new ArrayList<>(), 0);
+                        else
+                            bt = (BasicTable) conn_.run("rpc(getControllerAlias(),getClusterPerf)", 0);
                         break;
                     } catch (Exception e) {
                         log.error("ERROR getting other data nodes, exception: " + e.getMessage());
@@ -907,7 +911,7 @@ public class DBConnection {
                     } else {
                         // enable loadBalance
                         //ignore very high load nodes, rand one in low load nodes
-                        List<Node> lowLoadNodes=new ArrayList<>();
+                        List<Node> lowLoadNodes = new ArrayList<>();
                         BasicIntVector mode = (BasicIntVector) bt.getColumn("mode");
                         BasicStringVector colHost = (BasicStringVector) bt.getColumn("host");
                         BasicIntVector colPort = (BasicIntVector) bt.getColumn("port");
