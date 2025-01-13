@@ -1035,8 +1035,10 @@ public class DBConnection {
             }
         } while (!closed_ && (tryReconnectNums == -1 || attempt < tryReconnectNums));
 
-        if (!closed_ && !isConnected)
+        if (!closed_ && !isConnected) {
+            log.error("Connect to " + node.hostName + ":" + node.port + " failed after " + attempt + " reconnect attempts.");
             throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed after " + attempt + " reconnect attempts.");
+        }
 
         if (initialScript_!=null && initialScript_.length() > 0){
             run(initialScript_);
