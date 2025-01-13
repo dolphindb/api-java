@@ -869,7 +869,17 @@ public class DBConnection {
                     }
 
                     try {
-                        BasicBoolean isClientAuth = (BasicBoolean) conn_.run("isClientAuth", new ArrayList<>(), 0);
+                        BasicBoolean isClientAuth = null;
+                        try {
+                            isClientAuth = (BasicBoolean) conn_.run("isClientAuth", new ArrayList<>(), 0);
+                        } catch (Exception e) {
+                            if (e.getMessage().contains("Can't recognize function name isClientAuth"))
+                                bt = (BasicTable) conn_.run("rpc(getControllerAlias(),getClusterPerf)", 0);
+                            else
+                                throw e;
+                            break;
+                        }
+
                         if (isClientAuth.getBoolean())
                             bt = (BasicTable) conn_.run("getClusterPerf", new ArrayList<>(), 0);
                         else
