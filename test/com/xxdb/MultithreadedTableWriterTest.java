@@ -13,7 +13,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -168,6 +170,192 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "", "t1", false, false, null, 10000, 1,
                 5, "date");
         conn.run("undef(`t1,SHARED)");
+    }
+
+    @Test
+    public void test_MultithreadedTableWriter_reconnect_false() throws IOException {
+        int port=7102;
+        String re = null;
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, port, "admin", "123456",
+                    "", "tt", false, false, null, 10000, 1,
+                    5, "date",null,false,false,0);
+        }catch (Exception ex) {
+            re = ex.getMessage();
+        }
+        assertEquals(true,re.contains("Failed to connect to server "));
+    }
+
+    @Test
+    public void test_MultithreadedTableWriter_reconnect_false_tryReconnectNums_not_set() throws IOException {
+        int port=7102;
+        String re = null;
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, port, "admin", "123456",
+                    "", "tt", false, false, null, 10000, 1,
+                    5, "date",null,false,false);
+        }catch (Exception ex) {
+            re = ex.getMessage();
+        }
+        assertEquals(true,re.contains("Failed to connect to server "));
+    }
+
+    @Test
+    public void test_MultithreadedTableWriter_reconnect_false_tryReconnectNums_1() throws Exception {
+        int port=7102;
+        String re = null;
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, port, "admin", "123456",
+                    "", "tt", false, false, null, 10000, 1,
+                    5, "date",null,false,false,1);
+        }catch (Exception ex) {
+            re = ex.getMessage();
+        }
+        assertEquals(true,re.contains("Failed to connect to server "));
+    }
+
+    @Test
+    public void test_MultithreadedTableWriter_reconnect_true() throws IOException {
+        int port=7102;
+        int trynums=3;
+        String re = null;
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, port, "admin", "123456",
+                    "", "tt", false, false, null, 10000, 1,
+                    5, "date",null,false,true,trynums);
+        }catch (Exception ex) {
+            re = ex.getMessage();
+        }
+        assertEquals("Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attempts.",re);
+    }
+
+    //@Test 会一直重连 ，故回归注销
+    public void test_MultithreadedTableWriter_reconnect_true_tryReconnectNums_not_set() throws IOException {
+        int port=7102;
+        int trynums=3;
+        String re = null;
+        try {
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, port, "admin", "123456",
+                    "", "tt", false, false, null, 10000, 1,
+                    5, "date",null,false,true);
+        }catch (Exception ex) {
+            re = ex.getMessage();
+        }
+        assertEquals("Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attempts.",re);
+    }
+
+    //@Test  会一直重连 ，故回归注销
+    public void test_MultithreadedTableWriter_tryReconnectNums_0_reconnect_true() throws Exception {
+        int port=7102;
+        int trynums=0;
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, port, "admin", "123456",
+                "", "tt", false, false, null, 10000, 1,
+                5, "date",null,false,true,trynums);
+    }
+
+    //@Test tryReconnectNums设置为-1时 会无限重连
+    public void test_MultithreadedTableWriter_tryReconnectNums_negetive_reconnect_true() throws Exception {
+        int port=7102;
+        int trynums=-1;
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, port, "admin", "123456",
+                "", "tt", false, true, null, 10000, 1,
+                5, "date",null,false,false,trynums);
+    }
+
+    @Test
+    public void test_MultithreadedTableWriter_tryReconnectNums_enableHighAvailability_true_reconnect_false() throws Exception {
+        class LogCapture {
+            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            private final PrintStream originalErr = System.err;
+            public void start() {
+                System.setErr(new PrintStream(baos));
+            }
+            public void stop() {
+                System.setErr(originalErr);
+            }
+            public String getLogMessages() {
+                return baos.toString();
+            }
+        }
+        int port=7102;
+        int trynums=3;
+        LogCapture logCapture = new LogCapture();
+        logCapture.start();
+        try{
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, port, "admin", "123456",
+                    "", "tt", false, true, new String[]{"192.168.0.69:7002"}, 10000, 1,
+                    5, "date",null,true,false,trynums);
+        }catch(Exception ex){
+            System.out.println(ex.getMessage());
+        }
+        logCapture.stop();
+        String s=logCapture.getLogMessages();
+        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attempts for every node in high availability sites."));
+    }
+
+    @Test
+    public void test_MultithreadedTableWriter_tryReconnectNums_enableHighAvailability_true_reconnect_false_1() throws Exception {
+        class LogCapture {
+            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            private final PrintStream originalErr = System.err;
+            public void start() {
+                System.setErr(new PrintStream(baos));
+            }
+            public void stop() {
+                System.setErr(originalErr);
+            }
+            public String getLogMessages() {
+                return baos.toString();
+            }
+        }
+        int port=7102;
+        int trynums=3;
+        LogCapture logCapture = new LogCapture();
+        logCapture.start();
+        try{
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, port, "admin", "123456",
+                    "", "tt", false, true, new String[]{"192.168.0.69:7002","192.168.0.69:7222"}, 10000, 1,
+                    5, "date",null,true,false,trynums);
+        }catch(Exception ex){
+            System.out.println(ex.getMessage());
+        }
+        logCapture.stop();
+        String s=logCapture.getLogMessages();
+        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attempts for every node in high availability sites."));
+    }
+
+    @Test
+    public void test_MultithreadedTableWriter_tryReconnectNums_enableHighAvailability_true_reconnect_true() throws Exception {
+        class LogCapture {
+            private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            private final PrintStream originalErr = System.err;
+            public void start() {
+                System.setErr(new PrintStream(baos));
+            }
+            public void stop() {
+                System.setErr(originalErr);
+            }
+            public String getLogMessages() {
+                return baos.toString();
+            }
+        }
+        int port=7102;
+        int trynums=3;
+        String re = null;
+        String[] N={"localhost:7300"};
+        DBConnection conn =new DBConnection();
+        LogCapture logCapture = new LogCapture();
+        logCapture.start();
+        try{
+            mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, port, "admin", "123456",
+                    "", "tt", false, true, new String[]{"192.168.0.69:7002"}, 10000, 1,
+                    5, "date",null,true,true,trynums);
+        }catch(Exception ex){
+            System.out.println(ex.getMessage());
+        }
+        logCapture.stop();
+        String s=logCapture.getLogMessages();
+        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attempts for every node in high availability sites."));
     }
 
     @Test(timeout = 120000)
@@ -6712,14 +6900,14 @@ public  class MultithreadedTableWriterTest implements Runnable {
             }
         }
         mtw.waitForThreadCompletion();
-        conn1.run("sleep(5000)");
+        conn1.run("sleep(10000)");
         try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
 
         }
         catch(IOException ex) {
             System.out.println(ex.getMessage());
         }
-        conn1.run("sleep(8000)");
+        conn1.run("sleep(10000)");
         DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
         conn1.run("sleep(2000)");
