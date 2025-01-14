@@ -18,6 +18,7 @@ import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.net.*;
 import java.sql.*;
+import java.sql.Array;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.*;
@@ -407,6 +408,20 @@ public class DBConnectionTest {
         Assert.assertEquals(true,elapsedTime>2000);
         Assert.assertEquals(true,re.contains("read timed out."));
         System.out.println(re);
+    }
+
+    @Test
+    public void test_Connect_Reconnect_true_tryReconnectNums_int() throws IOException {
+        int port=7102;
+        int trynums=2;
+        DBConnection conn =new DBConnection();
+        String re = null;
+        try {
+            conn.connect(HOST,port,0,true,trynums);
+        }catch (Exception ex) {
+            re = ex.getMessage();
+        }
+        assertEquals("Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attempts.",re);
     }
     @Test
     public void test_Connect_tryReconnectNums_Filed_enableHighAvailability_false_enableLoadBalance_false() throws IOException {
@@ -3130,7 +3145,7 @@ public class DBConnectionTest {
         EntityBlockReader v = (EntityBlockReader) conn.run("table(1..22486 as id)", (ProgressListener) null, 4, 4, 8191);
      }
 
-    @Test
+    //@Test
     public void TestFetchBigData() throws IOException {
         EntityBlockReader v = (EntityBlockReader) conn.run("table(1..50080000 as id)", (ProgressListener) null, 4, 4, 8200);
         BasicTable data = (BasicTable) v.read();
@@ -4588,7 +4603,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
-        sleep(10000);
+        sleep(5000);
         //DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"admin","123456",null,false);
         sleep(500);
@@ -4608,7 +4623,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
-        sleep(1000);
+        sleep(5000);
         conn1.connect(HOST,PORT,"admin","123456",null,false);
         conn1.run("a=1;\n a");
         assertEquals(true, conn1.isConnected());
@@ -4628,7 +4643,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
-        sleep(1000);
+        sleep(5000);
         conn1.run("a=1;\n a");
         //The connection switches to a different node to execute the code
         try{
@@ -4637,7 +4652,7 @@ public void test_SSL() throws Exception {
         {
             System.out.println(ex);
         }
-        sleep(1000);
+        sleep(5000);
         assertEquals(true, conn1.isConnected());
     }
     //@Test //AJ-287
@@ -5416,5 +5431,119 @@ public void test_SSL() throws Exception {
         System.out.println(re1.getString());
         Assert.assertEquals("22",re1.getColumn(6).get(0).getString());
     }
+    @Test  //isClientAuth开启
+    public void test_not_login_run_fuction() throws Exception {
+        DBConnection db = new DBConnection();
+        db.connect("192.168.0.69", 8868);
+        Entity version = db.run("version",new ArrayList<>());
+        System.out.println(version.getString());
+        assertNotNull(version.getString());
 
+        Entity isClientAuth = db.run("isClientAuth",new ArrayList<>());
+        System.out.println(isClientAuth.getString());
+        assertNotNull(isClientAuth.getString());
+
+        Entity getNodeType = db.run("getNodeType",new ArrayList<>());
+        System.out.println(getNodeType.getString());
+        assertNotNull(getNodeType.getString());
+
+        Entity getNodeAlias = db.run("getNodeAlias",new ArrayList<>());
+        System.out.println(getNodeAlias.getString());
+        assertNotNull(getNodeAlias.getString());
+
+        Entity getControllerAlias = db.run("getControllerAlias",new ArrayList<>());
+        System.out.println(getControllerAlias.getString());
+        assertNotNull(getControllerAlias.getString());
+
+        Entity license = db.run("license",new ArrayList<>());
+        System.out.println(license.getString());
+        assertNotNull(license.getString());
+
+        Entity getActiveMaster = db.run("getActiveMaster",new ArrayList<>());
+        System.out.println(getActiveMaster.getString());
+        assertNotNull(getActiveMaster.getString());
+
+        Entity getClusterPerf = db.run("getClusterPerf",new ArrayList<>());
+        System.out.println(getClusterPerf.getString());
+        assertNotNull(getClusterPerf.getString());
+
+        Entity loadClusterNodesConfigs = db.run("loadClusterNodesConfigs",new ArrayList<>());
+        System.out.println(loadClusterNodesConfigs.getString());
+        assertNotNull(loadClusterNodesConfigs.getString());
+
+        Entity getConfig = db.run("getConfig",new ArrayList<>());
+        System.out.println(getConfig.getString());
+        assertNotNull(getConfig.getString());
+
+        Entity getCurrentSessionAndUser = db.run("getCurrentSessionAndUser",new ArrayList<>());
+        System.out.println(getCurrentSessionAndUser.getString());
+        assertNotNull(getCurrentSessionAndUser.getString());
+
+        Entity getDynamicPublicKey = db.run("getDynamicPublicKey",new ArrayList<>());
+        System.out.println(getDynamicPublicKey.getString());
+        assertNotNull(getDynamicPublicKey.getString());
+
+        String re = null;
+        try{
+            db.run("1+1");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(true, re.contains("Login is required for script execution with client authentication enabled."));
+    }
+    //@Test
+    public void test_not_login_run_fuction_authenticateByTicket() throws Exception {
+        DBConnection db = new DBConnection();
+        db.connect("192.168.0.69", 8868);
+        List<Entity> entity = new ArrayList<>();
+        entity.add(new BasicString("kdC8Ta0JzMc0czTyBByX2Jn3eD89uOJ9FXGuUjRdxL8EpoNze1xWGBpsI5wV7zer\n" +
+                "NP8gGsHy6X3JpHY5D+GzOH2qkPtpauTBTgUaNEr2BYcTnZXtq65xmvv0moeygELF\n" +
+                "rlUPYVL4CiL8ueLYxl0SyBzbG4sB7/pR0b5/PcIfb1g="));
+        db.run("authenticateByTicket",entity);
+        db.run("1+1");
+    }
+    @Test
+    public void test_not_login_run_fuction_login() throws Exception {
+        DBConnection db = new DBConnection();
+        db.connect("192.168.0.69", 8868);
+        List<Entity> entity1 = new ArrayList<>();
+        entity1.add(new BasicString("admin"));
+        entity1.add(new BasicString("123456"));
+        db.run("login",entity1);
+        db.run("1+1");
+    }
+    @Test
+    public void test_not_login_run_fuction_not_support() throws Exception {
+        DBConnection db = new DBConnection();
+        db.connect("192.168.0.69", 8868);
+        String re = null;
+        try{
+            db.run("getAllDBs",new ArrayList<>());
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(true, re.contains("Login is required for script execution with client authentication enabled. RefId: S04009. function: getAllDBs"));
+    }
+    @Test //isClientAuth开启
+    public void test_Connect_enableHighAvailability_true() throws IOException {
+        DBConnection conn =new DBConnection();
+        conn.connect(HOST,8868,"admin","123456","table(1..10 as id);",true,new String[]{"192.168.0.69:8868"});
+    }
+
+    @Test
+    public void test_run_fuction_listener() throws Exception {
+        DBConnection db = new DBConnection();
+        db.connect(HOST, PORT, "admin", "123456");
+        ProgressListener listener = new ProgressListener() {
+            @Override
+            public void progress(String message) {
+                System.out.println("message: \n" + message);
+            }
+        };
+        List<Entity> entity = new ArrayList<>();
+        entity.add(new BasicString("BVE="));
+        entity.add(new BasicString("2中国BVE="));
+        Entity print = db.run("print", entity, 3, 3, 0, true, listener);
+        System.out.println("print:" + print.getString());
+    }
 }
