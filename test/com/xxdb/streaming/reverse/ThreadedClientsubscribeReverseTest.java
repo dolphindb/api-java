@@ -500,7 +500,7 @@ public class ThreadedClientsubscribeReverseTest {
         write_data.start();
         Thread.sleep(1000);
         conn.run("stopPublishTable('"+HOST+"',9055,'Trades',\"subTrades\")");
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         //conn.run("stopPublishTable('"+HOST+"',9055,'Trades',\"subTrades\")");
         //Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");

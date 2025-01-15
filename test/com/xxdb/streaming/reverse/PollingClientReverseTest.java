@@ -527,7 +527,7 @@ public class PollingClientReverseTest {
 //                }
 
             }
-            pollingClient1.unsubscribe(HOST, PORT, "Trades1");
+            pollingClient.unsubscribe(HOST, PORT, "Trades1");
 //            pollingClient.unsubscribe(HOST, PORT, "Trades1");
         }
     }

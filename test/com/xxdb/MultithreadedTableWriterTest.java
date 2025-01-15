@@ -11,6 +11,7 @@ import com.xxdb.route.PartitionedTableAppender;
 import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -45,7 +46,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
 
     public MultithreadedTableWriterTest() {
     }
-
+    @BeforeClass
+    public static void prepare1 () throws IOException {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
+        controller_conn.run("try{startDataNode('" + HOST + ":" + PORT + "')}catch(ex){}");
+        controller_conn.run("sleep(5000)");
+    }
     @Before
     public void prepare() throws IOException {
         conn = new DBConnection(false,false,true);
