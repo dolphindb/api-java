@@ -128,7 +128,7 @@ public class BasicDateTimeTest {
         String HOST = bundle.getString("HOST");
         int PORT = Integer.parseInt(bundle.getString("PORT"));
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Map<String,Entity> map = new HashMap<>();
         map.put("dateTimeMatrix",bdtm);
         conn.upload(map);
@@ -152,7 +152,7 @@ public class BasicDateTimeTest {
         int PORT = Integer.parseInt(bundle.getString("PORT"));
         // int PORT = 8848;
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Map<String,Entity> map = new HashMap<>();
         map.put("dateTimeVector",bdtv);
         conn.upload(map);

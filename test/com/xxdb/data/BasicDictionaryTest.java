@@ -66,7 +66,7 @@ public class BasicDictionaryTest {
     public void test_BasicDictionary_getString_DT_ANY() throws IOException {
         BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_ANY,1);
         conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Entity[] arr = new Entity[10];
         for (int i = 0; i < 10; i++) {
             arr[i] = conn.run(""+i);
@@ -78,7 +78,7 @@ public class BasicDictionaryTest {
     @Test
     public void test_BasicDictionary_upload() throws IOException {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_ANY);
         Map<String,Entity> data = new HashMap<>();
         data.put("bd",bd);

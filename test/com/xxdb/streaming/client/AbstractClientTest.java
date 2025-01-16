@@ -157,7 +157,7 @@ public class AbstractClientTest {
         map.put("goldendb",4);
         BasicAnyVector bav = new BasicAnyVector(4);
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Entity res = conn.run("blob(\"hello\")");
         bav.set(0,new BasicInt(5));
         bav.set(1,new BasicString("DataBase"));

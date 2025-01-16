@@ -387,7 +387,7 @@ public class BasicComplexTest {
         Map<String,Entity> map = new HashMap<>();
         map.put("complexMatrix",bcm);
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         conn.upload(map);
         assertTrue(conn.run("complexMatrix;").isMatrix());
         assertEquals(Entity.DATA_TYPE.DT_COMPLEX,conn.run("complexMatrix").getDataType());
@@ -407,7 +407,7 @@ public class BasicComplexTest {
         Map<String,Entity> map = new HashMap<>();
         map.put("complexVector",bcv);
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         conn.upload(map);
         BasicComplexVector bcv2 = (BasicComplexVector) conn.run("complexVector;");
         assertEquals(BasicComplex.class,bcv2.getElementClass());

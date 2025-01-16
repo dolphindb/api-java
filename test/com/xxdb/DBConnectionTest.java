@@ -8,6 +8,7 @@ import com.xxdb.io.Double2;
 import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.Long2;
 import com.xxdb.io.ProgressListener;
+import com.xxdb.route.AutoFitTableUpsert;
 import com.xxdb.streaming.client.Site;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -2811,7 +2812,7 @@ public class DBConnectionTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        assertEquals(true,re.contains("getGroupList() => Only administrators execute function getGroupList"));
+        assertEquals(true,re.contains("Login is required for script execution with client authentication enabled. "));
     }
     @Test
     public void TestPartitionTable() throws IOException, InterruptedException {
@@ -3809,7 +3810,7 @@ public class DBConnectionTest {
     @Test
     public void test_tryRun_priority_parallelism() throws IOException {
         DBConnection conn = new DBConnection();
-        assertTrue(conn.connect(HOST,PORT,false));
+        assertTrue(conn.connect(HOST,PORT,"admin","123456",false));
         String scripts = "m=1..10$5:2;";
         conn.tryRun(scripts,1,1);
         BasicIntMatrix res = (BasicIntMatrix) conn.run("m;");
@@ -3861,7 +3862,7 @@ public class DBConnectionTest {
     @Test
     public void test_run_priority() throws IOException{
         DBConnection conn = new DBConnection(false,false);
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         conn.run("t = table(1..5 as id, rand(100, 5) as price);",1);
         BasicTable res = (BasicTable) conn.run("select * from t;",2);
         assertEquals(5,res.rows());
@@ -3870,7 +3871,7 @@ public class DBConnectionTest {
     @Test
     public void test_run_clearSessionMemeory() throws IOException{
         DBConnection conn = new DBConnection(false,false);
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Boolean noError = true;
         conn.run("testVar=1",false);
         assertEquals("1",conn.run("testVar;",false).getString());
@@ -3887,7 +3888,7 @@ public class DBConnectionTest {
     @Test
     public void test_run_progressListener() throws IOException{
         DBConnection conn = new DBConnection(false,false);
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         ProgressListener listener = new ProgressListener() {
             @Override
             public void progress(String message) {
@@ -3926,7 +3927,7 @@ public class DBConnectionTest {
 @Test
 public void test_SSL() throws Exception {
     DBConnection conn = new DBConnection(false,true);
-    assertTrue(conn.connect(HOST,PORT));
+    assertTrue(conn.connect(HOST,PORT,"admin","123456"));
     HashMap<String,Entity> map = new HashMap<>();
     map.put("x",conn.run("x=[1 3 6 10];"));
     map.put("y",conn.run("y=[2 1 5 3];"));
@@ -4789,8 +4790,7 @@ public void test_SSL() throws Exception {
     @Test
     public void Test_Connect_SqlStdEnum_DolphinDB() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection(DolphinDB);
-        conn.connect(HOST,PORT);
-        sleep(500);
+        conn.connect(HOST,PORT,"admin","123456");
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("cumavg(1 2 3);");
         System.out.println(ba.getString());
@@ -4807,8 +4807,7 @@ public void test_SSL() throws Exception {
     @Test
     public void Test_Connect_SqlStdEnum_DolphinDB_1() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
-        sleep(500);
+        conn.connect(HOST,PORT,"admin","123456");
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb')");
         System.out.println(ba.getString());
@@ -4825,8 +4824,7 @@ public void test_SSL() throws Exception {
     @Test
     public void Test_Connect_SqlStdEnum_DolphinDB_2() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection(DolphinDB);
-        conn.connect(HOST,PORT);
-        sleep(500);
+        conn.connect(HOST,PORT,"admin","123456");
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb')");
         System.out.println(ba.getString());
@@ -4863,9 +4861,7 @@ public void test_SSL() throws Exception {
     @Test
     public void Test_Connect_SqlStdEnum_Oracle() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection(Oracle);
-        conn.connect(HOST,PORT);
-        conn.connect(HOST,PORT);
-        sleep(500);
+        conn.connect(HOST,PORT,"admin","123456");
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("cumavg(1 2 3);");
         System.out.println(ba.getString());
@@ -4885,9 +4881,7 @@ public void test_SSL() throws Exception {
     @Test
     public void Test_Connect_SqlStdEnum_Oracle_1() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
-        conn.connect(HOST,PORT);
-        sleep(500);
+        conn.connect(HOST,PORT,"admin","123456");
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'oracle');");
         System.out.println(ba.getString());
@@ -4907,9 +4901,7 @@ public void test_SSL() throws Exception {
     @Test
     public void Test_Connect_SqlStdEnum_Oracle_2() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection(Oracle);
-        conn.connect(HOST,PORT);
-        conn.connect(HOST,PORT);
-        sleep(500);
+        conn.connect(HOST,PORT,"admin","123456");
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb');");
         System.out.println(ba.getString());
@@ -4929,8 +4921,7 @@ public void test_SSL() throws Exception {
     @Test
     public void Test_Connect_SqlStdEnum_MySQL() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection(MySQL);
-        conn.connect(HOST,PORT);
-        sleep(500);
+        conn.connect(HOST,PORT,"admin","123456");
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("cumavg(1 2 3);");
         System.out.println(ba.getString());
@@ -4955,8 +4946,7 @@ public void test_SSL() throws Exception {
     @Test
     public void Test_Connect_SqlStdEnum_MySQL_1() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
-        sleep(500);
+        conn.connect(HOST,PORT,"admin","123456");
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'mysql');");
         System.out.println(ba.getString());
@@ -4981,9 +4971,7 @@ public void test_SSL() throws Exception {
     @Test
     public void Test_Connect_SqlStdEnum_MySQL_2() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection(MySQL);
-        conn.connect(HOST,PORT);
-        conn.connect(HOST,PORT);
-        sleep(500);
+        conn.connect(HOST,PORT,"admin","123456");
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb');");
         System.out.println(ba.getString());
@@ -5013,9 +5001,7 @@ public void test_SSL() throws Exception {
     @Test
     public void Test_Connect_SqlStdEnum_getByName() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection( getByName("MySQL"));
-        conn.connect(HOST,PORT);
-        conn.connect(HOST,PORT);
-        sleep(500);
+        conn.connect(HOST,PORT,"admin","123456");
         assertEquals(true, conn.isConnected());
         BasicDoubleVector ba = (BasicDoubleVector)conn.run("runSQL(\"cumavg(1 2 3)\", 'ddb');");
         System.out.println(ba.getString());

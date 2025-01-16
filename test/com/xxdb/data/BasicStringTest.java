@@ -546,7 +546,7 @@ public class BasicStringTest {
         list.add("MangoDB");
         BasicStringVector bsv = new BasicStringVector(list,true);
         conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Entity value = conn.run("a=blob(\"English\");a;");
         assertEquals(0,bsv.asof((Scalar) value));
         bsv.asof(new BasicString("HikVision"));

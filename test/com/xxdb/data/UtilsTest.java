@@ -145,7 +145,7 @@ public class UtilsTest {
     @Test
     public void test_toMonth() throws IOException {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         try{
             Utils.toMonth(conn.run("x=5"));
         }catch(RuntimeException re){
@@ -167,7 +167,7 @@ public class UtilsTest {
     @Test
     public void test_toDate() throws IOException{
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         try{
             Utils.toDate(conn.run("x=5"));
         }catch(RuntimeException re){
@@ -189,7 +189,7 @@ public class UtilsTest {
     @Test
     public void test_toDateHour() throws IOException{
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         try{
             Utils.toDateHour(conn.run("x=5"));
         }catch(RuntimeException re){
@@ -212,7 +212,7 @@ public class UtilsTest {
     @Test
     public void test_castDateTime() throws IOException{
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         try {
             Utils.castDateTime(conn.run("t0=table(1 2 3 as a, `x`y`z as b, 10.8 7.6 3.5 as c);t0;"), Entity.DATA_TYPE.DT_DATE);
         }catch(RuntimeException re){

@@ -214,7 +214,7 @@ public class SimpleDBConnectionPoolTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        assertEquals(true,re.contains("Only administrators execute function getGroupList"));
+        assertEquals(true,re.contains("Login is required for script execution with client authentication enabled"));
     }
     @Test
     public void test_SimpleDBConnectionPool_config_userId_not_admin() throws IOException, InterruptedException {
@@ -628,7 +628,7 @@ public class SimpleDBConnectionPoolTest {
         pool = new SimpleDBConnectionPool(config1);
         DBConnection poolEntry = pool.getConnection();
         assertEquals(5,pool.getTotalConnectionsCount());
-        poolEntry.run("table(1..10000 as id ,take(`qq`aa`ss,10000) as id1)");
+        poolEntry.run("version",new ArrayList<>());
         pool.close();
     }
     @Test

@@ -67,7 +67,7 @@ public class BasicAnyVectorTest {
     @Test
     public void test_BasicAnyVector_Entity() throws IOException {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Entity[] arr = new Entity[3];
         arr[0] = conn.run("x=[1 3 2];x;");
         arr[1] = conn.run("y=1..4;y;");
@@ -105,7 +105,7 @@ public class BasicAnyVectorTest {
     @Test
     public void test_BasicAnyVector_scalar() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Entity[] arr = new Entity[12];
         for (int i = 0; i < 10; i++) {
             arr[i] = conn.run(""+i);
@@ -240,7 +240,7 @@ public class BasicAnyVectorTest {
     @Test(expected = RuntimeException.class)
     public void test_basicAnyVector_Append_scalar() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Entity[] arr = new Entity[12];
         for (int i = 0; i < 10; i++) {
             arr[i] = conn.run(""+i);
@@ -258,7 +258,7 @@ public class BasicAnyVectorTest {
     @Test(expected = RuntimeException.class)
     public void test_BasicAnyVector_Append_vector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Entity[] arr = new Entity[12];
         for (int i = 0; i < 10; i++) {
             arr[i] = conn.run(""+i);
@@ -276,7 +276,7 @@ public class BasicAnyVectorTest {
     @Test(expected = RuntimeException.class)
     public void test_BasicAnyVector_AddRange() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Entity[] arr = new Entity[12];
         for (int i = 0; i < 10; i++) {
             arr[i] = conn.run(""+i);
@@ -294,7 +294,7 @@ public class BasicAnyVectorTest {
     @Test(expected = RuntimeException.class)
     public void test_BasicAnyVector_Add() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Entity[] arr = new Entity[12];
         for (int i = 0; i < 10; i++) {
             arr[i] = conn.run(""+i);
@@ -311,7 +311,7 @@ public class BasicAnyVectorTest {
     @Test
     public void test_BasicAnyVector_toJsonString() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         Entity[] arr = new Entity[12];
         for (int i = 0; i < 10; i++) {
             arr[i] = conn.run(""+i);

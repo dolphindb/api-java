@@ -151,7 +151,7 @@ public class BasicIotAnyVectorTest {
     @Test
     public void test_BasicIotAnyVector_2() throws IOException {
         String script = "if(existsDatabase(\"dfs://testIOT222\")) dropDatabase(\"dfs://testIOT222\")\n" +
-                "     create database \"dfs://testIOT222\" partitioned by  HASH([INT, 40]),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
+                "     create database \"dfs://testIOT222\" partitioned by  HASH([INT, 40]),RANGE(2020.01.01 2022.01.01 2038.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT222\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -276,7 +276,7 @@ public class BasicIotAnyVectorTest {
     @Test
     public void test_iotAnyVector_bigData() throws IOException {
         String script = "if(existsDatabase(\"dfs://testIOT123\")) dropDatabase(\"dfs://testIOT123\")\n" +
-                "     create database \"dfs://testIOT123\" partitioned by  HASH([INT, 40]),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
+                "     create database \"dfs://testIOT123\" partitioned by  HASH([INT, 40]),RANGE(2020.01.01 2022.01.01 2038.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT123\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -304,7 +304,7 @@ public class BasicIotAnyVectorTest {
     @Test
     public void test_iotAnyVector_allDateType() throws IOException {
         String script = "if(existsDatabase(\"dfs://testIOT\")) dropDatabase(\"dfs://testIOT\")\n" +
-                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
+                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2038.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -376,7 +376,7 @@ public class BasicIotAnyVectorTest {
     @Test
     public void test_iotAnyVector_allDateType_null() throws IOException {
         String script = "if(existsDatabase(\"dfs://testIOT\")) dropDatabase(\"dfs://testIOT\")\n" +
-                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
+                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2038.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -447,7 +447,7 @@ public class BasicIotAnyVectorTest {
     @Test
     public void test_iotAnyVector_allDateType_upload() throws IOException {
         String script = "if(existsDatabase(\"dfs://testIOT\")) dropDatabase(\"dfs://testIOT\")\n" +
-                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
+                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2038.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -501,7 +501,7 @@ public class BasicIotAnyVectorTest {
     @Test
     public void test_iotAnyVector_allDateType_upload_null() throws IOException {
         String script = "if(existsDatabase(\"dfs://testIOT\")) dropDatabase(\"dfs://testIOT\")\n" +
-                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
+                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2038.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +
@@ -598,7 +598,7 @@ public class BasicIotAnyVectorTest {
     @Test
     public void test_iotAnyVector_allDateType_void() throws IOException {
         String script = "if(existsDatabase(\"dfs://testIOT\")) dropDatabase(\"dfs://testIOT\")\n" +
-                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2025.01.01), engine='IOTDB'\n" +
+                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2038.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT\".\"pt\"(\n" +
                 "     deviceId INT,\n" +
                 "     timestamp TIMESTAMP,\n" +

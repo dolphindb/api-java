@@ -51,7 +51,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
         controller_conn.run("try{startDataNode('" + HOST + ":" + PORT + "')}catch(ex){}");
-        controller_conn.run("sleep(5000)");
+        controller_conn.run("sleep(8000)");
     }
     @Before
     public void prepare() throws IOException {

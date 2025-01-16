@@ -45,7 +45,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasicIntArrayVector() throws Exception {
          DBConnection conn = new DBConnection(false,false,true);
-         conn.connect(HOST, PORT);
+         conn.connect(HOST, PORT,"admin","123456");
          BasicArrayVector obj = (BasicArrayVector)conn.run("a = array(INT[], 0, 20)\n" +
                  "for(i in 1..20000){\n" +
                  "\ta.append!([1..100 join NULL])\n" +
@@ -62,7 +62,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasicLongArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector obj = (BasicArrayVector)conn.run("a = array(LONG[], 0, 20)\n" +
                 "for(i in 1..20000){\n" +
                 "\ta.append!([1..100 join NULL])\n" +
@@ -83,7 +83,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasicShortArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector obj = (BasicArrayVector)conn.run("a = array(SHORT[], 0, 20)\n" +
                 "for(i in 1..20000){\n" +
                 "\ta.append!([1..100 join NULL])\n" +
@@ -105,7 +105,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_Float_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector obj = (BasicArrayVector)conn.run("a = array(FLOAT[], 0, 20)\n" +
                 "for(i in 1..20000){\n" +
                 "\ta.append!([(1..100+0.7) join NULL])\n" +
@@ -127,7 +127,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_DOUBLE_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector obj = (BasicArrayVector)conn.run("a = array(DOUBLE[], 0, 20)\n" +
                 "for(i in 1..20000){\n" +
                 "\ta.append!([(1..100+0.7) join NULL])\n" +
@@ -148,7 +148,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_bool_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="a = array(BOOL[], 0, 20)\n" +
                 "a.append!([true false,true,])\n;a";
         BasicArrayVector obj = (BasicArrayVector)conn.run(script);
@@ -162,7 +162,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_char_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="a = array(CHAR[], 0, 20)\n" +
                 "a.append!([char(1..2),char(0),char()]);a";
         BasicArrayVector obj = (BasicArrayVector)conn.run(script);
@@ -176,7 +176,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_date_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="a = array(DATE[], 0, 20)\n" +
                 "a.append!([date(1..2),date(0),date()]);a";
         BasicArrayVector obj = (BasicArrayVector)conn.run(script);
@@ -193,7 +193,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_month_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(MONTH[], 0, 20)\n" +
                 "a.append!([month(1..2),month(0),month()])\n" +
@@ -212,7 +212,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_time_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(TIME[], 0, 20)\n" +
                 "a.append!([time(1..2),time(0),time()])\n" +
@@ -231,7 +231,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_minute_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(MINUTE[], 0, 20)\n" +
                 "a.append!([minute(1..2),minute(0),minute()])\n" +
@@ -250,7 +250,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_second_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(SECOND[], 0, 20)\n" +
                 "a.append!([second(1..2),second(0),second()])\n" +
@@ -268,7 +268,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_datetime_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(DATETIME[], 0, 20)\n" +
                 "a.append!([datetime(1..2),datetime(0),datetime()])\n" +
@@ -286,7 +286,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_timestamp_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "\n" +
                 "a = array(TIMESTAMP[], 0, 20)\n" +
@@ -306,7 +306,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_nanotime_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(NANOTIME[], 0, 20)\n" +
                 "a.append!([nanotime(1..2),nanotime(0),nanotime()])\n" +
@@ -324,7 +324,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_nanotimestamp_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(NANOTIMESTAMP[], 0, 20)\n" +
                 "a.append!([nanotimestamp(1..2),nanotimestamp(0),nanotimestamp()])\n" +
@@ -344,7 +344,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_datehourArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(DATEHOUR[], 0, 20)\n" +
                 "a.append!([datehour(1..2),datehour(0),datehour()])\n" +
@@ -362,7 +362,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_decimal32_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(DECIMAL32(4)[],0)\n" +
                 "a.append!([[1.11111,2],[1.000001,3],[34.1,2,111.0],[]])\n" +
@@ -382,7 +382,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_decimal32_ArrayVector_compress_true() throws Exception {
         DBConnection conn = new DBConnection(false,false,true);
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(DECIMAL32(4)[],0)\n" +
                 "a.append!([[1.11111,2],[1.000001,3],[34.1,2,111.0],[]])\n" +
@@ -402,7 +402,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_decimal64_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(DECIMAL64(4)[],0)\n" +
                 "a.append!([[1.11111,2],[1.000001,3],[34.1,2,111.0],[]])\n" +
@@ -422,7 +422,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_decimal64_ArrayVector_compress_true() throws Exception {
         DBConnection conn = new DBConnection(false,false,true);
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(DECIMAL64(4)[],0)\n" +
                 "a.append!([[1.11111,2],[1.000001,3],[34.1,2,111.0],[]])\n" +
@@ -442,7 +442,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasic_decimal128_ArrayVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "a = array(DECIMAL128(4)[],0)\n" +
                 "a.append!([[1.11111,2],[1.000001,3],[34.1,2,111.0],[]])\n" +
@@ -482,7 +482,7 @@ public class BasicArrayVectorTest {
     @Test
     public void TestBasicIntArrayVector_allNULL() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector obj = (BasicArrayVector) conn.run("a = array(INT[], 0, 10000)\n" +
                 "for(i in 1..10000){\n" +
                 "\tx = int()\n" +
@@ -500,7 +500,7 @@ public class BasicArrayVectorTest {
       @Test
     public void Test_new_BasicArrayVector_BOOL() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
 
         Vector v=new BasicBooleanVector(2);
@@ -517,7 +517,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_INT() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         int num=1000;
         Vector v=new BasicIntVector(num);
@@ -551,7 +551,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_LONG() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicLongVector(2);
         v.set(0,new BasicLong(1));
@@ -574,7 +574,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_SHORT() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicShortVector(2);
         v.set(0,new BasicShort((short) 1));
@@ -597,7 +597,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_FLOAT() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicFloatVector(2);
         v.set(0,new BasicFloat(1.0f));
@@ -619,7 +619,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_DOUBLE() throws Exception {
         DBConnection conn = new DBConnection(false,false,true);
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicDoubleVector(2);
         v.set(0,new BasicDouble(1));
@@ -642,7 +642,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_DATE() throws Exception {
         DBConnection conn = new DBConnection(false,false,true);
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicDateVector(2);
         v.set(0,new BasicDate(LocalDate.of(2022,1,1)));
@@ -665,7 +665,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_MINUTE() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicMinuteVector(2);
         v.set(0,new BasicMinute(1));
@@ -688,7 +688,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_second() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicSecondVector(2);
         v.set(0,new BasicSecond(1));
@@ -711,7 +711,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_datetime() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicDateTimeVector(2);
         v.set(0,new BasicDateTime(1));
@@ -734,7 +734,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_datehour() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicDateHourVector(2);
         v.set(0,new BasicDateHour((short) 1));
@@ -757,7 +757,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_timestamp() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicTimestampVector(2);
         v.set(0,new BasicTimestamp(1));
@@ -780,7 +780,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_nanotimestamp() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         long time = System.currentTimeMillis();
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicNanoTimestampVector(2);
@@ -804,7 +804,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_nanotime() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicNanoTimeVector(2);
         v.set(0,new BasicNanoTime(LocalTime.of(1,1,1,1323433)));
@@ -854,7 +854,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_UUID() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicUuidVector(2);
         v.set(0,new BasicUuid(1,3));
@@ -882,7 +882,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_ipaddr() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicIPAddrVector(2);
         v.set(0,new BasicIPAddr(15645,564353));
@@ -911,7 +911,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_int128() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicInt128Vector(2);
         v.set(0,new BasicInt128(15645,564353));
@@ -938,7 +938,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_decimal32() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicDecimal32Vector(2,4);
         v.set(0,new BasicDecimal32(15645.00,2));
@@ -967,7 +967,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_decimal32_compress_true() throws Exception {
         DBConnection conn = new DBConnection(false,false,true);
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicDecimal32Vector(2,4);
         v.set(0,new BasicDecimal32(15645.00,2));
@@ -996,7 +996,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_decimal64() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicDecimal64Vector(2,4);
         v.set(0,new BasicDecimal64(15645.00,2));
@@ -1025,7 +1025,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_decimal64_compress_true() throws Exception {
         DBConnection conn = new DBConnection(false,false,true);
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicDecimal64Vector(2,4);
         v.set(0,new BasicDecimal64(15645.00,2));
@@ -1054,7 +1054,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_decimal128() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicDecimal128Vector(2,4);
         v.set(0,new BasicDecimal128("15645.00",2));
@@ -1085,7 +1085,7 @@ public class BasicArrayVectorTest {
     @Test
     public void Test_new_BasicArrayVector_decimal128_compress_true() throws Exception {
         DBConnection conn = new DBConnection(false,false,true);
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v=new BasicDecimal128Vector(2,4);
         v.set(0,new BasicDecimal128("15645.00",2));
@@ -1254,7 +1254,7 @@ public class BasicArrayVectorTest {
     @Test
     public void testCompresstable_include_arrayvector()throws Exception {
         DBConnection conn = new DBConnection(false,false,true);
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         String script="\n" +
                 "\n" +
                 "s=array(INT[],0,10);\n" +
@@ -1281,7 +1281,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_complex() throws Exception{
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         Vector v = new BasicComplexVector(2);
         Scalar value = new BasicComplex(1.1,2.5);
@@ -1305,7 +1305,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_point() throws Exception{
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         List<Vector> l = new ArrayList<>();
         Vector v = new BasicPointVector(2);
         Scalar p1 = new BasicPoint(0.8,1.9);
@@ -1401,7 +1401,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_serialize() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         List<Vector> l = new ArrayList<Vector>();
         int time=1000;
         l = new ArrayList<Vector>();
@@ -1423,7 +1423,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_AppendScalar() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("j = arrayVector(9 13 16 18,14:10:50+0..17);j;");
         assertEquals(Entity.DATA_TYPE.DT_SECOND_ARRAY,bav.getDataType());
         String re = null;
@@ -1438,7 +1438,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_AppendBasicIntVector() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("c = arrayVector(1 6 14 15,take(21..75,15));c;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_INT_ARRAY,bav.getDataType());
@@ -1468,7 +1468,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicIntVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(INT[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_INT_ARRAY,bav.getDataType());
@@ -1479,7 +1479,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicBoolVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(BOOL[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_BOOL_ARRAY,bav.getDataType());
@@ -1490,7 +1490,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicByteVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(CHAR[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_BYTE_ARRAY,bav.getDataType());
@@ -1501,7 +1501,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicShortVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(SHORT[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_SHORT_ARRAY,bav.getDataType());
@@ -1512,7 +1512,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicLongVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(LONG[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_LONG_ARRAY,bav.getDataType());
@@ -1523,7 +1523,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicDateVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DATE[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_DATE_ARRAY,bav.getDataType());
@@ -1534,7 +1534,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicMonthVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(MONTH[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_MONTH_ARRAY,bav.getDataType());
@@ -1545,7 +1545,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicTimeVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(TIME[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_TIME_ARRAY,bav.getDataType());
@@ -1556,7 +1556,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicMinuteVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(MINUTE[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_MINUTE_ARRAY,bav.getDataType());
@@ -1567,7 +1567,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicSecondVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(SECOND[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_SECOND_ARRAY,bav.getDataType());
@@ -1578,7 +1578,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicDateTimeVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DATETIME[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_DATETIME_ARRAY,bav.getDataType());
@@ -1589,7 +1589,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicTimestampVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(TIMESTAMP[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_TIMESTAMP_ARRAY,bav.getDataType());
@@ -1600,7 +1600,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicNanoTimeVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(NANOTIME[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_NANOTIME_ARRAY,bav.getDataType());
@@ -1611,7 +1611,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicNanoTimestampVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(NANOTIMESTAMP[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_NANOTIMESTAMP_ARRAY,bav.getDataType());
@@ -1622,7 +1622,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicFloatVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(FLOAT[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_FLOAT_ARRAY,bav.getDataType());
@@ -1633,7 +1633,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicDoubleVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DOUBLE[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_DOUBLE_ARRAY,bav.getDataType());
@@ -1644,7 +1644,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicUuidVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(UUID[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_UUID_ARRAY,bav.getDataType());
@@ -1655,7 +1655,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicDateHourVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DATEHOUR[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_DATEHOUR_ARRAY,bav.getDataType());
@@ -1666,7 +1666,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicIPAddrVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(IPADDR[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_IPADDR_ARRAY,bav.getDataType());
@@ -1677,7 +1677,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicInt128Vector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(INT128[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_INT128_ARRAY,bav.getDataType());
@@ -1688,7 +1688,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicComplexVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(COMPLEX[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_COMPLEX_ARRAY,bav.getDataType());
@@ -1699,7 +1699,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicPointVector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(POINT[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_POINT_ARRAY,bav.getDataType());
@@ -1710,7 +1710,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicDecimal32Vector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DECIMAL32(4)[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_DECIMAL32_ARRAY,bav.getDataType());
@@ -1721,7 +1721,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicDecimal64Vector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DECIMAL64(7)[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_DECIMAL64_ARRAY,bav.getDataType());
@@ -1732,7 +1732,7 @@ public class BasicArrayVectorTest {
     @Test
     public void test_BasicArrayVector_Append_BasicDecimal128Vector_null() throws Exception {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST, PORT);
+        conn.connect(HOST, PORT,"admin","123456");
         BasicArrayVector bav = (BasicArrayVector) conn.run("x=array(DECIMAL128(10)[], 0);x;");
         int size = bav.rows();
         assertEquals(Entity.DATA_TYPE.DT_DECIMAL128_ARRAY,bav.getDataType());
