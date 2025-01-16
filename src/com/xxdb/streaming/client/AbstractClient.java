@@ -386,7 +386,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                 params.add(new BasicString(actionName));
                 params.add(new BasicString(tableName));
 
-                BasicString version = (BasicString) conn.run("version()");
+                BasicString version = (BasicString) conn.run("version", new ArrayList<>());
                 int verNum = getVersionNumber(version.getString());
                 if (verNum >= 995)
                     params.add(new BasicBoolean(true));
@@ -858,7 +858,7 @@ public abstract class AbstractClient implements MessageDispatcher {
         DBConnection conn = new DBConnection();
         try {
             conn.connect(host, port);
-            String version = conn.run("version()").getString();
+            String version = conn.run("version", new ArrayList<>()).getString();
 
             String[] _ = version.split(" ")[0].split("\\.");
             int v0 = Integer.parseInt(_[0]);
