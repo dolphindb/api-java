@@ -529,7 +529,7 @@ public class SimpleDBConnectionPoolTest {
         DBConnection poolEntity = pool.getConnection();
         controller_conn.run("try{startDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
         int port1 = port_list[1];
-        poolEntity.run("sleep(2000)");
+        //poolEntity.run("sleep(2000)");
         BasicTable re = (BasicTable) poolEntity.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
         for (int i = 0; i < re.rows(); i++) {
             System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
