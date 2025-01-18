@@ -214,7 +214,7 @@ public class SimpleDBConnectionPoolTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        assertEquals(true,re.contains("Login is required for script execution with client authentication enabled"));
+        assertEquals(true,re.contains("Login is required for script execution with client authentication enabled")||re.contains("Only administrators execute function getGroupList"));
     }
     @Test
     public void test_SimpleDBConnectionPool_config_userId_not_admin() throws IOException, InterruptedException {

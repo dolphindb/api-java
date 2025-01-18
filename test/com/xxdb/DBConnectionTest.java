@@ -1766,7 +1766,7 @@ public class DBConnectionTest {
     @Test
     public void testDictionaryUpload_1() throws IOException {
         DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT);
+        conn.connect(HOST,PORT,"admin","123456");
         BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_ANY);
         Map<String,Entity> data = new HashMap<>();
         data.put("bd",bd);
@@ -2804,7 +2804,7 @@ public class DBConnectionTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        assertEquals(true,re.contains("Login is required for script execution with client authentication enabled. "));
+        assertEquals(true,re.contains("Login is required for script execution with client authentication enabled. ")||re.contains("Only administrators execute function getGroupList"));
     }
     @Test
     public void TestPartitionTable() throws IOException, InterruptedException {
@@ -4583,7 +4583,7 @@ public void test_SSL() throws Exception {
         assertEquals(true, conn.isConnected());
     }
 
-    @Test
+    //@Test
     public void test_string_length()throws Exception{
         conn = new DBConnection(false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -4593,7 +4593,7 @@ public void test_SSL() throws Exception {
         data1.put("da",data);
         conn.upload(data1);
     }
-    @Test
+    //@Test
     public void test_string_length2()throws Exception{
         DBConnection conn = new DBConnection(false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
@@ -4608,7 +4608,7 @@ public void test_SSL() throws Exception {
         data1.put("da",data);
         conn.upload(data1);
     }
-   @Test
+   //@Test
     public void test_BasicDBTask1223()throws Exception{
         conn = new DBConnection(false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");

@@ -527,7 +527,7 @@ public class ConnectionPoolTest {
         String script = "\n" +
                 "t = table(datetime(1..10)  as date,symbol(string(1..10)) as sym)\n" +
                 "db2=database(\"\",HASH,[SYMBOL,5])\n" +
-                "db1=database(\"\",RANGE,datetime(2020.02.02T01:01:01)+0..10000*2)\n" +
+                "db1=database(\"\",RANGE,datetime(2020.02.02T01:01:01 2022.02.02T01:01:01 2024.02.02T01:01:01))\n" +
                 "if(existsDatabase(\"dfs://demohash\")){\n" +
                 "\tdropDatabase(\"dfs://demohash\")\n" +
                 "}\n" +
@@ -559,9 +559,9 @@ public class ConnectionPoolTest {
             int m = appender.append(new BasicTable(colNames, cols));
             assertEquals(10000,m);
         }
-        BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
+        BasicInt re = (BasicInt) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
-        assertEquals(100000,re.getLong());
+        assertEquals(100000,re.getInt());
 
         BasicTable table = (BasicTable)conn.run("select * from loadTable(\"dfs://demohash\",`pt)");
         assertEquals(date.getString(),table.getColumn("date").getString());
