@@ -1,5 +1,6 @@
-package com.xxdb;
+package com.xxdb.restart;
 
+import com.xxdb.*;
 import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicIntVector;
 import com.xxdb.data.BasicString;
