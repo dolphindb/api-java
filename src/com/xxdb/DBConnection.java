@@ -1059,7 +1059,19 @@ public class DBConnection {
         log.info("Connect to " + node.hostName + ":" + node.port + ".");
         while (!closed_){
             try {
-                return conn_.connect(node.hostName, node.port, uid_, pwd_, connTimeout_, connectTimeout_, readTimeout_);
+                boolean connected = conn_.connect(node.hostName, node.port, uid_, pwd_, connTimeout_, connectTimeout_, readTimeout_);
+                if (!connected)
+                    return false;
+
+                boolean nodeInited;
+                try {
+                    nodeInited = ((BasicBoolean) conn_.run("isNodeInitialized", new ArrayList<>(), 0)).getBoolean();
+                } catch (Exception e) {
+                    log.error("Server does not support the initialization check. Please upgrade to a newer version.");
+                    nodeInited = true;
+                }
+
+                return nodeInited;
             } catch (Exception e) {
                 if (isConnected()){
                     Node tmpNode = new Node();
