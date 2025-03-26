@@ -10,7 +10,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 import com.xxdb.comm.SqlStdEnum;
 import com.xxdb.data.*;
-import com.xxdb.data.Vector;
 import com.xxdb.data.Void;
 import com.xxdb.io.*;
 import org.slf4j.Logger;
@@ -143,7 +142,6 @@ public class DBConnection {
         private String userId_;
         private String pwd_;
         private boolean encrypted_ = true;
-        private boolean enableSCRAM;
         private boolean isConnected_;
         private boolean sslEnable_ = false;
         private boolean asynTask_ = false;
@@ -158,21 +156,18 @@ public class DBConnection {
         private ReentrantLock lock_;
         private boolean isReverseStreaming_ = false;
         private boolean python_ = false;
-        private boolean kdb_ = false;
         private SqlStdEnum sqlStd_;
 
-        private DBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, boolean isReverseStreaming, SqlStdEnum sqlStd, boolean enableSCRAM, boolean kdb){
+        private DBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, boolean isReverseStreaming, SqlStdEnum sqlStd){
             sessionID_ = "";
             this.sslEnable_ = sslEnable;
             this.asynTask_ = asynTask;
             this.compress_ = compress;
             this.ifUrgent_ = ifUrgent;
             this.python_ = python;
-            this.kdb_ = kdb;
             this.isReverseStreaming_ = isReverseStreaming;
             this.sqlStd_ = sqlStd;
             this.lock_ = new ReentrantLock();
-            this.enableSCRAM = enableSCRAM;
         }
 
         private boolean connect(String hostName, int port, String userId, String password, int connTimeout, int connectTimeout, int readTimeout) throws IOException{
@@ -260,7 +255,7 @@ public class DBConnection {
                 if (asynTask_) {
                     login(userId_, pwd_, false);
                 } else {
-                    login(userId_, pwd_, encrypted_);
+                    login();
                 }
             }
 
@@ -280,8 +275,6 @@ public class DBConnection {
                 flag += 64;
             if (this.python_)
                 flag += 2048;
-            if (this.kdb_)
-                flag += 4096;
             if (this.isReverseStreaming_)
                 flag += 131072;
             if (Objects.nonNull(this.sqlStd_)) {
@@ -292,92 +285,14 @@ public class DBConnection {
 
         private void login(String userId, String password, boolean enableEncryption) throws IOException {
             lock_.lock();
-            this.userId_ = userId;
-            this.pwd_ = password;
-
-            if (enableSCRAM) {
-                try {
-                 scramLogin();
-                } finally {
-                    lock_.unlock();
-                }
-            } else {
-                try {
-                    this.encrypted_ = enableEncryption;
-                    login();
-                } finally {
-                    lock_.unlock();
-                }
-            }
-        }
-
-        private void scramLogin() throws IOException {
-            List<Entity> args = new ArrayList<>();
-            args.add(new BasicString(this.userId_));
-            String clientNonce = CryptoUtils.generateNonce(16);
-            args.add(new BasicString(clientNonce));
-
-            Entity result;
             try {
-                result = run("scramClientFirst", args, 0);
-            } catch (IOException e) {
-                if (e.getMessage().contains("Can't recognize function name scramClientFirst"))
-                    throw new IOException("SCRAM login is unavailble on current server.");
-                else if (e.getMessage().contains("sha256 authMode doesn't support scram authMode"))
-                    throw new IOException("user '" + this.userId_ + "' doesn't support scram authMode.");
-                else
-                    throw e;
+                this.userId_ = userId;
+                this.pwd_ = password;
+                this.encrypted_ = enableEncryption;
+                login();
+            } finally {
+                lock_.unlock();
             }
-
-            if (!result.isVector() || result.rows() != 3)
-                throw new IOException("SCRAM login failed, server error: get server nonce failed.");
-
-            String saltString = ((Vector) result).get(0).getString();
-            byte[] salt = CryptoUtils.base64Decode(saltString, false);
-            int iterCount = ((BasicInt) ((Vector) result).get(1)).getInt();
-            String combinedNonce = ((Vector) result).get(2).getString();
-
-            // calculate saltedPassword
-            byte[] saltedPassword = CryptoUtils.pbkdf2HmacSha256(this.pwd_, salt, iterCount);
-
-            // calculate clientKey
-            byte[] clientKey = CryptoUtils.computeClientKey(saltedPassword);
-
-            // calculate storedKey
-            byte[] storedKey = CryptoUtils.computeStoredKey(clientKey);
-
-            // calculate auth
-            String authMessage = "n=" + userId_ + ",r=" + clientNonce + ","
-                    + "r=" + combinedNonce + ",s=" + saltString + ",i=" + iterCount + ","
-                    + "c=biws,r=" + combinedNonce;
-
-            // calculate client signature
-            byte[] clientSignature = CryptoUtils.computeClientSignature(storedKey, authMessage);
-
-            // calculate client proof
-            byte[] proof = CryptoUtils.computeProof(clientKey, clientSignature);
-
-            // call scramClientFinal
-            args.clear();
-            args.add(new BasicString(userId_));
-            args.add(new BasicString(combinedNonce));
-            args.add(new BasicString(CryptoUtils.base64Encode(proof, false)));
-            result = run("scramClientFinal", args, 0);
-            if (!result.isScalar() || result.getDataType() != Entity.DATA_TYPE.DT_STRING)
-                throw new IOException("SCRAM login failed, server error: get server signature failed.");
-
-            // calculate serverKey
-            byte[] serverKey = CryptoUtils.computeServerKey(saltedPassword);
-
-            // check server signature
-            byte[] serverSignature = CryptoUtils.computeServerSignature(serverKey, authMessage);
-
-            if (!CryptoUtils.base64Encode(serverSignature, false).equals(result.getString())) {
-                close(); // if check failed, close connection
-                throw new IOException("SCRAM login failed, Invalid server signature");
-            }
-
-            log.info("SCRAM login succeed.");
         }
 
         private void login() throws IOException {
@@ -672,7 +587,7 @@ public class DBConnection {
     }
 
     private DBConnectionImpl createEnableReverseStreamingDBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, SqlStdEnum sqlStd) {
-        return new DBConnectionImpl(asynTask, sslEnable, compress, python, ifUrgent, true, sqlStd, false, false);
+        return new DBConnectionImpl(asynTask, sslEnable, compress, python, ifUrgent, true, sqlStd);
     }
 
     public DBConnection() {
@@ -696,33 +611,23 @@ public class DBConnection {
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, SqlStdEnum.DolphinDB, false, false);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, SqlStdEnum.DolphinDB);
         this.mutex_ = new ReentrantLock();
     }
 
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, SqlStdEnum sqlStd){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, sqlStd, false, false);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, sqlStd);
         this.mutex_ = new ReentrantLock();
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, SqlStdEnum.DolphinDB, false, false);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, SqlStdEnum.DolphinDB);
         this.mutex_ = new ReentrantLock();
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, SqlStdEnum sqlStd){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, sqlStd, false, false);
-        this.mutex_ = new ReentrantLock();
-    }
-
-    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, SqlStdEnum sqlStd, boolean enableSCRAM){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, sqlStd, enableSCRAM, false);
-        this.mutex_ = new ReentrantLock();
-    }
-
-    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, SqlStdEnum sqlStd, boolean enableSCRAM, boolean useKdb){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, sqlStd, enableSCRAM, useKdb);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, sqlStd);
         this.mutex_ = new ReentrantLock();
     }
 
@@ -738,7 +643,7 @@ public class DBConnection {
      */
     @Deprecated
     private DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, boolean isReverseStreaming, SqlStdEnum sqlStd){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, isReverseStreaming, sqlStd, false, false);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, isReverseStreaming, sqlStd);
         this.mutex_ = new ReentrantLock();
     }
 
@@ -1153,19 +1058,7 @@ public class DBConnection {
         log.info("Connect to " + node.hostName + ":" + node.port + ".");
         while (!closed_){
             try {
-                boolean connected = conn_.connect(node.hostName, node.port, uid_, pwd_, connTimeout_, connectTimeout_, readTimeout_);
-                if (!connected)
-                    return false;
-
-                boolean nodeInited;
-                try {
-                    nodeInited = ((BasicBoolean) conn_.run("isNodeInitialized", new ArrayList<>(), 0)).getBoolean();
-                } catch (Exception e) {
-                    log.error("Server does not support the initialization check. Please upgrade to a newer version.");
-                    nodeInited = true;
-                }
-
-                return nodeInited;
+                return conn_.connect(node.hostName, node.port, uid_, pwd_, connTimeout_, connectTimeout_, readTimeout_);
             } catch (Exception e) {
                 if (isConnected()){
                     Node tmpNode = new Node();
