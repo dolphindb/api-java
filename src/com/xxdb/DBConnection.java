@@ -122,6 +122,166 @@ public class DBConnection {
         }
     }
 
+    public static class ConnectConfig {
+       private String hostName;
+       private int port;
+       private int connectTimeout = 0;
+       private int readTimeout = 0;
+       private String userId = "";
+       private String password = "";
+       private String initialScript = null;
+       private boolean enableHighAvailability;
+       private String[] highAvailabilitySites = null;
+       private boolean reconnect;
+       private boolean enableLoadBalance;
+       private int tryReconnectNums = -1;
+
+       // flag:
+       private boolean ifUserSetEnableLoadBalance;
+
+       private ConnectConfig() {}
+
+       public static Builder builder() {
+            return new Builder();
+        }
+
+       public static class Builder {
+           private final ConnectConfig config;
+
+           private Builder() {
+               config = new ConnectConfig();
+           }
+
+           public Builder hostName(String hostName) {
+               config.hostName = hostName;
+               return this;
+           }
+
+           public Builder port(int port) {
+               config.port = port;
+               return this;
+           }
+
+           public Builder connectTimeout(int connectTimeout) {
+               config.connectTimeout = connectTimeout;
+               return this;
+           }
+
+           public Builder readTimeout(int readTimeout) {
+               config.readTimeout = readTimeout;
+               return this;
+           }
+
+           public Builder userId(String userId) {
+               config.userId = userId;
+               return this;
+           }
+
+           public Builder password(String password) {
+               config.password = password;
+               return this;
+           }
+
+           public Builder initialScript(String initialScript) {
+               config.initialScript = initialScript;
+               return this;
+           }
+
+           public Builder enableHighAvailability(boolean enableHighAvailability) {
+               config.enableHighAvailability = enableHighAvailability;
+               return this;
+           }
+
+           public Builder highAvailabilitySites(String[] highAvailabilitySites) {
+               config.highAvailabilitySites = highAvailabilitySites;
+               return this;
+           }
+
+           public Builder reconnect(boolean reconnect) {
+               config.reconnect = reconnect;
+               return this;
+           }
+
+           public Builder enableLoadBalance(boolean enableLoadBalance) {
+               config.enableLoadBalance = enableLoadBalance;
+               config.ifUserSetEnableLoadBalance = true;
+               return this;
+           }
+
+           public Builder tryReconnectNums(int tryReconnectNums) {
+               config.tryReconnectNums = tryReconnectNums;
+               return this;
+           }
+
+           public ConnectConfig build() {
+               validateConfig();
+               return config;
+           }
+
+           private void validateConfig() {
+               if (Utils.isEmpty(config.hostName))
+                   throw new IllegalArgumentException("The param 'hostName' cannot be null or empty.");
+
+               if (config.port <= 0 || config.port > 65535)
+                   throw new IllegalArgumentException("The param 'port' cannot less than or equanl to 0, and also cannot rather than 65535.");
+
+               if (config.connectTimeout < 0 || config.readTimeout < 0)
+                   throw new IllegalArgumentException("The param connectTimeout or readTimeout cannot less than zero.");
+
+               if (config.enableHighAvailability && !config.ifUserSetEnableLoadBalance)
+                   config.enableLoadBalance = true;
+           }
+       }
+
+        public String getHostName() {
+            return hostName;
+        }
+
+        public int getPort() {
+            return port;
+        }
+
+        public int getConnectTimeout() {
+            return connectTimeout;
+        }
+
+        public int getReadTimeout() {
+            return readTimeout;
+        }
+
+        public String getUserId() {
+            return userId;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public String getInitialScript() {
+            return initialScript;
+        }
+
+        public boolean getEnableHighAvailability() {
+            return enableHighAvailability;
+        }
+
+        public String[] getHighAvailabilitySites() {
+            return highAvailabilitySites;
+        }
+
+        public boolean getReconnect() {
+            return reconnect;
+        }
+
+        public boolean getEnableLoadBalance() {
+            return enableLoadBalance;
+        }
+
+        public int getTryReconnectNums() {
+            return tryReconnectNums;
+        }
+    }
+
     enum Property{
         flag,//1
         cancel,//2
@@ -792,6 +952,12 @@ public class DBConnection {
 
     public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance) throws IOException {
         return connect(hostName, port, userId, password, initialScript, enableHighAvailability, highAvailabilitySites, reconnect, enableLoadBalance, -1);
+    }
+
+    public boolean connect(ConnectConfig connectConfig) throws IOException {
+        this.connectTimeout_ = connectConfig.getConnectTimeout();
+        this.readTimeout_ = connectConfig.getReadTimeout();
+        return connect(connectConfig.getHostName(), connectConfig.getPort(), connectConfig.getUserId(), connectConfig.getPassword(), connectConfig.getInitialScript(), connectConfig.getEnableHighAvailability(), connectConfig.getHighAvailabilitySites(), connectConfig.getReconnect(), connectConfig.getEnableLoadBalance(), connectConfig.getTryReconnectNums());
     }
 
     public boolean connect(String hostName, int port, String userId, String password, String initialScript, boolean enableHighAvailability, String[] highAvailabilitySites, boolean reconnect, boolean enableLoadBalance, int tryReconnectNums) throws IOException {
