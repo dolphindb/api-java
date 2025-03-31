@@ -315,6 +315,9 @@ public class DBConnection {
         }
 
         private void scramLogin() throws IOException {
+            if (asynTask_)
+                throw new IOException("SCRAM login is not supported in async mode.");
+
             List<Entity> args = new ArrayList<>();
             args.add(new BasicString(this.userId_));
             String clientNonce = CryptoUtils.generateNonce(16);
@@ -332,7 +335,7 @@ public class DBConnection {
                     throw e;
             }
 
-            if (Objects.isNull(result) || !result.isVector() || result.rows() != 3)
+            if (!result.isVector() || result.rows() != 3)
                 throw new IOException("SCRAM login failed, server error: get server nonce failed.");
 
             String saltString = ((Vector) result).get(0).getString();
