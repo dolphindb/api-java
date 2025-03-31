@@ -332,7 +332,7 @@ public class DBConnection {
                     throw e;
             }
 
-            if (!result.isVector() || result.rows() != 3)
+            if (Objects.isNull(result) || !result.isVector() || result.rows() != 3)
                 throw new IOException("SCRAM login failed, server error: get server nonce failed.");
 
             String saltString = ((Vector) result).get(0).getString();
