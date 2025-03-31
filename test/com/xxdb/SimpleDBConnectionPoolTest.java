@@ -20,6 +20,7 @@ import java.time.Month;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.xxdb.Prepare.PrepareUser_authMode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -2003,6 +2004,23 @@ public class SimpleDBConnectionPoolTest {
         BasicTable ua = (BasicTable) poolEntry.run("wideTable;");
         assertEquals(1000,ua.columns());
         assertEquals(bt.getString(),ua.getString());
+    }
+
+    @Test
+    public void test_SimpleDBConnectionPool_config_user_authMode_scream() throws IOException, InterruptedException {
+        PrepareUser_authMode("scramUser","123456","scram");
+        SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
+        config1.setHostName(HOST);
+        config1.setPort(PORT);
+        config1.setUserId("scramUser");
+        config1.setPassword("123456");
+        config1.setLoadBalance(false);
+        config1.setEnableHighAvailability(true);
+        config1.setInitialPoolSize(10);
+        pool = new SimpleDBConnectionPool(config1);
+        DBConnection poolEntity = pool.getConnection();
+        Entity re = poolEntity.run("1+1");
+        assertEquals("2", re.getString());
     }
 }
 

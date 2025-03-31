@@ -928,6 +928,25 @@ public class ThreadedClientsubscribeReverseTest {
     }
 
     @Test(timeout = 60000)
+    public void test_subscribe_user_authMode_scream() throws IOException, InterruptedException {
+        PrepareUser_authMode("scramUser","123456","scram");
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        Vector filter1 = (Vector) conn.run("1..100000");
+        threadedClient.subscribe(HOST,PORT,"Trades","admin",MessageHandler_handler,-1,false,filter1,true,100,5,"scramUser","123456");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",10000);
+        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        assertEquals(10000,row_num.getInt());
+        threadedClient.unsubscribe(HOST,PORT,"Trades","admin");
+    }
+
+    @Test(timeout = 60000)
     public void test_subscribe_other_user_allow_unsubscribe_login() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"

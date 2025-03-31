@@ -277,6 +277,13 @@ public class Prepare {
                 "rpc(getControllerAlias(),create_user);" );
     }
 
+    public static void PrepareUser_authMode(String userName,String password,String authMode) throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run("def create_user(){try{deleteUser(`"+userName+")}catch(ex){};createUser(`"+userName+", '"+password+"',,true,\""+authMode+"\");};"+
+                "rpc(getControllerAlias(),create_user);" );
+    }
+
     public static void checkData(BasicTable exception, BasicTable resTable) {
         assertEquals(exception.rows(), resTable.rows());
         for (int i = 0; i < exception.columns(); i++) {
