@@ -300,8 +300,12 @@ public class DBConnection {
                 }
             } else {
                 try {
-                    // try scram login first, if failed use normal login quietly
                     scramLogin();
+                } catch (IOException e) {
+                    // try scram login first, if failed use normal login quietly
+                }
+
+                try {
                     this.encrypted_ = enableEncryption;
                     login();
                 } finally {
