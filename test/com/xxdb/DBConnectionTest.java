@@ -5397,7 +5397,7 @@ public void test_SSL() throws Exception {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        assertEquals("SCRAM login failed, server error: get server nonce failed.", re);
+        assertEquals("SCRAM login is not supported in async mode.", re);
     }
 
     @Test
