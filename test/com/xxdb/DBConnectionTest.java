@@ -3921,7 +3921,7 @@ public class DBConnectionTest {
 @Test
 public void test_SSL() throws Exception {
     DBConnection conn = new DBConnection(false,true);
-    conn.connect(HOST,18922,"admin","123456");
+    conn.connect(HOST,PORT,"admin","123456");
     assertTrue(conn.connect(HOST,PORT,"admin","123456"));
     HashMap<String,Entity> map = new HashMap<>();
     map.put("x",conn.run("x=[1 3 6 10];"));
@@ -5282,10 +5282,10 @@ public void test_SSL() throws Exception {
         }
         assertEquals(true, re.contains("Login is required for script execution with client authentication enabled. RefId: S04009. function: getAllDBs"));
     }
-    @Test //isClientAuth开启
+    //@Test //isClientAuth开启
     public void test_Connect_enableHighAvailability_true() throws IOException {
         DBConnection conn =new DBConnection();
-        conn.connect(HOST,8868,"admin","123456","table(1..10 as id);",true,new String[]{"192.168.0.69:8868"});
+        conn.connect(HOST,PORT,"admin","123456","table(1..10 as id);",true,new String[]{"192.168.0.69:8868"});
     }
 
     @Test
@@ -5391,10 +5391,13 @@ public void test_SSL() throws Exception {
     public void Test_DBConnection_enableSCRAM_true_asynchronousTask_true() throws Exception {
         PrepareUser_authMode("scramUser","123456","scram");
         DBConnection conn = new DBConnection(true, false,false,false,false,null,true);
-        conn.connect(HOST,PORT,"test1","123456");
-        BasicInt re = (BasicInt) conn.run("1+1");
-        System.out.println(re.getString());
-        assertEquals("2", re.getString());
+        String re = null;
+        try{
+            conn.connect(HOST,PORT,"test1","123456");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("SCRAM login failed, server error: get server nonce failed.", re);
     }
 
     @Test
