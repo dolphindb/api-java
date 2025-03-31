@@ -23,6 +23,8 @@ import java.util.stream.IntStream;
 
 import static com.xxdb.Prepare.*;
 import static com.xxdb.comm.SqlStdEnum.*;
+import static com.xxdb.data.Entity.DATA_FORM.DF_TABLE;
+import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static java.lang.Thread.sleep;
 import static org.junit.Assert.*;
 
@@ -606,7 +608,7 @@ public class DBConnectionTest {
         scalar.setNull();
         assertTrue(scalar.isNull());
         assertEquals(Entity.DATA_CATEGORY.INTEGRAL,scalar.getDataCategory());
-        assertEquals(Entity.DATA_TYPE.DT_INT,scalar.getDataType());
+        assertEquals(DT_INT,scalar.getDataType());
         assertEquals(-1,scalar.hashBucket(1));
         assertEquals(-2147483648,scalar.hashCode());
         assertEquals("null",scalar.getJsonString());
@@ -758,7 +760,7 @@ public class DBConnectionTest {
         scalar.setNull();
         assertTrue(scalar.isNull());
         assertEquals(Entity.DATA_CATEGORY.TEMPORAL,scalar.getDataCategory());
-        assertEquals(Entity.DATA_TYPE.DT_SECOND,scalar.getDataType());
+        assertEquals(DT_SECOND,scalar.getDataType());
         assertEquals(-1,scalar.hashBucket(1));
         assertEquals(-2147483648,scalar.hashCode());
         assertEquals("null",scalar.getJsonString());
@@ -887,7 +889,7 @@ public class DBConnectionTest {
         scalar.setNull();
         assertTrue(scalar.isNull());
         assertEquals(Entity.DATA_CATEGORY.LITERAL,scalar.getDataCategory());
-        assertEquals(Entity.DATA_TYPE.DT_STRING,scalar.getDataType());
+        assertEquals(DT_STRING,scalar.getDataType());
         assertEquals(0,scalar.hashBucket(1));
         assertEquals(0,scalar.hashCode());
         assertEquals("null",scalar.getJsonString());
@@ -1767,7 +1769,7 @@ public class DBConnectionTest {
     public void testDictionaryUpload_1() throws IOException {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        BasicDictionary bd = new BasicDictionary(Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_ANY);
+        BasicDictionary bd = new BasicDictionary(DT_INT, Entity.DATA_TYPE.DT_ANY);
         Map<String,Entity> data = new HashMap<>();
         data.put("bd",bd);
         conn.upload(data);
@@ -1837,7 +1839,7 @@ public class DBConnectionTest {
     @Test
     public void testSet() throws IOException {
         BasicSet result = (BasicSet) conn.run("set(1+3*1..100)");
-        assertEquals(Entity.DATA_TYPE.DT_INT, result.getDataType());
+        assertEquals(DT_INT, result.getDataType());
         assertEquals(Entity.DATA_FORM.DF_SET, result.getDataForm());
 
     }
@@ -1849,7 +1851,7 @@ public class DBConnectionTest {
         map.put("set", set);
         conn.upload(map);
         Entity sets = conn.run("set");
-        assertEquals(Entity.DATA_TYPE.DT_INT, sets.getDataType());
+        assertEquals(DT_INT, sets.getDataType());
         assertEquals(Entity.DATA_FORM.DF_SET, sets.getDataForm());
     }
 
@@ -3919,6 +3921,7 @@ public class DBConnectionTest {
 @Test
 public void test_SSL() throws Exception {
     DBConnection conn = new DBConnection(false,true);
+    conn.connect(HOST,18922,"admin","123456");
     assertTrue(conn.connect(HOST,PORT,"admin","123456"));
     HashMap<String,Entity> map = new HashMap<>();
     map.put("x",conn.run("x=[1 3 6 10];"));
@@ -5154,8 +5157,9 @@ public void test_SSL() throws Exception {
 
         DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"parallelism_test","123456");
-        BasicTable re1 = (BasicTable)conn.run("getConsoleJobs();",4,5,false);
+        BasicTable re1 = (BasicTable)conn.run("getConsoleJobs();",3,5,false);
         Assert.assertEquals("5",re1.getColumn(6).get(0).getString());
+        System.out.println(re1.getColumn(5).get(0).getString());
     }
     @Test//api设置的parallelism大于server的setMaxJobParallelism
     public void test_DBConnection_run_parallelism_2() throws IOException {
@@ -5300,4 +5304,164 @@ public void test_SSL() throws Exception {
         Entity print = db.run("print", entity, 3, 3, 0, true, listener);
         System.out.println("print:" + print.getString());
     }
+    @Test
+    public void TestDownloadUpload_hugeTable() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        BasicTable re = (BasicTable)conn.run("t=table(second(0..999999) as sd, take(`AAPL, 1000000) as str, 0..999999 as cint, arrayVector(1..1000000*3, take(NULL 1.123 -9928345.0, 3000000)) as cdoublev); \n t");
+        assertEquals(DF_TABLE,re.getDataForm());
+        assertEquals(1000000,re.rows());
+        assertEquals(4,re.columns());
+        assertEquals(DT_SECOND,re.getColumn(0).getDataType());
+        assertEquals(DT_STRING,re.getColumn(1).getDataType());
+        assertEquals(DT_INT,re.getColumn(2).getDataType());
+        assertEquals(DT_DOUBLE_ARRAY,re.getColumn(3).getDataType());
+        Entity ex_col0 = conn.run("take(second(0..999999), 1000000)");
+        Entity ex_col1 = conn.run("take(`AAPL, 1000000)");
+        Entity ex_col2 = conn.run("0..999999");
+        Entity ex_col3 = conn.run("arrayVector(1..1000000*3, take(NULL 1.123 -9928345.0, 3000000))");
+
+        assertEquals(ex_col0.getString(),re.getColumn(0).getString());
+        assertEquals(ex_col1.getString(),re.getColumn(1).getString());
+        assertEquals(ex_col2.getString(),re.getColumn(2).getString());
+        assertEquals(ex_col3.getString(),re.getColumn(3).getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("res", re);
+        conn.upload(map);
+        Entity assertion_result = conn.run("all(each(eqObj, values res, values t, 5))");
+        assertEquals("true", assertion_result.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_enableSCRAM_false() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,false );
+        conn.connect(HOST,PORT,"admin","123456");
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_enableSCRAM_false_user_authMode_scram() throws Exception {
+        PrepareUser_authMode("scramUser","123456","scram");
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,false);
+        conn.connect(HOST,PORT,"scramUser","123456");
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+        conn.close();
+    }
+
+    @Test
+    public void Test_DBConnection_enableSCRAM_true_user_admin() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,true );
+        String re = null;
+        try{
+            conn.connect(HOST,PORT,"admin","123456");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("user 'admin' doesn't support scram authMode.", re);
+    }
+
+    @Test
+    public void Test_DBConnection_enableSCRAM_true_user_not_support() throws Exception {
+        PrepareUser_authMode("test2","123456","sha256");
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,true );
+        String re = null;
+        try{
+            conn.connect(HOST,PORT,"test2","123456");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("user 'test2' doesn't support scram authMode.", re);
+    }
+    @Test
+    public void Test_DBConnection_enableSCRAM_true() throws Exception {
+        PrepareUser_authMode("test1","123456","scram");
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,true);
+        conn.connect(HOST,PORT,"test1","123456");
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_enableSCRAM_true_asynchronousTask_true() throws Exception {
+        PrepareUser_authMode("scramUser","123456","scram");
+        DBConnection conn = new DBConnection(true, false,false,false,false,null,true);
+        conn.connect(HOST,PORT,"test1","123456");
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_enableSCRAM_true_useSSL_true() throws Exception {
+        PrepareUser_authMode("test1","123456","scram");
+        DBConnection conn = new DBConnection(false, true,false,false,false,null,true);
+        conn.connect(HOST,PORT,"test1","123456");
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_enableSCRAM_true_compress_true() throws Exception {
+        PrepareUser_authMode("test1","123456","scram");
+        DBConnection conn = new DBConnection(false, false,true,false,false,null,true);
+        conn.connect(HOST,PORT,"test1","123456");
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_enableSCRAM_true_usePython_true() throws Exception {
+        PrepareUser_authMode("test1","123456","scram");
+        DBConnection conn = new DBConnection(false, false,false,true,false,null,true);
+        conn.connect(HOST,PORT,"test1","123456");
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_enableSCRAM_true_login() throws Exception {
+        PrepareUser_authMode("test1","123456","scram");
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,true);
+        conn.connect(HOST,PORT);
+        conn.login("test1","123456",true);
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_enableSCRAM_true_login_enableEncryption() throws Exception {
+        PrepareUser_authMode("test1","123456","scram");
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,true);
+        conn.connect(HOST,PORT);
+        conn.login("test1","123456",false);
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_enableSCRAM_true_login_function() throws Exception {
+        PrepareUser_authMode("test1","123456","scram");
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,true);
+        conn.connect(HOST,PORT);
+        List<Entity> list = new ArrayList<>();
+        list.add(new BasicString("test1"));
+        list.add(new BasicString("123456"));
+        conn.run("login",list);
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+
+
 }

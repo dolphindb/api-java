@@ -23,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static com.xxdb.Prepare.PrepareUser_authMode;
 import static com.xxdb.Prepare.checkData;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
@@ -7099,5 +7100,29 @@ public  class MultithreadedTableWriterTest implements Runnable {
 //        //assertEquals(11, bt10.rows());
 //        System.out.println(bt10.getString());
 //    }
+
+    @Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_user_authMode_scream() throws Exception {
+        PrepareUser_authMode("scramUser","123456","scram");
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = streamTable(1000:0, `char`int`long`short`id," +
+                "[CHAR,INT,LONG,SHORT,INT]);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "scramUser", "123456",
+                "", "t1", false, false, null, 1, 1,
+                1, "id");
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( (int)1, (int)1, (int)-1, (int)0, (int)-1);
+        pErrorInfo=mutithreadTableWriter_.insert( null, (int)1, (int)1, (int)0, (int)1);
+        assertEquals("code= info=",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt = (BasicTable) conn.run("select * from t1;");
+        assertEquals(2, bt.rows());
+        assertEquals("[1,]", bt.getColumn("char").getString());
+        assertEquals("[1,1]", bt.getColumn("int").getString());
+        assertEquals("[-1,1]", bt.getColumn("long").getString());
+        assertEquals("[0,0]", bt.getColumn("short").getString());
+        conn.run("undef(`t1,SHARED)");
+    }
 }
 

@@ -15,9 +15,11 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import static com.xxdb.Prepare.PrepareUser_authMode;
 import static org.junit.Assert.assertEquals;
 
 public class ConnectionPoolTest {
@@ -128,6 +130,45 @@ public class ConnectionPoolTest {
         long tcompleteTime = completeTime1 - startTime;
         assertEquals(true,tcompleteTime>10000);
         pool1.shutdown();
+    }
+
+    @Test
+    public void test_DBConnectionPool_user_authMode_scream() throws Exception {
+        PrepareUser_authMode("scramUser","123456","scram");
+        conn.run("if(existsDatabase(\"dfs://testArrayVector\")){\n" +
+                "dropDatabase(\"dfs://testArrayVector\")\n" +
+                "}\n" +
+                "db=database(\"dfs://testArrayVector\",RANGE,int(1..10),,\"TSDB\")\n" +
+                "t = table(1000000:0,`sym`tradeDate`volume`valueTrade,[INT,DATETIME,INT[],DOUBLE])\n" +
+                "pt = db.createPartitionedTable(t,`pt,`sym,,`tradeDate)");
+        conn.run("grant(\"scramUser\", DB_OWNER, \"dfs://test*\");\n grant(\"scramUser\", DB_MANAGE);\n grant(\"scramUser\", TABLE_READ,\"*\");\n grant(\"scramUser\", TABLE_WRITE,\"dfs://testArrayVector/pt\");");
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"scramUser","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testArrayVector","pt","sym",pool);
+        List<String> colNames = new ArrayList<>();
+        colNames.add("sym");
+        colNames.add("tradesDate");
+        colNames.add("volume");
+        colNames.add("valueTrade");
+        List<Vector> cols = new ArrayList<>();
+        BasicIntVector biv = new BasicIntVector(new int[]{1,2,3});
+        cols.add(biv);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{10,20,30});
+        cols.add(bdtv);
+        List<Vector> value = new ArrayList<>();
+        value.add(new BasicIntVector(new int[]{1,2,3}));
+        value.add(new BasicIntVector(new int[]{4,5,6,7,8}));
+        value.add(new BasicIntVector(new int[]{9,10,11,13,17,21}));
+        BasicArrayVector bav = new BasicArrayVector(value);
+        cols.add(bav);
+        BasicDoubleVector bdv = new BasicDoubleVector(new double[]{1.1,3.6,7.9});
+        cols.add(bdv);
+        BasicTable bt = new BasicTable(colNames,cols);
+        int x = appender.append(bt);
+        BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
+        assertEquals(3,res.rows());
+        assertEquals(Entity.DATA_TYPE.DT_INT_ARRAY,res.getColumn(2).getDataType());
+        System.out.println(res.getColumn(2).getString());
+        pool.shutdown();
     }
 
 
@@ -2527,6 +2568,54 @@ public class ConnectionPoolTest {
 
         BasicTable bt10 = (BasicTable) conn.run("select count(*) from loadTable(\"dfs://testIOT_allDateType1\",`pt);");
         assertEquals("9000000", bt10.getColumn(0).getString(0));
+        pool.shutdown();
+    }
+
+    //@Test
+    public void Test_PartitionedTableAppender_iotAnyVector_1() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testIOT_allDateType1\")) dropDatabase(\"dfs://testIOT_allDateType1\")\n" +
+                "     create database \"dfs://testIOT_allDateType1\" partitioned by   RANGE(100000*(0..10)),RANGE(2020.01.01 2022.01.01 2038.01.01), engine='IOTDB'\n" +
+                "     create table \"dfs://testIOT_allDateType1\".\"pt\"(\n" +
+                "     deviceId INT,\n" +
+                "     timestamp TIMESTAMP,\n" +
+                "     location SYMBOL,\n" +
+                "     value IOTANY,\n" +
+                " )\n" +
+                "partitioned by deviceId, timestamp,\n" +
+                "sortColumns=[`deviceId, `location, `timestamp],\n" +
+                "latestKeyCache=true;\n" +
+                "pt = loadTable(\"dfs://testIOT_allDateType1\",\"pt\");\n" ;
+        conn.run(script);
+        BasicByte bbyte = new BasicByte((byte) 127);
+        BasicShort bshort = new BasicShort((short) 0);
+        BasicInt bint = new BasicInt(-4);
+        BasicLong blong = new BasicLong(-4);
+        BasicBoolean bbool = new BasicBoolean(false);
+        BasicFloat bfloat = new BasicFloat((float) 1.99);
+        BasicDouble bdouble = new BasicDouble(1.99);
+        BasicString bsting = new BasicString("最新特殊字符：!@#$%^&*()_++_}{|{\":>?</.,';\\][=-0987654321`~asdQWHH这个点做工&&，。、te长qqa");
+        Scalar[] scalar = new Scalar[]{bbyte, bshort, bint, blong, bbool, bfloat, bdouble, bsting, bdouble, bsting};
+        BasicIotAnyVector BIV = new BasicIotAnyVector(scalar);
+        BasicIntVector deviceId = new BasicIntVector(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+
+        BasicAnyVector BIV1 = new BasicAnyVector(10);
+        for (int i = 0; i < 10; i++) {
+            BIV1.set(i, new BasicInt(i));
+        }
+
+        BasicTimestampVector timestamp = new BasicTimestampVector(new long[]{1577836800001l, 1577836800002l, 1577836800003l, 1577836800004l, 1577836800005l, 1577836800006l, 1577836800007l, 1577836800008l, 1577836800009l, 1577836800010l});
+        BasicSymbolVector location = new BasicSymbolVector(Arrays.asList(new String[]{"d1d", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10"}));
+
+        List<Entity> args = Arrays.asList(deviceId, timestamp, location, BIV);
+        List<String> colNames = Arrays.asList("deviceId", "timestamp", "location", "BIV");
+        List<Vector> cols = Arrays.asList(deviceId, timestamp, location, BIV);
+        BasicTable table = new BasicTable(colNames, cols);
+
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testIOT_allDateType1","pt","deviceId", pool);
+        appender.append(table);
+        BasicTable bt10 = (BasicTable) conn.run("select count(*) from loadTable(\"dfs://testIOT_allDateType1\",`pt);");
+        assertEquals("10", bt10.getColumn(0).getString(0));
         pool.shutdown();
     }
 }

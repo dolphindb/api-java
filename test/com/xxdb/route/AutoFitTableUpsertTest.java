@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import static com.xxdb.Prepare.PrepareUser_authMode;
 import static org.junit.Assert.*;
 
 public class AutoFitTableUpsertTest {
@@ -2044,5 +2045,51 @@ public class AutoFitTableUpsertTest {
         assertEquals("9000000", bt10.getColumn(0).getString(0));
         //System.out.println(bt10.getString());
         conn.close();
+    }
+
+    @Test
+    public void test_AutoFitTableUpsert__user_authMode_scream() throws Exception {
+        PrepareUser_authMode("scramUser","123456","scram");
+        conn = new DBConnection();
+        conn.connect(HOST,PORT,"scramUser","123456");
+        String script = "cbool = true false false;\n" +
+                "cchar = 'a' 'b' 'c';\n" +
+                "cshort = 122h 32h 45h;\n" +
+                "cint = 1 4 9;\n" +
+                "clong = 17l 39l 72l;\n" +
+                "cdate = 2013.06.13 2015.07.12 2019.08.15;\n" +
+                "cmonth = 2011.08M 2014.02M 2019.07M;\n" +
+                "ctime = 04:15:51.921 09:27:16.095 11:32:28.387;\n" +
+                "cminute = 03:25m 08:12m 10:15m;\n" +
+                "csecond = 01:15:20 04:26:45 09:22:59;\n" +
+                "cdatetime = 1976.09.10 02:31:42 1987.12.13 11:58:31 1999.12.10 20:49:23;\n" +
+                "ctimestamp = 1997.07.20 21:45:16.339 2002.11.26 12:40:31.783 2008.08.10 23:54:27.629;\n" +
+                "cnanotime = 01:25:33.365869429 03:47:25.364828475 08:16:22.748395721;\n" +
+                "cnanotimestamp = 2005.09.23 13:30:35.468385940 2007.12.11 14:54:38.949792731 2009.09.30 16:39:51.973463623;\n" +
+                "cfloat = 7.5f 0.79f 8.27f;\n" +
+                "cdouble = 5.7 7.2 3.9;\n" +
+                "cstring = \"hello\" \"hi\" \"here\";\n" +
+                "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n" +
+                "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n" +
+                "cdecimal32 = decimal32(12 17 135.2,2)\n" +
+                "cdecimal64 = decimal64(18 24 33.878,4)\n" +
+                "cdecimal128 = decimal128(18 24 33.878,10)\n" +
+                "t = indexedTable(`cint,cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute," +
+                "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble," +
+                "cstring,cdatehour,cdecimal32,cdecimal64,cdecimal128);" +
+                "share t as st;";
+        conn.run(script);
+        BasicTable bt = (BasicTable) conn.run("t2 = table(true as cbool,'d' as cchar,86h as cshort,9 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64,decimal128(27,10) as cdecimal128)\n" +
+                " t2;");
+        AutoFitTableUpsert aftu = new AutoFitTableUpsert("","st",conn,true,null,null);
+        aftu.upsert(bt);
+        BasicTable ua = (BasicTable) conn.run("select * from st;");
+        assertEquals(3,ua.rows());
+        assertEquals(0,conn.run("select * from st where cminute = 10:15m").rows());
+        assertEquals(1,conn.run("select * from st where cminute = 15:27m").rows());
+        BasicTable ua1 = (BasicTable) conn.run("select cdecimal128 from st where cint = 9");
+        assertEquals("27.0000000000",ua1.getColumn(0).get(0).getString());
+        conn.run("undef(`st.SHARED)");
+        conn.run("clear!(t)");
     }
 }
