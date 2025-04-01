@@ -5389,7 +5389,7 @@ public void test_SSL() throws Exception {
 
     @Test
     public void Test_DBConnection_enableSCRAM_true_asynchronousTask_true() throws Exception {
-        PrepareUser_authMode("scramUser","123456","scram");
+        PrepareUser_authMode("test1","123456","scram");
         DBConnection conn = new DBConnection(true, false,false,false,false,null,true);
         String re = null;
         try{
