@@ -295,7 +295,7 @@ public class BasicIotAnyVectorTest {
                 "flushTSDBCache()\n" ;
         conn.run(script);
         BasicTable entity1 = (BasicTable)conn.run("select * from loadTable( \"dfs://testIOT123\", `pt) order by timestamp;");
-        //System.out.println(entity1.getColumn(3).getString());
+        System.out.println(entity1.getColumn(3).getString());
         Assert.assertEquals(200000,entity1.rows());
         BasicTable entity2 = (BasicTable)conn.run("select * from loadTable( \"dfs://testIOT123\", `pt)  where deviceId in 1..100000 order by timestamp");
         Assert.assertEquals(entity2.getColumn(0).getString(),entity2.getColumn(0).getString());
@@ -696,4 +696,58 @@ public class BasicIotAnyVectorTest {
         System.out.println(entity3.getString());
         Assert.assertEquals(entity1.getString(),entity3.getString());
     }
+    @Test
+    public void Test_iotanyvector_upload() throws Exception {
+        String script = "if(existsDatabase(\"dfs://testIOT\")) dropDatabase(\"dfs://testIOT\")\n" +
+                "     create database \"dfs://testIOT\" partitioned by   VALUE(1..20),RANGE(2020.01.01 2022.01.01 2038.01.01), engine='IOTDB'\n" +
+                "     create table \"dfs://testIOT\".\"pt\"(\n" +
+                "     deviceId INT,\n" +
+                "     timestamp TIMESTAMP,\n" +
+                "     location SYMBOL,\n" +
+                "     value IOTANY,\n" +
+                " )\n" +
+                "partitioned by deviceId, timestamp,\n" +
+                "sortColumns=[`deviceId, `location, `timestamp],\n" +
+                "latestKeyCache=true;\n" +
+                "pt = loadTable(\"dfs://testIOT\",\"pt\");\n";
+        //conn.run(script);
+        BasicByte bbyte = new BasicByte((byte) 127);
+        BasicShort bshort = new BasicShort((short) 0);
+        BasicInt bint = new BasicInt(-4);
+        BasicLong blong = new BasicLong(-4);
+        BasicBoolean bbool = new BasicBoolean(false);
+        BasicFloat bfloat = new BasicFloat((float) 1.99);
+        BasicDouble bdouble = new BasicDouble(1.99);
+        BasicString bsting = new BasicString("最新特殊字符：!@#$%^&*()_++_}{|{\":>?</.,';\\][=-0987654321`~asdQWHH这个点做工&&，。、te长qqa");
+        Scalar[] scalar = new Scalar[]{bbyte, bshort, bint, blong, bbool, bfloat, bdouble, bsting, bdouble, bsting};
+        BasicIotAnyVector BIV = new BasicIotAnyVector(scalar);
+
+        BasicIntVector deviceId = new BasicIntVector(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+
+        BasicAnyVector BIV1 = new BasicAnyVector(10);
+        for (int i = 0; i < 10; i++) {
+            BIV1.set(i,  BIV.get(i));
+        }
+        BasicAnyVector BIV2 = new BasicAnyVector(10);
+        for (int i = 0; i < 10; i++) {
+            BIV2.set(i,  new BasicInt(i));
+        }
+        System.out.println(BIV2.getString());
+        System.out.println(BIV2.getDataType());
+        BasicTimestampVector timestamp = new BasicTimestampVector(new long[]{1577836800001l, 1577836800002l, 1577836800003l, 1577836800004l, 1577836800005l, 1577836800006l, 1577836800007l, 1577836800008l, 1577836800009l, 1577836800010l});
+        BasicSymbolVector location = new BasicSymbolVector(Arrays.asList(new String[]{"d1d", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10"}));
+
+        List<String> colNames = Arrays.asList("deviceId", "timestamp", "location", "BIV2");
+        List<Vector> cols = Arrays.asList(deviceId, timestamp, location, deviceId);
+        BasicTable table = new BasicTable(colNames, cols);
+        List<Entity> argList = new ArrayList<Entity>(1);
+        argList.add(table);
+        System.out.println(table.getString());
+        conn.run(String.format("testTable = loadTable('%s','%s')", "dfs://testIOT", "pt"));
+        conn.run("tableInsert{testTable}", argList);
+
+        Entity re = conn.run("pt = loadTable(\"dfs://testIOT\", \"pt\");schema(pt)");
+        System.out.println(re.getString());
+    }
+
 }

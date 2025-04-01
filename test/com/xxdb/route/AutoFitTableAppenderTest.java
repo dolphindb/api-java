@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.ResourceBundle;
 
+import static com.xxdb.Prepare.PrepareUser_authMode;
 import static org.junit.Assert.assertEquals;
 
 public class AutoFitTableAppenderTest {
@@ -32,6 +33,16 @@ public class AutoFitTableAppenderTest {
     public void setUp() throws IOException {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
+        String script = "obj =  exec name from objs(true) where shared=true;\n" +
+                "for(s in obj)\n" +
+                "{\n" +
+                "undef (s, SHARED);\n" +
+                "}";
+        try{
+            conn.run(script);
+        }catch(Exception E){
+            System.out.println(E.getMessage());
+        }
     }
     @After
     public void tearDown() throws Exception {
@@ -2656,7 +2667,7 @@ public class AutoFitTableAppenderTest {
     }
 
     @Test
-    public void Test_AutoFitTableUpsert_iotAnyVector_big_data() throws Exception {
+    public void Test_AutoFitTableAppender_iotAnyVector_big_data() throws Exception {
         String script = "if(existsDatabase(\"dfs://testIOT_allDateType1\")) dropDatabase(\"dfs://testIOT_allDateType1\")\n" +
                 "     create database \"dfs://testIOT_allDateType1\" partitioned by   RANGE(1000000*(0..10)),RANGE(2020.01.01 2022.01.01 2038.01.01), engine='IOTDB'\n" +
                 "     create table \"dfs://testIOT_allDateType1\".\"pt\"(\n" +
@@ -2695,6 +2706,49 @@ public class AutoFitTableAppenderTest {
 
         BasicTable bt10 = (BasicTable) conn.run("select count(*) from loadTable(\"dfs://testIOT_allDateType1\",`pt);");
          assertEquals("9000000", bt10.getColumn(0).getString(0));
+    }
+
+    @Test
+    public void Test_AutoFitTableAppender_user_authMode_scream() throws IOException {
+        PrepareUser_authMode("scramUser","123456","scram");
+        String script = null;
+        script = "cbool = true false false;\n";
+        script += "cchar = 'a' 'b' 'c';\n";
+        script += "cshort = 122h 32h 45h;\n";
+        script += "cint = 1 4 9;\n";
+        script += "clong = 17l 39l 72l;\n";
+        script += "cdate = 2013.06.13 2015.07.12 2019.08.15;\n";
+        script += "cmonth = 2011.08M 2014.02M 2019.07M;\n";
+        script += "ctime = 04:15:51.921 09:27:16.095 11:32:28.387;\n";
+        script += "cminute = 03:25m 08:12m 10:15m;\n";
+        script += "csecond = 01:15:20 04:26:45 09:22:59;\n";
+        script += "cdatetime = 1976.09.10 02:31:42 1987.12.13 11:58:31 1999.12.10 20:49:23;\n";
+        script += "ctimestamp = 1997.07.20 21:45:16.339 2002.11.26 12:40:31.783 2008.08.10 23:54:27.629;\n";
+        script += "cnanotime = 01:25:33.365869429 03:47:25.364828475 08:16:22.748395721;\n";
+        script += "cnanotimestamp = 2005.09.23 13:30:35.468385940 2007.12.11 14:54:38.949792731 2009.09.30 16:39:51.973463623;\n";
+        script += "cfloat = 7.5f 0.79f 8.27f;\n";
+        script += "cdouble = 5.7 7.2 3.9;\n";
+        script += "cstring = \"hello\" \"hi\" \"here\";\n";
+        script += "cdatehour = datehour(2012.06.15 15:32:10.158 2012.06.15 17:30:10.008 2014.09.29 23:55:42.693);\n";
+        script += "cblob = blob(\"dolphindb\" \"gaussdb\" \"goldendb\")\n";
+        script += "cdecimal32 = decimal32(12 17 135.2,2)\n";
+        script += "cdecimal64 = decimal64(18 24 33.878,4)\n";
+        script += "cdecimal128 = decimal128(18 24 33.878,10)\n";
+        script += "t = table(cbool,cchar,cshort,cint,clong,cdate,cmonth,ctime,cminute,";
+        script += "csecond,cdatetime,ctimestamp,cnanotime,cnanotimestamp,cfloat,cdouble,";
+        script += "cstring,cdatehour,cblob,cdecimal32,cdecimal64,cdecimal128);";
+        script += "share t as st;";
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,true);
+        conn.connect(HOST,PORT,"scramUser","123456");
+        conn.run(script);
+        BasicTable bt = (BasicTable)conn.run("table(true as cbool,'d' as cchar,86h as cshort,10 as cint,726l as clong,2021.09.23 as cdate,2021.10M as cmonth,14:55:26.903 as ctime,15:27m as cminute,14:27:35 as csecond,2018.11.11 11:11:11 as cdatetime,2010.09.29 11:35:47.295 as ctimestamp,12:25:45.284729843 as cnanotime,2018.09.15 15:32:32.734728902 as cnanotimestamp,5.7f as cfloat,0.86 as cdouble,\"single\" as cstring,datehour(2022.08.23 17:33:54.324) as cdatehour,blob(\"dolphindb\")as cblob,decimal32(19,2) as cdecimal32,decimal64(27,4) as cdecimal64,decimal128(27,10) as cdecimal128)");
+        AutoFitTableAppender aftu = new AutoFitTableAppender("", "st", conn);
+        aftu.append(bt);
+        BasicTable ua = (BasicTable)conn.run("select * from st;");
+        Assert.assertEquals(4, ua.rows());
+        BasicTable act = (BasicTable)conn.run("select * from st where cint = 10;");
+        compareBasicTable(bt, act);
+        conn.run("undef(`st, SHARED)");
     }
 }
 

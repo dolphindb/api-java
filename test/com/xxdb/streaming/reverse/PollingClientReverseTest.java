@@ -300,6 +300,18 @@ public class PollingClientReverseTest {
         pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades1");
     }
 
+    @Test(timeout = 120000)
+    public void test_subscribe_user_authMode_scream() throws IOException {
+        PrepareUser_authMode("scramUser","123456","scram");
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1", "subtrades1", -1, true,null,"scramUser","123456");
+        ArrayList<IMessage> msgs1;
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades1.append!(t)");
+        msgs1 = poller1.poll(1000, 10000);
+        assertEquals(5000, msgs1.size());
+        pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades1");
+    }
+
     @Test(expected = IOException.class)
     public void test_subscribe_user_error() throws IOException {
             TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades","subTread1",-1,true,null,"admin_error","123456");

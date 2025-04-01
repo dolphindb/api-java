@@ -536,6 +536,19 @@ public static void PrepareStreamTable() throws IOException {
     }
 
     @Test
+    public void test_subscribe_authMode_scream() throws IOException, InterruptedException {
+        PrepareStreamTable();
+        PrepareUser_authMode("scramUser","123456","scram");
+        Vector filter1 = (Vector) conn.run("1..100000");
+        threadPooledClient.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,"scramUser","123456");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",10000);
+        BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
+        assertEquals(10000,row_num.getInt());
+        threadPooledClient.unsubscribe(HOST,PORT,"Trades","subTread1");
+    }
+
+    @Test
     public void test_subscribe_other_user_unallow() throws IOException {
         PrepareStreamTable();
         PrepareUser("test1","123456");
