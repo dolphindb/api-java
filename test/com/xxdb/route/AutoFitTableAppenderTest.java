@@ -33,6 +33,16 @@ public class AutoFitTableAppenderTest {
     public void setUp() throws IOException {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
+        String script = "obj =  exec name from objs(true) where shared=true;\n" +
+                "for(s in obj)\n" +
+                "{\n" +
+                "undef (s, SHARED);\n" +
+                "}";
+        try{
+            conn.run(script);
+        }catch(Exception E){
+            System.out.println(E.getMessage());
+        }
     }
     @After
     public void tearDown() throws Exception {

@@ -1715,7 +1715,7 @@ public class SimpleDBConnectionPoolTest {
                 "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000) + 0.254, 3), 100))\n" +
                 "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, 1000) + 0.25467, 4), 100))\n" +
                 "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, 1000) + 0.25467, 5), 100))\n" +
-                "share table(col1, cbool, cchar, cshort, cint, clong, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cfloat, cdouble, cuuid, cdatehour,cipaddr, cint128,  ccomplex,cpoint,cdecimal32,cdecimal64,cdecimal128) as data;\n" +
+                "data = table(col1, cbool, cchar, cshort, cint, clong, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cfloat, cdouble, cuuid, cdatehour,cipaddr, cint128,  ccomplex,cpoint,cdecimal32,cdecimal64,cdecimal128);\n" +
                 "pt = loadTable(\"dfs://test_append_type_tsdb1\",`pt)\n"+
                 "pt.append!(data)\n";
         poolEntry1.run(script1);
@@ -1787,7 +1787,7 @@ public class SimpleDBConnectionPoolTest {
                 "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, 1000) + 0.254, 3), 100))\n" +
                 "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, 1000) + 0.25467, 4), 100))\n" +
                 "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, 1000) + 0.25467, 5), 100))\n" +
-                "share table(col1, cbool, cchar, cshort, cint, clong, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cfloat, cdouble, cuuid, cdatehour,cipaddr, cint128,  ccomplex,cpoint,cdecimal32,cdecimal64,cdecimal128) as data;\n" +
+                "data =  table(col1, cbool, cchar, cshort, cint, clong, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cfloat, cdouble, cuuid, cdatehour,cipaddr, cint128,  ccomplex,cpoint,cdecimal32,cdecimal64,cdecimal128) ;\n" +
                 "pt = loadTable(\"dfs://test_append_type_tsdb1\",`pt)\n"+
                 "pt.append!(data)\n";
         poolEntry1.run(script1);
@@ -1863,7 +1863,7 @@ public class SimpleDBConnectionPoolTest {
                     "decimal32v = decimal32(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 3);\n" +
                     "decimal64v = decimal64(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 8);\n" +
                     "decimal128v = decimal128(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 10);\n" +
-                    "share table(col1, boolv, charv, intv, shortv, longv, floatv, doublev, datev, monthv, timev, minutev, secondv, datetimev, timestampv, nanotimev, nanotimestampv, symbolv, stringv, uuidv, datehourv, ippaddrv, int128v, blobv, decimal32v, decimal64v, decimal128v) as data;\n"+
+                    "data = table(col1, boolv, charv, intv, shortv, longv, floatv, doublev, datev, monthv, timev, minutev, secondv, datetimev, timestampv, nanotimev, nanotimestampv, symbolv, stringv, uuidv, datehourv, ippaddrv, int128v, blobv, decimal32v, decimal64v, decimal128v);\n"+
                     "pt = loadTable(\"dfs://test_append_type_tsdb1\",`pt)\n"+
                     "pt.append!(data)\n";
         poolEntry1.run(script1);
@@ -1939,7 +1939,7 @@ public class SimpleDBConnectionPoolTest {
                 "decimal32v = decimal32(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 3);\n" +
                 "decimal64v = decimal64(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 8);\n" +
                 "decimal128v = decimal128(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n), 10);\n" +
-                "share table(col1, boolv, charv, intv, shortv, longv, floatv, doublev, datev, monthv, timev, minutev, secondv, datetimev, timestampv, nanotimev, nanotimestampv, symbolv, stringv, uuidv, datehourv, ippaddrv, int128v, blobv, decimal32v, decimal64v, decimal128v) as data;\n"+
+                "data =  table(col1, boolv, charv, intv, shortv, longv, floatv, doublev, datev, monthv, timev, minutev, secondv, datetimev, timestampv, nanotimev, nanotimestampv, symbolv, stringv, uuidv, datehourv, ippaddrv, int128v, blobv, decimal32v, decimal64v, decimal128v);\n"+
                 "pt = loadTable(\"dfs://test_append_type_tsdb1\",`pt)\n"+
                 "pt.append!(data)\n";
         poolEntry1.run(script1);
