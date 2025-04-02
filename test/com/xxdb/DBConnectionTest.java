@@ -5465,6 +5465,451 @@ public void test_SSL() throws Exception {
         System.out.println(re.getString());
         assertEquals("2", re.getString());
     }
+    @Test
+    public void Test_DBConnection_ConnectConfig() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(PORT)
+                .userId("admin")
+                .password("123456")
+                .initialScript("table=table(1..10 as id)")
+                .reconnect(true)
+                .enableHighAvailability(false)
+                .highAvailabilitySites(null)
+                .enableLoadBalance(false)
+                .readTimeout(100)
+                .connectTimeout(100)
+                .tryReconnectNums(10)
+                .build();
+        conn.connect(connectConfig);
+        BasicTable re = (BasicTable) conn.run("table");
+        System.out.println(re.getString());
+        assertEquals("[1,2,3,4,5,6,7,8,9,10]", re.getColumn(0).getString());
 
+        assertEquals(true, connectConfig.getHostName().contains("192.168"));
+        assertEquals(8802, connectConfig.getPort());
+        assertEquals("admin", connectConfig.getUserId());
+        assertEquals("123456", connectConfig.getPassword());
+        assertEquals("table=table(1..10 as id)", connectConfig.getInitialScript());
+        assertEquals(true, connectConfig.getReconnect());
+        assertEquals(false, connectConfig.getEnableHighAvailability());
+        assertEquals(null, connectConfig.getHighAvailabilitySites());
+        assertEquals(false, connectConfig.getEnableLoadBalance());
+        assertEquals(100, connectConfig.getReadTimeout());
+        assertEquals(100, connectConfig.getConnectTimeout());
+        assertEquals(10, connectConfig.getTryReconnectNums());
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_hostName_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        String re = null;
+        try{
+            DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                    // .hostName(HOST)
+                    .port(PORT)
+                    .userId("admin")
+                    .password("123456")
+                    .build();
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("The param 'hostName' cannot be null or empty.", re);
+
+        String re1 = null;
+        try{
+            DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                     .hostName(null)
+                    .port(PORT)
+                    .userId("admin")
+                    .password("123456")
+                    .build();
+        }catch(Exception ex){
+            re1 = ex.getMessage();
+        }
+        assertEquals("The param 'hostName' cannot be null or empty.", re1);
+
+        String re2 = null;
+        try{
+            DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                    .hostName("")
+                    .port(PORT)
+                    .userId("admin")
+                    .password("123456")
+                    .build();
+        }catch(Exception ex){
+            re2 = ex.getMessage();
+        }
+        assertEquals("The param 'hostName' cannot be null or empty.", re2);
+    }
+
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_port_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        String re = null;
+        try{
+            DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                    .hostName(HOST)
+                    //.port(PORT)
+                    .userId("admin")
+                    .password("123456")
+                    .build();
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("The param 'port' cannot less than or equal to 0, and also cannot greater than 65535.", re);
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_port_negative() throws Exception {
+        DBConnection conn = new DBConnection();
+        String re = null;
+        try{
+            DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                    .hostName(HOST)
+                    .port(-1)
+                    .userId("admin")
+                    .password("123456")
+                    .build();
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("The param 'port' cannot less than or equal to 0, and also cannot greater than 65535.", re);
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_hostName_port_set_correct() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(PORT)
+                .build();
+        conn.connect(connectConfig);
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+        assertEquals(true, connectConfig.getHostName().contains("192.168"));
+        assertEquals(8802, connectConfig.getPort());
+        assertEquals("", connectConfig.getUserId());
+        assertEquals("", connectConfig.getPassword());
+        assertEquals(null, connectConfig.getInitialScript());
+        assertEquals(false, connectConfig.getReconnect());
+        assertEquals(false, connectConfig.getEnableHighAvailability());
+        assertEquals(null, connectConfig.getHighAvailabilitySites());
+        assertEquals(false, connectConfig.getEnableLoadBalance());
+        assertEquals(0, connectConfig.getReadTimeout());
+        assertEquals(0, connectConfig.getConnectTimeout());
+        assertEquals(-1, connectConfig.getTryReconnectNums());
+        conn.close();
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_userId_not_set() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(PORT)
+                //.userId("admin")
+                .password("123456")
+                .build();
+        conn.connect(connectConfig);
+        String re = null;
+        try{
+            conn.run("getGroupList();");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals(true,re.contains("Login is required for script execution with client authentication enabled")||re.contains("Only administrators execute function getGroupList"));
+    }
+    @Test
+    public void Test_DBConnection_ConnectConfig_userId_set_error() throws Exception {
+        DBConnection conn = new DBConnection();
+        String re = null;
+        try{
+            DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                    .hostName(HOST)
+                    .port(PORT)
+                    .userId("admin_error")
+                    .password("123456")
+                    .build();
+            conn.connect(connectConfig);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals(true, re.contains("The user name or password is incorrect."));
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_password_not_set() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(PORT)
+                .userId("admin")
+                //.password("123456")
+                .build();
+        conn.connect(connectConfig);
+        String re = null;
+        try{
+            conn.run("getGroupList();");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals(true,re.contains("getGroupList() => Only administrators execute function getGroupList"));
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_password_set_error() throws Exception {
+        DBConnection conn = new DBConnection();
+        String re = null;
+        try{
+            DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                    .hostName(HOST)
+                    .port(PORT)
+                    .userId("admin")
+                    .password("123456_error")
+                    .build();
+            conn.connect(connectConfig);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals(true, re.contains("The user name or password is incorrect."));
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_initialScript() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(PORT)
+                .userId("admin")
+                .password("123456")
+                .initialScript("table=table(1..10 as id1)")
+                .build();
+        conn.connect(connectConfig);
+        BasicTable re = (BasicTable) conn.run("table");
+        assertEquals("[1,2,3,4,5,6,7,8,9,10]", re.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_reconnect_true_tryReconnectNums_10() throws Exception {
+        DBConnection conn = new DBConnection();
+        String re = null;
+        try{
+            DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                    .hostName(HOST)
+                    .port(8887)
+                    .userId("admin")
+                    .password("123456")
+                    .reconnect(true)
+                    .tryReconnectNums(5)
+                    .build();
+            conn.connect(connectConfig);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("Connect to 192.168.0.69:8887 failed after 5 reconnect attempts.", re);
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_reconnect_false() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(8887)
+                .userId("admin")
+                .password("123456")
+                .reconnect(false)
+                .tryReconnectNums(5)
+                .build();
+        conn.connect(connectConfig);
+        String re = null;
+        try{
+            conn.run("1+1");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("Couldn't send script/function to the remote host because the connection has been closed", re);
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_enableHighAvailability_true() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(8887)
+                .userId("admin")
+                .password("123456")
+                .enableHighAvailability(true)
+                .highAvailabilitySites(ipports)
+                .build();
+        conn.connect(connectConfig);
+        Entity re = conn.run("1+1");
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_enableHighAvailability_false() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(8887)
+                .userId("admin")
+                .password("123456")
+                .enableHighAvailability(false)
+                .highAvailabilitySites(ipports)
+                .build();
+        conn.connect(connectConfig);
+        String re = null;
+        try{
+            conn.run("1+1");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("Couldn't send script/function to the remote host because the connection has been closed", re);
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_enableLoadBalance_true_enableHighAvailability_not_set() throws Exception {
+        DBConnection conn = new DBConnection();
+        String re = null;
+        try{
+            DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                    .hostName(HOST)
+                    .port(PORT)
+                    .userId("admin")
+                    .password("123456")
+                    .enableLoadBalance(true)
+                    .build();
+            conn.connect(connectConfig);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("Cannot only enable loadbalance but not enable highAvailablity.", re);
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_enableLoadBalance_true() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(PORT)
+                .userId("admin")
+                .password("123456")
+                .enableLoadBalance(true)
+                .enableHighAvailability(true)
+                .highAvailabilitySites(ipports)
+                .build();
+        conn.connect(connectConfig);
+        assertEquals(true, connectConfig.getEnableLoadBalance());
+        conn.connect(connectConfig);
+        Entity re = conn.run("1+1");
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_enableLoadBalance_false() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(PORT)
+                .userId("admin")
+                .password("123456")
+                .enableLoadBalance(false)
+                .enableHighAvailability(true)
+                .highAvailabilitySites(ipports)
+                .build();
+        conn.connect(connectConfig);
+        assertEquals(false, connectConfig.getEnableLoadBalance());
+    }
+    @Test
+    public void Test_DBConnection_ConnectConfig_readTimeout_negative() throws Exception {
+        DBConnection conn = new DBConnection();
+        String re = null;
+        try{
+            DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                    .hostName(HOST)
+                    .port(PORT)
+                    .userId("admin")
+                    .password("123456")
+                    .readTimeout(-1)
+                    .build();
+            conn.connect(connectConfig);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("The param connectTimeout or readTimeout cannot less than zero.", re);
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_readTimeout() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(PORT)
+                .userId("admin")
+                .password("123456")
+                .readTimeout(100)
+                .build();
+        conn.connect(connectConfig);
+        assertEquals(100, connectConfig.getReadTimeout());
+        conn.connect(connectConfig);
+        Entity re = conn.run("1+1");
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_connectTimeout_negative() throws Exception {
+        DBConnection conn = new DBConnection();
+        String re = null;
+        try{
+            DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                    .hostName(HOST)
+                    .port(PORT)
+                    .userId("admin")
+                    .password("123456")
+                    .connectTimeout(-1)
+                    .build();
+            conn.connect(connectConfig);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("The param connectTimeout or readTimeout cannot less than zero.", re);
+    }
+    @Test
+    public void Test_DBConnection_ConnectConfig_connectTimeout() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(PORT)
+                .userId("admin")
+                .password("123456")
+                .connectTimeout(100)
+                .build();
+        conn.connect(connectConfig);
+        assertEquals(100, connectConfig.getConnectTimeout());
+        conn.connect(connectConfig);
+        Entity re = conn.run("1+1");
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_ConnectConfig_tryReconnectNums() throws Exception {
+        DBConnection conn = new DBConnection();
+        DBConnection.ConnectConfig connectConfig = DBConnection.ConnectConfig.builder()
+                .hostName(HOST)
+                .port(PORT)
+                .userId("admin")
+                .password("123456")
+                .tryReconnectNums(100)
+                .build();
+        conn.connect(connectConfig);
+        assertEquals(100, connectConfig.getTryReconnectNums());
+        conn.connect(connectConfig);
+        Entity re = conn.run("1+1");
+        assertEquals("2", re.getString());
+    }
 
 }
