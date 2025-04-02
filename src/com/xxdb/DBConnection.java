@@ -224,7 +224,7 @@ public class DBConnection {
                    throw new IllegalArgumentException("The param 'hostName' cannot be null or empty.");
 
                if (config.port <= 0 || config.port > 65535)
-                   throw new IllegalArgumentException("The param 'port' cannot less than or equanl to 0, and also cannot rather than 65535.");
+                   throw new IllegalArgumentException("The param 'port' cannot less than or equal to 0, and also cannot greater than 65535.");
 
                if (config.connectTimeout < 0 || config.readTimeout < 0)
                    throw new IllegalArgumentException("The param connectTimeout or readTimeout cannot less than zero.");
