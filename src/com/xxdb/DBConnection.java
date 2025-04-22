@@ -318,16 +318,18 @@ public class DBConnection {
         private ReentrantLock lock_;
         private boolean isReverseStreaming_ = false;
         private boolean python_ = false;
+        private boolean kdb_;
         private SqlStdEnum sqlStd_;
 
 
-        private DBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, boolean isReverseStreaming, SqlStdEnum sqlStd, boolean enableSCRAM) {
+        private DBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, boolean isReverseStreaming, SqlStdEnum sqlStd, boolean enableSCRAM, boolean kdb) {
             sessionID_ = "";
             this.sslEnable_ = sslEnable;
             this.asynTask_ = asynTask;
             this.compress_ = compress;
             this.ifUrgent_ = ifUrgent;
             this.python_ = python;
+            this.kdb_ = kdb;
             this.isReverseStreaming_ = isReverseStreaming;
             this.sqlStd_ = sqlStd;
             this.lock_ = new ReentrantLock();
@@ -439,6 +441,8 @@ public class DBConnection {
                 flag += 64;
             if (this.python_)
                 flag += 2048;
+            if (this.kdb_)
+                flag += 4096;
             if (this.isReverseStreaming_)
                 flag += 131072;
             if (Objects.nonNull(this.sqlStd_)) {
@@ -838,7 +842,7 @@ public class DBConnection {
     }
 
     private DBConnectionImpl createEnableReverseStreamingDBConnectionImpl(boolean asynTask, boolean sslEnable, boolean compress, boolean python, boolean ifUrgent, SqlStdEnum sqlStd) {
-        return new DBConnectionImpl(asynTask, sslEnable, compress, python, ifUrgent, true, sqlStd, false);
+        return new DBConnectionImpl(asynTask, sslEnable, compress, python, ifUrgent, true, sqlStd, false, false);
     }
 
     public DBConnection() {
@@ -862,30 +866,36 @@ public class DBConnection {
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, SqlStdEnum.DolphinDB, false);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, SqlStdEnum.DolphinDB, false, false);
         this.mutex_ = new ReentrantLock();
     }
 
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, SqlStdEnum sqlStd){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, sqlStd, false);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, false, false, sqlStd, false, false);
         this.mutex_ = new ReentrantLock();
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, SqlStdEnum.DolphinDB, false);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, SqlStdEnum.DolphinDB, false, false);
         this.mutex_ = new ReentrantLock();
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, SqlStdEnum sqlStd){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, sqlStd, false);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, sqlStd, false, false);
         this.mutex_ = new ReentrantLock();
     }
 
     public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, SqlStdEnum sqlStd, boolean enableSCRAM){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, sqlStd, enableSCRAM);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, sqlStd, enableSCRAM, false);
         this.mutex_ = new ReentrantLock();
     }
+
+    public DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, SqlStdEnum sqlStd, boolean enableSCRAM, boolean useKdb){
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, false, sqlStd, enableSCRAM, useKdb);
+        this.mutex_ = new ReentrantLock();
+    }
+
 
     /**
      * This method has been deprecated since 'Java API 1.30.22.4'.
@@ -899,7 +909,7 @@ public class DBConnection {
      */
     @Deprecated
     private DBConnection(boolean asynchronousTask, boolean useSSL, boolean compress, boolean usePython, boolean isUrgent, boolean isReverseStreaming, SqlStdEnum sqlStd){
-        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, isReverseStreaming, sqlStd, false);
+        this.conn_ = new DBConnectionImpl(asynchronousTask, useSSL, compress, usePython, isUrgent, isReverseStreaming, sqlStd, false, false);
         this.mutex_ = new ReentrantLock();
     }
 
