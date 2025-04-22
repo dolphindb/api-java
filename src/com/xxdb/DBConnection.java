@@ -1329,7 +1329,7 @@ public class DBConnection {
                 try {
                     nodeInited = ((BasicBoolean) conn_.run("isNodeInitialized", new ArrayList<>(), 0)).getBoolean();
                 } catch (Exception e) {
-                    log.error("Server does not support the initialization check. Please upgrade to a newer version.");
+                    log.warn("Server does not support the initialization check. Please upgrade to a newer version.");
                     nodeInited = true;
                 }
 
