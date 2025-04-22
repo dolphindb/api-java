@@ -738,9 +738,9 @@ public class DBConnection {
 
             if (!header.equals("OK")){
                 if (scriptType == "script")
-                    throw new IOException(hostName_+":"+port_+" Server response: " + header + ". script: " + script + "");
+                    throw new IOException(hostName_+":"+port_+" Server response: " + header + " script: " + script + "");
                 else
-                    throw new IOException(hostName_+":"+port_+" Server response: " + header + ". " + scriptType + ": " + script + "");
+                    throw new IOException(hostName_+":"+port_+" Server response: " + header + " " + scriptType + ": " + script + "");
             }
 
             if (numObject == 0){
