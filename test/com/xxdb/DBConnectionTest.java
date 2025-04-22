@@ -5912,4 +5912,28 @@ public void test_SSL() throws Exception {
         assertEquals("2", re.getString());
     }
 
+    @Test
+    public void Test_DBConnection_run_script_exception() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT, "admin", "123456");
+        String re = null;
+        try{
+            conn.run("\"aa\"+[1]");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(true, re.contains("String cannot be added to a vector that is not of string type. script: \"aa\"+[1]"));
+    }
+    @Test
+    public void Test_DBConnection_run_function_exception() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        String re = null;
+        try{
+            conn.connect(HOST,PORT,"admin","123456qq", null, true, null);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(true, re.contains("The user name or password is incorrect. function: login"));
+    }
+
 }
