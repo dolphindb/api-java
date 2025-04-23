@@ -5465,6 +5465,57 @@ public void test_SSL() throws Exception {
         System.out.println(re.getString());
         assertEquals("2", re.getString());
     }
+
+    @Test
+    public void Test_DBConnection_useKdb_false() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,false,false);
+        conn.connect(HOST,PORT);
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+    @Test
+    public void Test_DBConnection_useKdb_false_1() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,false,false);
+        conn.connect(HOST,PORT);
+        String re = null;
+        try{
+            BasicLong re1 = (BasicLong) conn.run("a:1\n;a");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(true, re.contains("Cannot recognize the token a script: a:1"));
+    }
+
+    //@Test
+    public void Test_DBConnection_useKdb_true() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,false,true);
+        conn.connect(HOST,8847);
+        BasicLong re = (BasicLong) conn.run("a:1\n;a");
+        System.out.println(re.getString());
+        assertEquals("1", re.getString());
+    }
+
+    //@Test
+    public void Test_DBConnection_useKdb_true_server_not_support() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,false,true);
+        conn.connect(HOST,18921);
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_useKdb_true_usePython_true() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,true,false,null,false,true);
+        String re = null;
+        try{
+            conn.connect(HOST,PORT);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'usePython' and 'useKdb' cannot be set simultaneously.", re);
+    }
     @Test
     public void Test_DBConnection_ConnectConfig() throws Exception {
         DBConnection conn = new DBConnection();
