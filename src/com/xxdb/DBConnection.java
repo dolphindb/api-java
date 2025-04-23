@@ -430,6 +430,10 @@ public class DBConnection {
         }
 
         private int generateRequestFlag(boolean clearSessionMemory){
+            if (this.python_ && this.kdb_) {
+                throw new IllegalArgumentException("The param 'usePython' and 'useKdb' cannot be set simultaneously.");
+            }
+
             int flag = 0;
             if (this.ifUrgent_)
                 flag += 1;
