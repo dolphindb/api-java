@@ -87,7 +87,7 @@ public class SimpleDBConnectionPoolTest {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host, controller_port, "admin", "123456");
         controller_conn.run("try{stopDataNode('"+HOST+":"+PORT+"')}catch(ex){}");
-        controller_conn.run("8000");
+        controller_conn.run("10000");
         SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
         config1.setHostName(HOST);
         config1.setPort(PORT);

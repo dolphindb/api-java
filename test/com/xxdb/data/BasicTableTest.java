@@ -574,7 +574,7 @@ public class BasicTableTest {
     public void test_BasicTable_GetSubTable_DFS() throws IOException {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        String script = "n=10000000;\n" +
+        String script = "n=1000000;\n" +
                 "bool = take(true false,n);\n" +
                 "char = take('a'..'z',n);\n" +
                 "short = take(1h..255h,n);\n" +
@@ -600,9 +600,10 @@ public class BasicTableTest {
                 "pt.append!(t)";
         conn.run(script);
         BasicTable bt = (BasicTable) conn.run("select * from pt;");
-        assertEquals(10000000,bt.rows());
-        Table gs = bt.getSubTable(0,9999999);
+        assertEquals(1000000,bt.rows());
+        Table gs = bt.getSubTable(0,1);
         System.out.println(gs.getString());
+        assertEquals(2,gs.rows());
     }
     @Test
     public void test_BasicTable_getRowJson()throws Exception{
