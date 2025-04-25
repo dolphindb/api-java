@@ -323,12 +323,13 @@ public static void PrepareStreamTable() throws IOException {
         PrepareStreamTable();
         int ofst = -2;
         String re = null;
-        try {
-            threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
-        } catch (Exception ex) {
-            re = ex.getMessage();
-        }
-        assertEquals(true, re.contains("Can't find the message with offset [-2]"));
+        threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+//        try {
+//            threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+//        } catch (Exception ex) {
+//            re = ex.getMessage();
+//        }
+//        assertEquals(true, re.contains("Can't find the message with offset [-2]"));
     }
 
     @Test

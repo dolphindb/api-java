@@ -989,7 +989,8 @@ public class ThreadedClientsubscribeReverseTest {
             threadedClient.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(true,e.getMessage().contains("No access to shared table [Trades]."));
+            System.out.println(e.getMessage());
+            assertEquals(true,e.getMessage().contains("No access to shared table [Trades]"));
         }
     }
 
@@ -1015,15 +1016,15 @@ public class ThreadedClientsubscribeReverseTest {
             threadedClient.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test1", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(true,e.getMessage().contains("No access to shared table [Trades]."));
             System.out.println(e.getMessage());
+            assertEquals(true,e.getMessage().contains("No access to shared table [Trades]"));
         }
 
         try {
             threadedClient.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, true, filter1, true, 100, 5, "test3", "123456");
             fail("no exception thrown");
         }catch (Exception e){
-            assertEquals(true,e.getMessage().contains("No access to shared table [Trades]."));
+            assertEquals(true,e.getMessage().contains("No access to shared table [Trades]"));
         }
         threadedClient.subscribe(HOST, PORT, "Trades", "subTread1", MessageHandler_handler, -1, false, filter1, true, 100, 5, "test2", "123456");
         threadedClient.unsubscribe(HOST, PORT, "Trades", "subTread1");

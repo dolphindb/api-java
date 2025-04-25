@@ -567,7 +567,7 @@ public class BasicIotAnyVectorTest {
         Assert.assertEquals("IOTANY", entity33.getColumn(0).getString(0));
 
         BasicTable entity4 = (BasicTable)conn.run("select *  from loadTable( \"dfs://testIOT\", `pt) order by deviceId limit 9 ;");
-        System.out.println(entity4.getColumn("value"));
+        //System.out.println(entity4.getColumn("value"));
         BasicIotAnyVector entity44 = (BasicIotAnyVector)entity4.getColumn("value");
         Map<String, Entity> map2 = new HashMap<>();
         map2.put("iotAny3", entity44);

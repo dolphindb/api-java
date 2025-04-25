@@ -210,7 +210,7 @@ public class EventClientTest {
                 "timestamp = t\n"+
                 "}\n"+
                 "}\n"+
-                "class MainMonitor{\n"+
+                "class MainMonitor:CEPMonitor{\n"+
                 "def MainMonitor(){}\n"+
                 "def updateMarketData(event)\n"+
                 "def onload(){addEventListener(updateMarketData,'MarketData',,'all')}\n"+
@@ -896,7 +896,7 @@ public class EventClientTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals(true, re.contains("doesn't exist.. function: stopPublishTable"));
+        Assert.assertEquals(true, re.contains("doesn't exist. function: stopPublishTable"));
     }
 
     //@Test

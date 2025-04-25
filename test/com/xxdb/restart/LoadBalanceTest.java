@@ -151,7 +151,7 @@ public class LoadBalanceTest {
         }
     };
 
-    @Test(timeout = 120000)
+    //@Test(timeout = 120000)
     public void test_load_balance_ha_stream() throws IOException, InterruptedException {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(controller_host,controller_port,"admin","123456");

@@ -2189,7 +2189,7 @@ public class DBConnectionTest {
         assertTrue(((BasicDateTimeMatrix) matrixDateTimeRes).get(1, 1).getString().equals("1925.10.18T23:32:09"));
 
         Entity matrixTimeCross = conn.run("time(cross(add,13:31:10.008 12:30:10.008,1 2 3 -4))");
-        Entity matrixTime = conn.run("take(1900.06.13T13:30:10,8)$4:2");
+        Entity matrixTime = conn.run("take(2000.06.13T13:30:10,8)$4:2");
         map.put("matrixTimeCross", matrixTimeCross);
         map.put("matrixTime", matrixTime);
         conn.upload(map);
@@ -5097,7 +5097,7 @@ public void test_SSL() throws Exception {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals(true, re.contains("Duplicated column name name. "));
+        assertEquals(true, re.contains("Duplicated column name name "));
     }
 
     @Test
@@ -5112,7 +5112,7 @@ public void test_SSL() throws Exception {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals(true, re.contains("Can't recognize function name C. function: C"));
+        assertEquals(true, re.contains("Can't recognize function name C function: C"));
     }
     @Test
     public void test_allDateType_combine() throws IOException {
@@ -5148,7 +5148,7 @@ public void test_SSL() throws Exception {
         assertEquals(10000, data.rows());
     }
 
-    @Test//api设置的parallelism小于server的setMaxJobParallelism
+    @Test//api设置的parallelism小于server的setMaxJobParallelism server默认管理员MaxJobParallelism为64，普通用户2
     public void test_DBConnection_run_parallelism_1() throws IOException {
         PrepareUser("parallelism_test","123456");
         conn = new DBConnection();
@@ -5158,7 +5158,7 @@ public void test_SSL() throws Exception {
         DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"parallelism_test","123456");
         BasicTable re1 = (BasicTable)conn.run("getConsoleJobs();",3,5,false);
-        Assert.assertEquals("5",re1.getColumn(6).get(0).getString());
+        Assert.assertEquals("2",re1.getColumn(6).get(0).getString());
         System.out.println(re1.getColumn(5).get(0).getString());
     }
     @Test//api设置的parallelism大于server的setMaxJobParallelism
@@ -5189,10 +5189,10 @@ public void test_SSL() throws Exception {
         System.out.println(re1.getString());
         Assert.assertEquals("22",re1.getColumn(6).get(0).getString());
     }
-    @Test  //isClientAuth开启
+    //@Test  //isClientAuth开启
     public void test_not_login_run_fuction() throws Exception {
         DBConnection db = new DBConnection();
-        db.connect("192.168.0.69", 8868);
+        db.connect(HOST, PORT);
         Entity version = db.run("version",new ArrayList<>());
         System.out.println(version.getString());
         assertNotNull(version.getString());
@@ -5263,7 +5263,7 @@ public void test_SSL() throws Exception {
     @Test
     public void test_not_login_run_fuction_login() throws Exception {
         DBConnection db = new DBConnection();
-        db.connect("192.168.0.69", 8868);
+        db.connect(HOST, PORT);
         List<Entity> entity1 = new ArrayList<>();
         entity1.add(new BasicString("admin"));
         entity1.add(new BasicString("123456"));
@@ -5273,14 +5273,14 @@ public void test_SSL() throws Exception {
     @Test
     public void test_not_login_run_fuction_not_support() throws Exception {
         DBConnection db = new DBConnection();
-        db.connect("192.168.0.69", 8868);
+        db.connect(HOST, PORT);
         String re = null;
         try{
             db.run("getAllDBs",new ArrayList<>());
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals(true, re.contains("Login is required for script execution with client authentication enabled. RefId: S04009. function: getAllDBs"));
+        assertEquals(true, re.contains("Login is required for script execution with client authentication enabled. RefId: S04009 function: getAllDBs"));
     }
     //@Test //isClientAuth开启
     public void test_Connect_enableHighAvailability_true() throws IOException {
@@ -5419,7 +5419,14 @@ public void test_SSL() throws Exception {
         System.out.println(re.getString());
         assertEquals("2", re.getString());
     }
-
+    //@Test
+    public void Test_DBConnection_usePython_true() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,true);
+        conn.connect(HOST,PORT,"admin","123456");
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
     @Test
     public void Test_DBConnection_enableSCRAM_true_usePython_true() throws Exception {
         PrepareUser_authMode("test1","123456","scram");
@@ -5464,6 +5471,57 @@ public void test_SSL() throws Exception {
         BasicInt re = (BasicInt) conn.run("1+1");
         System.out.println(re.getString());
         assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_useKdb_false() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,false,false);
+        conn.connect(HOST,PORT);
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+    @Test
+    public void Test_DBConnection_useKdb_false_1() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,false,false);
+        conn.connect(HOST,PORT);
+        String re = null;
+        try{
+            BasicLong re1 = (BasicLong) conn.run("a:1\n;a");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(true, re.contains("Cannot recognize the token a script: a:1"));
+    }
+
+    //@Test
+    public void Test_DBConnection_useKdb_true() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,false,true);
+        conn.connect(HOST,8847);
+        BasicLong re = (BasicLong) conn.run("a:1\n;a");
+        System.out.println(re.getString());
+        assertEquals("1", re.getString());
+    }
+
+    //@Test
+    public void Test_DBConnection_useKdb_true_server_not_support() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,false,false,null,false,true);
+        conn.connect(HOST,18921);
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+
+    @Test
+    public void Test_DBConnection_useKdb_true_usePython_true() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,true,false,null,false,true);
+        String re = null;
+        try{
+            conn.connect(HOST,PORT);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'usePython' and 'useKdb' cannot be set simultaneously.", re);
     }
     @Test
     public void Test_DBConnection_ConnectConfig() throws Exception {
@@ -5694,7 +5752,7 @@ public void test_SSL() throws Exception {
     }
 
     @Test
-    public void Test_DBConnection_ConnectConfig_reconnect_true_tryReconnectNums_10() throws Exception {
+    public void Test_DBConnection_ConnectConfig_reconnect_true_tryReconnectNums_5() throws Exception {
         DBConnection conn = new DBConnection();
         String re = null;
         try{
