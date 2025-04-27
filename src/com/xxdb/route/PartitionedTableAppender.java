@@ -145,15 +145,26 @@ public class PartitionedTableAppender {
     	int affected = 0;
     	for(int i=0; i<tasks.size(); ++i){
     		DBTask task = tasks.get(i);
-    		if(task.isSuccessful()){
-    			Entity re = task.getResult();
-    			if(re.getDataType() == Entity.DATA_TYPE.DT_VOID){
-					affected = 0;
-				}else{
-					affected += ((BasicInt)task.getResult()).getInt();
+			while (!task.isFinished()) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
 				}
 			}
+
+    		if (task.isSuccessful()) {
+    			Entity re = task.getResult();
+    			if (re.getDataType() == Entity.DATA_TYPE.DT_VOID) {
+					affected = 0;
+				} else {
+					affected += ((BasicInt)task.getResult()).getInt();
+				}
+			} else {
+				throw new RuntimeException("Task [" + i + "] come across execption: " + task.getErrorMsg());
+			}
     	}
+
     	return affected;
     }
     
