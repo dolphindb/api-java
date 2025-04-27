@@ -7,6 +7,7 @@ import com.xxdb.io.Long2;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
 import com.xxdb.route.AutoFitTableUpsert;
 import com.xxdb.route.PartitionedTableAppender;
+import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +22,7 @@ import java.util.ResourceBundle;
 
 import static com.xxdb.Prepare.PrepareUser_authMode;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ConnectionPoolTest {
     private static String dburl="dfs://demohash";
@@ -2618,5 +2620,72 @@ public class ConnectionPoolTest {
         assertEquals("10", bt10.getColumn(0).getString(0));
         pool.shutdown();
     }
+
+    @Test(timeout = 120000)
+    public void test_ChunkInTransaction_insert() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n" +
+                "dbName = \"dfs://test_ChunkInTransaction\"\n" +
+                "if(exists(dbName)){\n" +
+                "\tdropDatabase(dbName)\t\n" +
+                "}\n" +
+                "db=database(dbName, VALUE,1..6)\n" +
+                "t=table(1:0, `volume`valueTrade, [INT, DOUBLE])\n" +
+                " ;share t as t1;\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"volume\"])\n");
+        conn.run(sb.toString());
+
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,8802,"admin","123456",3,false,false);
+        PartitionedTableAppender appender = new PartitionedTableAppender("dfs://test_ChunkInTransaction","pt","volume", pool);
+        PartitionedTableAppender appender1 = new PartitionedTableAppender("dfs://test_ChunkInTransaction","pt","volume", pool);
+
+        List<String> colNames = Arrays.asList("volume", "valueTrade");
+        BasicIntVector volume = new BasicIntVector(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+        BasicDoubleVector valueTrade = new BasicDoubleVector(Arrays.asList(1.0, 2.9, 3.9, 4.9, 5.9, 6.7, 7.7, 8.7, 9.7, 10.7));
+        List<Vector> cols = Arrays.asList(volume, valueTrade);
+        BasicTable table = new BasicTable(colNames, cols);
+
+        class MyThread1 extends Thread {
+            @Override
+            public void run() {
+                try {
+                    int rows = appender.append(table);
+                    System.out.println("rows：" + rows);
+                } catch (Exception e) {
+                    // 捕获异常并打印错误信息
+                    System.err.println( e.getMessage());
+                }
+            }
+        }
+        final String[] re = {null};
+
+        class MyThread2 extends Thread {
+            @Override
+            public void run() {
+                try {
+                    int rows1 = appender1.append(table);
+                    System.out.println("rows1：" + rows1);
+                } catch (Exception e) {
+                    // 捕获异常并打印错误信息
+                    System.err.println(e.getMessage());
+                    re[0] = e.getMessage();
+
+                }
+            }
+        }
+
+        MyThread1 thread1 = new MyThread1();
+        MyThread2 thread2 = new MyThread2();
+        thread1.start();
+        Thread.sleep(5);
+        thread2.start();
+        thread1.join();
+        thread2.join();
+        System.out.println(re[0].toString());
+        assertEquals(true, re[0].toString().contains("is currently locked and in use"));
+        pool.shutdown();
+    }
+
 }
 
