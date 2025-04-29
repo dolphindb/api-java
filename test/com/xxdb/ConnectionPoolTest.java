@@ -2636,7 +2636,7 @@ public class ConnectionPoolTest {
                 " ;share t as t1;\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"volume\"])\n");
         conn.run(sb.toString());
 
-        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,8802,"admin","123456",3,false,false);
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
         PartitionedTableAppender appender = new PartitionedTableAppender("dfs://test_ChunkInTransaction","pt","volume", pool);
         PartitionedTableAppender appender1 = new PartitionedTableAppender("dfs://test_ChunkInTransaction","pt","volume", pool);
 
