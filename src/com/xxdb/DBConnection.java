@@ -1398,15 +1398,8 @@ public class DBConnection {
                 return ExceptionType.ET_NEWLEADER;
             }
         }else if ((index = msg.indexOf("<DataNodeNotAvail>")) != -1){
-            index = msg.indexOf(">");
-            String ipport = msg.substring(index + 1);
-            Node newNode = new Node();
-            parseIpPort(ipport, newNode);
-            Node lastNode = new Node();
-            conn_.getNode(lastNode);
             node.hostName = "";
             node.port = 0;
-            log.info(msg);
             return ExceptionType.ET_NODENOTAVAIL;
         }else if ((index = msg.indexOf("The datanode isn't initialized yet. Please try again later")) != -1){
             node.hostName = "";
@@ -1676,7 +1669,7 @@ public class DBConnection {
                                 return new Void();
                             else if (type == ExceptionType.ET_UNKNOW)
                                 throw e;
-                        }else {
+                        } else {
                             parseException(e.getMessage(), node);
                         }
                         switchDataNode(node);
