@@ -330,6 +330,8 @@ public class MultithreadedTableWriter {
     private boolean ifCallback_ = false;
     private ColInfo[] colInfos_;
     private boolean enableActualSendTime_ = false;
+    private boolean isSetStreamTableTimestamp;
+
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
                                     boolean enableHighAvailability, String[] highAvailabilitySites,
@@ -561,6 +563,17 @@ public class MultithreadedTableWriter {
 
         BasicTable colDefs = (BasicTable)schema.get(new BasicString("colDefs"));
         BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
+        try {
+            BasicString streamTableTimestampColName = (BasicString) pConn.run("getStreamTableTimestamp(" + tableName_ + ")");
+            if (Objects.nonNull(streamTableTimestampColName)) {
+                isSetStreamTableTimestamp = true;
+            }
+        } catch (Exception e) {
+            if (!e.getMessage().contains("Cannot recognize the token getStreamTableTimestamp")) {
+                throw e;
+            }
+        }
+
         int columnSize = colDefs.rows();
         if (Objects.nonNull(compressTypes_)) {
             if (!enableActualSendTime && compressTypes_.length != columnSize)
@@ -574,11 +587,18 @@ public class MultithreadedTableWriter {
                 compressTypes_ = copy;
             }
         }
-        if (callbackHandler != null){
+
+        if (callbackHandler != null) {
             ifCallback_ = true;
-            colInfos_ = new ColInfo[columnSize+1];
-        }else
-            colInfos_ = new ColInfo[columnSize];
+            columnSize ++;
+        }
+
+        if (isSetStreamTableTimestamp) {
+           columnSize --;
+        }
+
+        colInfos_ = new ColInfo[columnSize];
+
         for (int i = 0; i < colInfos_.length; i++){
             ColInfo colInfo = new ColInfo();
             colInfos_[i] = colInfo;
@@ -852,7 +872,8 @@ public class MultithreadedTableWriter {
             throw new RuntimeException("Thread is exiting. ");
         }
         if ((!enableActualSendTime_ && args.length != colInfos_.length) ||
-                (enableActualSendTime_ && args.length != colInfos_.length - 1)) {
+                (enableActualSendTime_ && !isSetStreamTableTimestamp && args.length != colInfos_.length - 1) ||
+                 enableActualSendTime_ && isSetStreamTableTimestamp && args.length != colInfos_.length - 1) {
             return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter, "Column counts don't match.");
         }
 
