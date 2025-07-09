@@ -99,15 +99,14 @@ public class BasicDecimal128Vector extends AbstractVector {
         super(df);
         int rows = in.readInt();
         int cols = in.readInt();
-        int size = rows * cols;
-        this.unscaledValues = new BigInteger[size];
+        this.unscaledValues = new BigInteger[rows];
         if (extra != -1)
             scale_ = extra;
         else
             scale_ = in.readInt();
 
         byte[] buffer = new byte[4096];
-        handleLittleEndianBigEndian(in, this.unscaledValues, buffer, size);
+        handleLittleEndianBigEndian(in, this.unscaledValues, buffer, rows);
 
         this.size = this.unscaledValues.length;
         this.capacity = this.unscaledValues.length;

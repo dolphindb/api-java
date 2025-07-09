@@ -74,13 +74,12 @@ public class BasicDecimal32Vector extends AbstractVector{
         super(df);
         int rows = in.readInt();
         int cols = in.readInt();
-        int size = rows * cols;
-        unscaledValues = new int[size];
+        unscaledValues = new int[rows];
         if (extra != -1)
             scale_ = extra;
         else
             scale_ = in.readInt();
-        long totalBytes = (long)size * 4;
+        long totalBytes = (long)rows * 4;
         long off = 0;
         boolean little = in.isLittleEndian();
         ByteOrder bo = little ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;

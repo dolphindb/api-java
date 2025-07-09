@@ -70,9 +70,8 @@ public class BasicPointVector extends AbstractVector{
 		super(df);
 		int rows = in.readInt();
 		int cols = in.readInt(); 
-		int size = rows * cols;
-		values = new Double2[size];
-		long totalBytes = (long)size * 16, off = 0;
+		values = new Double2[rows];
+		long totalBytes = (long)rows * 16, off = 0;
 		boolean littleEndian = in.isLittleEndian();
 		ByteOrder bo = littleEndian ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		byte[] buf = new byte[4096];

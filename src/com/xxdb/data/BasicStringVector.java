@@ -194,7 +194,6 @@ public class BasicStringVector extends AbstractVector{
 		this.isSymbol = isSymbol;
 		int rows = in.readInt();
 		int columns = in.readInt();
-		int size = rows * columns;
 		if (blob) {
 			blobValues = new ArrayList<>(rows);
 			for(int i = 0; i < rows; ++i)
@@ -202,8 +201,8 @@ public class BasicStringVector extends AbstractVector{
 				blobValues.add(in.readBlob());
 			}
 		} else {
-			values = new String[size];
-			for (int i = 0; i < size; ++i) {
+			values = new String[rows];
+			for (int i = 0; i < rows; ++i) {
 				values[i] = in.readString();
 			}
 		}
@@ -222,21 +221,20 @@ public class BasicStringVector extends AbstractVector{
 		isBlob = blob;
 		int rows = in.readInt();
 		int columns = in.readInt();
-		int size = rows * columns;
 		if(!blob) {
-			values = new String[size];
+			values = new String[rows];
 			if(collection != null){
 				SymbolBase symbase = collection.add(in);
-				for (int i = 0; i < size; ++i){
+				for (int i = 0; i < rows; ++i){
 					values[i] = symbase.getSymbol(in.readInt());
 				}
 			} else {
-				for (int i = 0; i < size; ++i)
+				for (int i = 0; i < rows; ++i)
 					values[i] = in.readString();
 			}
 		} else {
-			blobValues = new ArrayList<>(size);
-			for (int i = 0; i < size; ++i)
+			blobValues = new ArrayList<>(rows);
+			for (int i = 0; i < rows; ++i)
 				blobValues.add(in.readBlob());
 		}
 

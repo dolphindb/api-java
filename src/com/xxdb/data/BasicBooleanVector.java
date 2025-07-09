@@ -75,12 +75,11 @@ public class BasicBooleanVector extends AbstractVector{
 	protected BasicBooleanVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
 		super(df);
 		int rows = in.readInt();
-		int cols = in.readInt(); 
-		int size = rows * cols;
-		values = new byte[size];
+		int cols = in.readInt();
+		values = new byte[rows];
 		int off = 0;
-		while (off < size) {
-			int len = Math.min(4096, size - off);
+		while (off < rows) {
+			int len = Math.min(4096, rows - off);
 			in.readFully(values, off, len);
 			off += len;
 		}

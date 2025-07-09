@@ -68,9 +68,8 @@ public class BasicFloatVector extends AbstractVector{
 		super(df);
 		int rows = in.readInt();
 		int cols = in.readInt(); 
-		int size = rows * cols;
-		values = new float[size];
-		long totalBytes = (long)size * 4, off = 0;
+		values = new float[rows];
+		long totalBytes = (long)rows * 4, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		byte[] buf = new byte[4096];
 		while (off < totalBytes) {

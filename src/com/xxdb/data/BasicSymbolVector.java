@@ -71,10 +71,9 @@ public class BasicSymbolVector extends AbstractVector {
 		super(df);
 		int rows = in.readInt();
 		int columns = in.readInt();
-		int size = rows * columns;
-		values = new int[size];
+		values = new int[rows];
 		base = new SymbolBase(in);
-		int totalBytes = size * 4, off = 0;
+		int totalBytes = rows * 4, off = 0;
 		byte[] buf = new byte[4096];
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		while (off < totalBytes) {
@@ -95,10 +94,9 @@ public class BasicSymbolVector extends AbstractVector {
 		super(df);
 		int rows = in.readInt();
 		int columns = in.readInt();
-		int size = rows * columns;
-		values = new int[size];
+		values = new int[rows];
 		base = collection.add(in);
-		int totalBytes = size * 4, off = 0;
+		int totalBytes = rows * 4, off = 0;
 		byte[] buf = new byte[4096];
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		while (off < totalBytes) {

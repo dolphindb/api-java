@@ -33,10 +33,8 @@ public class BasicAnyVector extends AbstractVector{
 		super(DATA_FORM.DF_VECTOR); 
 		int rows = in.readInt();
 		int cols = in.readInt();
-		int size = rows * cols;
-		values = new Entity[size];
-//		assert(rows <= 1024);
-		for(int i=0; i<size; ++i){
+		values = new Entity[rows];
+		for (int i=0; i<rows; ++i) {
 			short flag = in.readShort();
 			int form = flag>>8;
 			int type = flag & 0xff;

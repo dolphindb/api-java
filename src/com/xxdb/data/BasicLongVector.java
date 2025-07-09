@@ -67,9 +67,8 @@ public class BasicLongVector extends AbstractVector{
 		super(df);
 		int rows = in.readInt();
 		int cols = in.readInt(); 
-		int size = rows * cols;
-		values = new long[size];
-		long totalBytes = (long)size * 8, off = 0;
+		values = new long[rows];
+		long totalBytes = (long)rows * 8, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		byte[] buf = new byte[4096];
 		while (off < totalBytes) {

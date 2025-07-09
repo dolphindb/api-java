@@ -29,7 +29,7 @@ public class BasicDurationVector extends AbstractVector{
 		super(df);
 		int rows = in.readInt();
 		int cols = in.readInt(); 
-		int size = rows * cols * 2;
+		int size = rows * 2;
 		values = new int[size];
 		long totalBytes = (long)size * 4, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;

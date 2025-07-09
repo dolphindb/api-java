@@ -66,11 +66,10 @@ public class BasicByteVector extends AbstractVector{
 		super(df);
 		int rows = in.readInt();
 		int cols = in.readInt(); 
-		int size = rows * cols;
-		values = new byte[size];
+		values = new byte[rows];
 		int off = 0;
-		while (off < size) {
-			int len = Math.min(4096, size - off);
+		while (off < rows) {
+			int len = Math.min(4096, rows - off);
 			in.readFully(values, off, len);
 			off += len;
 		}

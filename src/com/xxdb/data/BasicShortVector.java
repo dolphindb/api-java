@@ -68,9 +68,8 @@ public class BasicShortVector extends AbstractVector{
 		super(df);
 		int rows = in.readInt();
 		int cols = in.readInt(); 
-		int size = rows * cols;
-		values = new short[size];
-		long totalBytes = (long)size * 2, off = 0;
+		values = new short[rows];
+		long totalBytes = (long)rows * 2, off = 0;
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		byte[] buf = new byte[4096];
 		while (off < totalBytes) {

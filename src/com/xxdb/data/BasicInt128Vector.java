@@ -69,9 +69,8 @@ public class BasicInt128Vector extends AbstractVector{
 		super(df);
 		int rows = in.readInt();
 		int cols = in.readInt(); 
-		int size = rows * cols;
-		values = new Long2[size];
-		long totalBytes = (long)size * 16, off = 0;
+		values = new Long2[rows];
+		long totalBytes = (long)rows * 16, off = 0;
 		boolean littleEndian = in.isLittleEndian();
 		ByteOrder bo = littleEndian ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		byte[] buf = new byte[4096];
