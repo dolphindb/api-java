@@ -149,6 +149,17 @@ public class DBConnectionTest {
         boolean re = conn.connect(HOST,PORT,"","",ipports);
         Assert.assertEquals(true,re);
     }
+
+    @Test
+    public void Test_DBConnection_isUrgent_true_1() throws Exception {
+        //PrepareUser_authMode("test1","123456","scram");
+        DBConnection conn = new DBConnection(false, false,false,false,true,null);
+        conn.connect(HOST,PORT,"admin","123456");
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+
     @Test
     public void Test_Connect_connectTimeout_negative() throws IOException {
         class LogCapture {
@@ -356,7 +367,26 @@ public class DBConnectionTest {
         Assert.assertEquals(true,elapsedTime2>4000 && elapsedTime2<4050);
         Assert.assertEquals("Read timed out",re1);
     }
-
+    @Test
+    public void Test_Connect() throws IOException, InterruptedException {
+        DBConnection conn1 = new DBConnection();
+        try{
+            conn1.connect("1234", PORT, "admin","123456");
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+        DBConnection conn2 = new DBConnection();
+        conn2.connect(HOST, PORT, "admin","123456");
+        DBConnection conn3 = new DBConnection();
+        try{
+            conn3.connect("1234", PORT, "admin","123456");
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+       Entity RE = conn2.run("1+1");
+        System.out.println(RE.getString());
+        Assert.assertEquals("2",RE.getString());
+    }
     @Test
     public void Test_Connect_readTimeout_fail_1() throws IOException, InterruptedException {
         DBConnection conn1 = new DBConnection();
@@ -2728,7 +2758,74 @@ public class DBConnectionTest {
         BasicInt res = (BasicInt) conn.run("exec count(*) from sharedT1");
         assertEquals(1, tb.rows());
         assertEquals(2, res.getInt());
+    }
 
+    @Test
+    public void Test_DBConnection_upload_any_null() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT,"admin","123456");
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("anyV");
+        List<Vector> cols = new ArrayList<Vector>();
+        cols.add(new BasicAnyVector(0));
+        BasicTable t1 = new BasicTable(colNames, cols);
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("t1", t1);
+        conn.upload(map);
+        BasicTable table = (BasicTable)conn.run("select * from t1");
+        System.out.println(table.getString());
+        assertEquals(0, table.rows());
+        assertEquals(DT_ANY, table.getColumn(0).getDataType());
+    }
+
+    @Test
+    public void Test_DBConnection_upload_any() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT,"admin","123456");
+        List<String> colNames = new ArrayList<String>();
+        colNames.add("anyV");
+        List<Vector> cols = new ArrayList<Vector>();
+
+        BasicAnyVector bav = new BasicAnyVector(12);
+        Entity[] arr = new Entity[12];
+        for (int i = 0; i < 10; i++) {
+            arr[i] = conn.run(""+i);
+        }
+        arr[10] = conn.run("11.11");
+        arr[11] = conn.run("true");
+        for(int i=0; i<arr.length; i++){
+            bav.set(i,arr[i]);
+        }
+
+        cols.add(bav);
+        BasicTable t1 = new BasicTable(colNames, cols);
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("t1", t1);
+        conn.upload(map);
+        BasicTable table = (BasicTable)conn.run("select * from t1");
+        System.out.println(table.getString());
+        assertEquals(12, table.rows());
+        assertEquals(DT_ANY, table.getColumn(0).getDataType());
+        assertEquals("(0,1,2,3,4,5,6,7,8,9,...)", table.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_DBConnection_table_any_upload() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT,"admin","123456");
+        BasicTable re1 = (BasicTable) conn.run("re = table(100:0, `sex`name`eye, [STRING,ANY,ANY]);\n" +
+                "re.tableInsert(`f`m,([`jill],['tom' 'dick' 'harry' 'jack']), ([`gray],['blue' 'green' 'blue' 'blue']));\n" +
+                "select * from re;");
+        assertEquals("sex name                    eye                     \n" +
+                "--- ----------------------- ------------------------\n" +
+                "f   [jill]                  [gray]                  \n" +
+                "m   ([tom,dick,harry,jack]) ([blue,green,blue,blue])\n",re1.getString());
+
+        Map<String, Entity> map = new HashMap<String, Entity>();
+        map.put("re1", re1);
+        conn.upload(map);
+        BasicTable re2 = (BasicTable) conn.run("select * from re1");
+        assertEquals(re1.getString(), re2.getString());
     }
 
     @Test

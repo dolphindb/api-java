@@ -323,6 +323,16 @@ public class BasicAnyVectorTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"MIXED\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_ANY\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.Entity\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"(0,1,2,3,4,5,6,7,8,9,...)\",\"table\":false,\"vector\":true}", re);
     }
-
+    @Test
+    public void test_BasicAnyVector_table() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        BasicTable re = (BasicTable) conn.run("t= table(`tom`dickh`arry`jack`jill as name,  `m`m`m`m`f as sex, `blue`green`blue`blue`gray as eye);\nselect toArray(name),toArray(eye) from t group by sex ;");
+        System.out.println(re.getString());
+        assertEquals("sex toArray_name          toArray_eye           \n" +
+                "--- --------------------- ----------------------\n" +
+                "f   [jill]                [gray]                \n" +
+                "m   [tom,dickh,arry,jack] [blue,green,blue,blue]\n",re.getString());
+    }
 
 }
