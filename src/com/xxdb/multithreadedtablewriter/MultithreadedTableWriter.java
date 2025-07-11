@@ -564,9 +564,14 @@ public class MultithreadedTableWriter {
         BasicTable colDefs = (BasicTable)schema.get(new BasicString("colDefs"));
         BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
         try {
-            BasicString streamTableTimestampColName = (BasicString) pConn.run("getStreamTableTimestamp(" + tableName_ + ")");
-            if (Objects.nonNull(streamTableTimestampColName)) {
-                isSetStreamTableTimestamp = true;
+            if (dbName.isEmpty()) {
+                Entity tableType = pConn.run("typestr(" + tableName + ")");
+                if (tableType.getString().equals("STREAMING TABLE")) {
+                    BasicString streamTableTimestampColName = (BasicString) pConn.run("getStreamTableTimestamp(" + tableName_ + ")");
+                    if (Objects.nonNull(streamTableTimestampColName)) {
+                        isSetStreamTableTimestamp = true;
+                    }
+                }
             }
         } catch (Exception e) {
             if (!e.getMessage().contains("Cannot recognize the token getStreamTableTimestamp")) {
