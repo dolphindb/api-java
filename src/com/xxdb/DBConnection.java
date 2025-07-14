@@ -1303,13 +1303,12 @@ public class DBConnection {
                 throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed.");
             }
 
-            if (nodes_.size() > 1) {
-                int index = nodeRandom_.nextInt(nodes_.size());
-                if (connectNode(nodes_.get(index))){
+            int index = nodeRandom_.nextInt(nodes_.size());
+            if (connectNode(nodes_.get(index))) {
+                if (nodes_.size() > 1)
                     log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
-                    isConnected = true;
-                    break;
-                }
+                isConnected = true;
+                break;
             }
 
             try {
