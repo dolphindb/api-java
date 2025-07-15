@@ -1396,7 +1396,7 @@ public class DBConnection {
                 log.info("New leader is " + node.hostName + ":" + node.port);
                 return ExceptionType.ET_NEWLEADER;
             }
-        }else if ((index = msg.indexOf("<DataNodeNotAvail>")) != -1){
+        }else if (msg.contains("<DataNodeNotAvail>") || msg.contains("<DataNodeNotReady>")){
             node.hostName = "";
             node.port = 0;
             return ExceptionType.ET_NODENOTAVAIL;
