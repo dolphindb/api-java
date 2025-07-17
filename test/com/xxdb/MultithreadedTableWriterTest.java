@@ -6863,6 +6863,52 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(true, sendTime.getNanoTimestamp().getNano() > now.getNano());
         assertEquals(true, sendTime.getNanoTimestamp().getNano() < now1.getNano());
     }
+
+    @Test(timeout = 120000)//server support setStreamTableTimestamp
+    public void test_MultithreadedTableWriter_enableActualSendTime_setStreamTableTimestamp() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = streamTable(1000:0, `id`enableActualSendTime`streamTableTimestamp," +
+                "[INT,NANOTIMESTAMP,NANOTIMESTAMP]);" +
+                "setStreamTableTimestamp(t, `streamTableTimestamp);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false, null, 1, 1,
+                1, "id",true);
+
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(  1);
+        assertEquals("code= info=",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt = (BasicTable) conn.run("select * from t1;");
+        assertEquals(1, bt.rows());
+        System.out.println(bt.getString());
+        Entity re = conn.run("t[`enableActualSendTime][0]<t[`streamTableTimestamp][0]");
+        assertEquals("true", re.getString());
+        conn.run("undef(`t1,SHARED)");
+    }
+
+    //@Test(timeout = 120000)//server not support setStreamTableTimestamp
+    public void test_MultithreadedTableWriter_enableActualSendTime_not_support_setStreamTableTimestamp() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, 8878, "admin", "123456");
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = streamTable(1000:0, `id`enableActualSendTime`streamTableTimestamp," +
+                "[INT,NANOTIMESTAMP,NANOTIMESTAMP]);" +
+                "setStreamTableTimestamp(t, `streamTableTimestamp);" +
+                "share t as t1;");
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, 8878, "admin", "123456",
+                "", "t1", false, false, null, 1, 1,
+                1, "id",true);
+
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(  1);
+        assertEquals("code=A2 info=Column counts don't match.",pErrorInfo.toString());
+//        mutithreadTableWriter_.waitForThreadCompletion();
+//        BasicTable bt = (BasicTable) conn.run("select * from t1;");
+//        assertEquals(1, bt.rows());
+        conn.run("undef(`t1,SHARED)");
+    }
+
     //@Test(timeout = 120000)
     public void test_MultithreadedTableWriter_allDataType_null() throws Exception {
         List<String> colNames = new ArrayList<String>();
@@ -7029,32 +7075,64 @@ public  class MultithreadedTableWriterTest implements Runnable {
 //        mutithreadTableWriter_.waitForThreadCompletion();
 //    }
 
-//    @Test(timeout = 120000)
-//    public void test_mtw_enableHighAvailability_true() throws Exception {
-//        DBConnection conn1 = new DBConnection();
-//        conn1.connect(HOST,8802,"admin","123456");
-//        conn1.run("share table(10:0,`id`price`val,[INT,DOUBLE,INT]) as table1;\n");
-//
-//        DBConnection conn2 = new DBConnection();
-//        conn2.connect(HOST,8803,"admin","123456");
-//        conn2.run("share table(10:0,`id`price`val,[INT,DOUBLE,INT]) as table1;\n");
-//
-//        //System.out.println("节点断掉");
-//        //Thread.sleep(10000);
-//        MultithreadedTableWriter mtw1 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "", "table1",
-//                false, true, ipports, 1000, 0.001f, 10, "id");
-//        //检查线程连接情况
-//        for(int i = 0;i <10000;i++) {
-//            int tmp =5;
-//            mtw1.insert(tmp, (double) tmp, 1);
-//            Thread.sleep(100);
-//        }
-//        mtw1.waitForThreadCompletion();
-//        //BasicInt writedData1 = (BasicInt) conn1.run("(exec count(*) from table1 where val = 1)[0]");
-//        BasicInt writedData2 = (BasicInt) conn2.run("(exec count(*) from table1 where val = 1)[0]");
-//        //System.out.println(writedData1);
-//        System.out.println(writedData2);
-//    }
+    //@Test(timeout = 120000)
+    public void test_mtw_enableHighAvailability_true() throws Exception {
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,8802,"admin","123456");
+        conn1.run("share table(10:0,`id`price`val,[INT,DOUBLE,INT]) as table1;\n");
+
+        DBConnection conn2 = new DBConnection();
+        conn2.connect(HOST,8803,"admin","123456");
+        conn2.run("share table(10:0,`id`price`val,[INT,DOUBLE,INT]) as table1;\n");
+
+        System.out.println("节点断掉");
+        Thread.sleep(1000);
+        MultithreadedTableWriter mtw1 = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "", "table1",
+                false, true, ipports, 1000, 0.001f, 1, "id");
+        //检查线程连接情况
+        for(int i = 0;i <1000;i++) {
+            int tmp =5;
+            mtw1.insert(tmp, (double) tmp, 1);
+            Thread.sleep(100);
+            System.out.println("循环次数："+i);
+        }
+        mtw1.waitForThreadCompletion();
+        //BasicInt writedData1 = (BasicInt) conn1.run("(exec count(*) from table1 where val = 1)[0]");
+        BasicInt writedData2 = (BasicInt) conn2.run("(exec count(*) from table1 where val = 1)[0]");
+        //System.out.println(writedData1);
+        System.out.println(writedData2);
+    }
+
+    //@Test//AJ-856
+    public void test_mtw_enableHighAvailability_true_append_dfs() throws Exception {
+        DBConnection conn1 = new DBConnection();
+        conn1.connect("192.168.0.69",8802,"admin","123456");
+        conn1.run("t1= table(10:0,`id`price`val,[INT,DOUBLE,INT])\n" +
+                "dbPath = \"dfs://TSDB_mtw\"\n" +
+                "if(existsDatabase(dbPath)){dropDatabase(dbPath)}\n" +
+                "db = database(dbPath, VALUE, 0..1000, engine='TSDB')\n" +
+                "pt=db.createPartitionedTable(t1, \"pt\",`id, , [`id])");
+
+        DBConnection conn2 = new DBConnection();
+        conn2.connect("192.168.0.69",8803,"admin","123456");
+        DBConnection conn3 = new DBConnection();
+        conn3.connect("192.168.0.69",8800,"admin","123456");
+
+        System.out.println("节点断掉");
+        Thread.sleep(1000);
+        MultithreadedTableWriter mtw1 = new MultithreadedTableWriter("192.168.0.69", 8802, "admin", "123456", "dfs://TSDB_mtw", "pt",
+                false, true, new String[]{"192.168.0.69:8802","192.168.0.69:8803"}, 1, 0.001f, 1, "id");
+        //检查线程连接情况
+        for(int i = 0;i <1000;i++) {
+            int tmp =5;
+            mtw1.insert(tmp, (double) tmp, 1);
+            Thread.sleep(100);
+            System.out.println("循环次数："+i);
+        }
+        mtw1.waitForThreadCompletion();
+        BasicInt writedData2 = (BasicInt) conn3.run("(exec count(*) from table1 where val = 1)[0]");
+        System.out.println(writedData2);
+    }
 
 //    @Test not support
 //    public void Test_MultithreadedTableWriter_iotAnyVector() throws Exception {
