@@ -568,7 +568,7 @@ public class MultithreadedTableWriter {
                 Entity tableType = pConn.run("typestr(" + tableName + ")");
                 if (tableType.getString().equals("STREAMING TABLE")) {
                     BasicString streamTableTimestampColName = (BasicString) pConn.run("getStreamTableTimestamp(" + tableName_ + ")");
-                    if (Objects.nonNull(streamTableTimestampColName)) {
+                    if (!Utils.isEmpty(streamTableTimestampColName.getString())) {
                         isSetStreamTableTimestamp = true;
                     }
                 }
