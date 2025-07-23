@@ -522,7 +522,7 @@ public class SimpleDBConnectionPoolTest {
         config1.setInitialScript("1");
         config1.setCompress(true);
         config1.setUseSSL(true);
-        config1.setUsePython(true);
+        config1.setUsePython(false);
         config1.setLoadBalance(false);
         config1.setEnableHighAvailability(false);
         config1.setHighAvailabilitySites(null);
@@ -535,7 +535,7 @@ public class SimpleDBConnectionPoolTest {
         assertEquals(5,config1.getInitialPoolSize());
         assertEquals("1",config1.getInitialScript());
         assertEquals(true,config1.isUseSSL());
-        assertEquals(true,config1.isUsePython());
+        assertEquals(false,config1.isUsePython());
         assertEquals(true,config1.isCompress());
         assertEquals(false,config1.isLoadBalance());
         assertEquals(false,config1.isEnableHighAvailability());
@@ -1273,7 +1273,7 @@ public class SimpleDBConnectionPoolTest {
         pool = new SimpleDBConnectionPool(config);
         logCapture.stop();
         String s=logCapture.getLogMessages();
-        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attemps for every node in high availability sites."));
+        assertTrue(s.contains("Connect failed after "+trynums+" reconnect attempts for every node in high availability sites."));
     }
     @Test(expected = RuntimeException.class)
     public void test_SimpleDBConnectionPool_getConnection_Failed_TryReconnectNums_enableHighAvailability_true_enableLoadBalance_true(){
@@ -1514,6 +1514,7 @@ public class SimpleDBConnectionPoolTest {
         config.setInitialPoolSize(10);
         pool = new SimpleDBConnectionPool(config);
         String script = "login(`admin, `123456); \n" +
+                "try{undef(\"data\",SHARED)}catch(except){};\n" +
                 "n=100;\n" +
                 "t1 = table(n:0, `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`uuidv`datehourv`ippaddrv`int128v`blobv`decimal32v`decimal64v`decimal128v, [BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, SYMBOL, STRING, UUID, DATEHOUR, IPADDR, INT128, BLOB, DECIMAL32(3), DECIMAL64(8), DECIMAL128(10)]);\n" +
                 "colTypes=[INT,BOOL,CHAR,SHORT,INT,LONG,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,FLOAT,DOUBLE,SYMBOL,STRING,UUID,DATEHOUR,IPADDR,INT128,BLOB,COMPLEX,POINT,DECIMAL32(2),DECIMAL64(7),DECIMAL128(19)];\n" +
@@ -1596,7 +1597,8 @@ public class SimpleDBConnectionPoolTest {
     public void test_SimpleDBConnectionPool_insert_into_memoryTable_arrayVector_all_dateType() throws IOException, InterruptedException {
         config.setInitialPoolSize(10);
         pool = new SimpleDBConnectionPool(config);
-        String script = "login(`admin, `123456); \n"+
+        String script = "login(`admin, `123456); \n" +
+                "try{undef(\"data\",SHARED)}catch(except){};\n"+
                 "colNames=\"col\"+string(1..26);\n" +
                 "colTypes=[INT,BOOL[],CHAR[],SHORT[],INT[],LONG[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[],FLOAT[],DOUBLE[],UUID[],DATEHOUR[],IPADDR[],INT128[],COMPLEX[],POINT[],DECIMAL32(2)[],DECIMAL64(7)[],DECIMAL128(19)[]];\n" +
                 "share table(1:0,colNames,colTypes) as tt;\n" +
@@ -1689,7 +1691,8 @@ public class SimpleDBConnectionPoolTest {
         poolEntry.run(script);
         poolEntry.close();
         DBConnection poolEntry1 = pool.getConnection();
-        String script1 = "col1 = 1..10;\n" +
+        String script1 = "try{undef(\"data\",SHARED)}catch(except){};\n" +
+                "col1 = 1..10;\n" +
                 "cbool = array(BOOL[]).append!(cut(take([true, false, NULL], 1000), 100))\n" +
                 "cchar = array(CHAR[]).append!(cut(take(char(-100..100 join NULL), 1000), 100))\n" +
                 "cshort = array(SHORT[]).append!(cut(take(short(-100..100 join NULL), 1000), 100))\n" +
@@ -1761,7 +1764,8 @@ public class SimpleDBConnectionPoolTest {
         poolEntry.run(script);
         poolEntry.close();
         DBConnection poolEntry1 = pool.getConnection();
-        String script1 = "col1 = 1..10;\n" +
+        String script1 = "try{undef(\"data\",SHARED)}catch(except){};\n" +
+                "col1 = 1..10;\n" +
                 "cbool = array(BOOL[]).append!(cut(take([true, false, NULL], 1000), 100))\n" +
                 "cchar = array(CHAR[]).append!(cut(take(char(-100..100 join NULL), 1000), 100))\n" +
                 "cshort = array(SHORT[]).append!(cut(take(short(-100..100 join NULL), 1000), 100))\n" +
@@ -1833,7 +1837,8 @@ public class SimpleDBConnectionPoolTest {
         poolEntry.run(script);
         poolEntry.close();
         DBConnection poolEntry1 = pool.getConnection();
-        String script1 = "n = 1000;\n" +
+        String script1 = "try{undef(\"data\",SHARED)}catch(except){};\n" +
+                "n = 1000;\n" +
                     "col1 = 1..1000;\n" +
                     "boolv = bool(rand([true, false, NULL], n));\n" +
                     "charv = char(rand(rand(-100..100, 1000) join take(char(), 4), n));\n" +
@@ -1909,7 +1914,8 @@ public class SimpleDBConnectionPoolTest {
         poolEntry.run(script);
         poolEntry.close();
         DBConnection poolEntry1 = pool.getConnection();
-        String script1 = "n = 1000;\n" +
+        String script1 = "try{undef(\"data\",SHARED)}catch(except){};\n" +
+                "n = 1000;\n" +
                 "col1 = 1..1000;\n" +
                 "boolv = bool(rand([true, false, NULL], n));\n" +
                 "charv = char(rand(rand(-100..100, 1000) join take(char(), 4), n));\n" +
