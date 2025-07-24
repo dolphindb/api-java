@@ -1289,26 +1289,29 @@ public class DBConnection {
         boolean isConnected = false;
         do {
             attempt ++;
-            if (node.hostName != null && node.hostName.length() > 0) {
+            boolean ifReconnectSingleNodeTry = false;
+            if (Utils.isNotEmpty(node.hostName)) {
                 if (connectNode(node)) {
                     if (nodes_.size() > 1)
                         log.info("Switch to node: " + node.hostName + ":" + node.port + " successfully.");
                     isConnected = true;
                     break;
                 }
-            } else {
-                if (nodes_.isEmpty()){
-                    log.error("Connect to " + node.hostName + ":" + node.port + " failed.");
-                    throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed.");
-                }
 
-                int index = nodeRandom_.nextInt(nodes_.size());
-                if (connectNode(nodes_.get(index))) {
-                    if (nodes_.size() > 1)
-                        log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
-                    isConnected = true;
-                    break;
-                }
+                ifReconnectSingleNodeTry = nodes_.size() == 1;
+            }
+
+            if (nodes_.isEmpty()){
+                log.error("Connect to " + node.hostName + ":" + node.port + " failed.");
+                throw new RuntimeException("Connect to " + node.hostName + ":" + node.port + " failed.");
+            }
+
+            int index = nodeRandom_.nextInt(nodes_.size());
+            if (!ifReconnectSingleNodeTry && connectNode(nodes_.get(index))) {
+                if (nodes_.size() > 1)
+                    log.info("Switch to node: " + nodes_.get(index).hostName + ":" + nodes_.get(index).port + " successfully.");
+                isConnected = true;
+                break;
             }
 
             try {

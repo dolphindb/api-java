@@ -722,6 +722,10 @@ public class Utils {
 		return cs == null || cs.length() == 0;
 	}
 
+	public static boolean isNotEmpty(CharSequence cs) {
+		return cs != null && cs.length() > 0;
+	}
+
 	private static final BigDecimal DECIMAL128_MIN_VALUE = new BigDecimal("-170141183460469231731687303715884105728");
 	private static final BigDecimal DECIMAL128_MAX_VALUE = new BigDecimal("170141183460469231731687303715884105728");
 
