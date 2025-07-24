@@ -40,6 +40,15 @@ public class BasicSetTest {
         assertFalse(bs.add(new BasicDateTime(LocalDateTime.now())));
         assertEquals("[]",new BasicSet(Entity.DATA_TYPE.DT_TIMESTAMP,2).keys().getString());
     }
+    @Test
+    public void test_BasicSet_KeyType1(){
+        BasicSet bs = new BasicSet(Entity.DATA_TYPE.DT_MINUTE,4);
+        assertTrue(bs.add(new BasicMinute(-2147483648)));
+        assertTrue(bs.add(new BasicMinute(-2)));
+        assertTrue(bs.add(new BasicMinute(0)));
+        assertTrue(bs.add(new BasicMinute(21)));
+        System.out.println(bs.getString());
+    }
 
     @Test(expected = IOException.class)
     public void test_BasicSet_ExtendedDataInput_notVector() throws IOException {

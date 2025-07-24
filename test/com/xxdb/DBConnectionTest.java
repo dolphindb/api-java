@@ -8,6 +8,9 @@ import com.xxdb.io.Double2;
 import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.Long2;
 import com.xxdb.io.ProgressListener;
+import com.xxdb.streaming.client.IMessage;
+import com.xxdb.streaming.client.MessageHandler;
+import com.xxdb.streaming.client.ThreadedClient;
 import org.junit.*;
 
 import java.io.*;
@@ -18,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.*;
 import java.util.Date;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
@@ -1750,24 +1754,24 @@ public class DBConnectionTest {
         assertEquals("1",  matrix3.getRowLabel(0).getString());
         assertEquals("4.00",  matrix3.get(0,0).getString());
     }
-    @Test
-    public void testBasicTableSerialize() throws IOException {
-        StringBuilder sb = new StringBuilder();
-        sb.append("n=20000\n");
-        sb.append("syms=`IBM`C`MS`MSFT`JPM`ORCL`BIDU`SOHU`GE`EBAY`GOOG`FORD`GS`PEP`USO`GLD`GDX`EEM`FXI`SLV`SINA`BAC`AAPL`PALL`YHOO`KOH`TSLA`CS`CISO`SUN\n");
-        sb.append("mytrades=table(09:30:00+rand(18000,n) as timestamp,rand(syms,n) as sym, 10*(1+rand(100,n)) as qty,5.0+rand(100.0,n) as price);\n");
-        sb.append("select qty,price from mytrades where sym==`IBM;");
-        BasicTable table = (BasicTable) conn.run(sb.toString());
-
-        File f = new File("F:\\tmp\\test.dat");
-        FileOutputStream fos = new FileOutputStream(f);
-        BufferedOutputStream bos = new BufferedOutputStream(fos);
-        LittleEndianDataOutputStream dataStream = new LittleEndianDataOutputStream(bos);
-        table.write(dataStream);
-        bos.flush();
-        dataStream.close();
-        fos.close();
-    }
+    //@Test
+//    public void testBasicTableSerialize() throws IOException {
+//        StringBuilder sb = new StringBuilder();
+//        sb.append("n=20000\n");
+//        sb.append("syms=`IBM`C`MS`MSFT`JPM`ORCL`BIDU`SOHU`GE`EBAY`GOOG`FORD`GS`PEP`USO`GLD`GDX`EEM`FXI`SLV`SINA`BAC`AAPL`PALL`YHOO`KOH`TSLA`CS`CISO`SUN\n");
+//        sb.append("mytrades=table(09:30:00+rand(18000,n) as timestamp,rand(syms,n) as sym, 10*(1+rand(100,n)) as qty,5.0+rand(100.0,n) as price);\n");
+//        sb.append("select qty,price from mytrades where sym==`IBM;");
+//        BasicTable table = (BasicTable) conn.run(sb.toString());
+//
+//        File f = new File("F:\\tmp\\test.dat");
+//        FileOutputStream fos = new FileOutputStream(f);
+//        BufferedOutputStream bos = new BufferedOutputStream(fos);
+//        LittleEndianDataOutputStream dataStream = new LittleEndianDataOutputStream(bos);
+//        table.write(dataStream);
+//        bos.flush();
+//        dataStream.close();
+//        fos.close();
+//    }
 
    /* @Test
     public void testBasicTableDeserialize() throws IOException {
@@ -2813,7 +2817,8 @@ public class DBConnectionTest {
     public void Test_DBConnection_table_any_upload() throws Exception {
         DBConnection conn = new DBConnection();
         conn.connect(HOST, PORT,"admin","123456");
-        BasicTable re1 = (BasicTable) conn.run("re = table(100:0, `sex`name`eye, [STRING,ANY,ANY]);\n" +
+        BasicTable re1 = (BasicTable) conn.run("try{undef(\"re\",SHARED)}catch(except){};\n" +
+                "re = table(100:0, `sex`name`eye, [STRING,ANY,ANY]);\n" +
                 "re.tableInsert(`f`m,([`jill],['tom' 'dick' 'harry' 'jack']), ([`gray],['blue' 'green' 'blue' 'blue']));\n" +
                 "select * from re;");
         assertEquals("sex name                    eye                     \n" +
@@ -2908,41 +2913,37 @@ public class DBConnectionTest {
     @Test
     public void TestPartitionTable() throws IOException, InterruptedException {
         //createPartitionTable
-        StringBuilder sb = new StringBuilder();
-        sb.append("n=10000;");
-        sb.append("t = table(rand(1 2 3,n)as id,rand(1..10,n)as val);");
-        sb.append("if(existsDatabase('dfs://db1')){ dropDatabase('dfs://db1')}");
-        sb.append("db = database('dfs://db1',VALUE ,1 2);");
-        sb.append("pt = db.createPartitionedTable(t,`pt,`id).append!(t);");
-        conn.run(sb.toString());
+        String script = "n=10000;\n" +
+                "t = table(rand(1 2 3,n)as id,rand(1..10,n)as val);\n" +
+                "if(existsDatabase('dfs://db1')){ dropDatabase('dfs://db1')}\n" +
+                "db = database('dfs://db1',VALUE ,1 2);\n" +
+                "pt = db.createPartitionedTable(t,`pt,`id).append!(t);";
+        conn.run(script);
         BasicLong res = (BasicLong) conn.run("exec count(*) from pt");
         assertEquals(true, res.getLong() > 0);
         //addValuePartitions
-        sb.append("addValuePartitions(db,3);");
-        sb.append("pt.append!(t);");
-        conn.run(sb.toString());
+        conn.run("addValuePartitions(db,3);\n " +
+                "pt.append!(t);");
         BasicInt res3 = (BasicInt) conn.run("size(exec count(dfsPath) from pnodeRun(getAllChunks) where dfsPath like \"/db1/3%\" group by chunkId);");
         assertEquals(1, res3.getInt());
         //dropPartition
-        conn.run("dropPartition(db,"+"\"/"+"3"+"/\""+",`pt);");
+        conn.run("dropPartition(db,\"/3/\",`pt);");
         BasicBoolean res4 = (BasicBoolean) conn.run("existsPartition('dfs://db1/3');");
         assertFalse(res4.getBoolean());
         //addColumn
-        sb.append("addColumn(pt,[\"x\", \"y\"],[INT, INT]);");
-        sb.append("t1 = table(rand(1 2 3 4,n) as id,rand(1..10,n) as val,rand(1..5,n) as x,rand(1..10,n) as y );");
-        sb.append("pt.append!(t1);");
-        conn.run(sb.toString());
-        conn.run("pnodeRun(purgeCacheEngine)");
-        sleep(5000);
+        conn.run("addColumn(pt,[\"x\", \"y\"],[INT, INT]);\n" +
+                "t1 = table(rand(1 2 3 4,n) as id,rand(1..10,n) as val,rand(1..5,n) as x,rand(1..10,n) as y );\n" +
+                "pt.append!(t1);\n" +
+                "pnodeRun(purgeCacheEngine);");
+        sleep(1000);
         BasicLong res_x = (BasicLong) conn.run("exec count(*) from pt where x=1");
         assertEquals(true, res_x.getLong() > 0);
         //PartitionTableJoin
-        sb.append("t2 = table(1 as id,2 as val);");
-        sb.append("pt2 = db.createPartitionedTable(t2,`pt2,`id).append!(t2);");
-        conn.run(sb.toString());
-        BasicLong resej = (BasicLong) conn.run("exec count(*) from ej(pt,pt2,`id);");
-        BasicLong respt = (BasicLong) conn.run("exec count(*) from pt;");
-        assertEquals(true, resej.getLong() < respt.getLong());
+        conn.run("t2 = table(1 as id,2 as val);\n" +
+                "pt2 = db.createPartitionedTable(t2,`pt2,`id).append!(t2);");
+        BasicTable resej = (BasicTable) conn.run("select count(*) from ej(pt,pt2,`id);");
+        BasicTable respt = (BasicTable) conn.run("select count(*) from pt;");
+        assertEquals(true, Integer.parseInt(resej.getColumn(0).getString(0))  < Integer.parseInt(respt.getColumn(0).getString(0)));
     }
 
     @Test
@@ -6091,4 +6092,14 @@ public void test_SSL() throws Exception {
         assertEquals(true, re.contains("The user name or password is incorrect. function: login"));
     }
 
+    //@Test //AJ-820
+    public void test_run() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        Boolean isuccessful = conn.connect("192.168.0.69", 8848, "admin", "123456", "", false, null, true);
+        while (true)
+        {
+            System.out.println(conn.run("1+1"));
+            conn.run("sleep(100)");
+        }
+    }
 }

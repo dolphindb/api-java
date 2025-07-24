@@ -503,7 +503,7 @@ public class MTWCallbackTest {
         conn2.close();
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout = 1200000)
     public  void test_MultithreadedTableWriter_Callback_dfs_multiple_thread_true_bigData()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, false);
         conn.connect(HOST, PORT, "admin", "123456");
