@@ -20,12 +20,10 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 
 	private class AsyncWorker implements Runnable {
 		private DBConnection conn_;
-		boolean enableSeqNo = true;
 		private final Thread workThread_;
 
-		public AsyncWorker(DBConnection conn, boolean enableSeqNo) {
+		public AsyncWorker(DBConnection conn) {
 			this.conn_ = conn;
-			this.enableSeqNo = enableSeqNo;
 			workThread_ = new Thread(this);
 			workThread_.start();
 		}
@@ -51,7 +49,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 						break;
 					}
 					try {
-						task.setDBConnection(conn_, enableSeqNo);
+						task.setDBConnection(conn_);
 						task.call();
 					} catch (InterruptedException e) {
 						 break;
@@ -73,14 +71,10 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 	}
 
 	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability) throws IOException {
-		this(host, port, uid, pwd, count, loadBalance, enableHighAvailability, null, "",false, false, false, true);
+		this(host, port, uid, pwd, count, loadBalance, enableHighAvailability, null, "",false, false, false);
 	}
 
 	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability, String[] highAvailabilitySites, String initialScript,boolean compress, boolean useSSL, boolean usePython) throws IOException {
-		this(host, port, uid, pwd, count, loadBalance, enableHighAvailability, highAvailabilitySites, initialScript, compress, useSSL, usePython, true);
-	}
-
-	public ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability, String[] highAvailabilitySites, String initialScript,boolean compress, boolean useSSL, boolean usePython, boolean enableSeqNo) throws IOException {
 		if (count <= 0)
 			throw new RuntimeException("The thread count can not be less than 0");
 		if (!loadBalance) {
@@ -96,7 +90,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 					throw new RuntimeException("Can't connect to the specified host: ", e);
 				}
 
-				workers_.add(new AsyncWorker(conn, enableSeqNo));
+				workers_.add(new AsyncWorker(conn));
 			}
 		} else {
 			BasicStringVector nodes = null;
@@ -123,7 +117,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 				DBConnection conn = new DBConnection(false, useSSL, compress, usePython);
 				if(!conn.connect(hosts[i % nodeCount], ports[i % nodeCount], uid, pwd, initialScript, enableHighAvailability, highAvailabilitySites,false,false))
 					throw new RuntimeException("Can't connect to the host " + nodes.getString(i));
-				workers_.add(new AsyncWorker(conn, enableSeqNo));
+				workers_.add(new AsyncWorker(conn));
 			}
 		}
 	}

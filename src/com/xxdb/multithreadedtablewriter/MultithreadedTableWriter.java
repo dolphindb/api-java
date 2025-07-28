@@ -69,13 +69,11 @@ public class MultithreadedTableWriter {
             return sb.toString();
         }
     };
-
     static class WriterThread implements Runnable{
-        WriterThread(MultithreadedTableWriter tableWriter, DBConnection conn, Callback callbackHandler, boolean enableSeqNo) {
+        WriterThread(MultithreadedTableWriter tableWriter, DBConnection conn, Callback callbackHandler) {
             tableWriter_=tableWriter;
             sentRows_=0;
             conn_ = conn;
-            enableSeqNo_ = enableSeqNo;
             callbackHandler_ = callbackHandler;
             exit_ = false;
             isFinished_ = false;
@@ -193,10 +191,10 @@ public class MultithreadedTableWriter {
                         List<Entity> args = new ArrayList<>();
                         args.add(writeTable);
                         runscript = scriptTableInsert_;
-                        conn_.run(runscript, args, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, enableSeqNo_);
+                        conn_.run(runscript, args);
                         if (scriptSaveTable_ != null && !scriptSaveTable_.isEmpty()) {
                             runscript = scriptSaveTable_;
-                            conn_.run(runscript, null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, "", enableSeqNo_);
+                            conn_.run(runscript);
                         }
                         sentRows_ += addRowCount;
                     } catch (Exception e) {
@@ -304,7 +302,6 @@ public class MultithreadedTableWriter {
         Object busyLock_ = new Object();
         Callback callbackHandler_;
         String scriptTableInsert_,scriptSaveTable_;
-        boolean enableSeqNo_ = true;
 
         List<List<Vector>> writeQueue_ = new ArrayList<>();
         List<List<Entity>> failedQueue_=new ArrayList<>();
@@ -313,11 +310,7 @@ public class MultithreadedTableWriter {
         boolean exit_;//Only set when exit
         boolean isFinished_;
         public static int vectorSize = 65535;
-
-        private static final int DEFAULT_PRIORITY = 4;
-        private static final int DEFAULT_PARALLELISM = 64;
     };
-
     private String dbName_;
     private String tableName_;
     private int batchSize_;
@@ -338,7 +331,6 @@ public class MultithreadedTableWriter {
     private ColInfo[] colInfos_;
     private boolean enableActualSendTime_ = false;
     private boolean isSetStreamTableTimestamp;
-    private boolean enableSeqNo = true;
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
@@ -347,7 +339,7 @@ public class MultithreadedTableWriter {
                                     int threadCount, String partitionCol,
                                     int[] compressTypes, Mode mode, String[] pModeOption) throws Exception{
         init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
-                batchSize, throttle,threadCount,partitionCol,compressTypes, mode, pModeOption, null, false, false, -1, true);
+                batchSize, throttle,threadCount,partitionCol,compressTypes, mode, pModeOption, null, false, false, -1);
     }
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
@@ -356,7 +348,7 @@ public class MultithreadedTableWriter {
                                     int threadCount, String partitionCol,
                                     int[] compressTypes) throws Exception{
         init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
-                batchSize, throttle,threadCount,partitionCol,compressTypes, Mode.M_Append, null, null, false, false, -1, true);
+                batchSize, throttle,threadCount,partitionCol,compressTypes, Mode.M_Append, null, null, false, false, -1);
     }
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
@@ -364,7 +356,7 @@ public class MultithreadedTableWriter {
                                     int batchSize, float throttle,
                                     int threadCount, String partitionCol) throws Exception{
         init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
-                batchSize, throttle,threadCount,partitionCol,null, Mode.M_Append, null, null, false, false, -1, true);
+                batchSize, throttle,threadCount,partitionCol,null, Mode.M_Append, null, null, false, false, -1);
     }
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
@@ -373,7 +365,7 @@ public class MultithreadedTableWriter {
                                     int threadCount, String partitionCol,
                                     int[] compressTypes, Callback callbackHandler) throws Exception{
         init(hostName,port,userId, password,dbName, tableName, useSSL,enableHighAvailability,highAvailabilitySites,
-                batchSize, throttle,threadCount,partitionCol,compressTypes, Mode.M_Append, null, callbackHandler, false, false, -1, true);
+                batchSize, throttle,threadCount,partitionCol,compressTypes, Mode.M_Append, null, callbackHandler, false, false, -1);
     }
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
@@ -384,7 +376,7 @@ public class MultithreadedTableWriter {
                                     int[] compressTypes, Mode mode, String[] pModeOption,
                                     boolean enableActualSendTime) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, compressTypes, mode, pModeOption, null, enableActualSendTime, false, -1, true);
+                batchSize, throttle, threadCount, partitionCol, compressTypes, mode, pModeOption, null, enableActualSendTime, false, -1);
     }
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
@@ -395,7 +387,7 @@ public class MultithreadedTableWriter {
                                     int[] compressTypes,
                                     boolean enableActualSendTime) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, null, enableActualSendTime, false, -1, true);
+                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, null, enableActualSendTime, false, -1);
     }
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
@@ -405,7 +397,7 @@ public class MultithreadedTableWriter {
                                     int threadCount, String partitionCol,
                                     boolean enableActualSendTime) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, null, Mode.M_Append, null, null, enableActualSendTime, false, -1, true);
+                batchSize, throttle, threadCount, partitionCol, null, Mode.M_Append, null, null, enableActualSendTime, false, -1);
     }
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
@@ -416,7 +408,7 @@ public class MultithreadedTableWriter {
                                     int[] compressTypes, Callback callbackHandler,
                                     boolean enableActualSendTime) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, callbackHandler, enableActualSendTime, false, -1, true);
+                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, callbackHandler, enableActualSendTime, false, -1);
     }
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
@@ -427,7 +419,7 @@ public class MultithreadedTableWriter {
                                     int[] compressTypes, Mode mode, String[] pModeOption,
                                     boolean enableActualSendTime, boolean reconnect) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, compressTypes, mode, pModeOption, null, enableActualSendTime, reconnect, -1, true);
+                batchSize, throttle, threadCount, partitionCol, compressTypes, mode, pModeOption, null, enableActualSendTime, reconnect, -1);
     }
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
@@ -438,7 +430,7 @@ public class MultithreadedTableWriter {
                                     int[] compressTypes,
                                     boolean enableActualSendTime, boolean reconnect) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, null, enableActualSendTime, reconnect, -1, true);
+                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, null, enableActualSendTime, reconnect, -1);
     }
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
@@ -448,7 +440,7 @@ public class MultithreadedTableWriter {
                                     int threadCount, String partitionCol,
                                     boolean enableActualSendTime, boolean reconnect) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, null, Mode.M_Append, null, null, enableActualSendTime, reconnect, -1, true);
+                batchSize, throttle, threadCount, partitionCol, null, Mode.M_Append, null, null, enableActualSendTime, reconnect, -1);
     }
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
@@ -459,7 +451,7 @@ public class MultithreadedTableWriter {
                                     int[] compressTypes, Callback callbackHandler,
                                     boolean enableActualSendTime, boolean reconnect) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, callbackHandler, enableActualSendTime, reconnect, -1, true);
+                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, callbackHandler, enableActualSendTime, reconnect, -1);
     }
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
@@ -470,7 +462,7 @@ public class MultithreadedTableWriter {
                                     int[] compressTypes, Mode mode, String[] pModeOption,
                                     boolean enableActualSendTime, boolean reconnect, int tryReconnectNums) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, compressTypes, mode, pModeOption, null, enableActualSendTime, reconnect, tryReconnectNums, true);
+                batchSize, throttle, threadCount, partitionCol, compressTypes, mode, pModeOption, null, enableActualSendTime, reconnect, tryReconnectNums);
     }
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
@@ -481,7 +473,7 @@ public class MultithreadedTableWriter {
                                     int[] compressTypes,
                                     boolean enableActualSendTime, boolean reconnect, int tryReconnectNums) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, null, enableActualSendTime, reconnect, tryReconnectNums, true);
+                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, null, enableActualSendTime, reconnect, tryReconnectNums);
     }
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
@@ -491,7 +483,7 @@ public class MultithreadedTableWriter {
                                     int threadCount, String partitionCol,
                                     boolean enableActualSendTime, boolean reconnect, int tryReconnectNums) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, null, Mode.M_Append, null, null, enableActualSendTime, reconnect, tryReconnectNums, true);
+                batchSize, throttle, threadCount, partitionCol, null, Mode.M_Append, null, null, enableActualSendTime, reconnect, tryReconnectNums);
     }
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
@@ -502,18 +494,7 @@ public class MultithreadedTableWriter {
                                     int[] compressTypes, Callback callbackHandler,
                                     boolean enableActualSendTime, boolean reconnect, int tryReconnectNums) throws Exception {
         init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, callbackHandler, enableActualSendTime, reconnect, tryReconnectNums, true);
-    }
-
-    private void MultithreadedTableWriter(String hostName, int port, String userId, String password,
-                      String dbName, String tableName, boolean useSSL,
-                      boolean enableHighAvailability, String[] highAvailabilitySites,
-                      int batchSize, float throttle,
-                      int threadCount, String partitionCol,
-                      int[] compressTypes, Mode mode, String[] pModeOption, Callback callbackHandler,
-                      boolean enableActualSendTime, boolean reconnect, int tryReconnectNums, boolean enableSeqNo) throws Exception {
-        init(hostName, port, userId, password, dbName, tableName, useSSL, enableHighAvailability, highAvailabilitySites,
-                batchSize, throttle, threadCount, partitionCol, compressTypes, mode, pModeOption, callbackHandler, enableActualSendTime, reconnect, tryReconnectNums, enableSeqNo);
+                batchSize, throttle, threadCount, partitionCol, compressTypes, Mode.M_Append, null, callbackHandler, enableActualSendTime, reconnect, tryReconnectNums);
     }
 
     private void init(String hostName, int port, String userId, String password,
@@ -522,7 +503,7 @@ public class MultithreadedTableWriter {
                       int batchSize, float throttle,
                       int threadCount, String partitionCol,
                       int[] compressTypes, Mode mode, String[] pModeOption, Callback callbackHandler,
-                      boolean enableActualSendTime, boolean reconnect, int tryReconnectNums, boolean enableSeqNo) throws Exception{
+                      boolean enableActualSendTime, boolean reconnect, int tryReconnectNums) throws Exception{
         dbName_=dbName;
         tableName_=tableName;
         batchSize_=batchSize;
@@ -707,7 +688,7 @@ public class MultithreadedTableWriter {
             if (pConn == null) {
                 pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,enableHighAvailability,highAvailabilitySites,isCompress, reconnect, tryReconnectNums);
             }
-            WriterThread writerThread = new WriterThread(this,pConn, callbackHandler, enableSeqNo);
+            WriterThread writerThread = new WriterThread(this,pConn, callbackHandler);
             threads_.add(writerThread);
             pConn = null;
         }

@@ -9,7 +9,6 @@ import com.xxdb.data.Entity;
 
 public class BasicDBTask implements DBTask {
 	private String script;
-	private boolean enableSeqNo = true;
 	private List<Entity> args;
 	private DBConnection conn;
 	private Entity result = null;
@@ -17,9 +16,6 @@ public class BasicDBTask implements DBTask {
 	private TaskStatus status = TaskStatus.PENDING;
 	private CountDownLatch latch;
 	private int timeOut = -1;
-
-	private static final int DEFAULT_PRIORITY = 4;
-	private static final int DEFAULT_PARALLELISM = 64;
 
 	public BasicDBTask(String script, List<Entity> args) {
 		this.script = script;
@@ -34,12 +30,10 @@ public class BasicDBTask implements DBTask {
 	@Override
 	public Entity call() {
 		try {
-			if (args != null) {
-				result = conn.run(script, args, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, enableSeqNo);
-			} else {
-				result = conn.run(script, null, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, "", enableSeqNo);
-			}
-
+			if (args != null)
+				result = conn.run(script, args);
+			else
+				result = conn.run(script);
 			errMsg = null;
 			synchronized (this) {
 				status = TaskStatus.SUCCESS;
@@ -59,12 +53,6 @@ public class BasicDBTask implements DBTask {
 	@Override
 	public void setDBConnection(DBConnection conn) {
 		this.conn = conn;
-	}
-
-	@Override
-	public void setDBConnection(DBConnection conn, boolean enableSeqNo) {
-		this.conn = conn;
-		this.enableSeqNo = enableSeqNo;
 	}
 
 	@Override
