@@ -99,15 +99,26 @@ public abstract class AbstractExtendedDataOutputStream extends FilterOutputStrea
 
 	public static int getUTFlength(String value, int start, int sum) throws IOException {
 		int len = value.length();
-		for (int i = start; i < len; ++i){
+		for (int i = start; i < len; ++i) {
 			char c = value.charAt(i);
-			if (c >= '\u0001' && c <= '\u007f')
+			if (Character.isHighSurrogate(c) && i + 1 < len && Character.isLowSurrogate(value.charAt(i + 1))) {
+				// Check if this is a high surrogate of a surrogate pair.
+				// Characters represented by surrogate pairs take 4 bytes in UTF-8.
+				sum += 4;
+				// Skip the low surrogate character.
+				i++;
+			} else if (c <= '\u007F') {
+				// ASCII characters (including null character) take 1 byte.
 				sum += 1;
-			else if (c == '\u0000' || (c >= '\u0080' && c <= '\u07ff'))
+			} else if (c <= '\u07FF') {
+				// Two-byte character range.
 				sum += 2;
-			else
+			} else {
+				// Three-byte character range (0x0800-0xFFFF, excluding surrogate range).
 				sum += 3;
+			}
 		}
+
 		return sum;
 	}
 	
