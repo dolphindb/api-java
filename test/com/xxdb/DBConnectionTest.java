@@ -17,11 +17,16 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.*;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
@@ -31,6 +36,7 @@ import static com.xxdb.data.Entity.DATA_FORM.DF_TABLE;
 import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static java.lang.Thread.sleep;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class DBConnectionTest {
 
@@ -5052,6 +5058,31 @@ public void test_SSL() throws Exception {
         assertEquals("blob1AMZN", table2.getColumn(3).get(2).getString());
     }
     @Test
+    public void test_DBConnection_run_ASCII_char() throws IOException, InterruptedException {
+        DBConnection connection = new DBConnection();
+        connection.connect(HOST, PORT, "admin", "123456");
+        for (int i = 0; i <= 0x7F; i++) {
+            char c = (char) i;
+            System.out.printf("Unicode: \\u%04X | Dec: %3d | Char: %s%n",
+                    i, i,
+                    (i < 32 || i == 127) ? "[控制字符]" : c);
+            if((i == 9|| i == 10|| i == 32|| i == 33|| i == 36|| i == 37 || i == 38 || i == 42 || i == 43  || (i >= 45&&i <= 60)|| i == 62|| i == 64|| i == 92|| i == 94|| i == 96|| i == 101|| i == 124)){
+                Entity re = connection.run(String.valueOf(c));
+                System.out.println(re.getString());
+            }else{
+                String ex = null;
+                try{
+                    connection.run(String.valueOf(c));
+                }catch(Exception e){
+                    ex = e.getMessage();
+                    System.out.println(ex);
+                }
+                assertNotNull(ex);
+            }
+        }
+    }
+
+    @Test
     public void test_connection_enableSeqNo_true() throws Exception {
         DBConnection connection = new DBConnection(false, false, false);
         connection.connect(HOST, PORT, "admin", "123456",
@@ -5072,10 +5103,10 @@ public void test_SSL() throws Exception {
         BasicTable res1 = (BasicTable) connection.run("select * from loadTable(\"dfs://tableUpsert_test\",\"pt\")");
         BasicTable res2 = (BasicTable) connection.run("select * from loadTable(\"dfs://tableUpsert_test\",\"pt1\")");
         assertEquals(30000, res1.rows());
-        assertEquals(30000, res1.rows());
+        assertEquals(30000, res2.rows());
         connection.close();
     }
-
+    
     @Test
     public void test_connection_enableSeqNo_false() throws Exception {
         DBConnection connection = new DBConnection(false, false, false);
@@ -5097,7 +5128,7 @@ public void test_SSL() throws Exception {
         BasicTable res1 = (BasicTable) connection.run("select * from loadTable(\"dfs://tableUpsert_test\",\"pt\")");
         BasicTable res2 = (BasicTable) connection.run("select * from loadTable(\"dfs://tableUpsert_test\",\"pt1\")");
         assertEquals(30000, res1.rows());
-        assertEquals(30000, res1.rows());
+        assertEquals(30000, res2.rows());
         connection.close();
     }
     @Test
