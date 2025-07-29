@@ -1,6 +1,7 @@
 package com.xxdb;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.sun.org.apache.xml.internal.utils.StringVector;
 import com.xxdb.data.Dictionary;
 import com.xxdb.data.Vector;
 import com.xxdb.data.*;
@@ -5058,6 +5059,39 @@ public void test_SSL() throws Exception {
         assertEquals("blob1AMZN", table2.getColumn(3).get(2).getString());
     }
     @Test
+    public void test_DBConnection_upload_illegal_string1() throws IOException {
+        DBConnection connection = new DBConnection();
+        connection.connect(HOST, PORT, "admin", "123456");
+
+        BasicString sv = new BasicString("blob1AM\0ZN");
+        Map<String, Entity> upObj = new HashMap<String, Entity>();
+        upObj.put("SV", (Entity) sv);
+        conn.upload(upObj);
+        Entity sv1 =  conn.run("SV;\n");
+        Assert.assertEquals("blob1AM",sv1.getString());
+    }
+    @Test
+    public void test_DBConnection_upload_ASCII_char() throws IOException {
+        DBConnection connection = new DBConnection();
+        connection.connect(HOST, PORT, "admin", "123456");
+
+        for (int i = 1; i <= 0x7F; i++) {
+            char c = (char) i;
+            System.out.printf("Unicode: \\u%04X | Dec: %3d | Char: %s%n",
+                    i, i,
+                    (i < 32 || i == 127) ? "[控制字符]" : c);
+            BasicString sv = new BasicString(String.valueOf(c));
+            Map<String, Entity> upObj = new HashMap<String, Entity>();
+            upObj.put("SV", (Entity) sv);
+            conn.upload(upObj);
+            Entity sv1 =  conn.run("SV;\n");
+            if (i != 13){
+                Assert.assertEquals(sv1,(Entity)sv);
+            }
+        }
+    }
+
+    @Test
     public void test_DBConnection_run_ASCII_char() throws IOException, InterruptedException {
         DBConnection connection = new DBConnection();
         connection.connect(HOST, PORT, "admin", "123456");
@@ -5106,7 +5140,7 @@ public void test_SSL() throws Exception {
         assertEquals(30000, res2.rows());
         connection.close();
     }
-    
+
     @Test
     public void test_connection_enableSeqNo_false() throws Exception {
         DBConnection connection = new DBConnection(false, false, false);
