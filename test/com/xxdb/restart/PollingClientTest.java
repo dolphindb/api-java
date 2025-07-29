@@ -115,7 +115,8 @@ public class PollingClientTest {
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         controller_conn.run("sleep(1000)");
-        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+        String script1 = "try{undef(`Trades,SHARED)}catch(ex){};\n" +
+                "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
@@ -217,7 +218,8 @@ public class PollingClientTest {
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         controller_conn.run("sleep(1000)");
-        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+        String script1 = "try{undef(`Trades,SHARED)}catch(ex){};\n" +
+                "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
@@ -279,7 +281,8 @@ public class PollingClientTest {
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         controller_conn.run("sleep(1000)");
-        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+        String script1 = "try{undef(`Trades,SHARED)}catch(ex){};\n" +
+                "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
@@ -375,7 +378,8 @@ public class PollingClientTest {
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         controller_conn.run("sleep(5000)");
-        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+        String script1 = "try{undef(`Trades,SHARED)}catch(ex){};\n" +
+                "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
@@ -418,7 +422,7 @@ public class PollingClientTest {
         Thread.sleep(8000);
         conn3.run("n=3000;t=table(1..n as tag,timestamp(1..n) as ts,take(100.0,n) as data);" + "Trades.append!(t)");
         Thread.sleep(5000);
-        List<IMessage> messages2 = poller.poll(3000,3000);
+        List<IMessage> messages2 = poller.poll(5000,3000);
         MessageHandler_handler(messages2);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[2]+"')}catch(ex){}");
         Thread.sleep(5000);

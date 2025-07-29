@@ -325,6 +325,7 @@ public class DBConnectionTest {
         System.out.println("Timeout after " + elapsedTime + " ms");
         Assert.assertEquals(true,elapsedTime>6000 && elapsedTime<8000);
     }
+
     //@Test//没有设置重连次数，会一直重连
     public void Test_Connect_connectTimeout_fail_2() throws IOException {
         DBConnection conn = new DBConnection();
@@ -5931,7 +5932,7 @@ public void test_SSL() throws Exception {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        assertEquals("Connect to 192.168.0.69:8887 failed after 5 reconnect attempts.", re);
+        assertEquals("Connect to "+HOST+":8887 failed after 5 reconnect attempts.", re);
     }
 
     @Test

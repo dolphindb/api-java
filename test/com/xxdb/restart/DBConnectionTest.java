@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
 
@@ -131,6 +132,7 @@ public class DBConnectionTest {
     public void Test_connect_EnableHighAvailability_true_1() throws IOException, InterruptedException {
         DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"admin","123456",null,true);
+        conn.connect(HOST, CONTROLLER_PORT, "admin", "123456");
         BasicString nodeAliasTmp = (BasicString)conn1.run("getNodeAlias()");
         String nodeAlias = nodeAliasTmp.getString();
         try{
@@ -139,7 +141,8 @@ public class DBConnectionTest {
         {
             System.out.println(ex);
         }
-        sleep(1000);
+        sleep(8000);
+        System.out.println("-----------------------------------");
         conn1.run("a=1;\n a");
         //The connection switches to a different node to execute the code
         try{
@@ -152,9 +155,10 @@ public class DBConnectionTest {
         assertEquals(true, conn1.isConnected());
     }
     @Test
-    public void Test_reConnect__true() throws IOException, InterruptedException {
+    public void Test_reConnect_true() throws IOException, InterruptedException {
         DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"admin","123456",null,false,null,true);
+        conn.connect(HOST, CONTROLLER_PORT, "admin", "123456");
         BasicString nodeAliasTmp = (BasicString)conn1.run("getNodeAlias()");
         String nodeAlias = nodeAliasTmp.getString();
         try{
@@ -163,16 +167,46 @@ public class DBConnectionTest {
         {
             System.out.println(ex);
         }
-        sleep(1000);
-        conn1.run("a=1;\n a");
+        sleep(10000);
+        //conn1.run("a=1;\n a");
         //The connection switches to a different node to execute the code
         try{
-            conn.run("startDataNode(\""+nodeAlias+"\")");
+            conn.run("stopDataNode(\""+HOST+":"+PORT+"\")");
         }catch(Exception ex)
         {
             System.out.println(ex);
         }
-        sleep(1000);
+        sleep(5000);
+
+        class MyThread extends Thread {
+            @Override
+            public void run() {
+                try {
+                    conn1.connect(HOST,PORT,"admin","123456",null,false,null,true);
+                } catch (Exception e) {
+                    // 捕获异常并打印错误信息
+                    System.err.println(e.getMessage());
+                }
+            }
+        }
+        class MyThread1 extends Thread {
+            @Override
+            public void run() {
+                try {
+                    conn.run("startDataNode(\""+HOST+":"+PORT+"\")");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        MyThread thread = new MyThread();
+        thread.start();
+        Thread.sleep(3000);
+        MyThread1 thread1 = new MyThread1();
+        thread1.start();
+        thread1.join();
+        Thread.sleep(8000);
+        conn1.run("a=1;\n a");
         assertEquals(true, conn1.isConnected());
     }
     @Test //reConnect is not valid

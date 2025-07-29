@@ -92,7 +92,8 @@ public class ThreadedClientTest {
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         controller_conn.run("sleep(1000)");
-        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+        String script1 = "try{undef(`Trades,SHARED)}catch(ex){};\n" +
+                "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
@@ -114,7 +115,7 @@ public class ThreadedClientTest {
         Thread.sleep(8000);
         conn.run("t=table(5001..5500 as tag,now()+5001..5500 as ts,rand(100.0,500) as data);" + "Trades.append!(t)");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         BasicTable row_num = (BasicTable)conn.run("select count(*) from Receive");
         System.out.println(row_num.getColumn(0).get(0));
         assertEquals("5500",row_num.getColumn(0).get(0).getString());
@@ -127,7 +128,8 @@ public class ThreadedClientTest {
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         controller_conn.run("sleep(1000)");
-        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+        String script1 = "try{undef(`Trades,SHARED)}catch(ex){};\n" +
+                "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
@@ -179,7 +181,8 @@ public class ThreadedClientTest {
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         controller_conn.run("sleep(1000)");
-        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+        String script1 = "try{undef(`Trades,SHARED)}catch(ex){};\n" +
+                "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
@@ -247,7 +250,8 @@ public class ThreadedClientTest {
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         controller_conn.run("sleep(1000)");
-        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+        String script1 = "try{undef(`Trades,SHARED)}catch(ex){};\n" +
+                "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);
@@ -333,7 +337,8 @@ public class ThreadedClientTest {
         controller_conn.connect(controller_host,controller_port,"admin","123456");
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
         controller_conn.run("sleep(1000)");
-        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+        String script1 = "try{undef(`Trades,SHARED)}catch(ex){};\n" +
+                "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"
                 + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
         conn.run(script1);

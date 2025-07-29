@@ -706,13 +706,13 @@ public  class MultithreadedTableWriterTest implements Runnable {
         StringBuilder sb = new StringBuilder();
         String dbName = "dfs://test_MultithreadedTableWriter_pt";
 
-        sb.append("if(existsDatabase('" + dbName + "')){\n" +
+        String script = "if(existsDatabase('" + dbName + "')){\n" +
                 "\t\tdropDatabase('" + dbName + "')\n" +
                 "\t}\n" +
                 "\tdb=database('" + dbName + "', VALUE, 2012.01.01..2012.01.30)\n" +
                 "t=table(1:0, `sym`tradeDate`tradeTime`tradePrice`vwap`volume`valueTrade, [SYMBOL, DATE, TIME, DOUBLE, DOUBLE, INT, DOUBLE])\n" +
-                "\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"tradeDate\"])");
-        conn.run(sb.toString());
+                "\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"tradeDate\"])";
+        conn.run(script);
         String re = null;
         try {
             mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
