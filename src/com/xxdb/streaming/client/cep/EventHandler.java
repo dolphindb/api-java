@@ -398,9 +398,26 @@ public class EventHandler {
     }
 
     private Entity deserializeFastArray(Entity.DATA_TYPE type, int extraParam, ExtendedDataInput input) throws IOException {
-        BasicEntityFactory factory = new BasicEntityFactory();
-        input.readShort();
-        return factory.createEntity(Entity.DATA_FORM.DF_VECTOR, type, input, false);
+        int totalCount = input.readShort();
+        if (totalCount == 0) {
+            return BasicEntityFactory.instance().createVectorWithDefaultValue(type, 0, extraParam);
+        }
+
+        byte countByte = input.readByte();
+        input.readByte();
+
+        int count;
+        if (countByte == 1) {
+            count = input.readByte() & 0xFF;
+        } else if (countByte == 2) {
+            count = input.readUnsignedShort();
+        } else {
+            count = input.readInt();
+        }
+
+        AbstractVector vector = (AbstractVector) BasicEntityFactory.instance().createVectorWithDefaultValue(type, count, extraParam);
+        vector.deserialize(0, count, input);
+        return vector;
     }
 
     private Entity deserializeAny(Entity.DATA_TYPE type, Entity.DATA_FORM form, ExtendedDataInput input) throws IOException {
