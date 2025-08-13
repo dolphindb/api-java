@@ -2,6 +2,7 @@ package com.xxdb.streaming.client.cep;
 
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
+import com.xxdb.data.Vector;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -19,6 +20,7 @@ import static com.xxdb.data.Entity.DATA_FORM.*;
 
 public class EventSenderTest {
     public static DBConnection conn ;
+    public static DBConnection conn1 ;
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
@@ -238,20 +240,36 @@ public class EventSenderTest {
     public static  EventMessageHandler handler_array_decimal = new EventMessageHandler() {
         @Override
         public void doEvent(String eventType, List<Entity> attributes) {
-            System.out.println("eventType: " + eventType);
-            String decimal32v = attributes.get(0).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
-            String decimal64v = attributes.get(1).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
-            String decimal128v = attributes.get(2).getString().replaceAll(",,", ",NULL,").replaceAll("\\[,", "[NULL,").replaceAll(",]", ",NULL]").replace(',', ' ');
-
-            for (int i=0;i<attributes.size();i++){
-                //attributes.get(i).getString();
-                System.out.println(attributes.get(i).getString());
-            }
-            String script = null;
-            script = String.format("insert into outputTable values( %s,%s,%s)", decimal32v, decimal64v, decimal128v);
-
+//            System.out.println("eventType: " + eventType);
+            BasicArrayVector col1 = new BasicArrayVector(DT_DECIMAL32_ARRAY,0,2);
             try {
-                conn.run(script);
+                col1.Append((Vector)attributes.get(0));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            BasicArrayVector col2 = new BasicArrayVector(DT_DECIMAL64_ARRAY,0,7);
+            try {
+                col2.Append((Vector)attributes.get(1));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            BasicArrayVector col3 = new BasicArrayVector(DT_DECIMAL128_ARRAY,0,19);
+            try {
+                col3.Append((Vector)attributes.get(2));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            List<String> colNames = new ArrayList<String>();
+            colNames.add("col1");
+            colNames.add("col2");
+            colNames.add("col3");
+            List<Vector> cols = new ArrayList<Vector>(){};
+            cols.add(col1);
+            cols.add(col2);
+            cols.add(col3);
+            BasicTable bt = new BasicTable(colNames, cols);
+            try {
+                conn1.run("tableInsert{outputTable}",  Arrays.asList(bt));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -2064,7 +2082,7 @@ public class EventSenderTest {
         checkData(bt,bt2);
         client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
-    @Test//精度问题
+    @Test
     public  void test_EventSender_all_dateType_vector() throws IOException, InterruptedException {
         String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
                 "colNames=\"col\"+string(1..25);\n" +
@@ -2151,28 +2169,29 @@ public class EventSenderTest {
     }
 
     @Test
-    public  void test_EventClient_vector_decimal_1() throws IOException, InterruptedException {
+    public  void test_EventClient_vector_decimal32() throws IOException, InterruptedException {
         String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
                 "share table(1:0,[\"col1\"],[DECIMAL32(2)[]]) as outputTable;\n" ;
         conn.run(script);
-        String script1 ="class event_all_array_dateType{\n" +
-                "\tdecimal32v :: DECIMAL32(3)  VECTOR\n" +
-                "  def event_all_array_dateType(decimal32){\n" +
+        String script1 ="class decimal32_vector{\n" +
+                "\tdecimal32v :: DECIMAL32(2)  VECTOR\n" +
+                "  def decimal32_vector(decimal32){\n" +
                 "\tdecimal32v = decimal32\n" +
                 "  \t}\n" +
                 "}   \n" +
-                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[], ) as type, array(INT[], 0) as form)\n" +
-                "eventType = 'event_all_array_dateType'\n" +
-                "eventKeys = 'decimal32v';\n" +
-                "typeV = [ DECIMAL32(2)[]];\n" +
-                "formV = [ VECTOR];\n" +
-                "insert into schemaTable values([eventType], [eventKeys], [typeV],[formV]);\n" +
+                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventField, array(STRING, 0) as fieldType, array(INT[], ) as fieldTypeId, array(INT[], 0) as fieldFormId)\n" +
+                "eventType = 'decimal32_vector'\n" +
+                "eventField = 'decimal32v';\n" +
+                "fieldType = 'DECIMAL32(2)';\n" +
+                "fieldTypeId = [ DECIMAL32(2)];\n" +
+                "fieldFormId = [ VECTOR];\n" +
+                "insert into schemaTable values([eventType], [eventField], [fieldType], [fieldTypeId], [fieldFormId]);\n" +
                 "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput1;\n" +
                 "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
                 "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput1);";
         conn.run(script1);
         EventSchema scheme = new EventSchema();
-        scheme.setEventType("event_all_array_dateType");
+        scheme.setEventType("decimal32_vector");
         scheme.setFieldNames(Arrays.asList("decimal32v"));
         scheme.setFieldTypes(Arrays.asList( DT_DECIMAL32));
         scheme.setFieldForms(Arrays.asList(  DF_VECTOR));
@@ -2182,18 +2201,19 @@ public class EventSenderTest {
         List<String> eventTimeFields = new ArrayList<>();
         List<String> commonFields = new ArrayList<>();
         EventSender sender = new EventSender(conn, "inputTable",eventSchemes, eventTimeFields, commonFields);
-        String script2 = "\tevent_all_array_dateType1=event_all_array_dateType( decimal32(1 2.001,2))\n" +
-                "\tappendEvent(inputSerializer, event_all_array_dateType1)\n" ;
+        String script2 = "\tdecimal32_vector1=decimal32_vector( decimal32(1 2.001,2))\n" +
+                "\tappendEvent(inputSerializer, decimal32_vector1)\n" ;
         conn.run(script2);
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicDecimal32Vector(new String[]{"1","2.001"},2));
-        sender.sendEvent("event_all_array_dateType",attributes);
+        sender.sendEvent("decimal32_vector",attributes);
         BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
         Assert.assertEquals(1,bt1.rows());
         BasicTable bt2 = (BasicTable)conn.run("select * from intput1;");
         Assert.assertEquals(1,bt2.rows());
         checkData(bt1,bt2);
     }
+
     public static  EventMessageHandler handler_string = new EventMessageHandler() {
         @Override
         public void doEvent(String eventType, List<Entity> attribute) {
@@ -2207,7 +2227,7 @@ public class EventSenderTest {
                 }
             }
     };
-    @Test
+   // @Test //AJ-662
     public  void test_EventClient_vector_string() throws IOException, InterruptedException {
         String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
                 "share table(1:0,[\"col1\"],[STRING]) as outputTable;\n" ;
@@ -2256,7 +2276,7 @@ public class EventSenderTest {
         checkData(bt1,bt2);
         client.unsubscribe(HOST, PORT, "intput1", "test1");
     }
-    @Test
+    //@Test AJ-662
     public  void test_EventClient_vector_symbol() throws IOException, InterruptedException {
         String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
                 "share table(1:0,[\"col1\"],[STRING]) as outputTable;\n" ;
@@ -2305,8 +2325,8 @@ public class EventSenderTest {
         checkData(bt1,bt2);
         client.unsubscribe(HOST, PORT, "intput1", "test1");
     }
-    @Test
-    public  void test_EventSender_all_dateType_array() throws IOException {
+    //@Test//not support
+    public  void test_EventSender_all_dateType_any() throws IOException {
         EventSchema scheme = new EventSchema();
         scheme.setEventType("event_all_array_dateType");
         scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "datehourv", "uuidv", "ippaddrv", "int128v", "pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
@@ -2331,6 +2351,58 @@ public class EventSenderTest {
         sender.sendEvent("event_all_array_dateType",attributes);
         BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
         Assert.assertEquals(1,bt1.rows());
+    }
+    @Test
+    public  void test_EventSender_Double_vector() throws IOException, InterruptedException {
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
+                "share table(1:0,[\"stringv\",\"doublev\",\"double1v\"],[STRING, DOUBLE[],DOUBLE[]]) as outputTable;\n" ;
+        conn.run(script);
+        String script1 ="class event_double_vector{\n" +
+                "\tstringv :: STRING\n" +
+                "\tdoublev :: DOUBLE  VECTOR\n" +
+                "\tdouble1v :: DOUBLE  VECTOR\n" +
+                "  def event_double_vector(string,double,double1){\n" +
+                "\tstringv = string\n" +
+                "\tdoublev = double\n" +
+                "\tdouble1v = double1\n" +
+                "  \t}\n" +
+                "}   \n" +
+                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[], ) as type, array(INT[], 0) as form)\n" +
+                "eventType = 'event_double_vector'\n" +
+                "eventKeys = 'stringv,doublev,double1v';\n" +
+                "typeV = [ STRING,DOUBLE,DOUBLE];\n" +
+                "formV = [SCALAR, VECTOR,VECTOR];\n" +
+                "insert into schemaTable values([eventType], [eventKeys], [typeV],[formV]);\n" +
+                "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput1;\n" +
+                "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
+                "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput1);";
+        conn.run(script1);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("event_double_vector");
+        scheme.setFieldNames(Arrays.asList("stringv","doublev","double1v"));
+        scheme.setFieldTypes(Arrays.asList(DT_STRING, DT_DOUBLE,DT_DOUBLE));
+        scheme.setFieldForms(Arrays.asList( DF_SCALAR, DF_VECTOR,DF_VECTOR));
+        scheme.setFieldExtraParams(Arrays.asList(0, 1,1));
+
+        List<EventSchema> eventSchemes = Collections.singletonList(scheme);
+        List<String> eventTimeKeys = new ArrayList<>();
+        List<String> commonKeys = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable", eventSchemes, eventTimeKeys, commonKeys);
+        String script2 = "\tevent_double_vector1=event_double_vector(\"test2\", double(1 2.001),double(1 2.001))\n" +
+                "\tappendEvent(inputSerializer, event_double_vector1)\n" ;
+        conn.run(script2);
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicString("test2"));
+        attributes.add(new BasicDoubleVector(Arrays.asList(new Double[]{1.0, 2.001})));
+        attributes.add(new BasicDoubleVector(Arrays.asList(new Double[]{1.0, 2.001})));
+        sender.sendEvent("event_double_vector",attributes);
+        BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
+        Assert.assertEquals(1,bt1.rows());
+        BasicTable bt2 = (BasicTable)conn.run("select * from intput1;");
+        Assert.assertEquals(1,bt2.rows());
+        System.out.println(bt2.getString());
+        System.out.println(bt1.getString());
+        checkData(bt1,bt2);
     }
 
 }

@@ -3,6 +3,7 @@ package com.xxdb.streaming.client.cep;
 import com.xxdb.DBConnection;
 import com.xxdb.Prepare;
 import com.xxdb.data.*;
+import com.xxdb.data.Vector;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -17,6 +18,7 @@ import static com.xxdb.Prepare.*;
 import static com.xxdb.data.Entity.DATA_FORM.*;
 import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static com.xxdb.streaming.client.cep.EventSenderTest.*;
+import static java.lang.Thread.sleep;
 
 public class EventClientTest {
     public static DBConnection conn ;
@@ -233,7 +235,7 @@ public class EventClientTest {
         EventClient client = new EventClient(eventSchemas, eventTimeFields, commonFields);
         client.subscribe(HOST, PORT, "intput", "test1", handler, -1, true, "admin", "123456");
         conn.run("marketData1 = MarketData(now());\n appendEvent(inputSerializer, [marketData1])");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
         BasicTable re1 = (BasicTable)conn.run("select timestamp from intput");
@@ -431,7 +433,7 @@ public class EventClientTest {
 
         client.subscribe(HOST, PORT, "intput", "test1", handler1, -1, true, "admin", "123456");
         conn.run("marketData1 = MarketData(now(),time(1));\n marketData2 = MarketData1(\"tesrtttt\",now());\n appendEvent(inputSerializer, [marketData1,marketData2])");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         BasicTable re1 = (BasicTable)conn.run("select * from outputTable1");
         BasicTable re2 = (BasicTable)conn.run("select timestamp from intput");
@@ -490,7 +492,7 @@ public class EventClientTest {
 
         client.subscribe(HOST, PORT, "intput", "test1", handler1, -1, true, "admin", "123456");
         conn.run("marketData1 = MarketData(now(),time(1));\n marketData2 = MarketData1(\"tesrtttt\",now());\n appendEvent(inputSerializer, [marketData1,marketData2])");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         BasicTable re1 = (BasicTable)conn.run("select * from outputTable1");
         BasicTable re2 = (BasicTable)conn.run("select timestamp from intput");
@@ -663,7 +665,7 @@ public class EventClientTest {
         sender.sendEvent("MarketData", attributes);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
         sender.sendEvent("MarketData", attributes);
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
         client.unsubscribe(HOST, PORT, "inputTable", "test1");
@@ -678,7 +680,7 @@ public class EventClientTest {
         sender.sendEvent("MarketData", attributes);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -2, true, "admin", "123456");
         sender.sendEvent("MarketData", attributes);
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
         client.unsubscribe(HOST, PORT, "inputTable", "test1");
@@ -693,7 +695,7 @@ public class EventClientTest {
         sender.sendEvent("MarketData", attributes);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, 0, true, "admin", "123456");
         sender.sendEvent("MarketData", attributes);
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(2,re.rows());
     }
@@ -708,7 +710,7 @@ public class EventClientTest {
         sender.sendEvent("MarketData", attributes);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, 1, true, "admin", "123456");
         sender.sendEvent("MarketData", attributes);
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
     }
@@ -737,7 +739,7 @@ public class EventClientTest {
         attributes.add(new BasicString("123456"));
         sender.sendEvent("MarketData", attributes);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, false, "admin", "123456");
-        Thread.sleep(1000);
+        sleep(1000);
         client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
 
@@ -750,7 +752,7 @@ public class EventClientTest {
         attributes.add(new BasicString("123456"));
         sender.sendEvent("MarketData", attributes);
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
-        Thread.sleep(1000);
+        sleep(1000);
         client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
 
@@ -794,7 +796,7 @@ public class EventClientTest {
         attributes.add(new BasicString("123456"));
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
         sender.sendEvent("MarketData", attributes);
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
     }
@@ -813,7 +815,7 @@ public class EventClientTest {
         attributes.add(new BasicString("123456"));
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "user1", "123456");
         sender.sendEvent("MarketData", attributes);
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
     }
@@ -855,14 +857,14 @@ public class EventClientTest {
         for(int i=0;i<10;i++) {
             client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
             sender.sendEvent("MarketData", attributes);
-            Thread.sleep(200);
+            sleep(200);
             client.unsubscribe(HOST, PORT, "inputTable", "test1");
             client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
             sender.sendEvent("MarketData", attributes);
-            Thread.sleep(200);
+            sleep(200);
             client.unsubscribe(HOST, PORT, "inputTable", "test1");
         }
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(20,re.rows());
     }
@@ -923,7 +925,7 @@ public class EventClientTest {
         attributes.add(new BasicString("123456"));
         client.subscribe(HOST, PORT, "inputTable", "test1", handler, -1, true, "admin", "123456");
         sender.sendEvent("MarketData", attributes);
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
     }
@@ -961,7 +963,7 @@ public class EventClientTest {
         attributes.add(new BasicString("123456"));
         client.subscribe(StreamLeaderHost, StreamLeaderPort, "inputTable_1", "test1", handler, -1, true, "admin", "123456");
         sender.sendEvent("MarketData", attributes);
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn1.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
         Assert.assertEquals("2024.03.22T10:45:03.100",re.getColumn(0).get(0).getString());
@@ -1006,7 +1008,7 @@ public class EventClientTest {
         attributes.add(new BasicString("123456"));
         client.subscribe(StreamFollowerHost, StreamFollowerPort, "inputTable_1", "test1", handler, -1, true, "user1", "123456");
         sender.sendEvent("MarketData", attributes);
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn1.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
         Assert.assertEquals("2024.03.22T10:45:03.100",re.getColumn(0).get(0).getString());
@@ -1109,10 +1111,10 @@ public class EventClientTest {
                 "\tall_data_type1=event_all_dateType(data1.row(i)[`boolv], data1.row(i)[`charv], data1.row(i)[`shortv], data1.row(i)[`intv],data1.row(i)[`longv], data1.row(i)[`doublev], data1.row(i)[`floatv], data1.row(i)[`datev],data1.row(i)[`monthv], data1.row(i)[`timev], data1.row(i)[`minutev], data1.row(i)[`secondv],data1.row(i)[`datetimev], data1.row(i)[`timestampv], data1.row(i)[`nanotimev], data1.row(i)[`nanotimestampv], data1.row(i)[`stringv], data1.row(i)[`datehourv], data1.row(i)[`uuidv], data1.row(i)[`ippaddrv],data1.row(i)[`int128v], blob(data1.row(i)[`blobv]), data1.row(i)[`pointv], data1.row(i)[`complexv], data1.row(i)[`decimal32v], data1.row(i)[`decimal64v], data1.row(i)[`decimal128v])\n" +
                 "\tappendEvent(inputSerializer, all_data_type1)\n" ;
         conn.run(script2);
-        Thread.sleep(10000);
+        sleep(10000);
         BasicTable bt1 = (BasicTable)conn.run("select * from data;");
         Assert.assertEquals(1,bt1.rows());
-        Thread.sleep(20000);
+        sleep(20000);
         BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(1,bt2.rows());
         checkData(bt1,bt2);
@@ -1213,10 +1215,10 @@ public class EventClientTest {
                 "\tappendEvent(inputSerializer, all_data_type1)\n" +
                 "\t}" ;
                 conn.run(script2);
-        Thread.sleep(10000);
+        sleep(10000);
         BasicTable bt1 = (BasicTable)conn.run("select * from data;");
         Assert.assertEquals(100,bt1.rows());
-        Thread.sleep(20000);
+        sleep(20000);
         BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(100,bt2.rows());
         checkData(bt1,bt2);
@@ -1401,12 +1403,13 @@ public class EventClientTest {
                 "\tcomplexv = complex\n" +
                 "  \t}\n" +
                 "}   \n" +
-                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[], ) as type, array(INT[], 0) as form)\n" +
+                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventField, array(STRING, 0) as fieldType, array(INT[], ) as fieldTypeId, array(INT[], 0) as fieldFormId)\n" +
                 "eventType = 'event_all_array_dateType'\n" +
-                "eventKeys = 'boolv,charv,shortv,intv,longv,doublev,floatv,datev,monthv,timev,minutev,secondv,datetimev,timestampv,nanotimev,nanotimestampv,datehourv,uuidv,ippaddrv,int128v,pointv,complexv';\n" +
-                "typeV = [BOOL[], CHAR[], SHORT[], INT[], LONG[], DOUBLE[], FLOAT[], DATE[],MONTH[], TIME[], MINUTE[], SECOND[], DATETIME[], TIMESTAMP[], NANOTIME[], NANOTIMESTAMP[], DATEHOUR[], UUID[], IPADDR[], INT128[], POINT[], COMPLEX[]];\n" +
-                "formV = [VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR];\n" +
-                "insert into schemaTable values([eventType], [eventKeys], [typeV],[formV]);\n" +
+                "eventField = 'boolv,charv,shortv,intv,longv,doublev,floatv,datev,monthv,timev,minutev,secondv,datetimev,timestampv,nanotimev,nanotimestampv,datehourv,uuidv,ippaddrv,int128v,pointv,complexv';\n" +
+                "fieldType = 'BOOL,CHAR,SHORT,INT,LONG,DOUBLE,FLOAT,DATE,MONTH,TIME, MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,DATEHOUR,UUID,IPADDR,INT128,POINT,COMPLEX'\n" +
+                "fieldTypeId = [BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE,MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, DATEHOUR, UUID, IPADDR, INT128, POINT, COMPLEX];\n" +
+                "fieldFormId = [VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR, VECTOR];\n" +
+                "insert into schemaTable values([eventType], [eventField], [fieldType], [fieldTypeId], [fieldFormId]);\n" +
                 "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput1;\n" +
                 "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
                 "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput1);";
@@ -1432,31 +1435,33 @@ public class EventClientTest {
                 "\tappendEvent(inputSerializer, event_all_array_dateType1)\n" +
                 "\t}" ;
         conn.run(script2);
-        Thread.sleep(5000);
+        sleep(5000);
         for(int i=0;i<bt.rows();i++){
             List<Entity> attributes = new ArrayList<>();
             for(int j=0;j<bt.columns();j++){
                 Entity pt = bt.getColumn(j).get(i);
-                System.out.println(pt.getDataType());
-                System.out.println(i + "行， " + j + "列：" + pt.getString());
+                //System.out.println(pt.getDataType());
+                //System.out.println(i + "行， " + j + "列：" + pt.getString());
                 attributes.add(pt);
             }
             sender.sendEvent("event_all_array_dateType",attributes);
         }
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
         Assert.assertEquals(10,bt1.rows());
         BasicTable bt2 = (BasicTable)conn.run("select * from intput1;");
         Assert.assertEquals(10,bt2.rows());
         checkData(bt1,bt2);
-        Thread.sleep(10000);
+        sleep(10000);
         BasicTable bt3 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(10,bt3.rows());
         checkData(bt,bt3);
     }
 
-    //@Test//AJ-659
+    @Test
     public  void test_EventClient_all_dateType_vector_decimal() throws IOException, InterruptedException {
+        conn1 = new DBConnection();
+        conn1.connect(HOST,PORT,"admin","123456");
         String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
                 "colNames=\"col\"+string(1..3);\n" +
                 "colTypes=[DECIMAL32(2)[],DECIMAL64(7)[],DECIMAL128(19)[]];\n" +
@@ -1472,12 +1477,13 @@ public class EventClientTest {
                 "\tdecimal128v = decimal128\n" +
                 "  \t}\n" +
                 "}   \n" +
-                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[], ) as type, array(INT[], 0) as form)\n" +
+                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventField, array(STRING, 0) as fieldType, array(INT[], ) as fieldTypeId, array(INT[], 0) as fieldFormId)\n" +
                 "eventType = 'event_all_array_dateType'\n" +
-                "eventKeys = 'decimal32v,decimal64v,decimal128v';\n" +
-                "typeV = [ DECIMAL32(2)[], DECIMAL64(7)[], DECIMAL128(19)[]];\n" +
-                "formV = [ VECTOR, VECTOR, VECTOR];\n" +
-                "insert into schemaTable values([eventType], [eventKeys], [typeV],[formV]);\n" +
+                "eventField = 'decimal32v,decimal64v,decimal128v';\n" +
+                "fieldType = 'DECIMAL32(2),DECIMAL64(7),DECIMAL128(19)';\n" +
+                "fieldTypeId = [ DECIMAL32(2), DECIMAL64(7), DECIMAL128(19)];\n" +
+                "fieldFormId = [ VECTOR, VECTOR, VECTOR];\n" +
+                "insert into schemaTable values([eventType], [eventField], [fieldType], [fieldTypeId], [fieldFormId]);\n" +
                 "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput1;\n" +
                 "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
                 "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput1);";
@@ -1505,31 +1511,32 @@ public class EventClientTest {
                 "\tappendEvent(inputSerializer, event_all_array_dateType1)\n" +
                 "\t}" ;
         conn.run(script2);
-        Thread.sleep(5000);
+        sleep(5000);
         for(int i=0;i<bt.rows();i++){
             List<Entity> attributes = new ArrayList<>();
             for(int j=0;j<bt.columns();j++){
                 Entity pt = bt.getColumn(j).get(i);
-                System.out.println(pt.getDataType());
-                System.out.println(i + "行， " + j + "列：" + pt.getString());
+//                System.out.println(pt.getDataType());
+//                System.out.println(i + "行， " + j + "列：" + pt.getString());
                 attributes.add(pt);
             }
             sender.sendEvent("event_all_array_dateType",attributes);
         }
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
         Assert.assertEquals(10,bt1.rows());
         BasicTable bt2 = (BasicTable)conn.run("select * from intput1;");
         Assert.assertEquals(10,bt2.rows());
         checkData(bt1,bt2);
-        Thread.sleep(10000);
+        sleep(4000);
         BasicTable bt3 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(10,bt3.rows());
+       // System.out.println(bt3.getColumn(2).getString());
         checkData(bt,bt3);
     }
 
-    @Test//not support
-    public  void test_EventClient_all_dateType_array() throws IOException, InterruptedException {
+    //@Test//not support
+    public  void test_EventClient_all_dateType_ANY() throws IOException, InterruptedException {
         String script0 = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
                 "colNames=\"col\"+string(1..25);\n" +
                 "colTypes=[BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[], DATEHOUR[],UUID[],IPADDR[],INT128[],POINT[],COMPLEX[],DECIMAL32(2)[],DECIMAL64(7)[],DECIMAL128(10)[]];\n" +
@@ -1562,7 +1569,7 @@ public class EventClientTest {
         BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
         Assert.assertEquals(1,bt1.rows());
         Assert.assertEquals(1,bt1.rows());
-        Thread.sleep(2000);
+        sleep(2000);
         client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
     @Test
@@ -1611,7 +1618,7 @@ public class EventClientTest {
 
         client.subscribe(HOST, PORT, "intput", "test1", handler1, -1, true, "admin", "123456");
         conn.run("marketData1 = MarketData(now(),time(1));\n marketData2 = MarketData1(\"tesrtttt\",now());\n appendEvent(inputSerializer, [marketData1,marketData2])");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         BasicTable re1 = (BasicTable)conn.run("select * from outputTable1");
         BasicTable re2 = (BasicTable)conn.run("select timestamp from intput");
@@ -1623,5 +1630,131 @@ public class EventClientTest {
         Assert.assertEquals("tesrtttt",re1.getColumn(0).get(0).getString());
         Assert.assertEquals(re2.getColumn(0).get(0).getString(),re1.getColumn(1).get(0).getString());
         client.unsubscribe(HOST, PORT, "intput", "test1");
+    }
+
+    public static  EventMessageHandler handler_BondDepth = new EventMessageHandler() {
+        @Override
+        public void doEvent(String eventType, List<Entity> attributes) {
+
+            System.out.println("eventType------------: " + eventType);
+            for (int i=0;i<attributes.size();i++){
+                System.out.println(attributes.get(i).getString());
+            }
+            try {
+                BasicStringVector col1 = new BasicStringVector(0);
+                col1.Append((Scalar)attributes.get(0));
+                BasicArrayVector col2 = new BasicArrayVector(Entity.DATA_TYPE.DT_DOUBLE_ARRAY,0);
+                col2.Append((Vector)attributes.get(1));
+                BasicArrayVector col3 = new BasicArrayVector(Entity.DATA_TYPE.DT_DOUBLE_ARRAY,0);
+                col3.Append((Vector)attributes.get(2));
+                List<String> colNames = new ArrayList<String>();
+                colNames.add("col1");
+                colNames.add("col2");
+                colNames.add("col3");
+                List<Vector> cols = new ArrayList<Vector>(){};
+                cols.add(col1);
+                cols.add(col2);
+                cols.add(col3);
+                BasicTable bt = new BasicTable(colNames, cols);
+                conn1.run("tableInsert{outputTable}",  Arrays.asList(bt));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
+    @Test
+    public  void test_EventClient_Double_vector() throws IOException, InterruptedException {
+        conn1 = new DBConnection();
+        conn1.connect(HOST, PORT, "admin", "123456");
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n" +
+                "share table(1:0,[\"stringv\",\"doublev\",\"double1v\"],[STRING, DOUBLE[],DOUBLE[]]) as outputTable;\n" ;
+        conn.run(script);
+        String script1 ="class StockTick{\n" +
+                "    name :: STRING \n" +
+                "    price :: FLOAT \n" +
+                "    def StockTick(name_, price_){\n" +
+                "        name = name_\n" +
+                "        price = price_\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "class BondDepth{\n" +
+                "    contract :: STRING \n" +
+                "    bidYields :: DOUBLE VECTOR \n" +
+                "    ofrYields :: DOUBLE VECTOR \n" +
+                "\n" +
+                "    def BondDepth(contract_, bidYields_, ofrYields_){\n" +
+                "        contract = contract_\n" +
+                "        bidYields = bidYields_\n" +
+                "        ofrYields = ofrYields_\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "class SimpleShareSearch:CEPMonitor {\n" +
+                "        //保存最新的 StockTick 事件\n" +
+                "        newTick :: StockTick \n" +
+                "        def SimpleShareSearch(){\n" +
+                "                newTick = StockTick(\"init\", 0.0)\n" +
+                "        }\n" +
+                "        def processTick(stockTickEvent)\n" +
+                "        \n" +
+                "        def onload() {\n" +
+                "                addEventListener(handler=processTick, eventType=\"BondDepth\", times=\"all\")\n" +
+                "        } \n" +
+                "        def processTick(BondDepth) { \n" +
+                "                str = \"+++++++++++++++++++++++ BondDepth event received\" + now(true)$STRING\n" +
+                "                writeLog(str)\n" +
+                "        }\n" +
+                "}\n" +
+                "\n" +
+                " try {unsubscribeTable(tableName=\"testInput\", actionName=\"test1235\")} catch(ex) {}\n" +
+                "go\n" +
+                " try {undef(`testInput,SHARED)} catch(ex) {}\n" +
+                "share(streamTable(array(STRING, 0) as eventType, array(BLOB, 0) as eventBody), `testInput)\n" +
+                "go\n" +
+                "\n" +
+                "try {dropStreamEngine(`simpleMonitor)} catch(ex) {}\n" +
+                "createCEPEngine(name=\"simpleMonitor\", monitors=<SimpleShareSearch()>, dummyTable=testInput, eventSchema=[StockTick,BondDepth])\n" +
+                "\n" +
+                "subscribeTable(tableName=\"testInput\", actionName=\"test1235\", handler=getStreamEngine(`simpleMonitor), msgAsTable=true)\n" +
+                "go\n" +
+                "eventSchema =  getCEPEngineStat(engine=\"simpleMonitor\").eventSchema\n" +
+                "try {dropStreamEngine(`testSerializer)} catch(ex) {}\n" +
+                "ses = streamEventSerializer(name=\"testSerializer\", eventSchema=eventSchema, outputTable=testInput)\n" +
+                "\n" +
+                "depth = BondDepth(\"test2\", [1.0, 1.1], [1.0, 1.1])\n" +
+                "ses.appendEvent(depth)";
+        conn.run(script1);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("BondDepth");
+        scheme.setFieldNames(Arrays.asList("contract", "bidYields", "ofrYields"));
+        scheme.setFieldTypes(Arrays.asList( DT_STRING, DT_DOUBLE, DT_DOUBLE));
+        scheme.setFieldForms(Arrays.asList(  DF_SCALAR, DF_VECTOR, DF_VECTOR));
+        scheme.setFieldExtraParams(Arrays.asList( 0, 0, 0));
+
+        List<EventSchema> eventSchemes = Collections.singletonList(scheme);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable", eventSchemes, eventTimeFields, commonFields);
+        EventClient client = new EventClient(eventSchemes, eventTimeFields, commonFields);
+        client.subscribe(HOST, PORT, "inputTable", "test1111", handler_BondDepth, -1, true, "admin", "123456");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicString("test2"));
+        attributes.add(new BasicDoubleVector(new double[]{1.0, 1.1}));
+        attributes.add(new BasicDoubleVector(new double[]{1.0, 1.1}));
+        sender.sendEvent("BondDepth", attributes);
+        BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
+        Assert.assertEquals(1,bt1.rows());
+        BasicTable bt2 = (BasicTable)conn.run("select * from testInput;");
+        Assert.assertEquals(1,bt2.rows());
+        checkData(bt1,bt2);
+        sleep(1000);
+        BasicTable bt3 = (BasicTable)conn.run("select * from outputTable;");
+        System.out.println(bt3.getString());
+        Assert.assertEquals("stringv doublev double1v\n" +
+                "------- ------- --------\n" +
+                "test2   [1,1.1] [1,1.1] \n", bt3.getString());
     }
 }

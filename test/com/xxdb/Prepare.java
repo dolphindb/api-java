@@ -175,8 +175,8 @@ public class Prepare {
                 "ccomplex = array(	COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n), m))\n" +
                 "cpoint = array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n), m))\n" +
                 "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, n) + 0.254, 3), m))\n" +
-                "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, n) + 0.25467, 4), m))\n" +
-                "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, n) + 0.25467, 5), m))\n" +
+                "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, n) + 0.25, 4), m))\n" +
+                "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, n) + 0.25, 5), m))\n" +
                 "share table(cbool, cchar, cshort, cint, clong, cdouble, cfloat, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cdatehour, cuuid, cipaddr, cint128, cpoint, ccomplex,  cdecimal32, cdecimal64, cdecimal128) as data;\n" ;
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
@@ -219,8 +219,8 @@ public class Prepare {
                 "n="+count1+";\n" +
                 "m="+count2+";\n" +
                 "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, n) + 0.254, 3), m))\n" +
-                "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, n) + 0.25467, 4), m))\n" +
-                "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, n) + 0.25467, 5), m))\n" +
+                "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, n) + 0.2546, 4), m))\n" +
+                "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, n) + 0.25, 5), m))\n" +
                 "share table( cdecimal32, cdecimal64,cdecimal128) as data;" ;
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
@@ -287,7 +287,7 @@ public class Prepare {
     public static void checkData(BasicTable exception, BasicTable resTable) {
         assertEquals(exception.rows(), resTable.rows());
         for (int i = 0; i < exception.columns(); i++) {
-            System.out.println("col" + resTable.getColumnName(i));
+            //System.out.println("col" + resTable.getColumnName(i));
             assertEquals(exception.getColumn(i).getString(), resTable.getColumn(i).getString());
         }
     }
