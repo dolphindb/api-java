@@ -767,6 +767,154 @@ public abstract class AbstractClient implements MessageDispatcher {
         return queue;
     }
 
+    protected Map<String, Object> subscribeStreamingSqlLogInfoInternal(String host, int port,
+                                                                       String tableName, String actionName, MessageHandler handler,
+                                                                       long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer,
+                                                                       boolean allowExistTopic, String userName, String passWord, boolean createSubInfo, boolean streamingSQL) throws IOException, RuntimeException {
+        Entity re;
+        String topic = "";
+        DBConnection dbConn = null;
+        Map<String, Object> res = new HashMap<>();
+
+        try {
+            checkServerVersion(host, port);
+            List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+            List<String> usr = Arrays.asList(userName, passWord);
+
+            dbConn = createSubscribeInternalDBConnection();
+            subscribeInternalConnect(dbConn, host, port, userName, passWord);
+
+            if (deserializer!=null&&!deserializer.isInited())
+                deserializer.init(dbConn);
+            if (deserializer != null){
+                BasicDictionary schema = (BasicDictionary) dbConn.run(tableName + ".schema()");
+                deserializer.checkSchema(schema);
+            }
+
+            String localIP = this.listeningHost;
+            if (localIP.equals(""))
+                localIP = dbConn.getLocalAddress().getHostAddress();
+
+            if (!hostEndian.containsKey(host))
+                hostEndian.put(host, dbConn.getRemoteLittleEndian());
+
+            List<Entity> params = new ArrayList<Entity>();
+            params.add(new BasicString(tableName));
+            params.add(new BasicString(actionName));
+            params.add(new BasicBoolean(true)); // streamingSQL，'true' true will return
+            re = dbConn.run("getSubscriptionTopic", params);
+            Entity schema = ((BasicAnyVector) re).get(1);
+            res.put("schema", schema);
+            System.out.println("getSubscriptionTopic re: \n" + re.getString());
+            topic = ((BasicAnyVector) re).getEntity(0).getString();
+            System.out.println("topic: " + topic);
+            lastSuccessSubscribeTopic = topic;
+            params.clear();
+
+            params.add(new BasicString(localIP));
+            params.add(new BasicInt(this.listeningPort));
+            params.add(new BasicString(tableName));
+            params.add(new BasicString(actionName));
+            params.add(new BasicLong(offset));
+            if (filter != null)
+                params.add(filter);
+            else {
+                params.add(new Void());
+            }
+            if (allowExistTopic) {
+                params.add(new BasicBoolean(allowExistTopic));
+            } else {
+                params.add(new Void());
+            }
+
+            params.add(new Void()); // resetOffset
+            params.add(new Void()); // udpMulticast
+
+            params.add(new BasicBoolean(streamingSQL));
+            re = dbConn.run("publishTable", params);
+            connList.add(dbConn);
+            users.put(tp, usr);
+            if (ifUseBackupSite) {
+                synchronized (subInfos_){
+                    subInfos_.put(topic, deserializer);
+                }
+                synchronized (tableNameToTrueTopic) {
+                    tableNameToTrueTopic.put(host + ":" + port + "/" + tableName + "/" + actionName, topic);
+                }
+                synchronized (HATopicToTrueTopic) {
+                    HATopicToTrueTopic.put(topic, topic);
+                }
+                synchronized (trueTopicToSites) {
+                    trueTopicToSites.put(topic, trueTopicToSites.get(lastBackupSiteTopic));
+                }
+            } else if (re instanceof BasicAnyVector) {
+                BasicStringVector HASiteStrings = (BasicStringVector) (((BasicAnyVector) re).getEntity(1));
+                int HASiteNum = HASiteStrings.rows();
+                Site[] sites = new Site[HASiteNum];
+                for (int i = 0; i < HASiteNum; i++) {
+                    String HASite = HASiteStrings.getString(i);
+                    String[] HASiteHostAndPort = HASite.split(":");
+                    String HASiteHost = HASiteHostAndPort[0];
+                    int HASitePort = new Integer(HASiteHostAndPort[1]);
+                    String HASiteAlias = HASiteHostAndPort[2];
+                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord, false);
+                    if (!reconnect){
+                        sites[i].closed = true;
+                    }
+                    synchronized (tableNameToTrueTopic) {
+                        tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + "/" + tableName + "/" + actionName, topic);
+                    }
+                    String HATopic = getTopic(HASiteHost, HASitePort, HASiteAlias, tableName, actionName);
+                    synchronized (HATopicToTrueTopic) {
+                        HATopicToTrueTopic.put(HATopic, topic);
+                    }
+                }
+                if (subInfos_.containsKey(topic)){
+                    throw new RuntimeException("Subscription with topic " + topic + " exist. ");
+                }else {
+                    subInfos_.put(topic, deserializer);
+                }
+                synchronized (trueTopicToSites) {
+                    trueTopicToSites.put(topic, sites);
+                }
+            } else {
+                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, deserializer, allowExistTopic, userName, passWord, false)};
+                if (!reconnect){
+                    sites[0].closed = true;
+                }
+                synchronized (subInfos_){
+                    subInfos_.put(topic, deserializer);
+                }
+                synchronized (tableNameToTrueTopic) {
+                    tableNameToTrueTopic.put(host + ":" + port + "/" + tableName + "/" + actionName, topic);
+                }
+                synchronized (HATopicToTrueTopic) {
+                    HATopicToTrueTopic.put(topic, topic);
+                }
+                synchronized (trueTopicToSites) {
+                    trueTopicToSites.put(topic, sites);
+                }
+            }
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            if (listeningPort > 0)
+                dbConn.close();
+        }
+
+        BlockingQueue<List<IMessage>> queue;
+        if (createSubInfo) {
+            queue = queueManager.addQueue(topic);
+            lastQueue = queue;
+        } else {
+            queue = lastQueue;
+        }
+
+        res.put("queue", queue);
+
+        return res;
+    }
+
     protected BlockingQueue<List<IMessage>> subscribeInternal(String host, int port,
                                                               String tableName, String actionName, MessageHandler handler,
                                                               long offset, boolean reconnect, Vector filter,  StreamDeserializer deserializer,
