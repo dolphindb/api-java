@@ -505,7 +505,18 @@ public class MultithreadedTableWriter {
                       int[] compressTypes, Mode mode, String[] pModeOption, Callback callbackHandler,
                       boolean enableActualSendTime, boolean reconnect, int tryReconnectNums) throws Exception{
         dbName_=dbName;
-        tableName_=tableName;
+
+        boolean isOrca = false;
+        if (tableName_.contains(".orca_table.")) {
+            isOrca = true;
+        }
+
+        if (isOrca) {
+            tableName_ = "loadOrcaStreamTable(\"" + tableName + "\")";
+        } else {
+            tableName_=tableName;
+        }
+
         batchSize_=batchSize;
         throttleMilsecond_=(int)throttle*1000;
         hasError_=false;
@@ -544,9 +555,13 @@ public class MultithreadedTableWriter {
         }
 
         BasicDictionary schema;
-        if(dbName.isEmpty()){
-            schema = (BasicDictionary)pConn.run("schema(" + tableName + ")");
-        }else{
+        if (dbName.isEmpty()) {
+            if (isOrca) {
+                schema = (BasicDictionary)pConn.run("useOrcaStreamTable(\"" + tableName + "\", schema)");
+            } else {
+                schema = (BasicDictionary)pConn.run("schema(" + tableName + ")");
+            }
+        } else {
             schema = (BasicDictionary)pConn.run("schema(loadTable(\"" + dbName + "\",\"" + tableName + "\"))");
         }
         Entity partColNames = schema.get(new BasicString("partitionColumnName"));
