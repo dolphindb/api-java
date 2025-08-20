@@ -507,7 +507,7 @@ public class MultithreadedTableWriter {
         dbName_=dbName;
 
         boolean isOrca = false;
-        if (tableName_.contains(".orca_table.")) {
+        if (tableName.contains(".orca_table.")) {
             isOrca = true;
         }
 
@@ -549,7 +549,7 @@ public class MultithreadedTableWriter {
             compressTypes_=new int[compressTypes.length];
             System.arraycopy(compressTypes,0,compressTypes_,0,compressTypes.length);
         }
-        DBConnection pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,enableHighAvailability,highAvailabilitySites,isCompress, reconnect, tryReconnectNums);
+        DBConnection pConn = newConn(hostName,port,userId,password,dbName,tableName_,useSSL,enableHighAvailability,highAvailabilitySites,isCompress, reconnect, tryReconnectNums);
         if(pConn==null){
             throw new RuntimeException("Failed to connect to server " + hostName + ":" + port);
         }
@@ -557,12 +557,12 @@ public class MultithreadedTableWriter {
         BasicDictionary schema;
         if (dbName.isEmpty()) {
             if (isOrca) {
-                schema = (BasicDictionary)pConn.run("useOrcaStreamTable(\"" + tableName + "\", schema)");
+                schema = (BasicDictionary)pConn.run("useOrcaStreamTable(\"" + tableName_ + "\", schema)");
             } else {
-                schema = (BasicDictionary)pConn.run("schema(" + tableName + ")");
+                schema = (BasicDictionary)pConn.run("schema(" + tableName_ + ")");
             }
         } else {
-            schema = (BasicDictionary)pConn.run("schema(loadTable(\"" + dbName + "\",\"" + tableName + "\"))");
+            schema = (BasicDictionary)pConn.run("schema(loadTable(\"" + dbName + "\",\"" + tableName_ + "\"))");
         }
         Entity partColNames = schema.get(new BasicString("partitionColumnName"));
         if(partColNames!=null){//partitioned table
@@ -580,7 +580,7 @@ public class MultithreadedTableWriter {
         BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
         try {
             if (dbName.isEmpty()) {
-                Entity tableType = pConn.run("typestr(" + tableName + ")");
+                Entity tableType = pConn.run("typestr(" + tableName_ + ")");
                 if (tableType.getString().equals("STREAMING TABLE")) {
                     BasicString streamTableTimestampColName = (BasicString) pConn.run("getStreamTableTimestamp(" + tableName_ + ")");
                     if (!Utils.isEmpty(streamTableTimestampColName.getString())) {
@@ -701,7 +701,7 @@ public class MultithreadedTableWriter {
         // init done, start thread now.
         for(int i = 0; i < threadCount; i++){
             if (pConn == null) {
-                pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,enableHighAvailability,highAvailabilitySites,isCompress, reconnect, tryReconnectNums);
+                pConn = newConn(hostName,port,userId,password,dbName,tableName_,useSSL,enableHighAvailability,highAvailabilitySites,isCompress, reconnect, tryReconnectNums);
             }
             WriterThread writerThread = new WriterThread(this,pConn, callbackHandler);
             threads_.add(writerThread);
