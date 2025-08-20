@@ -45,10 +45,78 @@ public abstract class AbstractClient implements MessageDispatcher {
     protected static boolean subOnce;
     protected BlockingQueue<List<IMessage>> lastQueue;
     protected String lastSuccessSubscribeTopic = "";
+    protected List<HAStreamTableInfo> haStreamTableInfo= new ArrayList<>();
 
     private Daemon daemon = null;
 
     private static final Logger log = LoggerFactory.getLogger(AbstractClient.class);
+
+    public class HAStreamTableInfo {
+        private String followIp;
+        private int followPort;
+        private String tableName;
+        private String actionName;
+        private String leaderIp;
+        private int leaderPort;
+
+        public HAStreamTableInfo(String followIp, int followPort, String tableName,
+                                 String actionName, String leaderIp, int leaderPort) {
+            this.followIp = followIp;
+            this.followPort = followPort;
+            this.tableName = tableName;
+            this.actionName = actionName;
+            this.leaderIp = leaderIp;
+            this.leaderPort = leaderPort;
+        }
+
+        public String getFollowIp() {
+            return followIp;
+        }
+
+        public void setFollowIp(String followIp) {
+            this.followIp = followIp;
+        }
+
+        public int getFollowPort() {
+            return followPort;
+        }
+
+        public void setFollowPort(int followPort) {
+            this.followPort = followPort;
+        }
+
+        public String getTableName() {
+            return tableName;
+        }
+
+        public void setTableName(String tableName) {
+            this.tableName = tableName;
+        }
+
+        public String getActionName() {
+            return actionName;
+        }
+
+        public void setActionName(String actionName) {
+            this.actionName = actionName;
+        }
+
+        public String getLeaderIp() {
+            return leaderIp;
+        }
+
+        public void setLeaderIp(String leaderIp) {
+            this.leaderIp = leaderIp;
+        }
+
+        public int getLeaderPort() {
+            return leaderPort;
+        }
+
+        public void setLeaderPort(int leaderPort) {
+            this.leaderPort = leaderPort;
+        }
+    }
 
     class ReconnectItem {
         /**
@@ -602,7 +670,15 @@ public abstract class AbstractClient implements MessageDispatcher {
                     connList.add(dbConn);
                     users.put(tp, usr);
                 } catch (IOException e) {
-                    log.error("Connect to site " + site.host + ":" + site.port + " failed: " + e.getMessage());
+                    Object[] hostPort = new Object[2];
+                    if (getNewLeader(e.getMessage(), hostPort)) {
+                        log.warn("In reconnect: Got NotLeaderException, switch to leader node [" + host + ":" + port + "] for subscription");
+                        haStreamTableInfo.add(new HAStreamTableInfo(host, port, tableName, actionName, (String) hostPort[0], (Integer) hostPort[1]));
+                        host = (String) hostPort[0];
+                        port = (Integer) hostPort[1];
+                    } else {
+                        log.error("Connect to site " + site.host + ":" + site.port + " failed: " + e.getMessage());
+                    }
                 }
             }
 
@@ -640,119 +716,131 @@ public abstract class AbstractClient implements MessageDispatcher {
             }
         } else {
             // origin logic：HASites
-            try {
-                checkServerVersion(host, port);
-                List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
-                List<String> usr = Arrays.asList(userName, passWord);
+            while (!isClose()) {
+                try {
+                    checkServerVersion(host, port);
+                    List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
+                    List<String> usr = Arrays.asList(userName, passWord);
 
-                dbConn = createSubscribeInternalDBConnection();
-                subscribeInternalConnect(dbConn, host, port, userName, passWord);
+                    dbConn = createSubscribeInternalDBConnection();
+                    subscribeInternalConnect(dbConn, host, port, userName, passWord);
 
-                if (deserializer!=null&&!deserializer.isInited())
-                    deserializer.init(dbConn);
-                if (deserializer != null){
-                    BasicDictionary schema = (BasicDictionary) dbConn.run(tableName + ".schema()");
-                    deserializer.checkSchema(schema);
-                }
-
-                String localIP = this.listeningHost;
-                if (localIP.equals(""))
-                    localIP = dbConn.getLocalAddress().getHostAddress();
-
-                if (!hostEndian.containsKey(host))
-                    hostEndian.put(host, dbConn.getRemoteLittleEndian());
-
-                List<Entity> params = new ArrayList<Entity>();
-                params.add(new BasicString(tableName));
-                params.add(new BasicString(actionName));
-                re = dbConn.run("getSubscriptionTopic", params);
-                topic = ((BasicAnyVector) re).getEntity(0).getString();
-                lastSuccessSubscribeTopic = topic;
-                params.clear();
-
-                params.add(new BasicString(localIP));
-                params.add(new BasicInt(this.listeningPort));
-                params.add(new BasicString(tableName));
-                params.add(new BasicString(actionName));
-                params.add(new BasicLong(offset));
-                if (filter != null)
-                    params.add(filter);
-                else {
-                    params.add(new Void());
-                }
-                if (allowExistTopic) {
-                    params.add(new BasicBoolean(allowExistTopic));
-                }
-
-                re = dbConn.run("publishTable", params);
-                connList.add(dbConn);
-                users.put(tp, usr);
-                if (ifUseBackupSite) {
-                    synchronized (subInfos_){
-                        subInfos_.put(topic, deserializer);
+                    if (deserializer!=null&&!deserializer.isInited())
+                        deserializer.init(dbConn);
+                    if (deserializer != null){
+                        BasicDictionary schema = (BasicDictionary) dbConn.run(tableName + ".schema()");
+                        deserializer.checkSchema(schema);
                     }
-                    synchronized (tableNameToTrueTopic) {
-                        tableNameToTrueTopic.put(host + ":" + port + "/" + tableName + "/" + actionName, topic);
+
+                    String localIP = this.listeningHost;
+                    if (localIP.equals(""))
+                        localIP = dbConn.getLocalAddress().getHostAddress();
+
+                    if (!hostEndian.containsKey(host))
+                        hostEndian.put(host, dbConn.getRemoteLittleEndian());
+
+                    List<Entity> params = new ArrayList<Entity>();
+                    params.add(new BasicString(tableName));
+                    params.add(new BasicString(actionName));
+                    re = dbConn.run("getSubscriptionTopic", params);
+                    topic = ((BasicAnyVector) re).getEntity(0).getString();
+                    lastSuccessSubscribeTopic = topic;
+                    params.clear();
+
+                    params.add(new BasicString(localIP));
+                    params.add(new BasicInt(this.listeningPort));
+                    params.add(new BasicString(tableName));
+                    params.add(new BasicString(actionName));
+                    params.add(new BasicLong(offset));
+                    if (filter != null)
+                        params.add(filter);
+                    else {
+                        params.add(new Void());
                     }
-                    synchronized (HATopicToTrueTopic) {
-                        HATopicToTrueTopic.put(topic, topic);
+                    if (allowExistTopic) {
+                        params.add(new BasicBoolean(allowExistTopic));
                     }
-                    synchronized (trueTopicToSites) {
-                        trueTopicToSites.put(topic, trueTopicToSites.get(lastBackupSiteTopic));
-                    }
-                } else if (re instanceof BasicAnyVector) {
-                    BasicStringVector HASiteStrings = (BasicStringVector) (((BasicAnyVector) re).getEntity(1));
-                    int HASiteNum = HASiteStrings.rows();
-                    Site[] sites = new Site[HASiteNum];
-                    for (int i = 0; i < HASiteNum; i++) {
-                        String HASite = HASiteStrings.getString(i);
-                        String[] HASiteHostAndPort = HASite.split(":");
-                        String HASiteHost = HASiteHostAndPort[0];
-                        int HASitePort = new Integer(HASiteHostAndPort[1]);
-                        String HASiteAlias = HASiteHostAndPort[2];
-                        sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable);
-                        if (!reconnect){
-                            sites[i].closed = true;
+
+                    re = dbConn.run("publishTable", params);
+                    connList.add(dbConn);
+                    users.put(tp, usr);
+                    if (ifUseBackupSite) {
+                        synchronized (subInfos_){
+                            subInfos_.put(topic, deserializer);
                         }
                         synchronized (tableNameToTrueTopic) {
-                            tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + "/" + tableName + "/" + actionName, topic);
+                            tableNameToTrueTopic.put(host + ":" + port + "/" + tableName + "/" + actionName, topic);
                         }
-                        String HATopic = getTopic(HASiteHost, HASitePort, HASiteAlias, tableName, actionName);
                         synchronized (HATopicToTrueTopic) {
-                            HATopicToTrueTopic.put(HATopic, topic);
+                            HATopicToTrueTopic.put(topic, topic);
+                        }
+                        synchronized (trueTopicToSites) {
+                            trueTopicToSites.put(topic, trueTopicToSites.get(lastBackupSiteTopic));
+                        }
+                    } else if (re instanceof BasicAnyVector) {
+                        BasicStringVector HASiteStrings = (BasicStringVector) (((BasicAnyVector) re).getEntity(1));
+                        int HASiteNum = HASiteStrings.rows();
+                        Site[] sites = new Site[HASiteNum];
+                        for (int i = 0; i < HASiteNum; i++) {
+                            String HASite = HASiteStrings.getString(i);
+                            String[] HASiteHostAndPort = HASite.split(":");
+                            String HASiteHost = HASiteHostAndPort[0];
+                            int HASitePort = new Integer(HASiteHostAndPort[1]);
+                            String HASiteAlias = HASiteHostAndPort[2];
+                            sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable);
+                            if (!reconnect){
+                                sites[i].closed = true;
+                            }
+                            synchronized (tableNameToTrueTopic) {
+                                tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + "/" + tableName + "/" + actionName, topic);
+                            }
+                            String HATopic = getTopic(HASiteHost, HASitePort, HASiteAlias, tableName, actionName);
+                            synchronized (HATopicToTrueTopic) {
+                                HATopicToTrueTopic.put(HATopic, topic);
+                            }
+                        }
+                        if (subInfos_.containsKey(topic)){
+                            throw new RuntimeException("Subscription with topic " + topic + " exist. ");
+                        }else {
+                            subInfos_.put(topic, deserializer);
+                        }
+                        synchronized (trueTopicToSites) {
+                            trueTopicToSites.put(topic, sites);
+                        }
+                    } else {
+                        Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable)};
+                        if (!reconnect){
+                            sites[0].closed = true;
+                        }
+                        synchronized (subInfos_){
+                            subInfos_.put(topic, deserializer);
+                        }
+                        synchronized (tableNameToTrueTopic) {
+                            tableNameToTrueTopic.put(host + ":" + port + "/" + tableName + "/" + actionName, topic);
+                        }
+                        synchronized (HATopicToTrueTopic) {
+                            HATopicToTrueTopic.put(topic, topic);
+                        }
+                        synchronized (trueTopicToSites) {
+                            trueTopicToSites.put(topic, sites);
                         }
                     }
-                    if (subInfos_.containsKey(topic)){
-                        throw new RuntimeException("Subscription with topic " + topic + " exist. ");
-                    }else {
-                        subInfos_.put(topic, deserializer);
+
+                    break;
+                } catch (Exception ex) {
+                    Object[] hostPort = new Object[2];
+                    if (getNewLeader(ex.getMessage(), hostPort)) {
+                        log.warn("In reconnect: Got NotLeaderException, switch to leader node [" + host + ":" + port + "] for subscription");
+                        haStreamTableInfo.add(new HAStreamTableInfo(host, port, tableName, actionName, (String) hostPort[0], (Integer) hostPort[1]));
+                        host = (String) hostPort[0];
+                        port = (Integer) hostPort[1];
+                    } else {
+                        throw ex;
                     }
-                    synchronized (trueTopicToSites) {
-                        trueTopicToSites.put(topic, sites);
-                    }
-                } else {
-                    Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable)};
-                    if (!reconnect){
-                        sites[0].closed = true;
-                    }
-                    synchronized (subInfos_){
-                        subInfos_.put(topic, deserializer);
-                    }
-                    synchronized (tableNameToTrueTopic) {
-                        tableNameToTrueTopic.put(host + ":" + port + "/" + tableName + "/" + actionName, topic);
-                    }
-                    synchronized (HATopicToTrueTopic) {
-                        HATopicToTrueTopic.put(topic, topic);
-                    }
-                    synchronized (trueTopicToSites) {
-                        trueTopicToSites.put(topic, sites);
-                    }
+                } finally {
+                    if (listeningPort > 0)
+                        dbConn.close();
                 }
-            } catch (Exception ex) {
-                throw ex;
-            } finally {
-                if (listeningPort > 0)
-                    dbConn.close();
             }
         }
 
@@ -948,6 +1036,26 @@ public abstract class AbstractClient implements MessageDispatcher {
                 port = sites[currentSiteIndex].port;
             }
 
+            if (!haStreamTableInfo.isEmpty()) {
+                synchronized (haStreamTableInfo) {
+                    HAStreamTableInfo matchedInfo = null;
+                    for (HAStreamTableInfo info : haStreamTableInfo) {
+                        if (info.getFollowIp().equals(host) &&
+                                info.getFollowPort() == port &&
+                                info.getTableName().equals(tableName) &&
+                                info.getActionName().equals(actionName)) {
+                            matchedInfo = info;
+                            break;
+                        }
+                    }
+
+                    if (matchedInfo != null) {
+                        host = matchedInfo.getLeaderIp();
+                        port = matchedInfo.getLeaderPort();
+                    }
+                }
+            }
+
             List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
             List<String> usr = users.get(tp);
             String user = usr.get(0);
@@ -1069,5 +1177,36 @@ public abstract class AbstractClient implements MessageDispatcher {
             dbConn = DBConnection.internalCreateEnableReverseStreamingDBConnection(false, false, false, false, false, SqlStdEnum.DolphinDB);
 
         return dbConn;
+    }
+
+    public boolean getNewLeader(String s, Object[] hostPort) {
+        int index = s.indexOf("<NotLeader>");
+        if (index == -1) {
+            return false;
+        }
+
+        index = s.indexOf('>');
+        if (index == -1) {
+            return false;
+        }
+
+        String ipPort = s.substring(index + 1);
+        String[] parts = ipPort.split(":");
+
+        if (parts.length < 2) {
+            return false;
+        }
+
+        hostPort[0] = parts[0]; // host
+        try {
+            int port = Integer.parseInt(parts[1]);
+            if (port > 0 && port <= 65535) {
+                hostPort[1] = port; // port
+                return true;
+            }
+            return false;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 }

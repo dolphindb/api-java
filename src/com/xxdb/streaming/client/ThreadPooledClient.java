@@ -129,8 +129,16 @@ public class ThreadPooledClient extends AbstractClient {
                 log.info("Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + site.actionName);
                 return true;
             } catch (Exception ex) {
-                log.error("Unable to subscribe table. Will try again after 1 seconds.");
-                ex.printStackTrace();
+                Object[] hostPort = new Object[2];
+                if (getNewLeader(ex.getMessage(), hostPort)) {
+                    log.warn("In reconnect: Got NotLeaderException, switch to leader node [" + site.host + ":" + site.port + "] for subscription");
+                    haStreamTableInfo.add(new HAStreamTableInfo(site.host, site.port, site.tableName, site.actionName, (String) hostPort[0], (Integer) hostPort[1]));
+                    site.host = (String) hostPort[0];
+                    site.port = (Integer) hostPort[1];
+                } else {
+                    log.error("Unable to subscribe table. Will try again after 1 seconds.");
+                    ex.printStackTrace();
+                }
                 return false;
             }
         } else {
@@ -168,8 +176,16 @@ public class ThreadPooledClient extends AbstractClient {
                 log.info("Successfully reconnected and subscribed " + site.host + ":" + site.port + "/" + site.tableName + site.actionName);
                 return true;
             } catch (Exception ex) {
-                log.error("Unable to subscribe table. Will try again after 1 seconds.");
-                ex.printStackTrace();
+                Object[] hostPort = new Object[2];
+                if (getNewLeader(ex.getMessage(), hostPort)) {
+                    log.warn("In reconnect: Got NotLeaderException, switch to leader node [" + site.host + ":" + site.port + "] for subscription");
+                    haStreamTableInfo.add(new HAStreamTableInfo(site.host, site.port, site.tableName, site.actionName, (String) hostPort[0], (Integer) hostPort[1]));
+                    site.host = (String) hostPort[0];
+                    site.port = (Integer) hostPort[1];
+                } else {
+                    log.error("Unable to subscribe table. Will try again after 1 seconds.");
+                    ex.printStackTrace();
+                }
                 return false;
             }
         }
@@ -185,6 +201,27 @@ public class ThreadPooledClient extends AbstractClient {
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer, boolean allowExistTopic, String userName, String passWord, boolean msgAsTable) throws IOException {
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable);
+
+        if (!haStreamTableInfo.isEmpty()) {
+            synchronized (haStreamTableInfo) {
+                HAStreamTableInfo matchedInfo = null;
+                for (HAStreamTableInfo info : haStreamTableInfo) {
+                    if (info.getFollowIp().equals(host) &&
+                            info.getFollowPort() == port &&
+                            info.getTableName().equals(tableName) &&
+                            info.getActionName().equals(actionName)) {
+                        matchedInfo = info;
+                        break;
+                    }
+                }
+
+                if (matchedInfo != null) {
+                    host = matchedInfo.getLeaderIp();
+                    port = matchedInfo.getLeaderPort();
+                }
+            }
+        }
+
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
         List<String> usr = Arrays.asList(userName, passWord);
         synchronized (queueHandlers) {
@@ -199,6 +236,27 @@ public class ThreadPooledClient extends AbstractClient {
             resubscribeInterval = 100;
 
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable, backupSites, resubscribeInterval, subOnce);
+
+        if (!haStreamTableInfo.isEmpty()) {
+            synchronized (haStreamTableInfo) {
+                HAStreamTableInfo matchedInfo = null;
+                for (HAStreamTableInfo info : haStreamTableInfo) {
+                    if (info.getFollowIp().equals(host) &&
+                            info.getFollowPort() == port &&
+                            info.getTableName().equals(tableName) &&
+                            info.getActionName().equals(actionName)) {
+                        matchedInfo = info;
+                        break;
+                    }
+                }
+
+                if (matchedInfo != null) {
+                    host = matchedInfo.getLeaderIp();
+                    port = matchedInfo.getLeaderPort();
+                }
+            }
+        }
+
         String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
         synchronized (queueHandlers) {
             queueHandlers.put(tableNameToTrueTopic.get(topicStr), new QueueHandlerBinder(queue, handler));
@@ -278,6 +336,27 @@ public class ThreadPooledClient extends AbstractClient {
         if (!ifUseBackupSite) {
             // original logic:
             DBConnection dbConn = new DBConnection();
+
+            if (!haStreamTableInfo.isEmpty()) {
+                synchronized (haStreamTableInfo) {
+                    HAStreamTableInfo matchedInfo = null;
+                    for (HAStreamTableInfo info : haStreamTableInfo) {
+                        if (info.getFollowIp().equals(host) &&
+                                info.getFollowPort() == port &&
+                                info.getTableName().equals(tableName) &&
+                                info.getActionName().equals(actionName)) {
+                            matchedInfo = info;
+                            break;
+                        }
+                    }
+
+                    if (matchedInfo != null) {
+                        host = matchedInfo.getLeaderIp();
+                        port = matchedInfo.getLeaderPort();
+                    }
+                }
+            }
+
             List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
             List<String> usr = users.get(tp);
             String user = usr.get(0);
@@ -338,6 +417,26 @@ public class ThreadPooledClient extends AbstractClient {
                     Site[] sites = trueTopicToSites.get(topic);
                     host = sites[currentSiteIndex].host;
                     port = sites[currentSiteIndex].port;
+                }
+
+                if (!haStreamTableInfo.isEmpty()) {
+                    synchronized (haStreamTableInfo) {
+                        HAStreamTableInfo matchedInfo = null;
+                        for (HAStreamTableInfo info : haStreamTableInfo) {
+                            if (info.getFollowIp().equals(host) &&
+                                    info.getFollowPort() == port &&
+                                    info.getTableName().equals(tableName) &&
+                                    info.getActionName().equals(actionName)) {
+                                matchedInfo = info;
+                                break;
+                            }
+                        }
+
+                        if (matchedInfo != null) {
+                            host = matchedInfo.getLeaderIp();
+                            port = matchedInfo.getLeaderPort();
+                        }
+                    }
                 }
 
                 List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);

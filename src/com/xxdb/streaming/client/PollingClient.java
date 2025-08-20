@@ -46,8 +46,16 @@ public class PollingClient extends AbstractClient {
                 topicPoller.setQueue(queue);
                 return true;
             } catch (Exception ex) {
-                log.error("Unable to subscribe table. Will try again after 1 seconds.");
-                ex.printStackTrace();
+                Object[] hostPort = new Object[2];
+                if (getNewLeader(ex.getMessage(), hostPort)) {
+                    log.warn("In reconnect: Got NotLeaderException, switch to leader node [" + site.host + ":" + site.port + "] for subscription");
+                    haStreamTableInfo.add(new HAStreamTableInfo(site.host, site.port, site.tableName, site.actionName, (String) hostPort[0], (Integer) hostPort[1]));
+                    site.host = (String) hostPort[0];
+                    site.port = (Integer) hostPort[1];
+                } else {
+                    log.error("Unable to subscribe table. Will try again after 1 seconds.");
+                    ex.printStackTrace();
+                }
                 return false;
             }
         } else {
@@ -65,6 +73,16 @@ public class PollingClient extends AbstractClient {
                 topicPoller.setQueue(lastQueue);
                 return true;
             } catch (Exception ex) {
+                Object[] hostPort = new Object[2];
+                if (getNewLeader(ex.getMessage(), hostPort)) {
+                    log.warn("In reconnect: Got NotLeaderException, switch to leader node [" + site.host + ":" + site.port + "] for subscription");
+                    haStreamTableInfo.add(new HAStreamTableInfo(site.host, site.port, site.tableName, site.actionName, (String) hostPort[0], (Integer) hostPort[1]));
+                    site.host = (String) hostPort[0];
+                    site.port = (Integer) hostPort[1];
+                } else {
+                    log.error("Unable to subscribe table. Will try again after 1 seconds.");
+                    ex.printStackTrace();
+                }
                 log.error("Unable to subscribe table. Will try again after 1 seconds.");
                 ex.printStackTrace();
                 return false;
@@ -171,6 +189,26 @@ public class PollingClient extends AbstractClient {
                 Site[] sites = trueTopicToSites.get(topic);
                 host = sites[currentSiteIndex].host;
                 port = sites[currentSiteIndex].port;
+            }
+
+            if (!haStreamTableInfo.isEmpty()) {
+                synchronized (haStreamTableInfo) {
+                    HAStreamTableInfo matchedInfo = null;
+                    for (HAStreamTableInfo info : haStreamTableInfo) {
+                        if (info.getFollowIp().equals(host) &&
+                                info.getFollowPort() == port &&
+                                info.getTableName().equals(tableName) &&
+                                info.getActionName().equals(actionName)) {
+                            matchedInfo = info;
+                            break;
+                        }
+                    }
+
+                    if (matchedInfo != null) {
+                        host = matchedInfo.getLeaderIp();
+                        port = matchedInfo.getLeaderPort();
+                    }
+                }
             }
 
             List<String> tp = Arrays.asList(host, String.valueOf(port), tableName, actionName);
