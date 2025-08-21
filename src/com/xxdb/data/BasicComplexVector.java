@@ -18,6 +18,21 @@ public class BasicComplexVector extends AbstractVector{
 	public BasicComplexVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicComplexVector(int size, int capacity) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.values = new Double2[capacity];
+		for (int i = 0; i < size; i++) {
+			values[i] = new Double2(0, 0);
+		}
+
+		this.size = size;
+		this.capaticy = capacity;
+	}
 	
 	public BasicComplexVector(List<Double2> list){
 		super(DATA_FORM.DF_VECTOR);
@@ -206,6 +221,18 @@ public class BasicComplexVector extends AbstractVector{
 	public void set(int index, Entity value) throws Exception {
 		values[index].x = ((BasicComplex)value).getReal();
 		values[index].y = ((BasicComplex)value).getImage();
+	}
+
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Double2) {
+			Double2 d2 = (Double2) value;
+			setComplex(index, d2.x, d2.y);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Double2 or null is supported.");
+		}
 	}
 	
 	public void setComplex(int index, double real, double image){

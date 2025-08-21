@@ -19,6 +19,10 @@ public class BasicDateTimeVector extends BasicIntVector{
 	public BasicDateTimeVector(int size) {
 		super(size);
 	}
+
+	public BasicDateTimeVector(int size, int capacity) {
+		super(size, capacity);
+	}
 	
 	public BasicDateTimeVector(List<Integer> list){
 		super(list);

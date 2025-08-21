@@ -17,6 +17,10 @@ public class BasicTimeVector extends BasicIntVector{
 	public BasicTimeVector(int size){
 		super(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicTimeVector(int size, int capacity) {
+		super(size, capacity);
+	}
 	
 	public BasicTimeVector(List<Integer> list){
 		super(list);

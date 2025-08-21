@@ -18,6 +18,10 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 		super(size);
 	}
 
+	public BasicNanoTimestampVector(int size, int capacity) {
+		super(size, capacity);
+	}
+
 	public BasicNanoTimestampVector(List<Long> list){
 		super(list);
 	}

@@ -17,6 +17,21 @@ public class BasicPointVector extends AbstractVector{
 	public BasicPointVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicPointVector(int size, int capacity) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.values = new Double2[capacity];
+		for (int i = 0; i < size; ++i) {
+			this.values[i] = new Double2(0, 0);
+		}
+
+		this.size = size;
+		this.capaticy = capacity;
+	}
 	
 	public BasicPointVector(List<Double2> list){
 		super(DATA_FORM.DF_VECTOR);

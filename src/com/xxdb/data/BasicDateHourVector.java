@@ -15,8 +15,13 @@ import com.xxdb.io.ExtendedDataInput;
  */
 
 public class BasicDateHourVector extends BasicIntVector {
+
 	public BasicDateHourVector(int size) {
 		super(size);
+	}
+
+	public BasicDateHourVector(int size, int capacity) {
+		super(size, capacity);
 	}
 	
 	public BasicDateHourVector(List<Integer> list){

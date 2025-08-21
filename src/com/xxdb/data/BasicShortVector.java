@@ -23,6 +23,17 @@ public class BasicShortVector extends AbstractVector{
 	public BasicShortVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicShortVector(int size, int capacity) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.values = new short[capacity];
+		this.size = size;
+		this.capaticy = capacity;
+	}
 	
 	public BasicShortVector(List<Short> list){
 		super(DATA_FORM.DF_VECTOR);

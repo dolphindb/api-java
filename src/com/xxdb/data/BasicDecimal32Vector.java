@@ -23,6 +23,20 @@ public class BasicDecimal32Vector extends AbstractVector{
         this(DATA_FORM.DF_VECTOR, size);
     }
 
+    public BasicDecimal32Vector(int size, int capacity, int scale) {
+        super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 9)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,9].");
+        if (capacity < size) {
+            capacity = size;
+        }
+
+        this.scale_ = scale;
+        this.unscaledValues = new int[capacity];
+        this.size = size;
+        this.capacity = capacity;
+    }
+
     public BasicDecimal32Vector(int size, int scale){
         super(DATA_FORM.DF_VECTOR);
         if (scale < 0 || scale > 9)

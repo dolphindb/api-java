@@ -23,6 +23,17 @@ public class BasicLongVector extends AbstractVector{
 	public BasicLongVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicLongVector(int size, int capacity) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.values = new long[capacity];
+		this.size = size;
+		this.capaticy = capacity;
+	}
 	
 	public BasicLongVector(List<Long> list){
 		super(DATA_FORM.DF_VECTOR);

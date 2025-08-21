@@ -19,6 +19,10 @@ public class BasicNanoTimeVector extends BasicLongVector{
 		super(DATA_FORM.DF_VECTOR, size);
 	}
 
+	public BasicNanoTimeVector(int size, int capacity) {
+		super(size, capacity);
+	}
+
 	public BasicNanoTimeVector(List<Long> list){
 		super(list);
 	}

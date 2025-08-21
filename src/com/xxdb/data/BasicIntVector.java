@@ -18,10 +18,21 @@ import com.xxdb.io.ExtendedDataOutput;
 public class BasicIntVector extends AbstractVector{
 	protected int[] values;
 	protected int size;
-	protected int capaticy;
+	protected int capacity;
 	
 	public BasicIntVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
+	}
+
+	public BasicIntVector(int size, int capacity) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.values = new int[capacity];
+		this.size = size;
+		this.capacity = capacity;
 	}
 	
 	public BasicIntVector(List<Integer> list){
@@ -37,7 +48,7 @@ public class BasicIntVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	public BasicIntVector(int[] array){
@@ -52,7 +63,7 @@ public class BasicIntVector extends AbstractVector{
 			values = array;
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	protected BasicIntVector(DATA_FORM df, int size){
@@ -60,7 +71,7 @@ public class BasicIntVector extends AbstractVector{
 		values = new int[size];
 
 		this.size = values.length;;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	protected BasicIntVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -83,7 +94,7 @@ public class BasicIntVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	@Override
@@ -103,7 +114,7 @@ public class BasicIntVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 
 	@Override
@@ -189,12 +200,12 @@ public class BasicIntVector extends AbstractVector{
 	}
 
 	public void add(int value) {
-		if (size + 1 > capaticy && values.length > 0){
+		if (size + 1 > capacity && values.length > 0){
 			values = Arrays.copyOf(values, values.length * 2);
 		}else if (values.length <= 0){
 			values = Arrays.copyOf(values, values.length + 1);
 		}
-		capaticy = values.length;
+		capacity = values.length;
 		values[size] = value;
 		size++;
 	}
@@ -224,7 +235,7 @@ public class BasicIntVector extends AbstractVector{
 					requiredCapacity
 			);
 			values = Arrays.copyOf(values, newCapacity);
-			capaticy = newCapacity;
+			capacity = newCapacity;
 		}
 	}
 

@@ -26,6 +26,15 @@ public class BasicDecimal128Vector extends AbstractVector {
     private int size;
     private int capacity;
 
+    public BasicDecimal128Vector(int size) {
+        super(DATA_FORM.DF_VECTOR);
+        this.unscaledValues = new BigInteger[size];
+        Arrays.fill(this.unscaledValues, BigInteger.ZERO);
+
+        this.size = this.unscaledValues.length;
+        this.capacity = this.unscaledValues.length;
+    }
+
     public BasicDecimal128Vector(int size, int scale) {
         super(DATA_FORM.DF_VECTOR);
         if (scale < 0 || scale > 38)
@@ -36,6 +45,25 @@ public class BasicDecimal128Vector extends AbstractVector {
 
         this.size = this.unscaledValues.length;
         this.capacity = this.unscaledValues.length;
+    }
+
+    public BasicDecimal128Vector(int size, int capacity, int scale) {
+        super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 38)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,38].");
+        if (capacity < size) {
+            capacity = size;
+        }
+
+        this.scale_ = scale;
+        this.unscaledValues = new BigInteger[capacity];
+
+        for (int i = 0; i < size; i++) {
+            this.unscaledValues[i] = BigInteger.ZERO;
+        }
+
+        this.size = size;
+        this.capacity = capacity;
     }
 
     public BasicDecimal128Vector(String[] dataValue, int scale) {

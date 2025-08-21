@@ -18,6 +18,10 @@ public class BasicSecondVector extends BasicIntVector{
 	public BasicSecondVector(int size){
 		super(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicSecondVector(int size, int capacity) {
+		super(size, capacity);
+	}
 	
 	public BasicSecondVector(List<Integer> list){
 		super(list);

@@ -22,6 +22,17 @@ public class BasicBooleanVector extends AbstractVector{
 	public BasicBooleanVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicBooleanVector(int size, int capacity) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.values = new byte[capacity];
+		this.size = size;
+		this.capaticy = capacity;
+	}
 	
 	public BasicBooleanVector(List<Byte> list){
 		super(DATA_FORM.DF_VECTOR);

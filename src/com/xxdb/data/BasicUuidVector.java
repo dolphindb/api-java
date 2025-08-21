@@ -11,6 +11,10 @@ public class BasicUuidVector extends BasicInt128Vector {
 	public BasicUuidVector(int size){
 		super(size);
 	}
+
+	public BasicUuidVector(int size, int capacity) {
+		super(size, capacity);
+	}
 	
 	public BasicUuidVector(List<Long2> list){
 		super(list);

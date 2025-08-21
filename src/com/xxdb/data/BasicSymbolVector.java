@@ -27,6 +27,18 @@ public class BasicSymbolVector extends AbstractVector {
 		this.size = values.length;
 		capaticy = values.length;
 	}
+
+	public BasicSymbolVector(int size, int capacity) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.base = new SymbolBase(0);
+		this.values = new int[capacity];
+		this.size = size;
+		this.capaticy = capacity;
+	}
 	
 	public BasicSymbolVector(SymbolBase base, int size){
 		super(DATA_FORM.DF_VECTOR);

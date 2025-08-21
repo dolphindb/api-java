@@ -16,6 +16,17 @@ public class BasicDurationVector extends AbstractVector{
 	public BasicDurationVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicDurationVector(int size, int capacity) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.values = new int[2 * capacity];
+		this.size = 2 * size;
+		this.capaticy = 2 * capacity;
+	}
 		
 	protected BasicDurationVector(DATA_FORM df, int size){
 		super(df);

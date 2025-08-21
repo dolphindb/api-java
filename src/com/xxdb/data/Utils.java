@@ -740,4 +740,12 @@ public class Utils {
 				throw new RuntimeException("Decimal128 overflow " + new BigDecimal(value.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP).toBigInteger()).scaleByPowerOfTen(-scale));
 		}
 	}
+
+	public static Vector createVector(DATA_TYPE type, int size, int capacity) {
+		return createVector(type, size, capacity, -1);
+	}
+
+	public static Vector createVector(DATA_TYPE type, int size, int capacity, int extraParam) {
+		return BasicEntityFactory.instance().createVector(type, size, capacity, extraParam);
+	}
 }

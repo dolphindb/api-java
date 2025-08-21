@@ -19,6 +19,10 @@ public class BasicMonthVector extends BasicIntVector{
 		super(DATA_FORM.DF_VECTOR, size);
 	}
 
+	public BasicMonthVector(int size, int capacity) {
+		super(size, capacity);
+	}
+
 	public BasicMonthVector(List<Integer> list) {
 		super(list);
 	}

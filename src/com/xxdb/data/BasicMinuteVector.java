@@ -18,6 +18,10 @@ public class BasicMinuteVector extends BasicIntVector{
 	public BasicMinuteVector(int size){
 		super(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicMinuteVector(int size, int capacity) {
+		super(size, capacity);
+	}
 	
 	public BasicMinuteVector(List<Integer> list){
 		super(list);

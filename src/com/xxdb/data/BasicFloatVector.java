@@ -23,6 +23,17 @@ public class BasicFloatVector extends AbstractVector{
 	public BasicFloatVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicFloatVector(int size, int capacity) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.values = new float[capacity];
+		this.size = size;
+		this.capaticy = capacity;
+	}
 	
 	public BasicFloatVector(List<Float> list){
 		super(DATA_FORM.DF_VECTOR);

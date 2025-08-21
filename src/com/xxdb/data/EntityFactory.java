@@ -6,6 +6,7 @@ import com.xxdb.io.ExtendedDataInput;
 
 public interface EntityFactory {
 	Entity createEntity(Entity.DATA_FORM form, Entity.DATA_TYPE type, ExtendedDataInput in, boolean exteneded)  throws IOException;
+	Vector createVector(Entity.DATA_TYPE type, int size, int capacity, int extra);
 	Matrix createMatrixWithDefaultValue(Entity.DATA_TYPE type, int rows, int columns);
 	Vector createVectorWithDefaultValue(Entity.DATA_TYPE type, int size, int extra);
 	Vector createPairWithDefaultValue(Entity.DATA_TYPE type);

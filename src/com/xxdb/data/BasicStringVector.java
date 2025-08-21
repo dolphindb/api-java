@@ -35,6 +35,36 @@ public class BasicStringVector extends AbstractVector{
 	public BasicStringVector(int size){
 		this(DATA_FORM.DF_VECTOR, size, false);
 	}
+
+	public BasicStringVector(int size, int capacity) {
+		this(size, capacity, false, false);
+	}
+
+	public BasicStringVector(int size, int capacity, boolean blob, boolean symbol) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.isBlob = blob;
+		this.isSymbol = symbol;
+
+		if (blob) {
+			this.blobValues = new ArrayList<>(capacity);
+			for (int i = 0; i < size; i++) {
+				this.blobValues.add(new byte[0]);
+			}
+			this.size = size;
+			this.capaticy = capacity;
+		} else {
+			this.values = new String[capacity];
+			for (int i = 0; i < size; i++) {
+				this.values[i] = "";
+			}
+			this.size = size;
+			this.capaticy = capacity;
+		}
+	}
 	
 	public BasicStringVector(List<String> list){
 		super(DATA_FORM.DF_VECTOR);

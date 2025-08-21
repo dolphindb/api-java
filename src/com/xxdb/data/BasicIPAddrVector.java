@@ -11,6 +11,10 @@ public class BasicIPAddrVector extends BasicInt128Vector {
 	public BasicIPAddrVector(int size){
 		super(size);
 	}
+
+	public BasicIPAddrVector(int size, int capacity) {
+		super(size, capacity);
+	}
 	
 	public BasicIPAddrVector(List<Long2> list){
 		super(list);

@@ -23,6 +23,17 @@ public class BasicDoubleVector extends AbstractVector{
 	public BasicDoubleVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicDoubleVector(int size, int capacity) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.values = new double[capacity];
+		this.size = size;
+		this.capaticy = capacity;
+	}
 	
 	public BasicDoubleVector(List<Double> list){
 		super(DATA_FORM.DF_VECTOR);
@@ -134,6 +145,7 @@ public class BasicDoubleVector extends AbstractVector{
 		}else{
 			values[index] = ((Scalar)value).getNumber().doubleValue();
 		}
+	}
 
 	@Override
 	public void set(int index, Object value) {

@@ -13,6 +13,11 @@ public class BasicVoidVector extends AbstractVector {
         this(Entity.DATA_FORM.DF_VECTOR, size);
     }
 
+    public BasicVoidVector(int size, int capacity) {
+        super(DATA_FORM.DF_VECTOR);
+        this.size = size;
+    }
+
     protected BasicVoidVector(Entity.DATA_FORM df, int size){
         super(df);
         this.size = size;

@@ -22,6 +22,17 @@ public class BasicByteVector extends AbstractVector{
 	public BasicByteVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicByteVector(int size, int capacity) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.values = new byte[capacity];
+		this.size = size;
+		this.capaticy = capacity;
+	}
 	
 	public BasicByteVector(List<Byte> list){
 		super(DATA_FORM.DF_VECTOR);

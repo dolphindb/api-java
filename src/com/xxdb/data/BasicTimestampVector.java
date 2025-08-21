@@ -18,6 +18,10 @@ public class BasicTimestampVector extends BasicLongVector{
 	public BasicTimestampVector(int size){
 		super(size);
 	}
+
+	public BasicTimestampVector(int size, int capacity) {
+		super(size, capacity);
+	}
 	
 	public BasicTimestampVector(List<Long> list){
 		super(list);

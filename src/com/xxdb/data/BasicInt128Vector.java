@@ -18,6 +18,21 @@ public class BasicInt128Vector extends AbstractVector{
 	public BasicInt128Vector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
 	}
+
+	public BasicInt128Vector(int size, int capacity) {
+		super(DATA_FORM.DF_VECTOR);
+		if (capacity < size) {
+			capacity = size;
+		}
+
+		this.values = new Long2[capacity];
+		for (int i = 0; i < size; ++i) {
+			this.values[i] = new Long2(0, 0);
+		}
+
+		this.size = size;
+		this.capaticy = capacity;
+	}
 	
 	public BasicInt128Vector(List<Long2> list){
 		super(DATA_FORM.DF_VECTOR);
