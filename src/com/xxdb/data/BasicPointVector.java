@@ -8,7 +8,6 @@ import java.util.List;
 import com.xxdb.io.Double2;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-import com.xxdb.io.Long2;
 
 public class BasicPointVector extends AbstractVector{
 	protected Double2[] values;
@@ -147,6 +146,18 @@ public class BasicPointVector extends AbstractVector{
 		values[index].y = ((BasicPoint)value).getY();
 	}
 
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Double2) {
+			Double2 d2 = (Double2) value;
+			setPoint(index, d2.x, d2.y);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Double2 or null is supported.");
+		}
+	}
+
 	public void setPoint(int index, double x, double y){
 		values[index].x = x;
 		values[index].y = y;
@@ -162,6 +173,16 @@ public class BasicPointVector extends AbstractVector{
 		return 16;
 	}
 
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(new Double2(-Double.MAX_VALUE, -Double.MAX_VALUE));
+		} else if (value instanceof Double2) {
+			add((Double2) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Double2 or null is supported.");
+		}
+	}
 
 	public void add(Double2 value) {
 		if (size + 1 > capaticy && values.length > 0){

@@ -125,6 +125,17 @@ public class BasicByteVector extends AbstractVector{
 		}
 	}
 
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Byte) {
+			setByte(index, (byte) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Byte or null is supported.");
+		}
+	}
+
 	public void setByte(int index, byte value){
 		values[index] = value;
 	}
@@ -180,6 +191,17 @@ public class BasicByteVector extends AbstractVector{
 	@Override
 	public int getUnitLength(){
 		return 1;
+	}
+
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(Byte.MIN_VALUE);
+		} else if (value instanceof Byte) {
+			add((byte) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Byte or null is supported.");
+		}
 	}
 
 	public void add(byte value) {

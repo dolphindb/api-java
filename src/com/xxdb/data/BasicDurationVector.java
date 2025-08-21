@@ -63,6 +63,11 @@ public class BasicDurationVector extends AbstractVector{
 	}
 
 	@Override
+	public void set(int index, Object value) {
+		throw new RuntimeException("BasicDurationVector.set not implemented yet.");
+	}
+
+	@Override
 	public int hashBucket(int index, int buckets){
 		return 0;
 	}
@@ -72,6 +77,10 @@ public class BasicDurationVector extends AbstractVector{
 		return 4;
 	}
 
+	@Override
+	public void add(Object value) {
+		throw new RuntimeException("BasicDurationVector.add not implemented yet.");
+	}
 
 	public void add(int value, int duration) {
 		if (size + 1 > capaticy && values.length > 0){

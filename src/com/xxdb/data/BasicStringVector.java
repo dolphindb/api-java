@@ -287,6 +287,16 @@ public class BasicStringVector extends AbstractVector{
 		return 1;
 	}
 
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add("");
+		} else if (value instanceof String) {
+			add((String) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only String or null is supported.");
+		}
+	}
 
 	public void add(String value) {
 		if (isBlob) {
@@ -375,6 +385,17 @@ public class BasicStringVector extends AbstractVector{
 				values[index] = ((BasicString)value).getString();
 			} else
 				throw new Exception("The value must be a string scalar. ");
+		}
+	}
+
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof String) {
+			setString(index, (String) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only String or null is supported.");
 		}
 	}
 

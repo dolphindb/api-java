@@ -135,6 +135,10 @@ public class BasicSymbolVector extends AbstractVector {
 		return 4;
 	}
 
+	@Override
+	public void add(Object value) {
+		add((String) value);
+	}
 
 	public void add(String value) {
 		throw new RuntimeException("SymbolVector does not support add");
@@ -167,6 +171,17 @@ public class BasicSymbolVector extends AbstractVector {
 
 	public void set(int index, Entity value) throws Exception {
 		values[index] = base.find(value.getString(), true);
+	}
+
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof String) {
+			setString(index, (String) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only String or null is supported.");
+		}
 	}
 
 	public void setString(int index, String value){

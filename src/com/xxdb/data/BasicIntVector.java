@@ -136,6 +136,17 @@ public class BasicIntVector extends AbstractVector{
 	public int getInt(int index){
 		return values[index];
 	}
+
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Integer) {
+			setInt(index, (int) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Integer or null is supported.");
+		}
+	}
 	
 	public void set(int index, Entity value) throws Exception {
 		if(((Scalar)value).isNull()){
@@ -164,6 +175,17 @@ public class BasicIntVector extends AbstractVector{
 	@Override
 	public int getUnitLength() {
 		return 4;
+	}
+
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(Integer.MIN_VALUE);
+		} else if (value instanceof Integer) {
+			add((int)value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Integer or null is supported.");
+		}
 	}
 
 	public void add(int value) {

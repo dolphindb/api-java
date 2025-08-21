@@ -319,6 +319,11 @@ public class BasicArrayVector extends AbstractVector {
 	}
 
 	@Override
+	public void set(int index, Object value) {
+		throw new RuntimeException("BasicArrayVector.set not supported.");
+	}
+
+	@Override
 	public Class<?> getElementClass() {
 		return Entity.class;
 	}

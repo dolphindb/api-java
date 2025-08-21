@@ -10,6 +10,7 @@ import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.List;
 import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL64;
 
 public class BasicDecimal64Vector extends AbstractVector{
@@ -236,6 +237,35 @@ public class BasicDecimal64Vector extends AbstractVector{
     }
 
     @Override
+    public void set(int index, Object value) {
+        if (value == null) {
+            setNull(index);
+        } else if (value instanceof String) {
+            try {
+                BigDecimal bd = new BigDecimal((String)value);
+                if (checkDecimal64Range(bd)) {
+                    BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale_).setScale(0, RoundingMode.HALF_UP);
+                    unscaledValues[index] = multipliedValue.longValue();
+                } else {
+                    setNull(index);
+                }
+            } catch (Exception e) {
+                setNull(index);
+            }
+        } else if (value instanceof BigDecimal) {
+            BigDecimal bd = (BigDecimal) value;
+            if (checkDecimal64Range(bd)) {
+                BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale_).setScale(0, RoundingMode.HALF_UP);
+                unscaledValues[index] = multipliedValue.longValue();
+            } else {
+                setNull(index);
+            }
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only String, BigDecimal or null is supported.");
+        }
+    }
+
+    @Override
     public Class<?> getElementClass() {
         return BasicDecimal64.class;
     }
@@ -250,6 +280,38 @@ public class BasicDecimal64Vector extends AbstractVector{
     @Override
     public int getUnitLength() {
         return 8;
+    }
+
+    @Override
+    public void add(Object value) {
+        if (value == null) {
+            if (size + 1 > capacity && unscaledValues.length > 0) {
+                unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length * 2);
+            } else if (unscaledValues.length <= 0) {
+                unscaledValues = new long[1];
+            }
+            capacity = unscaledValues.length;
+            unscaledValues[size] = Long.MIN_VALUE;
+            size++;
+        } else if (value instanceof String) {
+            add((String) value);
+        } else if (value instanceof BigDecimal) {
+            if (size + 1 > capacity && unscaledValues.length > 0) {
+                unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length * 2);
+            } else if (unscaledValues.length <= 0) {
+                unscaledValues = new long[1];
+            }
+            capacity = unscaledValues.length;
+
+            BigDecimal bd = (BigDecimal) value;
+            BigDecimal pow = BigDecimal.TEN.pow(scale_);
+            if (checkDecimal64Range(bd)) {
+                unscaledValues[size] = bd.multiply(pow).longValue();
+            }
+            size++;
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only String, BigDecimal or null is supported.");
+        }
     }
 
     public void add(String value) {

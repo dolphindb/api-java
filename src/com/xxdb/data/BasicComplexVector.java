@@ -126,6 +126,17 @@ public class BasicComplexVector extends AbstractVector{
 		return 16;
 	}
 
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(new Double2(-Double.MAX_VALUE, -Double.MAX_VALUE));
+		} else if (value instanceof Double2) {
+			add((Double2) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Double2 or null is supported.");
+		}
+	}
+
 	public void add(Double2 value) {
 		if (size + 1 > capaticy && values.length > 0){
 			values = Arrays.copyOf(values, values.length * 2);

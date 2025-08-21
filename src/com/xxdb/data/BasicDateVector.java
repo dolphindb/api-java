@@ -3,6 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -63,6 +64,21 @@ public class BasicDateVector extends BasicIntVector{
 		else
 			return Utils.parseDate(getInt(index));
 	}
+
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Integer) {
+			setInt(index, (int) value);
+		} else if (value instanceof LocalDate) {
+			setDate(index, (LocalDate) value);
+		} else if (value instanceof Calendar) {
+			setInt(index, Utils.countDays((Calendar)value));
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only LocalDate, Calendar, Integer or null is supported.");
+		}
+	}
  
 	public void setDate(int index, LocalDate date){
 		setInt(index,Utils.countDays(date));
@@ -91,6 +107,21 @@ public class BasicDateVector extends BasicIntVector{
 			buffer.putInt(val);
 		}
 		return buffer;
+	}
+
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(Integer.MIN_VALUE);
+		} else if (value instanceof Integer) {
+			add((int) value);
+		} else if (value instanceof LocalDate) {
+			add(Utils.countDays((LocalDate) value));
+		} else if (value instanceof Calendar) {
+			add(Utils.countDays((Calendar) value));
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only LocalDate, Calendar, Integer or null is supported.");
+		}
 	}
 
 	@Override

@@ -144,6 +144,17 @@ public class BasicLongVector extends AbstractVector{
 		}
 	}
 
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Long) {
+			setLong(index, (long) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Long or null is supported.");
+		}
+	}
+
 	public void setLong(int index, long value){
 		values[index] = value;
 	}
@@ -165,6 +176,16 @@ public class BasicLongVector extends AbstractVector{
 		return 16;
 	}
 
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(Long.MIN_VALUE);
+		} else if (value instanceof Long) {
+			add((long) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Long or null is supported.");
+		}
+	}
 
 	public void add(long value) {
 		if (size + 1 > capaticy && values.length > 0){

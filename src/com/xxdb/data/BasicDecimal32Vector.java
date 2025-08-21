@@ -10,6 +10,7 @@ import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.List;
 import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL32;
 
 public class BasicDecimal32Vector extends AbstractVector{
@@ -216,6 +217,35 @@ public class BasicDecimal32Vector extends AbstractVector{
             }else{
                 unscaledValues[index] = ((BasicDecimal32) value).getInt();
             }
+        }
+    }
+
+    @Override
+    public void set(int index, Object value) {
+        if (value == null) {
+            setNull(index);
+        } else if (value instanceof String) {
+            try {
+                BigDecimal bd = new BigDecimal((String) value);
+                BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale_).setScale(0, RoundingMode.HALF_UP);
+                if (checkDecimal32Range(multipliedValue.intValue())) {
+                    unscaledValues[index] = multipliedValue.intValue();
+                } else {
+                    setNull(index);
+                }
+            } catch (Exception e) {
+                setNull(index);
+            }
+        } else if (value instanceof BigDecimal) {
+            BigDecimal bd = (BigDecimal) value;
+            BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale_).setScale(0, RoundingMode.HALF_UP);
+            if (checkDecimal32Range(multipliedValue.intValue())) {
+                unscaledValues[index] = multipliedValue.intValue();
+            } else {
+                setNull(index);
+            }
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only String, BigDecimal or null is supported.");
         }
     }
 

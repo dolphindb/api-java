@@ -3,7 +3,7 @@ package com.xxdb.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -63,6 +63,21 @@ public class BasicDateHourVector extends BasicIntVector {
 		else
 			return Utils.parseDateHour(getInt(index));
 	}
+
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Integer) {
+			setInt(index, (int) value);
+		} else if (value instanceof LocalDateTime) {
+			setDateHour(index, (LocalDateTime)value);
+		} else if (value instanceof Calendar) {
+			setInt(index, Utils.countHours((Calendar)value));
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only LocalDateTime, Calendar, Integer or null is supported.");
+		}
+	}
 	
 	public void setDateHour(int index, LocalDateTime dt){
 		setInt(index,Utils.countHours(dt));
@@ -91,6 +106,21 @@ public class BasicDateHourVector extends BasicIntVector {
 			buffer.putInt(val);
 		}
 		return buffer;
+	}
+
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(Integer.MIN_VALUE);
+		} else if (value instanceof Integer) {
+			add((int) value);
+		} else if (value instanceof LocalDateTime) {
+			add(Utils.countHours((LocalDateTime) value));
+		} else if (value instanceof Calendar) {
+			add(Utils.countHours((Calendar) value));
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only LocalDateTime, Calendar, Integer or null is supported.");
+		}
 	}
 
 	@Override

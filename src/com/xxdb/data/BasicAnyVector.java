@@ -66,6 +66,11 @@ public class BasicAnyVector extends AbstractVector{
 		values[index] = value;
 	}
 
+	@Override
+	public void set(int index, Object value) {
+		throw new RuntimeException("BasicAnyVector.set(int index, Object value) not supported.");
+	}
+
 	public void setEntity(int index, Entity value){
 		values[index] = value;
 	}

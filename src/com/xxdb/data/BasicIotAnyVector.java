@@ -96,6 +96,11 @@ public class BasicIotAnyVector extends AbstractVector {
     }
 
     @Override
+    public void set(int index, Object value) {
+        throw new RuntimeException("BasicIotAnyVector.set not supported.");
+    }
+
+    @Override
     public Vector combine(Vector vector) {
         throw new UnsupportedOperationException();
     }
@@ -133,6 +138,11 @@ public class BasicIotAnyVector extends AbstractVector {
     @Override
     public int getUnitLength(){
         throw new RuntimeException("IotAnyVector.getUnitLength not supported.");
+    }
+
+    @Override
+    public void add(Object value) {
+        throw new RuntimeException("IotAnyVector.add not supported.");
     }
 
     public void addRange(Object[] valueList) {

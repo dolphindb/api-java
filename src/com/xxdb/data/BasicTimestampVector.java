@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Calendar;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -62,6 +63,21 @@ public class BasicTimestampVector extends BasicLongVector{
 		else
 			return Utils.parseTimestamp(getLong(index));
 	}
+
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Long) {
+			setLong(index, (long) value);
+		} else if (value instanceof LocalDateTime) {
+			setTimestamp(index, (LocalDateTime) value);
+		} else if (value instanceof Calendar) {
+			setLong(index, Utils.countDateMilliseconds((Calendar) value));
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only LocalDateTime, Calendar, Long or null is supported.");
+		}
+	}
 	
 	public void setTimestamp(int index, LocalDateTime dt){
 		setLong(index, Utils.countMilliseconds(dt));
@@ -80,6 +96,21 @@ public class BasicTimestampVector extends BasicLongVector{
 		System.arraycopy(this.values,0, newValue,0,this.rows());
 		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
 		return new BasicTimestampVector(newValue);
+	}
+
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(Long.MIN_VALUE);
+		} else if (value instanceof Long) {
+			add((long) value);
+		} else if (value instanceof LocalDateTime) {
+			add(Utils.countMilliseconds((LocalDateTime) value));
+		} else if (value instanceof Calendar) {
+			add(Utils.countDateMilliseconds((Calendar) value));
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only LocalDateTime, Calendar, Long or null is supported.");
+		}
 	}
 
 	@Override

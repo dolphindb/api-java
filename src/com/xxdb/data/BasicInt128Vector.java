@@ -167,6 +167,18 @@ public class BasicInt128Vector extends AbstractVector{
 		values[index].low = ((BasicInt128)value).getLeastSignicantBits();
 	}
 
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Long2) {
+			Long2 l2 = (Long2) value;
+			setInt128(index, l2.high, l2.low);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Long2 or null is supported.");
+		}
+	}
+
 	public void setInt128(int index, long highValue, long lowValue){
 		values[index].high = highValue;
 		values[index].low = lowValue;
@@ -182,6 +194,16 @@ public class BasicInt128Vector extends AbstractVector{
 		return 16;
 	}
 
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(new Long2(Long.MIN_VALUE, Long.MIN_VALUE));
+		} else if (value instanceof Long2) {
+			add((Long2) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Long2 or null is supported.");
+		}
+	}
 
 	public void add(Long2 value) {
 		if (size + 1 > capaticy && values.length > 0){

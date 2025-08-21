@@ -62,6 +62,19 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 		else
 			return Utils.parseNanoTimestamp(getLong(index));
 	}
+
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Long) {
+			setLong(index, (long) value);
+		} else if (value instanceof LocalDateTime) {
+			setNanoTimestamp(index, (LocalDateTime) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only LocalDateTime, Long or null is supported.");
+		}
+	}
 	
 	public void setNanoTimestamp(int index, LocalDateTime dt){
 		setLong(index, Utils.countDTNanoseconds(dt));
@@ -80,6 +93,19 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 		System.arraycopy(this.values,0, newValue,0,this.rows());
 		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
 		return new BasicNanoTimestampVector(newValue);
+	}
+
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(Long.MIN_VALUE);
+		} else if (value instanceof Long) {
+			add((long) value);
+		} else if (value instanceof LocalDateTime) {
+			add(Utils.countDTNanoseconds((LocalDateTime) value));
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only LocalDateTime, Long or null is supported.");
+		}
 	}
 
 	@Override

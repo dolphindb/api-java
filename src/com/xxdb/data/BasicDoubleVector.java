@@ -135,6 +135,15 @@ public class BasicDoubleVector extends AbstractVector{
 			values[index] = ((Scalar)value).getNumber().doubleValue();
 		}
 
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Double) {
+			setDouble(index, (double) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Double or null is supported.");
+		}
 	}
 
 	public void setDouble(int index, double value){
@@ -192,6 +201,16 @@ public class BasicDoubleVector extends AbstractVector{
 		return 8;
 	}
 
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(-Double.MAX_VALUE);
+		} else if (value instanceof Double) {
+			add((double) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Double or null is supported.");
+		}
+	}
 
 	public void add(double value) {
 		if (size + 1 > capaticy && values.length > 0){

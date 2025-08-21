@@ -135,7 +135,17 @@ public class BasicShortVector extends AbstractVector{
 		}else{
 			values[index] = ((Scalar)value).getNumber().shortValue();
 		}
+	}
 
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Short) {
+			setShort(index, (short) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Short or null is supported.");
+		}
 	}
 
 	public void setShort(int index, short value){
@@ -159,6 +169,16 @@ public class BasicShortVector extends AbstractVector{
 		return 2;
 	}
 
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(Short.MIN_VALUE);
+		} else if (value instanceof Short) {
+			add((short) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Short or null is supported.");
+		}
+	}
 
 	public void add(short value) {
 		if (size + 1 > capaticy && values.length > 0){

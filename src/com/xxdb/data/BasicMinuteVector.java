@@ -2,6 +2,7 @@ package com.xxdb.data;
 
 import java.io.IOException;
 import java.time.LocalTime;
+import java.util.Calendar;
 import java.util.List;
 
 import com.xxdb.io.ExtendedDataInput;
@@ -62,6 +63,24 @@ public class BasicMinuteVector extends BasicIntVector{
 		else
 			return Utils.parseMinute(getInt(index));
 	}
+
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Integer) {
+			setInt(index, (int) value);
+		} else if (value instanceof LocalTime) {
+			setMinute(index, (LocalTime) value);
+		} else if (value instanceof Calendar) {
+			setInt(index, Utils.countMinutes(
+					((Calendar) value).get(Calendar.HOUR_OF_DAY),
+					((Calendar) value).get(Calendar.MINUTE)
+			));
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only LocalTime, Calendar, Integer or null is supported.");
+		}
+	}
 	
 	public void setMinute(int index, LocalTime time){
 		setInt(index, Utils.countMinutes(time));
@@ -80,6 +99,24 @@ public class BasicMinuteVector extends BasicIntVector{
 		System.arraycopy(this.values,0, newValue,0,this.rows());
 		System.arraycopy(v.values,0, newValue,this.rows(),v.rows());
 		return new BasicMinuteVector(newValue);
+	}
+
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(Integer.MIN_VALUE);
+		} else if (value instanceof Integer) {
+			add((int) value);
+		} else if (value instanceof LocalTime) {
+			add(Utils.countMinutes((LocalTime) value));
+		} else if (value instanceof Calendar) {
+			add(Utils.countMinutes(
+					((Calendar) value).get(Calendar.HOUR_OF_DAY),
+					((Calendar) value).get(Calendar.MINUTE)
+			));
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only LocalTime, Calendar, Integer or null is supported.");
+		}
 	}
 
 	@Override

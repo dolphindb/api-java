@@ -2,14 +2,12 @@ package com.xxdb.data;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class BasicVoidVector extends AbstractVector {
 
     private int size;
-
 
     public BasicVoidVector(int size){
         this(Entity.DATA_FORM.DF_VECTOR, size);
@@ -44,6 +42,9 @@ public class BasicVoidVector extends AbstractVector {
     }
 
     public void set(int index, Entity value) throws Exception {}
+
+    @Override
+    public void set(int index, Object value) {}
 
     @Override
     public Vector combine(Vector vector) {
@@ -88,6 +89,11 @@ public class BasicVoidVector extends AbstractVector {
     @Override
     public int getUnitLength(){
         return 1;
+    }
+
+    @Override
+    public void add(Object value) {
+        throw new RuntimeException("BasicVoidVector not support add.");
     }
 
     @Override

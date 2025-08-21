@@ -26,6 +26,7 @@ public interface Vector extends Entity{
 	Entity get(int index);
 	String getString(int index);
 	void set(int index, Entity value) throws Exception;
+	void set(int index, Object value);
 	Class<?> getElementClass();
 	void deserialize(int start, int count, ExtendedDataInput in) throws IOException;
 	void serialize(int start, int count, ExtendedDataOutput out) throws IOException;
@@ -33,5 +34,6 @@ public interface Vector extends Entity{
 	int serialize(int indexStart, int offect, int targetNumElement, AbstractVector.NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException;
 	void Append(Scalar value) throws Exception;
 	void Append(Vector value) throws Exception;
+	void add(Object value);
 	String getJsonString(int rowIndex);
 }

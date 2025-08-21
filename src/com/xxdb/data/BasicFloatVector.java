@@ -118,6 +118,16 @@ public class BasicFloatVector extends AbstractVector{
 		return 4;
 	}
 
+	@Override
+	public void add(Object value) {
+		if (value == null) {
+			add(-Float.MAX_VALUE);
+		} else if (value instanceof Float) {
+			add((float) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Float or null is supported.");
+		}
+	}
 
 	public void add(float value) {
 		if (size + 1 > capaticy && values.length > 0){
@@ -188,7 +198,17 @@ public class BasicFloatVector extends AbstractVector{
 		}else{
 			values[index] = ((Scalar)value).getNumber().floatValue();
 		}
+	}
 
+	@Override
+	public void set(int index, Object value) {
+		if (value == null) {
+			setNull(index);
+		} else if (value instanceof Float) {
+			setFloat(index, (float) value);
+		} else {
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Float or null is supported.");
+		}
 	}
 
 	public void setFloat(int index, float value){

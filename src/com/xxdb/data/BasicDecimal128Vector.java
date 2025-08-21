@@ -10,9 +10,9 @@ import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL128;
-import static com.xxdb.data.Entity.DATA_TYPE.DT_DECIMAL64;
 
 public class BasicDecimal128Vector extends AbstractVector {
 
@@ -309,6 +309,29 @@ public class BasicDecimal128Vector extends AbstractVector {
     }
 
     @Override
+    public void set(int index, Object value) {
+        if (value == null) {
+            setNull(index);
+        } else if (value instanceof String) {
+            try {
+                BigDecimal bd = new BigDecimal((String) value);
+                Utils.checkDecimal128Range(bd, scale_);
+                BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale_).setScale(0, RoundingMode.HALF_UP);
+                unscaledValues[index] = multipliedValue.toBigInteger();
+            } catch (Exception e) {
+                setNull(index);
+            }
+        } else if (value instanceof BigDecimal) {
+            BigDecimal bd = (BigDecimal) value;
+            Utils.checkDecimal128Range(bd, scale_);
+            BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale_).setScale(0, RoundingMode.HALF_UP);
+            unscaledValues[index] = multipliedValue.toBigInteger();
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only String, BigDecimal or null is supported.");
+        }
+    }
+
+    @Override
     public Class<?> getElementClass() {
         return BasicDecimal128.class;
     }
@@ -349,6 +372,38 @@ public class BasicDecimal128Vector extends AbstractVector {
     @Override
     public int getUnitLength() {
         return 16;
+    }
+
+    @Override
+    public void add(Object value) {
+        if (value == null) {
+            if (size + 1 > capacity && unscaledValues.length > 0) {
+                unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length * 2);
+            } else if (unscaledValues.length <= 0) {
+                unscaledValues = new BigInteger[1];
+            }
+            capacity = unscaledValues.length;
+            unscaledValues[size] = BIGINT_MIN_VALUE;
+            size++;
+        } else if (value instanceof String) {
+            add((String) value);
+        } else if (value instanceof BigInteger) {
+            if (size + 1 > capacity && unscaledValues.length > 0) {
+                unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length * 2);
+            } else if (unscaledValues.length <= 0) {
+                unscaledValues = new BigInteger[1];
+            }
+            capacity = unscaledValues.length;
+
+            BigInteger bi = (BigInteger) value;
+            if (bi.compareTo(BIGINT_MIN_VALUE) < 0 || bi.compareTo(BIGINT_MAX_VALUE) > 0) {
+                throw new IllegalArgumentException("BigInteger value out of range for Decimal128");
+            }
+            unscaledValues[size] = bi;
+            size++;
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only String, BigDecimal or null is supported.");
+        }
     }
 
     public void add(BigDecimal value) {
