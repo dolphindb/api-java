@@ -43,6 +43,7 @@ public class PollingClientReverseTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    static int COMPUTENODE = Integer.parseInt(bundle.getString("COMPUTENODE"));
     //static int PORT=9002;
     public static PollingClient pollingClient;
     private StreamDeserializer deserializer_;
