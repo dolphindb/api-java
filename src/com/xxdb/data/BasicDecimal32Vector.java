@@ -61,6 +61,31 @@ public class BasicDecimal32Vector extends AbstractVector{
         capacity = length;
     }
 
+    public BasicDecimal32Vector(List<String> data, int scale) {
+        super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 9)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,9].");
+        this.scale_ = scale;
+
+        int length = data.size();
+        unscaledValues = new int[length];
+        for (int i = 0; i < length; i++) {
+            if (data.get(i) == null || data.get(i).isEmpty()) {
+                unscaledValues[i] = Integer.MIN_VALUE;
+            } else {
+                BigDecimal bd = new BigDecimal(data.get(i));
+                BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
+                if (multipliedValue.intValue() > Integer.MIN_VALUE && multipliedValue.intValue() < Integer.MAX_VALUE)
+                    unscaledValues[i] = multipliedValue.intValue();
+                else
+                    unscaledValues[i] = Integer.MIN_VALUE;
+            }
+        }
+
+        size = length;
+        capacity = length;
+    }
+
     BasicDecimal32Vector(int[] dataValue, int scale){
         super(DATA_FORM.DF_VECTOR);
         if (scale < 0 || scale > 9)

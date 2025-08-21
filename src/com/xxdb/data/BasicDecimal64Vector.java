@@ -74,6 +74,31 @@ public class BasicDecimal64Vector extends AbstractVector{
         capacity = length;
     }
 
+    public BasicDecimal64Vector(List<String> data, int scale) {
+        super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 18)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,18].");
+        this.scale_ = scale;
+
+        int length = data.size();
+        unscaledValues = new long[length];
+        for (int i = 0; i < length; i++) {
+            if (data.get(i) == null || data.get(i).isEmpty()) {
+                unscaledValues[i] = Long.MIN_VALUE;
+            } else {
+                BigDecimal bd = new BigDecimal(data.get(i));
+                BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
+                if (checkDecimal64Range(multipliedValue))
+                    unscaledValues[i] = multipliedValue.longValue();
+                else
+                    unscaledValues[i] = Long.MIN_VALUE;
+            }
+        }
+
+        size = length;
+        capacity = length;
+    }
+
     public BasicDecimal64Vector(DATA_FORM df, ExtendedDataInput in, int extra) throws IOException{
         super(df);
         int rows = in.readInt();

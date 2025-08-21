@@ -65,6 +65,45 @@ public class BasicDecimal128Vector extends AbstractVector {
         this.capacity = this.unscaledValues.length;
     }
 
+    public BasicDecimal128Vector(List<String> data, int scale) {
+        super(DATA_FORM.DF_VECTOR);
+        if (scale < 0 || scale > 38)
+            throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0,38].");
+        this.scale_ = scale;
+
+        int length = data.size();
+        this.unscaledValues = new BigInteger[length];
+
+        for (int i = 0; i < length; i++) {
+            if (data.get(i) == null || data.get(i).isEmpty()) {
+                this.unscaledValues[i] = BIGINT_MIN_VALUE;
+            } else {
+                try {
+                    BigDecimal bd = new BigDecimal(data.get(i));
+                    Utils.checkDecimal128Range(bd, scale);
+
+                    BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
+                    BigInteger unscaledValue = multipliedValue.toBigInteger();
+
+                    if (unscaledValue.compareTo(BIGINT_MIN_VALUE) < 0) {
+                        throw new RuntimeException("Decimal128 below " + unscaledValue);
+                    }
+
+                    if (unscaledValue.compareTo(BIGINT_MAX_VALUE) > 0) {
+                        throw new RuntimeException("Decimal128 overflow " + unscaledValue);
+                    }
+
+                    this.unscaledValues[i] = unscaledValue;
+                } catch (NumberFormatException e) {
+                    this.unscaledValues[i] = BIGINT_MIN_VALUE;
+                }
+            }
+        }
+
+        this.size = this.unscaledValues.length;
+        this.capacity = this.unscaledValues.length;
+    }
+
     BasicDecimal128Vector(BigInteger[] dataValue, int scale) {
         super(DATA_FORM.DF_VECTOR);
         if (scale < 0 || scale > 38)
