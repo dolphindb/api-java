@@ -17,6 +17,7 @@ import static com.xxdb.Prepare.*;
 import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static com.xxdb.data.Entity.DATA_TYPE.DT_DOUBLE;
 import static com.xxdb.streaming.reverse.ThreadedClientsubscribeReverseTest.*;
+import static java.lang.Thread.sleep;
 import static org.junit.Assert.*;
 
 public class ThreadPooledClientReverseTest {
@@ -25,6 +26,7 @@ public class ThreadPooledClientReverseTest {
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     //static int PORT = 9002;
+    static int COMPUTENODE = Integer.parseInt(bundle.getString("COMPUTENODE"));
     static long total = 0;
 
     private static ThreadPooledClient threadPooledClient;
@@ -1897,4 +1899,112 @@ public static void PrepareStreamTable() throws IOException {
 //        threadPooledClient.subscribe(HOST, PORT, "quote_commodity_stream", "subTrades", MessageHandler_handler_null, -1, true);
 //        System.out.println("client created");
 //    }
+
+    public static MessageHandler MessageHandler_handler_orca = new MessageHandler() {
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                List<Entity> args = new ArrayList<>();
+                args.add(msg.getEntity(0));
+                args.add(msg.getEntity(1));
+                args.add(msg.getEntity(2));
+                conn1.run("tableInsert{Receive}", args);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    @Test(timeout = 180000)
+    public void test_threadPooledClient_subscribe_orca_table() throws Exception{
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, COMPUTENODE,"admin","123456");
+        String script1 = "if (existsCatalog(\"orca\")) {\n" +
+                "\tdropCatalog(\"orca\")\n" +
+                "}\n" +
+                "go\n" +
+                "createCatalog(\"orca\")\n" +
+                "go\n" +
+                "use catalog orca\n" +
+                "g = createStreamGraph('engine')\n" +
+                "g.source(\"trades\", 1000:0, [\"time\",\"sym\",\"volume\"], [TIMESTAMP, SYMBOL, INT])\n" +
+                ".timeSeriesEngine(windowSize=60000, step=60000, metrics=<[sum(volume)]>, timeColumn=\"time\", useSystemTime=false, keyColumn=\"sym\", useWindowStartTime=false)\n" +
+                ".sink(\"output\")\n" +
+                "g.submit()\n" +
+                "go\n" +
+                "times = [2018.10.08T01:01:01.785, 2018.10.08T01:01:02.125, 2018.10.08T01:01:10.263, 2018.10.08T01:01:12.457, 2018.10.08T01:02:10.789, 2018.10.08T01:02:12.005, 2018.10.08T01:02:30.021, 2018.10.08T01:04:02.236, 2018.10.08T01:04:04.412, 2018.10.08T01:04:05.152]\n" +
+                "syms = [`A, `B, `B, `A, `A, `B, `A, `A, `B, `B]\n" +
+                "volumes = [10, 26, 14, 28, 15, 9, 10, 29, 32, 23]\n" +
+                "\n" +
+                "tmp = table(times as time, syms as sym, volumes as volume)\n" +
+                "appendOrcaStreamTable(\"trades\", tmp)";
+        conn.run(script1);
+        BasicTable port = (BasicTable)conn.run("select port from getClusterPerf() where name = (exec site from getOrcaStreamTableMeta() where fqn = \"orca.orca_table.output\")");
+        int port1 = Integer.valueOf(port.getColumn(0).get(0).getString());
+        conn1 = new DBConnection();
+        conn1.connect(HOST,port1 ,"admin", "123456");
+        String script2 = "share table(1:0,`time`sym`volume, [TIMESTAMP, STRING, INT]) as Receive;";
+        conn1.run(script2);
+
+        threadPooledClient.subscribe(HOST, port1, "orca.orca_table.output", MessageHandler_handler_orca,true);
+        conn1.run("appendOrcaStreamTable( \"orca.orca_table.output\", table(timestamp(1..10) as time,take(`a`s`q,10) as sym, 1..10 as volume))");
+        //wait_data("Receive",4);
+        sleep(800);
+        BasicTable re = (BasicTable) conn1.run("select * from Receive order by time,sym,volume");
+        BasicTable tra = (BasicTable) conn1.run("select * from  orca.orca_table.output order by time,sym,sum_volume");
+        assertEquals(14, re.rows());
+        for (int i = 0; i < re.rows(); i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getString(), tra.getColumn(2).get(i).getString());
+        }
+        threadPooledClient.unsubscribe(HOST, port1, "orca.orca_table.output");
+    }
+
+    @Test(timeout = 180000)
+    public void test_threadPooledClient_subscribe_orca_table_not_orca_node() throws Exception{
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, COMPUTENODE,"admin","123456");
+        String script1 = "if (existsCatalog(\"orca\")) {\n" +
+                "\tdropCatalog(\"orca\")\n" +
+                "}\n" +
+                "go\n" +
+                "createCatalog(\"orca\")\n" +
+                "go\n" +
+                "use catalog orca\n" +
+                "g = createStreamGraph('engine')\n" +
+                "g.source(\"trades\", 1000:0, [\"time\",\"sym\",\"volume\"], [TIMESTAMP, SYMBOL, INT])\n" +
+                ".timeSeriesEngine(windowSize=60000, step=60000, metrics=<[sum(volume)]>, timeColumn=\"time\", useSystemTime=false, keyColumn=\"sym\", useWindowStartTime=false)\n" +
+                ".sink(\"output\")\n" +
+                "g.submit()\n" +
+                "go\n" +
+                "times = [2018.10.08T01:01:01.785, 2018.10.08T01:01:02.125, 2018.10.08T01:01:10.263, 2018.10.08T01:01:12.457, 2018.10.08T01:02:10.789, 2018.10.08T01:02:12.005, 2018.10.08T01:02:30.021, 2018.10.08T01:04:02.236, 2018.10.08T01:04:04.412, 2018.10.08T01:04:05.152]\n" +
+                "syms = [`A, `B, `B, `A, `A, `B, `A, `A, `B, `B]\n" +
+                "volumes = [10, 26, 14, 28, 15, 9, 10, 29, 32, 23]\n" +
+                "\n" +
+                "tmp = table(times as time, syms as sym, volumes as volume)\n" +
+                "appendOrcaStreamTable(\"trades\", tmp)";
+        conn.run(script1);
+        BasicTable port = (BasicTable)conn.run("select port from getClusterPerf() where name != (exec site from getOrcaStreamTableMeta() where fqn = \"orca.orca_table.output\") and mode = 0 limit 1");
+        int port1 = Integer.valueOf(port.getColumn(0).get(0).getString());
+        conn1 = new DBConnection();
+        conn1.connect(HOST,port1 ,"admin", "123456");
+        String script2 = "share table(1:0,`time`sym`volume, [TIMESTAMP, STRING, INT]) as Receive;";
+        conn1.run(script2);
+
+        threadPooledClient.subscribe(HOST, port1, "orca.orca_table.output", MessageHandler_handler_orca,true);
+        conn1.run("appendOrcaStreamTable( \"orca.orca_table.output\", table(timestamp(1..10) as time,take(`a`s`q,10) as sym, 1..10 as volume))");
+
+        //wait_data("Receive",4);
+        sleep(500);
+        BasicTable re = (BasicTable) conn1.run("select * from Receive order by time,sym,volume");
+        BasicTable tra = (BasicTable) conn1.run("select * from  orca.orca_table.output order by time,sym,sum_volume");
+        assertEquals(14, re.rows());
+        for (int i = 0; i < re.rows(); i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getString(), tra.getColumn(2).get(i).getString());
+        }
+        threadPooledClient.unsubscribe(HOST, port1, "orca.orca_table.output");
+    }
 }
