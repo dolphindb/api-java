@@ -266,6 +266,38 @@ public class BasicDecimal32Vector extends AbstractVector{
         return 4;
     }
 
+    @Override
+    public void add(Object value) {
+        if (value == null) {
+            if (size + 1 > capacity && unscaledValues.length > 0) {
+                unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length * 2);
+            } else if (unscaledValues.length <= 0) {
+                unscaledValues = new int[1];
+            }
+            capacity = unscaledValues.length;
+            unscaledValues[size] = Integer.MIN_VALUE;
+            size++;
+        } else if (value instanceof String) {
+            add((String) value);
+        } else if (value instanceof BigDecimal) {
+            if (size + 1 > capacity && unscaledValues.length > 0) {
+                unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length * 2);
+            } else if (unscaledValues.length <= 0) {
+                unscaledValues = new int[1];
+            }
+            capacity = unscaledValues.length;
+
+            BigDecimal bd = (BigDecimal) value;
+            BigDecimal pow = BigDecimal.TEN.pow(scale_);
+            if (checkDecimal32Range(bd.multiply(pow).intValue())) {
+                unscaledValues[size] = bd.multiply(pow).intValue();
+            }
+            size++;
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only String, BigDecimal or null is supported.");
+        }
+    }
+
     public void add(String value) {
         if (size + 1 > capacity && unscaledValues.length > 0) {
             unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length * 2);
