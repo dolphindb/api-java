@@ -131,7 +131,7 @@ public class ThreadPooledClient extends AbstractClient {
             } catch (Exception ex) {
                 Object[] hostPort = new Object[2];
                 if (getNewLeader(ex.getMessage(), hostPort)) {
-                    log.warn("In reconnect: Got NotLeaderException, switch to leader node [" + site.host + ":" + site.port + "] for subscription");
+                    log.warn("In reconnect: Got NotLeaderException, switch to leader node [" + hostPort[0] + ":" + hostPort[1] + "] for subscription");
                     haStreamTableInfo.add(new HAStreamTableInfo(site.host, site.port, site.tableName, site.actionName, (String) hostPort[0], (Integer) hostPort[1]));
                     site.host = (String) hostPort[0];
                     site.port = (Integer) hostPort[1];
@@ -178,7 +178,7 @@ public class ThreadPooledClient extends AbstractClient {
             } catch (Exception ex) {
                 Object[] hostPort = new Object[2];
                 if (getNewLeader(ex.getMessage(), hostPort)) {
-                    log.warn("In reconnect: Got NotLeaderException, switch to leader node [" + site.host + ":" + site.port + "] for subscription");
+                    log.warn("In reconnect: Got NotLeaderException, switch to leader node [" + hostPort[0] + ":" + hostPort[1] + "] for subscription");
                     haStreamTableInfo.add(new HAStreamTableInfo(site.host, site.port, site.tableName, site.actionName, (String) hostPort[0], (Integer) hostPort[1]));
                     site.host = (String) hostPort[0];
                     site.port = (Integer) hostPort[1];
