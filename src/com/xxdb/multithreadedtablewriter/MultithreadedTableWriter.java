@@ -254,13 +254,16 @@ public class MultithreadedTableWriter {
         }
 
         boolean init(){
-            if (tableWriter_.mode_ == Mode.M_Append){
+            if (tableWriter_.mode_ == Mode.M_Append) {
                 if (tableWriter_.dbName_.isEmpty()) {
                     scriptTableInsert_ = "tableInsert{\"" + tableWriter_.tableName_ + "\"}";
                 } else {// single partitioned table
                     scriptTableInsert_ = "tableInsert{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")}";
                 }
-            }else if (tableWriter_.mode_ == Mode.M_Upsert){
+            } else if (tableWriter_.mode_ == Mode.M_Upsert) {
+                if (tableWriter_.isOrcaStreamTable) {
+                    throw new RuntimeException("WriteMode for ORCA stream table must be 'Append'.");
+                }
                 StringBuilder sb = new StringBuilder();
                 if(tableWriter_.dbName_.isEmpty()){
                     sb.append("upsert!{" + tableWriter_.tableName_);
@@ -331,6 +334,7 @@ public class MultithreadedTableWriter {
     private ColInfo[] colInfos_;
     private boolean enableActualSendTime_ = false;
     private boolean isSetStreamTableTimestamp;
+    private boolean isOrcaStreamTable = false;
 
     public MultithreadedTableWriter(String hostName, int port, String userId, String password,
                                     String dbName, String tableName, boolean useSSL,
@@ -506,15 +510,8 @@ public class MultithreadedTableWriter {
                       boolean enableActualSendTime, boolean reconnect, int tryReconnectNums) throws Exception{
         dbName_=dbName;
 
-        boolean isOrca = false;
         if (tableName.contains(".orca_table.")) {
-            isOrca = true;
-        }
-
-        if (isOrca) {
-            tableName_ = "loadOrcaStreamTable(\"" + tableName + "\")";
-        } else {
-            tableName_=tableName;
+            isOrcaStreamTable = true;
         }
 
         batchSize_=batchSize;
@@ -549,20 +546,20 @@ public class MultithreadedTableWriter {
             compressTypes_=new int[compressTypes.length];
             System.arraycopy(compressTypes,0,compressTypes_,0,compressTypes.length);
         }
-        DBConnection pConn = newConn(hostName,port,userId,password,dbName,tableName_,useSSL,enableHighAvailability,highAvailabilitySites,isCompress, reconnect, tryReconnectNums);
+        DBConnection pConn = newConn(hostName,port,userId,password,dbName,tableName,useSSL,enableHighAvailability,highAvailabilitySites,isCompress, reconnect, tryReconnectNums);
         if(pConn==null){
             throw new RuntimeException("Failed to connect to server " + hostName + ":" + port);
         }
 
         BasicDictionary schema;
         if (dbName.isEmpty()) {
-            if (isOrca) {
-                schema = (BasicDictionary)pConn.run("useOrcaStreamTable(\"" + tableName_ + "\", schema)");
+            if (isOrcaStreamTable) {
+                schema = (BasicDictionary)pConn.run("useOrcaStreamTable(\"" + tableName + "\", schema)");
             } else {
-                schema = (BasicDictionary)pConn.run("schema(" + tableName_ + ")");
+                schema = (BasicDictionary)pConn.run("schema(" + tableName + ")");
             }
         } else {
-            schema = (BasicDictionary)pConn.run("schema(loadTable(\"" + dbName + "\",\"" + tableName_ + "\"))");
+            schema = (BasicDictionary)pConn.run("schema(loadTable(\"" + dbName + "\",\"" + tableName + "\"))");
         }
         Entity partColNames = schema.get(new BasicString("partitionColumnName"));
         if(partColNames!=null){//partitioned table
@@ -578,6 +575,7 @@ public class MultithreadedTableWriter {
 
         BasicTable colDefs = (BasicTable)schema.get(new BasicString("colDefs"));
         BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
+
         try {
             if (dbName.isEmpty()) {
                 Entity tableType = pConn.run("typestr(" + tableName_ + ")");
@@ -592,6 +590,12 @@ public class MultithreadedTableWriter {
             if (!e.getMessage().contains("Cannot recognize the token getStreamTableTimestamp")) {
                 throw e;
             }
+        }
+
+        if (isOrcaStreamTable) {
+            tableName_ = "loadOrcaStreamTable(\"" + tableName + "\")";
+        } else {
+            tableName_=tableName;
         }
 
         int columnSize = colDefs.rows();
