@@ -83,13 +83,13 @@ public class BasicSecondTest {
     public void test_BasicSecondVector_Append() throws Exception {
         BasicSecondVector bsv = new BasicSecondVector(new int[]{12,34,56});
         int size = bsv.size;
-        int capacity = bsv.capaticy;
+        int capacity = bsv.capacity;
         bsv.Append(new BasicSecond(LocalTime.now()));
         assertEquals(size+1,bsv.size);
-        assertEquals(capacity*2,bsv.capaticy);
+        assertEquals(capacity*2,bsv.capacity);
         bsv.Append(bsv);
         assertEquals(size+5,bsv.size);
-        assertEquals(9,bsv.capaticy);
+        assertEquals(9,bsv.capacity);
     }
     @Test
     public void test_BasicSecond_toJSONString() throws Exception {

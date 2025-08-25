@@ -230,13 +230,13 @@ public class BasicInt128Test {
     public void test_BasicInt128Vector_Append() throws Exception {
         BasicInt128Vector bi128v = new BasicInt128Vector(new Long2[]{new Long2(17L,6L),new Long2(29L,2L)});
         int size = bi128v.size;
-        int capacity = bi128v.capaticy;
+        int capacity = bi128v.capacity;
         bi128v.Append(new BasicInt128(35L,18L));
         assertEquals(size+1,bi128v.size);
-        assertEquals(capacity*2,bi128v.capaticy);
+        assertEquals(capacity*2,bi128v.capacity);
         bi128v.Append(new BasicInt128Vector(new Long2[]{new Long2(3L,0L),new Long2(59L,17L)}));
         assertEquals(size+3,bi128v.size);
-        assertEquals(capacity*2+2,bi128v.capaticy);
+        assertEquals(capacity*2+2,bi128v.capacity);
     }
     @Test
     public void test_BasicInt128_toJSONString(){

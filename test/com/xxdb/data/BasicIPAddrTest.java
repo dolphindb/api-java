@@ -154,13 +154,13 @@ public class BasicIPAddrTest {
     public void test_BasicIPAddrVector_Append() throws Exception {
         BasicIPAddrVector bipv = new BasicIPAddrVector(new Long2[]{new Long2(18L,11L),new Long2(9000L,659L)});
         int size = bipv.size;
-        int capacity = bipv.capaticy;
+        int capacity = bipv.capacity;
         bipv.Append(new BasicIPAddr(1300L,800L));
         bipv.Append(new BasicIPAddr(888L,600L));
         assertEquals(size+2,bipv.size);
-        assertEquals(capacity*2,bipv.capaticy);
+        assertEquals(capacity*2,bipv.capacity);
         bipv.Append(new BasicIPAddrVector(new Long2[]{new Long2(8100L,1300L),new Long2(820L,710L)}));
-        assertEquals(capacity*2+2,bipv.capaticy);
+        assertEquals(capacity*2+2,bipv.capacity);
         assertEquals(size+4,bipv.rows());
     }
 

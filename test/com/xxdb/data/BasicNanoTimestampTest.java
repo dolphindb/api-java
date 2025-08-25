@@ -133,10 +133,10 @@ public class BasicNanoTimestampTest {
     @Test
     public void test_BasicNanoTimeStampVector_Append() throws Exception {
         BasicNanoTimestampVector bntsv = new BasicNanoTimestampVector(new long[]{7554784040L,46274927491L});
-        int capacity = bntsv.capaticy;
+        int capacity = bntsv.capacity;
         bntsv.Append(new BasicNanoTimestamp(4738492949L));
         bntsv.Append(new BasicNanoTimestamp(7843849393L));
-        assertEquals(bntsv.size,bntsv.capaticy);
+        assertEquals(bntsv.size,bntsv.capacity);
         bntsv.Append(new BasicNanoTimestampVector(new long[]{36273293,3749284,73859372,47593902}));
         assertEquals(capacity*4,bntsv.size);
         String re = JSONObject.toJSONString(bntsv);

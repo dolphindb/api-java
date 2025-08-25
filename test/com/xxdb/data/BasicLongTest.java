@@ -164,13 +164,13 @@ public class BasicLongTest {
     public void test_BasicLongVector_Append() throws Exception {
         BasicLongVector blv = new BasicLongVector(new long[]{600,615,617});
         int size = blv.size;
-        int capacity = blv.capaticy;
+        int capacity = blv.capacity;
         blv.Append(new BasicLong(625));
         assertEquals(size+1,blv.size);
-        assertEquals(capacity*2,blv.capaticy);
+        assertEquals(capacity*2,blv.capacity);
         blv.Append(new BasicLongVector(new long[]{630,632,636}));
         assertEquals(size+4,blv.size);
-        assertEquals(capacity*2+3,blv.capaticy);
+        assertEquals(capacity*2+3,blv.capacity);
     }
     @Test
     public void test_longValue() throws Exception {

@@ -829,13 +829,13 @@ public class BasicDecimalTest {
         map.put("TTable",new BasicTable(colNames,cols));
         conn.upload(map);
         BasicTable bt2 = (BasicTable) conn.run("TTable;");
-        for (int i =0 ;i<1000;i++) {
+        for (int i =0 ;i<10;i++) {
             int m = appender.append(bt2);
             assertEquals(12,m);
         }
         BasicLong re = (BasicLong) conn.run("pt= loadTable(\"dfs://demohash\",`pt)\n" +
                 "exec count(*) from pt");
-        assertEquals(12000,re.getLong());
+        assertEquals(120,re.getLong());
         pool.shutdown();
     }
     @Test

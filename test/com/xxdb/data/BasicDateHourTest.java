@@ -107,13 +107,13 @@ public class BasicDateHourTest {
     public void test_BasicDateHourVector_Append() throws Exception {
         BasicDateHourVector bdhv = new BasicDateHourVector(new int[]{476,1004});
         int size = bdhv.size;
-        int capacity = bdhv.capaticy;
+        int capacity = bdhv.capacity;
         bdhv.Append(new BasicDateHour(LocalDateTime.now()));
-        assertEquals(capacity*2,bdhv.capaticy);
+        assertEquals(capacity*2,bdhv.capacity);
         System.out.println(bdhv.get(2));
         bdhv.Append(bdhv);
         assertEquals(size+4,bdhv.size);
-        assertEquals(6,bdhv.capaticy);
+        assertEquals(6,bdhv.capacity);
     }
     @Test
     public void test_BasicDateHour_toJSONString() throws Exception {

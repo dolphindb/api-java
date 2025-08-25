@@ -107,9 +107,9 @@ public class BasicTimestampTest {
     public void test_BasicTimeStampVector_Append() throws Exception {
         BasicTimestampVector btsv = new BasicTimestampVector(new long[]{34724264,7472947292L,3742839,3473293});
         int size = btsv.size;
-        int capacity = btsv.capaticy;
+        int capacity = btsv.capacity;
         btsv.Append(new BasicTimestamp(LocalDateTime.now()));
-        assertEquals(capacity*2,btsv.capaticy);
+        assertEquals(capacity*2,btsv.capacity);
         btsv.Append(btsv);
         System.out.println(btsv.getString());
         assertEquals(size+6,btsv.size);

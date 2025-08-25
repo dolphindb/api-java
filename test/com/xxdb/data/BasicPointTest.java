@@ -710,15 +710,15 @@ public class BasicPointTest {
     public void test_BasicPointVector_Append() throws Exception {
         BasicPointVector bpv = new BasicPointVector(new Double2[]{});
         int size = bpv.size;
-        int capacity = bpv.capaticy;
+        int capacity = bpv.capacity;
         System.out.println(size);
         System.out.println(capacity);
         bpv.Append(new BasicPoint(3.6,0.72));
         assertEquals(size+1,bpv.size);
-        System.out.println(bpv.capaticy);
+        System.out.println(bpv.capacity);
         bpv.Append(new BasicPointVector(new Double2[]{new Double2(2.2,0.62),new Double2(0.76,9.25)}));
         assertEquals(size+3,bpv.size);
-        assertEquals(capacity+3,bpv.capaticy);
+        assertEquals(capacity+3,bpv.capacity);
 
     }
     @Test

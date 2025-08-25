@@ -163,13 +163,13 @@ public class BasicIntTest {
     public void test_BasicIntVector_Append() throws Exception {
         BasicIntVector biv = new BasicIntVector(new int[]{5,11,23});
         int size = biv.size;
-        int capacity = biv.capaticy;
+        int capacity = biv.capacity;
         biv.Append(new BasicInt(12));
         assertEquals(size+1,biv.rows());
-        assertEquals(capacity*2,biv.capaticy);
+        assertEquals(capacity*2,biv.capacity);
         biv.Append(new BasicIntVector(new int[]{40,21,33}));
         assertEquals(size+4,biv.size);
-        assertEquals(capacity*2+3,biv.capaticy);
+        assertEquals(capacity*2+3,biv.capacity);
     }
     @Test
     public void test_intValue() throws Exception {

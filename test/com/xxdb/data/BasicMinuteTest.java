@@ -95,12 +95,12 @@ public class BasicMinuteTest {
     public void test_BasicMinuteVector_Append() throws Exception {
         BasicMinuteVector bmv = new BasicMinuteVector(new int[]{15,45});
         int size = bmv.size;
-        int capacity = bmv.capaticy;
+        int capacity = bmv.capacity;
         bmv.Append(new BasicMinute(LocalTime.now()));
-        assertEquals(capacity*2,bmv.capaticy);
+        assertEquals(capacity*2,bmv.capacity);
         bmv.Append(new BasicMinuteVector(new int[]{78,32}));
-        assertEquals(capacity*2+2,bmv.capaticy);
-        assertNotEquals(bmv.size,bmv.capaticy);
+        assertEquals(capacity*2+2,bmv.capacity);
+        assertNotEquals(bmv.size,bmv.capacity);
         System.out.println(bmv.getString());
     }
     @Test

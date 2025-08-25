@@ -109,13 +109,13 @@ public class BasicUuidTest {
     public void test_BasicUuidVector_Append() throws Exception {
         BasicUuidVector buv = new BasicUuidVector(new Long2[]{new Long2(35,11)});
         int size = buv.size;
-        int capacity = buv.capaticy;
+        int capacity = buv.capacity;
         buv.Append(new BasicUuid(19,7));
-        assertEquals(capacity*2,buv.capaticy);
+        assertEquals(capacity*2,buv.capacity);
         buv.Append(new BasicUuid(28,16));
-        assertEquals(capacity*4,buv.capaticy);
+        assertEquals(capacity*4,buv.capacity);
         buv.Append(new BasicUuidVector(new Long2[]{new Long2(46,29),new Long2(28,12)}));
-        assertEquals(capacity*4+2,buv.capaticy);
+        assertEquals(capacity*4+2,buv.capacity);
         assertEquals(size+4,buv.size);
     }
     @Test

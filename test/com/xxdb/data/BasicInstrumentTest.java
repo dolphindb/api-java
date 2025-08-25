@@ -37,20 +37,20 @@ public class BasicInstrumentTest {
     }
     @Test
     public void test_BasicInstrument_basic() throws IOException {
-        String script = "dict = { \n" +
-                " \"productType\": \"Option\",\n" +
-                " \"optionType\": \"EuropeanOption\",\n" +
-                " \"version\": 0,\n" +
-                " \"instrumentId\": \"0001\",\n" +
-                " \"nominal\": 100.0,\n" +
-                " \"strike\": 100.0,\n" +
-                " \"maturity\": 2022.08.09,\n" +
-                " \"dayCountConvention\": \"ActualActual\",\n" +
-                " \"payoffType\": \"Call\",\n" +
-                " \"priceCurrency\": \"CNY\",\n" +
-                " \"underlying\": \"EU_0001\"\n" +
+        String script ="fixedRateBond = {\n" +
+                "    \"productType\": \"Cash\",\n" +
+                "    \"assetType\": \"Bond\",\n" +
+                "    \"bondType\": \"FixedRate\",\n" +
+                "    \"version\": 0, \n" +
+                "    \"instrumentId\": \"240025.IB\",\n" +
+                "    \"start\": 2024.12.25,\n" +
+                "    \"maturity\": 2031.12.25,\n" +
+                "    \"issuePrice\": 100.0,\n" +
+                "    \"coupon\": 0.0149,\n" +
+                "    \"frequency\": \"Annual\",\n" +
+                "    \"dayCountConvention\": \"ActualActual\"\n" +
                 "}\n" +
-                "ins = parseInstrument(dict)\n" +
+                "ins = parseInstrument(fixedRateBond)\n" +
                 "ins;";
         BasicInstrument Instrument = (BasicInstrument)conn.run(script);
         System.out.println(Instrument.getString());
@@ -68,20 +68,48 @@ public class BasicInstrumentTest {
 
     @Test
     public void test_BasicInstrument_upload() throws IOException {
-        String script = "dict = { \n" +
-                " \"productType\": \"Option\",\n" +
-                " \"optionType\": \"EuropeanOption\",\n" +
-                " \"version\": 0,\n" +
-                " \"instrumentId\": \"0001\",\n" +
-                " \"nominal\": 100.0,\n" +
-                " \"strike\": 100.0,\n" +
-                " \"maturity\": 2022.08.09,\n" +
-                " \"dayCountConvention\": \"ActualActual\",\n" +
-                " \"payoffType\": \"Call\",\n" +
-                " \"priceCurrency\": \"CNY\",\n" +
-                " \"underlying\": \"EU_0001\"\n" +
+        String script ="fixedRateBond = {\n" +
+                "    \"productType\": \"Cash\",\n" +
+                "    \"assetType\": \"Bond\",\n" +
+                "    \"bondType\": \"FixedRate\",\n" +
+                "    \"version\": 0, \n" +
+                "    \"instrumentId\": \"240025.IB\",\n" +
+                "    \"start\": 2024.12.25,\n" +
+                "    \"maturity\": 2031.12.25,\n" +
+                "    \"issuePrice\": 100.0,\n" +
+                "    \"coupon\": 0.0149,\n" +
+                "    \"frequency\": \"Annual\",\n" +
+                "    \"dayCountConvention\": \"ActualActual\"\n" +
                 "}\n" +
-                "ins = parseInstrument(dict)\n" +
+                "ins = parseInstrument(fixedRateBond)\n" +
+                "ins;";
+        BasicInstrument Instrument = (BasicInstrument)conn.run(script);
+        Map<String, Entity> upObj = new HashMap<String, Entity>();
+        upObj.put("Instrument", (Entity) Instrument);
+        String re = null;
+        try{
+            conn.upload(upObj);
+        }catch(Exception ex){
+            re =ex.getMessage();
+        }
+        assertEquals("Not support yet",re);
+    }
+    @Test
+    public void test_BasicInstrument_download_table() throws IOException {
+        String script ="fixedRateBond = {\n" +
+                "    \"productType\": \"Cash\",\n" +
+                "    \"assetType\": \"Bond\",\n" +
+                "    \"bondType\": \"FixedRate\",\n" +
+                "    \"version\": 0, \n" +
+                "    \"instrumentId\": \"240025.IB\",\n" +
+                "    \"start\": 2024.12.25,\n" +
+                "    \"maturity\": 2031.12.25,\n" +
+                "    \"issuePrice\": 100.0,\n" +
+                "    \"coupon\": 0.0149,\n" +
+                "    \"frequency\": \"Annual\",\n" +
+                "    \"dayCountConvention\": \"ActualActual\"\n" +
+                "}\n" +
+                "ins = parseInstrument(fixedRateBond)\n" +
                 "ins;";
         BasicInstrument Instrument = (BasicInstrument)conn.run(script);
         Map<String, Entity> upObj = new HashMap<String, Entity>();

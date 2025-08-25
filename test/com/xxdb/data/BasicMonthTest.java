@@ -88,12 +88,12 @@ public class BasicMonthTest {
     public void test_BasicMonthVector_Append() throws Exception {
         BasicMonthVector bmv = new BasicMonthVector(new int[]{1,3,5});
         int size = bmv.size;
-        int capacity = bmv.capaticy;
+        int capacity = bmv.capacity;
         bmv.Append(new BasicMonth(13));
-        assertEquals(capacity*2,bmv.capaticy);
+        assertEquals(capacity*2,bmv.capacity);
         bmv.Append(new BasicMonthVector(new int[]{7,8,10,12}));
         assertEquals(size+5,bmv.size);
-        assertNotEquals(bmv.size,bmv.capaticy);
+        assertNotEquals(bmv.size,bmv.capacity);
     }
     @Test
     public void test_BasicMonth_toJSONString() throws Exception {

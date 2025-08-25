@@ -86,13 +86,13 @@ public class BasicTimeTest {
     public void test_BasicTimeVector_Append() throws Exception {
         BasicTimeVector btv = new BasicTimeVector(new int[]{1893,1976});
         int size = btv.size;
-        int capacity = btv.capaticy;
+        int capacity = btv.capacity;
         btv.Append(new BasicTime(2022));
         assertEquals(size+1,btv.size);
-        assertEquals(capacity*2,btv.capaticy);
+        assertEquals(capacity*2,btv.capacity);
         btv.Append(new BasicTimeVector(new int[]{618,755,907}));
         assertEquals(size+4,btv.size);
-        assertEquals(capacity*2+2,btv.capaticy);
+        assertEquals(capacity*2+2,btv.capacity);
     }
     @Test
     public void test_BasicTime(){

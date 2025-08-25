@@ -124,11 +124,11 @@ public class BasicDateTest {
     public void test_BasicDateVector_Append() throws Exception {
         BasicDateVector bdv = new BasicDateVector(new int[]{25,220,280});
         int size = bdv.size;
-        int capacity = bdv.capaticy;
+        int capacity = bdv.capacity;
         bdv.Append(new BasicDate(317));
-        assertEquals(capacity*2,bdv.capaticy);
+        assertEquals(capacity*2,bdv.capacity);
         bdv.Append(new BasicDateVector(new int[]{420,587,618}));
-        assertEquals(capacity*2+3,bdv.capaticy);
+        assertEquals(capacity*2+3,bdv.capacity);
         assertEquals(size+4,bdv.size);
         System.out.println(bdv.getString());
     }

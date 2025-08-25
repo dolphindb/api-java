@@ -92,14 +92,14 @@ public class BasicNanoTimeTest {
     public void test_BasicNanotimeVector_Append() throws Exception {
         BasicNanoTimeVector bntv = new BasicNanoTimeVector(new long[]{2314571,72668945,29934552});
         int size = bntv.size;
-        int capacity = bntv.capaticy;
+        int capacity = bntv.capacity;
         bntv.Append(new BasicNanoTime(899034671));
         bntv.Append(new BasicNanoTime(9012343536L));
         assertEquals(size+2,bntv.size);
-        assertEquals(capacity*2,bntv.capaticy);
+        assertEquals(capacity*2,bntv.capacity);
         bntv.Append(new BasicNanoTimeVector(new long[]{65534,21485432,1798093345}));
-        assertEquals(capacity*2+3,bntv.capaticy);
-        assertNotEquals(bntv.size,bntv.capaticy);
+        assertEquals(capacity*2+3,bntv.capacity);
+        assertNotEquals(bntv.size,bntv.capacity);
     }
     @Test
     public void test_BasicNanoTime_toJSONString() throws Exception {

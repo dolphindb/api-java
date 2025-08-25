@@ -183,12 +183,12 @@ public class BasicDateTimeTest {
     public void test_BasicDateTimeVector_Append() throws Exception {
         BasicDateTimeVector bdtv = new BasicDateTimeVector(new int[]{3354,324,342});
         bdtv.Append(bdtv);
-        assertEquals(bdtv.size,bdtv.capaticy);
+        assertEquals(bdtv.size,bdtv.capacity);
         int size = bdtv.size;
-        int capacity = bdtv.capaticy;
+        int capacity = bdtv.capacity;
         bdtv.Append(new BasicDateTime(37483940));
         bdtv.Append(new BasicDateTime(LocalDateTime.now()));
-        assertEquals(capacity*2,bdtv.capaticy);
+        assertEquals(capacity*2,bdtv.capacity);
         assertEquals(size+2,bdtv.size);
         System.out.println(bdtv.getString());
     }
