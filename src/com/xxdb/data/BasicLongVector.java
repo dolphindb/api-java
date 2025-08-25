@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.List;
-
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -18,7 +17,7 @@ import com.xxdb.io.ExtendedDataOutput;
 public class BasicLongVector extends AbstractVector{
 	protected long[] values;
 	protected int size;
-	protected int capaticy;
+	protected int capacity;
 	
 	public BasicLongVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -32,7 +31,7 @@ public class BasicLongVector extends AbstractVector{
 
 		this.values = new long[capacity];
 		this.size = size;
-		this.capaticy = capacity;
+		this.capacity = capacity;
 	}
 	
 	public BasicLongVector(List<Long> list){
@@ -48,7 +47,7 @@ public class BasicLongVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	public BasicLongVector(long[] array){
@@ -63,7 +62,7 @@ public class BasicLongVector extends AbstractVector{
 			values = array;
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	protected BasicLongVector(DATA_FORM df, int size){
@@ -71,7 +70,7 @@ public class BasicLongVector extends AbstractVector{
 		values = new long[size];
 
 		this.size = values.length;;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	protected BasicLongVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -93,7 +92,7 @@ public class BasicLongVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	@Override
@@ -113,7 +112,7 @@ public class BasicLongVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 
 	@Override
@@ -199,12 +198,12 @@ public class BasicLongVector extends AbstractVector{
 	}
 
 	public void add(long value) {
-		if (size + 1 > capaticy && values.length > 0){
+		if (size + 1 > capacity && values.length > 0){
 			values = Arrays.copyOf(values, values.length * 2);
 		}else if (values.length <= 0){
 			values = Arrays.copyOf(values, values.length + 1);
 		}
-		capaticy = values.length;
+		capacity = values.length;
 		values[size] = value;
 		size++;
 	}
@@ -235,7 +234,7 @@ public class BasicLongVector extends AbstractVector{
 					requiredCapacity
 			);
 			values = Arrays.copyOf(values, newCapacity);
-			capaticy = newCapacity;
+			capacity = newCapacity;
 		}
 	}
 

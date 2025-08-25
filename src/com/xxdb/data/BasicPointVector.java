@@ -12,7 +12,7 @@ import com.xxdb.io.ExtendedDataOutput;
 public class BasicPointVector extends AbstractVector{
 	protected Double2[] values;
 	protected int size;
-	protected int capaticy;
+	protected int capacity;
 	
 	public BasicPointVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -30,7 +30,7 @@ public class BasicPointVector extends AbstractVector{
 		}
 
 		this.size = size;
-		this.capaticy = capacity;
+		this.capacity = capacity;
 	}
 	
 	public BasicPointVector(List<Double2> list){
@@ -47,7 +47,7 @@ public class BasicPointVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	public BasicPointVector(Double2[] array){
@@ -67,7 +67,7 @@ public class BasicPointVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	protected BasicPointVector(DATA_FORM df, int size){
@@ -77,7 +77,7 @@ public class BasicPointVector extends AbstractVector{
 			values[i] = new Double2(0, 0);
 
 		this.size = values.length;;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	protected BasicPointVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -103,7 +103,7 @@ public class BasicPointVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	@Override
@@ -126,7 +126,7 @@ public class BasicPointVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 
 	@Override
@@ -200,12 +200,12 @@ public class BasicPointVector extends AbstractVector{
 	}
 
 	public void add(Double2 value) {
-		if (size + 1 > capaticy && values.length > 0){
+		if (size + 1 > capacity && values.length > 0){
 			values = Arrays.copyOf(values, values.length * 2);
 		}else if (values.length <= 0){
 			values = Arrays.copyOf(values, values.length + 1);
 		}
-		capaticy = values.length;
+		capacity = values.length;
 		values[size] = value;
 		size++;
 	}
@@ -236,7 +236,7 @@ public class BasicPointVector extends AbstractVector{
 					requiredCapacity
 			);
 			values = Arrays.copyOf(values, newCapacity);
-			capaticy = newCapacity;
+			capacity = newCapacity;
 		}
 	}
 

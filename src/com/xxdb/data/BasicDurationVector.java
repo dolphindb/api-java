@@ -4,14 +4,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
 public class BasicDurationVector extends AbstractVector{
 	private int[] values;
 	private int size;
-	private int capaticy;
+	private int capacity;
 	
 	public BasicDurationVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -25,7 +24,7 @@ public class BasicDurationVector extends AbstractVector{
 
 		this.values = new int[2 * capacity];
 		this.size = 2 * size;
-		this.capaticy = 2 * capacity;
+		this.capacity = 2 * capacity;
 	}
 		
 	protected BasicDurationVector(DATA_FORM df, int size){
@@ -33,7 +32,7 @@ public class BasicDurationVector extends AbstractVector{
 		values = new int[2*size];
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	protected BasicDurationVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -56,7 +55,7 @@ public class BasicDurationVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	public Entity get(int index){
@@ -94,12 +93,12 @@ public class BasicDurationVector extends AbstractVector{
 	}
 
 	public void add(int value, int duration) {
-		if (size + 1 > capaticy && values.length > 0){
+		if (size + 1 > capacity && values.length > 0){
 			values = Arrays.copyOf(values, values.length * 2);
 		}else if (values.length <= 0){
 			values = Arrays.copyOf(values, values.length + 1);
 		}
-		capaticy = values.length;
+		capacity = values.length;
 		values[size] = value;
 		values[size+1] = duration;
 		size+=2;
@@ -131,7 +130,7 @@ public class BasicDurationVector extends AbstractVector{
 					requiredCapacity
 			);
 			values = Arrays.copyOf(values, newCapacity);
-			capaticy = newCapacity;
+			capacity = newCapacity;
 		}
 	}
 

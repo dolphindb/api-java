@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.List;
-
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 
@@ -18,7 +17,7 @@ import com.xxdb.io.ExtendedDataOutput;
 public class BasicShortVector extends AbstractVector{
 	private short[] values;
 	private int size;
-	private int capaticy;
+	private int capacity;
 	
 	public BasicShortVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -32,7 +31,7 @@ public class BasicShortVector extends AbstractVector{
 
 		this.values = new short[capacity];
 		this.size = size;
-		this.capaticy = capacity;
+		this.capacity = capacity;
 	}
 	
 	public BasicShortVector(List<Short> list){
@@ -49,7 +48,7 @@ public class BasicShortVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	public BasicShortVector(short[] array){
@@ -64,7 +63,7 @@ public class BasicShortVector extends AbstractVector{
 			values = array;
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	protected BasicShortVector(DATA_FORM df, int size){
@@ -72,7 +71,7 @@ public class BasicShortVector extends AbstractVector{
 		values = new short[size];
 
 		this.size = values.length;;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	protected BasicShortVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -94,7 +93,7 @@ public class BasicShortVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	@Override
@@ -114,7 +113,7 @@ public class BasicShortVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 
 	@Override
@@ -192,12 +191,12 @@ public class BasicShortVector extends AbstractVector{
 	}
 
 	public void add(short value) {
-		if (size + 1 > capaticy && values.length > 0){
+		if (size + 1 > capacity && values.length > 0){
 			values = Arrays.copyOf(values, values.length * 2);
 		}else if (values.length <= 0){
 			values = Arrays.copyOf(values, values.length + 1);
 		}
-		capaticy = values.length;
+		capacity = values.length;
 		values[size] = value;
 		size++;
 	}
@@ -228,7 +227,7 @@ public class BasicShortVector extends AbstractVector{
 					requiredCapacity
 			);
 			values = Arrays.copyOf(values, newCapacity);
-			capaticy = newCapacity;
+			capacity = newCapacity;
 		}
 	}
 

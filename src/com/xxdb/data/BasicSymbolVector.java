@@ -17,7 +17,7 @@ public class BasicSymbolVector extends AbstractVector {
 	private SymbolBase base;
 	private int[] values;
 	private int size;
-	private int capaticy;
+	private int capacity;
 	
 	public BasicSymbolVector(int size){
 		super(DATA_FORM.DF_VECTOR);
@@ -25,7 +25,7 @@ public class BasicSymbolVector extends AbstractVector {
 		values = new int[size];
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 
 	public BasicSymbolVector(int size, int capacity) {
@@ -37,7 +37,7 @@ public class BasicSymbolVector extends AbstractVector {
 		this.base = new SymbolBase(0);
 		this.values = new int[capacity];
 		this.size = size;
-		this.capaticy = capacity;
+		this.capacity = capacity;
 	}
 	
 	public BasicSymbolVector(SymbolBase base, int size){
@@ -46,7 +46,7 @@ public class BasicSymbolVector extends AbstractVector {
 		values = new int[size];
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	public BasicSymbolVector(List<String> list){
@@ -61,7 +61,7 @@ public class BasicSymbolVector extends AbstractVector {
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	public BasicSymbolVector(SymbolBase base, int[] values, boolean copy){
@@ -76,7 +76,7 @@ public class BasicSymbolVector extends AbstractVector {
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 
 	protected BasicSymbolVector(DATA_FORM df, ExtendedDataInput in) throws IOException {
@@ -99,7 +99,7 @@ public class BasicSymbolVector extends AbstractVector {
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	protected BasicSymbolVector(DATA_FORM df, ExtendedDataInput in, SymbolBaseCollection collection) throws IOException{
@@ -122,7 +122,7 @@ public class BasicSymbolVector extends AbstractVector {
 		}
 
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	public Entity get(int index){
@@ -163,9 +163,9 @@ public class BasicSymbolVector extends AbstractVector {
 
 	@Override
 	public void Append(Scalar value) {
-		if (size + 1 > capaticy){
+		if (size + 1 > capacity){
 			values = Arrays.copyOf(values, values.length * 2);
-			capaticy = values.length;
+			capacity = values.length;
 		}
 		values[size] = base.find(value.getString(), true);
 		size++;

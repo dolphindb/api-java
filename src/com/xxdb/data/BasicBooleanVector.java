@@ -2,7 +2,6 @@ package com.xxdb.data;
 
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -17,7 +16,7 @@ import java.util.List;
 public class BasicBooleanVector extends AbstractVector{
 	private byte[] values;
 	private int size;
-	private int capaticy;
+	private int capacity;
 	
 	public BasicBooleanVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -31,7 +30,7 @@ public class BasicBooleanVector extends AbstractVector{
 
 		this.values = new byte[capacity];
 		this.size = size;
-		this.capaticy = capacity;
+		this.capacity = capacity;
 	}
 	
 	public BasicBooleanVector(List<Byte> list){
@@ -46,7 +45,7 @@ public class BasicBooleanVector extends AbstractVector{
 			}
 		}
 		size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	public BasicBooleanVector(byte[] array){
@@ -73,14 +72,14 @@ public class BasicBooleanVector extends AbstractVector{
 			values = array;
 
 		size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	protected BasicBooleanVector(DATA_FORM df, int size){
 		super(df);
 		values = new byte[size];
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	protected BasicBooleanVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -95,14 +94,14 @@ public class BasicBooleanVector extends AbstractVector{
 			off += len;
 		}
 		this.size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 	
 	@Override
 	public void deserialize(int start, int count, ExtendedDataInput in) throws IOException {
 		in.readFully(values, start, count);
 		size = values.length;
-		capaticy = values.length;
+		capacity = values.length;
 	}
 
 	@Override
@@ -219,12 +218,12 @@ public class BasicBooleanVector extends AbstractVector{
 	}
 
 	public void add(byte value) {
-		if (size + 1 > capaticy && values.length > 0){
+		if (size + 1 > capacity && values.length > 0){
 			values = Arrays.copyOf(values, values.length * 2);
 		}else if (values.length <= 0){
 			values = Arrays.copyOf(values, values.length + 1);
 		}
-		capaticy = values.length;
+		capacity = values.length;
 		values[size] = value;
 		size++;
 	}
@@ -254,7 +253,7 @@ public class BasicBooleanVector extends AbstractVector{
 					requiredCapacity
 			);
 			values = Arrays.copyOf(values, newCapacity);
-			capaticy = newCapacity;
+			capacity = newCapacity;
 		}
 	}
 

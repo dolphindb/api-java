@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.List;
-
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.ExtendedDataOutput;
 import com.xxdb.io.Double2;
@@ -13,7 +12,7 @@ import com.xxdb.io.Double2;
 public class BasicComplexVector extends AbstractVector{
 	protected Double2[] values;
 	private int size;
-	private int capaticy;
+	private int capacity;
 	
 	public BasicComplexVector(int size){
 		this(DATA_FORM.DF_VECTOR, size);
@@ -31,7 +30,7 @@ public class BasicComplexVector extends AbstractVector{
 		}
 
 		this.size = size;
-		this.capaticy = capacity;
+		this.capacity = capacity;
 	}
 	
 	public BasicComplexVector(List<Double2> list){
@@ -47,7 +46,7 @@ public class BasicComplexVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		this.capaticy = values.length;
+		this.capacity = values.length;
 	}
 	
 	public BasicComplexVector(Double2[] array){
@@ -67,7 +66,7 @@ public class BasicComplexVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		this.capaticy = values.length;
+		this.capacity = values.length;
 	}
 	
 	protected BasicComplexVector(DATA_FORM df, int size){
@@ -77,7 +76,7 @@ public class BasicComplexVector extends AbstractVector{
 			values[i] = new Double2(0, 0);
 
 		this.size = values.length;
-		this.capaticy = values.length;
+		this.capacity = values.length;
 	}
 	
 	protected BasicComplexVector(DATA_FORM df, ExtendedDataInput in) throws IOException{
@@ -103,7 +102,7 @@ public class BasicComplexVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		this.capaticy = values.length;
+		this.capacity = values.length;
 	}
 	
 	@Override
@@ -126,7 +125,7 @@ public class BasicComplexVector extends AbstractVector{
 		}
 
 		this.size = values.length;
-		this.capaticy = values.length;
+		this.capacity = values.length;
 	}
 
 	@Override
@@ -153,12 +152,12 @@ public class BasicComplexVector extends AbstractVector{
 	}
 
 	public void add(Double2 value) {
-		if (size + 1 > capaticy && values.length > 0){
+		if (size + 1 > capacity && values.length > 0){
 			values = Arrays.copyOf(values, values.length * 2);
 		}else if (values.length <= 0){
 			values = Arrays.copyOf(values, values.length + 1);
 		}
-		capaticy = values.length;
+		capacity = values.length;
 		values[size] = value;
 		size++;
 	}
@@ -188,7 +187,7 @@ public class BasicComplexVector extends AbstractVector{
 					requiredCapacity
 			);
 			values = Arrays.copyOf(values, newCapacity);
-			capaticy = newCapacity;
+			capacity = newCapacity;
 		}
 	}
 
