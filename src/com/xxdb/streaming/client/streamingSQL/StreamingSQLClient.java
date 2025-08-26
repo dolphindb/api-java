@@ -133,7 +133,7 @@ public class StreamingSQLClient extends AbstractClient {
 
     public BasicTable subscribeStreamingSQL(String queryId, MessageHandler handler, int batchSize, float throttle) throws IOException {
         // Create a wrapper to store table references
-        final TableWrapper resultWrapper = new TableWrapper(new BasicTable(new ArrayList<>(), new ArrayList<>()));
+        final TableWrapper resultWrapper = new TableWrapper(null);
 
         if (Objects.isNull(handler)) {
             // update table logic
