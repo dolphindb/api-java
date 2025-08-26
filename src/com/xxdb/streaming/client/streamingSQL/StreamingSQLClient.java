@@ -198,7 +198,13 @@ public class StreamingSQLClient extends AbstractClient {
 
     public BasicTable getStreamingSQLStatus(String queryId) {
         try {
-            return (BasicTable) conn.run("getStreamingSQLStatus(\"" + queryId + "\")");
+            if (Objects.equals(queryId, "")) {
+                throw new IllegalArgumentException("The param 'queryId' cannot be empty.");
+            } else if (Objects.isNull(queryId)) {
+                return (BasicTable) conn.run("getStreamingSQLStatus()");
+            } else {
+                return (BasicTable) conn.run("getStreamingSQLStatus(\"" + queryId + "\")");
+            }
         } catch (IOException e) {
             throw new RuntimeException("get streaming SQL status error: " + e);
         }
