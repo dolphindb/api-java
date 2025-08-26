@@ -103,8 +103,11 @@ public class StreamingSQLClient extends AbstractClient {
         }
     }
 
-    public StreamingSQLClient(String host, int port, String userName, String password, int subscribePort) throws IOException {
-        super(subscribePort);
+    public StreamingSQLClient(String host, int port, String userName, String password) throws IOException {
+        if (Utils.isEmpty(host)) {
+            throw new IllegalArgumentException("The param 'host' cannot be null or empty.");
+        }
+
         this.host = host;
         this.port = port;
         this.userName = userName;
