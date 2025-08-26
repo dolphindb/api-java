@@ -254,6 +254,18 @@ public class StreamingSQLClient extends AbstractClient {
             };
         }
 
+        if (Utils.isEmpty(queryId)) {
+            throw new IllegalArgumentException("The param 'queryId' cannot be null or empty.");
+        }
+
+        try {
+            getStreamingSQLStatus(queryId);
+        } catch (Exception e) {
+            if (e.getMessage().contains("queryId " + queryId + " does not exist")) {
+                throw new IllegalArgumentException("queryId " + queryId + " does not exist.");
+            }
+        }
+
         // Call subscribeInternal with the (possibly newly created) handler
         Map<String, Object> res = subscribeStreamingSqlLogInfoInternal(host, port, queryId, queryId, handler, -1, false, null, null, false, userName, password, true, true);
 
