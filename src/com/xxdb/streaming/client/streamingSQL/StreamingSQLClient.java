@@ -158,6 +158,10 @@ public class StreamingSQLClient extends AbstractClient {
                 throw new IllegalArgumentException("The param 'sqlQuery' cannot be null or empty.");
             }
 
+            if (logTableCacheSize < 0) {
+                throw new IllegalArgumentException("logTableCacheSize must be a positive integer.");
+            }
+
             List<Entity> params = new ArrayList<>();
             params.add(new BasicString(sqlQuery));
 
@@ -165,9 +169,7 @@ public class StreamingSQLClient extends AbstractClient {
                 params.add(new BasicString(queryId));
             }
 
-            if (logTableCacheSize > 0) {
-                params.add(new BasicInt(logTableCacheSize));
-            }
+            params.add(new BasicInt(logTableCacheSize));
 
             Entity streamingSQLTableName = conn.run("registerStreamingSQL", params);
             return streamingSQLTableName.getString();
