@@ -126,7 +126,7 @@ public class StreamingSQLClient extends AbstractClient {
 
     public void revokeStreamingSQLTable(String tableName) {
         try {
-            conn.run("revokeStreamingSQLTable(" + tableName + ")");
+            conn.run("revokeStreamingSQLTable(\"" + tableName + "\")");
         } catch (IOException e) {
             throw new RuntimeException("revoke streaming sql table error: " + e);
         }
