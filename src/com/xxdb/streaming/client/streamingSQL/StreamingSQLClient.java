@@ -209,7 +209,7 @@ public class StreamingSQLClient extends AbstractClient {
     }
 
     public BasicTable subscribeStreamingSQL(String queryId, int batchSize, float throttle) throws IOException {
-        return subscribeStreamingSQL(queryId, null, -1, -1);
+        return subscribeStreamingSQL(queryId, null, batchSize, throttle);
     }
 
     public BasicTable subscribeStreamingSQL(String queryId, MessageHandler handler) throws IOException {
