@@ -154,6 +154,10 @@ public class StreamingSQLClient extends AbstractClient {
 
     public String registerStreamingSQL(String sqlQuery, String queryId, int logTableCacheSize) {
         try {
+            if (Utils.isEmpty(sqlQuery)) {
+                throw new IllegalArgumentException("The param 'sqlQuery' cannot be null or empty.");
+            }
+
             List<Entity> params = new ArrayList<>();
             params.add(new BasicString(sqlQuery));
 
@@ -174,7 +178,7 @@ public class StreamingSQLClient extends AbstractClient {
 
     public void revokeStreamingSQL(String queryId) {
         try {
-            conn.run("revokeStreamingSQL(" + queryId + ")");
+            conn.run("revokeStreamingSQL(\"" + queryId + "\")");
         } catch (IOException e) {
             throw new RuntimeException("revoke streaming SQL error: " + e);
         }
