@@ -206,21 +206,166 @@ public class StreamingSQLResultUpdater {
                                 }
                             } else if (prevUpdateType == LogType.kInsert) {
                                 // Process insert operation
-                                getLinesInLog(updateColumns, updateValues, updateLogSize, offset, length);
+                                log.debug("处理 kInsert 类型消息");
+
+                                // 获取插入行号
                                 BasicIntVector insertNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                                 int prevSize = result.rows();
-                                log.debug("Calling appendColumns for kInsert");
-                                boolean appended = appendColumns(result, updateValues);
-                                if (!appended) {
-                                    throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
-                                }
-                                BasicIntVector sortIndex = insertIndexMapping(prevSize, insertNo, wrapper);
 
-                                List<Vector> newCols = new ArrayList<>();
-                                for (int col = 0; col < result.columns(); col++) {
-                                    newCols.add(result.getColumn(col).getSubVector(sortIndex.getdataArray()));
+                                // 打印消息内容
+                                log.debug("消息内容: 类型=" + prevUpdateType + ", 行号=" + insertNo.getString() +
+                                        ", 数据列数=" + (msg.size() - 2));
+
+                                // 如果是单行数据，使用通用类型处理
+                                if (insertNo.rows() == 1) {
+                                    // 创建包含新数据的列数组
+                                    Vector[] newColumns = new Vector[msg.size() - 2]; // 减去类型和行号两列
+
+                                    // 为每一列创建对应类型的向量
+                                    for (int j = 2; j < msg.size(); j++) {
+                                        Scalar sourceValue = (Scalar) msg.getEntity(j);
+                                        Entity.DATA_TYPE dataType = sourceValue.getDataType();
+
+                                        // 创建适当类型的向量
+                                        Vector newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
+
+                                        // 根据数据类型正确复制值
+                                        switch (dataType) {
+                                            case DT_BOOL:
+                                                boolean boolValue = ((BasicBoolean)sourceValue).getBoolean();
+                                                ((BasicBooleanVector)newVector).set(0, new BasicBoolean(boolValue));
+                                                break;
+                                            case DT_BYTE:
+                                                byte byteValue = ((BasicByte)sourceValue).getByte();
+                                                ((BasicByteVector)newVector).set(0, new BasicByte(byteValue));
+                                                break;
+                                            case DT_SHORT:
+                                                short shortValue = ((BasicShort)sourceValue).getShort();
+                                                ((BasicShortVector)newVector).set(0, new BasicShort(shortValue));
+                                                break;
+                                            case DT_INT:
+                                                int intValue = ((BasicInt)sourceValue).getInt();
+                                                ((BasicIntVector)newVector).set(0, new BasicInt(intValue));
+                                                break;
+                                            case DT_LONG:
+                                                long longValue = ((BasicLong)sourceValue).getLong();
+                                                ((BasicLongVector)newVector).set(0, new BasicLong(longValue));
+                                                break;
+                                            case DT_FLOAT:
+                                                float floatValue = ((BasicFloat)sourceValue).getFloat();
+                                                ((BasicFloatVector)newVector).set(0, new BasicFloat(floatValue));
+                                                break;
+                                            case DT_DOUBLE:
+                                                double doubleValue = ((BasicDouble)sourceValue).getDouble();
+                                                ((BasicDoubleVector)newVector).set(0, new BasicDouble(doubleValue));
+                                                break;
+                                            case DT_STRING:
+                                                String stringValue = ((BasicString)sourceValue).getString();
+                                                ((BasicStringVector)newVector).set(0, new BasicString(stringValue));
+                                                break;
+                                            case DT_DATE:
+                                                int dateValue = ((BasicDate)sourceValue).getInt();
+                                                ((BasicDateVector)newVector).set(0, new BasicDate(dateValue));
+                                                break;
+                                            case DT_MONTH:
+                                                int monthValue = ((BasicMonth)sourceValue).getInt();
+                                                ((BasicMonthVector)newVector).set(0, new BasicMonth(monthValue));
+                                                break;
+                                            case DT_TIME:
+                                                int timeValue = ((BasicTime)sourceValue).getInt();
+                                                ((BasicTimeVector)newVector).set(0, new BasicTime(timeValue));
+                                                break;
+                                            case DT_MINUTE:
+                                                int minuteValue = ((BasicMinute)sourceValue).getInt();
+                                                ((BasicMinuteVector)newVector).set(0, new BasicMinute(minuteValue));
+                                                break;
+                                            case DT_SECOND:
+                                                int secondValue = ((BasicSecond)sourceValue).getInt();
+                                                ((BasicSecondVector)newVector).set(0, new BasicSecond(secondValue));
+                                                break;
+                                            case DT_DATETIME:
+                                                int datetimeValue = ((BasicDateTime)sourceValue).getInt();
+                                                ((BasicDateTimeVector)newVector).set(0, new BasicDateTime(datetimeValue));
+                                                break;
+                                            case DT_TIMESTAMP:
+                                                long timestampValue = ((BasicTimestamp)sourceValue).getLong();
+                                                ((BasicTimestampVector)newVector).set(0, new BasicTimestamp(timestampValue));
+                                                break;
+                                            case DT_NANOTIME:
+                                                long nanotimeValue = ((BasicNanoTime)sourceValue).getLong();
+                                                ((BasicNanoTimeVector)newVector).set(0, new BasicNanoTime(nanotimeValue));
+                                                break;
+                                            case DT_NANOTIMESTAMP:
+                                                long nanotimestampValue = ((BasicNanoTimestamp)sourceValue).getLong();
+                                                ((BasicNanoTimestampVector)newVector).set(0, new BasicNanoTimestamp(nanotimestampValue));
+                                                break;
+                                            // 可以根据需要添加更多类型
+                                            default:
+                                                // 对于不认识的类型，直接复制原始值
+                                                newVector.set(0, sourceValue);
+                                        }
+
+                                        newColumns[j-2] = newVector;
+                                    }
+
+                                    // 直接添加到表中
+                                    boolean appended = appendColumns(result, newColumns);
+                                    if (!appended) {
+                                        throw new RuntimeException("updateStreamingSQLResult failed when appending new data");
+                                    }
+
+                                    log.debug("成功添加新行，当前表行数: " + result.rows());
+
+                                    // 插入位置
+                                    int insertPos = ((BasicInt)insertNo.get(0)).getInt();
+                                    log.debug("插入位置: " + insertPos);
+
+                                    // 只有当插入位置不是在末尾时，才需要排序
+                                    if (insertPos < prevSize) {
+                                        // 创建一个表示当前表行顺序的向量
+                                        BasicIntVector sortIndex = new BasicIntVector(result.rows());
+                                        for (int j = 0; j < prevSize; j++) {
+                                            sortIndex.set(j, new BasicInt(j));
+                                        }
+
+                                        // 最后一行的原始位置是 prevSize
+                                        int lastRowPos = prevSize;
+
+                                        // 将最后一行移动到指定位置
+                                        for (int j = result.rows() - 1; j > insertPos; j--) {
+                                            sortIndex.set(j, sortIndex.get(j - 1));
+                                        }
+                                        sortIndex.set(insertPos, new BasicInt(lastRowPos));
+
+                                        // 使用排序索引创建新表
+                                        List<Vector> newCols = new ArrayList<>();
+                                        for (int col = 0; col < result.columns(); col++) {
+                                            newCols.add(result.getColumn(col).getSubVector(sortIndex.getdataArray()));
+                                        }
+                                        result = new BasicTable(getColumnNames(result), newCols);
+                                    }
+                                } else {
+                                    // 对于多行数据，恢复原始处理逻辑
+                                    getLinesInLog(updateColumns, updateValues, updateLogSize, offset, length);
+
+                                    // 添加到表中
+                                    boolean appended = appendColumns(result, updateValues);
+                                    if (!appended) {
+                                        throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
+                                    }
+
+                                    // 计算排序索引
+                                    BasicIntVector sortIndex = insertIndexMapping(prevSize, insertNo, wrapper);
+
+                                    // 使用排序索引创建新表
+                                    List<Vector> newCols = new ArrayList<>();
+                                    for (int col = 0; col < result.columns(); col++) {
+                                        newCols.add(result.getColumn(col).getSubVector(sortIndex.getdataArray()));
+                                    }
+                                    result = new BasicTable(getColumnNames(result), newCols);
                                 }
-                                result = new BasicTable(getColumnNames(result), newCols);
+
+                                log.debug("处理完成，当前表行数: " + result.rows());
                             }
                         }
                     }
@@ -342,21 +487,166 @@ public class StreamingSQLResultUpdater {
                     }
                 } else if (prevUpdateType == LogType.kInsert) {
                     // Process insert operation
-                    getLinesInLog(updateColumns, updateValues, updateLogSize, offset, length);
+                    log.debug("处理 kInsert 类型消息");
+
+                    // 获取插入行号
                     BasicIntVector insertNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                     int prevSize = result.rows();
-                    log.debug("Calling appendColumns for final kInsert");
-                    boolean appended = appendColumns(result, updateValues);
-                    if (!appended) {
-                        throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
-                    }
-                    BasicIntVector sortIndex = insertIndexMapping(prevSize, insertNo, wrapper);
 
-                    List<Vector> newCols = new ArrayList<>();
-                    for (int col = 0; col < result.columns(); col++) {
-                        newCols.add(result.getColumn(col).getSubVector(sortIndex.getdataArray()));
+                    // 打印消息内容
+                    log.debug("消息内容: 类型=" + prevUpdateType + ", 行号=" + insertNo.getString() +
+                            ", 数据列数=" + (msg.size() - 2));
+
+                    // 如果是单行数据，使用通用类型处理
+                    if (insertNo.rows() == 1) {
+                        // 创建包含新数据的列数组
+                        Vector[] newColumns = new Vector[msg.size() - 2]; // 减去类型和行号两列
+
+                        // 为每一列创建对应类型的向量
+                        for (int i = 2; i < msg.size(); i++) {
+                            Scalar sourceValue = (Scalar) msg.getEntity(i);
+                            Entity.DATA_TYPE dataType = sourceValue.getDataType();
+
+                            // 创建适当类型的向量
+                            Vector newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
+
+                            // 根据数据类型正确复制值
+                            switch (dataType) {
+                                case DT_BOOL:
+                                    boolean boolValue = ((BasicBoolean)sourceValue).getBoolean();
+                                    ((BasicBooleanVector)newVector).set(0, new BasicBoolean(boolValue));
+                                    break;
+                                case DT_BYTE:
+                                    byte byteValue = ((BasicByte)sourceValue).getByte();
+                                    ((BasicByteVector)newVector).set(0, new BasicByte(byteValue));
+                                    break;
+                                case DT_SHORT:
+                                    short shortValue = ((BasicShort)sourceValue).getShort();
+                                    ((BasicShortVector)newVector).set(0, new BasicShort(shortValue));
+                                    break;
+                                case DT_INT:
+                                    int intValue = ((BasicInt)sourceValue).getInt();
+                                    ((BasicIntVector)newVector).set(0, new BasicInt(intValue));
+                                    break;
+                                case DT_LONG:
+                                    long longValue = ((BasicLong)sourceValue).getLong();
+                                    ((BasicLongVector)newVector).set(0, new BasicLong(longValue));
+                                    break;
+                                case DT_FLOAT:
+                                    float floatValue = ((BasicFloat)sourceValue).getFloat();
+                                    ((BasicFloatVector)newVector).set(0, new BasicFloat(floatValue));
+                                    break;
+                                case DT_DOUBLE:
+                                    double doubleValue = ((BasicDouble)sourceValue).getDouble();
+                                    ((BasicDoubleVector)newVector).set(0, new BasicDouble(doubleValue));
+                                    break;
+                                case DT_STRING:
+                                    String stringValue = ((BasicString)sourceValue).getString();
+                                    ((BasicStringVector)newVector).set(0, new BasicString(stringValue));
+                                    break;
+                                case DT_DATE:
+                                    int dateValue = ((BasicDate)sourceValue).getInt();
+                                    ((BasicDateVector)newVector).set(0, new BasicDate(dateValue));
+                                    break;
+                                case DT_MONTH:
+                                    int monthValue = ((BasicMonth)sourceValue).getInt();
+                                    ((BasicMonthVector)newVector).set(0, new BasicMonth(monthValue));
+                                    break;
+                                case DT_TIME:
+                                    int timeValue = ((BasicTime)sourceValue).getInt();
+                                    ((BasicTimeVector)newVector).set(0, new BasicTime(timeValue));
+                                    break;
+                                case DT_MINUTE:
+                                    int minuteValue = ((BasicMinute)sourceValue).getInt();
+                                    ((BasicMinuteVector)newVector).set(0, new BasicMinute(minuteValue));
+                                    break;
+                                case DT_SECOND:
+                                    int secondValue = ((BasicSecond)sourceValue).getInt();
+                                    ((BasicSecondVector)newVector).set(0, new BasicSecond(secondValue));
+                                    break;
+                                case DT_DATETIME:
+                                    int datetimeValue = ((BasicDateTime)sourceValue).getInt();
+                                    ((BasicDateTimeVector)newVector).set(0, new BasicDateTime(datetimeValue));
+                                    break;
+                                case DT_TIMESTAMP:
+                                    long timestampValue = ((BasicTimestamp)sourceValue).getLong();
+                                    ((BasicTimestampVector)newVector).set(0, new BasicTimestamp(timestampValue));
+                                    break;
+                                case DT_NANOTIME:
+                                    long nanotimeValue = ((BasicNanoTime)sourceValue).getLong();
+                                    ((BasicNanoTimeVector)newVector).set(0, new BasicNanoTime(nanotimeValue));
+                                    break;
+                                case DT_NANOTIMESTAMP:
+                                    long nanotimestampValue = ((BasicNanoTimestamp)sourceValue).getLong();
+                                    ((BasicNanoTimestampVector)newVector).set(0, new BasicNanoTimestamp(nanotimestampValue));
+                                    break;
+                                // 可以根据需要添加更多类型
+                                default:
+                                    // 对于不认识的类型，直接复制原始值
+                                    newVector.set(0, sourceValue);
+                            }
+
+                            newColumns[i-2] = newVector;
+                        }
+
+                        // 直接添加到表中
+                        boolean appended = appendColumns(result, newColumns);
+                        if (!appended) {
+                            throw new RuntimeException("updateStreamingSQLResult failed when appending new data");
+                        }
+
+                        log.debug("成功添加新行，当前表行数: " + result.rows());
+
+                        // 插入位置
+                        int insertPos = ((BasicInt)insertNo.get(0)).getInt();
+                        log.debug("插入位置: " + insertPos);
+
+                        // 只有当插入位置不是在末尾时，才需要排序
+                        if (insertPos < prevSize) {
+                            // 创建一个表示当前表行顺序的向量
+                            BasicIntVector sortIndex = new BasicIntVector(result.rows());
+                            for (int i = 0; i < prevSize; i++) {
+                                sortIndex.set(i, new BasicInt(i));
+                            }
+
+                            // 最后一行的原始位置是 prevSize
+                            int lastRowPos = prevSize;
+
+                            // 将最后一行移动到指定位置
+                            for (int i = result.rows() - 1; i > insertPos; i--) {
+                                sortIndex.set(i, sortIndex.get(i - 1));
+                            }
+                            sortIndex.set(insertPos, new BasicInt(lastRowPos));
+
+                            // 使用排序索引创建新表
+                            List<Vector> newCols = new ArrayList<>();
+                            for (int col = 0; col < result.columns(); col++) {
+                                newCols.add(result.getColumn(col).getSubVector(sortIndex.getdataArray()));
+                            }
+                            result = new BasicTable(getColumnNames(result), newCols);
+                        }
+                    } else {
+                        // 对于多行数据，恢复原始处理逻辑
+                        getLinesInLog(updateColumns, updateValues, updateLogSize, offset, length);
+
+                        // 添加到表中
+                        boolean appended = appendColumns(result, updateValues);
+                        if (!appended) {
+                            throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
+                        }
+
+                        // 计算排序索引
+                        BasicIntVector sortIndex = insertIndexMapping(prevSize, insertNo, wrapper);
+
+                        // 使用排序索引创建新表
+                        List<Vector> newCols = new ArrayList<>();
+                        for (int col = 0; col < result.columns(); col++) {
+                            newCols.add(result.getColumn(col).getSubVector(sortIndex.getdataArray()));
+                        }
+                        result = new BasicTable(getColumnNames(result), newCols);
                     }
-                    result = new BasicTable(getColumnNames(result), newCols);
+
+                    log.debug("处理完成，当前表行数: " + result.rows());
                 }
             }
         }
@@ -366,13 +656,36 @@ public class StreamingSQLResultUpdater {
         return new StreamingSQLResult(result, wrapper.map);
     }
 
-    // Helper function: Get row data from update log
     private static void getLinesInLog(List<Vector> updateColumns, Vector[] updateValues, int updateLogSize, int offset, int length) {
         for (int i = 0; i < updateColumns.size(); i++) {
+            // 问题很可能出在这里：需要确保创建新的向量副本而不是共享引用
+            Vector sourceVector;
             if (offset == 0 && updateLogSize == length) {
-                updateValues[i] = updateColumns.get(i);
+                sourceVector = updateColumns.get(i);
             } else {
-                updateValues[i] = ((AbstractVector)updateColumns.get(i)).getSubVector(createRangeIndices(offset, length));
+                sourceVector = ((AbstractVector)updateColumns.get(i)).getSubVector(createRangeIndices(offset, length));
+            }
+
+            // 创建一个新的向量并复制数据，避免共享引用
+            Entity.DATA_TYPE dataType = sourceVector.getDataType();
+            Vector newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, sourceVector.rows(), -1);
+
+            // 逐个复制数据元素
+            for (int j = 0; j < sourceVector.rows(); j++) {
+                try {
+                    Scalar value = (Scalar)sourceVector.get(j);
+                    newVector.set(j, value);
+                } catch (Exception e) {
+                    log.error("Error copying data: " + e.getMessage());
+                }
+            }
+
+            updateValues[i] = newVector;
+
+            // 调试日志
+            log.debug("Created new vector of type " + dataType + " with " + newVector.rows() + " rows");
+            for (int j = 0; j < Math.min(5, newVector.rows()); j++) {
+                log.debug("Element " + j + ": " + newVector.get(j));
             }
         }
     }

@@ -3,6 +3,8 @@ package com.xxdb.streaming.client.streamingSQL;
 import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import com.xxdb.data.Vector;
+import com.xxdb.data.Void;
+import com.xxdb.io.ExtendedDataOutput;
 import com.xxdb.streaming.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,10 +28,78 @@ public class StreamingSQLClient extends AbstractClient {
 
     // Table wrapper class, used for modifying table references within inner classes
     private static class TableWrapper {
-        public BasicTable table;
+        public volatile BasicTable table;
 
         public TableWrapper(BasicTable table) {
             this.table = table;
+        }
+    }
+
+    private class ProxyTable extends BasicTable {
+        private final TableWrapper wrapper;
+
+        public ProxyTable(TableWrapper wrapper) {
+            // 不调用实例方法，而是使用静态列表或外部类的方法
+            super(createSafeColumnNames(), createSafeColumns());
+            this.wrapper = wrapper;
+        }
+
+        // 重写所有需要委托给wrapper.table的方法
+        @Override
+        public int rows() {
+            return wrapper.table != null ? wrapper.table.rows() : 0;
+        }
+
+        @Override
+        public int columns() {
+            return wrapper.table != null ? wrapper.table.columns() : 0;
+        }
+
+        @Override
+        public String getColumnName(int index) {
+            return wrapper.table != null ? wrapper.table.getColumnName(index) : "";
+        }
+
+        @Override
+        public Vector getColumn(int index) {
+            return wrapper.table != null ? wrapper.table.getColumn(index) : null;
+        }
+
+        @Override
+        public Vector getColumn(String name) {
+            return wrapper.table != null ? wrapper.table.getColumn(name) : null;
+        }
+
+        @Override
+        public String getString() {
+            return wrapper.table != null ? wrapper.table.getString() : "";
+        }
+
+        @Override
+        public DATA_CATEGORY getDataCategory() {
+            return wrapper.table != null ? wrapper.table.getDataCategory() : DATA_CATEGORY.MIXED;
+        }
+
+        @Override
+        public DATA_TYPE getDataType() {
+            return wrapper.table != null ? wrapper.table.getDataType() : DATA_TYPE.DT_DICTIONARY;
+        }
+
+        @Override
+        public DATA_FORM getDataForm() {
+            return wrapper.table != null ? wrapper.table.getDataForm() : DATA_FORM.DF_TABLE;
+        }
+
+        @Override
+        public void write(ExtendedDataOutput out) throws IOException {
+            if (wrapper.table != null) {
+                wrapper.table.write(out);
+            }
+        }
+
+        @Override
+        public Table getSubTable(int[] indices) {
+            return wrapper.table != null ? wrapper.table.getSubTable(indices) : null;
         }
     }
 
@@ -141,14 +211,27 @@ public class StreamingSQLClient extends AbstractClient {
                 @Override
                 public void doEvent(IMessage msg) {
                     try {
-                        log.debug("msg: " + msg.getEntity(0).getString() + " " + msg.getEntity(1).getString() + " " +msg.getEntity(2).getString() + " " +msg.getEntity(3).getString());
-                        // Update table and row number mapping
-                        StreamingSQLResultUpdater.StreamingSQLResult sqlResult =
-                                StreamingSQLResultUpdater.updateStreamingSQLResult(resultWrapper.table, deleteLineMap, msg);
+                        log.debug("msg: " + msg.getEntity(0).getString() + " " + msg.getEntity(1).getString() + " " + msg.getEntity(2).getString() + " " + msg.getEntity(3).getString());
+                        // 如果表已初始化，则更新表内容
+                        if (resultWrapper.table != null) {
+                            // 打印更新前的表内容
+                            log.debug("更新前，表内容: " + resultWrapper.table.getString());
 
-                        // Update table and row number mapping
-                        resultWrapper.table = sqlResult.table;
-                        deleteLineMap = sqlResult.deleteLineMap;
+                            // 获取更新结果
+                            StreamingSQLResultUpdater.StreamingSQLResult sqlResult =
+                                    StreamingSQLResultUpdater.updateStreamingSQLResult(resultWrapper.table, deleteLineMap, msg);
+
+                            // 获取新表和deleteLineMap
+                            BasicTable newTable = sqlResult.table;
+                            deleteLineMap = sqlResult.deleteLineMap;
+
+                            // 更新表引用
+                            resultWrapper.table = newTable;
+
+                            // 打印更新后的表内容
+                            log.debug("更新后，表内容: " + resultWrapper.table.getString());
+                            log.debug("更新后，表有 " + resultWrapper.table.rows() + " 行");
+                        }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -170,6 +253,7 @@ public class StreamingSQLClient extends AbstractClient {
 
         // Update the table with schema information
         resultWrapper.table = new BasicTable(colNames, cols);
+        log.debug("创建了初始表，有 " + colNames.size() + " 列");
 
         MessageHandler finalHandler = handler;
 
@@ -243,12 +327,13 @@ public class StreamingSQLClient extends AbstractClient {
         thread.start();
 
         // Returns the table from the wrapper
-        return resultWrapper.table;
+        return new ProxyTable(resultWrapper);
     }
 
     public void unsubscribeStreamingSQL(String queryId) {
         try {
             List<Entity> params = new ArrayList<>();
+            params.add(new Void());
             params.add(new BasicString(queryId));
             conn.run("unsubscribeStreamingSQL", params);
         } catch (IOException e) {
@@ -271,5 +356,17 @@ public class StreamingSQLClient extends AbstractClient {
             ex.printStackTrace();
             return false;
         }
+    }
+
+    private static List<String> createSafeColumnNames() {
+        List<String> columnNames = new ArrayList<>();
+        columnNames.add("dummy");
+        return columnNames;
+    }
+
+    private static List<Vector> createSafeColumns() {
+        List<Vector> columns = new ArrayList<>();
+        columns.add(new BasicStringVector(0));
+        return columns;
     }
 }
