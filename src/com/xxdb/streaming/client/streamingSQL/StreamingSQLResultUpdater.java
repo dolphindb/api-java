@@ -203,16 +203,14 @@ public class StreamingSQLResultUpdater {
                                 // Process delete operation
                                 BasicIntVector removeLineNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                                 removeIndexMapping(removeLineNo, result.rows(), wrapper);
-                                // Only execute delete if table has data
+                                // 先排序再删除
+                                int[] originalArray = removeLineNo.getdataArray();
+                                int[] sortedArray = originalArray.clone();
+                                Arrays.sort(sortedArray);
+                                removeLineNo = new BasicIntVector(sortedArray);
+
                                 if (result.rows() > 0) {
-                                    int[] originalArray = removeLineNo.getdataArray();
-                                    int[] sortedArray = originalArray.clone();
-                                    Arrays.sort(sortedArray);
-                                    removeLineNo = new BasicIntVector(sortedArray);
-                                    boolean removed = removeRows(result, removeLineNo);
-                                    if (!removed) {
-                                        throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
-                                    }
+                                    result = removeRows(result, removeLineNo);
                                 }
                             } else if (prevUpdateType == LogType.kInsert) {
                                 // Process insert operation
@@ -237,7 +235,12 @@ public class StreamingSQLResultUpdater {
                                         Entity.DATA_TYPE dataType = sourceValue.getDataType();
 
                                         // 创建适当类型的向量
-                                        Vector newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
+                                        Vector newVector;
+                                        if (msg.getEntity(j) instanceof BasicDecimal32 || msg.getEntity(j) instanceof BasicDecimal64 || msg.getEntity(j) instanceof BasicDecimal128) {
+                                            newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, ((Scalar) msg.getEntity(j)).getScale());
+                                        } else {
+                                            newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
+                                        }
 
                                         // 根据数据类型正确复制值
                                         switch (dataType) {
@@ -326,36 +329,70 @@ public class StreamingSQLResultUpdater {
 
                                     log.debug("成功添加新行，当前表行数: " + result.rows());
 
-                                    // 插入位置
-                                    int insertPos = ((BasicInt)insertNo.get(0)).getInt();
-                                    log.debug("插入位置: " + insertPos);
+                                    // 获取逻辑插入位置
+                                    int logicalInsertPos = ((BasicInt)insertNo.get(0)).getInt();
+                                    log.debug("逻辑插入位置: " + logicalInsertPos);
 
-                                    // 只有当插入位置不是在末尾时，才需要排序
-                                    if (insertPos < prevSize) {
+                                    // 计算物理插入位置（考虑deleteLineMap）
+                                    int physicalInsertPos = logicalInsertPos;
+                                    int lineMapSize = wrapper.map != null ? wrapper.map.rows() : 0;
+                                    int[] mapArray = wrapper.map != null ? wrapper.map.getdataArray() : new int[0];
+
+                                    if (lineMapSize > 0) {
+                                        // 找到在deleteLineMap中小于logicalInsertPos的元素个数
+                                        int mapPos = findLowerBoundCount(mapArray, lineMapSize, logicalInsertPos);
+                                        physicalInsertPos = logicalInsertPos - mapPos;
+
+                                        // 更新deleteLineMap：在插入位置之后的所有删除记录都需要+1
+                                        for (int j = mapPos; j < lineMapSize; j++) {
+                                            mapArray[j]++;
+                                        }
+                                        wrapper.map = new BasicIntVector(mapArray);
+
+                                        log.debug("考虑deleteLineMap后，物理插入位置: " + physicalInsertPos +
+                                                ", mapPos: " + mapPos);
+                                    }
+
+                                    // 边界检查
+                                    if (physicalInsertPos > prevSize) {
+                                        physicalInsertPos = prevSize;
+                                    } else if (physicalInsertPos < 0) {
+                                        physicalInsertPos = 0;
+                                    }
+
+                                    log.debug("最终物理插入位置: " + physicalInsertPos);
+
+                                    // 只有当插入位置不是在末尾时，才需要重排序
+                                    if (physicalInsertPos < prevSize) {
                                         // 创建一个表示当前表行顺序的向量
                                         BasicIntVector sortIndex = new BasicIntVector(result.rows());
-                                        for (int j = 0; j < prevSize; j++) {
-                                            sortIndex.set(j, new BasicInt(j));
+                                        int[] sortArray = sortIndex.getdataArray();
+
+                                        // 初始化排序数组
+                                        for (int j = 0; j < result.rows(); j++) {
+                                            sortArray[j] = j;
                                         }
 
-                                        // 最后一行的原始位置是 prevSize
-                                        int lastRowPos = prevSize;
+                                        // 将最后一行（新插入的行）移动到指定位置
+                                        int lastRowIndex = prevSize; // 新插入行的索引
 
-                                        // 将最后一行移动到指定位置
-                                        for (int j = result.rows() - 1; j > insertPos; j--) {
-                                            sortIndex.set(j, sortIndex.get(j - 1));
+                                        // 向右移动元素，为新行腾出空间
+                                        for (int j = lastRowIndex; j > physicalInsertPos; j--) {
+                                            sortArray[j] = sortArray[j - 1];
                                         }
-                                        sortIndex.set(insertPos, new BasicInt(lastRowPos));
+                                        sortArray[physicalInsertPos] = lastRowIndex;
 
                                         // 使用排序索引创建新表
                                         List<Vector> newCols = new ArrayList<>();
                                         for (int col = 0; col < result.columns(); col++) {
-                                            newCols.add(result.getColumn(col).getSubVector(sortIndex.getdataArray()));
+                                            newCols.add(result.getColumn(col).getSubVector(sortArray));
                                         }
                                         result = new BasicTable(getColumnNames(result), newCols);
+
+                                        log.debug("完成单行插入重排序");
                                     }
                                 } else {
-                                    // 对于多行数据，恢复原始处理逻辑
+                                    // 对于多行数据的处理
                                     getLinesInLog(updateColumns, updateValues, updateLogSize, offset, length);
 
                                     // 添加到表中
@@ -363,6 +400,8 @@ public class StreamingSQLResultUpdater {
                                     if (!appended) {
                                         throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
                                     }
+
+                                    log.debug("成功添加新行，当前表行数: " + result.rows());
 
                                     // 计算排序索引
                                     BasicIntVector sortIndex = insertIndexMapping(prevSize, insertNo, wrapper);
@@ -372,7 +411,12 @@ public class StreamingSQLResultUpdater {
                                     for (int col = 0; col < result.columns(); col++) {
                                         newCols.add(result.getColumn(col).getSubVector(sortIndex.getdataArray()));
                                     }
-                                    result = new BasicTable(getColumnNames(result), newCols);
+
+                                    // 创建并替换为新表 - 确保列顺序正确
+                                    List<String> columnNames = getColumnNames(result);
+                                    result = new BasicTable(columnNames, newCols);
+
+                                    log.debug("重排序后，表有 " + result.rows() + " 行");
                                 }
 
                                 log.debug("处理完成，当前表行数: " + result.rows());
@@ -484,16 +528,14 @@ public class StreamingSQLResultUpdater {
                     // Process delete operation
                     BasicIntVector removeLineNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                     removeIndexMapping(removeLineNo, result.rows(), wrapper);
-                    // Only execute delete if table has data
+                    // 先排序再删除
+                    int[] originalArray = removeLineNo.getdataArray();
+                    int[] sortedArray = originalArray.clone();
+                    Arrays.sort(sortedArray);
+                    removeLineNo = new BasicIntVector(sortedArray);
+
                     if (result.rows() > 0) {
-                        int[] originalArray = removeLineNo.getdataArray();
-                        int[] sortedArray = originalArray.clone();
-                        Arrays.sort(sortedArray);
-                        removeLineNo = new BasicIntVector(sortedArray);
-                        boolean removed = removeRows(result, removeLineNo);
-                        if (!removed) {
-                            throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
-                        }
+                        result = removeRows(result, removeLineNo);
                     }
                 } else if (prevUpdateType == LogType.kInsert) {
                     // Process insert operation
@@ -513,14 +555,14 @@ public class StreamingSQLResultUpdater {
                         Vector[] newColumns = new Vector[msg.size() - 2]; // 减去类型和行号两列
 
                         // 为每一列创建对应类型的向量
-                        for (int i = 2; i < msg.size(); i++) {
-                            Scalar sourceValue = (Scalar) msg.getEntity(i);
+                        for (int j = 2; j < msg.size(); j++) {
+                            Scalar sourceValue = (Scalar) msg.getEntity(j);
                             Entity.DATA_TYPE dataType = sourceValue.getDataType();
 
                             // 创建适当类型的向量
                             Vector newVector;
-                            if (msg.getEntity(i) instanceof BasicDecimal32 || msg.getEntity(i) instanceof BasicDecimal64 || msg.getEntity(i) instanceof BasicDecimal128) {
-                                newVector =  BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, ((Scalar) msg.getEntity(i)).getScale());
+                            if (msg.getEntity(j) instanceof BasicDecimal32 || msg.getEntity(j) instanceof BasicDecimal64 || msg.getEntity(j) instanceof BasicDecimal128) {
+                                newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, ((Scalar) msg.getEntity(j)).getScale());
                             } else {
                                 newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
                             }
@@ -601,7 +643,7 @@ public class StreamingSQLResultUpdater {
                                     newVector.set(0, sourceValue);
                             }
 
-                            newColumns[i-2] = newVector;
+                            newColumns[j-2] = newVector;
                         }
 
                         // 直接添加到表中
@@ -612,36 +654,70 @@ public class StreamingSQLResultUpdater {
 
                         log.debug("成功添加新行，当前表行数: " + result.rows());
 
-                        // 插入位置
-                        int insertPos = ((BasicInt)insertNo.get(0)).getInt();
-                        log.debug("插入位置: " + insertPos);
+                        // 获取逻辑插入位置
+                        int logicalInsertPos = ((BasicInt)insertNo.get(0)).getInt();
+                        log.debug("逻辑插入位置: " + logicalInsertPos);
 
-                        // 只有当插入位置不是在末尾时，才需要排序
-                        if (insertPos < prevSize) {
+                        // 计算物理插入位置（考虑deleteLineMap）
+                        int physicalInsertPos = logicalInsertPos;
+                        int lineMapSize = wrapper.map != null ? wrapper.map.rows() : 0;
+                        int[] mapArray = wrapper.map != null ? wrapper.map.getdataArray() : new int[0];
+
+                        if (lineMapSize > 0) {
+                            // 找到在deleteLineMap中小于logicalInsertPos的元素个数
+                            int mapPos = findLowerBoundCount(mapArray, lineMapSize, logicalInsertPos);
+                            physicalInsertPos = logicalInsertPos - mapPos;
+
+                            // 更新deleteLineMap：在插入位置之后的所有删除记录都需要+1
+                            for (int j = mapPos; j < lineMapSize; j++) {
+                                mapArray[j]++;
+                            }
+                            wrapper.map = new BasicIntVector(mapArray);
+
+                            log.debug("考虑deleteLineMap后，物理插入位置: " + physicalInsertPos +
+                                    ", mapPos: " + mapPos);
+                        }
+
+                        // 边界检查
+                        if (physicalInsertPos > prevSize) {
+                            physicalInsertPos = prevSize;
+                        } else if (physicalInsertPos < 0) {
+                            physicalInsertPos = 0;
+                        }
+
+                        log.debug("最终物理插入位置: " + physicalInsertPos);
+
+                        // 只有当插入位置不是在末尾时，才需要重排序
+                        if (physicalInsertPos < prevSize) {
                             // 创建一个表示当前表行顺序的向量
                             BasicIntVector sortIndex = new BasicIntVector(result.rows());
-                            for (int i = 0; i < prevSize; i++) {
-                                sortIndex.set(i, new BasicInt(i));
+                            int[] sortArray = sortIndex.getdataArray();
+
+                            // 初始化排序数组
+                            for (int j = 0; j < result.rows(); j++) {
+                                sortArray[j] = j;
                             }
 
-                            // 最后一行的原始位置是 prevSize
-                            int lastRowPos = prevSize;
+                            // 将最后一行（新插入的行）移动到指定位置
+                            int lastRowIndex = prevSize; // 新插入行的索引
 
-                            // 将最后一行移动到指定位置
-                            for (int i = result.rows() - 1; i > insertPos; i--) {
-                                sortIndex.set(i, sortIndex.get(i - 1));
+                            // 向右移动元素，为新行腾出空间
+                            for (int j = lastRowIndex; j > physicalInsertPos; j--) {
+                                sortArray[j] = sortArray[j - 1];
                             }
-                            sortIndex.set(insertPos, new BasicInt(lastRowPos));
+                            sortArray[physicalInsertPos] = lastRowIndex;
 
                             // 使用排序索引创建新表
                             List<Vector> newCols = new ArrayList<>();
                             for (int col = 0; col < result.columns(); col++) {
-                                newCols.add(result.getColumn(col).getSubVector(sortIndex.getdataArray()));
+                                newCols.add(result.getColumn(col).getSubVector(sortArray));
                             }
                             result = new BasicTable(getColumnNames(result), newCols);
+
+                            log.debug("完成单行插入重排序");
                         }
                     } else {
-                        // 对于多行数据，恢复原始处理逻辑
+                        // 对于多行数据的处理
                         getLinesInLog(updateColumns, updateValues, updateLogSize, offset, length);
 
                         // 添加到表中
@@ -649,6 +725,8 @@ public class StreamingSQLResultUpdater {
                         if (!appended) {
                             throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
                         }
+
+                        log.debug("成功添加新行，当前表行数: " + result.rows());
 
                         // 计算排序索引
                         BasicIntVector sortIndex = insertIndexMapping(prevSize, insertNo, wrapper);
@@ -658,7 +736,12 @@ public class StreamingSQLResultUpdater {
                         for (int col = 0; col < result.columns(); col++) {
                             newCols.add(result.getColumn(col).getSubVector(sortIndex.getdataArray()));
                         }
-                        result = new BasicTable(getColumnNames(result), newCols);
+
+                        // 创建并替换为新表 - 确保列顺序正确
+                        List<String> columnNames = getColumnNames(result);
+                        result = new BasicTable(columnNames, newCols);
+
+                        log.debug("重排序后，表有 " + result.rows() + " 行");
                     }
 
                     log.debug("处理完成，当前表行数: " + result.rows());
@@ -880,107 +963,147 @@ public class StreamingSQLResultUpdater {
     // Process insert operation
     private static BasicIntVector insertIndexMapping(int prevSize, Vector insertIndex, DeleteLineMapWrapper wrapper) {
         int length = insertIndex.rows();
-        int start = 0;
         BasicIntVector sortIndex = new BasicIntVector(prevSize + length);
         int[] psort = sortIndex.getdataArray();
-        int[] mapArray = wrapper.map != null ? wrapper.map.getdataArray() : new int[0];
 
-        // Initialize sort array
-        for (int i = 0; i < prevSize; i++) {
+        // 获取原始的deleteLineMap数组
+        int[] originalMapArray = wrapper.map != null ? wrapper.map.getdataArray() : new int[0];
+        // 复制deleteLineMap，因为我们需要在每次插入时更新它
+        int[] mapArray = originalMapArray.clone();
+        int lineMapSize = mapArray.length;
+
+        // 初始化排序数组：前prevSize个元素为0到prevSize-1，后length个元素为prevSize到prevSize+length-1
+        for (int i = 0; i < prevSize + length; i++) {
             psort[i] = i;
         }
 
-        int lineMapSize = wrapper.map != null ? wrapper.map.rows() : 0;
+        log.debug("insertIndexMapping开始: 原始大小=" + prevSize + ", 插入索引长度=" + length);
         if (lineMapSize > 0) {
-            while (start < length) {
-                int count = Math.min(1024, length - start);
-                int[] pindex = new int[count];
-                for (int i = 0; i < count; i++) {
-                    pindex[i] = ((BasicInt)insertIndex.get(start + i)).getInt();
+            log.debug("deleteLineMap大小: " + lineMapSize);
+        }
+
+        // 按顺序处理每个插入操作
+        for (int i = 0; i < length; i++) {
+            int logicalInsertPos = ((BasicInt)insertIndex.get(i)).getInt();
+            int currIndex = i + prevSize; // 新行在扩展后表中的实际索引位置
+
+            // 计算物理插入位置（考虑已删除的行）
+            int physicalInsertPos = logicalInsertPos;
+            if (lineMapSize > 0) {
+                // 找到在deleteLineMap中小于logicalInsertPos的元素个数
+                int mapPos = findLowerBoundCount(mapArray, lineMapSize, logicalInsertPos);
+                physicalInsertPos = logicalInsertPos - mapPos;
+
+                // 更新deleteLineMap：在插入位置之后的所有删除记录都需要+1
+                // 因为我们插入了一个新行，影响了后续的逻辑行号
+                for (int j = mapPos; j < lineMapSize; j++) {
+                    mapArray[j]++;
                 }
 
-                for (int i = 0; i < count; ++i) {
-                    int pos = findLowerBoundCount(mapArray, lineMapSize, pindex[i]);
-                    updateSortedVec(mapArray, lineMapSize, pos);
-                    int currIndex = i + start + prevSize;
-                    int insertNo = pindex[i] - pos;
-                    if (insertNo >= prevSize + length) {
-                        // Don't throw exception, just log warning
-                        log.debug("Warning: Adjusting insertLogNo from " + insertNo + " to " + (prevSize + length - 1));
-                        insertNo = prevSize + length - 1; // Adjust to the last possible position
-                    }
-                    for (int j = currIndex; j > insertNo; j--) {
-                        psort[j] = psort[j - 1];
-                    }
-                    psort[insertNo] = currIndex;
-                }
-                start += count;
+                log.debug("第 " + i + " 个插入: 逻辑位置=" + logicalInsertPos +
+                        ", 映射位置=" + mapPos + ", 物理位置=" + physicalInsertPos);
             }
-        } else {
-            while (start < length) {
-                int count = Math.min(1024, length - start);
-                int[] pindex = new int[count];
-                for (int i = 0; i < count; i++) {
-                    pindex[i] = ((BasicInt)insertIndex.get(start + i)).getInt();
-                }
 
-                for (int i = 0; i < count; ++i) {
-                    int currIndex = i + start + prevSize;
-                    if (pindex[i] >= prevSize + length) {
-                        // Don't throw exception, just log warning
-                        log.debug("Warning: Adjusting insertLogNo from " + pindex[i] + " to " + (prevSize + length - 1));
-                        pindex[i] = prevSize + length - 1; // Adjust to the last possible position
-                    }
-                    for (int j = currIndex; j > pindex[i]; j--) {
-                        psort[j] = psort[j - 1];
-                    }
-                    psort[pindex[i]] = currIndex;
-                }
-                start += count;
+            // 边界检查：确保物理插入位置在有效范围内
+            if (physicalInsertPos > prevSize + i) {
+                log.debug("Warning: 调整物理插入位置从 " + physicalInsertPos + " 到 " + (prevSize + i));
+                physicalInsertPos = prevSize + i;
+            } else if (physicalInsertPos < 0) {
+                log.debug("Warning: 调整物理插入位置从 " + physicalInsertPos + " 到 0");
+                physicalInsertPos = 0;
+            }
+
+            log.debug("处理第 " + i + " 个插入: 逻辑位置=" + logicalInsertPos +
+                    ", 最终物理位置=" + physicalInsertPos + ", 当前索引=" + currIndex);
+
+            // 将当前行插入到指定位置
+            // 需要将physicalInsertPos到currIndex-1之间的所有元素向右移动一位
+            for (int j = currIndex; j > physicalInsertPos; j--) {
+                psort[j] = psort[j - 1];
+            }
+
+            // 在计算出的物理位置插入新行
+            psort[physicalInsertPos] = currIndex;
+        }
+
+        // 打印最终排序索引用于调试
+        StringBuilder sb = new StringBuilder("最终排序索引: [");
+        for (int i = 0; i < Math.min(20, sortIndex.rows()); i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(psort[i]);
+        }
+        if (sortIndex.rows() > 20) sb.append(", ...");
+        sb.append("]");
+        log.debug(sb.toString());
+
+        // 验证排序索引的有效性
+        boolean[] used = new boolean[psort.length];
+        boolean isValid = true;
+        for (int i = 0; i < psort.length; i++) {
+            if (psort[i] < 0 || psort[i] >= psort.length) {
+                System.err.println("Invalid sort index at position " + i + ": " + psort[i]);
+                isValid = false;
+                break;
+            }
+            if (used[psort[i]]) {
+                System.err.println("Duplicate sort index: " + psort[i]);
+                isValid = false;
+                break;
+            }
+            used[psort[i]] = true;
+        }
+
+        if (!isValid) {
+            System.err.println("排序索引无效，重置为默认顺序");
+            for (int j = 0; j < psort.length; j++) {
+                psort[j] = j;
             }
         }
+
+        // 更新wrapper中的deleteLineMap
+        if (lineMapSize > 0) {
+            wrapper.map = new BasicIntVector(mapArray);
+            log.debug("更新后的deleteLineMap大小: " + wrapper.map.rows());
+        }
+
         return sortIndex;
     }
 
     // Helper function: Remove rows
-    private static boolean removeRows(BasicTable table, BasicIntVector rowIndices) {
+    private static BasicTable removeRows(BasicTable table, BasicIntVector rowIndices) {
         try {
-            // Get indices of rows to keep
+            if (table.rows() == 0 || rowIndices == null || rowIndices.rows() == 0) {
+                return table; // 没有行需要删除
+            }
+
+            // 获取要保留的行的索引
             int[] keepIndices = createComplementIndices(table.rows(), rowIndices);
 
-            // Create new table (only containing non-deleted rows)
-            List<Vector> newColumns = new ArrayList<>();
-            for (int i = 0; i < table.columns(); i++) {
-                newColumns.add(table.getColumn(i).getSubVector(keepIndices));
-            }
+            // 获取列名
+            List<String> columnNames = getColumnNames(table);
 
-            // Create a new table to replace the original
-            List<String> columnNames = new ArrayList<>();
-            for (int i = 0; i < table.columns(); i++) {
-                columnNames.add(table.getColumnName(i));
+            if (keepIndices.length == 0) {
+                // 所有行都被删除，创建空表
+                List<Vector> emptyColumns = new ArrayList<>();
+                for (int i = 0; i < table.columns(); i++) {
+                    emptyColumns.add(BasicEntityFactory.instance().createVectorWithDefaultValue(
+                            table.getColumn(i).getDataType(), 0, -1));
+                }
+                return new BasicTable(columnNames, emptyColumns);
+            } else {
+                // 有行需要保留，创建子表（保留原始顺序）
+                List<Vector> newColumns = new ArrayList<>();
+                for (int i = 0; i < table.columns(); i++) {
+                    newColumns.add(table.getColumn(i).getSubVector(keepIndices));
+                }
+                return new BasicTable(columnNames, newColumns);
             }
-            BasicTable newTable = new BasicTable(columnNames, newColumns);
-
-            // Since we can't directly replace table content, we need to update row by row
-            // First delete all rows (by replacing existing columns with empty vectors)
-            for (int col = 0; col < table.columns(); col++) {
-                // Create empty vector of the same type as the original column
-                Vector emptyVector = BasicEntityFactory.instance().createVectorWithDefaultValue(
-                        table.getColumn(col).getDataType(), 0, -1);
-                table.replaceColumn(table.getColumnName(col), emptyVector);
-            }
-
-            // Then add new rows
-            for (int col = 0; col < newTable.columns(); col++) {
-                table.getColumn(col).Append(newTable.getColumn(col));
-            }
-
-            return true;
         } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            log.error("Error in removeRows: " + e.getMessage(), e);
+            return table; // 出错时返回原表
         }
     }
+
 
     // Helper function: Create complement indices
     private static int[] createComplementIndices(int totalRows, BasicIntVector excludeIndices) {
