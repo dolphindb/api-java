@@ -369,7 +369,7 @@ public class StreamingSQLClient extends AbstractClient {
         return new ProxyTable(resultWrapper);
     }
 
-    public void unsubscribeStreamingSQL(String queryId) {
+    public void unsubscribeStreamingSQL(String queryId) throws IOException {
         try {
             List<Entity> params = new ArrayList<>();
             params.add(new Void());
@@ -394,7 +394,7 @@ public class StreamingSQLClient extends AbstractClient {
             }
             log.info("Successfully unsubscribed table " + fullTableName);
         } catch (IOException e) {
-            throw new RuntimeException("revoke streaming SQL error: " + e);
+            throw e;
         } finally {
             conn.close();
         }
