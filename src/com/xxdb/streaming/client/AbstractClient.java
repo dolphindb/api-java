@@ -891,8 +891,6 @@ public abstract class AbstractClient implements MessageDispatcher {
             params.add(new BasicString(actionName));
             params.add(new BasicBoolean(true)); // streamingSQL，'true' true will return
             re = dbConn.run("getSubscriptionTopic", params);
-            Entity schema = ((BasicAnyVector) re).get(1);
-            res.put("schema", schema);
             System.out.println("getSubscriptionTopic re: \n" + re.getString());
             topic = ((BasicAnyVector) re).getEntity(0).getString();
             System.out.println("topic: " + topic);
@@ -920,6 +918,7 @@ public abstract class AbstractClient implements MessageDispatcher {
 
             params.add(new BasicBoolean(streamingSQL));
             re = dbConn.run("publishTable", params);
+            res.put("schema", re);
             connList.add(dbConn);
             users.put(tp, usr);
             if (ifUseBackupSite) {

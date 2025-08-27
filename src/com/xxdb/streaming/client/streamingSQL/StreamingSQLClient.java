@@ -282,17 +282,9 @@ public class StreamingSQLClient extends AbstractClient {
         Map<String, Object> res = subscribeStreamingSqlLogInfoInternal(host, port, queryId, queryId, handler, -1, false, null, null, false, userName, password, true, true);
 
         BlockingQueue<List<IMessage>> queue = (BlockingQueue<List<IMessage>>) res.get("queue");
-        BasicTable schema = (BasicTable) res.get("schema");
-        List<String> colNames = new ArrayList<>();
-        List<Vector> cols = new ArrayList<>();
-        for (int i = 2; i < schema.columns(); i++) {
-            colNames.add(schema.getColumnName(i));
-            cols.add(schema.getColumn(i));
-        }
 
-        // Update the table with schema information
-        resultWrapper.table = new BasicTable(colNames, cols);
-        log.debug("创建了初始表，有 " + colNames.size() + " 列");
+        resultWrapper.table = (BasicTable) res.get("schema");
+        log.debug("创建了初始表，有 " + resultWrapper.table.columns() + " 列");
 
         MessageHandler finalHandler = handler;
 
