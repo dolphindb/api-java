@@ -1022,7 +1022,7 @@ public class StreamingSQLResultUpdater {
 
             // Ensure all columns have the same number of rows
             for (int i = 0; i < columns.length; i++ ) {
-                if (columns[i].rows() != rowsToAdd && !(table.getColumn(i) instanceof BasicArrayVector)) {
+                if (columns[i].rows() != rowsToAdd && !(table.getColumn(i) instanceof BasicArrayVector) && !(table.getColumn(i) instanceof BasicAnyVector)) {
                     throw new IllegalArgumentException("All columns must have the same number of rows");
                 }
             }
