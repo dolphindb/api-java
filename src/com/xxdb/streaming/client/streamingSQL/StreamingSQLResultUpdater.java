@@ -64,9 +64,13 @@ public class StreamingSQLResultUpdater {
         lineNoColumn.Append((BasicInt) msg.getEntity(1));
         List<Vector> updateColumns = new ArrayList<>();
         for (int i = 2; i < msg.size(); i++) {
-            Vector col = BasicEntityFactory.instance().createVectorWithDefaultValue(msg.getEntity(i).getDataType(), 0, -1);
-            col.Append((Scalar) msg.getEntity(i));
-            updateColumns.add(col);
+            if (msg.getEntity(i) instanceof Vector) {
+                updateColumns.add((Vector) msg.getEntity(i));
+            } else {
+                Vector col = BasicEntityFactory.instance().createVectorWithDefaultValue(msg.getEntity(i).getDataType(), 0, -1);
+                col.Append((Scalar) msg.getEntity(i));
+                updateColumns.add(col);
+            }
         }
 
         int updateLogSize = lineNoColumn.rows();
@@ -1006,20 +1010,15 @@ public class StreamingSQLResultUpdater {
             log.debug("Appending " + rowsToAdd + " rows to table with " + table.columns() + " columns");
 
             // Ensure all columns have the same number of rows
-            for (Vector column : columns) {
-                if (column.rows() != rowsToAdd) {
+            for (int i = 0; i < columns.length; i++ ) {
+                if (columns[i].rows() != rowsToAdd && !(table.getColumn(i) instanceof BasicArrayVector)) {
                     throw new IllegalArgumentException("All columns must have the same number of rows");
                 }
             }
 
             // Add rows to table
             for (int col = 0; col < columns.length; col++) {
-                if (col < table.columns()) {
-                    log.debug("Appending to column " + col + " of type " + table.getColumn(col).getDataType());
-                    table.getColumn(col).Append(columns[col]);
-                } else {
-                    log.debug("Column index " + col + " exceeds table columns " + table.columns());
-                }
+                table.getColumn(col).Append(columns[col]);
             }
 
             log.debug("After append, table has " + table.rows() + " rows");
