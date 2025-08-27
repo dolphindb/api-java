@@ -26,7 +26,7 @@ public class EventClient extends AbstractClient {
 
     private EventHandler eventHandler;
 
-    private static final Logger log = LoggerFactory.getLogger(DBConnection.class);
+    private static final Logger log = LoggerFactory.getLogger(EventClient.class);
 
     public EventClient(List<EventSchema> eventSchemas, List<String> eventTimeFields, List<String> commonFields) throws SocketException {
         super(0);
