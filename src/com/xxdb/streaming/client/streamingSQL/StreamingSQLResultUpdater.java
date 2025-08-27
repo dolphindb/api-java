@@ -67,7 +67,13 @@ public class StreamingSQLResultUpdater {
             if (msg.getEntity(i) instanceof Vector) {
                 updateColumns.add((Vector) msg.getEntity(i));
             } else {
-                Vector col = BasicEntityFactory.instance().createVectorWithDefaultValue(msg.getEntity(i).getDataType(), 0, -1);
+                Vector col;
+                if (msg.getEntity(i) instanceof BasicDecimal32 || msg.getEntity(i) instanceof BasicDecimal64 || msg.getEntity(i) instanceof BasicDecimal128) {
+                    col =  BasicEntityFactory.instance().createVectorWithDefaultValue(msg.getEntity(i).getDataType(), 0, ((Scalar) msg.getEntity(i)).getScale());
+                } else {
+                    col = BasicEntityFactory.instance().createVectorWithDefaultValue(msg.getEntity(i).getDataType(), 0, -1);
+                }
+
                 col.Append((Scalar) msg.getEntity(i));
                 updateColumns.add(col);
             }
@@ -512,7 +518,12 @@ public class StreamingSQLResultUpdater {
                             Entity.DATA_TYPE dataType = sourceValue.getDataType();
 
                             // 创建适当类型的向量
-                            Vector newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
+                            Vector newVector;
+                            if (msg.getEntity(i) instanceof BasicDecimal32 || msg.getEntity(i) instanceof BasicDecimal64 || msg.getEntity(i) instanceof BasicDecimal128) {
+                                newVector =  BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, ((Scalar) msg.getEntity(i)).getScale());
+                            } else {
+                                newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
+                            }
 
                             // 根据数据类型正确复制值
                             switch (dataType) {
