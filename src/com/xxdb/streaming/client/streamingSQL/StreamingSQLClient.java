@@ -118,6 +118,7 @@ public class StreamingSQLClient extends AbstractClient {
 
     public void declareStreamingSQLTable(String tableName) {
         try {
+            checkConnConnect();
             conn.run("declareStreamingSQLTable(" + tableName + ")");
         } catch (IOException e) {
             throw new RuntimeException("declare streaming sql table error: " + e);
@@ -126,6 +127,7 @@ public class StreamingSQLClient extends AbstractClient {
 
     public void revokeStreamingSQLTable(String tableName) {
         try {
+            checkConnConnect();
             conn.run("revokeStreamingSQLTable(\"" + tableName + "\")");
         } catch (IOException e) {
             throw new RuntimeException("revoke streaming sql table error: " + e);
@@ -134,6 +136,7 @@ public class StreamingSQLClient extends AbstractClient {
 
     public BasicTable listStreamingSQLTables() {
         try {
+            checkConnConnect();
             return (BasicTable) conn.run("listStreamingSQLTables()");
         } catch (IOException e) {
             throw new RuntimeException("revoke streaming sql table error: " + e);
@@ -177,6 +180,7 @@ public class StreamingSQLClient extends AbstractClient {
                 }
             }
 
+            checkConnConnect();
             Entity streamingSQLTableName = conn.run("registerStreamingSQL", params);
             return streamingSQLTableName.getString();
         } catch (IOException e) {
@@ -186,6 +190,7 @@ public class StreamingSQLClient extends AbstractClient {
 
     public void revokeStreamingSQL(String queryId) {
         try {
+            checkConnConnect();
             conn.run("revokeStreamingSQL(\"" + queryId + "\")");
         } catch (IOException e) {
             throw new RuntimeException("revoke streaming SQL error: " + e);
@@ -198,6 +203,7 @@ public class StreamingSQLClient extends AbstractClient {
 
     public BasicTable getStreamingSQLStatus(String queryId) {
         try {
+            checkConnConnect();
             if (Objects.equals(queryId, "")) {
                 throw new IllegalArgumentException("The param 'queryId' cannot be empty.");
             } else if (Objects.isNull(queryId)) {
@@ -368,9 +374,29 @@ public class StreamingSQLClient extends AbstractClient {
             List<Entity> params = new ArrayList<>();
             params.add(new Void());
             params.add(new BasicString(queryId));
+            checkConnConnect();
             conn.run("unsubscribeStreamingSQL", params);
+
+            String topic = null;
+            String fullTableName = host + ":" + port + "/" + queryId + "/" + queryId;
+            synchronized (tableNameToTrueTopic) {
+                topic = tableNameToTrueTopic.get(fullTableName);
+            }
+            synchronized (trueTopicToSites) {
+                Site[] sites = trueTopicToSites.get(topic);
+                if (sites == null || sites.length == 0)
+                    ;
+                for (int i = 0; i < sites.length; i++)
+                    sites[i].setClosed(true);
+            }
+            synchronized (queueManager) {
+                queueManager.removeQueue(topic);
+            }
+            log.info("Successfully unsubscribed table " + fullTableName);
         } catch (IOException e) {
             throw new RuntimeException("revoke streaming SQL error: " + e);
+        } finally {
+            conn.close();
         }
     }
 
@@ -388,6 +414,13 @@ public class StreamingSQLClient extends AbstractClient {
             log.error(df.format(d) + " Unable to subscribe table. Will try again after 1 seconds." + site.getHost() + ":" + site.getPort() + "/" + site.getTableName() + "/" + site.getActionName());
             ex.printStackTrace();
             return false;
+        }
+    }
+
+    private void checkConnConnect() throws IOException {
+        if (!conn.isConnected()) {
+            conn = new DBConnection();
+            conn.connect(this.host, this.port, this.userName, this.password);
         }
     }
 
