@@ -237,7 +237,7 @@ public class BasicAnyVectorTest {
         bav.writeVectorToOutputStream(out);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void test_basicAnyVector_Append_scalar() throws Exception {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
@@ -253,9 +253,10 @@ public class BasicAnyVectorTest {
         bav.set(11, (Scalar) conn.run("date(2022.08.01);"));
         assertEquals("2022.08.01",bav.get(11).getString());
         bav.Append(new BasicInt(16));
+        assertEquals("16",bav.get(12).getString());
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void test_BasicAnyVector_Append_vector() throws Exception {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
@@ -271,6 +272,7 @@ public class BasicAnyVectorTest {
         bav.set(11, (Scalar) conn.run("date(2022.08.01);"));
         assertEquals("2022.08.01",bav.get(11).getString());
         bav.Append(new BasicIntVector(new int[]{26,31,23,24}));
+        assertEquals("[26,31,23,24]",bav.get(12).getString());
     }
 
     @Test(expected = RuntimeException.class)
