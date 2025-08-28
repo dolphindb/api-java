@@ -133,20 +133,20 @@ public class StreamingSQLResultUpdater {
                                     // Get updated row indices
                                     BasicIntVector updateLineNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
 
-                                    // Separate out-of-range indices and valid indices
+                                    // Only process valid indices (within table range)
                                     List<Integer> validIndices = new ArrayList<>();
-                                    List<Integer> outOfRangeIndices = new ArrayList<>();
 
                                     for (int idx = 0; idx < updateLineNo.rows(); idx++) {
                                         int lineNo = ((BasicInt)updateLineNo.get(idx)).getInt();
                                         if (lineNo < result.rows()) {
                                             validIndices.add(idx);
                                         } else {
-                                            outOfRangeIndices.add(idx);
+                                            // Log warning for out-of-range indices but don't treat as append
+                                            log.debug("Warning: Update index " + lineNo + " out of range (table has " + result.rows() + " rows), skipping");
                                         }
                                     }
 
-                                    // Process valid update indices
+                                    // Process valid update indices only
                                     if (!validIndices.isEmpty()) {
                                         // Create update vectors containing only valid indices
                                         BasicIntVector validUpdateLineNo = new BasicIntVector(validIndices.size());
@@ -170,26 +170,7 @@ public class StreamingSQLResultUpdater {
                                         }
                                     }
 
-                                    // Process out-of-range indices as append operations
-                                    if (!outOfRangeIndices.isEmpty()) {
-                                        log.debug("Found " + outOfRangeIndices.size() + " indices out of range, treating as append operations");
-
-                                        // Create append vectors containing only out-of-range indices
-                                        Vector[] appendValues = new Vector[updateValues.length];
-
-                                        for (int colIdx = 0; colIdx < updateValues.length; colIdx++) {
-                                            int[] outOfRangeIndicesArray = new int[outOfRangeIndices.size()];
-                                            for (int j = 0; j < outOfRangeIndices.size(); j++) {
-                                                outOfRangeIndicesArray[j] = outOfRangeIndices.get(j);
-                                            }
-                                            appendValues[colIdx] = ((AbstractVector)updateValues[colIdx]).getSubVector(outOfRangeIndicesArray);
-                                        }
-
-                                        boolean appended = appendColumns(result, appendValues);
-                                        if (!appended) {
-                                            throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
-                                        }
-                                    }
+                                    // 移除了处理超出范围索引的代码
                                 }
                             } else if (prevUpdateType == LogType.kAppend) {
                                 // Process append operation
@@ -383,20 +364,20 @@ public class StreamingSQLResultUpdater {
                         // Get updated row indices
                         BasicIntVector updateLineNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
 
-                        // Separate out-of-range indices and valid indices
+                        // Only process valid indices (within table range)
                         List<Integer> validIndices = new ArrayList<>();
-                        List<Integer> outOfRangeIndices = new ArrayList<>();
 
                         for (int idx = 0; idx < updateLineNo.rows(); idx++) {
                             int lineNo = ((BasicInt)updateLineNo.get(idx)).getInt();
                             if (lineNo < result.rows()) {
                                 validIndices.add(idx);
                             } else {
-                                outOfRangeIndices.add(idx);
+                                // Log warning for out-of-range indices but don't treat as append
+                                log.debug("Warning: Update index " + lineNo + " out of range (table has " + result.rows() + " rows), skipping");
                             }
                         }
 
-                        // Process valid update indices
+                        // Process valid update indices only
                         if (!validIndices.isEmpty()) {
                             // Create update vectors containing only valid indices
                             BasicIntVector validUpdateLineNo = new BasicIntVector(validIndices.size());
@@ -420,26 +401,7 @@ public class StreamingSQLResultUpdater {
                             }
                         }
 
-                        // Process out-of-range indices as append operations
-                        if (!outOfRangeIndices.isEmpty()) {
-                            log.debug("Found " + outOfRangeIndices.size() + " indices out of range, treating as append operations");
-
-                            // Create append vectors containing only out-of-range indices
-                            Vector[] appendValues = new Vector[updateValues.length];
-
-                            for (int colIdx = 0; colIdx < updateValues.length; colIdx++) {
-                                int[] outOfRangeIndicesArray = new int[outOfRangeIndices.size()];
-                                for (int j = 0; j < outOfRangeIndices.size(); j++) {
-                                    outOfRangeIndicesArray[j] = outOfRangeIndices.get(j);
-                                }
-                                appendValues[colIdx] = ((AbstractVector)updateValues[colIdx]).getSubVector(outOfRangeIndicesArray);
-                            }
-
-                            boolean appended = appendColumns(result, appendValues);
-                            if (!appended) {
-                                throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
-                            }
-                        }
+                        // 移除了处理超出范围索引的代码
                     }
                 } else if (prevUpdateType == LogType.kAppend) {
                     // Process append operation
