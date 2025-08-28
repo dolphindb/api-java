@@ -616,7 +616,16 @@ public class StreamingSQLResultUpdater {
 
             // 创建一个新的向量并复制数据，避免共享引用
             Entity.DATA_TYPE dataType = sourceVector.getDataType();
-            Vector newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, sourceVector.rows(), -1);
+            int scale = -1;
+            if (dataType == Entity.DATA_TYPE.DT_DECIMAL32) {
+                scale = ((BasicDecimal32Vector) sourceVector).getScale();
+            } else if(dataType == Entity.DATA_TYPE.DT_DECIMAL64) {
+                scale = ((BasicDecimal64Vector) sourceVector).getScale();
+            } else if(dataType == Entity.DATA_TYPE.DT_DECIMAL128) {
+                scale = ((BasicDecimal128Vector) sourceVector).getScale();
+            }
+
+            Vector newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, sourceVector.rows(), scale);
 
             // 逐个复制数据元素
             for (int j = 0; j < sourceVector.rows(); j++) {
