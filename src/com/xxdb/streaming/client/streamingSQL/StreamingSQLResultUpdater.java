@@ -443,19 +443,23 @@ public class StreamingSQLResultUpdater {
 
                         // 为每一列创建对应类型的向量
                         for (int j = 2; j < msg.size(); j++) {
-                            Scalar sourceValue = (Scalar) msg.getEntity(j);
-                            Entity.DATA_TYPE dataType = sourceValue.getDataType();
-
-                            // 创建适当类型的向量
-                            Vector newVector;
-                            if (msg.getEntity(j) instanceof BasicDecimal32 || msg.getEntity(j) instanceof BasicDecimal64 || msg.getEntity(j) instanceof BasicDecimal128) {
-                                newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, ((Scalar) msg.getEntity(j)).getScale());
+                            if (msg.getEntity(j) instanceof Vector) {
+                                newColumns[j-2] = (Vector) msg.getEntity(j);
                             } else {
-                                newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
-                            }
+                                Scalar sourceValue = (Scalar) msg.getEntity(j);
+                                Entity.DATA_TYPE dataType = sourceValue.getDataType();
 
-                            newVector.set(0, sourceValue);
-                            newColumns[j-2] = newVector;
+                                // 创建适当类型的向量
+                                Vector newVector;
+                                if (msg.getEntity(j) instanceof BasicDecimal32 || msg.getEntity(j) instanceof BasicDecimal64 || msg.getEntity(j) instanceof BasicDecimal128) {
+                                    newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, ((Scalar) msg.getEntity(j)).getScale());
+                                } else {
+                                    newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
+                                }
+
+                                newVector.set(0, sourceValue);
+                                newColumns[j-2] = newVector;
+                            }
                         }
 
                         // 直接添加到表中
