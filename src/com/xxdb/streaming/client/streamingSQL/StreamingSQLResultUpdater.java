@@ -945,8 +945,25 @@ public class StreamingSQLResultUpdater {
                 // 所有行都被删除，创建空表
                 List<Vector> emptyColumns = new ArrayList<>();
                 for (int i = 0; i < table.columns(); i++) {
-                    emptyColumns.add(BasicEntityFactory.instance().createVectorWithDefaultValue(
-                            table.getColumn(i).getDataType(), 0, -1));
+                    if (table.getColumn(i).getDataType().getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue()) {
+                        int scale = -1;
+                        if (table.getColumn(i).getDataType() == Entity.DATA_TYPE.DT_DECIMAL32_ARRAY
+                                || table.getColumn(i).getDataType() == Entity.DATA_TYPE.DT_DECIMAL64_ARRAY
+                                || table.getColumn(i).getDataType() == Entity.DATA_TYPE.DT_DECIMAL128_ARRAY) {
+                            scale = ((BasicArrayVector) table.getColumn(i)).getScale();
+                        }
+                        emptyColumns.add(new BasicArrayVector(table.getColumn(i).getDataType(), 0, scale));
+                    } else {
+                        int scale = -1;
+                        if (table.getColumn(i).getDataType() == Entity.DATA_TYPE.DT_DECIMAL32) {
+                            scale = ((BasicDecimal32Vector) table.getColumn(i)).getScale();
+                        } else if (table.getColumn(i).getDataType() == Entity.DATA_TYPE.DT_DECIMAL64) {
+                            scale = ((BasicDecimal64Vector) table.getColumn(i)).getScale();
+                        } else if (table.getColumn(i).getDataType() == Entity.DATA_TYPE.DT_DECIMAL128) {
+                            scale = ((BasicDecimal128Vector) table.getColumn(i)).getScale();
+                        }
+                        emptyColumns.add(BasicEntityFactory.instance().createVectorWithDefaultValue(table.getColumn(i).getDataType(), 0, scale));
+                    }
                 }
                 return new BasicTable(columnNames, emptyColumns);
             } else {
