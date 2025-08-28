@@ -9,7 +9,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import static org.junit.Assert.*;
@@ -73,6 +75,26 @@ public class BasicDecimal128VectorTest {
         }
         assertEquals("Scale -1 is out of bounds, it must be in [0,38].",ex1);
     }
+
+    @Test
+    public void test_BasicDecimal128Vector_list_scale_not_true() throws Exception {
+        List<String> tmp_string_v =  Arrays.asList("0.0","-123.00432","132.204234","100.0");
+        String ex = null;
+        try{
+            BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,39);
+        }catch(Exception e){
+            ex = e.getMessage();
+        }
+        assertEquals("Scale 39 is out of bounds, it must be in [0,38].",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,-1);
+        }catch(Exception e){
+            ex1 = e.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,38].",ex1);
+    }
+
     @Test
     public void test_BasicDecimal128Vector_scale_not_true_2() throws Exception {
         String ex = null;
@@ -201,6 +223,36 @@ public class BasicDecimal128VectorTest {
         BigInteger[] tmp_string_v1 = {};
         BasicDecimal128Vector tmp_128_v1 = new BasicDecimal128Vector(tmp_string_v1,4);
         assertEquals("[]",tmp_128_v1.getString());
+    }
+
+    @Test
+    public void test_BasicDecimal128Vector_create_string_list() throws Exception {
+        List<String>  tmp_string_v1 =  Arrays.asList("0.0","-123.00432","132.204234","100.0");
+        BasicDecimal128Vector tmp_128_v1 = new BasicDecimal128Vector(tmp_string_v1,0);
+        assertEquals("[0,-123,132,100]",tmp_128_v1.getString());
+
+        List<String>  tmp_string_v =  Arrays.asList("0.0","-123.00432","132.204234","100.0");
+        BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_128_v.getString());
+
+        List<String>  tmp_string_v2 =  Arrays.asList("0.1","-3.00432","1.204234","0.0");
+        BasicDecimal128Vector tmp_128_v2 = new BasicDecimal128Vector(tmp_string_v2,37);
+        assertEquals("[0.1000000000000000000000000000000000000,-3.0043200000000000000000000000000000000,1.2042340000000000000000000000000000000,0.0000000000000000000000000000000000000]",tmp_128_v2.getString());
+    }
+
+    @Test
+    public void test_BasicDecimal128Vector_create_string_list_null() throws Exception {
+        List<String> tmp_string_v = Arrays.asList("","-123.00432",null,"100.0");
+        BasicDecimal128Vector tmp_128_v = new BasicDecimal128Vector(tmp_string_v,4);
+        assertEquals("[,-123.0043,,100.0000]",tmp_128_v.getString());
+
+        List<String> tmp_string_v1 = new ArrayList<>();
+        BasicDecimal128Vector tmp_128_v1 = new BasicDecimal128Vector(tmp_string_v1,4);
+        assertEquals("[]",tmp_128_v1.getString());
+
+        List<String> tmp_string_v2 = Arrays.asList(  "-170141183460469231731687303715884105728", "-170141183460469231731687303715884105728");
+        BasicDecimal128Vector tmp_128_v2 = new BasicDecimal128Vector(tmp_string_v2,0);
+        assertEquals("[,]",tmp_128_v2.getString());
     }
 
     @Test

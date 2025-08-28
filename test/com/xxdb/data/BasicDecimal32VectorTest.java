@@ -9,7 +9,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import static org.junit.Assert.*;
@@ -68,6 +70,25 @@ public class BasicDecimal32VectorTest {
         String ex1 = null;
         try{
             BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_double_v,-1);
+        }catch(Exception E){
+            ex1 = E.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,9].",ex1);
+    }
+
+    @Test
+    public void test_BasicDecimal32Vector_list_scale_not_true() throws Exception {
+        List<String> tmp_string_v = Arrays.asList("0.0","-123.00432","132.204234","100.0");
+        String ex = null;
+        try{
+            BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,10);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale 10 is out of bounds, it must be in [0,9].",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,-1);
         }catch(Exception E){
             ex1 = E.getMessage();
         }
@@ -171,6 +192,28 @@ public class BasicDecimal32VectorTest {
     }
 
     @Test
+    public void test_BasicDecimal32Vector_create_list_string() throws Exception {
+        List<String> tmp_string_v = Arrays.asList("0.0","-123.00432","132.204234","100.0");
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_32_v.getString());
+    }
+    @Test
+    public void test_BasicDecimal32Vector_create_list_string_scale_0() throws Exception {
+        List<String> tmp_string_v = Arrays.asList("0.0","-123.00432","132.204234","100.0");
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,0);
+        assertEquals("[0,-123,132,100]",tmp_32_v.getString());
+
+        List<String> tmp_string_v1 = Arrays.asList("0.49","-123.44","132.50","-0.51");
+        BasicDecimal32Vector tmp_32_v1 = new BasicDecimal32Vector(tmp_string_v1,0);
+        assertEquals("[0,-123,133,-1]",tmp_32_v1.getString());
+    }
+    @Test
+    public void test_BasicDecimal32Vector_create_list_string_scale_8() throws Exception {
+        List<String> tmp_string_v = Arrays.asList("0.0","-1.00000001","1.00000001","9.99999999","-9.99999999");
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,8);
+        assertEquals("[0.00000000,-1.00000001,1.00000001,9.99999999,-9.99999999]",tmp_32_v.getString());
+    }
+    @Test
     public void test_BasicDecimal32Vector_create_Decimal32Vector_null() throws Exception {
         double[] tmp_double_v = {};
         BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_double_v,4);
@@ -181,6 +224,26 @@ public class BasicDecimal32VectorTest {
         String[] tmp_string_v = {};
         BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
         assertEquals("[]",tmp_32_v.getString());
+
+        String[] tmp_string_v1= new String[]{String.valueOf(Integer.MIN_VALUE), String.valueOf(Integer.MIN_VALUE-1)};
+        BasicDecimal32Vector tmp_32_v1 = new BasicDecimal32Vector(tmp_string_v1,4);
+        //assertEquals("[,]",tmp_32_v1.getString());
+
+    }
+
+    @Test
+    public void test_BasicDecimal32Vector_create_list_string_null() throws Exception {
+        List<String> tmp_string_v = Arrays.asList("","-123.00432",null,"100.0");
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,4);
+        assertEquals("[,-123.0043,,100.0000]",tmp_32_v.getString());
+
+        List<String> tmp_string_v1 = new ArrayList<>();
+        BasicDecimal32Vector tmp_32_v1 = new BasicDecimal32Vector(tmp_string_v1,4);
+        assertEquals("[]",tmp_32_v1.getString());
+
+        List<String> tmp_string_v2 = Arrays.asList(String.valueOf(Integer.MIN_VALUE), String.valueOf(Integer.MIN_VALUE-1));
+        BasicDecimal32Vector tmp_32_v2 = new BasicDecimal32Vector(tmp_string_v2,4);
+        //assertEquals("[,]",tmp_32_v2.getString());
     }
 
     @Test

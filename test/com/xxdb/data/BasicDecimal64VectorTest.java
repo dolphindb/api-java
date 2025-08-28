@@ -7,7 +7,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import static org.junit.Assert.*;
@@ -71,6 +73,26 @@ public class BasicDecimal64VectorTest {
         }
         assertEquals("Scale -1 is out of bounds, it must be in [0,18].",ex1);
     }
+
+    @Test
+    public void test_BasicDecimal64Vector_list_scale_not_true() throws Exception {
+        List<String> tmp_string_v = Arrays.asList("0.0", "-123.00432", "132.204234", "100.0");
+        String ex = null;
+        try{
+            BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,19);
+        }catch(Exception E){
+            ex=E.getMessage();
+        }
+        assertEquals("Scale 19 is out of bounds, it must be in [0,18].",ex);
+        String ex1 = null;
+        try{
+            BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,-1);
+        }catch(Exception E){
+            ex1 = E.getMessage();
+        }
+        assertEquals("Scale -1 is out of bounds, it must be in [0,18].",ex1);
+    }
+
     @Test
     public void test_BasicDecimal64Vector_run_vector() throws IOException {
         BasicDecimal64Vector re1 =(BasicDecimal64Vector) conn.run("decimal64([1.232,-12.43,123.53],6)");
@@ -129,6 +151,31 @@ public class BasicDecimal64VectorTest {
         BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,17);
         assertEquals("[0.00000000000000000,-1.00000000000000001,1.00000000000000001,9.99999999999999999,-9.99999999999999999]",tmp_64_v.getString());
     }
+
+    @Test
+    public void test_BasicDecimal64Vector_create_list_string() throws Exception {
+        List<String> tmp_string_v = Arrays.asList("0.0","-123.00432","132.204234","100.0");
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,4);
+        assertEquals("[0.0000,-123.0043,132.2042,100.0000]",tmp_64_v.getString());
+    }
+
+    @Test
+    public void test_BasicDecimal64Vector_create_list_string_scale_0() throws Exception {
+        List<String> tmp_string_v = Arrays.asList("0.0","-123.00432","132.204234","100.0");
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,0);
+        assertEquals("[0,-123,132,100]",tmp_64_v.getString());
+
+        List<String> tmp_string_v1 = Arrays.asList("0.49","-123.49","132.99","-0.51");
+        BasicDecimal64Vector tmp_64_v1 = new BasicDecimal64Vector(tmp_string_v1,0);
+        assertEquals("[0,-123,133,-1]",tmp_64_v1.getString());
+    }
+    @Test
+    public void test_BasicDecimal64Vector_create_list_string_scale_17() throws Exception {
+        List<String> tmp_string_v =  Arrays.asList("0.0","-1.00000000000000001","1.00000000000000001","9.99999999999999999","-9.99999999999999999");
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,17);
+        assertEquals("[0.00000000000000000,-1.00000000000000001,1.00000000000000001,9.99999999999999999,-9.99999999999999999]",tmp_64_v.getString());
+    }
+
     @Test
     public void test_BasicDecimal64Vector_create_Decimal64Vector_null() throws Exception {
         double[] tmp_double_v = {};
@@ -140,6 +187,21 @@ public class BasicDecimal64VectorTest {
         String[] tmp_string_v = {};
         BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,4);
         assertEquals("[]",tmp_64_v.getString());
+    }
+
+    @Test
+    public void test_BasicDecimal64Vector_create_list_string_null() throws Exception {
+        List<String> tmp_string_v = Arrays.asList("","-123.00432",null,"100.0");
+        BasicDecimal64Vector tmp_64_v = new BasicDecimal64Vector(tmp_string_v,4);
+        assertEquals("[,-123.0043,,100.0000]",tmp_64_v.getString());
+
+        List<String> tmp_string_v1 = new ArrayList<>();
+        BasicDecimal64Vector tmp_64_v1 = new BasicDecimal64Vector(tmp_string_v1,4);
+        assertEquals("[]",tmp_64_v1.getString());
+
+        List<String> tmp_string_v2 = Arrays.asList(  String.valueOf(Long.MIN_VALUE), String.valueOf(Long.MIN_VALUE-1));
+        BasicDecimal64Vector tmp_64_v2 = new BasicDecimal64Vector(tmp_string_v2,4);
+        assertEquals("[,]",tmp_64_v2.getString());
     }
 
     @Test
