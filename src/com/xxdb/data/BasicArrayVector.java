@@ -573,4 +573,8 @@ public class BasicArrayVector extends AbstractVector {
 	public int columns() {
 		return valueVec.rows();
 	}
+
+	public int getScale(){
+		return scale_;
+	}
 }
