@@ -7226,7 +7226,48 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "tmp = table(times as time, syms as sym, volumes as volume)\n" ;
         conn.run(script1);
         BasicTable bt = (BasicTable)conn.run("select * from tmp");
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+        BasicTable port = (BasicTable)conn.run("select port from getClusterPerf() where name = (exec site from getOrcaStreamTableMeta() where fqn = \"orca.orca_table.output\")");
+        int port1 = Integer.valueOf(port.getColumn(0).get(0).getString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, port1, "admin", "123456",
+                "", "orca.orca_table.trades", false, false, null, 1, 1,
+                1, "time");
+        for(int i=0;i<bt.rows();i++){
+            pErrorInfo = mutithreadTableWriter_.insert( bt.getColumn(0).get(i),bt.getColumn(1).get(i),bt.getColumn(2).get(i));
+        }
+        assertEquals("code= info=",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt1 = (BasicTable) conn.run("select * from orca.orca_table.trades;");
+        assertEquals(10, bt.rows());
+        checkData(bt, bt1);
+    }
+
+    @Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_table_orca_not_orca_node() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, COMPUTENODE,"admin","123456");
+        String script1 = "if (existsCatalog(\"orca\")) {\n" +
+                "\tdropCatalog(\"orca\")\n" +
+                "}\n" +
+                "go\n" +
+                "createCatalog(\"orca\")\n" +
+                "go\n" +
+                "use catalog orca\n" +
+                "g = createStreamGraph('engine')\n" +
+                "g.source(\"trades\", [\"time\",\"sym\",\"volume\"], [TIMESTAMP, SYMBOL, INT])\n" +
+                ".timeSeriesEngine(windowSize=60000, step=60000, metrics=<[sum(volume)]>, timeColumn=\"time\", useSystemTime=false, keyColumn=\"sym\", useWindowStartTime=false)\n" +
+                ".sink(\"output\")\n" +
+                "g.submit()\n" +
+                "go\n" +
+                "times = [2018.10.08T01:01:01.785, 2018.10.08T01:01:02.125, 2018.10.08T01:01:10.263, 2018.10.08T01:01:12.457, 2018.10.08T01:02:10.789, 2018.10.08T01:02:12.005, 2018.10.08T01:02:30.021, 2018.10.08T01:04:02.236, 2018.10.08T01:04:04.412, 2018.10.08T01:04:05.152]\n" +
+                "syms = [`A, `B, `B, `A, `A, `B, `A, `A, `B, `B]\n" +
+                "volumes = [10, 26, 14, 28, 15, 9, 10, 29, 32, 23]\n" +
+                "\n" +
+                "tmp = table(times as time, syms as sym, volumes as volume)\n" ;
+        conn.run(script1);
+        BasicTable bt = (BasicTable)conn.run("select * from tmp");
+        BasicTable port = (BasicTable)conn.run("select port from getClusterPerf() where name != (exec site from getOrcaStreamTableMeta() where fqn = \"orca.orca_table.output\") and mode = 0 limit 1");
+        int port1 = Integer.valueOf(port.getColumn(0).get(0).getString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, port1, "admin", "123456",
                 "", "orca.orca_table.trades", false, false, null, 1, 1,
                 1, "time");
         for(int i=0;i<bt.rows();i++){
