@@ -1770,4 +1770,19 @@ public class BasicArrayVectorTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"ARRAY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_INT_ARRAY\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.Entity\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[[2],[4],[6],[8]]\",\"table\":false,\"vector\":true}", re);
     }
+
+    @Test
+    public void test_BasicArrayVector_getScale() throws IOException {
+        BasicArrayVector bav = new BasicArrayVector(new int[]{1,2,3,4},new BasicIntVector(new int[]{2,4,6,8}));
+        assertEquals(-1, bav.getScale());
+
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT,"admin","123456");
+        String script="\n" +
+                "a = array(DECIMAL32(4)[],0)\n" +
+                "a.append!([[1.11111,2],[1.000001,3],[34.1,2,111.0],[]])\n" +
+                "a";
+        BasicArrayVector bav1 = (BasicArrayVector)conn.run(script);
+        assertEquals(4, bav1.getScale());
+    }
 }
