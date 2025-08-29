@@ -256,7 +256,7 @@ public class MultithreadedTableWriter {
         boolean init(){
             if (tableWriter_.mode_ == Mode.M_Append) {
                 if (tableWriter_.dbName_.isEmpty()) {
-                    scriptTableInsert_ = "tableInsert{\"" + tableWriter_.tableName_ + "\"}";
+                    scriptTableInsert_ = "tableInsert{" + tableWriter_.tableName_ + "}";
                 } else {// single partitioned table
                     scriptTableInsert_ = "tableInsert{loadTable(\"" + tableWriter_.dbName_ + "\",\"" + tableWriter_.tableName_ + "\")}";
                 }
