@@ -125,6 +125,9 @@ public class StreamingSQLResultUpdater {
                                         throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
                                     }
                                 } else {
+                                    log.debug("=== PROCESSING kUpdate ===");
+                                    log.debug("Table rows: " + result.rows());
+
                                     List<String> columnNames = new ArrayList<>();
                                     for (int j = 0; j < result.columns(); ++j) {
                                         columnNames.add(result.getColumnName(j));
@@ -132,22 +135,32 @@ public class StreamingSQLResultUpdater {
 
                                     // Get updated row indices
                                     BasicIntVector updateLineNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
+                                    log.debug("Original logical line numbers: " + updateLineNo.getString());
 
-                                    // Only process valid indices (within table range)
+                                    // 关键修复：先进行逻辑行号到物理行号的映射转换
+                                    updateIndexMapping(updateLineNo, result.rows(), wrapper);
+                                    log.debug("After mapping to physical line numbers: " + updateLineNo.getString());
+
+                                    // 现在验证转换后的物理行号是否有效
                                     List<Integer> validIndices = new ArrayList<>();
 
                                     for (int idx = 0; idx < updateLineNo.rows(); idx++) {
-                                        int lineNo = ((BasicInt)updateLineNo.get(idx)).getInt();
-                                        if (lineNo < result.rows()) {
+                                        int physicalLineNo = ((BasicInt)updateLineNo.get(idx)).getInt();
+                                        log.debug("Checking physical lineNo " + physicalLineNo + " against table size " + result.rows());
+                                        if (physicalLineNo >= 0 && physicalLineNo < result.rows()) {
                                             validIndices.add(idx);
+                                            log.debug("  -> Valid physical index: " + physicalLineNo);
                                         } else {
-                                            // Log warning for out-of-range indices but don't treat as append
-                                            log.debug("Warning: Update index " + lineNo + " out of range (table has " + result.rows() + " rows), skipping");
+                                            log.debug("  -> Invalid physical index: " + physicalLineNo + " (table size: " + result.rows() + ")");
+                                            log.debug("Warning: Mapped physical index " + physicalLineNo + " out of range, skipping");
                                         }
                                     }
 
+                                    log.debug("Valid indices count: " + validIndices.size());
+
                                     // Process valid update indices only
                                     if (!validIndices.isEmpty()) {
+                                        log.debug("Calling updateRows with valid physical indices");
                                         // Create update vectors containing only valid indices
                                         BasicIntVector validUpdateLineNo = new BasicIntVector(validIndices.size());
                                         Vector[] validUpdateValues = new Vector[updateValues.length];
@@ -160,17 +173,30 @@ public class StreamingSQLResultUpdater {
                                                     validUpdateLineNo.set(j, updateLineNo.get(validIndices.get(j)));
                                                 }
                                             }
-                                            validUpdateValues[colIdx] = ((AbstractVector)updateValues[colIdx]).getSubVector(validIndicesArray);
+
+                                            // 关键修复：检查表列类型，决定如何处理数据
+                                            Vector tableColumn = result.getColumn(colIdx);
+                                            if (tableColumn instanceof BasicArrayVector) {
+                                                // 对于数组列，不要使用getSubVector，直接使用原始数据
+                                                log.debug("Column " + colIdx + " is BasicArrayVector, using original vector");
+                                                validUpdateValues[colIdx] = updateValues[colIdx];
+                                            } else {
+                                                // 对于非数组列，正常使用getSubVector
+                                                log.debug("Column " + colIdx + " is not BasicArrayVector, using getSubVector");
+                                                validUpdateValues[colIdx] = ((AbstractVector)updateValues[colIdx]).getSubVector(validIndicesArray);
+                                            }
                                         }
 
-                                        updateIndexMapping(validUpdateLineNo, result.rows(), wrapper);
+                                        // 注意：这里不要再次调用 updateIndexMapping，因为已经转换过了
                                         boolean updated = updateRows(result, validUpdateValues, validUpdateLineNo, columnNames);
                                         if (!updated) {
                                             throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
                                         }
+                                    } else {
+                                        log.debug("No valid physical indices found after mapping, updateRows not called!");
                                     }
 
-                                    // 移除了处理超出范围索引的代码
+                                    log.debug("=== END PROCESSING kUpdate ===");
                                 }
                             } else if (prevUpdateType == LogType.kAppend) {
                                 // Process append operation
@@ -212,19 +238,23 @@ public class StreamingSQLResultUpdater {
 
                                     // 为每一列创建对应类型的向量
                                     for (int j = 2; j < msg.size(); j++) {
-                                        Scalar sourceValue = (Scalar) msg.getEntity(j);
-                                        Entity.DATA_TYPE dataType = sourceValue.getDataType();
-
-                                        // 创建适当类型的向量
-                                        Vector newVector;
-                                        if (msg.getEntity(j) instanceof BasicDecimal32 || msg.getEntity(j) instanceof BasicDecimal64 || msg.getEntity(j) instanceof BasicDecimal128) {
-                                            newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, ((Scalar) msg.getEntity(j)).getScale());
+                                        if (msg.getEntity(j) instanceof Vector) {
+                                            newColumns[j-2] = (Vector) msg.getEntity(j);
                                         } else {
-                                            newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
-                                        }
+                                            Scalar sourceValue = (Scalar) msg.getEntity(j);
+                                            Entity.DATA_TYPE dataType = sourceValue.getDataType();
 
-                                        newVector.set(0, sourceValue);
-                                        newColumns[j-2] = newVector;
+                                            // 创建适当类型的向量
+                                            Vector newVector;
+                                            if (msg.getEntity(j) instanceof BasicDecimal32 || msg.getEntity(j) instanceof BasicDecimal64 || msg.getEntity(j) instanceof BasicDecimal128) {
+                                                newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, ((Scalar) msg.getEntity(j)).getScale());
+                                            } else {
+                                                newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
+                                            }
+
+                                            newVector.set(0, sourceValue);
+                                            newColumns[j-2] = newVector;
+                                        }
                                     }
 
                                     // 直接添加到表中
@@ -350,12 +380,15 @@ public class StreamingSQLResultUpdater {
 
                     // If table is empty, treat as append operation
                     if (result.rows() == 0) {
-                        log.debug("Table is empty, treating final kUpdate as kAppend");
+                        log.debug("Table is empty, treating kUpdate as kAppend");
                         boolean appended = appendColumns(result, updateValues);
                         if (!appended) {
                             throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
                         }
                     } else {
+                        log.debug("=== PROCESSING kUpdate ===");
+                        log.debug("Table rows: " + result.rows());
+
                         List<String> columnNames = new ArrayList<>();
                         for (int j = 0; j < result.columns(); ++j) {
                             columnNames.add(result.getColumnName(j));
@@ -363,22 +396,32 @@ public class StreamingSQLResultUpdater {
 
                         // Get updated row indices
                         BasicIntVector updateLineNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
+                        log.debug("Original logical line numbers: " + updateLineNo.getString());
 
-                        // Only process valid indices (within table range)
+                        // 关键修复：先进行逻辑行号到物理行号的映射转换
+                        updateIndexMapping(updateLineNo, result.rows(), wrapper);
+                        log.debug("After mapping to physical line numbers: " + updateLineNo.getString());
+
+                        // 现在验证转换后的物理行号是否有效
                         List<Integer> validIndices = new ArrayList<>();
 
                         for (int idx = 0; idx < updateLineNo.rows(); idx++) {
-                            int lineNo = ((BasicInt)updateLineNo.get(idx)).getInt();
-                            if (lineNo < result.rows()) {
+                            int physicalLineNo = ((BasicInt)updateLineNo.get(idx)).getInt();
+                            log.debug("Checking physical lineNo " + physicalLineNo + " against table size " + result.rows());
+                            if (physicalLineNo >= 0 && physicalLineNo < result.rows()) {
                                 validIndices.add(idx);
+                                log.debug("  -> Valid physical index: " + physicalLineNo);
                             } else {
-                                // Log warning for out-of-range indices but don't treat as append
-                                log.debug("Warning: Update index " + lineNo + " out of range (table has " + result.rows() + " rows), skipping");
+                                log.debug("  -> Invalid physical index: " + physicalLineNo + " (table size: " + result.rows() + ")");
+                                log.debug("Warning: Mapped physical index " + physicalLineNo + " out of range, skipping");
                             }
                         }
 
+                        log.debug("Valid indices count: " + validIndices.size());
+
                         // Process valid update indices only
                         if (!validIndices.isEmpty()) {
+                            log.debug("Calling updateRows with valid physical indices");
                             // Create update vectors containing only valid indices
                             BasicIntVector validUpdateLineNo = new BasicIntVector(validIndices.size());
                             Vector[] validUpdateValues = new Vector[updateValues.length];
@@ -391,17 +434,30 @@ public class StreamingSQLResultUpdater {
                                         validUpdateLineNo.set(j, updateLineNo.get(validIndices.get(j)));
                                     }
                                 }
-                                validUpdateValues[colIdx] = ((AbstractVector)updateValues[colIdx]).getSubVector(validIndicesArray);
+
+                                // 关键修复：检查表列类型，决定如何处理数据
+                                Vector tableColumn = result.getColumn(colIdx);
+                                if (tableColumn instanceof BasicArrayVector) {
+                                    // 对于数组列，不要使用getSubVector，直接使用原始数据
+                                    log.debug("Column " + colIdx + " is BasicArrayVector, using original vector");
+                                    validUpdateValues[colIdx] = updateValues[colIdx];
+                                } else {
+                                    // 对于非数组列，正常使用getSubVector
+                                    log.debug("Column " + colIdx + " is not BasicArrayVector, using getSubVector");
+                                    validUpdateValues[colIdx] = ((AbstractVector)updateValues[colIdx]).getSubVector(validIndicesArray);
+                                }
                             }
 
-                            updateIndexMapping(validUpdateLineNo, result.rows(), wrapper);
+                            // 注意：这里不要再次调用 updateIndexMapping，因为已经转换过了
                             boolean updated = updateRows(result, validUpdateValues, validUpdateLineNo, columnNames);
                             if (!updated) {
                                 throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
                             }
+                        } else {
+                            log.debug("No valid physical indices found after mapping, updateRows not called!");
                         }
 
-                        // 移除了处理超出范围索引的代码
+                        log.debug("=== END PROCESSING kUpdate ===");
                     }
                 } else if (prevUpdateType == LogType.kAppend) {
                     // Process append operation
@@ -1009,16 +1065,15 @@ public class StreamingSQLResultUpdater {
     // Helper function: Update rows
     private static boolean updateRows(BasicTable table, Vector[] values, BasicIntVector rowIndices, List<String> columnNames) {
         try {
+            log.debug("=== UPDATE ROWS DEBUG ===");
+            log.debug("Table rows: " + table.rows());
+            log.debug("Row indices count: " + rowIndices.rows());
+            log.debug("Update values length: " + values.length);
+
             // If table is empty and it's an update operation, convert to append
             if (table.rows() == 0 && rowIndices.rows() > 0) {
                 log.debug("Table is empty, converting update to append");
                 return appendColumns(table, values);
-            }
-
-            // Get column name to index mapping
-            Map<String, Integer> colNameToIndex = new HashMap<>();
-            for (int i = 0; i < columnNames.size(); i++) {
-                colNameToIndex.put(columnNames.get(i), i);
             }
 
             // For each row to update
@@ -1031,21 +1086,58 @@ public class StreamingSQLResultUpdater {
                     continue;
                 }
 
-                // Update each column in the row
-                for (int colIndex = 0; colIndex < values.length; colIndex++) {
-                    // Get value
-                    Entity value = values[colIndex].get(i);
+                log.debug("Updating row " + rowIndex);
 
-                    // Get table column index
-                    int tableColIndex = colIndex;
-                    if (tableColIndex >= 0 && tableColIndex < table.columns()) {
-                        // Update cell
-                        table.getColumn(tableColIndex).set(rowIndex, value);
+                // Update each column in the row
+                for (int colIndex = 0; colIndex < Math.min(values.length, table.columns()); colIndex++) {
+                    try {
+                        Entity value;
+                        if (table.getColumn(colIndex) instanceof BasicArrayVector) {
+                            value = values[colIndex];
+                        } else {
+                            value = values[colIndex].get(i);
+                        }
+                        Vector tableColumn = table.getColumn(colIndex);
+
+                        log.debug("  Updating column " + colIndex + " (type: " + tableColumn.getDataType() + ")");
+                        log.debug("    Old value: " + (tableColumn.rows() > rowIndex ? tableColumn.get(rowIndex).getString() : "N/A"));
+                        log.debug("    New value: " + value.getString());
+
+                        // 检查是否是BasicArrayVector
+                        if (tableColumn instanceof BasicArrayVector) {
+                            log.debug("    Detected BasicArrayVector, using enhanced set method");
+                            if (!(value instanceof Vector)) {
+                                System.err.println("    Error: BasicArrayVector requires Vector value, got: " + value.getClass().getSimpleName());
+                                continue;
+                            }
+                        }
+
+                        // 执行更新
+                        tableColumn.set(rowIndex, value);
+
+                        // 验证更新是否成功
+                        Entity updatedValue = tableColumn.get(rowIndex);
+                        log.debug("    Updated value: " + updatedValue.getString());
+
+                        if (!updatedValue.getString().equals(value.getString())) {
+                            System.err.println("    Warning: Update may not have taken effect!");
+                            System.err.println("    Expected: " + value.getString());
+                            System.err.println("    Actual: " + updatedValue.getString());
+                        } else {
+                            log.debug("    Update successful!");
+                        }
+
+                    } catch (Exception e) {
+                        System.err.println("  Error updating column " + colIndex + " at row " + rowIndex + ": " + e.getMessage());
+                        e.printStackTrace();
+                        // 继续处理其他列，不要因为一列失败就整体失败
                     }
                 }
             }
 
+            log.debug("=== UPDATE ROWS COMPLETED ===");
             return true;
+
         } catch (Exception e) {
             System.err.println("Error in updateRows: " + e.getMessage());
             e.printStackTrace();
