@@ -314,13 +314,58 @@ public class BasicArrayVector extends AbstractVector {
 
 	@Override
 	public void set(int index, Entity value) throws Exception {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("BasicArrayVector.set not supported.");
+		if (!(value instanceof Vector)) {
+			throw new RuntimeException("BasicArrayVector.set requires a Vector value, got: " + value.getClass().getSimpleName());
+		}
+
+		Vector newValue = (Vector) value;
+
+		if (index < 0 || index >= rowIndicesSize) {
+			throw new IndexOutOfBoundsException("Index " + index + " out of bounds for size " + rowIndicesSize);
+		}
+
+		int startPosValueVec = index == 0 ? 0 : rowIndices[index - 1];
+		int currentRows = rowIndices[index] - startPosValueVec;
+		int newRows = newValue.rows();
+
+		if (currentRows != newRows) {
+			throw new RuntimeException("BasicArrayVector.set requires same length. Current: " + currentRows + ", New: " + newRows);
+		}
+
+		DATA_TYPE currentValueType = DATA_TYPE.valueOf(type.getValue() - 64);
+		if (newValue.getDataType() != currentValueType) {
+			throw new RuntimeException("BasicArrayVector.set requires same data type. Expected: " + currentValueType + ", Got: " + newValue.getDataType());
+		}
+
+		if (currentValueType == DATA_TYPE.DT_DECIMAL32 || currentValueType == DATA_TYPE.DT_DECIMAL64 || currentValueType == DATA_TYPE.DT_DECIMAL128) {
+			int currentScale = scale_;
+			int newScale = ((AbstractVector)newValue).getExtraParamForType();
+			if (currentScale != newScale) {
+				throw new RuntimeException("BasicArrayVector.set requires same scale for decimal types. Expected: " + currentScale + ", Got: " + newScale);
+			}
+		}
+
+		try {
+			for (int i = 0; i < newRows; i++) {
+				valueVec.set(startPosValueVec + i, newValue.get(i));
+			}
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to set data in BasicArrayVector: " + e.getMessage(), e);
+		}
 	}
 
 	@Override
 	public void set(int index, Object value) {
-		throw new RuntimeException("BasicArrayVector.set not supported.");
+		try {
+			if (value instanceof Vector) {
+				set(index, (Entity) value);
+			} else {
+				throw new RuntimeException("BasicArrayVector.set(Object) requires a Vector, got: " +
+						(value == null ? "null" : value.getClass().getSimpleName()));
+			}
+		} catch (Exception e) {
+			throw new RuntimeException("Error in BasicArrayVector.set(Object): " + e.getMessage(), e);
+		}
 	}
 
 	@Override
