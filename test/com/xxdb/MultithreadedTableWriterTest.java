@@ -5,9 +5,6 @@ import com.xxdb.data.Vector;
 import com.xxdb.data.*;
 import com.xxdb.multithreadedtablewriter.Callback;
 import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
-import com.xxdb.route.AutoFitTableAppender;
-import com.xxdb.route.AutoFitTableUpsert;
-import com.xxdb.route.PartitionedTableAppender;
 import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
@@ -35,6 +32,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
+    static int COMPUTENODE = Integer.parseInt(bundle.getString("COMPUTENODE"));
     static String CONTROLLER_HOST = bundle.getString("CONTROLLER_HOST");
     static int CONTROLLER_PORT = Integer.parseInt(bundle.getString("CONTROLLER_PORT"));
     static String[] ipports = bundle.getString("SITES").split(",");
@@ -1204,6 +1202,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertTrue(unwrite1.size() == 0);
         BasicTable ex1 = (BasicTable) conn.run("select * from loadTable(\"dfs://test_MultithreadedTableWriter\",`pt)");
         List<List<Entity>> unwrite2 =  mutithreadTableWriter2.getUnwrittenData();
+       System.out.println(unwrite2.size());
         try {
             ErrorCodeInfo errorInfo = mutithreadTableWriter2.insertUnwrittenData(unwrite2);
         }catch (Exception ex){
@@ -4910,7 +4909,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 //        assertEquals(1000000,result.getLong());
 //    }
 
-    @Test(timeout = 120000)
+    @Test
     public void test_mtw_concurrentWrite_getFailedData() throws Exception {
         conn.run("login(`admin,`123456)\n" +
                 "dbName = \"dfs://test_mtw_concurrentWrite_getFailedData1\"\n" +
@@ -7201,6 +7200,43 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals("[-1,1]", bt.getColumn("long").getString());
         assertEquals("[0,0]", bt.getColumn("short").getString());
         conn.run("undef(`t1,SHARED)");
+    }
+
+    @Test(timeout = 120000)
+    public void test_MultithreadedTableWriter_table_orca() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, COMPUTENODE,"admin","123456");
+        String script1 = "if (existsCatalog(\"orca\")) {\n" +
+                "\tdropCatalog(\"orca\")\n" +
+                "}\n" +
+                "go\n" +
+                "createCatalog(\"orca\")\n" +
+                "go\n" +
+                "use catalog orca\n" +
+                "g = createStreamGraph('engine')\n" +
+                "g.source(\"trades\", [\"time\",\"sym\",\"volume\"], [TIMESTAMP, SYMBOL, INT])\n" +
+                ".timeSeriesEngine(windowSize=60000, step=60000, metrics=<[sum(volume)]>, timeColumn=\"time\", useSystemTime=false, keyColumn=\"sym\", useWindowStartTime=false)\n" +
+                ".sink(\"output\")\n" +
+                "g.submit()\n" +
+                "go\n" +
+                "times = [2018.10.08T01:01:01.785, 2018.10.08T01:01:02.125, 2018.10.08T01:01:10.263, 2018.10.08T01:01:12.457, 2018.10.08T01:02:10.789, 2018.10.08T01:02:12.005, 2018.10.08T01:02:30.021, 2018.10.08T01:04:02.236, 2018.10.08T01:04:04.412, 2018.10.08T01:04:05.152]\n" +
+                "syms = [`A, `B, `B, `A, `A, `B, `A, `A, `B, `B]\n" +
+                "volumes = [10, 26, 14, 28, 15, 9, 10, 29, 32, 23]\n" +
+                "\n" +
+                "tmp = table(times as time, syms as sym, volumes as volume)\n" ;
+        conn.run(script1);
+        BasicTable bt = (BasicTable)conn.run("select * from tmp");
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "orca.orca_table.trades", false, false, null, 1, 1,
+                1, "time");
+        for(int i=0;i<bt.rows();i++){
+            pErrorInfo = mutithreadTableWriter_.insert( bt.getColumn(0).get(i),bt.getColumn(1).get(i),bt.getColumn(2).get(i));
+        }
+        assertEquals("code= info=",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt1 = (BasicTable) conn.run("select * from orca.orca_table.trades;");
+        assertEquals(10, bt.rows());
+        checkData(bt, bt1);
     }
 }
 
