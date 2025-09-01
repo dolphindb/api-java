@@ -218,8 +218,12 @@ public class BasicComplexVector extends AbstractVector{
 	}
 	
 	public void set(int index, Entity value) throws Exception {
-		values[index].x = ((BasicComplex)value).getReal();
-		values[index].y = ((BasicComplex)value).getImage();
+		if (value == null) {
+			values[index].setNull();
+		} else {
+			values[index].x = ((BasicComplex)value).getReal();
+			values[index].y = ((BasicComplex)value).getImage();
+		}
 	}
 
 	@Override
