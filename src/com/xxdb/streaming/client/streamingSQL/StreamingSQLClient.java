@@ -238,26 +238,35 @@ public class StreamingSQLClient extends AbstractClient {
                 @Override
                 public void doEvent(IMessage msg) {
                     try {
-                        log.debug("msg: " + msg.getEntity(0).getString() + " " + msg.getEntity(1).getString() + " " + msg.getEntity(2).getString() + " " + msg.getEntity(3).getString());
-                        // 如果表已初始化，则更新表内容
-                        if (resultWrapper.table != null) {
-                            // 打印更新前的表内容
-                            log.debug("更新前，表内容: " + resultWrapper.table.getString());
+                        // debug log: print msg
+                        StringBuilder logMessage = new StringBuilder("msg: ");
+                        for (int i = 0; i < msg.size(); i++) {
+                            if (i > 0) {
+                                logMessage.append(" ");
+                            }
+                            try {
+                                logMessage.append(msg.getEntity(i).getString());
+                            } catch (Exception e) {
+                                logMessage.append("<Error getting string representation>");
+                            }
+                        }
+                        log.debug(logMessage.toString());
 
-                            // 获取更新结果
+                        // If the table is initialized, update the table content
+                        if (resultWrapper.table != null) {
+                            // Print the table content before update
+                            log.debug("Before update，table content: " + resultWrapper.table.getString());
+
+                            // Get update results
                             StreamingSQLResultUpdater.StreamingSQLResult sqlResult =
                                     StreamingSQLResultUpdater.updateStreamingSQLResult(resultWrapper.table, deleteLineMap, msg);
 
-                            // 获取新表和deleteLineMap
+                            // Get the new table and deleteLineMap
                             BasicTable newTable = sqlResult.table;
                             deleteLineMap = sqlResult.deleteLineMap;
 
-                            // 更新表引用
+                            // Update table references
                             resultWrapper.table = newTable;
-
-                            // 打印更新后的表内容
-                            log.debug("更新后，表内容: " + resultWrapper.table.getString());
-                            log.debug("更新后，表有 " + resultWrapper.table.rows() + " 行");
                         }
                     } catch (Exception e) {
                         throw new RuntimeException(e);

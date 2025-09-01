@@ -32,7 +32,7 @@ public class StreamingSQLResultUpdater {
     /**
      * Streaming SQL result wrapper class, containing table and row number mapping
      */
-    public static class StreamingSQLResult {
+    protected static class StreamingSQLResult {
         public BasicTable table;
         public BasicIntVector deleteLineMap;
 
@@ -50,7 +50,7 @@ public class StreamingSQLResultUpdater {
      * @return Result object containing updated table and row number mapping
      * @throws Exception If an error occurs during update
      */
-    public static StreamingSQLResult updateStreamingSQLResult(BasicTable result, BasicIntVector deleteLineMap, IMessage msg) throws Exception {
+    protected static StreamingSQLResult updateStreamingSQLResult(BasicTable result, BasicIntVector deleteLineMap, IMessage msg) throws Exception {
         log.debug("Starting updateStreamingSQLResult");
         log.debug("Table columns: " + result.columns() + ", rows: " + result.rows());
 
@@ -137,11 +137,10 @@ public class StreamingSQLResultUpdater {
                                     BasicIntVector updateLineNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                                     log.debug("Original logical line numbers: " + updateLineNo.getString());
 
-                                    // 关键修复：先进行逻辑行号到物理行号的映射转换
+                                    // First perform the mapping conversion from logical row numbers to physical row numbers
                                     updateIndexMapping(updateLineNo, result.rows(), wrapper);
                                     log.debug("After mapping to physical line numbers: " + updateLineNo.getString());
 
-                                    // 现在验证转换后的物理行号是否有效
                                     List<Integer> validIndices = new ArrayList<>();
 
                                     for (int idx = 0; idx < updateLineNo.rows(); idx++) {
@@ -174,20 +173,18 @@ public class StreamingSQLResultUpdater {
                                                 }
                                             }
 
-                                            // 关键修复：检查表列类型，决定如何处理数据
+                                            // Check table column types to determine how to process the data
                                             Vector tableColumn = result.getColumn(colIdx);
                                             if (tableColumn instanceof BasicArrayVector) {
-                                                // 对于数组列，不要使用getSubVector，直接使用原始数据
                                                 log.debug("Column " + colIdx + " is BasicArrayVector, using original vector");
                                                 validUpdateValues[colIdx] = updateValues[colIdx];
                                             } else {
-                                                // 对于非数组列，正常使用getSubVector
                                                 log.debug("Column " + colIdx + " is not BasicArrayVector, using getSubVector");
                                                 validUpdateValues[colIdx] = ((AbstractVector)updateValues[colIdx]).getSubVector(validIndicesArray);
                                             }
                                         }
 
-                                        // 注意：这里不要再次调用 updateIndexMapping，因为已经转换过了
+                                        // Note: Do not call updateIndexMapping again here, as the conversion has already been done.
                                         boolean updated = updateRows(result, validUpdateValues, validUpdateLineNo, columnNames);
                                         if (!updated) {
                                             throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
@@ -210,7 +207,7 @@ public class StreamingSQLResultUpdater {
                                 // Process delete operation
                                 BasicIntVector removeLineNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                                 removeIndexMapping(removeLineNo, result.rows(), wrapper);
-                                // 先排序再删除
+                                // Sort first, then delete
                                 int[] originalArray = removeLineNo.getdataArray();
                                 int[] sortedArray = originalArray.clone();
                                 Arrays.sort(sortedArray);
@@ -221,22 +218,20 @@ public class StreamingSQLResultUpdater {
                                 }
                             } else if (prevUpdateType == LogType.kInsert) {
                                 // Process insert operation
-                                log.debug("处理 kInsert 类型消息");
+                                log.debug("Process kInsert type messages");
 
-                                // 获取插入行号
+                                // Get insertNo
                                 BasicIntVector insertNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                                 int prevSize = result.rows();
 
-                                // 打印消息内容
-                                log.debug("消息内容: 类型=" + prevUpdateType + ", 行号=" + insertNo.getString() +
-                                        ", 数据列数=" + (msg.size() - 2));
+                                log.debug("msg content: type=" + prevUpdateType + ", lineNo=" + insertNo.getString() + ", cols=" + (msg.size() - 2));
 
-                                // 如果是单行数据，使用通用类型处理
+                                // Process single-row data
                                 if (insertNo.rows() == 1) {
-                                    // 创建包含新数据的列数组
-                                    Vector[] newColumns = new Vector[msg.size() - 2]; // 减去类型和行号两列
+                                    // Create a column array containing new data, excluding the type and row number columns.
+                                    Vector[] newColumns = new Vector[msg.size() - 2];
 
-                                    // 为每一列创建对应类型的向量
+                                    // Create a vector of the corresponding type for each column
                                     for (int j = 2; j < msg.size(); j++) {
                                         if (msg.getEntity(j) instanceof Vector) {
                                             newColumns[j-2] = (Vector) msg.getEntity(j);
@@ -244,7 +239,6 @@ public class StreamingSQLResultUpdater {
                                             Scalar sourceValue = (Scalar) msg.getEntity(j);
                                             Entity.DATA_TYPE dataType = sourceValue.getDataType();
 
-                                            // 创建适当类型的向量
                                             Vector newVector;
                                             if (msg.getEntity(j) instanceof BasicDecimal32 || msg.getEntity(j) instanceof BasicDecimal64 || msg.getEntity(j) instanceof BasicDecimal128) {
                                                 newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, ((Scalar) msg.getEntity(j)).getScale());
@@ -257,105 +251,104 @@ public class StreamingSQLResultUpdater {
                                         }
                                     }
 
-                                    // 直接添加到表中
+                                    // Add directly to the table
                                     boolean appended = appendColumns(result, newColumns);
                                     if (!appended) {
                                         throw new RuntimeException("updateStreamingSQLResult failed when appending new data");
                                     }
 
-                                    log.debug("成功添加新行，当前表行数: " + result.rows());
+                                    log.debug("Successfully added new row, current table row count: " + result.rows());
 
-                                    // 获取逻辑插入位置
+                                    // Get the logical insertion position.
                                     int logicalInsertPos = ((BasicInt)insertNo.get(0)).getInt();
-                                    log.debug("逻辑插入位置: " + logicalInsertPos);
+                                    log.debug("logical insertion position: " + logicalInsertPos);
 
-                                    // 计算物理插入位置（考虑deleteLineMap）
+                                    // Calculate the physical insertion position (considering deleteLineMap).
                                     int physicalInsertPos = logicalInsertPos;
                                     int lineMapSize = wrapper.map != null ? wrapper.map.rows() : 0;
                                     int[] mapArray = wrapper.map != null ? wrapper.map.getdataArray() : new int[0];
 
                                     if (lineMapSize > 0) {
-                                        // 找到在deleteLineMap中小于logicalInsertPos的元素个数
+                                        // Find the number of elements in deleteLineMap that are less than logicalInsertPos
                                         int mapPos = findLowerBoundCount(mapArray, lineMapSize, logicalInsertPos);
                                         physicalInsertPos = logicalInsertPos - mapPos;
 
-                                        // 更新deleteLineMap：在插入位置之后的所有删除记录都需要+1
+                                        // Update deleteLineMap: All deletion records after the insertion position need to be incremented by 1
                                         for (int j = mapPos; j < lineMapSize; j++) {
                                             mapArray[j]++;
                                         }
                                         wrapper.map = new BasicIntVector(mapArray);
 
-                                        log.debug("考虑deleteLineMap后，物理插入位置: " + physicalInsertPos +
-                                                ", mapPos: " + mapPos);
+                                        log.debug("After considering deleteLineMap, the physical insertion position: " + physicalInsertPos + ", mapPos: " + mapPos);
                                     }
 
-                                    // 边界检查
+                                    // Boundary check
                                     if (physicalInsertPos > prevSize) {
                                         physicalInsertPos = prevSize;
                                     } else if (physicalInsertPos < 0) {
                                         physicalInsertPos = 0;
                                     }
 
-                                    log.debug("最终物理插入位置: " + physicalInsertPos);
+                                    log.debug("Final physical insertion position.: " + physicalInsertPos);
 
-                                    // 只有当插入位置不是在末尾时，才需要重排序
+                                    // Reordering is only necessary if the insertion position is not at the end
                                     if (physicalInsertPos < prevSize) {
-                                        // 创建一个表示当前表行顺序的向量
+                                        // Create a vector representing the current row order of the table
                                         BasicIntVector sortIndex = new BasicIntVector(result.rows());
                                         int[] sortArray = sortIndex.getdataArray();
 
-                                        // 初始化排序数组
+                                        // Initialize the sorting array
                                         for (int j = 0; j < result.rows(); j++) {
                                             sortArray[j] = j;
                                         }
 
-                                        // 将最后一行（新插入的行）移动到指定位置
-                                        int lastRowIndex = prevSize; // 新插入行的索引
+                                        // Move the last row (the newly inserted row) to the specified position, indicating the index of the newly inserted row
+                                        int lastRowIndex = prevSize;
 
-                                        // 向右移动元素，为新行腾出空间
+                                        // Shift elements to the right to make space for the new row
                                         for (int j = lastRowIndex; j > physicalInsertPos; j--) {
                                             sortArray[j] = sortArray[j - 1];
                                         }
                                         sortArray[physicalInsertPos] = lastRowIndex;
 
-                                        // 使用排序索引创建新表
+                                        // Create a new table using sorted indices
                                         List<Vector> newCols = new ArrayList<>();
                                         for (int col = 0; col < result.columns(); col++) {
                                             newCols.add(result.getColumn(col).getSubVector(sortArray));
                                         }
                                         result = new BasicTable(getColumnNames(result), newCols);
 
-                                        log.debug("完成单行插入重排序");
+                                        log.debug("Completed single-row insertion reordering");
                                     }
                                 } else {
-                                    // 对于多行数据的处理
+                                    // Process multi-rows
                                     getLinesInLog(updateColumns, updateValues, updateLogSize, offset, length);
 
-                                    // 添加到表中
+                                    // Add directly to the table
                                     boolean appended = appendColumns(result, updateValues);
                                     if (!appended) {
                                         throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
                                     }
 
-                                    log.debug("成功添加新行，当前表行数: " + result.rows());
+                                    log.debug("Successfully added new row, current table row count: " + result.rows());
 
-                                    // 计算排序索引
+                                    // Calculate the sorting indices
                                     BasicIntVector sortIndex = insertIndexMapping(prevSize, insertNo, wrapper);
 
-                                    // 使用排序索引创建新表
+                                    // Create a new table using sorted indices
                                     List<Vector> newCols = new ArrayList<>();
                                     for (int col = 0; col < result.columns(); col++) {
                                         newCols.add(result.getColumn(col).getSubVector(sortIndex.getdataArray()));
                                     }
 
-                                    // 创建并替换为新表 - 确保列顺序正确
+                                    // Create and replace with a new table - ensure the column order is correct
                                     List<String> columnNames = getColumnNames(result);
                                     result = new BasicTable(columnNames, newCols);
 
-                                    log.debug("重排序后，表有 " + result.rows() + " 行");
+                                    log.debug("After reordering, the table has " + result.rows() + " rows");
                                 }
 
-                                log.debug("处理完成，当前表行数: " + result.rows());
+                                log.debug("Processing completed, current table row count: " + result.rows());
                             }
                         }
                     }
@@ -398,11 +391,11 @@ public class StreamingSQLResultUpdater {
                         BasicIntVector updateLineNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                         log.debug("Original logical line numbers: " + updateLineNo.getString());
 
-                        // 关键修复：先进行逻辑行号到物理行号的映射转换
+                        // First perform the mapping conversion from logical row numbers to physical row numbers.
                         updateIndexMapping(updateLineNo, result.rows(), wrapper);
                         log.debug("After mapping to physical line numbers: " + updateLineNo.getString());
 
-                        // 现在验证转换后的物理行号是否有效
+                        // Now verify whether the converted physical row number is valid.
                         List<Integer> validIndices = new ArrayList<>();
 
                         for (int idx = 0; idx < updateLineNo.rows(); idx++) {
@@ -435,20 +428,18 @@ public class StreamingSQLResultUpdater {
                                     }
                                 }
 
-                                // 关键修复：检查表列类型，决定如何处理数据
+                                // Check table column types to determine how to process the data.
                                 Vector tableColumn = result.getColumn(colIdx);
                                 if (tableColumn instanceof BasicArrayVector) {
-                                    // 对于数组列，不要使用getSubVector，直接使用原始数据
                                     log.debug("Column " + colIdx + " is BasicArrayVector, using original vector");
                                     validUpdateValues[colIdx] = updateValues[colIdx];
                                 } else {
-                                    // 对于非数组列，正常使用getSubVector
                                     log.debug("Column " + colIdx + " is not BasicArrayVector, using getSubVector");
                                     validUpdateValues[colIdx] = ((AbstractVector)updateValues[colIdx]).getSubVector(validIndicesArray);
                                 }
                             }
 
-                            // 注意：这里不要再次调用 updateIndexMapping，因为已经转换过了
+                            // Note: Do not call updateIndexMapping again here, as the conversion has already been done.
                             boolean updated = updateRows(result, validUpdateValues, validUpdateLineNo, columnNames);
                             if (!updated) {
                                 throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
@@ -471,7 +462,7 @@ public class StreamingSQLResultUpdater {
                     // Process delete operation
                     BasicIntVector removeLineNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                     removeIndexMapping(removeLineNo, result.rows(), wrapper);
-                    // 先排序再删除
+                    // Sort first, then delete
                     int[] originalArray = removeLineNo.getdataArray();
                     int[] sortedArray = originalArray.clone();
                     Arrays.sort(sortedArray);
@@ -482,22 +473,20 @@ public class StreamingSQLResultUpdater {
                     }
                 } else if (prevUpdateType == LogType.kInsert) {
                     // Process insert operation
-                    log.debug("处理 kInsert 类型消息");
+                    log.debug("Process kInsert type messages");
 
-                    // 获取插入行号
+                    // Get insertNo
                     BasicIntVector insertNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                     int prevSize = result.rows();
 
-                    // 打印消息内容
-                    log.debug("消息内容: 类型=" + prevUpdateType + ", 行号=" + insertNo.getString() +
-                            ", 数据列数=" + (msg.size() - 2));
+                    log.debug("msg content: type=" + prevUpdateType + ", lineNo=" + insertNo.getString() + ", cols=" + (msg.size() - 2));
 
-                    // 如果是单行数据，使用通用类型处理
+                    // Process single-row data
                     if (insertNo.rows() == 1) {
-                        // 创建包含新数据的列数组
-                        Vector[] newColumns = new Vector[msg.size() - 2]; // 减去类型和行号两列
+                        // Create a column array containing new data, excluding the type and row number columns.
+                        Vector[] newColumns = new Vector[msg.size() - 2];
 
-                        // 为每一列创建对应类型的向量
+                        // Create a vector of the corresponding type for each column
                         for (int j = 2; j < msg.size(); j++) {
                             if (msg.getEntity(j) instanceof Vector) {
                                 newColumns[j-2] = (Vector) msg.getEntity(j);
@@ -505,7 +494,6 @@ public class StreamingSQLResultUpdater {
                                 Scalar sourceValue = (Scalar) msg.getEntity(j);
                                 Entity.DATA_TYPE dataType = sourceValue.getDataType();
 
-                                // 创建适当类型的向量
                                 Vector newVector;
                                 if (msg.getEntity(j) instanceof BasicDecimal32 || msg.getEntity(j) instanceof BasicDecimal64 || msg.getEntity(j) instanceof BasicDecimal128) {
                                     newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, ((Scalar) msg.getEntity(j)).getScale());
@@ -518,105 +506,103 @@ public class StreamingSQLResultUpdater {
                             }
                         }
 
-                        // 直接添加到表中
+                        // Add directly to the table.
                         boolean appended = appendColumns(result, newColumns);
                         if (!appended) {
                             throw new RuntimeException("updateStreamingSQLResult failed when appending new data");
                         }
 
-                        log.debug("成功添加新行，当前表行数: " + result.rows());
+                        log.debug("Successfully added new row, current table row count: " + result.rows());
 
-                        // 获取逻辑插入位置
+                        // Get the logical insertion position
                         int logicalInsertPos = ((BasicInt)insertNo.get(0)).getInt();
-                        log.debug("逻辑插入位置: " + logicalInsertPos);
+                        log.debug("logical insertion position: " + logicalInsertPos);
 
-                        // 计算物理插入位置（考虑deleteLineMap）
+                        // Calculate the physical insertion position (considering deleteLineMap)
                         int physicalInsertPos = logicalInsertPos;
                         int lineMapSize = wrapper.map != null ? wrapper.map.rows() : 0;
                         int[] mapArray = wrapper.map != null ? wrapper.map.getdataArray() : new int[0];
 
                         if (lineMapSize > 0) {
-                            // 找到在deleteLineMap中小于logicalInsertPos的元素个数
+                            // Find the number of elements in deleteLineMap that are less than logicalInsertPos
                             int mapPos = findLowerBoundCount(mapArray, lineMapSize, logicalInsertPos);
                             physicalInsertPos = logicalInsertPos - mapPos;
 
-                            // 更新deleteLineMap：在插入位置之后的所有删除记录都需要+1
+                            // Update deleteLineMap: All deletion records after the insertion position need to be incremented by 1
                             for (int j = mapPos; j < lineMapSize; j++) {
                                 mapArray[j]++;
                             }
                             wrapper.map = new BasicIntVector(mapArray);
 
-                            log.debug("考虑deleteLineMap后，物理插入位置: " + physicalInsertPos +
-                                    ", mapPos: " + mapPos);
+                            log.debug("After considering deleteLineMap, the physical insertion position: " + physicalInsertPos + ", mapPos: " + mapPos);
                         }
 
-                        // 边界检查
+                        // Boundary check
                         if (physicalInsertPos > prevSize) {
                             physicalInsertPos = prevSize;
                         } else if (physicalInsertPos < 0) {
                             physicalInsertPos = 0;
                         }
 
-                        log.debug("最终物理插入位置: " + physicalInsertPos);
+                        log.debug("Final physical insertion position.: " + physicalInsertPos);
 
-                        // 只有当插入位置不是在末尾时，才需要重排序
+                        // Reordering is only necessary if the insertion position is not at the end
                         if (physicalInsertPos < prevSize) {
-                            // 创建一个表示当前表行顺序的向量
+                            // Create a vector representing the current row order of the table
                             BasicIntVector sortIndex = new BasicIntVector(result.rows());
                             int[] sortArray = sortIndex.getdataArray();
 
-                            // 初始化排序数组
+                            // Initialize the sorting array
                             for (int j = 0; j < result.rows(); j++) {
                                 sortArray[j] = j;
                             }
 
-                            // 将最后一行（新插入的行）移动到指定位置
-                            int lastRowIndex = prevSize; // 新插入行的索引
+                            // Move the last row (the newly inserted row) to the specified position, indicating the index of the newly inserted row.
+                            int lastRowIndex = prevSize;
 
-                            // 向右移动元素，为新行腾出空间
+                            // Shift elements to the right to make space for the new row
                             for (int j = lastRowIndex; j > physicalInsertPos; j--) {
                                 sortArray[j] = sortArray[j - 1];
                             }
                             sortArray[physicalInsertPos] = lastRowIndex;
 
-                            // 使用排序索引创建新表
+                            // Create a new table using sorted indices
                             List<Vector> newCols = new ArrayList<>();
                             for (int col = 0; col < result.columns(); col++) {
                                 newCols.add(result.getColumn(col).getSubVector(sortArray));
                             }
                             result = new BasicTable(getColumnNames(result), newCols);
 
-                            log.debug("完成单行插入重排序");
+                            log.debug("Completed single-row insertion reordering");
                         }
                     } else {
-                        // 对于多行数据的处理
+                        // Process multi-rows
                         getLinesInLog(updateColumns, updateValues, updateLogSize, offset, length);
 
-                        // 添加到表中
                         boolean appended = appendColumns(result, updateValues);
                         if (!appended) {
                             throw new RuntimeException("updateStreamingSQLResult failed with error: " + err);
                         }
 
-                        log.debug("成功添加新行，当前表行数: " + result.rows());
+                        log.debug("Successfully added new row, current table row count: " + result.rows());
 
-                        // 计算排序索引
+                        // Calculate the sorting indices
                         BasicIntVector sortIndex = insertIndexMapping(prevSize, insertNo, wrapper);
 
-                        // 使用排序索引创建新表
+                        // Create a new table using sorted indices
                         List<Vector> newCols = new ArrayList<>();
                         for (int col = 0; col < result.columns(); col++) {
                             newCols.add(result.getColumn(col).getSubVector(sortIndex.getdataArray()));
                         }
 
-                        // 创建并替换为新表 - 确保列顺序正确
+                        // Create and replace with a new table - ensure the column order is correct.
                         List<String> columnNames = getColumnNames(result);
                         result = new BasicTable(columnNames, newCols);
 
-                        log.debug("重排序后，表有 " + result.rows() + " 行");
+                        log.debug("After reordering, the table has " + result.rows() + " rows");
                     }
 
-                    log.debug("处理完成，当前表行数: " + result.rows());
+                    log.debug("Processing completed, current table row count: " + result.rows());
                 }
             }
         }
@@ -628,7 +614,7 @@ public class StreamingSQLResultUpdater {
 
     private static void getLinesInLog(List<Vector> updateColumns, Vector[] updateValues, int updateLogSize, int offset, int length) {
         for (int i = 0; i < updateColumns.size(); i++) {
-            // 问题很可能出在这里：需要确保创建新的向量副本而不是共享引用
+            // It is necessary to ensure the creation of new vector copies rather than shared references
             Vector sourceVector;
             if (offset == 0 && updateLogSize == length) {
                 sourceVector = updateColumns.get(i);
@@ -636,7 +622,7 @@ public class StreamingSQLResultUpdater {
                 sourceVector = ((AbstractVector)updateColumns.get(i)).getSubVector(createRangeIndices(offset, length));
             }
 
-            // 创建一个新的向量并复制数据，避免共享引用
+            // Create a new vector and copy the data to avoid shared references
             Entity.DATA_TYPE dataType = sourceVector.getDataType();
             int scale = -1;
             if (dataType == Entity.DATA_TYPE.DT_DECIMAL32) {
@@ -649,7 +635,7 @@ public class StreamingSQLResultUpdater {
 
             Vector newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, sourceVector.rows(), scale);
 
-            // 逐个复制数据元素
+            // Copy data elements one by one
             for (int j = 0; j < sourceVector.rows(); j++) {
                 try {
                     Scalar value = (Scalar)sourceVector.get(j);
@@ -661,7 +647,6 @@ public class StreamingSQLResultUpdater {
 
             updateValues[i] = newVector;
 
-            // 调试日志
             log.debug("Created new vector of type " + dataType + " with " + newVector.rows() + " rows");
             for (int j = 0; j < Math.min(5, newVector.rows()); j++) {
                 log.debug("Element " + j + ": " + newVector.get(j));
@@ -847,68 +832,68 @@ public class StreamingSQLResultUpdater {
         BasicIntVector sortIndex = new BasicIntVector(prevSize + length);
         int[] psort = sortIndex.getdataArray();
 
-        // 获取原始的deleteLineMap数组
+        // Get original deleteLineMap array
         int[] originalMapArray = wrapper.map != null ? wrapper.map.getdataArray() : new int[0];
-        // 复制deleteLineMap，因为我们需要在每次插入时更新它
+        // Copy deleteLineMap since we need to update it with each insertion
         int[] mapArray = originalMapArray.clone();
         int lineMapSize = mapArray.length;
 
-        // 初始化排序数组：前prevSize个元素为0到prevSize-1，后length个元素为prevSize到prevSize+length-1
+        // Initialize sort array: first prevSize elements are 0 to prevSize-1, next length elements are prevSize to prevSize+length-1
         for (int i = 0; i < prevSize + length; i++) {
             psort[i] = i;
         }
 
-        log.debug("insertIndexMapping开始: 原始大小=" + prevSize + ", 插入索引长度=" + length);
+        log.debug("insertIndexMapping start: original size=" + prevSize + ", insert index length=" + length);
         if (lineMapSize > 0) {
-            log.debug("deleteLineMap大小: " + lineMapSize);
+            log.debug("deleteLineMap size: " + lineMapSize);
         }
 
-        // 按顺序处理每个插入操作
+        // Process each insert operation in order
         for (int i = 0; i < length; i++) {
             int logicalInsertPos = ((BasicInt)insertIndex.get(i)).getInt();
-            int currIndex = i + prevSize; // 新行在扩展后表中的实际索引位置
+            int currIndex = i + prevSize; // Actual index position of new row in extended table
 
-            // 计算物理插入位置（考虑已删除的行）
+            // Calculate physical insert position (considering deleted rows)
             int physicalInsertPos = logicalInsertPos;
             if (lineMapSize > 0) {
-                // 找到在deleteLineMap中小于logicalInsertPos的元素个数
+                // Find count of elements in deleteLineMap that are less than logicalInsertPos
                 int mapPos = findLowerBoundCount(mapArray, lineMapSize, logicalInsertPos);
                 physicalInsertPos = logicalInsertPos - mapPos;
 
-                // 更新deleteLineMap：在插入位置之后的所有删除记录都需要+1
-                // 因为我们插入了一个新行，影响了后续的逻辑行号
+                // Update deleteLineMap: all delete records after insert position need to be incremented by 1
+                // Because we inserted a new row, affecting subsequent logical row numbers
                 for (int j = mapPos; j < lineMapSize; j++) {
                     mapArray[j]++;
                 }
 
-                log.debug("第 " + i + " 个插入: 逻辑位置=" + logicalInsertPos +
-                        ", 映射位置=" + mapPos + ", 物理位置=" + physicalInsertPos);
+                log.debug("Insert " + i + ": logical position=" + logicalInsertPos +
+                        ", map position=" + mapPos + ", physical position=" + physicalInsertPos);
             }
 
-            // 边界检查：确保物理插入位置在有效范围内
+            // Boundary check: ensure physical insert position is within valid range
             if (physicalInsertPos > prevSize + i) {
-                log.debug("Warning: 调整物理插入位置从 " + physicalInsertPos + " 到 " + (prevSize + i));
+                log.debug("Warning: adjusting physical insert position from " + physicalInsertPos + " to " + (prevSize + i));
                 physicalInsertPos = prevSize + i;
             } else if (physicalInsertPos < 0) {
-                log.debug("Warning: 调整物理插入位置从 " + physicalInsertPos + " 到 0");
+                log.debug("Warning: adjusting physical insert position from " + physicalInsertPos + " to 0");
                 physicalInsertPos = 0;
             }
 
-            log.debug("处理第 " + i + " 个插入: 逻辑位置=" + logicalInsertPos +
-                    ", 最终物理位置=" + physicalInsertPos + ", 当前索引=" + currIndex);
+            log.debug("Processing insert " + i + ": logical position=" + logicalInsertPos +
+                    ", final physical position=" + physicalInsertPos + ", current index=" + currIndex);
 
-            // 将当前行插入到指定位置
-            // 需要将physicalInsertPos到currIndex-1之间的所有元素向右移动一位
+            // Insert current row at specified position
+            // Need to shift all elements from physicalInsertPos to currIndex-1 one position to the right
             for (int j = currIndex; j > physicalInsertPos; j--) {
                 psort[j] = psort[j - 1];
             }
 
-            // 在计算出的物理位置插入新行
+            // Insert new row at calculated physical position
             psort[physicalInsertPos] = currIndex;
         }
 
-        // 打印最终排序索引用于调试
-        StringBuilder sb = new StringBuilder("最终排序索引: [");
+        // Print final sort index for debugging
+        StringBuilder sb = new StringBuilder("Final sort index: [");
         for (int i = 0; i < Math.min(20, sortIndex.rows()); i++) {
             if (i > 0) sb.append(", ");
             sb.append(psort[i]);
@@ -917,7 +902,7 @@ public class StreamingSQLResultUpdater {
         sb.append("]");
         log.debug(sb.toString());
 
-        // 验证排序索引的有效性
+        // Validate sort index validity
         boolean[] used = new boolean[psort.length];
         boolean isValid = true;
         for (int i = 0; i < psort.length; i++) {
@@ -935,16 +920,16 @@ public class StreamingSQLResultUpdater {
         }
 
         if (!isValid) {
-            System.err.println("排序索引无效，重置为默认顺序");
+            System.err.println("Sort index invalid, resetting to default order");
             for (int j = 0; j < psort.length; j++) {
                 psort[j] = j;
             }
         }
 
-        // 更新wrapper中的deleteLineMap
+        // Update deleteLineMap in wrapper
         if (lineMapSize > 0) {
             wrapper.map = new BasicIntVector(mapArray);
-            log.debug("更新后的deleteLineMap大小: " + wrapper.map.rows());
+            log.debug("Updated deleteLineMap size: " + wrapper.map.rows());
         }
 
         return sortIndex;
@@ -954,17 +939,17 @@ public class StreamingSQLResultUpdater {
     private static BasicTable removeRows(BasicTable table, BasicIntVector rowIndices) {
         try {
             if (table.rows() == 0 || rowIndices == null || rowIndices.rows() == 0) {
-                return table; // 没有行需要删除
+                return table; // No rows need to be removed
             }
 
-            // 获取要保留的行的索引
+            // Get indices of rows to keep
             int[] keepIndices = createComplementIndices(table.rows(), rowIndices);
 
-            // 获取列名
+            // Get column names
             List<String> columnNames = getColumnNames(table);
 
             if (keepIndices.length == 0) {
-                // 所有行都被删除，创建空表
+                // All rows are removed, create empty table
                 List<Vector> emptyColumns = new ArrayList<>();
                 for (int i = 0; i < table.columns(); i++) {
                     if (table.getColumn(i).getDataType().getValue() >= Entity.DATA_TYPE.DT_BOOL_ARRAY.getValue()) {
@@ -989,7 +974,7 @@ public class StreamingSQLResultUpdater {
                 }
                 return new BasicTable(columnNames, emptyColumns);
             } else {
-                // 有行需要保留，创建子表（保留原始顺序）
+                // There are rows to keep, create subtable (preserving original order)
                 List<Vector> newColumns = new ArrayList<>();
                 for (int i = 0; i < table.columns(); i++) {
                     newColumns.add(table.getColumn(i).getSubVector(keepIndices));
@@ -998,7 +983,7 @@ public class StreamingSQLResultUpdater {
             }
         } catch (Exception e) {
             log.error("Error in removeRows: " + e.getMessage(), e);
-            return table; // 出错时返回原表
+            return table; // Return original table when error occurs
         }
     }
 
@@ -1103,7 +1088,7 @@ public class StreamingSQLResultUpdater {
                         log.debug("    Old value: " + (tableColumn.rows() > rowIndex ? tableColumn.get(rowIndex).getString() : "N/A"));
                         log.debug("    New value: " + value.getString());
 
-                        // 检查是否是BasicArrayVector
+                        // Check if it's a BasicArrayVector
                         if (tableColumn instanceof BasicArrayVector) {
                             log.debug("    Detected BasicArrayVector, using enhanced set method");
                             if (!(value instanceof Vector)) {
@@ -1112,10 +1097,10 @@ public class StreamingSQLResultUpdater {
                             }
                         }
 
-                        // 执行更新
+                        // Execute update
                         tableColumn.set(rowIndex, value);
 
-                        // 验证更新是否成功
+                        // Verify if update was successful
                         Entity updatedValue = tableColumn.get(rowIndex);
                         log.debug("    Updated value: " + updatedValue.getString());
 
@@ -1130,7 +1115,7 @@ public class StreamingSQLResultUpdater {
                     } catch (Exception e) {
                         System.err.println("  Error updating column " + colIndex + " at row " + rowIndex + ": " + e.getMessage());
                         e.printStackTrace();
-                        // 继续处理其他列，不要因为一列失败就整体失败
+                        // Continue processing other columns, don't fail entirely because of one column
                     }
                 }
             }
