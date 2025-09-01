@@ -65,10 +65,17 @@ public class BasicDecimal32Vector extends AbstractVector{
         int length = data.length;
         unscaledValues = new int[length];
         for (int i = 0; i < length; i++) {
-            BigDecimal bd = new BigDecimal(data[i]);
-            BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
-            if (multipliedValue.intValue() > Integer.MIN_VALUE && multipliedValue.intValue() < Integer.MAX_VALUE)
-                unscaledValues[i] = multipliedValue.intValue();
+            if (data[i] == null || data[i].isEmpty()) {
+                unscaledValues[i] = Integer.MIN_VALUE;
+            } else {
+                BigDecimal bd = new BigDecimal(data[i]);
+                if (bd.intValue() > Integer.MIN_VALUE && bd.intValue() < Integer.MAX_VALUE) {
+                    BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
+                    unscaledValues[i] = multipliedValue.intValue();
+                } else {
+                    unscaledValues[i] = Integer.MIN_VALUE;
+                }
+            }
         }
 
         size = length;
@@ -88,11 +95,12 @@ public class BasicDecimal32Vector extends AbstractVector{
                 unscaledValues[i] = Integer.MIN_VALUE;
             } else {
                 BigDecimal bd = new BigDecimal(data.get(i));
-                BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
-                if (multipliedValue.intValue() > Integer.MIN_VALUE && multipliedValue.intValue() < Integer.MAX_VALUE)
+                if (bd.intValue() > Integer.MIN_VALUE && bd.intValue() < Integer.MAX_VALUE) {
+                    BigDecimal multipliedValue = bd.scaleByPowerOfTen(scale).setScale(0, RoundingMode.HALF_UP);
                     unscaledValues[i] = multipliedValue.intValue();
-                else
+                } else {
                     unscaledValues[i] = Integer.MIN_VALUE;
+                }
             }
         }
 
