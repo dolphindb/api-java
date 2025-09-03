@@ -39,12 +39,10 @@ public class StreamingSQLClient extends AbstractClient {
         private final TableWrapper wrapper;
 
         public ProxyTable(TableWrapper wrapper) {
-            // 不调用实例方法，而是使用静态列表或外部类的方法
             super(createSafeColumnNames(), createSafeColumns());
             this.wrapper = wrapper;
         }
 
-        // 重写所有需要委托给wrapper.table的方法
         @Override
         public int rows() {
             return wrapper.table != null ? wrapper.table.rows() : 0;
@@ -221,59 +219,32 @@ public class StreamingSQLClient extends AbstractClient {
     }
 
     public BasicTable subscribeStreamingSQL(String queryId, int batchSize, float throttle) throws IOException {
-        return subscribeStreamingSQL(queryId, null, batchSize, throttle);
-    }
-
-    public BasicTable subscribeStreamingSQL(String queryId, MessageHandler handler) throws IOException {
-        return subscribeStreamingSQL(queryId, handler, -1, -1);
-    }
-
-    public BasicTable subscribeStreamingSQL(String queryId, MessageHandler handler, int batchSize, float throttle) throws IOException {
         // Create a wrapper to store table references
         final TableWrapper resultWrapper = new TableWrapper(null);
 
-        if (Objects.isNull(handler)) {
-            // update table logic
-            handler = new MessageHandler() {
-                @Override
-                public void doEvent(IMessage msg) {
-                    try {
-                        // debug log: print msg
-                        StringBuilder logMessage = new StringBuilder("msg: ");
-                        for (int i = 0; i < msg.size(); i++) {
-                            if (i > 0) {
-                                logMessage.append(" ");
-                            }
-                            try {
-                                logMessage.append(msg.getEntity(i).getString());
-                            } catch (Exception e) {
-                                logMessage.append("<Error getting string representation>");
-                            }
-                        }
-                        log.debug(logMessage.toString());
+        // update table logic
+        MessageHandler handler = new MessageHandler() {
+            @Override
+            public void doEvent(IMessage msg) {
+                try {
+                    // If the table is initialized, update the table content
+                    if (resultWrapper.table != null) {
+                        // Print the table content before update
+                        log.debug("Before update，table content: " + resultWrapper.table.getString());
 
-                        // If the table is initialized, update the table content
-                        if (resultWrapper.table != null) {
-                            // Print the table content before update
-                            log.debug("Before update，table content: " + resultWrapper.table.getString());
-
-                            // Get update results
-                            StreamingSQLResultUpdater.StreamingSQLResult sqlResult =
-                                    StreamingSQLResultUpdater.updateStreamingSQLResult(resultWrapper.table, deleteLineMap, msg);
-
-                            // Get the new table and deleteLineMap
-                            BasicTable newTable = sqlResult.table;
-                            deleteLineMap = sqlResult.deleteLineMap;
-
-                            // Update table references
-                            resultWrapper.table = newTable;
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        // Get update results
+                        StreamingSQLResultUpdater.StreamingSQLResult sqlResult = StreamingSQLResultUpdater.updateStreamingSQLResult(resultWrapper.table, deleteLineMap, msg);
+                        // Get the new table and deleteLineMap
+                        BasicTable newTable = sqlResult.table;
+                        deleteLineMap = sqlResult.deleteLineMap;
+                        // Update table references
+                        resultWrapper.table = newTable;
                     }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
-            };
-        }
+            }
+        };
 
         if (Utils.isEmpty(queryId)) {
             throw new IllegalArgumentException("The param 'queryId' cannot be null or empty.");
@@ -293,9 +264,7 @@ public class StreamingSQLClient extends AbstractClient {
         BlockingQueue<List<IMessage>> queue = (BlockingQueue<List<IMessage>>) res.get("queue");
 
         resultWrapper.table = (BasicTable) res.get("schema");
-        log.debug("创建了初始表，有 " + resultWrapper.table.columns() + " 列");
-
-        MessageHandler finalHandler = handler;
+        log.debug("Created initial table, contain: " + resultWrapper.table.columns() + " cols");
 
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -359,7 +328,7 @@ public class StreamingSQLClient extends AbstractClient {
                         continue;
 
                     for (IMessage msg : msgs) {
-                        finalHandler.doEvent(msg);
+                        handler.doEvent(msg);
                     }
                 }
             }
