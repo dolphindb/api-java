@@ -203,9 +203,9 @@ public class BasicFloatVector extends AbstractVector{
 	}
 	
 	public void set(int index, Entity value) throws Exception {
-		if(((Scalar)value).isNull()){
+		if (value == null || ((Scalar)value).isNull()) {
 			values[index] = -Float.MAX_VALUE;
-		}else{
+		} else {
 			values[index] = ((Scalar)value).getNumber().floatValue();
 		}
 	}
