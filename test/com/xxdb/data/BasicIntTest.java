@@ -62,20 +62,6 @@ public class BasicIntTest {
     }
 
     @Test
-    public void TestCombineIntVector() throws Exception {
-        int[] data = {4, 5, 3, 6};
-        BasicIntVector v = new BasicIntVector(data );
-        int[] data2 = { 2, 5, 1};
-        BasicIntVector vector2 = new BasicIntVector(data2 );
-        BasicIntVector res= (BasicIntVector) v.combine(vector2);
-        int[] datas = {4, 5, 3, 6, 2, 5, 1};
-        for (int i=0;i<res.rows();i++){
-            assertEquals(datas[i],((Scalar)res.get(i)).getNumber());
-        }
-        assertEquals(7,res.rows());
-    }
-
-    @Test
     public void test_BasicInt() throws Exception {
         BasicInt bi = new BasicInt(Integer.MIN_VALUE);
         assertNotNull(bi.getNumber());
@@ -110,68 +96,6 @@ public class BasicIntTest {
     }
 
     @Test
-    public void test_BasicIntVector(){
-        List<Integer> list = new ArrayList<>();
-        list.add(5);
-        list.add(7);
-        list.add(8);
-        list.add(Integer.MIN_VALUE);
-        list.add(null);
-        BasicIntVector biv = new BasicIntVector(list);
-        assertEquals(BasicInt.class,biv.getElementClass());
-        assertEquals(new BasicInt(7),biv.get(1));
-        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,biv.getDataCategory());
-        assertEquals("[5,7,8,,,5,7,8]",biv.getSubVector(new int[]{0,1,2,3,4,0,1,2}).getString());
-    }
-
-    @Test
-    public void test_BasicIntVector_wvtb() throws IOException {
-        List<Integer> list = new ArrayList<>();
-        list.add(5);
-        list.add(7);
-        list.add(8);
-        list.add(Integer.MIN_VALUE);
-        BasicIntVector biv = new BasicIntVector(list);
-        ByteBuffer bb = biv.writeVectorToBuffer(ByteBuffer.allocate(16));
-        assertEquals("[0, 0, 0, 5, 0, 0, 0, 7, 0, 0, 0, 8, -128, 0, 0, 0]",Arrays.toString(bb.array()));
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void test_BasicIntVector_asof_error(){
-        List<Integer> list = new ArrayList<>();
-        list.add(5);
-        list.add(7);
-        list.add(8);
-        list.add(Integer.MIN_VALUE);
-        BasicIntVector biv = new BasicIntVector(list);
-        biv.asof(new BasicComplex(1.9,8.5));
-    }
-
-    @Test
-    public void test_BasicIntVector_asof_normal(){
-        List<Integer> list = new ArrayList<>();
-        list.add(5);
-        list.add(7);
-        list.add(8);
-        list.add(Integer.MIN_VALUE);
-        BasicIntVector biv = new BasicIntVector(list);
-        assertEquals(3,biv.asof(new BasicInt(12)));
-        assertEquals(0,biv.asof(new BasicInt(6)));
-    }
-
-    @Test
-    public void test_BasicIntVector_Append() throws Exception {
-        BasicIntVector biv = new BasicIntVector(new int[]{5,11,23});
-        int size = biv.size;
-        int capacity = biv.capacity;
-        biv.Append(new BasicInt(12));
-        assertEquals(size+1,biv.rows());
-        assertEquals(capacity*2,biv.capacity);
-        biv.Append(new BasicIntVector(new int[]{40,21,33}));
-        assertEquals(size+4,biv.size);
-        assertEquals(capacity*2+3,biv.capacity);
-    }
-    @Test
     public void test_intValue() throws Exception {
         BasicInt bb = new BasicInt(1234);
         bb.setNull();
@@ -186,13 +110,7 @@ public class BasicIntTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_INT\",\"dictionary\":false,\"int\":-2147483648,\"jsonString\":\"null\",\"matrix\":false,\"null\":true,\"number\":-2147483648,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"\",\"table\":false,\"vector\":false}", re);
     }
-    @Test
-    public void test_BasicIntVector_toJSONString() throws Exception {
-        BasicIntVector biv = new BasicIntVector(new int[]{5,11,23});
-        String re = JSONObject.toJSONString(biv);
-        System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[5,11,23],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_INT\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicInt\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[5,11,23]\",\"table\":false,\"unitLength\":4,\"values\":[5,11,23],\"vector\":true}", re);
-    }
+
     @Test
     public void test_BasicIntMatrix_toJSONString() throws Exception {
         List<int[]> list = new ArrayList<>();

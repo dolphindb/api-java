@@ -3,6 +3,7 @@ package com.xxdb.data;
 import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -151,6 +152,68 @@ public class BasicDecimal128VectorTest {
             ex1 = E.getMessage();
         }
         assertEquals("Decimal128 170141183460469231731687303715884105729 cannot exceed 170141183460469231731687303715884105728",ex1);
+    }
+
+    @Test
+    public void test_BasicDecimal128Vector_capacity_lt_size() throws Exception {
+        BasicDecimal128Vector bbv = new BasicDecimal128Vector(6,1,3);
+        bbv.set(0, (Object)null);
+        bbv.set(1, null);
+        bbv.set(2, new BigDecimal("1.111"));
+        bbv.set(3, new BigDecimal("-1.111"));
+        bbv.set(4, "999.9999");
+        bbv.set(5, "-999");
+        Assert.assertEquals("[,,1.111,-1.111,999.999,-999.000]", bbv.getString());
+    }
+
+    @Test
+    public void test_BasicDecimal128Vector_size_capacity_set() throws Exception {
+        BasicDecimal128Vector bbv = new BasicDecimal128Vector(6,6,3);
+        Assert.assertEquals("[0.000,0.000,0.000,0.000,0.000,0.000]", bbv.getString());
+        bbv.set(0, (Object)null);
+        bbv.set(1, null);
+        bbv.set(2, new BigDecimal("1.111"));
+        bbv.set(3, new BigDecimal("-1.111"));
+        bbv.set(4, "999.9999");
+        bbv.set(5, "-999");
+        Assert.assertEquals("[,,1.111,-1.111,999.999,-999.000]", bbv.getString());
+    }
+
+    @Test
+    public void test_BasicDecimal128Vector_size_capacity_add() throws Exception {
+        BasicDecimal128Vector bbv = new BasicDecimal128Vector(0,6,3);
+        Assert.assertEquals("[]", bbv.getString());
+        bbv.add((Object)null);
+        bbv.add((String) null);
+        bbv.add(new BigDecimal("1.111"));
+        bbv.add(new BigDecimal("-1.111"));
+        bbv.add("999.9999");
+        bbv.add("-999");
+        Assert.assertEquals("[,,1.111,-1.111,999.999,-999.000]", bbv.getString());
+    }
+
+    @Test
+    public void test_BasicDecimal128Vector_set_type_not_match() throws Exception {
+        BasicDecimal128Vector bbv = new BasicDecimal128Vector(1,1,1);
+        String re = null;
+        try{
+            bbv.set(0,1);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("Unsupported type: java.lang.Integer. Only String, BigDecimal or null is supported.", re);
+    }
+
+    @Test
+    public void test_BasicDecimal128Vector_add_type_not_match() throws Exception {
+        BasicDecimal128Vector bbv = new BasicDecimal128Vector(1,1,1);
+        String re = null;
+        try{
+            bbv.add((Object)1);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("Unsupported type: java.lang.Integer. Only String, BigDecimal or null is supported.", re);
     }
 
     @Test

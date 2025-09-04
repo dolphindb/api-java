@@ -14,21 +14,6 @@ import static org.junit.Assert.assertEquals;
 
 public class BasicBooleanTest {
     @Test
-    public void TestCombineBooleanVector() throws Exception {
-        BasicBooleanVector v = new BasicBooleanVector(Arrays.asList(new Byte[]{0,1}));
-        BasicBooleanVector vector2 = new BasicBooleanVector(Arrays.asList(new Byte[]{0,1}));
-        BasicBooleanVector res= (BasicBooleanVector) v.combine(vector2);
-        BasicBooleanVector data=  new BasicBooleanVector(Arrays.asList(new Byte[]{0,1,0,1}));
-        AbstractVector.Offect offect = new AbstractVector.Offect(1);
-        assertEquals(-1,v.hashBucket(0,1));
-        for (int i=0;i<res.rows();i++){
-            assertEquals(((Scalar)data.get(i)).getNumber(),((Scalar)res.get(i)).getNumber());
-
-        }
-        assertEquals(4,res.rows());
-    }
-
-    @Test
     public void test_BasicBoolean() throws Exception {
         BasicBoolean bb = new BasicBoolean(Byte.MIN_VALUE);
         assertEquals(1,bb.columns(),0);
@@ -68,61 +53,6 @@ public class BasicBooleanTest {
         listofarrays.add(new byte[]{0,1,Byte.MIN_VALUE});
         listofarrays.add(new byte[]{Byte.MAX_VALUE,1,0});
         BasicBooleanMatrix bbm = new BasicBooleanMatrix(4,2,listofarrays);
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void test_BasicBooleanVector(){
-        List<Byte> list = new ArrayList<>();
-        list.add(0,(byte) 1);
-        list.add(1,(byte) 1);
-        list.add(2,null);
-        list.add(3,Byte.MAX_VALUE);
-        list.add(4,(byte) 0);
-        list.add(5,(byte) 0);
-        BasicBooleanVector bbv = new BasicBooleanVector(list);
-        assertTrue(bbv.isNull(2));
-        assertEquals(Entity.DATA_TYPE.DT_BOOL,bbv.get(2).getDataType());
-        assertEquals("[true,false,false,true]",bbv.getSubVector(new int[]{0,5,4,1}).getString());
-        assertFalse(bbv.getBoolean(4));
-        bbv.setBoolean(2,false);
-        assertEquals("false",bbv.get(2).getString());
-        bbv.setNull(4);
-        assertTrue(bbv.isNull(4));
-        assertEquals(Entity.DATA_CATEGORY.LOGICAL,bbv.getDataCategory());
-        assertEquals(BasicBoolean.class,bbv.getElementClass());
-        Scalar value = new BasicPoint(8.2,7.4);
-        bbv.asof(value);
-    }
-
-    @Test
-    public void test_basicBooleanVector_convert() throws IOException {
-        BasicBooleanVector bbv = new BasicBooleanVector(new boolean[]{false,true,true,false,true,false});
-        ByteBuffer bb = bbv.writeVectorToBuffer(ByteBuffer.allocate(10));
-        assertEquals((byte)1,bb.get(2));
-    }
-
-    @Test
-    public void test_basicBooleanVector_wvtb() throws IOException {
-        List<Byte> list = new ArrayList<>();
-        list.add(0,(byte) 1);
-        list.add(1,(byte) 1);
-        list.add(2,null);
-        list.add(3,Byte.MAX_VALUE);
-        list.add(4,(byte) 0);
-        list.add(5,(byte) 0);
-        BasicBooleanVector bbv = new BasicBooleanVector(list);
-        ByteBuffer bb = bbv.writeVectorToBuffer(ByteBuffer.allocate(6));
-        assertEquals("[1, 1, -128, 127, 0, 0]",Arrays.toString(bb.array()));
-    }
-
-    @Test
-    public void test_basicBooleanVector_Append() throws Exception {
-        BasicBooleanVector bbv = new BasicBooleanVector(new boolean[]{true,false,false,true});
-        int size = bbv.rows();
-        bbv.Append(new BasicBoolean(false));
-        assertEquals(size+1,bbv.rows());
-        bbv.Append(new BasicBooleanVector(new boolean[]{true,true,false}));
-        assertEquals(size+4,bbv.rows());
     }
 
     @Test

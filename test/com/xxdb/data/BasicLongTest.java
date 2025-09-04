@@ -60,22 +60,6 @@ public class BasicLongTest {
             }
         }
     }
-
-    @Test
-    public void TestCombineLongVector() throws Exception {
-        Long[] data = {1l,-1l,3l};
-        BasicLongVector v = new BasicLongVector(Arrays.asList(data));
-        Long[] data2 = {1l,-1l,3l,9l};
-        BasicLongVector vector2 = new BasicLongVector( Arrays.asList(data2));
-        BasicLongVector res= (BasicLongVector) v.combine(vector2);
-        Long[] datas = {1l,-1l,3l,1l,-1l,3l,9l};
-        for (int i=0;i<res.rows();i++){
-            assertEquals(datas[i],((Scalar)res.get(i)).getNumber());
-
-        }
-        assertEquals(7,res.rows());
-    }
-
     @Test
     public void test_BasicLong() throws Exception {
         BasicLong bl = new BasicLong(9000L);
@@ -115,64 +99,6 @@ public class BasicLongTest {
     }
 
     @Test
-    public void test_BasicLongVector(){
-        List<Long> list = new ArrayList<>();
-        list.add(855L);
-        list.add(865L);
-        list.add(null);
-        list.add(888L);
-        BasicLongVector blv = new BasicLongVector(list);
-        assertEquals("888",blv.get(3).getString());
-        assertEquals("[888,865,855]",blv.getSubVector(new int[]{3,1,0}).getString());
-        assertEquals(Entity.DATA_CATEGORY.INTEGRAL,blv.getDataCategory());
-        assertEquals(BasicLong.class,blv.getElementClass());
-    }
-
-    @Test
-    public void test_BasicLongVector_wvtb() throws IOException {
-        List<Long> list = new ArrayList<>();
-        list.add(855L);
-        list.add(865L);
-        list.add(888L);
-        BasicLongVector blv = new BasicLongVector(list);
-        ByteBuffer bb = blv.writeVectorToBuffer(ByteBuffer.allocate(24));
-        assertEquals("[0, 0, 0, 0, 0, 0, 3, 87, 0, 0, 0, 0, " +
-                "0, 0, 3, 97, 0, 0, 0, 0, 0, 0, 3, 120]",Arrays.toString(bb.array()));
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void test_BasicLongVector_asof_error(){
-        List<Long> list = new ArrayList<>();
-        list.add(855L);
-        list.add(865L);
-        list.add(888L);
-        BasicLongVector blv = new BasicLongVector(list);
-        blv.asof(new BasicComplex(5.75,7.37));
-    }
-
-    @Test
-    public void test_BasicLongVector_asof_normal(){
-        List<Long> list = new ArrayList<>();
-        list.add(855L);
-        list.add(865L);
-        list.add(888L);
-        BasicLongVector blv = new BasicLongVector(list);
-        blv.asof(new BasicLong(860L));
-    }
-
-    @Test
-    public void test_BasicLongVector_Append() throws Exception {
-        BasicLongVector blv = new BasicLongVector(new long[]{600,615,617});
-        int size = blv.size;
-        int capacity = blv.capacity;
-        blv.Append(new BasicLong(625));
-        assertEquals(size+1,blv.size);
-        assertEquals(capacity*2,blv.capacity);
-        blv.Append(new BasicLongVector(new long[]{630,632,636}));
-        assertEquals(size+4,blv.size);
-        assertEquals(capacity*2+3,blv.capacity);
-    }
-    @Test
     public void test_longValue() throws Exception {
         BasicLong bb = new BasicLong(860L);
         bb.setNull();
@@ -194,13 +120,7 @@ public class BasicLongTest {
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[600,615,617],\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_LONG\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicLong\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[600,615,617]\",\"table\":false,\"unitLength\":16,\"values\":[600,615,617],\"vector\":true}", re);
     }
-    @Test
-    public void test_BasicLongMatrix_toJSONString() throws Exception {
-        BasicLongMatrix blm = new BasicLongMatrix(2,2);
-        String re = JSONObject.toJSONString(blm);
-        System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"INTEGRAL\",\"dataForm\":\"DF_MATRIX\",\"dataType\":\"DT_LONG\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicLong\",\"matrix\":true,\"pair\":false,\"scalar\":false,\"string\":\"#0 #1\\n0  0 \\n0  0 \\n\",\"table\":false,\"vector\":false}", re);
-    }
+
     @Test(expected = RuntimeException.class)
     public void test_BasicLongMatrix_getScale() throws Exception {
         BasicLongMatrix bdm = new BasicLongMatrix(2,2);

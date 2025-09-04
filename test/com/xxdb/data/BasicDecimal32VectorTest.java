@@ -3,6 +3,7 @@ package com.xxdb.data;
 import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -130,6 +131,68 @@ public class BasicDecimal32VectorTest {
         assertEquals("Scale -1 is out of bounds, it must be in [0,9].",ex1);
     }
     @Test
+    public void test_BasicDecimal32Vector_capacity_lt_size() throws Exception {
+        BasicDecimal32Vector bbv = new BasicDecimal32Vector(6,1,3);
+        bbv.set(0, (Object)null);
+        bbv.set(1, null);
+        bbv.set(2, new BigDecimal("1.111"));
+        bbv.set(3, new BigDecimal("-1.111"));
+        bbv.set(4, "999.9999");
+        bbv.set(5, "-999");
+        Assert.assertEquals("[,,1.111,-1.111,999.999,-999.000]", bbv.getString());
+    }
+
+    @Test
+    public void test_BasicDecimal32Vector_size_capacity_set() throws Exception {
+        BasicDecimal32Vector bbv = new BasicDecimal32Vector(6,6,3);
+        Assert.assertEquals("[0.000,0.000,0.000,0.000,0.000,0.000]", bbv.getString());
+        bbv.set(0, (Object)null);
+        bbv.set(1, null);
+        bbv.set(2, new BigDecimal("1.111"));
+        bbv.set(3, new BigDecimal("-1.111"));
+        bbv.set(4, "999.9999");
+        bbv.set(5, "-999");
+        Assert.assertEquals("[,,1.111,-1.111,999.999,-999.000]", bbv.getString());
+    }
+
+    @Test
+    public void test_BasicDecimal32Vector_size_capacity_add() throws Exception {
+        BasicDecimal32Vector bbv = new BasicDecimal32Vector(0,6,3);
+        Assert.assertEquals("[]", bbv.getString());
+        bbv.add((Object)null);
+        bbv.add(null);
+        bbv.add(new BigDecimal("1.111"));
+        bbv.add(new BigDecimal("-1.111"));
+        bbv.add("999.9999");
+        bbv.add("-999");
+        Assert.assertEquals("[,,1.111,-1.111,999.999,-999.000]", bbv.getString());
+    }
+
+    @Test
+    public void test_BasicDecimal32Vector_set_type_not_match() throws Exception {
+        BasicDecimal32Vector bbv = new BasicDecimal32Vector(1,1,1);
+        String re = null;
+        try{
+            bbv.set(0,1);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("Unsupported type: java.lang.Integer. Only String, BigDecimal or null is supported.", re);
+    }
+
+    @Test
+    public void test_BasicDecimal32Vector_add_type_not_match() throws Exception {
+        BasicDecimal32Vector bbv = new BasicDecimal32Vector(1,1,1);
+        String re = null;
+        try{
+            bbv.add((Object)1);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("Unsupported type: java.lang.Integer. Only String, BigDecimal or null is supported.", re);
+    }
+
+    @Test
     public void test_BasicDecimal32Vector_run_vector() throws IOException {
         BasicDecimal32Vector re1 =(BasicDecimal32Vector) conn.run("decimal32([1.232,-12.43,123.53],6)");
         assertEquals("[1.232000,-12.430000,123.530000]",re1.getString());
@@ -227,7 +290,7 @@ public class BasicDecimal32VectorTest {
 
         String[] tmp_string_v1= new String[]{String.valueOf(Integer.MIN_VALUE), String.valueOf(Integer.MIN_VALUE-1)};
         BasicDecimal32Vector tmp_32_v1 = new BasicDecimal32Vector(tmp_string_v1,4);
-        //assertEquals("[,]",tmp_32_v1.getString());
+        assertEquals("[,]",tmp_32_v1.getString());
 
     }
 
@@ -243,7 +306,7 @@ public class BasicDecimal32VectorTest {
 
         List<String> tmp_string_v2 = Arrays.asList(String.valueOf(Integer.MIN_VALUE), String.valueOf(Integer.MIN_VALUE-1));
         BasicDecimal32Vector tmp_32_v2 = new BasicDecimal32Vector(tmp_string_v2,4);
-        //assertEquals("[,]",tmp_32_v2.getString());
+        assertEquals("[,]",tmp_32_v2.getString());
     }
 
     @Test

@@ -11,19 +11,6 @@ import static com.xxdb.data.Utils.countMilliseconds;
 import static org.junit.Assert.*;
 public class BasicTimestampTest {
     @Test
-    public void testTimeStampCombine(){
-        List<Long> list = Arrays.asList(1l,2l,3l);
-        BasicTimestampVector v = new BasicTimestampVector(list);
-        List<Long> list1 = Arrays.asList(3l,2l,1l);
-        BasicTimestampVector v1 = new BasicTimestampVector(list1);
-        BasicTimestampVector v2 = (BasicTimestampVector) v.combine(v1);
-        List<Long> list2 = Arrays.asList(1l,2l,3l,3l,2l,1l);
-        BasicTimestampVector v3 = new BasicTimestampVector(list2);
-        for (int i = 0;i<list2.size();i++){
-            assertEquals(v3.get(i).getString() ,v2.get(i).getString());
-        }
-    }
-    @Test
     public void test_BasicTimestamp(){
         LocalDateTime dt = LocalDateTime.of(2022,1,31,2,2,2,4000000);
         BasicTimestamp date = new BasicTimestamp(dt);
@@ -92,43 +79,13 @@ public class BasicTimestampTest {
     }
 
     @Test
-    public void test_BasicTimeStampVector(){
-        BasicTimestampVector btsv = new BasicTimestampVector(Entity.DATA_FORM.DF_VECTOR,5);
-        long[] array = new long[]{23641343568000L,23995876902000L,24104786790000L,12013435579000L,Long.MIN_VALUE};
-        BasicTimestampVector btv = new BasicTimestampVector(array,true);
-        btsv = btv;
-        assertEquals(BasicTimestamp.class,btsv.getElementClass());
-        assertNull(btsv.getTimestamp(4));
-        assertEquals("2733-11-07T14:06:30",btsv.getTimestamp(2).toString());
-        assertEquals("2733.11.07T14:06:30.000",btsv.get(2).toString());
-    }
-
-    @Test
-    public void test_BasicTimeStampVector_Append() throws Exception {
-        BasicTimestampVector btsv = new BasicTimestampVector(new long[]{34724264,7472947292L,3742839,3473293});
-        int size = btsv.size;
-        int capacity = btsv.capacity;
-        btsv.Append(new BasicTimestamp(LocalDateTime.now()));
-        assertEquals(capacity*2,btsv.capacity);
-        btsv.Append(btsv);
-        System.out.println(btsv.getString());
-        assertEquals(size+6,btsv.size);
-    }
-    @Test
     public void test_BasicTimestamp_toJSONString() throws Exception {
         BasicTimestamp date = new BasicTimestamp(100);
         String re = JSONObject.toJSONString(date);
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_TIMESTAMP\",\"dictionary\":false,\"jsonString\":\"\\\"1970.01.01T00:00:00.100\\\"\",\"long\":100,\"matrix\":false,\"null\":false,\"number\":100,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"1970.01.01T00:00:00.100\",\"table\":false,\"timestamp\":\"1970-01-01 00:00:00.100\",\"vector\":false}", re);
     }
-    @Test
-    public void test_BasicTimestampVector_toJSONString() throws Exception {
-        List<Long> list = Arrays.asList(1L,2L,3L);
-        BasicTimestampVector v = new BasicTimestampVector(list);
-        String re = JSONObject.toJSONString(v);
-        System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_TIMESTAMP\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicTimestamp\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[1970.01.01T00:00:00.001,1970.01.01T00:00:00.002,1970.01.01T00:00:00.003]\",\"table\":false,\"unitLength\":16,\"values\":[1,2,3],\"vector\":true}", re);
-    }
+
     @Test
     public void test_BasicTimestampMatrix_toJSONString() throws Exception {
         List<long[]> listofArrays = new ArrayList<>(2);

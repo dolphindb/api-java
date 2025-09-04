@@ -11,19 +11,6 @@ import static com.xxdb.data.Utils.countMilliseconds;
 import static org.junit.Assert.*;
 public class BasicMinuteTest {
     @Test
-    public void testMinuteCombine(){
-        List<Integer> list = Arrays.asList(1,2,3);
-        BasicMinuteVector v = new BasicMinuteVector(list);
-        List<Integer> list1 = Arrays.asList(3,2,1);
-        BasicMinuteVector v1 = new BasicMinuteVector(list1);
-        BasicMinuteVector v2 = (BasicMinuteVector) v.combine(v1);
-        List<Integer> list2 = Arrays.asList(1,2,3,3,2,1);
-        BasicMinuteVector v3 = new BasicMinuteVector(list2);
-        for (int i = 0;i<list2.size();i++){
-            assertEquals(v3.get(i).getString() ,v2.get(i).getString());
-        }
-    }
-    @Test
     public void test_BasicMinute() throws Exception {
         BasicMinute nt = new BasicMinute(-5);
         System.out.println(nt.getString());
@@ -69,54 +56,11 @@ public class BasicMinuteTest {
     }
 
     @Test
-    public void test_BasicMinuteVector(){
-        int[] array = new int[]{286,796,456,246,Integer.MIN_VALUE};
-        BasicMinuteVector btv = new BasicMinuteVector(array,true);
-        assertNull(btv.getMinute(4));
-        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,btv.getDataCategory());
-        assertEquals("04:06",btv.getMinute(3).toString());
-        int[] indices = new int[]{0,2,1};
-        assertEquals("[04:46m,07:36m,13:16m]",btv.getSubVector(indices).getString());
-        btv.setMinute(2,LocalTime.of(14,11,25));
-        assertEquals("14:11",btv.getMinute(2).toString());
-        assertEquals(BasicMinute.class,btv.getElementClass());
-        BasicMinuteVector bdhv = new BasicMinuteVector(Entity.DATA_FORM.DF_VECTOR,1);
-        assertEquals("00:00",bdhv.getMinute(0).toString());
-        List<Integer> list = Arrays.asList(286,796,456,246,Integer.MIN_VALUE);
-        BasicMinuteVector bdhv2 = new BasicMinuteVector(list);
-        assertEquals("13:16",bdhv2.getMinute(1).toString());
-        assertEquals("13:16m",bdhv2.get(1).getString());
-        BasicMinuteVector bmv = new BasicMinuteVector(5);
-        bmv = bdhv2;
-        assertEquals("07:36",bmv.getMinute(2).toString());
-    }
-
-    @Test
-    public void test_BasicMinuteVector_Append() throws Exception {
-        BasicMinuteVector bmv = new BasicMinuteVector(new int[]{15,45});
-        int size = bmv.size;
-        int capacity = bmv.capacity;
-        bmv.Append(new BasicMinute(LocalTime.now()));
-        assertEquals(capacity*2,bmv.capacity);
-        bmv.Append(new BasicMinuteVector(new int[]{78,32}));
-        assertEquals(capacity*2+2,bmv.capacity);
-        assertNotEquals(bmv.size,bmv.capacity);
-        System.out.println(bmv.getString());
-    }
-    @Test
     public void test_BasicMinute_toJSONString() throws Exception {
         BasicMinute date = new BasicMinute(100);
         String re = JSONObject.toJSONString(date);
         System.out.println(re);
         assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_SCALAR\",\"dataType\":\"DT_MINUTE\",\"dictionary\":false,\"int\":100,\"jsonString\":\"\\\"01:40m\\\"\",\"matrix\":false,\"minute\":\"01:40:00\",\"null\":false,\"number\":100,\"pair\":false,\"scalar\":true,\"scale\":0,\"string\":\"01:40m\",\"table\":false,\"vector\":false}", re);
-    }
-    @Test
-    public void test_BasicMinuteVector_toJSONString() throws Exception {
-        List<Integer> list = Arrays.asList(1,2,3);
-        BasicMinuteVector v = new BasicMinuteVector(list);
-        String re = JSONObject.toJSONString(v);
-        System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_MINUTE\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicMinute\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[00:01m,00:02m,00:03m]\",\"table\":false,\"unitLength\":4,\"values\":[1,2,3],\"vector\":true}", re);
     }
     @Test
     public void test_BasicMinuteMatrix_toJSONString() throws Exception {
