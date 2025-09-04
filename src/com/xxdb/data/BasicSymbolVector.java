@@ -22,6 +22,7 @@ public class BasicSymbolVector extends AbstractVector {
 	public BasicSymbolVector(int size){
 		super(DATA_FORM.DF_VECTOR);
 		base = new SymbolBase(0);
+		base.find("", true);
 		values = new int[size];
 
 		this.size = values.length;
@@ -35,6 +36,7 @@ public class BasicSymbolVector extends AbstractVector {
 		}
 
 		this.base = new SymbolBase(0);
+		this.base.find("", true);
 		this.values = new int[capacity];
 		this.size = size;
 		this.capacity = capacity;
