@@ -746,6 +746,10 @@ public class Utils {
 	}
 
 	public static Vector createVector(DATA_TYPE type, int size, int capacity, int extraParam) {
+		if (type.getValue() >=65 ) {
+			throw new IllegalArgumentException("Not support type " + type);
+		}
+
 		return BasicEntityFactory.instance().createVector(type, size, capacity, extraParam);
 	}
 }
