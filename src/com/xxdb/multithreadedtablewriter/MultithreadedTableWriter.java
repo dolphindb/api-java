@@ -576,6 +576,12 @@ public class MultithreadedTableWriter {
         BasicTable colDefs = (BasicTable)schema.get(new BasicString("colDefs"));
         BasicIntVector colDefsTypeInt = (BasicIntVector)colDefs.getColumn("typeInt");
 
+        if (isOrcaStreamTable) {
+            tableName_ = "loadOrcaStreamTable(\"" + tableName + "\")";
+        } else {
+            tableName_=tableName;
+        }
+
         try {
             if (dbName.isEmpty()) {
                 Entity tableType = pConn.run("typestr(" + tableName_ + ")");
@@ -592,15 +598,9 @@ public class MultithreadedTableWriter {
             }
         }
 
-        if (isOrcaStreamTable) {
-            tableName_ = "loadOrcaStreamTable(\"" + tableName + "\")";
-        } else {
-            tableName_=tableName;
-        }
-
         int columnSize = colDefs.rows();
         if (Objects.nonNull(compressTypes_)) {
-            if (!enableActualSendTime && compressTypes_.length != columnSize)
+            if (!enableActualSendTime_ && compressTypes_.length != columnSize)
                 throw new RuntimeException("The number of elements in parameter compressMethods does not match the column size " + columnSize);
             if (enableActualSendTime_) {
                 if (compressTypes_.length != columnSize - 1)
