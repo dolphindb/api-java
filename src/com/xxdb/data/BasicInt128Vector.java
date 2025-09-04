@@ -177,8 +177,12 @@ public class BasicInt128Vector extends AbstractVector{
 	}
 	
 	public void set(int index, Entity value) throws Exception {
-		values[index].high = ((BasicInt128)value).getMostSignicantBits();
-		values[index].low = ((BasicInt128)value).getLeastSignicantBits();
+		if (value == null) {
+			setNull(index);
+		} else {
+			values[index].high = ((BasicInt128)value).getMostSignicantBits();
+			values[index].low = ((BasicInt128)value).getLeastSignicantBits();
+		}
 	}
 
 	@Override
@@ -211,7 +215,7 @@ public class BasicInt128Vector extends AbstractVector{
 	@Override
 	public void add(Object value) {
 		if (value == null) {
-			add(new Long2(Long.MIN_VALUE, Long.MIN_VALUE));
+			add(new Long2(0, 0));
 		} else if (value instanceof Long2) {
 			add((Long2) value);
 		} else {
@@ -226,7 +230,11 @@ public class BasicInt128Vector extends AbstractVector{
 			values = Arrays.copyOf(values, values.length + 1);
 		}
 		capacity = values.length;
-		values[size] = value;
+		if (value == null) {
+			values[size] = new Long2(0, 0);
+		} else {
+			values[size] = value;
+		}
 		size++;
 	}
 
