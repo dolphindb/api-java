@@ -429,7 +429,95 @@ public class UtilsTest {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals("Not support type DT_POINT_ARRAY", re);
+        assertEquals("Cannot create vector for type 'DT_POINT_ARRAY'.", re);
+
+        String re1 = null;
+        try{
+            Vector bv1 = Utils.createVector(DT_FUNCTIONDEF, 0,0);
+        }catch(Exception e){
+            re1 = e.getMessage();
+        }
+        assertEquals("Cannot create vector for type 'DT_FUNCTIONDEF'.", re1);
+
+        String re2 = null;
+        try{
+            Vector bv1 = Utils.createVector(DT_BOOL_ARRAY, 0,0);
+        }catch(Exception e){
+            re2 = e.getMessage();
+        }
+        assertEquals("Cannot create vector for type 'DT_BOOL_ARRAY'.", re2);
+
+        String re3 = null;
+        try{
+            Vector bv1 = Utils.createVector(DT_HANDLE, 0,0);
+        }catch(Exception e){
+            re3 = e.getMessage();
+        }
+        assertEquals("Cannot create vector for type 'DT_HANDLE'.", re3);
+
+        String re4 = null;
+        try{
+            Vector bv1 = Utils.createVector( DT_CODE , 0,0);
+        }catch(Exception e){
+            re4 = e.getMessage();
+        }
+        assertEquals("Cannot create vector for type 'DT_CODE'.", re4);
+
+        String re5 = null;
+        try{
+            Vector bv1 = Utils.createVector( DT_DATASOURCE , 0,0);
+        }catch(Exception e){
+            re5 = e.getMessage();
+        }
+        assertEquals("Cannot create vector for type 'DT_DATASOURCE'.", re5);
+
+        String re6 = null;
+        try{
+            Vector bv1 = Utils.createVector(  DT_RESOURCE, 0,0);
+        }catch(Exception e){
+            re6 = e.getMessage();
+        }
+        assertEquals("Cannot create vector for type 'DT_RESOURCE'.", re6);
+
+        String re7 = null;
+        try{
+            Vector bv1 = Utils.createVector(   DT_COMPRESS, 0,0);
+        }catch(Exception e){
+            re7 = e.getMessage();
+        }
+        assertEquals("Cannot create vector for type 'DT_COMPRESS'.", re7);
+
+        String re8 = null;
+        try{
+            Vector bv1 = Utils.createVector(   DT_DICTIONARY, 0,0);
+        }catch(Exception e){
+            re8 = e.getMessage();
+        }
+        assertEquals("Cannot create vector for type 'DT_DICTIONARY'.", re8);
+
+        String re9 = null;
+        try{
+            Vector bv1 = Utils.createVector(  DT_OBJECT, 0,0);
+        }catch(Exception e){
+            re9 = e.getMessage();
+        }
+        assertEquals("Cannot create vector for type 'DT_OBJECT'.", re9);
+
+        String re10 = null;
+        try{
+            Vector bv1 = Utils.createVector(  DT_INSTRUMENT, 0,0);
+        }catch(Exception e){
+            re10 = e.getMessage();
+        }
+        assertEquals("Cannot create vector for type 'DT_INSTRUMENT'.", re10);
+
+        String re11 = null;
+        try{
+            Vector bv1 = Utils.createVector(  DT_MKTDATA, 0,0);
+        }catch(Exception e){
+            re11 = e.getMessage();
+        }
+        assertEquals("Cannot create vector for type 'DT_MKTDATA'.", re11);
     }
 
 }
