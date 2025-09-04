@@ -18,6 +18,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static com.xxdb.data.BasicArrayVectorTest.bundle;
+import static com.xxdb.data.Entity.DATA_FORM.DF_VECTOR;
+import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static com.xxdb.data.Utils.getDataTypeString;
 import static org.junit.Assert.*;
 
@@ -130,7 +132,7 @@ public class UtilsTest {
 
     @Test
     public void test_getCategory(){
-        assertEquals(Entity.DATA_CATEGORY.LOGICAL,Utils.getCategory(Entity.DATA_TYPE.DT_BOOL));
+        assertEquals(Entity.DATA_CATEGORY.LOGICAL,Utils.getCategory(DT_BOOL));
         assertEquals(Entity.DATA_CATEGORY.FLOATING,Utils.getCategory(Entity.DATA_TYPE.DT_DOUBLE));
         assertEquals(Entity.DATA_CATEGORY.FLOATING,Utils.getCategory(Entity.DATA_TYPE.DT_FLOAT));
         assertEquals(Entity.DATA_CATEGORY.BINARY,Utils.getCategory(Entity.DATA_TYPE.DT_INT128));
@@ -274,8 +276,8 @@ public class UtilsTest {
     }
     @Test
     public void test_getDataTypeString(){
-        assertEquals("bool",getDataTypeString(Entity.DATA_TYPE.DT_BOOL));
-        assertEquals("byte",getDataTypeString(Entity.DATA_TYPE.DT_BYTE));
+        assertEquals("bool",getDataTypeString(DT_BOOL));
+        assertEquals("byte",getDataTypeString(DT_BYTE));
         assertEquals("short",getDataTypeString(Entity.DATA_TYPE.DT_SHORT));
         assertEquals("int",getDataTypeString(Entity.DATA_TYPE.DT_INT));
         assertEquals("long",getDataTypeString(Entity.DATA_TYPE.DT_LONG));
@@ -303,4 +305,131 @@ public class UtilsTest {
     public void test_getJavaApiVersion(){
         Assert.assertNotNull(Utils.getJavaApiVersion());
     }
+
+    @Test
+    public void test_createVector_dateType(){
+        BasicBooleanVector bv = (BasicBooleanVector)Utils.createVector(DT_BOOL, 0,0);
+        assertEquals(DT_BOOL, bv.getDataType());
+        assertEquals(DF_VECTOR, bv.getDataForm());
+
+        BasicByteVector bv1 = (BasicByteVector)Utils.createVector(DT_BYTE, 0,0);
+        assertEquals(DT_BYTE, bv1.getDataType());
+        assertEquals(DF_VECTOR, bv1.getDataForm());
+
+        BasicShortVector bv2 = (BasicShortVector)Utils.createVector(DT_SHORT, 0,0);
+        assertEquals(DT_SHORT, bv2.getDataType());
+        assertEquals(DF_VECTOR, bv2.getDataForm());
+
+        BasicIntVector bv3 = (BasicIntVector)Utils.createVector(DT_INT, 0,0);
+        assertEquals(DT_INT, bv3.getDataType());
+        assertEquals(DF_VECTOR, bv3.getDataForm());
+
+        BasicLongVector bv5 = (BasicLongVector)Utils.createVector(DT_LONG, 0,0);
+        assertEquals(DT_LONG, bv5.getDataType());
+        assertEquals(DF_VECTOR, bv5.getDataForm());
+
+        BasicFloatVector bv6 = (BasicFloatVector)Utils.createVector(DT_FLOAT, 0,0);
+        assertEquals(DT_FLOAT, bv6.getDataType());
+        assertEquals(DF_VECTOR, bv6.getDataForm());
+
+        BasicDoubleVector bv7 = (BasicDoubleVector)Utils.createVector(DT_DOUBLE, 0,0);
+        assertEquals(DT_DOUBLE, bv7.getDataType());
+        assertEquals(DF_VECTOR, bv7.getDataForm());
+
+        BasicNanoTimeVector bv8 = (BasicNanoTimeVector)Utils.createVector(DT_NANOTIME, 0,0);
+        assertEquals(DT_NANOTIME, bv8.getDataType());
+        assertEquals(DF_VECTOR, bv8.getDataForm());
+
+        BasicNanoTimestampVector bv9 = (BasicNanoTimestampVector)Utils.createVector(DT_NANOTIMESTAMP, 0,0);
+        assertEquals(DT_NANOTIMESTAMP, bv9.getDataType());
+        assertEquals(DF_VECTOR, bv9.getDataForm());
+
+        BasicTimestampVector bv10 = (BasicTimestampVector)Utils.createVector(DT_TIMESTAMP, 0,0);
+        assertEquals(DT_TIMESTAMP, bv10.getDataType());
+        assertEquals(DF_VECTOR, bv10.getDataForm());
+
+        BasicDateVector bv11 = (BasicDateVector)Utils.createVector(DT_DATE, 0,0);
+        assertEquals(DT_DATE, bv11.getDataType());
+        assertEquals(DF_VECTOR, bv11.getDataForm());
+
+        BasicMonthVector bv12 = (BasicMonthVector)Utils.createVector(DT_MONTH, 0,0);
+        assertEquals(DT_MONTH, bv12.getDataType());
+        assertEquals(DF_VECTOR, bv12.getDataForm());
+
+        BasicTimeVector bv13 = (BasicTimeVector)Utils.createVector(DT_TIME, 0,0);
+        assertEquals(DT_TIME, bv13.getDataType());
+        assertEquals(DF_VECTOR, bv13.getDataForm());
+
+        BasicSecondVector bv14 = (BasicSecondVector)Utils.createVector(DT_SECOND, 0,0);
+        assertEquals(DT_SECOND, bv14.getDataType());
+        assertEquals(DF_VECTOR, bv14.getDataForm());
+
+        BasicMinuteVector bv15 = (BasicMinuteVector)Utils.createVector(DT_MINUTE, 0,0);
+        assertEquals(DT_MINUTE, bv15.getDataType());
+        assertEquals(DF_VECTOR, bv15.getDataForm());
+
+        BasicDateTimeVector bv16 = (BasicDateTimeVector)Utils.createVector(DT_DATETIME, 0,0);
+        assertEquals(DT_DATETIME, bv16.getDataType());
+        assertEquals(DF_VECTOR, bv16.getDataForm());
+
+        BasicInt128Vector bv17 = (BasicInt128Vector)Utils.createVector(DT_INT128, 0,0);
+        assertEquals(DT_INT128, bv17.getDataType());
+        assertEquals(DF_VECTOR, bv17.getDataForm());
+
+        BasicIPAddrVector bv18 = (BasicIPAddrVector)Utils.createVector(DT_IPADDR, 0,0);
+        assertEquals(DT_IPADDR, bv18.getDataType());
+        assertEquals(DF_VECTOR, bv18.getDataForm());
+
+        BasicUuidVector bv19 = (BasicUuidVector)Utils.createVector(DT_UUID, 0,0);
+        assertEquals(DT_UUID, bv19.getDataType());
+        assertEquals(DF_VECTOR, bv19.getDataForm());
+
+        BasicStringVector bv20 = (BasicStringVector)Utils.createVector(DT_STRING, 0,0);
+        assertEquals(DT_STRING, bv20.getDataType());
+        assertEquals(DF_VECTOR, bv20.getDataForm());
+
+        BasicStringVector bv21 = (BasicStringVector)Utils.createVector(DT_BLOB, 0,0);
+        assertEquals(DT_BLOB, bv21.getDataType());
+        assertEquals(DF_VECTOR, bv21.getDataForm());
+
+        BasicStringVector bv211 = (BasicStringVector)Utils.createVector(DT_SYMBOL, 0,0);
+        assertEquals(DT_SYMBOL, bv211.getDataType());
+        assertEquals(DF_VECTOR, bv211.getDataForm());
+
+        BasicComplexVector bv22 = (BasicComplexVector)Utils.createVector(DT_COMPLEX, 0,0);
+        assertEquals(DT_COMPLEX, bv22.getDataType());
+        assertEquals(DF_VECTOR, bv22.getDataForm());
+
+        BasicPointVector bv23 = (BasicPointVector)Utils.createVector(DT_POINT, 0,0);
+        assertEquals(DT_POINT, bv23.getDataType());
+        assertEquals(DF_VECTOR, bv23.getDataForm());
+
+        BasicDurationVector bv24 = (BasicDurationVector)Utils.createVector(DT_DURATION, 0,0);
+        assertEquals(DT_DURATION, bv24.getDataType());
+        assertEquals(DF_VECTOR, bv24.getDataForm());
+
+        BasicDecimal32Vector bv25 = (BasicDecimal32Vector)Utils.createVector(DT_DECIMAL32, 0,0,2);
+        assertEquals(DT_DECIMAL32, bv25.getDataType());
+        assertEquals(DF_VECTOR, bv25.getDataForm());
+
+        BasicDecimal64Vector bv26 = (BasicDecimal64Vector)Utils.createVector(DT_DECIMAL64, 0,0,11);
+        assertEquals(DT_DECIMAL64, bv26.getDataType());
+        assertEquals(DF_VECTOR, bv26.getDataForm());
+
+        BasicDecimal128Vector bv27 = (BasicDecimal128Vector)Utils.createVector(DT_DECIMAL128, 0,0,30);
+        assertEquals(DT_DECIMAL128, bv27.getDataType());
+        assertEquals(DF_VECTOR, bv27.getDataForm());
+    }
+
+    @Test
+    public void test_createVector_not_support(){
+        String re = null;
+        try{
+            Vector bv1 = Utils.createVector(DT_POINT_ARRAY, 0,0);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("Not support type DT_POINT_ARRAY", re);
+    }
+
 }
