@@ -745,11 +745,11 @@ public class Utils {
 		return createVector(type, size, capacity, -1);
 	}
 
-	public static Vector createVector(DATA_TYPE type, int size, int capacity, int extraParam) {
+	public static Vector createVector(DATA_TYPE type, int size, int capacity, int scale) {
 		if (type.getValue() >=65 ) {
 			throw new IllegalArgumentException("Not support type " + type);
 		}
 
-		return BasicEntityFactory.instance().createVector(type, size, capacity, extraParam);
+		return BasicEntityFactory.instance().createVector(type, size, capacity, scale);
 	}
 }
