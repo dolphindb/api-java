@@ -747,8 +747,8 @@ public class Utils {
 	}
 
 	public static Vector createVector(DATA_TYPE type, int size, int capacity, int scale) {
-		if (type.getValue() >=65 || type == DT_FUNCTIONDEF || type == DT_HANDLE || type == DT_DATASOURCE || type == DT_COMPRESS
-					|| type == DT_DICTIONARY || type == DT_INSTRUMENT || type == DT_MKTDATA) {
+		if (type.getValue() >=65 || type == DT_FUNCTIONDEF || type == DT_HANDLE || type == DT_CODE || type == DT_DATASOURCE
+				|| type == DT_RESOURCE || type == DT_COMPRESS || type == DT_DICTIONARY || type == DT_OBJECT || type == DT_INSTRUMENT || type == DT_MKTDATA) {
 			throw new IllegalArgumentException("Cannot create vector for type '" + type + "'.");
 		}
 
