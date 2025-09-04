@@ -1927,7 +1927,7 @@ public static void PrepareStreamTable() throws IOException {
                 "go\n" +
                 "use catalog orca\n" +
                 "g = createStreamGraph('engine')\n" +
-                "g.source(\"trades\", 1000:0, [\"time\",\"sym\",\"volume\"], [TIMESTAMP, SYMBOL, INT])\n" +
+                "g.source(\"trades\",  [\"time\",\"sym\",\"volume\"], [TIMESTAMP, SYMBOL, INT])\n" +
                 ".timeSeriesEngine(windowSize=60000, step=60000, metrics=<[sum(volume)]>, timeColumn=\"time\", useSystemTime=false, keyColumn=\"sym\", useWindowStartTime=false)\n" +
                 ".sink(\"output\")\n" +
                 "g.submit()\n" +
@@ -1973,7 +1973,7 @@ public static void PrepareStreamTable() throws IOException {
                 "go\n" +
                 "use catalog orca\n" +
                 "g = createStreamGraph('engine')\n" +
-                "g.source(\"trades\", 1000:0, [\"time\",\"sym\",\"volume\"], [TIMESTAMP, SYMBOL, INT])\n" +
+                "g.source(\"trades\", [\"time\",\"sym\",\"volume\"], [TIMESTAMP, SYMBOL, INT])\n" +
                 ".timeSeriesEngine(windowSize=60000, step=60000, metrics=<[sum(volume)]>, timeColumn=\"time\", useSystemTime=false, keyColumn=\"sym\", useWindowStartTime=false)\n" +
                 ".sink(\"output\")\n" +
                 "g.submit()\n" +
@@ -1996,7 +1996,7 @@ public static void PrepareStreamTable() throws IOException {
         conn1.run("appendOrcaStreamTable( \"orca.orca_table.output\", table(timestamp(1..10) as time,take(`a`s`q,10) as sym, 1..10 as volume))");
 
         //wait_data("Receive",4);
-        sleep(500);
+        sleep(1000);
         BasicTable re = (BasicTable) conn1.run("select * from Receive order by time,sym,volume");
         BasicTable tra = (BasicTable) conn1.run("select * from  orca.orca_table.output order by time,sym,sum_volume");
         assertEquals(14, re.rows());

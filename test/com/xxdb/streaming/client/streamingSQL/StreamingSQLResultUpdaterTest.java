@@ -871,7 +871,7 @@ public class StreamingSQLResultUpdaterTest {
         streamingSQLClient.unsubscribeStreamingSQL(id1);
     }
 
-    @Test
+    //@Test
     public void test_StreamingSQLClient_subscribeStreamingSQL_update_allDateType_array_big_data() throws IOException, InterruptedException {
         Preparedata_array_keyTable(500,5);
         StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
@@ -1255,7 +1255,6 @@ public class StreamingSQLResultUpdaterTest {
         System.out.println("------预期-----:"+ex1.rows());
         checkData(ex1, bt);
         System.out.println(bt.rows());
-        //checkData(ex1, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
     }
 }

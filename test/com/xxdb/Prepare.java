@@ -28,7 +28,9 @@ public class Prepare {
                 "    }\n" +
                 "    go;\n" +
                 "    try{revokeStreamingSQLTable(`t1)}catch(ex){print ex}\n" +
-                "    try{revokeStreamingSQLTable(`t2)}catch(ex){print ex}\n" );
+                "    try{revokeStreamingSQLTable(`t2)}catch(ex){print ex}\n" +
+                "    try{revokeStreamingSQLTable(`bondFilter)}catch(ex){print ex}\n" +
+                "    try{revokeStreamingSQLTable(`bestBondQuotation)}catch(ex){print ex}\n" );
             conn.run("def getAllShare(){\n" +
                     "\treturn select name from objs(true) where shared=1\n" +
                     "\t}\n" +

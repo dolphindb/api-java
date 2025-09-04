@@ -1,6 +1,7 @@
 package com.xxdb.streaming.client.streamingSQL;
 
 import com.xxdb.DBConnection;
+import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicTable;
 import com.xxdb.data.Entity;
 import com.xxdb.streaming.client.IMessage;
@@ -9,9 +10,7 @@ import com.xxdb.streaming.client.ThreadedClient;
 import org.junit.*;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 
 import static com.xxdb.Prepare.*;
 
@@ -697,7 +696,7 @@ public class StreamingSQLClientTest {
     }
 
     @Test
-    public void test_StreamingSQLClient_subscribeStreamingSQL_handler_null() throws IOException, InterruptedException {
+    public void test_StreamingSQLClient_subscribeStreamingSQL_null() throws IOException, InterruptedException {
         Preparedata("DOUBLE");
         StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
         streamingSQLClient.declareStreamingSQLTable("t1");
@@ -1652,42 +1651,6 @@ public class StreamingSQLClientTest {
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
     }
-
-    public static MessageHandler MessageHandler_handler = new MessageHandler() {
-        @Override
-        public void doEvent(IMessage msg) {
-                            String script = String.format("insert into Receive values('%s',%f)", msg.getEntity(2).getString(), Double.valueOf(msg.getEntity(3).toString()));
-            try {
-                conn.run(script);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    };
-    @Test
-    public void test_StreamingSQLClient_subscribeStreamingSQL_handler() throws IOException, InterruptedException {
-        String script = "share keyedTable(`id, 1:0, `id`time`value, [SYMBOL, TIMESTAMP, DOUBLE]) as t1;\n" +
-                "share keyedTable(`id, 1:0, `id`time`value, [SYMBOL, TIMESTAMP, DOUBLE]) as t2;\n" +
-                "share table(1:0, `id`value, [SYMBOL, DOUBLE]) as Receive;";
-        conn.run(script);
-        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
-        streamingSQLClient.declareStreamingSQLTable("t1");
-        streamingSQLClient.declareStreamingSQLTable("t2");
-        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
-        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
-        System.out.println("id1:"+id1);
-        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1, MessageHandler_handler);
-        writer_data(100,"t1","double");
-        writer_data(100,"t2","double");
-        Thread.sleep(5000);
-        BasicTable re = (BasicTable)conn.run("select * from Receive order by id");
-        System.out.println(bt.getString());
-        BasicTable ex = (BasicTable)conn.run(sqlStr1);
-        System.out.println(ex.getString());
-        checkData(ex, re);
-        streamingSQLClient.unsubscribeStreamingSQL(id1);
-    }
-
     @Test
     public void test_StreamingSQLClient_getStreamingSQLStatus() throws IOException {
         String script = "share keyedTable(`id, 1:0, `id`time`value, [SYMBOL, TIMESTAMP, DOUBLE]) as t1;\n" +
@@ -1915,4 +1878,105 @@ public class StreamingSQLClientTest {
         System.out.println(ex1.getString());
         streamingSQLClient.unsubscribeStreamingSQL(id1);
     }
+
+    //@Test
+    public void test_StreamingSQLClient_subscribeStreamingSQL_Performance() throws IOException, InterruptedException {
+        String script = "share table( 1:0, `id`time`value, [SYMBOL, TIMESTAMP, DOUBLE]) as t1;\n" +
+                "share table( 1:0, `id`time`value, [SYMBOL, TIMESTAMP, DOUBLE]) as t2;\n" ;
+        conn.run(script);
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        System.out.println("id1:"+id1);
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1);
+//        writer_data(100,"t1","double");
+//        writer_data(100,"t2","double");
+        String script1 = "n=1000;\n" +
+                "double = double(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n));\n" +
+                "data = table(take(\"A\"+string(1..300000), n) as id, timestamp(2025.08.26T12:36:23.438+1..n) as timestamp, double);\n" +
+                "t1.append!(data)\n"+
+                "t2.append!(data)\n";
+        conn.run(script1);
+        long startTime = System.currentTimeMillis();
+
+        int count1= 0;
+        while (!(count1==1000))
+        {
+            Thread.sleep(20);
+            count1 = bt.rows();
+        }
+
+        long endTime = System.currentTimeMillis();
+        System.out.println(endTime - startTime);
+        System.out.println(bt.rows());
+        BasicTable ex = (BasicTable)conn.run(sqlStr1);
+        checkData(ex, bt);
+        streamingSQLClient.unsubscribeStreamingSQL(id1);
+    }
+
+    //@Test
+    public void test_StreamingSQLClient_subscribeStreamingSQL_Performance11() throws IOException, InterruptedException {
+        List<Long> list = new ArrayList<>();
+        for(int i=0;i<10;i++){
+            try{conn.run("login(`admin, `123456)\n" +
+                    "    res = getStreamingSQLStatus()\n" +
+                    "    for(sqlStream in res){\n" +
+                    "        try{unsubscribeStreamingSQL(, sqlStream.queryId)}catch(ex){print ex}\n" +
+                    "        try{revokeStreamingSQL(sqlStream.queryId)}catch(ex){print ex}\n" +
+                    "    }\n" +
+                    "    go;\n" +
+                    "    try{revokeStreamingSQLTable(`t1)}catch(ex){print ex}\n" +
+                    "    try{revokeStreamingSQLTable(`t2)}catch(ex){print ex}\n" +
+                    "    try{undef(`t1,SHARED)}catch(ex){print ex}\n" +
+                    "    try{undef(`t2,SHARED)}catch(ex){print ex}");}catch (Exception ex){}
+
+            String script = "share table( 1:0, `id`time`value, [SYMBOL, TIMESTAMP, DOUBLE]) as t1;\n" +
+                    "share table( 1:0, `id`time`value, [SYMBOL, TIMESTAMP, DOUBLE]) as t2;\n" ;
+            conn.run(script);
+            StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+            streamingSQLClient.declareStreamingSQLTable("t1");
+            streamingSQLClient.declareStreamingSQLTable("t2");
+            String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+            String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
+            System.out.println("id1:"+id1);
+            BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1);
+//        writer_data(100,"t1","double");
+//        writer_data(100,"t2","double");
+            String script1 = "n=100000;\n" +
+                    "double = double(rand(rand(-100..100, 1000)*0.23 join take(double(), 4), n));\n" +
+                    "data = table(take(\"A\"+string(1..300000), n) as id, timestamp(2025.08.26T12:36:23.438+1..n) as timestamp, double);\n" +
+                    "t1.append!(data)\n"+
+                    "t2.append!(data)\n";
+            conn.run(script1);
+            long startTime = System.currentTimeMillis();
+
+            int count1= 0;
+            while (!(count1==100000))
+            {
+                Thread.sleep(50);
+                count1 = bt.rows();
+            }
+
+            long endTime = System.currentTimeMillis();
+            long result = endTime - startTime;
+            System.out.println(result);
+
+            System.out.println(bt.rows());
+            list.add(result);
+            BasicTable ex = (BasicTable)conn.run(sqlStr1);
+            checkData(ex, bt);
+            streamingSQLClient.unsubscribeStreamingSQL(id1);
+        }
+        System.out.println(list.toString());
+        double average = list.stream()
+                .mapToLong(Long::longValue)
+                .average()
+                .orElse(Double.NaN); // 处理空列表情况
+
+        System.out.println("平均值: " + average);
+    }
 }
+
+

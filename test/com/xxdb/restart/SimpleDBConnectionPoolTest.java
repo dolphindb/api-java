@@ -116,4 +116,37 @@ public class SimpleDBConnectionPoolTest {
         }
         controller_conn.close();
     }
+
+    @Test
+    public void test_SimpleDBConnectionPool_config_HighAvailability_true_LoadBalance_true_1() throws IOException, InterruptedException {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host, controller_port, "admin", "123456");
+        controller_conn.run("10000");
+        SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
+        config1.setHostName(HOST);
+        config1.setPort(PORT);
+        config1.setUserId("admin");
+        config1.setPassword("123456");
+        config1.setEnableHighAvailability(true);
+        config1.setLoadBalance(true);
+        config1.setMinimumPoolSize(101);
+        config1.setMaximumPoolSize(200);
+        config1.setHighAvailabilitySites(ipports);
+        pool = new SimpleDBConnectionPool(config1);
+        assertEquals(100,pool.getTotalConnectionsCount());
+        assertEquals(true,config1.isLoadBalance());
+        DBConnection poolEntity = pool.getConnection();
+        poolEntity.run("sleep(8000)");
+        BasicTable re = (BasicTable) poolEntity.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
+        for (int i = 0; i < re.rows(); i++) {
+            System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
+            String port = re.getColumn(0).get(i).toString();
+            String connectionNum = re.getColumn(1).get(i).toString();
+            if(Integer.valueOf(port) != PORT) {
+                assertEquals(true, Integer.valueOf(connectionNum) > 25);
+                assertEquals(true, Integer.valueOf(connectionNum) <= 60);
+            }
+        }
+        controller_conn.close();
+    }
 }

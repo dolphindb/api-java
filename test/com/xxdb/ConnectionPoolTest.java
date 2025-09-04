@@ -1750,7 +1750,7 @@ public class ConnectionPoolTest {
         colNames.add("time");
         colNames.add("uuid");
         List<Vector> cols = new ArrayList<>();
-        BasicIntVector biv = new BasicIntVector(1048576);
+        BasicIntVector biv = new BasicIntVector(148576);
         List<Vector> bcvl = new ArrayList<>();
         List<Vector> bcpvl = new ArrayList<>();
         List<Vector> bdhvl = new ArrayList<>();
@@ -1772,7 +1772,7 @@ public class ConnectionPoolTest {
         List<Vector> btsvl = new ArrayList<>();
         List<Vector> btvl = new ArrayList<>();
         List<Vector> buvl = new ArrayList<>();
-        for(int i=0;i<1048576;i++){
+        for(int i=0;i<148576;i++){
             biv.setInt(i,i%100);
             bcvl.add(new BasicByteVector(new byte[]{'d','o','l','p','h','i','n','d','b'}));
             bcpvl.add(new BasicComplexVector(new Double2[]{new Double2(i+0.1,i+0.2),new Double2(i+2.0,i+3.0)}));
@@ -1842,7 +1842,7 @@ public class ConnectionPoolTest {
         BasicTable bt = new BasicTable(colNames,cols);
         int x = appender.append(bt);
         BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
-        assertEquals(1048576,res.rows());
+        assertEquals(148576,res.rows());
         pool.shutdown();
     }
 

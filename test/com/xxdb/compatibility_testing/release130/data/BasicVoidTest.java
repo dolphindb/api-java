@@ -2,12 +2,9 @@ package com.xxdb.compatibility_testing.release130.data;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
-import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.*;
 import com.xxdb.data.Void;
 import com.xxdb.io.*;
-import com.xxdb.multithreadedtablewriter.MultithreadedTableWriter;
-import org.apache.commons.lang3.ObjectUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

@@ -46,8 +46,8 @@ public class BasicMktDataTest {
                 "    \"currency\": \"CNY\",\n" +
                 "    \"dayCountConvention\": \"Actual365\",\n" +
                 "    \"compounding\": \"Continuous\",\n" +
-                "    \"interpMethod\": \"LinearInterp\",\n" +
-                "    \"extrapMethod\": \"FlatExtrap\",\n" +
+                "    \"interpMethod\": \"Linear\",\n" +
+                "    \"extrapMethod\": \"Flat\",\n" +
                 "    \"dates\":[2025.07.07,2025.07.10,2025.07.17,2025.07.24,2025.08.04,2025.09.03,2025.10.09,2026.01.05,\n" +
                 "        2026.04.03,2026.07.03,2027.01.04,2027.07.05,2028.07.03],\n" +
                 "    \"values\":[0.015785,0.015931,0.016183,0.016381,0.016493,0.016503,0.016478,0.016234,0.016321,\n" +
@@ -81,8 +81,8 @@ public class BasicMktDataTest {
                 "    \"currency\": \"CNY\",\n" +
                 "    \"dayCountConvention\": \"Actual365\",\n" +
                 "    \"compounding\": \"Continuous\",\n" +
-                "    \"interpMethod\": \"LinearInterp\",\n" +
-                "    \"extrapMethod\": \"FlatExtrap\",\n" +
+                "    \"interpMethod\": \"Linear\",\n" +
+                "    \"extrapMethod\": \"Flat\",\n" +
                 "    \"dates\":[2025.07.07,2025.07.10,2025.07.17,2025.07.24,2025.08.04,2025.09.03,2025.10.09,2026.01.05,\n" +
                 "        2026.04.03,2026.07.03,2027.01.04,2027.07.05,2028.07.03],\n" +
                 "    \"values\":[0.015785,0.015931,0.016183,0.016381,0.016493,0.016503,0.016478,0.016234,0.016321,\n" +

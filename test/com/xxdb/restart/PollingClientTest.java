@@ -354,9 +354,9 @@ public class PollingClientTest {
         thread.join();
         Thread.sleep(5000);
         controller_conn.run("try{startDataNode('"+HOST+":"+port_list[1]+"')}catch(ex){}");
-        //Thread.sleep(1000);
+        Thread.sleep(1000);
         List<IMessage> messages1 = poller.poll(1000,1000);
-        //Thread.sleep(1000);
+        Thread.sleep(1000);
         System.out.println(messages1.size());
         //Assert.assertEquals(1000,messages1.size());
         MessageHandler_handler1(messages1);

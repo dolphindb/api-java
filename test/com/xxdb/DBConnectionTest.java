@@ -1466,11 +1466,14 @@ public class DBConnectionTest {
         assertEquals(2, matrix.columns());
     }
 
-    @Test(expected = IOException.class)
+    @Test
     public void testSymbolMatrixWithLabel() throws IOException {
-            BasicStringMatrix matrix = (BasicStringMatrix) conn.run("cross(add,matrix(`SYMBOL,2,2, ,`T),matrix(`SYMBOL,2,2, ,`T))");
-            assertEquals(0, matrix.rows());
-            assertEquals(0, matrix.columns());
+            BasicStringMatrix matrix = (BasicStringMatrix) conn.run("m=matrix(`SYMBOL,2,2, ,`T)\n" +
+                    "m.rename!(2020.01.01..2020.01.02, `A`B)\n" +
+                    "m.setIndexedMatrix!()\n" +
+                    "m;");
+            assertEquals(2, matrix.rows());
+            assertEquals(2, matrix.columns());
     }
 
     @Test

@@ -26,6 +26,8 @@ import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+
+import static com.xxdb.Prepare.clear_env;
 import static org.junit.Assert.*;
 
 public class PollingClientTest {
@@ -33,32 +35,8 @@ public class PollingClientTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
-    //static int PORT=9002;
+
     public static PollingClient client;
-    public void clear_env() throws IOException {
-        conn.run("a = getStreamingStat().pubTables\n" +
-                "for(i in a){\n" +
-                "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
-                "}");
-        conn.run("def getAllShare(){\n" +
-                "\treturn select name from objs(true) where shared=1\n" +
-                "\t}\n" +
-                "\n" +
-                "def clearShare(){\n" +
-                "\tlogin(`admin,`123456)\n" +
-                "\tallShare=exec name from pnodeRun(getAllShare)\n" +
-                "\tfor(i in allShare){\n" +
-                "\t\ttry{\n" +
-                "\t\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],clearTablePersistence,objByName(i))\n" +
-                "\t\t\t}catch(ex1){}\n" +
-                "\t\trpc((exec node from pnodeRun(getAllShare) where name =i)[0],undef,i,SHARED)\n" +
-                "\t}\n" +
-                "\ttry{\n" +
-                "\t\tPST_DIR=rpc(getControllerAlias(),getDataNodeConfig{getNodeAlias()})['persistenceDir']\n" +
-                "\t}catch(ex1){}\n" +
-                "}\n" +
-                "clearShare()");
-    }
 
     @Before
     public void setUp() throws IOException {

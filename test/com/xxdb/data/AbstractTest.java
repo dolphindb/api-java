@@ -228,9 +228,15 @@ public class AbstractTest{
 
     @Test(expected = RuntimeException.class)
     public void test_AbstractVector_deserialize() throws IOException {
-        abstract class BasicVector extends AbstractVector{
+        class BasicVector extends AbstractVector{
 
+            @Override
+            public void set(int index, Object value) {
+            }
 
+            @Override
+            public void add(Object value) {
+            }
             public BasicVector(DATA_FORM df) {
                 super(df);
             }
@@ -320,25 +326,31 @@ public class AbstractTest{
                 return 0;
             }
         }
-        //BasicVector bv = new BasicVector(Entity.DATA_FORM.DF_VECTOR);
+        BasicVector bv = new BasicVector(Entity.DATA_FORM.DF_VECTOR);
         ExtendedDataInput in = new BigEndianDataInputStream(new InputStream() {
             @Override
             public int read() throws IOException {
                 return 0;
             }
         });
-        //bv.deserialize(0,1,in);
+        bv.deserialize(0,1,in);
     }
 
     @Test(expected = RuntimeException.class)
     public void test_abstractVector_serialize() throws IOException {
-        abstract class BasicVector extends AbstractVector{
+        class BasicVector extends AbstractVector{
 
 
             public BasicVector(DATA_FORM df) {
                 super(df);
             }
+            @Override
+            public void set(int index, Object value) {
+            }
 
+            @Override
+            public void add(Object value) {
+            }
             @Override
             protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
 
@@ -424,14 +436,14 @@ public class AbstractTest{
                 return 0;
             }
         }
-        //BasicVector bv = new BasicVector(Entity.DATA_FORM.DF_VECTOR);
+        BasicVector bv = new BasicVector(Entity.DATA_FORM.DF_VECTOR);
         AbstractVector.NumElementAndPartial numElementAndPartial = new AbstractVector.NumElementAndPartial(10,2);
-        //bv.serialize(0,0,1,numElementAndPartial, ByteBuffer.allocate(8));
+        bv.serialize(0,0,1,numElementAndPartial, ByteBuffer.allocate(8));
     }
 
     @Test(expected = RuntimeException.class)
     public void test_AbstractVector_write() throws IOException {
-        abstract class BasicVector extends AbstractVector{
+        class BasicVector extends AbstractVector{
 
 
             public BasicVector(DATA_FORM df) {
@@ -442,7 +454,13 @@ public class AbstractTest{
             protected void writeVectorToOutputStream(ExtendedDataOutput out) throws IOException {
 
             }
+            @Override
+            public void set(int index, Object value) {
+            }
 
+            @Override
+            public void add(Object value) {
+            }
             @Override
             public Vector combine(Vector vector) {
                 return null;
@@ -523,13 +541,13 @@ public class AbstractTest{
                 return 0;
             }
         }
-       // BasicVector bv = new BasicVector(Entity.DATA_FORM.DF_VECTOR);
-        //bv.writeVectorToBuffer(ByteBuffer.allocate(8));
+        BasicVector bv = new BasicVector(Entity.DATA_FORM.DF_VECTOR);
+        bv.writeVectorToBuffer(ByteBuffer.allocate(8));
     }
 
     @Test(expected = RuntimeException.class)
     public void test_AbstractVector_CompressedMethod(){
-        abstract class BasicVector extends AbstractVector{
+        class BasicVector extends AbstractVector{
 
 
             public BasicVector(DATA_FORM df) {
@@ -577,6 +595,14 @@ public class AbstractTest{
             }
 
             @Override
+            public void set(int index, Object value) {
+            }
+
+            @Override
+            public void add(Object value) {
+            }
+
+            @Override
             public Class<?> getElementClass() {
                 return null;
             }
@@ -621,14 +647,14 @@ public class AbstractTest{
                 return 0;
             }
         }
-        //BasicVector bv = new BasicVector(Entity.DATA_FORM.DF_VECTOR);
-        //bv.setCompressedMethod(Vector.COMPRESS_LZ4);
-        //bv.setCompressedMethod(3);
+        BasicVector bv = new BasicVector(Entity.DATA_FORM.DF_VECTOR);
+        bv.setCompressedMethod(Vector.COMPRESS_LZ4);
+        bv.setCompressedMethod(3);
     }
 
     @Test(expected = RuntimeException.class)
     public void test_AbstractVector_other() throws IOException {
-        abstract class BasicVector extends AbstractVector{
+        class BasicVector extends AbstractVector{
 
 
             public BasicVector(DATA_FORM df) {
@@ -654,7 +680,13 @@ public class AbstractTest{
             public int asof(Scalar value) {
                 return 0;
             }
+            @Override
+            public void set(int index, Object value) {
+            }
 
+            @Override
+            public void add(Object value) {
+            }
             @Override
             public boolean isNull(int index) {
                 return false;
@@ -720,16 +752,16 @@ public class AbstractTest{
                 return 0;
             }
         }
-//        BasicVector bv = new BasicVector(Entity.DATA_FORM.DF_VECTOR);
-//        ExtendedDataOutput output = new BigEndianDataOutputStream(new OutputStream() {
-//            @Override
-//            public void write(int b) throws IOException {
-//                System.out.println(b);
-//            }
-//        });
-//        bv.writeCompressed(output);
-//        assertEquals(16,BasicVector.getUnitLength(Entity.DATA_TYPE.DT_POINT));
-//        BasicVector.getUnitLength(Entity.DATA_TYPE.DT_ANY);
+        BasicVector bv = new BasicVector(Entity.DATA_FORM.DF_VECTOR);
+        ExtendedDataOutput output = new BigEndianDataOutputStream(new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+                System.out.println(b);
+            }
+        });
+        bv.writeCompressed(output);
+        assertEquals(16,BasicVector.getUnitLength(Entity.DATA_TYPE.DT_POINT));
+        BasicVector.getUnitLength(Entity.DATA_TYPE.DT_ANY);
     }
 
     @Test

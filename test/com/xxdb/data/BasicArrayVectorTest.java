@@ -1268,7 +1268,7 @@ public class BasicArrayVectorTest {
                 "\tif(existsDatabase(dbName)){\n" +
                 "\t\tdropDatabase(dbName)\n" +
                 "\t}\n" +
-                "\tdb=database(dbName, VALUE, 1..2,,'TSDB')\n" +
+                "\tdb=database(dbName, RANGE, 0 5000 10001,,'TSDB')\n" +
                 "\tpt=createPartitionedTable(db,t,`pt,`id,,`id).append!(t)";
         conn.run(script);
         BasicIntVector arr= (BasicIntVector) conn.run("1..4");
@@ -1365,11 +1365,13 @@ public class BasicArrayVectorTest {
         BasicArrayVector obj = new BasicArrayVector(l);
         obj.setNull(1);
         Scalar value = new BasicBoolean(true);
+        String re = null;
         try {
             obj.set(1, value);
-        } catch (RuntimeException re) {
-            assertEquals("BasicArrayVector.set not supported.", re.getMessage());
+        } catch (RuntimeException e) {
+            re = e.getMessage();
         }
+        assertEquals("BasicArrayVector.set requires a Vector value, got: BasicBoolean", re);
     }
     @Test
     public void test_Function() throws Exception{
@@ -1768,7 +1770,7 @@ public class BasicArrayVectorTest {
         BasicArrayVector bav = new BasicArrayVector(new int[]{1,2,3,4},new BasicIntVector(new int[]{2,4,6,8}));
         String re = JSONObject.toJSONString(bav);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"ARRAY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_INT_ARRAY\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.Entity\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[[2],[4],[6],[8]]\",\"table\":false,\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataCategory\":\"ARRAY\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_INT_ARRAY\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.Entity\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"scale\":-1,\"string\":\"[[2],[4],[6],[8]]\",\"table\":false,\"vector\":true}", re);
     }
 
     @Test

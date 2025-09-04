@@ -1987,7 +1987,7 @@ public class PollingClientReverseTest {
                 "go\n" +
                 "use catalog orca\n" +
                 "g = createStreamGraph('engine')\n" +
-                "g.source(\"trades\", 1000:0, [\"time\",\"sym\",\"volume\"], [TIMESTAMP, SYMBOL, INT])\n" +
+                "g.source(\"trades\", [\"time\",\"sym\",\"volume\"], [TIMESTAMP, SYMBOL, INT])\n" +
                 ".timeSeriesEngine(windowSize=60000, step=60000, metrics=<[sum(volume)]>, timeColumn=\"time\", useSystemTime=false, keyColumn=\"sym\", useWindowStartTime=false)\n" +
                 ".sink(\"output\")\n" +
                 "g.submit()\n" +
@@ -2031,7 +2031,7 @@ public class PollingClientReverseTest {
                 "go\n" +
                 "use catalog orca\n" +
                 "g = createStreamGraph('engine')\n" +
-                "g.source(\"trades\", 1000:0, [\"time\",\"sym\",\"volume\"], [TIMESTAMP, SYMBOL, INT])\n" +
+                "g.source(\"trades\", [\"time\",\"sym\",\"volume\"], [TIMESTAMP, SYMBOL, INT])\n" +
                 ".timeSeriesEngine(windowSize=60000, step=60000, metrics=<[sum(volume)]>, timeColumn=\"time\", useSystemTime=false, keyColumn=\"sym\", useWindowStartTime=false)\n" +
                 ".sink(\"output\")\n" +
                 "g.submit()\n" +
