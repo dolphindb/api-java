@@ -9,10 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.Scanner;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -337,4 +334,122 @@ public class BasicAnyVectorTest {
                 "m   [tom,dickh,arry,jack] [blue,green,blue,blue]\n",re.getString());
     }
 
+    @Test
+    public void test_BasicAnyVector_performence() throws IOException, InterruptedException {
+        List<String> colNames = new ArrayList<>();
+        colNames.add("cbool");
+        colNames.add("cchar");
+        colNames.add("cshort");
+        colNames.add("cint");
+        colNames.add("clong");
+        colNames.add("cdouble");
+        colNames.add("cfloat");
+
+        colNames.add("cdate");
+        colNames.add("cmonth");
+        colNames.add("ctime");
+        colNames.add("cminute");
+        colNames.add("csecond");
+        colNames.add("cdatetime");
+        colNames.add("ctimestamp");
+        colNames.add("cnanotime");
+        colNames.add("cnanotimestamp");
+        colNames.add("cdatehour");
+        colNames.add("cuuid");
+        colNames.add("cipaddr");
+        colNames.add("cint128");
+        colNames.add("cpoint");
+        colNames.add("ccomplex");
+        colNames.add("cdecimal32");
+        colNames.add("cdecimal64");
+        colNames.add("cdecimal128");
+
+        List<String> testCases = new ArrayList<>();
+        testCases.add("cbool");
+        testCases.add("cchar");
+        testCases.add("cshort");
+        testCases.add("cint");
+        testCases.add("clong");
+        testCases.add("cdouble");
+        testCases.add("cfloat");
+
+        testCases.add("cdate");
+        testCases.add("cmonth");
+        testCases.add("ctime");
+        testCases.add("cminute");
+        testCases.add("csecond");
+        testCases.add("cdatetime");
+        testCases.add("ctimestamp");
+        testCases.add("cnanotime");
+        testCases.add("cnanotimestamp");
+        testCases.add("cdatehour");
+        testCases.add("cuuid");
+        testCases.add("cipaddr");
+        testCases.add("cint128");
+        testCases.add("cpoint");
+        testCases.add("ccomplex");
+        testCases.add("cdecimal32");
+        testCases.add("cdecimal64");
+        testCases.add("cdecimal128");
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        //Preparedata_array(500000,10);
+        String pre_data = "def createDataTableTuple(n,num){\n" +
+                "    boolv = bool(rand([true, false, NULL], n))\n" +
+                "        cbool = cut(take([true, false, NULL], n*num), num)\n" +
+                "        cchar = cut(take(char(-100..100 join NULL), n*num), num)\n" +
+                "        cshort = cut(take(short(-100..100 join NULL), n*num), num)\n" +
+                "        cint = cut(take(-100..100 join NULL, n*num), num)\n" +
+                "        clong = cut(take(long(-100..100 join NULL), n*num), num)\n" +
+                "        cdouble = cut(take(-100..100 join NULL, n*num) + 0.254, num)\n" +
+                "        cfloat = cut(take(-100..100 join NULL, n*num) + 0.254f, num)\n" +
+                "        cdate = cut(take(2012.01.01..2012.02.29, n*num), num)\n" +
+                "        cmonth = cut(take(2012.01M..2013.12M, n*num), num)\n" +
+                "        ctime = cut(take(09:00:00.000 + 0..99 * 1000, n*num), num)\n" +
+                "        cminute = cut(take(09:00m..15:59m, n*num), num)\n" +
+                "        csecond = cut(take(09:00:00 + 0..999, n*num), num)\n" +
+                "        cdatetime = cut(take(2012.01.01T09:00:00 + 0..999, n*num), num)\n" +
+                "        ctimestamp = cut(take(2012.01.01T09:00:00.000 + 0..999 * 1000, n*num), num)\n" +
+                "        //timestampv = timestamp(rand(1970.01.01T00:00:00.023+rand(-100..100, 10), n))\n" +
+                "        cnanotime =cut(take(09:00:00.000000000 + 0..999 * 1000000000, n*num), num)\n" +
+                "        cnanotimestamp = cut(take(2012.01.01T09:00:00.000000000 + 0..999 * 1000000000, n*num), num)\n" +
+                "        csymbol = cut(take(symbol(\"A\"+string(1..n)), n*num), num)\n" +
+                "        cstring = cut(\"A\"+string(1..(n*num)), num)\n" +
+                "        cuuid = cut(take(uuid([\"5d212a78-cc48-e3b1-4235-b4d91473ee87\", \"5d212a78-cc48-e3b1-4235-b4d91473ee88\", \"5d212a78-cc48-e3b1-4235-b4d91473ee89\", \"\"]), n*num), num)\n" +
+                "        cdatehour = cut(take(datehour(1..10 join NULL), n*num), num)\n" +
+                "        cipaddr = cut(take(ipaddr([\"192.168.100.10\", \"192.168.100.11\", \"192.168.100.14\", \"\"]), n*num), num)\n" +
+                "        cint128 = cut(take(int128([\"e1671797c52e15f763380b45e841ec32\", \"e1671797c52e15f763380b45e841ec33\", \"e1671797c52e15f763380b45e841ec35\", \"\"]), n*num), num)\n" +
+                "        cblob = cut(blob(\"A\"+string(1..(n*num))), num)\n" +
+                "        ccomplex = cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n*num), num)\n" +
+                "        cpoint = cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n*num), num) \n" +
+                "        cdecimal32 = cut(decimal32(take(-100..100 join NULL, n*num) + 0.254, 3), num)\n" +
+                "        cdecimal64 = cut(decimal64(take(-100..100 join NULL, n*num) + 0.25467, 5), num)\n" +
+                "        cdecimal128 = cut(decimal128(take(-100..100 join NULL, n*num) + 0.25467, 5), num)\n" +
+                "        data = table(boolv, cbool, cchar, cshort, cint, clong, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cfloat, cdouble, csymbol, cstring, cuuid, cipaddr, cint128, cdatehour,cblob,ccomplex,cpoint,cdecimal32, cdecimal64, cdecimal128)\n" +
+                "        return data \n" +
+                "}\n" +
+                "\n" +
+                "data = createDataTableTuple(100000,11) \n" +
+                "share  data as data1";
+        conn.run(pre_data);
+        for (int ii = 0; ii < colNames.size(); ii++) {
+            //System.out.println("start " + testCases.get(ii));
+            long start_download = System.nanoTime();
+            for (int i = 0; i < 10; i++) {
+                BasicAnyVector bnv = (BasicAnyVector) conn.run("exec " + colNames.get(ii) + " from data1");
+            }
+            long end_download = System.nanoTime();
+            System.out.println(testCases.get(ii) + "下载花费时间：" + (end_download - start_download) / 10000000);
+
+            BasicAnyVector bnv = (BasicAnyVector) conn.run("exec " + colNames.get(ii) + " from data1");
+            long start = System.nanoTime();
+            for (int i = 0; i < 10; i++) {
+                Map<String, Entity> map = new HashMap<String, Entity>();
+                map.put("bnv", bnv);
+                conn.upload(map);
+            }
+            long end = System.nanoTime();
+            System.out.println(testCases.get(ii) + "上传花费时间：" + (end - start) / 10000000);
+        }
+    }
 }
