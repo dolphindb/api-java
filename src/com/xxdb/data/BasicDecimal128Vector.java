@@ -339,6 +339,11 @@ public class BasicDecimal128Vector extends AbstractVector {
 
     @Override
     public void set(int index, Entity value) throws Exception {
+        if (value == null) {
+            setNull(index);
+            return;
+        }
+
         if (!value.getDataForm().equals(DATA_FORM.DF_SCALAR) || value.getDataType() != DT_DECIMAL128) {
             throw new RuntimeException("The value type is not BasicDecimal128!");
         }
@@ -480,7 +485,10 @@ public class BasicDecimal128Vector extends AbstractVector {
             this.unscaledValues = Arrays.copyOf(this.unscaledValues, this.unscaledValues.length + 1);
         }
         capacity = this.unscaledValues.length;
-        if (value.compareTo(BigDecimal.ZERO) == 0) {
+
+        if (value == null) {
+            this.unscaledValues[size] = BIGINT_MIN_VALUE;
+        } else if (value.compareTo(BigDecimal.ZERO) == 0) {
             this.unscaledValues[size] = BigInteger.ZERO;
         } else {
             this.unscaledValues[size] = value.scaleByPowerOfTen(this.scale_).toBigInteger();
@@ -489,7 +497,7 @@ public class BasicDecimal128Vector extends AbstractVector {
     }
 
     public void add(String value) {
-        if(value.equals(""))
+        if (value == null || value.equals(""))
             add(DECIMAL128_MIN_VALUE.scaleByPowerOfTen(-this.scale_));
         else
             add(new BigDecimal(value));

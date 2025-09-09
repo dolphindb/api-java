@@ -240,6 +240,11 @@ public class BasicDecimal64Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
+        if (value == null) {
+            setNull(index);
+            return;
+        }
+
         if (!value.getDataForm().equals(DATA_FORM.DF_SCALAR) || value.getDataType() != DT_DECIMAL64) {
             throw new RuntimeException("value type is not BasicDecimal64!");
         }
@@ -361,11 +366,11 @@ public class BasicDecimal64Vector extends AbstractVector{
         }
 
         capacity = unscaledValues.length;
-        if (value.equals("0.0"))
-            unscaledValues[size] = 0;
-        else if(value.equals(""))
+        if (value == null || value.equals("")) {
             unscaledValues[size] = Long.MIN_VALUE;
-        else {
+        } else if (value.equals("0.0")) {
+            unscaledValues[size] = 0;
+        } else {
             BigDecimal pow = BigDecimal.TEN.pow(scale_);
             BigDecimal bd = new BigDecimal(value);
             if (checkDecimal64Range(bd))

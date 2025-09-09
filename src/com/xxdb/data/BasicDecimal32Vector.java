@@ -240,6 +240,11 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void set(int index, Entity value) throws Exception {
+        if (value == null) {
+            setNull(index);
+            return;
+        }
+
         if (!value.getDataForm().equals(DATA_FORM.DF_SCALAR) || value.getDataType() != DT_DECIMAL32) {
             throw new RuntimeException("value type is not BasicDecimal32!");
         }
@@ -348,16 +353,16 @@ public class BasicDecimal32Vector extends AbstractVector{
     public void add(String value) {
         if (size + 1 > capacity && unscaledValues.length > 0) {
             unscaledValues = Arrays.copyOf(unscaledValues, unscaledValues.length * 2);
-        } else if (unscaledValues.length <= 0){
+        } else if (unscaledValues.length <= 0) {
             unscaledValues = new int[1];
         }
 
         capacity = unscaledValues.length;
-        if (value.equals("0.0"))
-            unscaledValues[size] = 0;
-        else if(value.equals(""))
+        if (value == null || value.equals("")) {
             unscaledValues[size] = Integer.MIN_VALUE;
-        else {
+        } else if (value.equals("0.0")) {
+            unscaledValues[size] = 0;
+        } else {
             BigDecimal pow = BigDecimal.TEN.pow(scale_);
             BigDecimal bd = new BigDecimal(value);
             if (checkDecimal32Range(bd.multiply(pow).intValue()))
