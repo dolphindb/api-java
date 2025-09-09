@@ -320,7 +320,7 @@ public class BasicStringVector extends AbstractVector{
 	@Override
 	public void add(Object value) {
 		if (value == null) {
-			add("");
+			add((String) null);
 		} else if (value instanceof String) {
 			add((String) value);
 		} else {
@@ -330,16 +330,25 @@ public class BasicStringVector extends AbstractVector{
 
 	public void add(String value) {
 		if (isBlob) {
-			blobValues.add(value.getBytes(StandardCharsets.UTF_8));
+			if (value == null) {
+				blobValues.add(new byte[0]);
+			} else {
+				blobValues.add(value.getBytes(StandardCharsets.UTF_8));
+			}
 			capacity = blobValues.size();
 		} else {
 			if (size + 1 > capacity && values.length > 0){
 				values = Arrays.copyOf(values, values.length * 2);
-			}else if (values.length <= 0){
+			} else if (values.length <= 0){
 				values = Arrays.copyOf(values, values.length + 1);
 			}
 			capacity = values.length;
-			values[size] = value;
+
+			if (value == null) {
+				values[size] = "";
+			} else {
+				values[size] = value;
+			}
 		}
 		size++;
 	}
@@ -405,6 +414,11 @@ public class BasicStringVector extends AbstractVector{
 	}
 
 	public void set(int index, Entity value) throws Exception {
+		if (value == null) {
+			setNull(index);
+			return;
+		}
+
 		if (isBlob) {
 			if (value.getDataType() == DATA_TYPE.DT_BLOB) {
 				blobValues.set(index, ((BasicString)value).getBytes());

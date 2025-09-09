@@ -206,7 +206,13 @@ public class BasicPointVector extends AbstractVector{
 			values = Arrays.copyOf(values, values.length + 1);
 		}
 		capacity = values.length;
-		values[size] = value;
+
+		if (value == null) {
+			values[size].setNull();
+		} else {
+			values[size] = value;
+		}
+
 		size++;
 	}
 
