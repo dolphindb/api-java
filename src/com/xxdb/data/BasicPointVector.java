@@ -155,10 +155,14 @@ public class BasicPointVector extends AbstractVector{
 			sub[i] = values[indices[i]];
 		return sub;
 	}
-	
+
 	public void set(int index, Entity value) throws Exception {
-		values[index].x = ((BasicPoint)value).getX();
-		values[index].y = ((BasicPoint)value).getY();
+		if (value == null) {
+			setNull(index);
+		} else {
+			values[index].x = ((BasicPoint)value).getX();
+			values[index].y = ((BasicPoint)value).getY();
+		}
 	}
 
 	@Override
@@ -168,14 +172,21 @@ public class BasicPointVector extends AbstractVector{
 		} else if (value instanceof Double2) {
 			Double2 d2 = (Double2) value;
 			setPoint(index, d2.x, d2.y);
+		} else if (value instanceof BasicPoint) {
+			BasicPoint bp = (BasicPoint) value;
+			setPoint(index, bp.getX(), bp.getY());
 		} else {
-			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Double2 or null is supported.");
+			throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName() + ". Only Double2, BasicPoint or null is supported.");
 		}
 	}
 
 	public void setPoint(int index, double x, double y){
-		values[index].x = x;
-		values[index].y = y;
+		if (values[index] == null) {
+			values[index] = new Double2(x, y);
+		} else {
+			values[index].x = x;
+			values[index].y = y;
+		}
 	}
 	
 	@Override
@@ -202,13 +213,13 @@ public class BasicPointVector extends AbstractVector{
 	public void add(Double2 value) {
 		if (size + 1 > capacity && values.length > 0){
 			values = Arrays.copyOf(values, values.length * 2);
-		}else if (values.length <= 0){
+		} else if (values.length <= 0){
 			values = Arrays.copyOf(values, values.length + 1);
 		}
 		capacity = values.length;
 
 		if (value == null) {
-			values[size].setNull();
+			values[size] = new Double2(-Double.MAX_VALUE, -Double.MAX_VALUE);
 		} else {
 			values[size] = value;
 		}
