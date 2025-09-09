@@ -320,16 +320,8 @@ public class BasicArrayVector extends AbstractVector {
 
 		Vector newValue = (Vector) value;
 
-		if (index < 0 || index >= rowIndicesSize) {
-			throw new IndexOutOfBoundsException("Index " + index + " out of bounds for size " + rowIndicesSize);
-		}
-
-		int startPosValueVec = index == 0 ? 0 : rowIndices[index - 1];
-		int currentRows = rowIndices[index] - startPosValueVec;
-		int newRows = newValue.rows();
-
-		if (currentRows != newRows) {
-			throw new RuntimeException("BasicArrayVector.set requires same length. Current: " + currentRows + ", New: " + newRows);
+		if (index < 0 || index >= capacity) {
+			throw new IndexOutOfBoundsException("Index " + index + " out of bounds for capacity " + capacity);
 		}
 
 		DATA_TYPE currentValueType = DATA_TYPE.valueOf(type.getValue() - 64);
@@ -345,12 +337,50 @@ public class BasicArrayVector extends AbstractVector {
 			}
 		}
 
-		try {
-			for (int i = 0; i < newRows; i++) {
-				valueVec.set(startPosValueVec + i, newValue.get(i));
+		if (index >= rowIndicesSize) {
+			for (int i = rowIndicesSize; i <= index; i++) {
+				if (i == 0) {
+					rowIndices[i] = 0;
+				} else {
+					rowIndices[i] = rowIndices[i-1];
+				}
 			}
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to set data in BasicArrayVector: " + e.getMessage(), e);
+			rowIndicesSize = index + 1;
+		}
+
+		int startPosValueVec = index == 0 ? 0 : rowIndices[index - 1];
+		int currentRows = rowIndices[index] - startPosValueVec;
+		int newRows = newValue.rows();
+
+		if (currentRows > 0 && newRows != currentRows) {
+			throw new RuntimeException("BasicArrayVector.set requires same length. Current: " + currentRows + ", New: " + newRows);
+		}
+
+		if (currentRows == 0) {
+			try {
+				if (newRows > 0) {
+					for (int i = 0; i < newRows; i++) {
+						valueVec.Append((Scalar) newValue.get(i));
+					}
+				}
+
+				rowIndices[index] = startPosValueVec + newRows;
+
+				for (int i = index + 1; i < rowIndicesSize; i++) {
+					rowIndices[i] += newRows;
+				}
+			} catch (Exception e) {
+				throw new RuntimeException("Failed to set data in BasicArrayVector: " + e.getMessage(), e);
+			}
+		} else {
+			try {
+				for (int i = 0; i < newRows; i++) {
+					Scalar scalar = (Scalar) newValue.get(i);
+					valueVec.set(startPosValueVec + i, scalar);
+				}
+			} catch (Exception e) {
+				throw new RuntimeException("Failed to set data in BasicArrayVector: " + e.getMessage(), e);
+			}
 		}
 	}
 
