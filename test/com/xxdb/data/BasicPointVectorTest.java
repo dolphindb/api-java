@@ -61,14 +61,15 @@ public class BasicPointVectorTest {
 
     @Test
     public void test_BasicPointVector_size_capacity_set() throws Exception {
-        BasicPointVector bbv = new BasicPointVector(5,6);
-        Assert.assertEquals("[(0.0, 0.0),(0.0, 0.0),(0.0, 0.0),(0.0, 0.0),(0.0, 0.0)]", bbv.getString());
+        BasicPointVector bbv = new BasicPointVector(6,7);
+        Assert.assertEquals("[(0.0, 0.0),(0.0, 0.0),(0.0, 0.0),(0.0, 0.0),(0.0, 0.0),(0.0, 0.0)]", bbv.getString());
         bbv.set(0, (Object)null);
         bbv.set(1, null);
         bbv.set(2, new Double2(1.0,9.2));
         bbv.set(3, new Double2(-1.0,-9.2));
         bbv.set(4, new Double2(Double.MIN_VALUE,Double.MIN_VALUE));
-        Assert.assertEquals("[(,),(,),(1.0, 9.2),(-1.0, -9.2),(4.9E-324, 4.9E-324)]", bbv.getString());
+        bbv.set(5, new BasicPoint(Double.MIN_VALUE,Double.MIN_VALUE));
+        Assert.assertEquals("[(,),(,),(1.0, 9.2),(-1.0, -9.2),(4.9E-324, 4.9E-324),(4.9E-324, 4.9E-324)]", bbv.getString());
     }
 
     @Test
@@ -92,7 +93,7 @@ public class BasicPointVectorTest {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals("Unsupported type: java.lang.Integer. Only Double2 or null is supported.", re);
+        assertEquals("Unsupported type: java.lang.Integer. Only Double2, BasicPoint or null is supported.", re);
     }
 
     @Test
