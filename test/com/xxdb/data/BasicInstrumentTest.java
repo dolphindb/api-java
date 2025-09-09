@@ -48,7 +48,7 @@ public class BasicInstrumentTest {
                 "    \"issuePrice\": 100.0,\n" +
                 "    \"coupon\": 0.0149,\n" +
                 "    \"frequency\": \"Annual\",\n" +
-                "    \"dayCountConvention\": \"ActualActual\"\n" +
+                "    \"dayCountConvention\": \"ActualActualISDA\"\n" +
                 "}\n" +
                 "ins = parseInstrument(fixedRateBond)\n" +
                 "ins;";
@@ -79,7 +79,7 @@ public class BasicInstrumentTest {
                 "    \"issuePrice\": 100.0,\n" +
                 "    \"coupon\": 0.0149,\n" +
                 "    \"frequency\": \"Annual\",\n" +
-                "    \"dayCountConvention\": \"ActualActual\"\n" +
+                "    \"dayCountConvention\": \"ActualActualISDA\"\n" +
                 "}\n" +
                 "ins = parseInstrument(fixedRateBond)\n" +
                 "ins;";
@@ -107,7 +107,7 @@ public class BasicInstrumentTest {
                 "    \"issuePrice\": 100.0,\n" +
                 "    \"coupon\": 0.0149,\n" +
                 "    \"frequency\": \"Annual\",\n" +
-                "    \"dayCountConvention\": \"ActualActual\"\n" +
+                "    \"dayCountConvention\": \"ActualActualISDA\"\n" +
                 "}\n" +
                 "ins = parseInstrument(fixedRateBond)\n" +
                 "ins;";
