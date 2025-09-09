@@ -27,7 +27,6 @@ public class BasicAnyVector extends AbstractVector {
 		}
 	}
 
-	@Deprecated
 	protected BasicAnyVector(Entity[] array, boolean copy) {
 		super(DATA_FORM.DF_VECTOR);
 		values = new ArrayList<>(Arrays.asList(array));
