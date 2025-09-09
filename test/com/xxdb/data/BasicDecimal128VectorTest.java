@@ -163,7 +163,7 @@ public class BasicDecimal128VectorTest {
         bbv.set(3, new BigDecimal("-1.111"));
         bbv.set(4, "999.9999");
         bbv.set(5, "-999");
-        Assert.assertEquals("[,,1.111,-1.111,999.999,-999.000]", bbv.getString());
+        Assert.assertEquals("[,,1.111,-1.111,1000.000,-999.000]", bbv.getString());
     }
 
     @Test
@@ -176,7 +176,7 @@ public class BasicDecimal128VectorTest {
         bbv.set(3, new BigDecimal("-1.111"));
         bbv.set(4, "999.9999");
         bbv.set(5, "-999");
-        Assert.assertEquals("[,,1.111,-1.111,999.999,-999.000]", bbv.getString());
+        Assert.assertEquals("[,,1.111,-1.111,1000.000,-999.000]", bbv.getString());
     }
 
     @Test

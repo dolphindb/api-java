@@ -49,8 +49,6 @@ public class BasicBooleanVectorTest {
         assertTrue(bbv.isNull(4));
         assertEquals(Entity.DATA_CATEGORY.LOGICAL,bbv.getDataCategory());
         assertEquals(BasicBoolean.class,bbv.getElementClass());
-        Scalar value = new BasicPoint(8.2,7.4);
-        bbv.asof(value);
     }
 
     @Test

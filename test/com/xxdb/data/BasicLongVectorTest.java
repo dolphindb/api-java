@@ -82,11 +82,11 @@ public class BasicLongVectorTest {
         BasicLongVector bbv = new BasicLongVector(1,1);
         String re = null;
         try{
-            bbv.add(1);
+            bbv.add("1");
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals("Unsupported type: java.lang.Integer. Only Long or null is supported.", re);
+        assertEquals("Unsupported type: java.lang.String. Only Long or null is supported.", re);
     }
 
     @Test

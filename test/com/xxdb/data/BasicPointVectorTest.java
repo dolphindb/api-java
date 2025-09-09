@@ -64,7 +64,7 @@ public class BasicPointVectorTest {
         BasicPointVector bbv = new BasicPointVector(5,6);
         Assert.assertEquals("[(0.0, 0.0),(0.0, 0.0),(0.0, 0.0),(0.0, 0.0),(0.0, 0.0)]", bbv.getString());
         bbv.set(0, (Object)null);
-        //bbv.set(1, null);
+        bbv.set(1, null);
         bbv.set(2, new Double2(1.0,9.2));
         bbv.set(3, new Double2(-1.0,-9.2));
         bbv.set(4, new Double2(Double.MIN_VALUE,Double.MIN_VALUE));

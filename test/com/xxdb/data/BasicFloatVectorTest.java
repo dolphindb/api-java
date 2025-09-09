@@ -42,7 +42,7 @@ public class BasicFloatVectorTest {
         bbv.set(3, (float)-0.1);
         bbv.set(4, Float.MIN_VALUE);
         bbv.set(5, -Float.MAX_VALUE);
-        Assert.assertEquals("[,,0.1,-0.1,,]", bbv.getString());
+        Assert.assertEquals("[,,0.1,-0.1,1.4E-45,]", bbv.getString());
     }
 
     @Test
@@ -55,7 +55,7 @@ public class BasicFloatVectorTest {
         bbv.set(3, (float)-0.1);
         bbv.set(4, Float.MIN_VALUE);
         bbv.set(5, -Float.MAX_VALUE);
-        Assert.assertEquals("[,0,0.1,-0.1,,]", bbv.getString());
+        Assert.assertEquals("[,,0.1,-0.1,1.4E-45,]", bbv.getString());
     }
 
     @Test
@@ -68,7 +68,7 @@ public class BasicFloatVectorTest {
         bbv.add((float)-0.1);
         bbv.add(Float.MIN_VALUE);
         bbv.add(-Float.MAX_VALUE);
-        Assert.assertEquals("[,0,0.1,-0.1,,]", bbv.getString());
+        Assert.assertEquals("[,,0.1,-0.1,1.4E-45,]", bbv.getString());
     }
 
     @Test

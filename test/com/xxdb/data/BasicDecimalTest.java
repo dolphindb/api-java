@@ -374,7 +374,7 @@ public class BasicDecimalTest {
                 "tt=streamTable(1:0, `sym`tradeDate`tradePrice`vwap`volume`vol`valueTrade, [SYMBOL,DATEHOUR, DOUBLE, DOUBLE, DECIMAL32(2), DECIMAL64(4), DOUBLE])\n;share tt as trades;";
         conn.run(script);
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "", "trades", false, false, null, 1000, 1,
+                "", "trades", false, false, null, 100000, 1,
                 20, "volume");
         for (int i = 0; i < 1048576; i++) {
             List<Entity> row = new ArrayList<>();

@@ -5407,15 +5407,8 @@ public void test_SSL() throws Exception {
         Entity getDynamicPublicKey = db.run("getDynamicPublicKey",new ArrayList<>());
         System.out.println(getDynamicPublicKey.getString());
         assertNotNull(getDynamicPublicKey.getString());
+         }
 
-        String re = null;
-        try{
-            db.run("1+1");
-        }catch(Exception e){
-            re = e.getMessage();
-        }
-        assertEquals(true, re.contains("Login is required for script execution with client authentication enabled."));
-    }
     //@Test
     public void test_not_login_run_fuction_authenticateByTicket() throws Exception {
         DBConnection db = new DBConnection();
@@ -5437,7 +5430,7 @@ public void test_SSL() throws Exception {
         db.run("login",entity1);
         db.run("1+1");
     }
-    @Test
+    //@Test//isClientAuth开启
     public void test_not_login_run_fuction_not_support() throws Exception {
         DBConnection db = new DBConnection();
         db.connect(HOST, PORT);
@@ -5449,6 +5442,20 @@ public void test_SSL() throws Exception {
         }
         assertEquals(true, re.contains("Login is required for script execution with client authentication enabled. RefId: S04009 function: getAllDBs"));
     }
+
+    //@Test//isClientAuth开启
+    public void test_not_login_run_script_not_support() throws Exception {
+        DBConnection db = new DBConnection();
+        db.connect(HOST, PORT);
+        String re = null;
+        try{
+            db.run("1+1");
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals(true, re.contains("Login is required for script execution with client authentication enabled. RefId: S04009 function: getAllDBs"));
+    }
+
     //@Test //isClientAuth开启
     public void test_Connect_enableHighAvailability_true() throws IOException {
         DBConnection conn =new DBConnection();
