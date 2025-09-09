@@ -3,6 +3,7 @@ package com.xxdb.data;
 import com.alibaba.fastjson2.JSONObject;
 import com.xxdb.DBConnection;
 import com.xxdb.io.*;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.awt.*;
@@ -15,6 +16,7 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.List;
 
+import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static org.junit.Assert.*;
 
 public class BasicArrayVectorTest {
@@ -1786,5 +1788,155 @@ public class BasicArrayVectorTest {
                 "a";
         BasicArrayVector bav1 = (BasicArrayVector)conn.run(script);
         assertEquals(4, bav1.getScale());
+    }
+
+    @Test
+    public void test_BasicArrayVector_BOOL_set_entity() throws Exception {
+        BasicArrayVector bav = new BasicArrayVector(DT_BOOL_ARRAY, 2);
+        bav.set(0,new BasicBooleanVector(0,0));
+        List<Byte> list = new ArrayList<>();
+        list.add(0,(byte) 1);
+        list.add(1,(byte) 1);
+        list.add(2,null);
+        list.add(3,Byte.MAX_VALUE);
+        list.add(4,(byte) 0);
+        list.add(5,(byte) 0);
+        BasicBooleanVector bbv = new BasicBooleanVector(list);
+        bav.set(1,bbv);
+        assertEquals(Entity.DATA_TYPE.DT_BOOL_ARRAY,bav.getDataType());
+        System.out.println(bav.getString());
+        assertEquals("[[],[true,true,,true,false,false]]",bav.getString());
+    }
+
+    @Test
+    public void test_BasicArrayVector_BOOL_set_entity_not_support() throws Exception {
+        BasicArrayVector bav = new BasicArrayVector(DT_BOOL_ARRAY, 2);
+        String re = null;
+        try{
+            bav.set(0,new BasicDecimal64Vector(0,0));
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        assertEquals("BasicArrayVector.set requires same data type. Expected: DT_BOOL, Got: DT_DECIMAL64",re);
+
+        String re1 = null;
+        try{
+            bav.set(0,new BasicBoolean((byte)0));
+        }catch(Exception ex){
+            re1 = ex.getMessage();
+        }
+        assertEquals("BasicArrayVector.set requires a Vector value, got: BasicBoolean",re1);
+
+        String re2 = null;
+        try{
+            bav.set(-1,new BasicBooleanVector(0,0));
+        }catch(Exception ex){
+            re2 = ex.getMessage();
+        }
+        assertEquals("Index -1 out of bounds for capacity 2",re2);
+
+        String re3 = null;
+        try{
+            bav.set(3,new BasicBooleanVector(0,0));
+        }catch(Exception ex){
+            re3 = ex.getMessage();
+        }
+        assertEquals("Index 3 out of bounds for capacity 2",re3);
+    }
+
+    @Test
+    public void test_BasicArrayVector_BOOL_set_object() throws Exception {
+        BasicArrayVector bav = new BasicArrayVector(DT_BOOL_ARRAY, 2);
+        bav.set(0,(Object) new BasicBooleanVector(0,0));
+        List<Byte> list = new ArrayList<>();
+        list.add(0,(byte) 1);
+        list.add(1,(byte) 1);
+        list.add(2,null);
+        list.add(3,Byte.MAX_VALUE);
+        list.add(4,(byte) 0);
+        list.add(5,(byte) 0);
+        BasicBooleanVector bbv = new BasicBooleanVector(list);
+        bav.set(1,(Object) bbv);
+        assertEquals(Entity.DATA_TYPE.DT_BOOL_ARRAY,bav.getDataType());
+        System.out.println(bav.getString());
+        assertEquals("[[],[true,true,,true,false,false]]",bav.getString());
+    }
+
+    @Test
+    public void test_BasicArrayVector_BOOL_set_object_null() throws Exception {
+        BasicArrayVector bav = new BasicArrayVector(DT_BOOL_ARRAY, 3);
+        String re = null;
+        try{
+            bav.set(0,(Object)null);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("Error in BasicArrayVector.set(Object): BasicArrayVector.set(Object) requires a Vector, got: null", re);
+    }
+
+    @Test
+    public void test_BasicArrayVector_BOOL_set_object_not_support() throws Exception {
+        BasicArrayVector bav = new BasicArrayVector(DT_BOOL_ARRAY, 3);
+        List<Byte> list = new ArrayList<>();
+        list.add(0,(byte) 1);
+        list.add(1,(byte) 1);
+        list.add(2,null);
+        list.add(3,Byte.MAX_VALUE);
+        list.add(4,(byte) 0);
+        list.add(5,(byte) 0);
+        String re = null;
+        try{
+            bav.set(1,list);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("Error in BasicArrayVector.set(Object): BasicArrayVector.set(Object) requires a Vector, got: ArrayList", re);
+    }
+    @Test
+    public void test_BasicArrayVector_decimal_set_entity() throws Exception {
+        BasicArrayVector bav = new BasicArrayVector(DT_DECIMAL32_ARRAY, 3,2);
+        bav.set(0,new BasicDecimal32Vector(0,0,2));
+        bav.set(1,new BasicDecimal32Vector(2,3,2));
+        String[] tmp_string_v = {"0.0","-123.00432","132.204234","100.0"};
+        BasicDecimal32Vector tmp_32_v = new BasicDecimal32Vector(tmp_string_v,2);
+        tmp_32_v.setNull(2);
+        bav.set(2,tmp_32_v);
+        assertEquals("[[],[0.00,0.00],[0.00,-123.00,,100.00]]",bav.getString());
+    }
+
+    @Test
+    public void test_BasicArrayVector_decimal_set_entity_not_support() throws Exception {
+        BasicArrayVector bav = new BasicArrayVector(DT_DECIMAL32_ARRAY, 2,2);
+        String re = null;
+        try{
+            bav.set(0,new BasicDecimal32Vector(0,0,0));
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("BasicArrayVector.set requires same scale for decimal types. Expected: 2, Got: 0", re);
+
+        String re1 = null;
+        try{
+            bav.set(0,new BasicDecimal64Vector(0,0,2));
+        }catch(Exception ex){
+            re1 = ex.getMessage();
+        }
+        Assert.assertEquals("BasicArrayVector.set requires same data type. Expected: DT_DECIMAL32, Got: DT_DECIMAL64", re1);
+
+        String re2 = null;
+        try{
+            bav.set(0,new BasicBoolean((byte)0));
+        }catch(Exception ex){
+            re2 = ex.getMessage();
+        }
+        Assert.assertEquals("BasicArrayVector.set requires a Vector value, got: BasicBoolean", re2);
+
+        String re3 = null;
+        try{
+            bav.set(0,new BasicDecimal32(0,2));
+        }catch(Exception ex){
+            re3 = ex.getMessage();
+        }
+        Assert.assertEquals("BasicArrayVector.set requires a Vector value, got: BasicDecimal32", re3);
     }
 }
