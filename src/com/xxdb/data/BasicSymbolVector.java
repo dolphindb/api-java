@@ -184,7 +184,11 @@ public class BasicSymbolVector extends AbstractVector {
 	}
 
 	public void set(int index, Entity value) throws Exception {
-		values[index] = base.find(value.getString(), true);
+		if (value == null) {
+			setNull(index);
+		} else {
+			values[index] = base.find(value.getString(), true);
+		}
 	}
 
 	@Override
@@ -198,8 +202,12 @@ public class BasicSymbolVector extends AbstractVector {
 		}
 	}
 
-	public void setString(int index, String value){
-		values[index] = base.find(value, true);
+	public void setString(int index, String value) {
+		if (value == null) {
+			setNull(index);
+		} else {
+			values[index] = base.find(value, true);
+		}
 	}
 	
 	@Override
@@ -238,7 +246,7 @@ public class BasicSymbolVector extends AbstractVector {
 
 	@Override
 	public void setNull(int index) {
-		setString(index,"");
+		values[index] = 0;
 	}
 
 	@Override
