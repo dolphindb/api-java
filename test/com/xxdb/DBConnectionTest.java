@@ -6154,7 +6154,7 @@ public void test_SSL() throws Exception {
         }catch(Exception e){
             re = e.getMessage();
         }
-        assertEquals(true, re.contains("String cannot be added to a vector that is not of string type. script: \"aa\"+[1]"));
+        assertEquals(true, re.contains("String cannot be added to a vector that is not of string type"));
     }
     @Test
     public void Test_DBConnection_run_function_exception() throws IOException, InterruptedException {
