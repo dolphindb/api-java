@@ -129,7 +129,7 @@ public class SimpleDBConnectionPoolTest {
         config1.setPassword("123456");
         config1.setEnableHighAvailability(true);
         config1.setLoadBalance(true);
-        config1.setMinimumPoolSize(101);
+        config1.setMinimumPoolSize(100);
         config1.setMaximumPoolSize(200);
         config1.setHighAvailabilitySites(ipports);
         pool = new SimpleDBConnectionPool(config1);

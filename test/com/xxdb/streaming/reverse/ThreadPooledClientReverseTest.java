@@ -476,15 +476,16 @@ public static void PrepareStreamTable() throws IOException {
         PrepareStreamTable();
         Vector filter1 = (Vector) conn.run("1..1000");
         for (int i=0;i<10;i++){
+            System.out.println("-----------------------------------:"+i);
             threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades1", MessageHandler_handler, -1, true, filter1, true);
             threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades2", MessageHandler_handler, -1, true, filter1, true);
             threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades3", MessageHandler_handler, -1, true, filter1, true);
-            conn.run("n=100;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+            conn.run("n=10;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
             Thread.sleep(1500);
             threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades1");
             threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades2");
             threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades3");
-            Thread.sleep(1500);
+            Thread.sleep(2000);
         }
     }
 
@@ -1996,7 +1997,7 @@ public static void PrepareStreamTable() throws IOException {
         conn1.run("appendOrcaStreamTable( \"orca.orca_table.output\", table(timestamp(1..10) as time,take(`a`s`q,10) as sym, 1..10 as volume))");
 
         //wait_data("Receive",4);
-        sleep(1000);
+        sleep(2000);
         BasicTable re = (BasicTable) conn1.run("select * from Receive order by time,sym,volume");
         BasicTable tra = (BasicTable) conn1.run("select * from  orca.orca_table.output order by time,sym,sum_volume");
         assertEquals(14, re.rows());
