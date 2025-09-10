@@ -1179,6 +1179,10 @@ public abstract class AbstractClient implements MessageDispatcher {
     }
 
     public boolean getNewLeader(String s, Object[] hostPort) {
+        if (Objects.isNull(s)) {
+            return false;
+        }
+
         int index = s.indexOf("<NotLeader>");
         if (index == -1) {
             return false;
