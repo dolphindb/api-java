@@ -10,6 +10,7 @@ import com.xxdb.streaming.client.AbstractClient;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.MessageHandler;
 import com.xxdb.streaming.client.Site;
+import com.xxdb.data.Vector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
@@ -34,13 +35,17 @@ public class EventClient extends AbstractClient {
     }
 
     public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, String userName, String password) throws IOException {
+        subscribe(host, port, tableName, actionName, handler, offset, reconnect, null, userName, password);
+    }
+
+    public void subscribe(String host, int port, String tableName, String actionName, MessageHandler handler, long offset, boolean reconnect, Vector filter, String userName, String password) throws IOException {
         if (Utils.isEmpty(tableName))
             throw new IllegalArgumentException("EventClient subscribe 'tableName' param cannot be null or empty.");
 
         if (Utils.isEmpty(actionName))
             actionName = DEFAULT_ACTION_NAME;
 
-        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, null, null, false, userName, password, false);
+        BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, null, false, userName, password, false);
         if (queue == null) {
             System.err.println("Subscription already made, handler loop not created.");
             return;
@@ -68,7 +73,7 @@ public class EventClient extends AbstractClient {
                 eventTypes.clear();
                 attributes.clear();
 
-                // todo notice，here MessageParser handled col to row;
+                // todo notice, here MessageParser handled col to row;
                 if (!eventHandler.deserializeEvent(msgs, eventTypes, attributes, errorInfo)) {
                     System.out.println("deserialize fail " + errorInfo.getErrorInfo());
                     continue;
@@ -141,7 +146,7 @@ public class EventClient extends AbstractClient {
     protected boolean doReconnect(Site site) {
         try {
             site.getHost();
-            subscribe(site.getHost(), site.getPort(), site.getTableName(), site.getActionName(), site.getHandler(), site.getMsgId() + 1, true, site.getUserName(), site.getPassWord());
+            subscribe(site.getHost(), site.getPort(), site.getTableName(), site.getActionName(), site.getHandler(), site.getMsgId() + 1, true, site.getFilter(), site.getUserName(), site.getPassWord());
             Date d = new Date();
             DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             log.info(df.format(d) + " Successfully reconnected and subscribed " + site.getHost() + ":" + site.getPort() + "/" + site.getTableName() + "/" + site.getActionName());
