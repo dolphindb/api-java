@@ -1757,4 +1757,335 @@ public class EventClientTest {
                 "------- ------- --------\n" +
                 "test2   [1,1.1] [1,1.1] \n", bt3.getString());
     }
+
+    @Test//客户真实场景
+    public  void test_EventClient_Double_vector_1() throws IOException, InterruptedException {
+        conn1 = new DBConnection();
+        conn1.connect(HOST, PORT, "admin", "123456");
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n" +
+                "share table(1:0,[\"stringv\",\"doublev\",\"double1v\"],[STRING, DOUBLE[],DOUBLE[]]) as outputTable;\n" ;
+        conn.run(script);
+        String script1 ="class StockTick{\n" +
+                "    name :: STRING \n" +
+                "    price :: FLOAT \n" +
+                "    def StockTick(name_, price_){\n" +
+                "        name = name_\n" +
+                "        price = price_\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "class BondDepth{\n" +
+                "    contract :: STRING \n" +
+                "    bidYields :: DOUBLE VECTOR \n" +
+                "    ofrYields :: DOUBLE VECTOR \n" +
+                "    bidouantities :: INT VECTOR \n" +
+                "    ofrouantities :: INT VECTOR \n" +
+                "\n" +
+                "    def BondDepth(contract_, bidYields_, ofrYields_,bidouantities_,ofrouantities_){\n" +
+                "        contract = contract_\n" +
+                "        bidYields = bidYields_\n" +
+                "        ofrYields = ofrYields_\n" +
+                "        bidouantities = bidouantities_\n" +
+                "        ofrouantities = ofrouantities_\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "class SimpleShareSearch:CEPMonitor {\n" +
+                "        //保存最新的 StockTick 事件\n" +
+                "        newTick :: StockTick \n" +
+                "        def SimpleShareSearch(){\n" +
+                "                newTick = StockTick(\"init\", 0.0)\n" +
+                "        }\n" +
+                "        def processTick(stockTickEvent)\n" +
+                "        \n" +
+                "        def onload() {\n" +
+                "                addEventListener(handler=processTick, eventType=\"BondDepth\", times=\"all\")\n" +
+                "        } \n" +
+                "        def processTick(BondDepth) { \n" +
+                "                str = \"+++++++++++++++++++++++ BondDepth event received\" + now(true)$STRING\n" +
+                "                writeLog(str)\n" +
+                "        }\n" +
+                "}\n" +
+                "\n" +
+                " try {unsubscribeTable(tableName=\"testInput\", actionName=\"test1235\")} catch(ex) {}\n" +
+                "go\n" +
+                " try {undef(`testInput,SHARED)} catch(ex) {}\n" +
+                "share(streamTable(array(STRING, 0) as eventType, array(BLOB, 0) as eventBody), `testInput)\n" +
+                "go\n" +
+                "\n" +
+                "try {dropStreamEngine(`simpleMonitor)} catch(ex) {}\n" +
+                "createCEPEngine(name=\"simpleMonitor\", monitors=<SimpleShareSearch()>, dummyTable=testInput, eventSchema=[StockTick,BondDepth])\n" +
+                "\n" +
+                "subscribeTable(tableName=\"testInput\", actionName=\"test1235\", handler=getStreamEngine(`simpleMonitor), msgAsTable=true)\n" +
+                "go\n" +
+                "eventSchema =  getCEPEngineStat(engine=\"simpleMonitor\").eventSchema\n" +
+                "try {dropStreamEngine(`testSerializer)} catch(ex) {}\n" +
+                "ses = streamEventSerializer(name=\"testSerializer\", eventSchema=eventSchema, outputTable=testInput)\n" +
+                "\n" +
+                "depth = BondDepth(\"test2.11TB\", [3.01], [3.0], [10000000], [10000000])\n" +
+                "ses.appendEvent(depth)";
+        conn.run(script1);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("BondDepth");
+        scheme.setFieldNames(Arrays.asList("contract", "bidYields", "ofrYields", "bidouantities", "ofrouantities"));
+        scheme.setFieldTypes(Arrays.asList( DT_STRING, DT_DOUBLE, DT_DOUBLE, DT_INT, DT_INT));
+        scheme.setFieldForms(Arrays.asList(  DF_SCALAR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
+        //scheme.setFieldExtraParams(Arrays.asList( 0, 0, 0));
+
+        List<EventSchema> eventSchemes = Collections.singletonList(scheme);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "testInput", eventSchemes, eventTimeFields, commonFields);
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicString("test2.11TB"));
+        attributes.add(new BasicDoubleVector(new double[]{3.01}));
+        attributes.add(new BasicDoubleVector(new double[]{3.0}));
+        attributes.add(new BasicIntVector((Collections.singletonList(10000000))));
+        attributes.add(new BasicIntVector((Collections.singletonList(10000000))));
+        sender.sendEvent("BondDepth", attributes);
+
+        BasicTable bt1 = (BasicTable)conn.run("select * from testInput;");
+        Assert.assertEquals(2,bt1.rows());
+        System.out.println(bt1.getString());
+        Assert.assertEquals(bt1.getColumn(0).get(0),bt1.getColumn(0).get(1));
+        Assert.assertEquals(bt1.getColumn(1).get(0),bt1.getColumn(1).get(1));
+    }
+    public static  EventMessageHandler handler_schema_two = new EventMessageHandler() {
+        @Override
+        public void doEvent(String eventType, List<Entity> attribute) {
+//            System.out.println("eventType: " + eventType);
+//            System.out.println(attribute.toString());
+            try {
+                if(eventType.contains("event_bool")){
+                    conn.run("tableInsert{outputTable1}", attribute);
+                }else{
+                    conn.run("tableInsert{outputTable2}", attribute);
+                }
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
+    @Test
+    public  void test_EventClient_subscribe_filter_null() throws IOException, InterruptedException {
+        String script = "share streamTable(1:0, `eventType`blobs, [STRING,BLOB]) as inputTable;\n" +
+                "share table(100:0, `boolv`intv, [BOOL, INT]) as outputTable1;\n" +
+                "share table(100:0, `boolv`intv, [BOOL, INT]) as outputTable2;\n";
+        conn.run(script);
+        String script1 =
+                " class event_bool{\n" +
+                        "boolv :: BOOL\n" +
+                        "intv :: INT\n" +
+                        "\n" +
+                        "  def event_bool(bool,int){\n" +
+                        "boolv = bool\n" +
+                        "intv = int\n" +
+                        "  }\n" +
+                        "} " +
+                        "class event_int{\n" +
+                        "boolv :: BOOL\n" +
+                        "intv :: INT\n" +
+                        "\n" +
+                        "  def event_int(bool,int){\n" +
+                        "boolv = bool\n" +
+                        "intv = int\n" +
+                        "  }\n" +
+                        "} " +
+                        "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[], ) as type, array(INT[], 0) as form)\n" +
+                        "eventType = ['event_bool', 'event_int']\n" +
+                        "eventKeys = ['boolv,intv','boolv,intv'];\n" +
+                        "typeV = [[BOOL, INT],[BOOL, INT]];\n" +
+                        "formV = [[SCALAR, SCALAR], [SCALAR, SCALAR]];\n" +
+                        "insert into schemaTable values(eventType, eventKeys, typeV, formV);\n" +
+                        "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput;\n" +
+                        "setStreamTableFilterColumn(objByName(`intput),`eventType);\n" +
+                        "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
+                        "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput);" ;
+        conn.run(script1);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("event_bool");
+        scheme.setFieldNames(Arrays.asList("boolv", "intv"));
+        scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_INT));
+        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
+        scheme.setFieldExtraParams(Arrays.asList(null, null));
+
+        EventSchema scheme1 = new EventSchema();
+        scheme1.setEventType("event_int");
+        scheme1.setFieldNames(Arrays.asList("boolv", "intv"));
+        scheme1.setFieldTypes(Arrays.asList(DT_BOOL, DT_INT));
+        scheme1.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
+        scheme1.setFieldExtraParams(Arrays.asList(null, null));
+        List<EventSchema> eventSchemas = new ArrayList<>();
+        eventSchemas.add(scheme);
+        eventSchemas.add(scheme1);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+
+        EventClient client = new EventClient(eventSchemas, eventTimeFields, commonFields);
+
+        client.subscribe(HOST, PORT, "intput", "test1", handler_schema_two, -1, true,null, "admin", "123456");
+        String script2 = "event1 = event_bool(false,1);\n" +
+                "event2 = event_bool(false,2);\n" +
+                "event3 = event_int(true,3);\n" +
+                "event4 = event_int(true,4);\n" +
+                "appendEvent(inputSerializer, [event1, event2, event3, event4]);";
+        conn.run(script2);
+        sleep(5000);
+        BasicTable bt2 = (BasicTable)conn.run("select * from outputTable1;");
+        Assert.assertEquals(2,bt2.rows());
+        Assert.assertEquals("boolv intv\n" +
+                "----- ----\n" +
+                "false 1   \n" +
+                "false 2   \n", bt2.getString());
+        BasicTable bt3 = (BasicTable)conn.run("select * from outputTable2;");
+        Assert.assertEquals(2,bt3.rows());
+        Assert.assertEquals("boolv intv\n" +
+                "----- ----\n" +
+                "true  3   \n" +
+                "true  4   \n", bt3.getString());
+    }
+
+    @Test
+    public  void test_EventClient_subscribe_filter() throws IOException, InterruptedException {
+        String script = "share streamTable(1:0, `eventType`blobs, [STRING,BLOB]) as inputTable;\n" +
+                "share table(100:0, `boolv`intv, [BOOL, INT]) as outputTable;\n";
+        conn.run(script);
+        String script1 =
+                " class event_bool{\n" +
+                "boolv :: BOOL\n" +
+                "intv :: INT\n" +
+                "\n" +
+                "  def event_bool(bool,int){\n" +
+                "boolv = bool\n" +
+                "intv = int\n" +
+                "  }\n" +
+                "} " +
+                "class event_int{\n" +
+                "boolv :: BOOL\n" +
+                "intv :: INT\n" +
+                "\n" +
+                "  def event_int(bool,int){\n" +
+                "boolv = bool\n" +
+                "intv = int\n" +
+                "  }\n" +
+                "} " +
+                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[], ) as type, array(INT[], 0) as form)\n" +
+                "eventType = ['event_bool', 'event_int']\n" +
+                "eventKeys = ['boolv,intv','boolv,intv'];\n" +
+                "typeV = [[BOOL, INT],[BOOL, INT]];\n" +
+                "formV = [[SCALAR, SCALAR], [SCALAR, SCALAR]];\n" +
+                "insert into schemaTable values(eventType, eventKeys, typeV, formV);\n" +
+                "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput;\n" +
+                "setStreamTableFilterColumn(objByName(`intput),`eventType);\n" +
+                "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
+                "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput);" ;
+        conn.run(script1);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("event_bool");
+        scheme.setFieldNames(Arrays.asList("boolv", "intv"));
+        scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_INT));
+        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
+        scheme.setFieldExtraParams(Arrays.asList(null, null));
+        List<EventSchema> eventSchemas = Collections.singletonList(scheme);
+
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+
+        EventClient client = new EventClient(eventSchemas, eventTimeFields, commonFields);
+        Vector filter1 =new BasicStringVector(new String[]{"event_bool"});
+        client.subscribe(HOST, PORT, "intput", "test1", handler, -1, true, filter1, "admin", "123456");
+
+        String script2 = "event1 = event_bool(false,1);\n" +
+                "event2 = event_bool(false,2);\n" +
+                "event3 = event_int(true,3);\n" +
+                "event4 = event_int(true,4);\n" +
+                "appendEvent(inputSerializer, [event1, event2, event3, event4]);";
+        conn.run(script2);
+        sleep(5000);
+        BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
+        Assert.assertEquals(2,bt2.rows());
+        Assert.assertEquals("boolv intv\n" +
+                "----- ----\n" +
+                "false 1   \n" +
+                "false 2   \n", bt2.getString());
+    }
+
+    @Test
+    public  void test_EventClient_subscribe_filter_1() throws IOException, InterruptedException {
+        String script = "share streamTable(1:0, `eventType`blobs, [STRING,BLOB]) as inputTable;\n" +
+                "share table(100:0, `boolv`intv, [BOOL, INT]) as outputTable;\n";
+        conn.run(script);
+        String script1 =
+                " class event_bool{\n" +
+                        "boolv :: BOOL\n" +
+                        "intv :: INT\n" +
+                        "\n" +
+                        "  def event_bool(bool,int){\n" +
+                        "boolv = bool\n" +
+                        "intv = int\n" +
+                        "  }\n" +
+                        "} " +
+                        "class event_int{\n" +
+                        "boolv :: BOOL\n" +
+                        "intv :: INT\n" +
+                        "\n" +
+                        "  def event_int(bool,int){\n" +
+                        "boolv = bool\n" +
+                        "intv = int\n" +
+                        "  }\n" +
+                        "} " +
+                        "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[], ) as type, array(INT[], 0) as form)\n" +
+                        "eventType = ['event_bool', 'event_int']\n" +
+                        "eventKeys = ['boolv,intv','boolv,intv'];\n" +
+                        "typeV = [[BOOL, INT],[BOOL, INT]];\n" +
+                        "formV = [[SCALAR, SCALAR], [SCALAR, SCALAR]];\n" +
+                        "insert into schemaTable values(eventType, eventKeys, typeV, formV);\n" +
+                        "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput;\n" +
+                        "setStreamTableFilterColumn(objByName(`intput),`eventType);\n" +
+                        "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
+                        "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput);" ;
+        conn.run(script1);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("event_bool");
+        scheme.setFieldNames(Arrays.asList("boolv", "intv"));
+        scheme.setFieldTypes(Arrays.asList(DT_BOOL, DT_INT));
+        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
+        scheme.setFieldExtraParams(Arrays.asList(null, null));
+
+        EventSchema scheme1 = new EventSchema();
+        scheme1.setEventType("event_int");
+        scheme1.setFieldNames(Arrays.asList("boolv", "intv"));
+        scheme1.setFieldTypes(Arrays.asList(DT_BOOL, DT_INT));
+        scheme1.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR));
+        scheme1.setFieldExtraParams(Arrays.asList(null, null));
+        List<EventSchema> eventSchemas = new ArrayList<>();
+        eventSchemas.add(scheme);
+        eventSchemas.add(scheme1);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+
+        EventClient client = new EventClient(eventSchemas, eventTimeFields, commonFields);
+        Vector filter1 =new BasicStringVector(new String[]{"event_bool"});
+        client.subscribe(HOST, PORT, "intput", "test1", handler, -1, true, filter1, "admin", "123456");
+
+        Vector filter2 =new BasicStringVector(new String[]{"event_int"});
+        client.subscribe(HOST, PORT, "intput", "test2", handler, -1, true, filter2, "admin", "123456");
+
+        String script2 = "event1 = event_bool(false,1);\n" +
+                "event2 = event_bool(false,2);\n" +
+                "event3 = event_int(true,3);\n" +
+                "event4 = event_int(true,4);\n" +
+                "appendEvent(inputSerializer, [event1, event2, event3, event4]);";
+        conn.run(script2);
+        sleep(2000);
+        BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
+        Assert.assertEquals(4,bt2.rows());
+        Assert.assertEquals("boolv intv\n" +
+                "----- ----\n" +
+                "true  3   \n" +
+                "false 1   \n" +
+                "true  4   \n" +
+                "false 2   \n", bt2.getString());
+    }
 }
