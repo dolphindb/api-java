@@ -17,6 +17,7 @@ import java.util.*;
 import static com.xxdb.Prepare.*;
 import static com.xxdb.data.Entity.DATA_TYPE.*;
 import static com.xxdb.data.Entity.DATA_FORM.*;
+import static java.lang.Thread.sleep;
 
 public class EventSenderTest {
     public static DBConnection conn ;
@@ -2325,33 +2326,159 @@ public class EventSenderTest {
         checkData(bt1,bt2);
         client.unsubscribe(HOST, PORT, "intput1", "test1");
     }
-    //@Test//not support
-    public  void test_EventSender_all_dateType_any() throws IOException {
+    @Test
+    public  void test_EventSender_any() throws Exception {
         EventSchema scheme = new EventSchema();
-        scheme.setEventType("event_all_array_dateType");
-        scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "datehourv", "uuidv", "ippaddrv", "int128v", "pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
-        scheme.setFieldTypes(Arrays.asList(DT_BOOL_ARRAY, DT_BYTE_ARRAY, DT_SHORT_ARRAY, DT_INT_ARRAY, DT_LONG_ARRAY, DT_DOUBLE_ARRAY, DT_FLOAT_ARRAY, DT_DATE_ARRAY,DT_MONTH_ARRAY, DT_TIME_ARRAY, DT_MINUTE_ARRAY, DT_SECOND_ARRAY, DT_DATETIME_ARRAY, DT_TIMESTAMP_ARRAY, DT_NANOTIME_ARRAY, DT_NANOTIMESTAMP_ARRAY, DT_DATEHOUR_ARRAY, DT_UUID_ARRAY, DT_IPADDR_ARRAY, DT_INT128_ARRAY, DT_POINT_ARRAY, DT_COMPLEX_ARRAY, DT_DECIMAL32_ARRAY, DT_DECIMAL64_ARRAY, DT_DECIMAL128_ARRAY));
-        scheme.setFieldForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
-        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, 2, 7,19));
+        scheme.setEventType("event_any");
+        scheme.setFieldNames(Arrays.asList( "any1", "any2", "any3" ));
+        scheme.setFieldTypes(Arrays.asList( DT_ANY, DT_ANY, DT_ANY));
+        scheme.setFieldForms(Arrays.asList(  DF_VECTOR, DF_VECTOR, DF_VECTOR));
+        scheme.setFieldExtraParams(Arrays.asList( null, null, null));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
         List<String> eventTimeFields = new ArrayList<>();
         List<String> commonFields = new ArrayList<>();
-        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n";
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n" +
+                "n=100;\n" +
+                "num=3;\n" +
+                "intv = int(rand(rand(-100..100, 1000) join take(int(), 4), n));\n" +
+                "any1 = cut(take([true, false, NULL], n*num), num);\n" +
+                "any2 = cut(take(char(-100..100 join NULL), n*num), num);\n" +
+                "any3 = cut(take(short(-100..100 join NULL), n*num), num);\n" +
+                "share  table(intv, any1, any2, any3) as data;";
         conn.run(script);
+        String script1 ="class event_any{\n" +
+                "\tany1 :: ANY \n" +
+                "\tany2 :: ANY \n" +
+                "\tany3 :: ANY \n" +
+                "  def event_any(any1V,any2V,any3V){\n" +
+                "\tany1 = any1V\n" +
+                "\tany2 = any2V\n" +
+                "\tany3 = any3V\n" +
+                "  \t}\n" +
+                "}   \n" +
+                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[],0 ) as type, array(INT[], 0) as form)\n" +
+                "eventType = 'event_any'\n" +
+                "eventKeys = 'any1, any2, any3';\n" +
+                "typeV = [ANY, ANY, ANY];\n" +
+                "formV = [SCALAR, SCALAR, SCALAR];\n" +
+                "insert into schemaTable values([eventType], [eventKeys], [typeV], [formV]);\n" +
+                "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput1;\n" +
+                "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
+                "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput1);";
+        conn.run(script1);
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
-        Preparedata_array(100,10);
         BasicTable bt = (BasicTable)conn.run("select * from data");
-        List<Entity> attributes = new ArrayList<>();
-        for(int j=0;j<bt.columns();j++){
-            Entity pt = (bt.getColumn(j));
-            System.out.println(pt.getDataType());
-            System.out.println(  j + "列：" + pt.getString());
-            attributes.add(pt);
+        String script2 = "data1=select * from data;\n" +
+                "for(i in 0..99){\n" +
+                "    any1v=array(ANY,0).append!(data1.row(i)[`any1])\n" +
+                "    any2v=array(ANY,0).append!(data1.row(i)[`any2])\n" +
+                "    any3v=array(ANY,0).append!(data1.row(i)[`any3])\n" +
+                "    event_any1=event_any( any1v, any2v, any3v)\n" +
+                "    appendEvent(inputSerializer, event_any1)\n" +
+                "\t}" ;
+        conn.run(script2);
+        Vector column = bt.getColumn(1);
+        for(int i=0;i<bt.rows();i++){
+            List<Entity> attributes = new ArrayList<>();
+            for(int j=1;j<bt.columns();j++){
+                BasicAnyVector bav = new BasicAnyVector(1);
+                bav.set(0,bt.getColumn(j).get(i));
+                attributes.add(bav);
+            }
+            sender.sendEvent("event_any",attributes);
         }
-        sender.sendEvent("event_all_array_dateType",attributes);
+        BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
+        System.out.println(bt1.getString());
+        Assert.assertEquals(100,bt1.rows());
+        BasicTable bt2 = (BasicTable)conn.run("select * from intput1;");
+        Assert.assertEquals(100,bt2.rows());
+        checkData(bt1,bt2);
+    }
+    @Test//
+    public  void test_EventSender_any_1() throws IOException, InterruptedException {
+        conn1 = new DBConnection();
+        conn1.connect(HOST, PORT, "admin", "123456");
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n" +
+                "share table(1:0,[\"stringv\",\"doublev\"],[STRING, ANY]) as outputTable;\n" ;
+        conn.run(script);
+        String script1 ="class StockTick{\n" +
+                "    name :: STRING \n" +
+                "    price :: FLOAT \n" +
+                "    def StockTick(name_, price_){\n" +
+                "        name = name_\n" +
+                "        price = price_\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "class BondDepth{\n" +
+                "    contract :: STRING \n" +
+                "    bidYields :: ANY\n" +
+                "\n" +
+                "    def BondDepth(contract_, bidYields_){\n" +
+                "        contract = contract_\n" +
+                "        bidYields = bidYields_\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "class SimpleShareSearch:CEPMonitor {\n" +
+                "        //保存最新的 StockTick 事件\n" +
+                "        newTick :: StockTick \n" +
+                "        def SimpleShareSearch(){\n" +
+                "                newTick = StockTick(\"init\", 0.0)\n" +
+                "        }\n" +
+                "        def processTick(stockTickEvent)\n" +
+                "        \n" +
+                "        def onload() {\n" +
+                "                addEventListener(handler=processTick, eventType=\"BondDepth\", times=\"all\")\n" +
+                "        } \n" +
+                "        def processTick(BondDepth) { \n" +
+                "                str = \"+++++++++++++++++++++++ BondDepth event received\" + now(true)$STRING\n" +
+                "                writeLog(str)\n" +
+                "        }\n" +
+                "}\n" +
+                "\n" +
+                " try {unsubscribeTable(tableName=\"testInput\", actionName=\"test1235\")} catch(ex) {}\n" +
+                "go\n" +
+                " try {undef(`testInput,SHARED)} catch(ex) {}\n" +
+                "share(streamTable(array(STRING, 0) as eventType, array(BLOB, 0) as eventBody), `testInput)\n" +
+                "go\n" +
+                "\n" +
+                "try {dropStreamEngine(`simpleMonitor)} catch(ex) {}\n" +
+                "createCEPEngine(name=\"simpleMonitor\", monitors=<SimpleShareSearch()>, dummyTable=testInput, eventSchema=[StockTick,BondDepth])\n" +
+                "\n" +
+                "subscribeTable(tableName=\"testInput\", actionName=\"test1235\", handler=getStreamEngine(`simpleMonitor), msgAsTable=true)\n" +
+                "go\n" +
+                "eventSchema =  getCEPEngineStat(engine=\"simpleMonitor\").eventSchema\n" +
+                "try {dropStreamEngine(`testSerializer)} catch(ex) {}\n" +
+                "ses = streamEventSerializer(name=\"testSerializer\", eventSchema=eventSchema, outputTable=testInput)\n" +
+                "\n" +
+                "depth = BondDepth(\"test2\", (111,`1))\n" +
+                "ses.appendEvent(depth)";
+        conn.run(script1);
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("BondDepth");
+        scheme.setFieldNames(Arrays.asList("contract", "bidYields"));
+        scheme.setFieldTypes(Arrays.asList( DT_STRING, DT_ANY));
+        scheme.setFieldForms(Arrays.asList(  DF_SCALAR, DF_VECTOR));
+        scheme.setFieldExtraParams(Arrays.asList( 0, 0));
+
+        List<EventSchema> eventSchemes = Collections.singletonList(scheme);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "inputTable", eventSchemes, eventTimeFields, commonFields);
+        EventClient client = new EventClient(eventSchemes, eventTimeFields, commonFields);
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(new BasicString("test2"));
+        BasicAnyVector bbb = (BasicAnyVector)conn.run("(111,`1)");
+        attributes.add(bbb);
+        sender.sendEvent("BondDepth", attributes);
         BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
         Assert.assertEquals(1,bt1.rows());
+        BasicTable bt2 = (BasicTable)conn.run("select * from testInput;");
+        Assert.assertEquals(1,bt2.rows());
+        checkData(bt1,bt2);
     }
+
     @Test
     public  void test_EventSender_Double_vector() throws IOException, InterruptedException {
         String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+

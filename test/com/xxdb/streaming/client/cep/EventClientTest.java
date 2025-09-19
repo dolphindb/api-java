@@ -1536,40 +1536,68 @@ public class EventClientTest {
     }
 
     //@Test//not support
-    public  void test_EventClient_all_dateType_ANY() throws IOException, InterruptedException {
-        String script0 = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n"+
-                "colNames=\"col\"+string(1..25);\n" +
-                "colTypes=[BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[], DATEHOUR[],UUID[],IPADDR[],INT128[],POINT[],COMPLEX[],DECIMAL32(2)[],DECIMAL64(7)[],DECIMAL128(10)[]];\n" +
-                "share table(1:0,colNames,colTypes) as outputTable;\n" ;
-        conn.run(script0);
+    public  void test_EventClient_ANY() throws IOException, InterruptedException {
         EventSchema scheme = new EventSchema();
-        scheme.setEventType("event_all_array_dateType");
-        scheme.setFieldNames(Arrays.asList("boolv", "charv", "shortv", "intv", "longv", "doublev", "floatv", "datev", "monthv", "timev", "minutev", "secondv", "datetimev", "timestampv", "nanotimev", "nanotimestampv", "datehourv", "uuidv", "ippaddrv", "int128v", "pointv", "complexv", "decimal32v", "decimal64v", "decimal128v"));
-        scheme.setFieldTypes(Arrays.asList(DT_BOOL_ARRAY, DT_BYTE_ARRAY, DT_SHORT_ARRAY, DT_INT_ARRAY, DT_LONG_ARRAY, DT_DOUBLE_ARRAY, DT_FLOAT_ARRAY, DT_DATE_ARRAY,DT_MONTH_ARRAY, DT_TIME_ARRAY, DT_MINUTE_ARRAY, DT_SECOND_ARRAY, DT_DATETIME_ARRAY, DT_TIMESTAMP_ARRAY, DT_NANOTIME_ARRAY, DT_NANOTIMESTAMP_ARRAY, DT_DATEHOUR_ARRAY, DT_UUID_ARRAY, DT_IPADDR_ARRAY, DT_INT128_ARRAY, DT_POINT_ARRAY, DT_COMPLEX_ARRAY, DT_DECIMAL32_ARRAY, DT_DECIMAL64_ARRAY, DT_DECIMAL128_ARRAY));
-        scheme.setFieldForms(Arrays.asList( DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR, DF_VECTOR));
-        scheme.setFieldExtraParams(Arrays.asList(null, null, null, null, null, null, null, null, null, null, null, null,null, null, null, null, null, null, null, null, null, null, 2, 7,19));
+        scheme.setEventType("event_any");
+        scheme.setFieldNames(Arrays.asList( "any1", "any2", "any3" ));
+        scheme.setFieldTypes(Arrays.asList( DT_ANY, DT_ANY, DT_ANY));
+        scheme.setFieldForms(Arrays.asList(  DF_VECTOR, DF_VECTOR, DF_VECTOR));
+        scheme.setFieldExtraParams(Arrays.asList( null, null, null));
         List<EventSchema> eventSchemas = Collections.singletonList(scheme);
         List<String> eventTimeFields = new ArrayList<>();
         List<String> commonFields = new ArrayList<>();
-        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n";
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n" +
+                "share table(1:0,`any1`any2`any3,[ANY,ANY,ANY]) as outputTable;\n" +
+                "n=100;\n" +
+                "num=3;\n" +
+                "intv = int(rand(rand(-100..100, 1000) join take(int(), 4), n));\n" +
+                "any1 = cut(take([true, false, NULL], n*num), num);\n" +
+                "any2 = cut(take(char(-100..100 join NULL), n*num), num);\n" +
+                "any3 = cut(take(short(-100..100 join NULL), n*num), num);\n" +
+                "share  table(intv, any1, any2, any3) as data;";
         conn.run(script);
-        EventSender sender = new EventSender(conn, "inputTable", eventSchemas, eventTimeFields, commonFields);
+        String script1 ="class event_any{\n" +
+                "\tany1 :: ANY \n" +
+                "\tany2 :: ANY \n" +
+                "\tany3 :: ANY \n" +
+                "  def event_any(any1V,any2V,any3V){\n" +
+                "\tany1 = any1V\n" +
+                "\tany2 = any2V\n" +
+                "\tany3 = any3V\n" +
+                "  \t}\n" +
+                "}   \n" +
+                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[],0 ) as type, array(INT[], 0) as form)\n" +
+                "eventType = 'event_any'\n" +
+                "eventKeys = 'any1, any2, any3';\n" +
+                "typeV = [ANY, ANY, ANY];\n" +
+                "formV = [SCALAR, SCALAR, SCALAR];\n" +
+                "insert into schemaTable values([eventType], [eventKeys], [typeV], [formV]);\n" +
+                "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput1;\n" +
+                "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
+                "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput1);";
+        conn.run(script1);
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         EventClient client = new EventClient(eventSchemas, eventTimeFields, commonFields);
-        client.subscribe(HOST, PORT, "inputTable", "test1", handler_array, -1, true, "admin", "123456");
-        Preparedata_array(100,10);
+        //需要新写一个handler
+        client.subscribe(HOST, PORT, "intput1", "test1", handler_array, -1, true, "admin", "123456");
+
         BasicTable bt = (BasicTable)conn.run("select * from data");
-        List<Entity> attributes = new ArrayList<>();
-        for(int j=0;j<bt.columns();j++){
-            Entity pt = (bt.getColumn(j));
-            System.out.println(pt.getDataType());
-            System.out.println(  j + "列：" + pt.getString());
-            attributes.add(pt);
-        }
-        sender.sendEvent("event_all_array_dateType",attributes);
-        BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
-        Assert.assertEquals(1,bt1.rows());
-        Assert.assertEquals(1,bt1.rows());
+        String script2 = "data1=select * from data;\n" +
+                "for(i in 0..99){\n" +
+                "    any1v=array(ANY,0).append!(data1.row(i)[`any1])\n" +
+                "    any2v=array(ANY,0).append!(data1.row(i)[`any2])\n" +
+                "    any3v=array(ANY,0).append!(data1.row(i)[`any3])\n" +
+                "    event_any1=event_any( any1v, any2v, any3v)\n" +
+                "    appendEvent(inputSerializer, event_any1)\n" +
+                "\t}" ;
+        conn.run(script2);
         sleep(2000);
+        BasicTable bt1 = (BasicTable)conn.run("select * from data;");
+        System.out.println(bt1.getString());
+        Assert.assertEquals(100,bt1.rows());
+        BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
+        Assert.assertEquals(100,bt2.rows());
+        checkData(bt1,bt2);
         client.unsubscribe(HOST, PORT, "inputTable", "test1");
     }
     @Test
