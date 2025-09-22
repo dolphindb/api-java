@@ -210,7 +210,7 @@ public class BasicDictionary extends AbstractEntity implements Dictionary{
 		try{
 			for(Map.Entry<Entity, Entity> entry : dict.entrySet()){
 				keys.set(index, entry.getKey());
-				values.set(index, (Scalar)entry.getValue());
+				values.set(index, (Entity) entry.getValue());
 				++index;
 			}
 		}
