@@ -2008,4 +2008,194 @@ public static void PrepareStreamTable() throws IOException {
         }
         threadPooledClient.unsubscribe(HOST, port1, "orca.orca_table.output");
     }
+
+    BatchMessageHandler BatchMessageHandler_msgAsTable = new BatchMessageHandler() {
+        @Override
+        public void batchHandler(List<IMessage> msgs) {
+            try {
+                save_batch_size.add(msgs.size());
+                for(int x = 0; x<msgs.size(); x++){
+                    doEvent(msgs.get(x));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+
+                System.out.println(msg.getEntity(0).getString());
+                List<Entity> args = new ArrayList<>();
+                args.add(msg.getEntity(0));
+                args.add(msg.getEntity(1));
+                args.add(msg.getEntity(2));
+                conn.run("tableInsert{Receive}", args);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void test_threadPooledClient_subscribe_msgAsTable_false() throws Exception {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        Vector filter1 = (Vector) conn.run("1..1000");
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_msgAsTable, 0,false, filter1,null,false,"admin","123456",false);
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",2000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by tag,ts,data");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades where tag<1001 order by tag,ts,data");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTread1");
+        assertEquals(2000, re.rows());
+        for (int i = 0; i < 2000; i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
+        }
+    }
+    @Test(timeout = 120000)
+    public void test_threadPooledClient_subscribe_msgAsTable_true() throws Exception {
+        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st1,`Trades)\t\n"
+                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+        conn.run(script1);
+        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+                "share(st2, `Receive)\t\n";
+        conn.run(script2);
+        Vector filter1 = (Vector) conn.run("1..1000");
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_msgAsTable, 0,false, filter1,null,false,"admin","123456",true);
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",2000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by tag,ts,data");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades where tag<1001 order by tag,ts,data");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTread1");
+        assertEquals(2000, re.rows());
+        for (int i = 0; i < 2000; i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(((Scalar)re.getColumn(2).get(i)).getNumber().doubleValue(), ((Scalar)tra.getColumn(2).get(i)).getNumber().doubleValue(), 4);
+        }
+    }
+
+    BatchMessageHandler BatchMessageHandler_msgAsTable_all = new BatchMessageHandler() {
+        @Override
+        public void batchHandler(List<IMessage> msgs) {
+            try {
+                save_batch_size.add(msgs.size());
+                for(int x = 0; x<msgs.size(); x++){
+                    doEvent(msgs.get(x));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                System.out.println(msg.getEntity(0).getString());
+                List<Entity> args = new ArrayList<>();
+                for(int i=0; i<28;i++){
+                    System.out.println(msg.getEntity(0).getString());
+                    args.add(msg.getEntity(i));
+                }
+                conn.run("tableInsert{Receive}", args);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    @Test(timeout = 120000)
+    public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_1() throws Exception {
+        Prepare_streamTable("Trades");
+        conn.run("setStreamTableFilterColumn(Trades, `intv)");
+        Prepare_streamTable("Receive");
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_msgAsTable_all, 0,false, null,null,false,"admin","123456",true);
+        Preparedata1(1);
+        conn.run("Trades.append!(data)");
+        wait_data("Receive",1);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by intv,boolv,charv,shortv");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades order by intv,boolv,charv,shortv");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTread1");
+        assertEquals(1, re.rows());
+        checkData(tra, re);
+    }
+    @Test(timeout = 120000)
+    public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_1000() throws Exception {
+        Prepare_streamTable("Trades");
+        conn.run("setStreamTableFilterColumn(Trades, `intv)");
+        Prepare_streamTable("Receive");
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_msgAsTable_all, 0,false, null,null,false,"admin","123456",true);
+        Preparedata1(1000);
+        conn.run("Trades.append!(data)");
+        wait_data("Receive",1000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by intv,boolv,charv,shortv");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades order by intv,boolv,charv,shortv");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTread1");
+        assertEquals(1000, re.rows());
+        checkData(tra, re);
+    }
+
+    @Test(timeout = 120000)
+    public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_10000() throws Exception {
+        Prepare_streamTable("Trades");
+        conn.run("setStreamTableFilterColumn(Trades, `intv)");
+        Prepare_streamTable("Receive");
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_msgAsTable_all, 0,false, null,null,false,"admin","123456",true);
+        Preparedata1(10000);
+        conn.run("Trades.append!(data)");
+        wait_data("Receive",10000);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by intv,boolv,charv,shortv");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades order by intv,boolv,charv,shortv");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTread1");
+        assertEquals(10000, re.rows());
+        checkData(tra, re);
+    }
+
+    BatchMessageHandler BatchMessageHandler_msgAsTable_all_array = new BatchMessageHandler() {
+        @Override
+        public void batchHandler(List<IMessage> msgs) {
+            try {
+                save_batch_size.add(msgs.size());
+                for(int x = 0; x<msgs.size(); x++){
+                    doEvent(msgs.get(x));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        @Override
+        public void doEvent(IMessage msg) {
+            try {
+                System.out.println(msg.getEntity(0).getString());
+                List<Entity> args = new ArrayList<>();
+                for(int i=0; i<26;i++){
+                    System.out.println(msg.getEntity(0).getString());
+                    args.add(msg.getEntity(i));
+                }
+                conn.run("tableInsert{Receive}", args);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    @Test(timeout = 120000)
+    public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_array() throws Exception {
+        Preparedata_streamTable_array(100,3);
+        threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_msgAsTable_all_array, 0,false, null,null,false,"admin","123456",true);
+        wait_data("Receive",34);
+        BasicTable re = (BasicTable) conn.run("select * from Receive order by id");
+        BasicTable tra = (BasicTable) conn.run("select * from Trades order by id");
+        threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTread1");
+        assertEquals(34, re.rows());
+        checkData(tra, re);
+    }
 }

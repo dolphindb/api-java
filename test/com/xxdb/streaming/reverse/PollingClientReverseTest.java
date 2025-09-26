@@ -1759,45 +1759,36 @@ public class PollingClientReverseTest {
         checkResult1();
         pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
-//    @Test
-//    public void test_subscribe_msgAsTable_true() throws IOException {
-//        //public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer
-//        //deserializer, String userName, String passWord, boolean msgAsTable) throws IOException {
-//
-//        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",0,true,null,null,"","",true);
-//        ArrayList<IMessage> msg1;
-//        List<String> colNames =  Arrays.asList("tag","ts","data");
-//        List<Vector> colData = Arrays.asList(new BasicIntVector(0),new BasicTimestampVector(0),new BasicDoubleVector(0));
-//        BasicTable bt = new BasicTable(colNames,colData);
-//        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
-//                "Trades1.append!(t)");
-//        msg1 = poller1.poll(1000, 10000);
-//        System.out.println(bt.rows());
-//        assertEquals(5000, msg1.size());
-//        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
-//    }
-//    @Test
-//    public void test_subscribe_msgAsTable_false() throws IOException {
-//        //public TopicPoller subscribe(String host, int port, String tableName, String actionName, long offset, boolean reconnect, Vector filter, StreamDeserializer
-//        //deserializer, String userName, String passWord, boolean msgAsTable) throws IOException {
-//
-//        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",0,true,null,null,"","",false);
-//        ArrayList<IMessage> msg1;
-//        List<String> colNames =  Arrays.asList("tag","ts","data");
-//        List<Vector> colData = Arrays.asList(new BasicIntVector(0),new BasicTimestampVector(0),new BasicDoubleVector(0));
-//        BasicTable bt = new BasicTable(colNames,colData);
-//        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
-//                "Trades1.append!(t)");
-//        msg1 = poller1.poll(1000, 10000);
-//        System.out.println(bt.rows());
-//        assertEquals(5000, msg1.size());
-//        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
-//    }
-//    @Test
-//    public void test_subscribe_msgAsTable_true_allDataType() throws IOException {
-//
-//    }
-//
+
+    @Test
+    public void test_subscribe_msgAsTable_true() throws IOException {
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",0,true,null,null,"","",true);
+        ArrayList<IMessage> msg1;
+        List<String> colNames =  Arrays.asList("tag","ts","data");
+        List<Vector> colData = Arrays.asList(new BasicIntVector(0),new BasicTimestampVector(0),new BasicDoubleVector(0));
+        BasicTable bt = new BasicTable(colNames,colData);
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades1.append!(t)");
+        msg1 = poller1.poll(1000, 10000);
+        System.out.println(bt.rows());
+        assertEquals(5000, msg1.size());
+        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
+    }
+    @Test
+    public void test_subscribe_msgAsTable_false() throws IOException {
+        TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",0,true,null,null,"","",false);
+        ArrayList<IMessage> msg1;
+        List<String> colNames =  Arrays.asList("tag","ts","data");
+        List<Vector> colData = Arrays.asList(new BasicIntVector(0),new BasicTimestampVector(0),new BasicDoubleVector(0));
+        BasicTable bt = new BasicTable(colNames,colData);
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades1.append!(t)");
+        msg1 = poller1.poll(1000, 10000);
+        System.out.println(bt.rows());
+        assertEquals(5000, msg1.size());
+        pollingClient.unsubscribe(HOST,PORT,"Trades1","subTread1");
+    }
+
 
     public void MessageHandler_handler(List<IMessage> messages) throws IOException {
         for(int i=0;i<messages.size();i++){
