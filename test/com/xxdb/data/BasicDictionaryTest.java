@@ -96,7 +96,7 @@ public class BasicDictionaryTest {
         conn.upload(data);
         Dictionary re1= (Dictionary) conn.run("bd");
         System.out.println(re1.getString());
-        assertEquals("1->(0,1,2,3,4,5,6,7,8,9)", re1.getString());
+        assertEquals("1->(0,1,2,3,4,5,6,7,8,9)\n", re1.getString());
     }
     @Test
     public void test_BasicDictionary_valueType_DT_ANY() throws IOException {

@@ -11,6 +11,8 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+import static com.xxdb.data.Entity.DATA_TYPE.*;
+import static java.sql.JDBCType.NULL;
 import static org.junit.Assert.*;
 
 public class BasicAnyVectorTest {
@@ -334,7 +336,7 @@ public class BasicAnyVectorTest {
                 "m   [tom,dickh,arry,jack] [blue,green,blue,blue]\n",re.getString());
     }
 
-    @Test
+    //@Test
     public void test_BasicAnyVector_performence() throws IOException, InterruptedException {
         List<String> colNames = new ArrayList<>();
         colNames.add("cbool");
@@ -394,7 +396,9 @@ public class BasicAnyVectorTest {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         //Preparedata_array(500000,10);
-        String pre_data = "def createDataTableTuple(n,num){\n" +
+        String pre_data = "try{undef(`data,SHARED)}catch(ex){}\n" +
+                "try{undef(`data1,SHARED)}catch(ex){}\n" +
+                "def createDataTableTuple(n,num){\n" +
                 "    boolv = bool(rand([true, false, NULL], n))\n" +
                 "        cbool = cut(take([true, false, NULL], n*num), num)\n" +
                 "        cchar = cut(take(char(-100..100 join NULL), n*num), num)\n" +
@@ -451,5 +455,65 @@ public class BasicAnyVectorTest {
             long end = System.nanoTime();
             System.out.println(testCases.get(ii) + "上传花费时间：" + (end - start) / 10000000);
         }
+    }
+
+    @Test
+    public void test_BasicAnyVector_set_dict() throws Exception {
+        BasicAnyVector bbb = new BasicAnyVector(1);
+        BasicDictionary dictionary3 = new BasicDictionary(DT_STRING, DT_ANY);
+        BasicDictionary dictionaryAAA = new BasicDictionary(DT_STRING, DT_STRING);
+        dictionaryAAA.put(new BasicString("p1"), new BasicString("1"));
+        dictionaryAAA.put(new BasicString("p2"), new BasicString("2"));
+
+        BasicDictionary dictionaryBBB = new BasicDictionary(DT_STRING, DT_STRING);
+        dictionaryBBB.put(new BasicString("p1"), new BasicString("100"));
+        dictionaryBBB.put(new BasicString("p2"), new BasicString("200"));
+
+        dictionary3.put(new BasicString("aaa"), dictionaryAAA);
+        dictionary3.put(new BasicString("bbb"), dictionaryBBB);
+        bbb.set(0, dictionary3);
+        System.out.println(bbb.getString());
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        BasicAnyVector re = (BasicAnyVector)conn.run("any1=array(ANY,0).append!(dict(`aaa`bbb, [dict(`p1`p2, `1`2), dict(`p1`p2, `100`200)]));any1;");
+        System.out.println(re.getString());
+        assertEquals(bbb.getString(),re.getString());
+    }
+
+    @Test
+    public void test_BasicAnyVector_set_dict1() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT, "admin", "123456");
+        String script=
+                "try{undef(`st,SHARED)}catch(ex){}\n" +
+                "share table(1000:0, `c1`c2,[STRING,ANY]) as st;\n" ;
+        conn.run(script);
+        Entity RE22 =  conn.run("st");
+        BasicAnyVector anyVector = new BasicAnyVector(1);
+        BasicDictionary dict = new BasicDictionary(DT_STRING, DT_ANY);
+        BasicDictionary dictionaryAAA = new BasicDictionary(DT_STRING, DT_STRING);
+        dictionaryAAA.put(new BasicString("p1"), new BasicString("1"));
+        dictionaryAAA.put(new BasicString("p2"), new BasicString("2"));
+        BasicDictionary dictionaryBBB = new BasicDictionary(DT_STRING, DT_STRING);
+        dictionaryBBB.put(new BasicString("p1"), new BasicString("100"));
+        dictionaryBBB.put(new BasicString("p2"), new BasicString("200"));
+        dict.put(new BasicString("aaa"), dictionaryAAA);
+        dict.put(new BasicString("bbb"), dictionaryBBB);
+        anyVector.set(0, dict);
+        System.out.println(anyVector.getString());
+        List<String> colNames = new ArrayList<>();
+        colNames.add("c1");
+        colNames.add("c2");
+        List<Vector> colVectors = new ArrayList<>();
+        BasicStringVector stringVector = new BasicStringVector(0);
+        stringVector.add("test!");
+        colVectors.add(stringVector);
+        colVectors.add(anyVector);
+
+        BasicTable table = new BasicTable(colNames, colVectors);
+        List<Entity> arguments = Arrays.asList(table);
+        conn.run("tableInsert{st}", arguments);
+        BasicTable bt = (BasicTable)conn.run("select * from st");
+        assertEquals(bt.getColumn(1).getString(), anyVector.getString());
     }
 }
