@@ -158,6 +158,16 @@ public class Prepare {
         conn.run(script);
     }
 
+    public static void Prepare_streamTable(String tableName) throws IOException {
+        String script = "login(`admin, `123456); \n" +
+                "colNames = `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`datehourv`uuidv`ippaddrv`int128v`blobv`pointv`complexv`decimal32v`decimal64v`decimal128v ;\n" +
+                "colTypes=[BOOL,CHAR,SHORT,INT,LONG,DOUBLE,FLOAT,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,SYMBOL,STRING,DATEHOUR,UUID,IPADDR,INT128,BLOB,POINT,COMPLEX,DECIMAL32(2),DECIMAL64(7),DECIMAL128(18)]\n" +
+                "share streamTable(1:0,colNames,colTypes) as " + tableName +";\n" ;
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run(script);
+    }
+
     public static void Preparedata1(long count) throws IOException {
         String script = "login(`admin, `123456); \n" +
                 "n="+count+";\n" +
@@ -231,6 +241,81 @@ public class Prepare {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         conn.run(script1);
+    }
+
+    public static void Preparedata_streamTable_array(long count1,long count2) throws IOException {
+        String script1 = "login(`admin, `123456); \n"+
+                "n="+count1+";\n" +
+                "m="+count2+";\n" +
+                "rows = ceil(double(n)/m)\n" +
+                "id = take(1..300000, rows) ;\n" +
+                "cbool = array(BOOL[]).append!(cut(take([true, false, NULL], n), m))\n" +
+                "cchar = array(CHAR[]).append!(cut(take(char(-100..100 join NULL), n), m))\n" +
+                "cshort = array(SHORT[]).append!(cut(take(short(-100..100 join NULL), n), m))\n" +
+                "cint = array(INT[]).append!(cut(take(-100..100 join NULL, n), m))\n" +
+                "clong = array(LONG[]).append!(cut(take(long(-100..100 join NULL), n), m))\n" +
+                "cdouble = array(DOUBLE[]).append!(cut(take(-100..100 join NULL, n) + 0.254, m))\n" +
+                "cfloat = array(FLOAT[]).append!(cut(take(-100..100 join NULL, n) + 0.254f, m))\n" +
+                "cdate = array(DATE[]).append!(cut(take(2012.01.01..2012.02.29, n), m))\n" +
+                "cmonth = array(MONTH[]).append!(cut(take(2012.01M..2013.12M, n), m))\n" +
+                "ctime = array(TIME[]).append!(cut(take(09:00:00.000 + 0..99 * 1000, n), m))\n" +
+                "cminute = array(MINUTE[]).append!(cut(take(09:00m..15:59m, n), m))\n" +
+                "csecond = array(SECOND[]).append!(cut(take(09:00:00 + 0..999, n), m))\n" +
+                "cdatetime = array(DATETIME[]).append!(cut(take(2012.01.01T09:00:00 + 0..999, n), m))\n" +
+                "ctimestamp = array(TIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000 + 0..999 * 1000, n), m))\n" +
+                "cnanotime =array(NANOTIME[]).append!(cut(take(09:00:00.000000000 + 0..999 * 1000000000, n), m))\n" +
+                "cnanotimestamp = array(NANOTIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000000000 + 0..999 * 1000000000, n), m))\n" +
+                "cuuid = array(UUID[]).append!(cut(take(uuid([\"5d212a78-cc48-e3b1-4235-b4d91473ee87\", \"5d212a78-cc48-e3b1-4235-b4d91473ee88\", \"5d212a78-cc48-e3b1-4235-b4d91473ee89\", \"\"]), n), m))\n" +
+                "cdatehour = array(DATEHOUR[]).append!(cut(take(datehour(1..10 join NULL), n), m))\n" +
+                "cipaddr = array(IPADDR[]).append!(cut(take(ipaddr([\"192.168.100.10\", \"192.168.100.11\", \"192.168.100.14\", \"\"]), n), m))\n" +
+                "cint128 = array(INT128[]).append!(cut(take(int128([\"e1671797c52e15f763380b45e841ec32\", \"e1671797c52e15f763380b45e841ec33\", \"e1671797c52e15f763380b45e841ec35\", \"\"]), n), m))\n" +
+                "ccomplex = array(	COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n), m))\n" +
+                "cpoint = array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n), m))\n" +
+                "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, n) + 0.254, 3), m))\n" +
+                "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, n) + 0.25, 4), m))\n" +
+                "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, n) + 0.25, 5), m))\n" +
+                "share streamTable(1000000:0, `id`cbool`cchar`cshort`cint`clong`cdouble`cfloat`cdate`cmonth`ctime`cminute`csecond`cdatetime`ctimestamp`cnanotime`cnanotimestamp`cdatehour`cuuid`cipaddr`cint128`cpoint`ccomplex`cdecimal32`cdecimal64`cdecimal128, [INT,BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[], DATEHOUR[],UUID[],IPADDR[],INT128[],POINT[],COMPLEX[],DECIMAL32(2)[],DECIMAL64(7)[],DECIMAL128(19)[]]) as Receive;\n" +
+                "share streamTable(id, cbool, cchar, cshort, cint, clong, cdouble, cfloat, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cdatehour, cuuid, cipaddr, cint128, cpoint, ccomplex,  cdecimal32, cdecimal64, cdecimal128) as Trades;\n" ;
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run(script1);
+    }
+
+    public static void PrepareStreamTable_StreamDeserializer_array_allDataType() throws IOException {
+        String script = "share streamTable(10000:0, `permno`sym`blob`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`datehourv`uuidv`ipaddrv`int128v`complexv`pointv, [TIMESTAMP,SYMBOL,BLOB,BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[], DATEHOUR[],UUID[],IPADDR[],INT128[],COMPLEX[],POINT[]]) as outTables;\n" +
+                "permno = take(1..1000,1000); \n" +
+                "timestampv = 2018.12.01T01:21:23.000 + 1..1000; \n" +
+                "dateType_INT =  array(INT[]).append!(cut(take(-100..100 join NULL, 1000*10), 10)); \n" +
+                "dateType_BOOL =  array(BOOL[]).append!(cut(take([true, false, NULL], 1000*10), 10)); \n" +
+                "dateType_CHAR =  array(CHAR[]).append!(cut(take(char(-10..10 join NULL), 1000*10), 10)); \n" +
+                "dateType_SHORT =  array(SHORT[]).append!(cut(take(short(-100..100 join NULL), 1000*10), 10)); \n" +
+                "dateType_LONG =  array(LONG[]).append!(cut(take(long(-100..100 join NULL), 1000*10), 10)); \n" + "" +
+                "dateType_DOUBLE =  array(DOUBLE[]).append!(cut(take(-100..100 join NULL, 1000*10) + 0.254, 10)); \n" +
+                "dateType_FLOAT =  array(FLOAT[]).append!(cut(take(-100..100 join NULL, 1000*10) + 0.254f, 10)); \n" +
+                "dateType_DATE =  array(DATE[]).append!(cut(take(2012.01.01..2012.02.29, 1000*10), 10)); \n" +
+                "dateType_MONTH =   array(MONTH[]).append!(cut(take(2012.01M..2013.12M, 1000*10), 10)); \n" +
+                "dateType_TIME =  array(TIME[]).append!(cut(take(09:00:00.000 + 0..99 * 1000, 1000*10), 10)); \n" +
+                "dateType_MINUTE =  array(MINUTE[]).append!(cut(take(09:00m..15:59m, 1000*10), 10)); \n" +
+                "dateType_SECOND =  array(SECOND[]).append!(cut(take(09:00:00 + 0..999, 1000*10), 10)); \n" +
+                "dateType_DATETIME =  array(DATETIME[]).append!(cut(take(2012.01.01T09:00:00 + 0..999, 1000*10), 10)); \n" +
+                "dateType_TIMESTAMP =  array(TIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000 + 0..999 * 1000, 1000*10), 10)); \n" +
+                "dateType_NANOTIME =  array(NANOTIME[]).append!(cut(take(09:00:00.000000000 + 0..999 * 1000000000, 1000*10), 10)); \n" +
+                "dateType_NANOTIMESTAMP =  array(NANOTIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000000000 + 0..999 * 1000000000, 1000*10), 10)); \n" +
+                "dateType_UUID =  array(UUID[]).append!(cut(take(uuid([\"5d212a78-cc48-e3b1-4235-b4d91473ee87\", \"5d212a78-cc48-e3b1-4235-b4d91473ee88\", \"5d212a78-cc48-e3b1-4235-b4d91473ee89\", \"\"]), 1000*10), 10)); \n" +
+                "dateType_DATEHOUR =  array(DATEHOUR[]).append!(cut(take(datehour(1..10 join NULL), 1000*10), 10)); \n" +
+                "dateType_IPADDR =  array(IPADDR[]).append!(cut(take(ipaddr([\"192.168.100.10\", \"192.168.100.11\", \"192.168.100.14\", \"\"]), 1000*10), 10)); \n" +
+                "dateType_INT128 =  array(INT128[]).append!(cut(take(int128([\"e1671797c52e15f763380b45e841ec32\", \"e1671797c52e15f763380b45e841ec33\", \"e1671797c52e15f763380b45e841ec35\", \"\"]), 1000*10), 10)); \n" +
+                "dateType_COMPLEX =   array(COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, 1000*10), 10));; \n" +
+                "dateType_POINT =  array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, 1000*10), 10)); \n" +
+                "share table(timestampv as timestamp1,dateType_BOOL as boolv, dateType_CHAR  as charv, dateType_SHORT  as shortv, dateType_INT  as intv, dateType_LONG  as longv, dateType_DOUBLE  as doublev, dateType_FLOAT  as floatv, dateType_DATE  as datev, dateType_MONTH  as monthv, dateType_TIME  as timev, dateType_MINUTE  as minutev, dateType_SECOND  as secondv, dateType_DATETIME  as datetimev, dateType_TIMESTAMP  as timestampv, dateType_NANOTIME  as nanotimev, dateType_NANOTIMESTAMP  as nanotimestampv, dateType_DATEHOUR  as datehourv, dateType_UUID  as uuidv, dateType_IPADDR  as ipaddrv, dateType_INT128  as int128v, dateType_COMPLEX as complexv, dateType_POINT as pointv) as pub_t1;\n" +
+                "share table(timestampv as timestamp1,dateType_BOOL as boolv, dateType_CHAR  as charv, dateType_SHORT  as shortv, dateType_INT  as intv, dateType_LONG  as longv, dateType_DOUBLE  as doublev, dateType_FLOAT  as floatv, dateType_DATE  as datev, dateType_MONTH  as monthv, dateType_TIME  as timev, dateType_MINUTE  as minutev, dateType_SECOND  as secondv, dateType_DATETIME  as datetimev, dateType_TIMESTAMP  as timestampv, dateType_NANOTIME  as nanotimev, dateType_NANOTIMESTAMP  as nanotimestampv, dateType_DATEHOUR  as datehourv, dateType_UUID  as uuidv, dateType_IPADDR  as ipaddrv, dateType_INT128  as int128v, dateType_COMPLEX as complexv, dateType_POINT as pointv) as pub_t2;\n" +
+                "d = dict(['msg1','msg2'], [pub_t1, pub_t2]);\n" +
+                "replay(inputTables=d, outputTables=`outTables, dateColumn=`timestamp1, timeColumn=`timestamp1);\n" +
+                "share streamTable(1000000:0, `timestamp1`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`datehourv`uuidv`ipaddrv`int128v`complexv`pointv, [TIMESTAMP,BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[], DATEHOUR[],UUID[],IPADDR[],INT128[],COMPLEX[],POINT[]]) as sub1;\n" +
+                "share streamTable(1000000:0, `timestamp1`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`datehourv`uuidv`ipaddrv`int128v`complexv`pointv, [TIMESTAMP,BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[], DATEHOUR[],UUID[],IPADDR[],INT128[],COMPLEX[],POINT[]]) as sub2;\n";
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT, "admin", "123456");
+        conn.run(script);
     }
 
     public static void Preparedata_array_keyTable(long count1,long count2) throws IOException {
