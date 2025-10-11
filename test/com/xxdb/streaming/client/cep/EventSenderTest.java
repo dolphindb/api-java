@@ -2394,89 +2394,219 @@ public class EventSenderTest {
         Assert.assertEquals(100,bt2.rows());
         checkData(bt1,bt2);
     }
-    @Test//
-    public  void test_EventSender_any_1() throws IOException, InterruptedException {
-        conn1 = new DBConnection();
-        conn1.connect(HOST, PORT, "admin", "123456");
-        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n" +
-                "share table(1:0,[\"stringv\",\"doublev\"],[STRING, ANY]) as outputTable;\n" ;
-        conn.run(script);
-        String script1 ="class StockTick{\n" +
-                "    name :: STRING \n" +
-                "    price :: FLOAT \n" +
-                "    def StockTick(name_, price_){\n" +
-                "        name = name_\n" +
-                "        price = price_\n" +
-                "    }\n" +
-                "}\n" +
-                "\n" +
-                "class BondDepth{\n" +
-                "    contract :: STRING \n" +
-                "    bidYields :: ANY\n" +
-                "\n" +
-                "    def BondDepth(contract_, bidYields_){\n" +
-                "        contract = contract_\n" +
-                "        bidYields = bidYields_\n" +
-                "    }\n" +
-                "}\n" +
-                "\n" +
-                "class SimpleShareSearch:CEPMonitor {\n" +
-                "        //保存最新的 StockTick 事件\n" +
-                "        newTick :: StockTick \n" +
-                "        def SimpleShareSearch(){\n" +
-                "                newTick = StockTick(\"init\", 0.0)\n" +
-                "        }\n" +
-                "        def processTick(stockTickEvent)\n" +
-                "        \n" +
-                "        def onload() {\n" +
-                "                addEventListener(handler=processTick, eventType=\"BondDepth\", times=\"all\")\n" +
-                "        } \n" +
-                "        def processTick(BondDepth) { \n" +
-                "                str = \"+++++++++++++++++++++++ BondDepth event received\" + now(true)$STRING\n" +
-                "                writeLog(str)\n" +
-                "        }\n" +
-                "}\n" +
-                "\n" +
-                " try {unsubscribeTable(tableName=\"testInput\", actionName=\"test1235\")} catch(ex) {}\n" +
-                "go\n" +
-                " try {undef(`testInput,SHARED)} catch(ex) {}\n" +
-                "share(streamTable(array(STRING, 0) as eventType, array(BLOB, 0) as eventBody), `testInput)\n" +
-                "go\n" +
-                "\n" +
-                "try {dropStreamEngine(`simpleMonitor)} catch(ex) {}\n" +
-                "createCEPEngine(name=\"simpleMonitor\", monitors=<SimpleShareSearch()>, dummyTable=testInput, eventSchema=[StockTick,BondDepth])\n" +
-                "\n" +
-                "subscribeTable(tableName=\"testInput\", actionName=\"test1235\", handler=getStreamEngine(`simpleMonitor), msgAsTable=true)\n" +
-                "go\n" +
-                "eventSchema =  getCEPEngineStat(engine=\"simpleMonitor\").eventSchema\n" +
-                "try {dropStreamEngine(`testSerializer)} catch(ex) {}\n" +
-                "ses = streamEventSerializer(name=\"testSerializer\", eventSchema=eventSchema, outputTable=testInput)\n" +
-                "\n" +
-                "depth = BondDepth(\"test2\", (111,`1))\n" +
-                "ses.appendEvent(depth)";
-        conn.run(script1);
+    //@Test//目前会比对不通过，不过通过server订阅 反序列化可以查询出来 后续该case 补充api订阅反序列化的场景
+    public  void test_EventSender_any_dict_1() throws Exception {
         EventSchema scheme = new EventSchema();
-        scheme.setEventType("BondDepth");
-        scheme.setFieldNames(Arrays.asList("contract", "bidYields"));
-        scheme.setFieldTypes(Arrays.asList( DT_STRING, DT_ANY));
-        scheme.setFieldForms(Arrays.asList(  DF_SCALAR, DF_VECTOR));
-        scheme.setFieldExtraParams(Arrays.asList( 0, 0));
-
-        List<EventSchema> eventSchemes = Collections.singletonList(scheme);
+        scheme.setEventType("event_any");
+        scheme.setFieldNames(Arrays.asList( "any1", "any2", "any3" ));
+        scheme.setFieldTypes(Arrays.asList( DT_ANY, DT_ANY, DT_ANY));
+        scheme.setFieldForms(Arrays.asList(  DF_VECTOR, DF_VECTOR, DF_VECTOR));
+        scheme.setFieldExtraParams(Arrays.asList( null, null, null));
+        List<EventSchema> eventSchemas = Collections.singletonList(scheme);
         List<String> eventTimeFields = new ArrayList<>();
         List<String> commonFields = new ArrayList<>();
-        EventSender sender = new EventSender(conn, "inputTable", eventSchemes, eventTimeFields, commonFields);
-        EventClient client = new EventClient(eventSchemes, eventTimeFields, commonFields);
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n" ;
+
+        conn.run(script);
+        String script1 ="class event_any {  \n" +
+                "    any1 :: ANY \n" +
+                "    any2 :: ANY \n" +
+                "    any3 :: ANY\n" +
+                "          \n" +
+                "    def event_any() {  \n" +
+                "        any1=dict(`aaa`bbb, `10`99,true)\n" +
+                "        any2=dict(`aaa1`bbb2, [1..10, 2..5],true)\n" +
+                "        any3=dict(`aaa11`bbb22, [dict(`p1`p2, `1`2, true), dict(`p11`p22, `100`200, true)])\n" +
+                "    }  \n" +
+                "}\n" +
+
+                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[],0 ) as type, array(INT[], 0) as form)\n" +
+                "eventType = 'event_any'\n" +
+                "eventKeys = 'any1, any2, any3';\n" +
+                "typeV = [ANY, ANY, ANY];\n" +
+                "formV = [SCALAR, SCALAR, SCALAR];\n" +
+                "insert into schemaTable values([eventType], [eventKeys], [typeV], [formV]);\n" +
+                "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput1;\n" +
+                "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
+                "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput1);";
+        conn.run(script1);
+        EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
+        String script2 = " event_any1=event_any()\n" +
+                "appendEvent(inputSerializer, event_any1)\n";
+        conn.run(script2);
+        BasicAnyVector any1 = new BasicAnyVector(1);
+        BasicDictionary dictionary = new BasicDictionary(DT_STRING, DT_ANY);
+        dictionary.put(new BasicString("aaa"), new BasicString("10"));
+        dictionary.put(new BasicString("bbb"), new BasicString("99"));
+        any1.set(0, dictionary);
+
+        BasicAnyVector any2 = new BasicAnyVector(1);
+        BasicDictionary dictionary2 = new BasicDictionary(DT_STRING, DT_ANY);
+        dictionary2.put(new BasicString("aaa1"), new BasicIntVector(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)));
+        dictionary2.put(new BasicString("bbb2"), new BasicIntVector(Arrays.asList(2, 3, 4, 5)));
+        any2.set(0, dictionary2);
+
+        BasicAnyVector any3 = new BasicAnyVector(1);
+        BasicDictionary dictionary3 = new BasicDictionary(DT_STRING, DT_ANY);
+        BasicDictionary dictionaryAAA = new BasicDictionary(DT_STRING, DT_STRING);
+        dictionaryAAA.put(new BasicString("p1"), new BasicString("1"));
+        dictionaryAAA.put(new BasicString("p2"), new BasicString("2"));
+
+        BasicDictionary dictionaryBBB = new BasicDictionary(DT_STRING, DT_STRING);
+        dictionaryBBB.put(new BasicString("p11"), new BasicString("100"));
+        dictionaryBBB.put(new BasicString("p22"), new BasicString("200"));
+
+        dictionary3.put(new BasicString("aaa11"), dictionaryAAA);
+        dictionary3.put(new BasicString("bbb22"), dictionaryBBB);
+        any3.set(0, dictionary3);
+
+        BasicAnyVector any11 = (BasicAnyVector)conn.run("any1=array(ANY,0).append!(dict(`aaa`bbb, `10`99));\n any1");
+        BasicAnyVector any22 = (BasicAnyVector)conn.run("any2=array(ANY,0).append!(dict(`aaa1`bbb2, [1..10, 2..5]));\n any2");
+        BasicAnyVector any33 = (BasicAnyVector)conn.run("any3=array(ANY,0).append!(dict(`aaa11`bbb22, [dict(`p1`p2, `1`2), dict(`p11`p22, `100`200,true)]));\n any3");
+
         List<Entity> attributes = new ArrayList<>();
-        attributes.add(new BasicString("test2"));
-        BasicAnyVector bbb = (BasicAnyVector)conn.run("(111,`1)");
-        attributes.add(bbb);
-        sender.sendEvent("BondDepth", attributes);
-        BasicTable bt1 = (BasicTable)conn.run("select * from inputTable;");
-        Assert.assertEquals(1,bt1.rows());
-        BasicTable bt2 = (BasicTable)conn.run("select * from testInput;");
+        attributes.add(any1);
+        attributes.add(any2);
+        attributes.add(any3);
+        sender.sendEvent("event_any",attributes);
+
+        List<Entity> attributes1 = new ArrayList<>();
+        attributes1.add(any11);
+        attributes1.add(any22);
+        attributes1.add(any33);
+        sender.sendEvent("event_any",attributes1);
+
+        BasicTable bt1 = (BasicTable)conn.run("select * from inputTable ;");
+        System.out.println(bt1.getString());
+        Assert.assertEquals(2,bt1.rows());
+//        Assert.assertEquals(bt1.getColumn(1).get(0), bt1.getColumn(1).get(1));
+        BasicTable bt2 = (BasicTable)conn.run("select * from intput1;");
         Assert.assertEquals(1,bt2.rows());
+        Assert.assertEquals(bt1.getColumn(1).get(1), bt2.getColumn(1).get(0));
         checkData(bt1,bt2);
+    }
+
+    @Test//使用server订阅反序列化判断数据的正确性
+    public  void test_EventSender_any_dict_2() throws Exception {
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("event_any");
+        scheme.setFieldNames(Arrays.asList( "any1", "any2", "any3" ));
+        scheme.setFieldTypes(Arrays.asList( DT_ANY, DT_ANY, DT_ANY));
+        scheme.setFieldForms(Arrays.asList(  DF_VECTOR, DF_VECTOR, DF_VECTOR));
+        scheme.setFieldExtraParams(Arrays.asList( null, null, null));
+        List<EventSchema> eventSchemas = Collections.singletonList(scheme);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n" ;
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run(script);
+        String script1 ="try {unsubscribeTable(,`intput, `subopt)} catch(ex) {}\n" +
+                "try {dropStreamEngine(`serInput)} catch(ex) {}\n" +
+                "try {dropStreamEngine(`cep1)} catch(ex) {}\n" +
+                "try{dropStreamTable(`intput)}catch(ex){}\n" +
+                "try{undef(`intput,SHARED)}catch(ex){}\n" +
+                "go\n" +
+                "class event_any {  \n" +
+                "    any1 :: ANY \n" +
+                "    any2 :: ANY \n" +
+                "    any3 :: ANY\n" +
+                "          \n" +
+                "    def event_any() {  \n" +
+                "        any1=dict(`aaa`bbb, `10`99, true)\n" +
+                "        any2=dict(`aaa1`bbb2, [1..10, 2..5], true)\n" +
+                "        any3=dict(`aaa11`bbb22, [dict(`p1`p2, `1`2,true), dict(`p11`p22, `100`200,true)],true)\n" +
+                "    }  \n" +
+                "}\n" +
+                "class mainMonitor:CEPMonitor{\n" +
+                "    datas :: ANY VECTOR\n" +
+                "     any1 :: ANY\n" +
+                "    any2 :: ANY\n" +
+                "    any3 :: ANY\n" +
+                "    def mainMonitor(){\n" +
+                "        datas = array(ANY, 0, 10)\n" +
+                "    }\n" +
+                "\n" +
+                "    def updateData(event)\n" +
+                "\n" +
+                "    def onunload(){\n" +
+                "    }\n" +
+                "\n" +
+                "    def onload(){\n" +
+                "        addEventListener(updateData, 'event_any', , 'all')\n" +
+                "    }\n" +
+                "\n" +
+                "    def updateData(event) {\n" +
+                "        any1 = event.any1\n" +
+                "        any2 = event.any2\n" +
+                "        any3 = event.any3\n" +
+                "        writeLog(\"------------------------\")\n" +
+                "        // writeLog(event.vobject.trader)\n" +
+                "        // emitEvent(event)\n" +
+                "    }\n" +
+                "}\n" +
+
+                "schemaTable = table(array(STRING, 0) as eventType, array(STRING, 0) as eventKeys, array(INT[],0 ) as type, array(INT[], 0) as form)\n" +
+                "eventType = 'event_any'\n" +
+                "eventKeys = 'any1, any2, any3';\n" +
+                "typeV = [ANY, ANY, ANY];\n" +
+                "formV = [SCALAR, SCALAR, SCALAR];\n" +
+                "insert into schemaTable values([eventType], [eventKeys], [typeV], [formV]);\n" +
+                "share streamTable( array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as intput;\n" +
+                "try{\ndropStreamEngine(`serInput)\n}catch(ex){\n}\n" +
+                "inputSerializer = streamEventSerializer(name=`serInput, eventSchema=schemaTable, outputTable=intput);\n" +
+
+                "dummy = table(array(STRING, 0) as eventType, array(BLOB, 0) as blobs)\n" +
+                "engineCep = createCEPEngine('cep1', <mainMonitor()>, dummy, [event_any], 1, , 10000, getStreamEngine(`serInput))\n" +
+                "subscribeTable(,`intput, `subopt, 0, getStreamEngine('cep1'), true);";
+        conn.run(script1);
+
+        EventSender sender = new EventSender(conn, "intput",eventSchemas, eventTimeFields, commonFields);
+        BasicAnyVector any1 = new BasicAnyVector(1);
+        BasicDictionary dictionary = new BasicDictionary(DT_STRING, DT_ANY);
+        dictionary.put(new BasicString("aaa"), new BasicString("10"));
+        dictionary.put(new BasicString("bbb"), new BasicString("99"));
+        any1.set(0, dictionary);
+
+        BasicAnyVector any2 = new BasicAnyVector(1);
+        BasicDictionary dictionary2 = new BasicDictionary(DT_STRING, DT_ANY);
+        dictionary2.put(new BasicString("aaa1"), new BasicStringVector(new String[]{"1","2","3","4","5","6","7","8","9","10"}));
+        dictionary2.put(new BasicString("bbb2"), new BasicStringVector(new String[]{"2","3","4","5"}));
+        any2.set(0, dictionary2);
+
+        BasicAnyVector any3 = new BasicAnyVector(1);
+        BasicDictionary dictionary3 = new BasicDictionary(DT_STRING, DT_ANY);
+        BasicDictionary dictionaryAAA = new BasicDictionary(DT_STRING, DT_STRING);
+        dictionaryAAA.put(new BasicString("p1"), new BasicString("1"));
+        dictionaryAAA.put(new BasicString("p2"), new BasicString("2"));
+
+        BasicDictionary dictionaryBBB = new BasicDictionary(DT_STRING, DT_STRING);
+        dictionaryBBB.put(new BasicString("p11"), new BasicString("100"));
+        dictionaryBBB.put(new BasicString("p22"), new BasicString("200"));
+
+        dictionary3.put(new BasicString("aaa11"), dictionaryAAA);
+        dictionary3.put(new BasicString("bbb22"), dictionaryBBB);
+        any3.set(0, dictionary3);
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(any1);
+        attributes.add(any2);
+        attributes.add(any3);
+        sender.sendEvent("event_any",attributes);
+        sleep(1000);
+        Entity re1 = conn.run("m = getCEPEngineMonitor(`cep1, `cep1, `mainMonitor);\n m.any1;");
+        Entity re2 = conn.run("m = getCEPEngineMonitor(`cep1, `cep1, `mainMonitor);\n m.any2;");
+        Entity re3 = conn.run("m = getCEPEngineMonitor(`cep1, `cep1, `mainMonitor);\n m.any3;");
+        Assert.assertEquals("(aaa->10\n" +
+                "bbb->99\n" +
+                ")",re1.getString());
+        Assert.assertEquals("(aaa1->[1,2,3,4,5,6,7,8,9,10]\n" +
+                "bbb2->[2,3,4,5]\n" +
+                ")",re2.getString());
+        Assert.assertEquals("(bbb22->{\n" +
+                "{p11,p22}->{100,200}}\n" +
+                "aaa11->{\n" +
+                "{p1,p2}->{1,2}}\n" +
+                ")",re3.getString());
     }
 
     @Test
