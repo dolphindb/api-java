@@ -16,7 +16,7 @@ import static com.xxdb.data.Entity.DATA_TYPE.*;
 
 public class Utils {
 
-	public static final String JAVA_API_VERSION = "3.00.4.0";
+	public static final String JAVA_API_VERSION = "3.00.4.1";
 
 	public static final int DISPLAY_ROWS = 20;
 	public static final int DISPLAY_COLS = 100;
