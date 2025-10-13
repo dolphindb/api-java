@@ -47,7 +47,7 @@ public class EventClient extends AbstractClient {
 
         BlockingQueue<List<IMessage>> queue = subscribeInternal(host, port, tableName, actionName, handler, offset, reconnect, filter, null, false, userName, password, false);
         if (queue == null) {
-            System.err.println("Subscription already made, handler loop not created.");
+            log.error("Subscription already made, handler loop not created.");
             return;
         }
 
@@ -75,7 +75,7 @@ public class EventClient extends AbstractClient {
 
                 // todo notice, here MessageParser handled col to row;
                 if (!eventHandler.deserializeEvent(msgs, eventTypes, attributes, errorInfo)) {
-                    System.out.println("deserialize fail " + errorInfo.getErrorInfo());
+                    log.error("deserialize fail " + errorInfo.getErrorInfo());
                     continue;
                 }
 
