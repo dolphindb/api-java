@@ -146,13 +146,13 @@ public class PollingClientReverseTest {
     }
     @Test(expected = IOException.class)
     public  void error_size1() throws IOException {
-        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades","subtrades",-1,true);
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1","subtrades",-1,true);
         ArrayList<IMessage> msgs;
         msgs = poller1.poll(1000,0);
        }
     @Test(expected = IOException.class)
     public  void error_size2() throws IOException {
-        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades","subtrades",-1,true);
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1","subtrades",-1,true);
         ArrayList<IMessage> msgs = poller1.poll(1000,-10);
     }
 
@@ -291,6 +291,46 @@ public class PollingClientReverseTest {
             pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades2");
         }
     }
+
+    @Test
+    public  void test_poll_timeout_less_then_0() throws IOException {
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1","subtrades",-1,true);
+        String re = null;
+        try{
+            ArrayList<IMessage> msgs = poller1.poll(-1,10);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("timeout must be greater than or equal to zero",re);
+    }
+
+    @Test(timeout = 120000)
+    public void test_poll_timeout_0() throws IOException, InterruptedException {
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1", "subtrades1", -1, true,null,"admin","123456");
+        ArrayList<IMessage> msgs1;
+        ArrayList<IMessage> msgs2;
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades1.append!(t)");
+        sleep(100);
+        msgs1 = poller1.poll(0, 10000);
+        msgs2= poller1.poll(0, 10000);
+        assertEquals(5000, msgs1.size());
+        assertEquals(0, msgs2.size());
+        pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades1");
+    }
+
+    @Test(timeout = 120000)
+    public void test_poll_timeout_100() throws IOException, InterruptedException {
+        TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1", "subtrades1", -1, true,null,"admin","123456");
+        ArrayList<IMessage> msgs1;
+        conn.run("n=5000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" +
+                "Trades1.append!(t)");
+//        sleep(1000);
+        msgs1 = poller1.poll(100, 10000);
+        assertEquals(5000, msgs1.size());
+        pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades1");
+    }
+
     @Test(timeout = 120000)
     public void test_subscribe_admin_login() throws IOException {
         TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1", "subtrades1", -1, true,null,"admin","123456");
