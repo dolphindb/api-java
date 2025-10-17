@@ -214,6 +214,18 @@ public class StreamingSQLClient extends AbstractClient {
         }
     }
 
+    public BasicDictionary getStreamingSQLSubscriptionInfo(String queryId) {
+        try {
+            checkConnConnect();
+            if (Utils.isEmpty(queryId)) {
+                throw new IllegalArgumentException("The param 'queryId' cannot be null or empty.");
+            }
+            return (BasicDictionary) conn.run("getStreamingSQLSubscriptionInfo(\"" + queryId + "\")");
+        } catch (IOException e) {
+            throw new RuntimeException("get streaming SQL subscription info error: " + e);
+        }
+    }
+
     public BasicTable subscribeStreamingSQL(String queryId) throws IOException {
         return subscribeStreamingSQL(queryId, -1, -1);
     }
