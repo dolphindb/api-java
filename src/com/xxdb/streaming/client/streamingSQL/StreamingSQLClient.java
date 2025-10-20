@@ -23,8 +23,21 @@ public class StreamingSQLClient extends AbstractClient {
     private String userName;
     private String password;
     private BasicIntVector deleteLineMap = new BasicIntVector(0);
+    private final Map<String, SubscriptionInfo> subscriptionInfoCache = new HashMap<>();
 
     private static final Logger log = LoggerFactory.getLogger(StreamingSQLClient.class);
+
+    private static class SubscriptionInfo {
+        public volatile BasicTimestamp leadingRecordInsertTime;
+        public volatile BasicTimestamp lastRecordInsertTime;
+        public volatile BasicTimestamp lastUpdatedTime;
+
+        public SubscriptionInfo() {
+            this.leadingRecordInsertTime = new BasicTimestamp(Long.MIN_VALUE);
+            this.lastRecordInsertTime = new BasicTimestamp(Long.MIN_VALUE);
+            this.lastUpdatedTime = new BasicTimestamp(Long.MIN_VALUE);
+        }
+    }
 
     // Table wrapper class, used for modifying table references within inner classes
     private static class TableWrapper {
@@ -215,15 +228,26 @@ public class StreamingSQLClient extends AbstractClient {
     }
 
     public BasicDictionary getStreamingSQLSubscriptionInfo(String queryId) {
-        try {
-            checkConnConnect();
-            if (Utils.isEmpty(queryId)) {
-                throw new IllegalArgumentException("The param 'queryId' cannot be null or empty.");
-            }
-            return (BasicDictionary) conn.run("getStreamingSQLSubscriptionInfo(\"" + queryId + "\")");
-        } catch (IOException e) {
-            throw new RuntimeException("get streaming SQL subscription info error: " + e);
+        if (Utils.isEmpty(queryId)) {
+            throw new IllegalArgumentException("The param 'queryId' cannot be null or empty.");
         }
+
+        // Return data from local cache
+        SubscriptionInfo info = subscriptionInfoCache.get(queryId);
+        if (info == null) {
+            throw new RuntimeException("Subscription info not found for queryId: " + queryId + ". Please subscribe first.");
+        }
+
+        // Create BasicDictionary to return
+        BasicDictionary result = new BasicDictionary(Entity.DATA_TYPE.DT_STRING, Entity.DATA_TYPE.DT_TIMESTAMP);
+
+        synchronized (info) {
+            result.put(new BasicString("leadingRecordInsertTime"), info.leadingRecordInsertTime);
+            result.put(new BasicString("lastRecordInsertTime"), info.lastRecordInsertTime);
+            result.put(new BasicString("lastUpdatedTime"), info.lastUpdatedTime);
+        }
+
+        return result;
     }
 
     public BasicTable subscribeStreamingSQL(String queryId) throws IOException {
@@ -233,6 +257,13 @@ public class StreamingSQLClient extends AbstractClient {
     public BasicTable subscribeStreamingSQL(String queryId, int batchSize, float throttle) throws IOException {
         // Create a wrapper to store table references
         final TableWrapper resultWrapper = new TableWrapper(null);
+
+        // Initialize subscription info cache for this queryId
+        synchronized (subscriptionInfoCache) {
+            if (!subscriptionInfoCache.containsKey(queryId)) {
+                subscriptionInfoCache.put(queryId, new SubscriptionInfo());
+            }
+        }
 
         // update table logic
         MessageHandler handler = new MessageHandler() {
@@ -339,8 +370,44 @@ public class StreamingSQLClient extends AbstractClient {
                     if (msgs == null)
                         continue;
 
+                    // Extract timestamps from batch messages
+                    BasicTimestamp firstNonNullTimestamp = null;
+                    BasicTimestamp lastNonNullTimestamp = null;
+
+                    for (IMessage msg : msgs) {
+                        BasicTimestamp basicTimestamp = (BasicTimestamp)msg.getEntity(2);
+                        if (basicTimestamp != null && !basicTimestamp.isNull()) {
+                            if (firstNonNullTimestamp == null) {
+                                firstNonNullTimestamp = basicTimestamp;
+                            }
+                            lastNonNullTimestamp = basicTimestamp;
+                        }
+                    }
+
+                    // Skip update if all timestamps are null
+                    if (firstNonNullTimestamp == null) {
+                        log.debug("All logTimestamp values are null, skipping batch update");
+                        continue;
+                    }
+
+                    // Process messages
                     for (IMessage msg : msgs) {
                         handler.doEvent(msg);
+                    }
+
+                    // Update subscription info cache after processing
+                    long currentTime = System.currentTimeMillis();
+                    SubscriptionInfo info = subscriptionInfoCache.get(queryId);
+                    if (info != null) {
+                        synchronized (info) {
+                            info.leadingRecordInsertTime = firstNonNullTimestamp;
+                            info.lastRecordInsertTime =  lastNonNullTimestamp;
+                            info.lastUpdatedTime = new BasicTimestamp(currentTime);
+                        }
+                        log.debug("Updated subscription info for queryId=" + queryId +
+                                ", leadingRecordInsertTime=" + info.leadingRecordInsertTime +
+                                ", lastRecordInsertTime=" + info.lastRecordInsertTime +
+                                ", lastUpdatedTime=" + info.lastUpdatedTime);
                     }
                 }
             }

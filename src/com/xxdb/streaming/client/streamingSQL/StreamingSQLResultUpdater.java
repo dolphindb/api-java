@@ -63,7 +63,8 @@ public class StreamingSQLResultUpdater {
         BasicIntVector lineNoColumn = new BasicIntVector(0);
         lineNoColumn.Append((BasicInt) msg.getEntity(1));
         List<Vector> updateColumns = new ArrayList<>();
-        for (int i = 2; i < msg.size(); i++) {
+        // Extract data columns (starting from index 3)
+        for (int i = 3; i < msg.size(); i++) {
             if (msg.getEntity(i) instanceof Vector) {
                 updateColumns.add((Vector) msg.getEntity(i));
             } else {
@@ -224,17 +225,17 @@ public class StreamingSQLResultUpdater {
                                 BasicIntVector insertNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                                 int prevSize = result.rows();
 
-                                log.debug("msg content: type=" + prevUpdateType + ", lineNo=" + insertNo.getString() + ", cols=" + (msg.size() - 2));
+                                log.debug("msg content: type=" + prevUpdateType + ", lineNo=" + insertNo.getString() + ", cols=" + (msg.size() - 3));
 
                                 // Process single-row data
                                 if (insertNo.rows() == 1) {
-                                    // Create a column array containing new data, excluding the type and row number columns.
-                                    Vector[] newColumns = new Vector[msg.size() - 2];
+                                    // Create a column array containing new data, excluding the type, row number, and logTimestamp columns.
+                                    Vector[] newColumns = new Vector[msg.size() - 3];
 
                                     // Create a vector of the corresponding type for each column
-                                    for (int j = 2; j < msg.size(); j++) {
+                                    for (int j = 3; j < msg.size(); j++) {
                                         if (msg.getEntity(j) instanceof Vector) {
-                                            newColumns[j-2] = (Vector) msg.getEntity(j);
+                                            newColumns[j-3] = (Vector) msg.getEntity(j);
                                         } else {
                                             Scalar sourceValue = (Scalar) msg.getEntity(j);
                                             Entity.DATA_TYPE dataType = sourceValue.getDataType();
@@ -247,7 +248,7 @@ public class StreamingSQLResultUpdater {
                                             }
 
                                             newVector.set(0, sourceValue);
-                                            newColumns[j-2] = newVector;
+                                            newColumns[j-3] = newVector;
                                         }
                                     }
 
@@ -479,17 +480,17 @@ public class StreamingSQLResultUpdater {
                     BasicIntVector insertNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                     int prevSize = result.rows();
 
-                    log.debug("msg content: type=" + prevUpdateType + ", lineNo=" + insertNo.getString() + ", cols=" + (msg.size() - 2));
+                    log.debug("msg content: type=" + prevUpdateType + ", lineNo=" + insertNo.getString() + ", cols=" + (msg.size() - 3));
 
                     // Process single-row data
                     if (insertNo.rows() == 1) {
-                        // Create a column array containing new data, excluding the type and row number columns.
-                        Vector[] newColumns = new Vector[msg.size() - 2];
+                        // Create a column array containing new data, excluding the type, row number, and logTimestamp columns.
+                        Vector[] newColumns = new Vector[msg.size() - 3];
 
                         // Create a vector of the corresponding type for each column
-                        for (int j = 2; j < msg.size(); j++) {
+                        for (int j = 3; j < msg.size(); j++) {
                             if (msg.getEntity(j) instanceof Vector) {
-                                newColumns[j-2] = (Vector) msg.getEntity(j);
+                                newColumns[j-3] = (Vector) msg.getEntity(j);
                             } else {
                                 Scalar sourceValue = (Scalar) msg.getEntity(j);
                                 Entity.DATA_TYPE dataType = sourceValue.getDataType();
@@ -502,7 +503,7 @@ public class StreamingSQLResultUpdater {
                                 }
 
                                 newVector.set(0, sourceValue);
-                                newColumns[j-2] = newVector;
+                                newColumns[j-3] = newVector;
                             }
                         }
 
