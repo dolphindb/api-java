@@ -303,7 +303,7 @@ public class StreamingSQLClient extends AbstractClient {
         }
 
         // Call subscribeInternal with the (possibly newly created) handler
-        Map<String, Object> res = subscribeStreamingSqlLogInfoInternal(host, port, queryId, queryId, handler, -1, false, null, null, false, userName, password, true, true);
+        Map<String, Object> res = subscribeStreamingSqlLogInfoInternal(host, port, queryId, queryId, handler, -1, false, null, null, false, userName, password, true, true, true);
 
         BlockingQueue<List<IMessage>> queue = (BlockingQueue<List<IMessage>>) res.get("queue");
 
@@ -376,12 +376,15 @@ public class StreamingSQLClient extends AbstractClient {
                     BasicTimestamp lastNonNullTimestamp = null;
 
                     for (IMessage msg : msgs) {
-                        BasicTimestamp basicTimestamp = (BasicTimestamp)msg.getEntity(2);
-                        if (basicTimestamp != null && !basicTimestamp.isNull()) {
-                            if (firstNonNullTimestamp == null) {
-                                firstNonNullTimestamp = basicTimestamp;
+                        BasicTimestampVector timestampVector = (BasicTimestampVector) msg.getEntity(2);
+                        for (int i = 0; i < timestampVector.rows(); i++) {
+                            BasicTimestamp basicTimestamp = (BasicTimestamp) timestampVector.get(i);
+                            if (basicTimestamp != null && !basicTimestamp.isNull()) {
+                                if (firstNonNullTimestamp == null) {
+                                    firstNonNullTimestamp = basicTimestamp;
+                                }
+                                lastNonNullTimestamp = basicTimestamp;
                             }
-                            lastNonNullTimestamp = basicTimestamp;
                         }
                     }
 
@@ -451,7 +454,7 @@ public class StreamingSQLClient extends AbstractClient {
     @Override
     protected boolean doReconnect(Site site) {
         try {
-            subscribeStreamingSqlLogInfoInternal(site.getHost(), site.getPort(), site.getTableName(), site.getActionName(), site.getHandler(), site.getMsgId() + 1, true, null, null, false, site.getUserName(), site.getPassWord(), true, true);
+            subscribeStreamingSqlLogInfoInternal(site.getHost(), site.getPort(), site.getTableName(), site.getActionName(), site.getHandler(), site.getMsgId() + 1, true, null, null, false, site.getUserName(), site.getPassWord(), true, true, true);
             Date d = new Date();
             DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             log.info(df.format(d) + " Successfully reconnected and subscribed " + site.getHost() + ":" + site.getPort() + "/" + site.getTableName() + "/" + site.getActionName());
