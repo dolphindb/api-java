@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -395,14 +396,12 @@ public class StreamingSQLClient extends AbstractClient {
                         handler.doEvent(msg);
                     }
 
-                    // Update subscription info cache after processing
-                    long currentTime = System.currentTimeMillis();
                     SubscriptionInfo info = subscriptionInfoCache.get(queryId);
                     if (info != null) {
                         synchronized (info) {
                             info.leadingRecordInsertTime = firstNonNullTimestamp;
                             info.lastRecordInsertTime =  lastNonNullTimestamp;
-                            info.lastUpdatedTime = new BasicTimestamp(currentTime);
+                            info.lastUpdatedTime = new BasicTimestamp(LocalDateTime.now());
                         }
                         log.debug("Updated subscription info for queryId=" + queryId +
                                 ", leadingRecordInsertTime=" + info.leadingRecordInsertTime +
