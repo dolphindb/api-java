@@ -160,7 +160,7 @@ class MessageParser implements Runnable {
         } catch (Exception e) {
             if (dispatcher.isClosed(topic)) {
                 if (!AbstractClient.ifUseBackupSite) {
-                    log.warn("Please check topic {} is unsubscribed, stopping message parser", topic);
+                    log.warn("Check topic {} is unsubscribed, stopping message parser", topic);
                 }
                 return;
             }
