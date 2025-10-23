@@ -271,6 +271,30 @@ public class StreamingSQLClient extends AbstractClient {
         return totalRows;
     }
 
+    /**
+     * Check if the batch is complete by verifying if the last timestamp is non-null
+     * @param messages List of messages to check
+     * @return true if the last timestamp in the last message is non-null, false otherwise
+     */
+    private boolean isBatchComplete(List<IMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return false;
+        }
+        // Get the last message
+        IMessage lastMsg = messages.get(messages.size() - 1);
+        try {
+            BasicTimestampVector timestampVector = (BasicTimestampVector) lastMsg.getEntity(2);
+            if (timestampVector != null && timestampVector.rows() > 0) {
+                // Check the last timestamp in the vector
+                BasicTimestamp lastTimestamp = (BasicTimestamp) timestampVector.get(timestampVector.rows() - 1);
+                return lastTimestamp != null && !lastTimestamp.isNull();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to check batch completion: " + e.getMessage());
+        }
+        return false;
+    }
+
     public BasicTable subscribeStreamingSQL(String queryId, int batchSize, float throttle) throws IOException {
         // Create a wrapper to store table references
         final TableWrapper resultWrapper = new TableWrapper(null);
@@ -331,50 +355,76 @@ public class StreamingSQLClient extends AbstractClient {
             public void run() {
                 log.info("StreamingSQLClient subscribe start.");
                 while (!isClose()) {
-                    List<IMessage> msgs = null;
+                    List<IMessage> msgs = new ArrayList<>();
                     if (batchSize < 0) {
-                        try {
-                            msgs = queue.take();
-                        } catch (InterruptedException e) {
-                            return;
+                        while (true) {
+                            List<IMessage> tmp;
+                            try {
+                                if (isBatchComplete(msgs)) {
+                                    tmp = queue.poll(0, TimeUnit.MILLISECONDS);
+                                } else {
+                                    tmp = queue.take();
+                                }
+                            } catch (InterruptedException e) {
+                                return;
+                            }
+                            if (tmp != null) {
+                                msgs.addAll(tmp);
+                            } else if (isBatchComplete(msgs)) {
+                                break;
+                            }
                         }
                     } else if (batchSize > 0 && throttle < 0) {
-                        msgs = new ArrayList<>();
-                        while (countTotalRows(msgs) < batchSize) {
-                            List<IMessage> tmp = null;
+                        while (true) {
+                            List<IMessage> tmp;
                             try {
-                                tmp = queue.take();
+                                if (countTotalRows(msgs) >= batchSize && isBatchComplete(msgs)) {
+                                    tmp = queue.poll(0, TimeUnit.MILLISECONDS);
+                                } else {
+                                    tmp = queue.take();
+                                }
                             } catch (InterruptedException e) {
                                 break;
                             }
-                            if(tmp != null){
+                            if (tmp != null) {
                                 msgs.addAll(tmp);
+                            } else if (countTotalRows(msgs) >= batchSize && isBatchComplete(msgs)) {
+                                break;
                             }
                         }
                     } else {
-                        // Both batchSize and throttle specified: accumulate until row count reaches batchSize or throttle timeout
-                        msgs = new ArrayList<>();
                         long end;
                         long now = System.currentTimeMillis();
                         end = now + (long)(throttle * 1000);
-                        while (countTotalRows(msgs) < batchSize && System.currentTimeMillis() < end) {
-                            List<IMessage> tmp = null;
+                        boolean shouldDrainQueue = false;
+
+                        while (System.currentTimeMillis() < end || shouldDrainQueue) {
+                            List<IMessage> tmp;
                             try {
                                 now = System.currentTimeMillis();
-                                if(end - now <= 0)
+                                if (shouldDrainQueue) {
+                                    tmp = queue.poll(0, TimeUnit.MILLISECONDS);
+                                } else if (end - now <= 0) {
                                     tmp = queue.take();
-                                else
+                                } else {
                                     tmp = queue.poll(end - now, TimeUnit.MILLISECONDS);
+                                }
                             } catch (InterruptedException e) {
                                 break;
                             }
-                            if(tmp != null){
+
+                            if (tmp != null) {
                                 msgs.addAll(tmp);
+                                if (countTotalRows(msgs) >= batchSize && isBatchComplete(msgs)) {
+                                    shouldDrainQueue = true;  // Start draining mode
+                                }
+                            } else if (shouldDrainQueue || (System.currentTimeMillis() >= end && isBatchComplete(msgs))) {
+                                break;
                             }
                         }
                     }
 
-                    if (msgs == null)
+                    if (msgs.isEmpty())
                         continue;
 
                     // Extract timestamps from batch messages
