@@ -378,15 +378,15 @@ public class StreamingSQLClient extends AbstractClient {
                         continue;
 
                     // Extract timestamps from batch messages
-                    BasicTimestamp firstNonNullTimestamp = null;
-                    BasicTimestamp lastNonNullTimestamp = null;
+                    BasicTimestamp firstNonNullTimestamp = new BasicTimestamp(Long.MIN_VALUE);;
+                    BasicTimestamp lastNonNullTimestamp = new BasicTimestamp(Long.MIN_VALUE);;
 
                     for (IMessage msg : msgs) {
                         BasicTimestampVector timestampVector = (BasicTimestampVector) msg.getEntity(2);
                         for (int i = 0; i < timestampVector.rows(); i++) {
                             BasicTimestamp basicTimestamp = (BasicTimestamp) timestampVector.get(i);
                             if (basicTimestamp != null && !basicTimestamp.isNull()) {
-                                if (firstNonNullTimestamp == null) {
+                                if (firstNonNullTimestamp.getLong() == Long.MIN_VALUE) {
                                     firstNonNullTimestamp = basicTimestamp;
                                 }
                                 lastNonNullTimestamp = basicTimestamp;

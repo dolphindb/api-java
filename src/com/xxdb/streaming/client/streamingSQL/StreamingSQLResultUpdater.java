@@ -652,13 +652,17 @@ public class StreamingSQLResultUpdater {
                 scale = ((BasicDecimal128Vector) sourceVector).getScale();
             }
 
-            Vector newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, sourceVector.rows(), scale);
+            Vector newVector;
+            if (dataType == Entity.DATA_TYPE.DT_ANY) {
+                newVector = new BasicAnyVector(sourceVector.rows());
+            } else {
+                newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, sourceVector.rows(), scale);
+            }
 
             // Copy data elements one by one
             for (int j = 0; j < sourceVector.rows(); j++) {
                 try {
-                    Scalar value = (Scalar)sourceVector.get(j);
-                    newVector.set(j, value);
+                    newVector.set(j, sourceVector.get(j));
                 } catch (Exception e) {
                     log.error("Error copying data: " + e.getMessage());
                 }
