@@ -255,6 +255,22 @@ public class StreamingSQLClient extends AbstractClient {
         return subscribeStreamingSQL(queryId, -1, -1);
     }
 
+    private int countTotalRows(List<IMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return 0;
+        }
+        int totalRows = 0;
+        for (IMessage msg : messages) {
+            try {
+                BasicTimestampVector timestampVector = (BasicTimestampVector) msg.getEntity(2);
+                totalRows += timestampVector.rows();
+            } catch (Exception e) {
+                log.warn("Failed to get rows from message: " + e.getMessage());
+            }
+        }
+        return totalRows;
+    }
+
     public BasicTable subscribeStreamingSQL(String queryId, int batchSize, float throttle) throws IOException {
         // Create a wrapper to store table references
         final TableWrapper resultWrapper = new TableWrapper(null);
@@ -316,17 +332,32 @@ public class StreamingSQLClient extends AbstractClient {
                 log.info("StreamingSQLClient subscribe start.");
                 while (!isClose()) {
                     List<IMessage> msgs = null;
-                    if(batchSize == -1 && throttle == -1) {
+                    if (batchSize < 0) {
                         try {
                             msgs = queue.take();
                         } catch (InterruptedException e) {
                             return;
                         }
-                    } else if (batchSize != -1 && throttle != -1) {
+                    } else if (batchSize > 0 && throttle < 0) {
+                        msgs = new ArrayList<>();
+                        while (countTotalRows(msgs) < batchSize) {
+                            List<IMessage> tmp = null;
+                            try {
+                                tmp = queue.take();
+                            } catch (InterruptedException e) {
+                                break;
+                            }
+                            if(tmp != null){
+                                msgs.addAll(tmp);
+                            }
+                        }
+                    } else {
+                        // Both batchSize and throttle specified: accumulate until row count reaches batchSize or throttle timeout
+                        msgs = new ArrayList<>();
                         long end;
                         long now = System.currentTimeMillis();
                         end = now + (long)(throttle * 1000);
-                        while (msgs == null || (msgs.size()<batchSize && System.currentTimeMillis() < end)) {
+                        while (countTotalRows(msgs) < batchSize && System.currentTimeMillis() < end) {
                             List<IMessage> tmp = null;
                             try {
                                 now = System.currentTimeMillis();
@@ -338,32 +369,7 @@ public class StreamingSQLClient extends AbstractClient {
                                 break;
                             }
                             if(tmp != null){
-                                if(msgs == null)
-                                    msgs = new ArrayList<>(tmp);
-                                else
-                                    msgs.addAll(tmp);
-                            }
-                        }
-                    } else {
-                        long end;
-                        long now = System.currentTimeMillis();
-                        end = now + (long)(throttle * 1000);
-                        while (msgs == null || System.currentTimeMillis() < end){
-                            List<IMessage> tmp = null;
-                            try {
-                                now = System.currentTimeMillis();
-                                if(end - now <= 0)
-                                    tmp = queue.take();
-                                else
-                                    tmp = queue.poll(end - now, TimeUnit.MILLISECONDS);
-                            } catch (InterruptedException e){
-                                break;
-                            }
-                            if(tmp != null){
-                                if(msgs == null)
-                                    msgs = tmp;
-                                else
-                                    msgs.addAll(tmp);
+                                msgs.addAll(tmp);
                             }
                         }
                     }
@@ -386,12 +392,6 @@ public class StreamingSQLClient extends AbstractClient {
                                 lastNonNullTimestamp = basicTimestamp;
                             }
                         }
-                    }
-
-                    // Skip update if all timestamps are null
-                    if (firstNonNullTimestamp == null) {
-                        log.debug("All logTimestamp values are null, skipping batch update");
-                        continue;
                     }
 
                     // Process messages
