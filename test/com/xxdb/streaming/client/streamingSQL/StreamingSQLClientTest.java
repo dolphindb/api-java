@@ -1,18 +1,18 @@
 package com.xxdb.streaming.client.streamingSQL;
 
 import com.xxdb.DBConnection;
-import com.xxdb.data.BasicInt;
-import com.xxdb.data.BasicTable;
-import com.xxdb.data.Entity;
+import com.xxdb.data.*;
 import com.xxdb.streaming.client.IMessage;
 import com.xxdb.streaming.client.MessageHandler;
 import com.xxdb.streaming.client.ThreadedClient;
 import org.junit.*;
 
 import java.io.IOException;
+import java.time.ZoneId;
 import java.util.*;
 
 import static com.xxdb.Prepare.*;
+import static java.lang.Thread.sleep;
 
 public class StreamingSQLClientTest {
     public static DBConnection conn;
@@ -391,7 +391,7 @@ public class StreamingSQLClientTest {
         writer_data(100,"t1","double");
         writer_data(100,"t2","double");
 
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -410,7 +410,7 @@ public class StreamingSQLClientTest {
         writer_data(100,"t1","double");
         writer_data(100,"t2","double");
 
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -505,7 +505,7 @@ public class StreamingSQLClientTest {
         writer_data(100,"t1","double");
         writer_data(100,"t2","double");
 
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -546,7 +546,7 @@ public class StreamingSQLClientTest {
         writer_data(8192,"t1","double");
         writer_data(8192,"t2","double");
 
-        Thread.sleep(5000);
+        sleep(5000);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
@@ -615,14 +615,16 @@ public class StreamingSQLClientTest {
         writer_data(99,"t1","double");
         writer_data(99,"t2","double");
         System.out.println(bt.rows());
-        Thread.sleep(2000);
+        System.out.println(streamingSQLClient.getStreamingSQLSubscriptionInfo(id1).getString());
+        sleep(2000);
         Assert.assertEquals(0, bt.rows());
         conn.run("n=1\n" +
                 "data = table(take(\"A\"+string(100..100000), n) as id, timestamp(2025.09.26T12:36:23.438+1..n) as timestamp, double(rand(rand(-100..100, 1000)*0.23, n) as value));\n" +
                 "t1.append!(data)\n" +
                 "t2.append!(data)");
-        Thread.sleep(500);
+        sleep(500);
         System.out.println(bt.getString());
+        System.out.println(streamingSQLClient.getStreamingSQLSubscriptionInfo(id1).getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -638,17 +640,17 @@ public class StreamingSQLClientTest {
         String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
         System.out.println("id1:"+id1);
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,-1,-1);
-        Thread.sleep(100);
+        sleep(100);
         Assert.assertEquals(0, bt.rows());
         writer_data(1,"t1","double");
         writer_data(1,"t2","double");
-        Thread.sleep(200);
+        sleep(200);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         Assert.assertEquals(1, bt.rows());
         writer_data(2,"t1","double");
         writer_data(2,"t2","double");
-        Thread.sleep(200);
+        sleep(200);
         BasicTable ex1 = (BasicTable)conn.run(sqlStr1);
         checkData(ex1, bt);
         Assert.assertEquals(2, bt.rows());
@@ -665,7 +667,7 @@ public class StreamingSQLClientTest {
         String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
         System.out.println("id1:"+id1);
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,10,1);
-        Thread.sleep(1100);
+        sleep(1100);
         Assert.assertEquals(0, bt.rows());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
@@ -686,7 +688,7 @@ public class StreamingSQLClientTest {
         streamingSQLClient.isClose();
         writer_data(100,"t1","double");
         writer_data(100,"t2","double");
-        Thread.sleep(1000);
+        sleep(1000);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.getString());
@@ -707,7 +709,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","double");
         writer_data(100,"t2","double");
-        Thread.sleep(1000);
+        sleep(1000);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.getString());
@@ -730,7 +732,7 @@ public class StreamingSQLClientTest {
         String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
         System.out.println("id1:"+id1);
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
-        Thread.sleep(5000);
+        sleep(5000);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.getString());
@@ -749,7 +751,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","int");
         writer_data(100,"t2","int");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -766,7 +768,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","bool");
         writer_data(100,"t2","bool");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -783,7 +785,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","char");
         writer_data(100,"t2","char");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -800,7 +802,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","short");
         writer_data(100,"t2","short");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -817,7 +819,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","long");
         writer_data(100,"t2","long");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -834,7 +836,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","double");
         writer_data(100,"t2","double");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -851,7 +853,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","float");
         writer_data(100,"t2","float");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -868,7 +870,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","date");
         writer_data(100,"t2","date");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -885,7 +887,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","month");
         writer_data(100,"t2","month");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -902,7 +904,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","time");
         writer_data(100,"t2","time");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -919,7 +921,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","minute");
         writer_data(100,"t2","minute");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -936,7 +938,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","second");
         writer_data(100,"t2","second");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -953,7 +955,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","datetime");
         writer_data(100,"t2","datetime");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -970,7 +972,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","timestamp1");
         writer_data(100,"t2","timestamp1");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -987,7 +989,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","nanotime");
         writer_data(100,"t2","nanotime");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1004,7 +1006,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","nanotimestamp");
         writer_data(100,"t2","nanotimestamp");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1021,7 +1023,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","symbol");
         writer_data(100,"t2","symbol");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1038,7 +1040,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","string");
         writer_data(100,"t2","string");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1055,7 +1057,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","uuid");
         writer_data(100,"t2","uuid");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1072,7 +1074,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","datehour");
         writer_data(100,"t2","datehour");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1089,7 +1091,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","ippaddr");
         writer_data(100,"t2","ippaddr");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1106,7 +1108,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","int128");
         writer_data(100,"t2","int128");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1123,7 +1125,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","blob");
         writer_data(100,"t2","blob");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1141,7 +1143,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","complex");
         writer_data(100,"t2","complex");
-        Thread.sleep(5000);
+        sleep(5000);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.getString());
@@ -1161,7 +1163,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data(100,"t1","point");
         writer_data(100,"t2","point");
-        Thread.sleep(5000);
+        sleep(5000);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.getString());
@@ -1195,7 +1197,7 @@ public class StreamingSQLClientTest {
         System.out.println("id1:"+id1);
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         conn.run(script1);
-        Thread.sleep(5000);
+        sleep(5000);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.getString());
@@ -1215,7 +1217,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","bool");
         writerdata_array(100,5,"t2","bool");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1232,7 +1234,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","char");
         writerdata_array(100,5,"t2","char");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1249,7 +1251,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","short");
         writerdata_array(100,5,"t2","short");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1266,7 +1268,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","int");
         writerdata_array(100,5,"t2","int");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1300,7 +1302,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","double");
         writerdata_array(100,5,"t2","double");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1317,7 +1319,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","float");
         writerdata_array(100,5,"t2","float");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1334,7 +1336,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","date");
         writerdata_array(100,5,"t2","date");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1351,7 +1353,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","month");
         writerdata_array(100,5,"t2","month");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1368,7 +1370,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","time");
         writerdata_array(100,5,"t2","time");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1385,7 +1387,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","minute");
         writerdata_array(100,5,"t2","minute");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1402,7 +1404,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","second");
         writerdata_array(100,5,"t2","second");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1419,7 +1421,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","datetime");
         writerdata_array(100,5,"t2","datetime");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1436,7 +1438,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","timestamp1");
         writerdata_array(100,5,"t2","timestamp1");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1453,7 +1455,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","nanotime");
         writerdata_array(100,5,"t2","nanotime");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1470,7 +1472,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","nanotimestamp");
         writerdata_array(100,5,"t2","nanotimestamp");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1487,7 +1489,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","uuid");
         writerdata_array(100,5,"t2","uuid");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1504,7 +1506,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","datehour");
         writerdata_array(100,5,"t2","datehour");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1521,7 +1523,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","ipaddr");
         writerdata_array(100,5,"t2","ipaddr");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1538,7 +1540,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","int128");
         writerdata_array(100,5,"t2","int128");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1555,7 +1557,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","complex");
         writerdata_array(100,5,"t2","complex");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1572,7 +1574,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","point");
         writerdata_array(100,5,"t2","point");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1590,7 +1592,7 @@ public class StreamingSQLClientTest {
         Assert.assertEquals(0, bt.rows());
         writerdata_array(100,5,"t1","decimal32");
         writerdata_array(100,5,"t2","decimal32");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1607,7 +1609,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","decimal64");
         writerdata_array(100,5,"t2","decimal64");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1624,7 +1626,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","decimal128");
         writerdata_array(100,5,"t2","decimal128");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -1644,12 +1646,65 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writer_data_array("t1");
         writer_data_array("t2");
-        Thread.sleep(5000);
+        sleep(5000);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.getString());
         checkData(ex, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
+    }
+    @Test//any列写入一个标量
+    public void test_StreamingSQLClient_subscribeStreamingSQL_any_scalar() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT, "admin", "123456");
+        String script = "share keyedTable(`bondcode, 1:0, `quotetime`bondcode`lastquotetime`cany1`cany2, [TIMESTAMP, SYMBOL,TIMESTAMP, ANY, ANY]) as t1;";
+        conn.run(script);
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin", "123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        // 注册流式 SQL
+        String sqlStr1 = "SELECT quotetime, bondcode, lastquotetime, cany1, cany2 FROM t1" ;
+        String queryId = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        // 订阅流式 SQL
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(queryId);
+        String script1 = "quotetime=take(2025.10.18T10:27:23.275..2025.10.10T10:27:23.275,1)\n" +
+                "bondcode=take(\"bondCode\"+string(1..10),1)\n" +
+                "lastquotetime=take(2025.10.18T10:27:23.375..2025.10.10T10:27:23.375,1)\n" +
+                "cany=array(ANY,0).append!(1000)\n" +
+                "tmp = table(quotetime, bondcode, lastquotetime, cany as cany1,cany as cany2);\n" +
+                "t1.append!(tmp)\n";
+        conn.run(script1);
+        sleep(1000);
+        BasicTable ex = (BasicTable)conn.run(sqlStr1);
+        checkData(ex, bt);
+        streamingSQLClient.unsubscribeStreamingSQL(queryId);
+    }
+
+    @Test//any列覆盖所有数据形式
+    public void test_StreamingSQLClient_subscribeStreamingSQL_any_all_dataform() throws IOException, InterruptedException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT, "admin", "123456");
+        String script = "share keyedTable(`bondcode, 1:0, `quotetime`bondcode`lastquotetime`cany1`cany2, [TIMESTAMP, SYMBOL,TIMESTAMP, ANY, ANY]) as t1;";
+        conn.run(script);
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin", "123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        // 注册流式 SQL
+        String sqlStr1 = "SELECT quotetime, bondcode, lastquotetime, cany1, cany2 FROM t1" ;
+        String queryId = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        // 订阅流式 SQL
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(queryId);
+        String script1 = "quotetime=take(2025.10.18T10:27:23.275..2025.10.10T10:27:23.275,9)\n" +
+                "bondcode=take(\"bondCode\"+string(1..10),9)\n" +
+                "lastquotetime=take(2025.10.18T10:27:23.375..2025.10.10T10:27:23.375,9)\n" +
+                "cany=array(ANY,0).append!(1000).append!(`www`qqq).append!(matrix([1 2 3, 4 5 6])).append!(set(1 2)).append!(100:11).append!(table(`qa`ws`ed as id)).append!(dict(`aaa11`bbb22, [dict(`p1`p2, `1`2, true), dict(`p11`p22, `100`200, true)])).append!((100, `11)).append!( [[`1a,`a1]].setColumnarTuple!())\n" +
+                "tmp = table(quotetime, bondcode, lastquotetime, cany as cany1,cany as cany2);\n" +
+                "t1.append!(tmp)\n";
+        conn.run(script1);
+        sleep(1000);
+        BasicTable ex = (BasicTable)conn.run(sqlStr1);
+//        System.out.println("bt:\n"+bt.getString());
+//        System.out.println("ex:\n"+ex.getString());
+        checkData(ex, bt);
+        streamingSQLClient.unsubscribeStreamingSQL(queryId);
     }
     @Test
     public void test_StreamingSQLClient_getStreamingSQLStatus() throws IOException {
@@ -1819,7 +1874,7 @@ public class StreamingSQLClientTest {
         writer_data(1,"t1","double");
         writer_data(1,"t2","double");
 
-        Thread.sleep(500);
+        sleep(500);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
@@ -1842,7 +1897,7 @@ public class StreamingSQLClientTest {
         writer_data(10000,"t1","double");
         writer_data(10000,"t2","double");
 
-        Thread.sleep(5000);
+        sleep(5000);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
@@ -1864,7 +1919,7 @@ public class StreamingSQLClientTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","bool");
         writerdata_array(100,5,"t2","bool");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
         checkData(ex, bt);
@@ -1876,6 +1931,122 @@ public class StreamingSQLClientTest {
                 "ex1 = SELECT id, time, t1.value, rowSum(value) FROM t1 FULL JOIN t2 ON t1.id=t2.id order by id \n" +
                 "assert 1, each(eqObj, res1.values(), ex1.values())");
         System.out.println(ex1.getString());
+        streamingSQLClient.unsubscribeStreamingSQL(id1);
+    }
+
+    @Test
+    public void test_StreamingSQLClient_getStreamingSQLSubscriptionInfo_queryId_null() throws IOException, InterruptedException {
+        Preparedata("DOUBLE");
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1,"ddb",Integer.MIN_VALUE);
+        System.out.println("id1:"+id1);
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1);
+        String re = null;
+        try{
+            streamingSQLClient.getStreamingSQLSubscriptionInfo(null);
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("The param 'queryId' cannot be null or empty.", re);
+        streamingSQLClient.unsubscribeStreamingSQL(id1);
+    }
+
+    @Test
+    public void test_StreamingSQLClient_getStreamingSQLSubscriptionInfo_queryId_not_exist() throws IOException, InterruptedException {
+        Preparedata("DOUBLE");
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1,"ddb",Integer.MIN_VALUE);
+        System.out.println("id1:"+id1);
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1);
+        String re = null;
+        try{
+            streamingSQLClient.getStreamingSQLSubscriptionInfo("not_exist");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("Subscription info not found for queryId: not_exist. Please subscribe first.", re);
+        streamingSQLClient.unsubscribeStreamingSQL(id1);
+    }
+
+    @Test//没有变更日志
+    public void test_StreamingSQLClient_getStreamingSQLSubscriptionInfo_no_data_change() throws IOException, InterruptedException {
+        Preparedata("DOUBLE");
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        System.out.println("ex:"+id1);
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
+        System.out.println("ex:"+streamingSQLClient.getStreamingSQLStatus().getString());
+        BasicDictionary ex = streamingSQLClient.getStreamingSQLSubscriptionInfo(id1);
+        System.out.println("ex:"+ex.getString());
+        Assert.assertEquals("{lastRecordInsertTime,leadingRecordInsertTime,lastUpdatedTime}->{,,}", ex.getString());
+        streamingSQLClient.unsubscribeStreamingSQL(id1);
+    }
+    @Test
+    public void test_StreamingSQLClient_getStreamingSQLSubscriptionInfo() throws IOException, InterruptedException {
+        Preparedata("BOOL[]");
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, time, t1.value, rowSum(value) FROM t1 FULL JOIN t2 ON t1.id=t2.id order by id\n" ;
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        System.out.println("id1:"+id1);
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,10,1);
+        writerdata_array(100,5,"t1","bool");
+        writerdata_array(100,5,"t2","bool");
+        sleep(1000);
+        BasicDictionary ex1 = streamingSQLClient.getStreamingSQLSubscriptionInfo(id1);
+        System.out.println(ex1.getString());
+        long lastRecordInsertTime1 = ((BasicTimestamp)ex1.get("lastRecordInsertTime")).getLong();
+        long leadingRecordInsertTime1 = ((BasicTimestamp)ex1.get("leadingRecordInsertTime")).getLong();
+        long lastUpdatedTime1 = ((BasicTimestamp)ex1.get("lastUpdatedTime")).getLong();
+        writerdata_array(100,5,"t1","bool");
+        writerdata_array(100,5,"t2","bool");
+        BasicDictionary ex2 = streamingSQLClient.getStreamingSQLSubscriptionInfo(id1);
+        System.out.println(ex2.getString());
+        long lastRecordInsertTime2 = ((BasicTimestamp)ex2.get("lastRecordInsertTime")).getLong();
+        long leadingRecordInsertTime2 = ((BasicTimestamp)ex2.get("leadingRecordInsertTime")).getLong();
+        long lastUpdatedTime12 = ((BasicTimestamp)ex2.get("lastUpdatedTime")).getLong();
+        Assert.assertEquals(true, lastRecordInsertTime2 > lastRecordInsertTime1);
+        Assert.assertEquals(true, leadingRecordInsertTime2 > leadingRecordInsertTime1);
+        Assert.assertEquals(true, lastUpdatedTime12 > lastUpdatedTime1);
+        streamingSQLClient.unsubscribeStreamingSQL(id1);
+    }
+    @Test//lastRecordInsertTime 和leadingRecordInsertTime不一致
+    public void test_StreamingSQLClient_getStreamingSQLSubscriptionInfo_1() throws IOException, InterruptedException {
+        Preparedata("DOUBLE");
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        System.out.println("id1:"+id1);
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,100,100);
+        writer_data(99,"t1","double");
+        writer_data(99,"t2","double");
+        sleep(2000);
+        Assert.assertEquals(0, bt.rows());
+        conn.run("n=1\n" +
+                "data = table(take(\"A\"+string(100..100000), n) as id, timestamp(2025.09.26T12:36:23.438+1..n) as timestamp, double(rand(rand(-100..100, 1000)*0.23, n) as value));\n" +
+                "t1.append!(data)\n" +
+                "t2.append!(data)");
+        sleep(500);
+        System.out.println(bt.getString());
+        System.out.println(streamingSQLClient.getStreamingSQLSubscriptionInfo(id1).getString());
+        BasicDictionary ex = streamingSQLClient.getStreamingSQLSubscriptionInfo(id1);
+        long lastRecordInsertTime = ((BasicTimestamp)ex.get("lastRecordInsertTime")).getLong();
+        long leadingRecordInsertTime = ((BasicTimestamp)ex.get("leadingRecordInsertTime")).getLong();
+        long lastUpdatedTime = ((BasicTimestamp)ex.get("lastUpdatedTime")).getLong();
+        Assert.assertEquals(true, lastRecordInsertTime>leadingRecordInsertTime);
+        Assert.assertEquals(true, lastUpdatedTime>leadingRecordInsertTime);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
     }
 
@@ -1904,7 +2075,7 @@ public class StreamingSQLClientTest {
         int count1= 0;
         while (!(count1==1000))
         {
-            Thread.sleep(20);
+            sleep(20);
             count1 = bt.rows();
         }
 
@@ -1955,7 +2126,7 @@ public class StreamingSQLClientTest {
             int count1= 0;
             while (!(count1==100000))
             {
-                Thread.sleep(50);
+                sleep(50);
                 count1 = bt.rows();
             }
 
