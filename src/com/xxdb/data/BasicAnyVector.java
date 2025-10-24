@@ -133,6 +133,10 @@ public class BasicAnyVector extends AbstractVector {
 		values.add(value);
 	}
 
+    public void Append(Entity value) {
+        values.add(value);
+    }
+
 	@Override
 	public void checkCapacity(int requiredCapacity) {
 		throw new RuntimeException("BasicAnyVector not support checkCapacity.");

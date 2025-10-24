@@ -109,20 +109,19 @@ public class StreamingSQLResultUpdater {
             Entity entity = rowData.get(i);
             Vector col;
 
-            if (entity instanceof Vector) {
+            if (result.getColumn(i) instanceof BasicAnyVector) {
+                col = new BasicAnyVector(1);
+                col.set(0, entity);
+            } else if (entity instanceof Vector) {
                 col = (Vector) entity;
-            } else if (entity instanceof Scalar) {
-                Scalar scalar = (Scalar) entity;
-                Vector newCol;
-                if (scalar instanceof BasicDecimal32 || scalar instanceof BasicDecimal64 || scalar instanceof BasicDecimal128) {
-                    newCol = BasicEntityFactory.instance().createVectorWithDefaultValue(scalar.getDataType(), 1, scalar.getScale());
-                } else {
-                    newCol = BasicEntityFactory.instance().createVectorWithDefaultValue(scalar.getDataType(), 1, -1);
-                }
-                newCol.set(0, scalar);
-                col = newCol;
             } else {
-                throw new IllegalArgumentException("Unsupported entity type: " + entity.getClass().getName());
+                Scalar scalar = (Scalar) entity;
+                if (scalar instanceof BasicDecimal32 || scalar instanceof BasicDecimal64 || scalar instanceof BasicDecimal128) {
+                    col = BasicEntityFactory.instance().createVectorWithDefaultValue(scalar.getDataType(), 1, scalar.getScale());
+                } else {
+                    col = BasicEntityFactory.instance().createVectorWithDefaultValue(scalar.getDataType(), 1, -1);
+                }
+                col.set(0, scalar);
             }
 
             updateColumns.add(col);
@@ -653,7 +652,7 @@ public class StreamingSQLResultUpdater {
             }
 
             Vector newVector;
-            if (dataType == Entity.DATA_TYPE.DT_ANY) {
+            if (dataType == Entity.DATA_TYPE.DT_ANY || dataType == Entity.DATA_TYPE.DT_VOID) {
                 newVector = new BasicAnyVector(sourceVector.rows());
             } else {
                 newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, sourceVector.rows(), scale);
@@ -930,12 +929,12 @@ public class StreamingSQLResultUpdater {
         boolean isValid = true;
         for (int i = 0; i < psort.length; i++) {
             if (psort[i] < 0 || psort[i] >= psort.length) {
-                System.err.println("Invalid sort index at position " + i + ": " + psort[i]);
+                log.error("Invalid sort index at position " + i + ": " + psort[i]);
                 isValid = false;
                 break;
             }
             if (used[psort[i]]) {
-                System.err.println("Duplicate sort index: " + psort[i]);
+                log.error("Duplicate sort index: " + psort[i]);
                 isValid = false;
                 break;
             }
@@ -943,7 +942,7 @@ public class StreamingSQLResultUpdater {
         }
 
         if (!isValid) {
-            System.err.println("Sort index invalid, resetting to default order");
+            log.error("Sort index invalid, resetting to default order");
             for (int j = 0; j < psort.length; j++) {
                 psort[j] = j;
             }
@@ -1058,13 +1057,21 @@ public class StreamingSQLResultUpdater {
 
             // Add rows to table
             for (int col = 0; col < columns.length; col++) {
-                table.getColumn(col).Append(columns[col]);
+                Vector tableColumn = table.getColumn(col);
+                if (tableColumn instanceof BasicAnyVector) {
+                    Vector sourceColumn = columns[col];
+                    for (int row = 0; row < sourceColumn.rows(); row++) {
+                        ((BasicAnyVector) tableColumn).Append(sourceColumn.get(row));
+                    }
+                } else {
+                    tableColumn.Append(columns[col]);
+                }
             }
 
             log.debug("After append, table has " + table.rows() + " rows");
             return true;
         } catch (Exception e) {
-            System.err.println("Error in appendColumns: " + e.getMessage());
+            log.error("Error in appendColumns: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -1115,7 +1122,7 @@ public class StreamingSQLResultUpdater {
                         if (tableColumn instanceof BasicArrayVector) {
                             log.debug("    Detected BasicArrayVector, using enhanced set method");
                             if (!(value instanceof Vector)) {
-                                System.err.println("    Error: BasicArrayVector requires Vector value, got: " + value.getClass().getSimpleName());
+                                log.error("    Error: BasicArrayVector requires Vector value, got: " + value.getClass().getSimpleName());
                                 continue;
                             }
                         }
@@ -1128,15 +1135,15 @@ public class StreamingSQLResultUpdater {
                         log.debug("    Updated value: " + updatedValue.getString());
 
                         if (!updatedValue.getString().equals(value.getString())) {
-                            System.err.println("    Warning: Update may not have taken effect!");
-                            System.err.println("    Expected: " + value.getString());
-                            System.err.println("    Actual: " + updatedValue.getString());
+                            log.error("    Warning: Update may not have taken effect!");
+                            log.error("    Expected: " + value.getString());
+                            log.error("    Actual: " + updatedValue.getString());
                         } else {
                             log.debug("    Update successful!");
                         }
 
                     } catch (Exception e) {
-                        System.err.println("  Error updating column " + colIndex + " at row " + rowIndex + ": " + e.getMessage());
+                        log.error("  Error updating column " + colIndex + " at row " + rowIndex + ": " + e.getMessage());
                         e.printStackTrace();
                         // Continue processing other columns, don't fail entirely because of one column
                     }
@@ -1147,7 +1154,7 @@ public class StreamingSQLResultUpdater {
             return true;
 
         } catch (Exception e) {
-            System.err.println("Error in updateRows: " + e.getMessage());
+            log.error("Error in updateRows: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
