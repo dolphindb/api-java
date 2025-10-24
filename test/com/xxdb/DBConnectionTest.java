@@ -86,7 +86,7 @@ public class DBConnectionTest {
     }
     @Before
     public void setUp() throws IOException {
-        conn = new DBConnection(false,false,true);
+        conn = new DBConnection(false,false,false);
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
                 throw new IOException("Failed to connect to dolphindb server");
@@ -2512,7 +2512,22 @@ public class DBConnectionTest {
         assertEquals(100, table.rows());
         assertEquals(2, table.columns());
     }
-
+    @Test
+    public void Test_upload_table_any() throws IOException {
+        String script = "ctime=take(2025.10.18T10:27:23.275..2025.10.10T10:27:23.275,9)\n" +
+                "cany=array(ANY,0).append!(1000).append!(`www`qqq).append!(matrix([1 2 3, 4 5 6])).append!(set(1 2)).append!(100:11).append!(table(`qa`ws`ed as id)).append!(dict(`aaa11`bbb22, [dict(`p1`p2, `1`2, true), dict(`p11`p22, `100`200, true)])).append!((100, `11)).append!( [[`1a,`a1]].setColumnarTuple!())\n" +
+                "t1 = table(ctime, cany);\n" +
+                "t1";
+        BasicTable tb = (BasicTable) conn.run(script);
+        System.out.println(tb.getString());
+        Map<String, Entity> upObj = new HashMap<String, Entity>();
+        upObj.put("table_uploaded", (Entity) tb);
+        conn.upload(upObj);
+        BasicTable re = (BasicTable) conn.run("table_uploaded");
+        assertEquals(9, re.rows());
+        assertEquals(2, re.columns());
+        checkData(tb, re);
+    }
     @Test
     public void testTableUpload() throws IOException {
         conn.run("try{" +
