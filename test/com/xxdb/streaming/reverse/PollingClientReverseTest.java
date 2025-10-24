@@ -343,7 +343,7 @@ public class PollingClientReverseTest {
     }
 
     @Test(timeout = 120000)
-    public void test_subscribe_user_authMode_scream() throws IOException {
+    public void test_subscribe_user_authMode_scram() throws IOException {
         PrepareUser_authMode("scramUser","123456","scram");
         TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1", "subtrades1", -1, true,null,"scramUser","123456");
         ArrayList<IMessage> msgs1;

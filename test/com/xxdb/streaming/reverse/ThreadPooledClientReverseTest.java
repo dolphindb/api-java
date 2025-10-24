@@ -481,11 +481,11 @@ public static void PrepareStreamTable() throws IOException {
             threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades2", MessageHandler_handler, -1, true, filter1, true);
             threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades3", MessageHandler_handler, -1, true, filter1, true);
             conn.run("n=10;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(1500);
+            Thread.sleep(2500);
             threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades1");
             threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades2");
             threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades3");
-            Thread.sleep(2000);
+            Thread.sleep(2300);
         }
     }
 
@@ -540,7 +540,7 @@ public static void PrepareStreamTable() throws IOException {
     }
 
     @Test
-    public void test_subscribe_authMode_scream() throws IOException, InterruptedException {
+    public void test_subscribe_authMode_scram() throws IOException, InterruptedException {
         PrepareStreamTable();
         PrepareUser_authMode("scramUser","123456","scram");
         Vector filter1 = (Vector) conn.run("1..100000");

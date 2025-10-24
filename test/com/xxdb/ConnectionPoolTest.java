@@ -135,7 +135,7 @@ public class ConnectionPoolTest {
     }
 
     @Test
-    public void test_DBConnectionPool_user_authMode_scream() throws Exception {
+    public void test_DBConnectionPool_user_authMode_scram() throws Exception {
         PrepareUser_authMode("scramUser","123456","scram");
         conn.run("if(existsDatabase(\"dfs://testArrayVector\")){\n" +
                 "dropDatabase(\"dfs://testArrayVector\")\n" +

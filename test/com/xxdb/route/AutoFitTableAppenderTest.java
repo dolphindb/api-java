@@ -2709,7 +2709,7 @@ public class AutoFitTableAppenderTest {
     }
 
     @Test
-    public void Test_AutoFitTableAppender_user_authMode_scream() throws IOException {
+    public void Test_AutoFitTableAppender_user_authMode_scram() throws IOException {
         PrepareUser_authMode("scramUser","123456","scram");
         String script = null;
         script = "cbool = true false false;\n";

@@ -931,7 +931,7 @@ public class ThreadedClientsubscribeReverseTest {
     }
 
     @Test(timeout = 60000)
-    public void test_subscribe_user_authMode_scream() throws IOException, InterruptedException {
+    public void test_subscribe_user_authMode_scram() throws IOException, InterruptedException {
         PrepareUser_authMode("scramUser","123456","scram");
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
                 "share(st1,`Trades)\t\n"

@@ -7178,7 +7178,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
 //    }
 
     @Test(timeout = 120000)
-    public void test_MultithreadedTableWriter_user_authMode_scream() throws Exception {
+    public void test_MultithreadedTableWriter_user_authMode_scram() throws Exception {
         PrepareUser_authMode("scramUser","123456","scram");
         StringBuilder sb = new StringBuilder();
         sb.append("t = streamTable(1000:0, `char`int`long`short`id," +
