@@ -22,8 +22,6 @@ import java.util.concurrent.locks.LockSupport;
 public class ThreadPooledClient extends AbstractClient {
     private static int CORES = Runtime.getRuntime().availableProcessors();
     private ExecutorService threadPool;
-    // private HashMap<String, List<String>> users = new HashMap<>();
-    private Object lock = new Object();
     private int threadCount = -1;
 
     private static final Logger log = LoggerFactory.getLogger(ThreadPooledClient.class);
@@ -169,7 +167,7 @@ public class ThreadPooledClient extends AbstractClient {
                     Thread.currentThread().interrupt();
                 }
 
-                // after last threadPool completely shutdown，create a new threadPool（because ExecutorService lifecycle is unidirectional）.
+                // after last threadPool completely shutdown, create a new threadPool（because ExecutorService lifecycle is unidirectional)
                 if (threadPool.isTerminated())
                     threadPool = Executors.newFixedThreadPool(threadCount);
 
@@ -333,6 +331,9 @@ public class ThreadPooledClient extends AbstractClient {
 
     @Override
     protected void unsubscribeInternal(String host, int port, String tableName, String actionName) throws IOException {
+        String originalFullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+        log.debug("Starting unsubscribe process for " + originalFullTableName);
+
         if (!ifUseBackupSite) {
             // original logic:
             DBConnection dbConn = new DBConnection();
@@ -351,6 +352,7 @@ public class ThreadPooledClient extends AbstractClient {
                     }
 
                     if (matchedInfo != null) {
+                        log.debug("Found HA matched info, switching from " + host + ":" + port + " to leader " + matchedInfo.getLeaderIp() + ":" + matchedInfo.getLeaderPort());
                         host = matchedInfo.getLeaderIp();
                         port = matchedInfo.getLeaderPort();
                     }
@@ -361,11 +363,34 @@ public class ThreadPooledClient extends AbstractClient {
             List<String> usr = users.get(tp);
             String user = usr.get(0);
             String pwd = usr.get(1);
+            log.debug("Connecting to server " + host + ":" + port + " to send unsubscribe signal for " + originalFullTableName);
             if (!user.equals(""))
                 dbConn.connect(host, port, user, pwd);
             else
                 dbConn.connect(host, port);
+            log.debug("Connected to server " + host + ":" + port + " successfully");
             try {
+                // Get topic and mark sites as closed BEFORE sending stopPublishTable
+                // This prevents MessageParser from triggering reconnect when it receives EOF
+                String topic;
+                String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+                synchronized (tableNameToTrueTopic) {
+                    topic = tableNameToTrueTopic.get(fullTableName);
+                    log.debug("Retrieved topic from tableNameToTrueTopic: " + topic + " for " + fullTableName);
+                }
+                synchronized (trueTopicToSites) {
+                    Site[] sites = trueTopicToSites.get(topic);
+                    if (sites == null || sites.length == 0) {
+                        log.warn("No sites found for topic: " + topic);
+                    } else {
+                        log.info("Marking " + sites.length + " site(s) as closed for topic: " + topic + " BEFORE sending stopPublishTable");
+                        for (int i = 0; i < sites.length; i++) {
+                            sites[i].closed = true;
+                            log.debug("Site " + i + " marked as closed: " + sites[i].host + ":" + sites[i].port);
+                        }
+                    }
+                }
+
                 String localIP = this.listeningHost;
                 if(localIP.equals(""))
                     localIP = dbConn.getLocalAddress().getHostAddress();
@@ -375,37 +400,31 @@ public class ThreadPooledClient extends AbstractClient {
                 params.add(new BasicString(tableName));
                 params.add(new BasicString(actionName));
 
+                log.debug("Sending stopPublishTable command with params: localIP=" + localIP + ", listeningPort=" + this.listeningPort + ", tableName=" + tableName + ", actionName=" + actionName);
                 dbConn.run("stopPublishTable", params);
-                String topic = null;
-                String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
-                synchronized (tableNameToTrueTopic) {
-                    topic = tableNameToTrueTopic.get(fullTableName);
-                }
-                synchronized (trueTopicToSites) {
-                    Site[] sites = trueTopicToSites.get(topic);
-                    if (sites == null || sites.length == 0)
-                        ;
-                    for (int i = 0; i < sites.length; i++)
-                        sites[i].closed = true;
-                }
+                log.debug("stopPublishTable command executed successfully for " + originalFullTableName);
                 synchronized (queueManager) {
                     queueManager.removeQueue(topic);
+                    log.debug("Queue removed from queueManager for topic: " + topic);
                 }
 
-                log.info("Successfully unsubscribed table " + fullTableName);
+                log.debug("Successfully unsubscribed table " + fullTableName);
             } catch (Exception ex) {
+                log.error("Error occurred during unsubscribe for " + originalFullTableName, ex);
                 throw ex;
             } finally {
                 dbConn.close();
+                log.debug("DBConnection closed for " + originalFullTableName);
+
                 String topicStr = host + ":" + port + "/" + tableName + "/" + actionName;
-                QueueHandlerBinder queueHandler =null;
                 synchronized (queueHandlers){
-                    queueHandler = queueHandlers.get(topicStr);
                     queueHandlers.remove(topicStr);
                 }
+                log.debug("Unsubscribe process completed for " + originalFullTableName);
             }
         } else {
             // use backBackSite
+            log.debug("Using backupSite mode for unsubscribe");
             String originHost = host;
             int originPort = port;
 
@@ -415,6 +434,7 @@ public class ThreadPooledClient extends AbstractClient {
                     String topic = tableNameToTrueTopic.get( host + ":" + port + "/" + tableName + "/" + actionName);
                     Integer currentSiteIndex = currentSiteIndexMap.get(topic);
                     Site[] sites = trueTopicToSites.get(topic);
+                    log.debug("Switching to current site index " + currentSiteIndex + ": " + sites[currentSiteIndex].host + ":" + sites[currentSiteIndex].port);
                     host = sites[currentSiteIndex].host;
                     port = sites[currentSiteIndex].port;
                 }
@@ -433,6 +453,7 @@ public class ThreadPooledClient extends AbstractClient {
                         }
 
                         if (matchedInfo != null) {
+                            log.debug("Found HA matched info, switching from " + host + ":" + port + " to leader " + matchedInfo.getLeaderIp() + ":" + matchedInfo.getLeaderPort());
                             host = matchedInfo.getLeaderIp();
                             port = matchedInfo.getLeaderPort();
                         }
@@ -443,11 +464,34 @@ public class ThreadPooledClient extends AbstractClient {
                 List<String> usr = users.get(tp);
                 String user = usr.get(0);
                 String pwd = usr.get(1);
+
+                log.debug("Connecting to server " + host + ":" + port + " to send unsubscribe signal (backupSite mode) for " + originalFullTableName);
                 if (!user.equals(""))
                     dbConn.connect(host, port, user, pwd);
                 else
                     dbConn.connect(host, port);
+
+                log.debug("Connected to server " + host + ":" + port + " successfully (backupSite mode)");
+
                 try {
+                    // Get topic and mark sites as closed BEFORE sending stopPublishTable
+                    // This prevents MessageParser from triggering reconnect when it receives EOF
+                    String topic;
+                    String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
+                    topic = tableNameToTrueTopic.get(fullTableName);
+                    log.debug("Retrieved topic from tableNameToTrueTopic: " + topic + " for " + fullTableName);
+
+                    Site[] sites = trueTopicToSites.get(topic);
+                    if (sites == null || sites.length == 0) {
+                        log.warn("No sites found for topic: " + topic);
+                    } else {
+                        log.debug("Marking " + sites.length + " site(s) as closed for topic: " + topic + " BEFORE sending stopPublishTable (backupSite mode)");
+                        for (int i = 0; i < sites.length; i++) {
+                            sites[i].closed = true;
+                            log.debug("Site " + i + " marked as closed: " + sites[i].host + ":" + sites[i].port);
+                        }
+                    }
+
                     String localIP = this.listeningHost;
                     if(localIP.equals(""))
                         localIP = dbConn.getLocalAddress().getHostAddress();
@@ -457,36 +501,33 @@ public class ThreadPooledClient extends AbstractClient {
                     params.add(new BasicString(tableName));
                     params.add(new BasicString(actionName));
 
+                    log.debug("Sending stopPublishTable command (backupSite mode) with params: localIP=" + localIP + ", listeningPort=" + this.listeningPort + ", tableName=" + tableName + ", actionName=" + actionName);
                     dbConn.run("stopPublishTable", params);
-                    String topic = null;
-                    String fullTableName = host + ":" + port + "/" + tableName + "/" + actionName;
-                    topic = tableNameToTrueTopic.get(fullTableName);
-
-                    Site[] sites = trueTopicToSites.get(topic);
-                    if (sites == null || sites.length == 0)
-                        ;
-                    for (int i = 0; i < sites.length; i++)
-                        sites[i].closed = true;
+                    log.debug("stopPublishTable command executed successfully (backupSite mode) for " + originalFullTableName);
 
                     queueManager.removeQueue(topic);
+                    log.debug("Queue removed from queueManager for topic: " + topic);
 
                     // init backupSites related params.
                     if (AbstractClient.ifUseBackupSite) {
+                        log.debug("Resetting backupSite related parameters");
                         AbstractClient.ifUseBackupSite = false;
                         AbstractClient.subOnce = false;
                         AbstractClient.resubscribeInterval = 100;
                     }
-                    log.info("Successfully unsubscribed table " + fullTableName);
+                    log.debug("Successfully unsubscribed table " + fullTableName);
                 } catch (Exception ex) {
+                    log.error("Error occurred during unsubscribe (backupSite mode) for " + originalFullTableName, ex);
                     throw ex;
                 } finally {
                     dbConn.close();
+                    log.debug("DBConnection closed (backupSite mode) for " + originalFullTableName);
+
                     String topicStr = originHost + ":" + originPort + "/" + tableName + "/" + actionName;
-                    QueueHandlerBinder queueHandler =null;
                     synchronized (queueHandlers){
-                        queueHandler = queueHandlers.get(topicStr);
                         queueHandlers.remove(topicStr);
                     }
+                    log.debug("Unsubscribe process completed (backupSite mode) for " + originalFullTableName);
                 }
             }
         }
