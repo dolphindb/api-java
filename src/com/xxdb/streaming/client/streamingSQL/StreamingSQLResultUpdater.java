@@ -652,7 +652,7 @@ public class StreamingSQLResultUpdater {
             }
 
             Vector newVector;
-            if (dataType == Entity.DATA_TYPE.DT_ANY || dataType == Entity.DATA_TYPE.DT_VOID) {
+            if (dataType == Entity.DATA_TYPE.DT_ANY) {
                 newVector = new BasicAnyVector(sourceVector.rows());
             } else {
                 newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, sourceVector.rows(), scale);
