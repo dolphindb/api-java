@@ -783,26 +783,4 @@ public class StreamReplicator implements AutoCloseable {
             }
         }
     }
-
-    /**
-     * Utility class for converting Java objects to DolphinDB entities.
-     */
-    public static Entity toEntity(Object obj, Entity.DATA_TYPE expectedType, int extra) {
-        if (obj == null) {
-            Scalar scalar = BasicEntityFactory.instance().createScalarWithDefaultValue(expectedType);
-            scalar.setNull();
-            return scalar;
-        }
-
-        if (obj instanceof Entity) {
-            return (Entity) obj;
-        }
-
-        // Use BasicEntityFactory static method to create appropriate scalar
-        try {
-            return BasicEntityFactory.createScalar(expectedType, obj, extra);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to convert object to Entity: " + e.getMessage(), e);
-        }
-    }
 }
