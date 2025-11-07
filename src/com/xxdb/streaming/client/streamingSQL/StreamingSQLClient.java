@@ -314,7 +314,7 @@ public class StreamingSQLClient extends AbstractClient {
                     // If the table is initialized, update the table content
                     if (resultWrapper.table != null) {
                         // Print the table content before update
-                        log.debug("Before update，table content: " + resultWrapper.table.getString());
+                        log.debug("Before update, table content: " + resultWrapper.table.getString());
 
                         // Get update results
                         StreamingSQLResultUpdater.StreamingSQLResult sqlResult = StreamingSQLResultUpdater.updateStreamingSQLResult(resultWrapper.table, deleteLineMap, msg);

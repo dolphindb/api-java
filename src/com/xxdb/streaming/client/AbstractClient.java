@@ -889,7 +889,7 @@ public abstract class AbstractClient implements MessageDispatcher {
             List<Entity> params = new ArrayList<Entity>();
             params.add(new BasicString(tableName));
             params.add(new BasicString(actionName));
-            params.add(new BasicBoolean(true)); // streamingSQL，'true' true will return
+            params.add(new BasicBoolean(true)); // streamingSQL,'true' true will return
             re = dbConn.run("getSubscriptionTopic", params);
             log.debug("getSubscriptionTopic re: \n" + re.getString());
             topic = ((BasicAnyVector) re).getEntity(0).getString();

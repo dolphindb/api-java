@@ -353,7 +353,7 @@ public class EventHandler {
                         continue;
                     }
 
-                    // todo unitlen 如何获取，以及后续是否有用，这里先写 1
+                    // todo unitlen 如何获取, 以及后续是否有用，这里先写 1
                     int unitLen = AbstractVector.getUnitLength(type);
                     if(type == Entity.DATA_TYPE.DT_SYMBOL){
                         // the size of symbol is 4, but it need to be serialized as a string
