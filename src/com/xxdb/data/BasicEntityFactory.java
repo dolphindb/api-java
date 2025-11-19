@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.Calendar;
 import java.util.Date;
 import static com.xxdb.data.Entity.DATA_TYPE.*;
@@ -1119,6 +1120,40 @@ public class BasicEntityFactory implements EntityFactory{
 
 	private static Scalar createScalar(DATA_TYPE dataType, String val, int extraParam) {
 		switch (dataType) {
+			case DT_BOOL:
+				return new BasicBoolean(Boolean.parseBoolean(val));
+			case DT_BYTE:
+				return new BasicByte(Byte.parseByte(val));
+			case DT_SHORT:
+				return new BasicShort(Short.parseShort(val));
+			case DT_INT:
+				return new BasicInt(Integer.parseInt(val));
+			case DT_LONG:
+				return new BasicLong(Long.parseLong(val));
+			case DT_FLOAT:
+				return new BasicFloat(Float.parseFloat(val));
+			case DT_DOUBLE:
+				return new BasicDouble(Double.parseDouble(val));
+			case DT_DATE:
+				return new BasicDate(LocalDate.parse(val));
+			case DT_MONTH:
+				return new BasicMonth(YearMonth.parse(val));
+			case DT_TIME:
+				return new BasicTime(LocalTime.parse(val));
+			case DT_MINUTE:
+				return new BasicMinute(LocalTime.parse(val));
+			case DT_SECOND:
+				return new BasicSecond(LocalTime.parse(val));
+			case DT_DATETIME:
+				return new BasicDateTime(LocalDateTime.parse(val));
+			case DT_TIMESTAMP:
+				return new BasicTimestamp(LocalDateTime.parse(val));
+			case DT_NANOTIME:
+				return new BasicNanoTime(LocalTime.parse(val));
+			case DT_NANOTIMESTAMP:
+				return new BasicNanoTimestamp(LocalDateTime.parse(val));
+			case DT_DATEHOUR:
+				return new BasicDateHour(LocalDateTime.parse(val));
 			case DT_INT128: {
 				return BasicInt128.fromString(val);
 			}
