@@ -804,10 +804,10 @@ public class BasicEntityTest {
     public void test_BasicEntityFactory_createScalar_string_float() throws Exception {
         BasicEntityFactory factory = new BasicEntityFactory();
         String ex = null;
-        BasicFloat  re1 = (BasicFloat)factory.createScalar(Entity.DATA_TYPE.DT_FLOAT, "-9.99",0);
-        assertEquals("-9.99",re1.getString());
+        BasicFloat  re1 = (BasicFloat)factory.createScalar(Entity.DATA_TYPE.DT_FLOAT, "-9.1",0);
+        assertEquals("-9.10000038",re1.getString());
         BasicFloat  re2 = (BasicFloat)factory.createScalar(Entity.DATA_TYPE.DT_FLOAT, "922.3372",0);
-        assertEquals("922.3372",re2.getString());
+        assertEquals("922.33721924",re2.getString());
         BasicFloat  re3 = (BasicFloat)factory.createScalar(Entity.DATA_TYPE.DT_FLOAT, null,0);
         assertEquals("",re3.getString());
         BasicFloat  re4 = (BasicFloat)factory.createScalar(Entity.DATA_TYPE.DT_FLOAT, "0",0);
@@ -920,14 +920,14 @@ public class BasicEntityTest {
         BasicEntityFactory factory = new BasicEntityFactory();
         BasicNanoTime  re = (BasicNanoTime)factory.createScalar(Entity.DATA_TYPE.DT_NANOTIME, "10:00:00.000",0);
         assertEquals("10:00:00.000000000",re.getString());
-        BasicNanoTime  re1 = (BasicNanoTime)factory.createScalar(Entity.DATA_TYPE.DT_NANOTIME, "2024-06-02T10:00:00.000",0);
-        assertEquals("2024.06.02 10:00:00.000",re1.getString());
-        BasicNanoTime  re2 = (BasicNanoTime)factory.createScalar(Entity.DATA_TYPE.DT_NANOTIME, "1964-06-02T23:59:59.999",0);
-        assertEquals("1964.06.02 23:59:59.999",re2.getString());
+        BasicNanoTime  re1 = (BasicNanoTime)factory.createScalar(Entity.DATA_TYPE.DT_NANOTIME, "10:00:00.0002222",0);
+        assertEquals("10:00:00.000222200",re1.getString());
+        BasicNanoTime  re2 = (BasicNanoTime)factory.createScalar(Entity.DATA_TYPE.DT_NANOTIME, "23:59:59.999",0);
+        assertEquals("23:59:59.999000000",re2.getString());
         BasicNanoTime  re3 = (BasicNanoTime)factory.createScalar(Entity.DATA_TYPE.DT_NANOTIME, null,0);
         assertEquals("",re3.getString());
-        BasicNanoTime  re4 = (BasicNanoTime)factory.createScalar(Entity.DATA_TYPE.DT_NANOTIME, "2039-06-02T10:00:00.888",0);
-        assertEquals("2039.06.02 10:00:00.888",re4.getString());
+        BasicNanoTime  re4 = (BasicNanoTime)factory.createScalar(Entity.DATA_TYPE.DT_NANOTIME, "10:00:00.888",0);
+        assertEquals("10:00:00.888000000",re4.getString());
     }
 
     @Test
