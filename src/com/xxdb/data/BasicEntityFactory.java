@@ -454,7 +454,7 @@ public class BasicEntityFactory implements EntityFactory{
 		public Matrix createMatrix(ExtendedDataInput in) throws IOException { return new BasicSecondMatrix(in);}
 		public ExtendObj createExtendObj(ExtendedDataInput in) throws IOException { return null;}
 		public Vector createVector(int size, int capacity, int extra) { return new BasicSecondVector(size, capacity);}
-		public Scalar createScalarWithDefaultValue() { return new BasicInt(0);}
+		public Scalar createScalarWithDefaultValue() { return new BasicSecond(0);}
 		public Vector createVectorWithDefaultValue(int size, int extra){ return new BasicSecondVector(size);}
 		public Vector createPairWithDefaultValue(){ return new BasicSecondVector(Entity.DATA_FORM.DF_PAIR, 2);}
 		public Matrix createMatrixWithDefaultValue(int rows, int columns){ return new BasicSecondMatrix(rows, columns);}
