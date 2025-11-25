@@ -481,11 +481,11 @@ public static void PrepareStreamTable() throws IOException {
             threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades2", MessageHandler_handler, -1, true, filter1, true);
             threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades3", MessageHandler_handler, -1, true, filter1, true);
             conn.run("n=10;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(2500);
+            Thread.sleep(1000);
             threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades1");
             threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades2");
             threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades3");
-            Thread.sleep(2300);
+            Thread.sleep(1000);
         }
     }
 
@@ -2115,9 +2115,9 @@ public static void PrepareStreamTable() throws IOException {
 
     @Test(timeout = 120000)
     public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_1() throws Exception {
-        Prepare_streamTable("Trades");
+        Prepare_streamTable(HOST, PORT,"Trades");
         conn.run("setStreamTableFilterColumn(Trades, `intv)");
-        Prepare_streamTable("Receive");
+        Prepare_streamTable(HOST, PORT,"Receive");
         threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_msgAsTable_all, 0,false, null,null,false,"admin","123456",true);
         Preparedata1(1);
         conn.run("Trades.append!(data)");
@@ -2130,9 +2130,9 @@ public static void PrepareStreamTable() throws IOException {
     }
     @Test(timeout = 120000)
     public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_1000() throws Exception {
-        Prepare_streamTable("Trades");
+        Prepare_streamTable(HOST, PORT,"Trades");
         conn.run("setStreamTableFilterColumn(Trades, `intv)");
-        Prepare_streamTable("Receive");
+        Prepare_streamTable(HOST, PORT,"Receive");
         threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_msgAsTable_all, 0,false, null,null,false,"admin","123456",true);
         Preparedata1(1000);
         conn.run("Trades.append!(data)");
@@ -2146,9 +2146,9 @@ public static void PrepareStreamTable() throws IOException {
 
     @Test(timeout = 120000)
     public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_10000() throws Exception {
-        Prepare_streamTable("Trades");
+        Prepare_streamTable(HOST, PORT,"Trades");
         conn.run("setStreamTableFilterColumn(Trades, `intv)");
-        Prepare_streamTable("Receive");
+        Prepare_streamTable(HOST, PORT,"Receive");
         threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_msgAsTable_all, 0,false, null,null,false,"admin","123456",true);
         Preparedata1(10000);
         conn.run("Trades.append!(data)");

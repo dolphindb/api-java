@@ -3666,9 +3666,9 @@ public class ThreadedClientsubscribeReverseTest {
 
     @Test(timeout = 120000)
     public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_1() throws Exception {
-        Prepare_streamTable("Trades");
+        Prepare_streamTable(HOST, PORT,"Trades");
         conn.run("setStreamTableFilterColumn(Trades, `intv)");
-        Prepare_streamTable("Receive");
+        Prepare_streamTable(HOST, PORT,"Receive");
         threadedClient.subscribe(HOST,PORT,"Trades","subTread1", BatchMessageHandler_msgAsTable_all,-1,true,null,null,true,10000,5,"admin","123456",true);
         Preparedata1(1);
         conn.run("Trades.append!(data)");
@@ -3681,9 +3681,9 @@ public class ThreadedClientsubscribeReverseTest {
     }
     @Test(timeout = 120000)
     public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_1000() throws Exception {
-        Prepare_streamTable("Trades");
+        Prepare_streamTable(HOST, PORT,"Trades");
         conn.run("setStreamTableFilterColumn(Trades, `intv)");
-        Prepare_streamTable("Receive");
+        Prepare_streamTable(HOST, PORT,"Receive");
         threadedClient.subscribe(HOST,PORT,"Trades","subTread1", BatchMessageHandler_msgAsTable_all,-1,true,null,null,true,10000,5,"admin","123456",true);
         Preparedata1(1000);
         conn.run("Trades.append!(data)");
@@ -3697,9 +3697,9 @@ public class ThreadedClientsubscribeReverseTest {
 
     @Test(timeout = 120000)
     public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_10000() throws Exception {
-        Prepare_streamTable("Trades");
+        Prepare_streamTable(HOST, PORT,"Trades");
         conn.run("setStreamTableFilterColumn(Trades, `intv)");
-        Prepare_streamTable("Receive");
+        Prepare_streamTable(HOST, PORT,"Receive");
         threadedClient.subscribe(HOST,PORT,"Trades","subTread1", BatchMessageHandler_msgAsTable_all,-1,true,null,null,true,10000,5,"admin","123456",true);
         Preparedata1(10000);
         conn.run("Trades.append!(data)");

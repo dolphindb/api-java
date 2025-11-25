@@ -1579,7 +1579,7 @@ public class EventClientTest {
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         EventClient client = new EventClient(eventSchemas, eventTimeFields, commonFields);
         //需要新写一个handler
-        client.subscribe(HOST, PORT, "intput1", "test1", handler_array, -1, true, "admin", "123456");
+        client.subscribe(HOST, PORT, "intput1", "test1", handler, -1, true, "admin", "123456");
 
         BasicTable bt = (BasicTable)conn.run("select * from data");
         String script2 = "data1=select * from data;\n" +
@@ -1592,8 +1592,7 @@ public class EventClientTest {
                 "\t}" ;
         conn.run(script2);
         sleep(2000);
-        BasicTable bt1 = (BasicTable)conn.run("select * from data;");
-        System.out.println(bt1.getString());
+        BasicTable bt1 = (BasicTable)conn.run("select any1,any2,any3 from data;");
         Assert.assertEquals(100,bt1.rows());
         BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(100,bt2.rows());

@@ -6972,7 +6972,8 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 " db = database(dbPath, HASH,[STRING, 2],,\"TSDB\");\n " +
                 "t= table(100:0,`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`uuidv`datehourv`ippaddrv`int128v`blobv`complexv`pointv`decimal32v`decimal64v`decimal128v, " +
                 "[BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, SYMBOL, STRING, UUID, DATEHOUR, IPADDR, INT128, BLOB, complex, POINT, DECIMAL32(3), DECIMAL64(4),DECIMAL128(10) ]);\n" +
-                " pt=db.createPartitionedTable(t,`pt,`stringv,,`stringv);");        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://empty_table", "pt", false, false, null, 1, 1, 1, "stringv");
+                " pt=db.createPartitionedTable(t,`pt,`stringv,,`stringv);");
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://empty_table", "pt", false, false, null, 1, 1, 1, "stringv");
         ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( cols);
         assertEquals("code= info=",pErrorInfo.toString());
         mutithreadTableWriter_.waitForThreadCompletion();
@@ -7276,6 +7277,33 @@ public  class MultithreadedTableWriterTest implements Runnable {
         mutithreadTableWriter_.waitForThreadCompletion();
         BasicTable bt1 = (BasicTable) conn.run("select * from orca.orca_table.trades;");
         assertEquals(10, bt.rows());
+        checkData(bt, bt1);
+    }
+
+    //@Test(timeout = 120000) 还不支持
+    public void test_MultithreadedTableWriter_table_any() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT,"admin","123456");
+        String script1 = "share table(1:0,`any1`any2`any3,[ANY,ANY,ANY]) as dataType_any;" +
+                "cany=array(ANY,0).append!(1000).append!(`www`qqq).append!(matrix([1 2 3, 4 5 6])).append!(set(1 2)).append!(100:11).append!(table(`qa`ws`ed as id)).append!(dict(`aaa11`bbb22, [dict(`p1`p2, `1`2, true), dict(`p11`p22, `100`200, true)])).append!((100, `11)).append!( [[`1a,`a1]].setColumnarTuple!());\n" +
+                "share  table(cany as any1, cany as any2, cany as any3) as data;\n" ;
+        conn.run(script1);
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "dataType_any", false, false, null, 1, 1,
+                1, "");
+        BasicTable bt = (BasicTable)conn.run("select * from data");
+        for(int i=0;i<bt.rows();i++){
+            pErrorInfo = mutithreadTableWriter_.insert(
+                    bt.getColumn(0).get(i),
+                    bt.getColumn(1).get(i),
+                    bt.getColumn(2).get(i));
+            System.out.println( bt.getColumn(0).get(i).getString());
+        }
+
+        assertEquals("code= info=",pErrorInfo.toString());
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt1 = (BasicTable) conn.run("select * from dataType_any;");
+        assertEquals(9, bt.rows());
         checkData(bt, bt1);
     }
 }

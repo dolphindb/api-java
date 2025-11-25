@@ -3,7 +3,6 @@ package com.xxdb.streaming.client.streamingSQL;
 import com.xxdb.DBConnection;
 import com.xxdb.data.BasicTable;
 import com.xxdb.data.Entity;
-import com.xxdb.streaming.client.ThreadedClient;
 import org.junit.*;
 
 import java.io.IOException;
