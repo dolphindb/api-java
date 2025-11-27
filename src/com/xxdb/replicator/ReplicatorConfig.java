@@ -69,38 +69,18 @@ public class ReplicatorConfig {
      * Sets the batching parameters.
      *
      * @param batchSize The number of rows to accumulate before writing (must be > 0)
-     * @param throttle  The maximum time in seconds to wait before writing, regardless of batch size (0 means no timeout)
+     * @param batchInterval  The maximum time in seconds to wait before writing, regardless of batch size (0 means no timeout)
      * @return This config instance for chaining
      */
-    public ReplicatorConfig setBatching(int batchSize, float throttle) {
-        if (batchSize <= 0) {
-            throw new IllegalArgumentException("batchSize must be greater than 0");
-        }
-        if (throttle < 0) {
-            throw new IllegalArgumentException("throttle must be greater than or equal to 0");
-        }
-        this.batchSize = batchSize;
-        this.batchInterval = (long)(throttle * 1000);
-        return this;
-    }
-
-    /**
-     * Sets the batching parameters with TimeUnit (alternative API).
-     *
-     * @param batchSize     The number of rows to accumulate before writing (must be > 0)
-     * @param batchInterval The maximum time to wait before writing, regardless of batch size
-     * @param unit          The time unit for batchInterval
-     * @return This config instance for chaining
-     */
-    public ReplicatorConfig setBatching(int batchSize, long batchInterval, TimeUnit unit) {
+    public ReplicatorConfig setBatching(int batchSize, int batchInterval) {
         if (batchSize <= 0) {
             throw new IllegalArgumentException("batchSize must be greater than 0");
         }
         if (batchInterval < 0) {
-            throw new IllegalArgumentException("batchInterval cannot be negative");
+            throw new IllegalArgumentException("throttle must be greater than or equal to 0");
         }
         this.batchSize = batchSize;
-        this.batchInterval = unit.toMillis(batchInterval);
+        this.batchInterval = batchInterval * 1000L; // convert to milliseconds
         return this;
     }
 
