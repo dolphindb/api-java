@@ -3,7 +3,6 @@ package com.xxdb.replicator;
 import com.xxdb.comm.ConnectionState;
 import com.xxdb.data.BasicTable;
 import com.xxdb.data.Vector;
-
 import java.util.concurrent.TimeUnit;
 
 /**

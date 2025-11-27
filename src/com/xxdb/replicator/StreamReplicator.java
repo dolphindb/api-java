@@ -6,7 +6,6 @@ import com.xxdb.comm.ErrorCodeInfo;
 import com.xxdb.data.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,13 +51,13 @@ public class StreamReplicator implements AutoCloseable {
      */
     public StreamReplicator(List<HostInfo> hosts, String tableName, ReplicatorConfig config) throws IOException {
         if (hosts == null || hosts.isEmpty()) {
-            throw new IllegalArgumentException("Hosts list cannot be null or empty");
+            throw new IllegalArgumentException("The param 'hosts' cannot be null or empty.");
         }
         if (tableName == null || tableName.isEmpty()) {
-            throw new IllegalArgumentException("Table name cannot be null or empty");
+            throw new IllegalArgumentException("The param 'tableName' cannot be null or empty.");
         }
         if (config == null) {
-            throw new IllegalArgumentException("Config cannot be null");
+            throw new IllegalArgumentException("The param 'config' cannot be null.");
         }
 
         this.hosts = new ArrayList<>(hosts);
@@ -115,24 +114,24 @@ public class StreamReplicator implements AutoCloseable {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    throw new IOException("Interrupted while waiting for initialization", e);
+                    throw new IOException("Interrupted while waiting for initialization.", e);
                 }
             }
         }
 
         if (!initialized) {
-            throw new IOException("Failed to initialize: no connection could retrieve table schema within timeout");
+            throw new IOException("Failed to initialize: no connection could retrieve table schema within timeout.");
         }
 
         // Validate compression array length if provided
         int[] compression = config.getCompression();
         if (compression != null && compression.length > 0 && compression.length != columnCount) {
             throw new IOException(String.format(
-                "Compression array length (%d) does not match column count (%d)",
+                "The param 'compression' value length (%d) does not match column count (%d).",
                 compression.length, columnCount));
         }
 
-        logger.info("StreamReplicator initialized for table '{}' with {} hosts and {} columns",
+        logger.info("StreamReplicator initialized for table '{}' with {} hosts and {} columns successfully.",
             tableName, hosts.size(), columnCount);
     }
 
@@ -145,12 +144,12 @@ public class StreamReplicator implements AutoCloseable {
     public ErrorCodeInfo insert(Object... args) {
         if (isClosed) {
             return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_DestroyedObject,
-                "StreamReplicator has been closed");
+                "StreamReplicator has been closed.");
         }
 
         if (args.length != columnCount) {
             return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidParameter,
-                String.format("Column count mismatch: expected %d columns, got %d", columnCount, args.length));
+                String.format("Column count mismatch: expected %d columns, but get %d.", columnCount, args.length));
         }
 
         insertLock.lock();
@@ -189,11 +188,11 @@ public class StreamReplicator implements AutoCloseable {
                     } else if (entity instanceof Vector) {
                         targetVector.Append((Vector) entity);
                     } else {
-                        throw new IllegalArgumentException("Unsupported entity type: " + entity.getClass());
+                        throw new IllegalArgumentException("Unsupported entity type: " + entity.getDataForm() + ".");
                     }
                 } catch (Exception e) {
                     return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_InvalidColumnType,
-                        String.format("Failed to convert column %d: %s", i, e.getMessage()));
+                        String.format("Failed to convert column %d: %s.", i, e.getMessage()));
                 }
             }
 
@@ -291,16 +290,16 @@ public class StreamReplicator implements AutoCloseable {
             try {
                 thread.join(30000); // 30 second timeout for completion
                 if (thread.isAlive()) {
-                    logger.warn("Writer thread for host '{}' did not complete within timeout", thread.getHostLabel());
+                    logger.warn("Writer thread for host '{}' does not complete within timeout.", thread.getHostLabel());
                     thread.interrupt();
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                logger.error("Interrupted while waiting for thread completion", e);
+                logger.error("Interrupted while waiting for thread completion.", e);
             }
         }
 
-        logger.info("All writer threads completed for table '{}'", tableName);
+        logger.info("All writer threads completed for table '{}'.", tableName);
     }
 
     /**
@@ -314,7 +313,7 @@ public class StreamReplicator implements AutoCloseable {
             return;
         }
 
-        logger.info("Closing StreamReplicator for table '{}'", tableName);
+        logger.info("Closing StreamReplicator for table '{}.'", tableName);
 
         // Wait for threads to complete
         waitForThreadCompletion();
@@ -381,7 +380,7 @@ public class StreamReplicator implements AutoCloseable {
             try {
                 // Initial connection
                 if (!connect()) {
-                    logger.error("Failed to establish initial connection to host '{}'", hostInfo.getLabel());
+                    logger.error("Failed to establish initial connection to host '{}'.", hostInfo.getLabel());
                     return;
                 }
 
@@ -421,7 +420,7 @@ public class StreamReplicator implements AutoCloseable {
                 if (connection != null) {
                     connection.close();
                 }
-                logger.info("Writer thread stopped for host '{}'", hostInfo.getLabel());
+                logger.info("Writer thread stopped for host '{}'.", hostInfo.getLabel());
             }
         }
 
@@ -453,7 +452,7 @@ public class StreamReplicator implements AutoCloseable {
                 return true;
 
             } catch (Exception e) {
-                logger.error("Failed to connect to host '{}': {}", hostInfo.getLabel(), e.getMessage());
+                logger.error("Failed to connect to host '{}': {}.", hostInfo.getLabel(), e.getMessage());
                 ErrorCodeInfo errorInfo = new ErrorCodeInfo(ErrorCodeInfo.Code.EC_Server,
                     "Connection failed: " + e.getMessage());
                 status.setError(errorInfo);
@@ -481,7 +480,7 @@ public class StreamReplicator implements AutoCloseable {
                     int typeInt = colDefsTypeInt.getInt(i);
                     Entity.DATA_TYPE type = Entity.DATA_TYPE.valueOf(typeInt);
                     if (config.getCompression() != null && !AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.valueOf(typeInt), config.getCompression()[i])) {
-                        throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + type);
+                        throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + type + ".");
                     }
                     columnTypes.add(type);
                     int extra = -1;
@@ -491,7 +490,7 @@ public class StreamReplicator implements AutoCloseable {
                     columnExtras.add(extra);
                 }
 
-                logger.debug("Retrieved schema for table '{}' from host '{}': {} columns",
+                logger.debug("Retrieved schema for table '{}' from host '{}': {} columns.",
                     tableName, hostInfo.getLabel(), columnTypes.size());
 
             } catch (Exception e) {
@@ -522,7 +521,7 @@ public class StreamReplicator implements AutoCloseable {
                 try {
                     table.setColumnCompressTypes(compression);
                 } catch (Exception e) {
-                    logger.error("Failed to set compression for host '{}': {}", hostInfo.getLabel(), e.getMessage());
+                    logger.error("Failed to set compression for host '{}': {}.", hostInfo.getLabel(), e.getMessage());
                 }
             }
 
@@ -549,10 +548,10 @@ public class StreamReplicator implements AutoCloseable {
                         );
 
                         if (!connected) {
-                            throw new IOException("Failed to reconnect");
+                            throw new IOException("Failed to reconnect.");
                         }
 
-                        logger.info("Reconnected to host '{}'", hostInfo.getLabel());
+                        logger.info("Reconnected to host '{}'.", hostInfo.getLabel());
                     }
 
                     // Execute insert
@@ -573,7 +572,7 @@ public class StreamReplicator implements AutoCloseable {
                         updateConnectionState(ConnectionState.Connected);
                     }
 
-                    logger.debug("Successfully wrote {} rows to host '{}'", rowCount, hostInfo.getLabel());
+                    logger.debug("Successfully wrote {} rows to host '{}'.", rowCount, hostInfo.getLabel());
 
                 } catch (Exception e) {
                     // Write failed
@@ -592,7 +591,7 @@ public class StreamReplicator implements AutoCloseable {
 
                     // If this is the last retry attempt
                     if (maxRetry != -1 && retry >= maxRetry) {
-                        logger.error("Max retry attempts reached for host '{}', data will be passed to callback",
+                        logger.error("Max retry attempts reached for host '{}', data will be passed to callback.",
                                    hostInfo.getLabel());
 
                         // Mark as dumped (failed)
@@ -606,12 +605,12 @@ public class StreamReplicator implements AutoCloseable {
                             );
 
                             if (!continueReplication) {
-                                logger.warn("Callback requested to stop replication for host '{}'",
+                                logger.warn("Callback requested to stop replication for host '{}'.",
                                           hostInfo.getLabel());
                                 shouldExit = true;
                             }
                         } catch (Exception callbackEx) {
-                            logger.error("Error in data dump callback for host '{}': {}",
+                            logger.error("Error in data dump callback for host '{}': {}.",
                                        hostInfo.getLabel(), callbackEx.getMessage());
                         }
 
@@ -622,7 +621,7 @@ public class StreamReplicator implements AutoCloseable {
                             Thread.sleep(config.getRetryInterval());
                         } catch (InterruptedException ie) {
                             Thread.currentThread().interrupt();
-                            logger.error("Interrupted during retry sleep for host '{}'", hostInfo.getLabel());
+                            logger.error("Interrupted during retry sleep for host '{}'.", hostInfo.getLabel());
                             break;
                         }
                     }
@@ -634,7 +633,7 @@ public class StreamReplicator implements AutoCloseable {
                         try {
                             connection.close();
                         } catch (Exception closeEx) {
-                            logger.debug("Error closing connection: {}", closeEx.getMessage());
+                            logger.debug("Error closing connection: {}.", closeEx.getMessage());
                         }
                         connection = null;
                     }
@@ -650,7 +649,7 @@ public class StreamReplicator implements AutoCloseable {
             this.connectionState = newState;
             if (oldState != newState) {
                 config.getOnConnectionStateChange().onStateChange(newState, hostInfo.getLabel());
-                logger.info("Connection state changed for host '{}': {} -> {}",
+                logger.info("Connection state changed for host '{}': {} -> {}.",
                     hostInfo.getLabel(), oldState, newState);
             }
         }
@@ -747,7 +746,7 @@ public class StreamReplicator implements AutoCloseable {
                         if (batchData.decrementAndCheckIfLast()) {
                             // All threads have processed this batch, remove it
                             queue.remove(i);
-                            logger.debug("Released shared batch {} (all threads processed)", sequenceId);
+                            logger.debug("Released shared batch {} (all threads processed).", sequenceId);
                         }
                         break;
                     }
