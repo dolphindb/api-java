@@ -1261,6 +1261,37 @@ public class ThreadedClientsubscribeReverseTest {
             }
         }
     }
+//    @Test(timeout=120000) 手工验证reconnect
+//    public void test_subscribe_reconnect_successful() throws IOException, InterruptedException {
+//        DBConnection conn1= new DBConnection();
+//        conn1.connect(HOST, PORT, "admin", "123456","",false,null,true);
+//        String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+//                "share st1 as Trades\t\n"
+//                + "setStreamTableFilterColumn(objByName(`Trades),`tag)";
+//        conn1.run(script1);
+//        String script2 = "st2 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +
+//                "share(st2, `Receive)\t\n";
+//        conn.run(script2);
+//        Vector filter1 = (Vector) conn1.run("1..100000");
+//        threadedClient.subscribe(HOST,PORT,"Trades","subTread1",MessageHandler_handler,-1,true,filter1,true,100,5,"admin","123456");
+//        System.out.println("Successful subscribe");
+//
+//        while (true) {
+//            try{
+//                conn1.run("n=1000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+//                sleep(1000);
+//                BasicTable re = (BasicTable)conn1.run("SELECT * FROM Receive") ;
+//                System.out.println("Receive:" + re.rows());
+//            }catch(Exception ex){
+//                System.out.println(ex.getMessage());
+//            }
+//
+//        }
+////        write_data.interrupt();
+////        threadedClient.unsubscribe(HOST,PORT,"Trades","subTread1");
+//    }
+
+
     @Test(timeout=120000)
     public void test_subscribe_reconnect_successful() throws IOException, InterruptedException {
         String script1 = "st1 = streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE])\n" +

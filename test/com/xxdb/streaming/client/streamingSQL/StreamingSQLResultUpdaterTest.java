@@ -1056,7 +1056,7 @@ public class StreamingSQLResultUpdaterTest {
         //append
         writer_data(1000,"t1","double");
         writer_data(1000,"t2","double");
-        Thread.sleep(500);
+        Thread.sleep(1000);
         BasicTable ex1 = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
         checkData(ex1, bt);
