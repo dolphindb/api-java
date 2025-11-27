@@ -30,6 +30,7 @@ public class StreamReplicator implements AutoCloseable {
     private final String tableName;
     private final ReplicatorConfig config;
     private final List<WriterThread> writerThreads;
+    private final List<DBConnection> connections;
     private final SharedDataQueue sharedDataQueue;
     private final ReentrantLock insertLock;
     private volatile boolean isClosed;
@@ -64,13 +65,16 @@ public class StreamReplicator implements AutoCloseable {
         this.tableName = tableName;
         this.config = config;
         this.writerThreads = new ArrayList<>();
+        this.connections = new ArrayList<>();
         this.sharedDataQueue = new SharedDataQueue();
         this.insertLock = new ReentrantLock();
         this.isClosed = false;
         this.currentBatchSize = 0;
 
         // Initialize and start writer threads for each host
-        initializeWriterThreads();
+        initializeConnections();
+        initializeTableSchema();
+        startWriterThreads();
     }
 
     /**
@@ -82,57 +86,6 @@ public class StreamReplicator implements AutoCloseable {
      */
     public StreamReplicator(List<HostInfo> hosts, String tableName) throws IOException {
         this(hosts, tableName, new ReplicatorConfig());
-    }
-
-    /**
-     * Initializes writer threads for all hosts.
-     */
-    private void initializeWriterThreads() throws IOException {
-        for (HostInfo host : hosts) {
-            WriterThread thread = new WriterThread(host);
-            writerThreads.add(thread);
-            thread.start();
-        }
-
-        // Wait for at least one thread to initialize and get table schema
-        boolean initialized = false;
-        long startTime = System.currentTimeMillis();
-        long timeout = 30000; // 30 seconds timeout
-
-        while (!initialized && System.currentTimeMillis() - startTime < timeout) {
-            for (WriterThread thread : writerThreads) {
-                if (thread.isInitialized()) {
-                    this.columnTypes = thread.getColumnTypes();
-                    this.columnExtras = thread.getColumnExtras();
-                    this.columnCount = columnTypes.size();
-                    initialized = true;
-                    break;
-                }
-            }
-            if (!initialized) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new IOException("Interrupted while waiting for initialization.", e);
-                }
-            }
-        }
-
-        if (!initialized) {
-            throw new IOException("Failed to initialize: no connection could retrieve table schema within timeout.");
-        }
-
-        // Validate compression array length if provided
-        int[] compression = config.getCompression();
-        if (compression != null && compression.length > 0 && compression.length != columnCount) {
-            throw new IOException(String.format(
-                "The param 'compression' value length (%d) does not match column count (%d).",
-                compression.length, columnCount));
-        }
-
-        logger.info("StreamReplicator initialized for table '{}' with {} hosts and {} columns successfully.",
-            tableName, hosts.size(), columnCount);
     }
 
     /**
@@ -210,39 +163,6 @@ public class StreamReplicator implements AutoCloseable {
     }
 
     /**
-     * Creates a new vector list based on table schema.
-     */
-    private List<Vector> createVectorList() {
-        List<Vector> vectors = new ArrayList<>();
-        for (int i = 0; i < columnTypes.size(); i++) {
-            Entity.DATA_TYPE type = columnTypes.get(i);
-            int extra = columnExtras.get(i);
-            Vector vector;
-
-            if (type == Entity.DATA_TYPE.DT_ANY) {
-                vector = new BasicAnyVector(0);
-            } else if (type.getValue() >= 64) { // Array type
-                vector = new BasicArrayVector(type, 1, extra);
-            } else {
-                vector = BasicEntityFactory.instance().createVectorWithDefaultValue(type, 0, extra);
-            }
-            vectors.add(vector);
-        }
-        return vectors;
-    }
-
-    /**
-     * Flushes the current batch to the shared queue.
-     */
-    private void flushCurrentBatch() {
-        if (currentBatch != null && currentBatchSize > 0) {
-            sharedDataQueue.addBatch(currentBatch);
-            currentBatch = null;
-            currentBatchSize = 0;
-        }
-    }
-
-    /**
      * Gets the current status of the replicator.
      *
      * @return The current status including per-host statistics
@@ -309,14 +229,22 @@ public class StreamReplicator implements AutoCloseable {
     @Override
     public void close() {
         if (isClosed) {
-            // Already waited or closed
             return;
         }
 
-        logger.info("Closing StreamReplicator for table '{}.'", tableName);
+        logger.info("Closing StreamReplicator for table '{}'.", tableName);
 
         // Wait for threads to complete
         waitForThreadCompletion();
+
+        // Close all connections
+        for (DBConnection conn : connections) {
+            try {
+                conn.close();
+            } catch (Exception e) {
+                logger.warn("Error closing connection: {}", e.getMessage());
+            }
+        }
     }
 
     /**
@@ -324,37 +252,22 @@ public class StreamReplicator implements AutoCloseable {
      */
     private class WriterThread extends Thread {
         private final HostInfo hostInfo;
+        private final DBConnection connection;
         private final ReplicatorStreamStatus status;
 
-        private DBConnection connection;
         private volatile boolean shouldExit;
-        private volatile boolean initialized;
-        private List<Entity.DATA_TYPE> columnTypes;
-        private List<Integer> columnExtras;
         private ConnectionState connectionState;
         private long lastProcessedSequenceId;
 
-        public WriterThread(HostInfo hostInfo) {
+        public WriterThread(HostInfo hostInfo, DBConnection connection) {
             super("StreamReplicator-" + hostInfo.getLabel());
             this.hostInfo = hostInfo;
+            this.connection = connection;
             this.status = new ReplicatorStreamStatus();
             this.shouldExit = false;
-            this.initialized = false;
-            this.connectionState = ConnectionState.Initializing;
+            this.connectionState = ConnectionState.Connected;
             this.lastProcessedSequenceId = -1; // Start from the beginning
             setDaemon(false);
-        }
-
-        public boolean isInitialized() {
-            return initialized;
-        }
-
-        public List<Entity.DATA_TYPE> getColumnTypes() {
-            return columnTypes;
-        }
-
-        public List<Integer> getColumnExtras() {
-            return columnExtras;
         }
 
         public String getHostLabel() {
@@ -378,12 +291,6 @@ public class StreamReplicator implements AutoCloseable {
         @Override
         public void run() {
             try {
-                // Initial connection
-                if (!connect()) {
-                    logger.error("Failed to establish initial connection to host '{}'.", hostInfo.getLabel());
-                    return;
-                }
-
                 // Main processing loop - read from shared queue
                 while (!shouldExit) {
                     SharedBatchData sharedBatch = sharedDataQueue.getNextBatch(lastProcessedSequenceId);
@@ -416,85 +323,10 @@ public class StreamReplicator implements AutoCloseable {
                     lastProcessedSequenceId = remainingBatch.getSequenceId();
                 }
 
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             } finally {
-                if (connection != null) {
-                    connection.close();
-                }
                 logger.info("Writer thread stopped for host '{}'.", hostInfo.getLabel());
-            }
-        }
-
-        private boolean connect() {
-            try {
-                updateConnectionState(ConnectionState.Initializing);
-
-                connection = new DBConnection(false, false, false);
-                boolean connected = connection.connect(
-                    hostInfo.getHost(),
-                    hostInfo.getPort(),
-                    hostInfo.getUserId(),
-                    hostInfo.getPassword()
-                );
-
-                if (!connected) {
-                    updateConnectionState(ConnectionState.Terminated);
-                    return false;
-                }
-
-                // Get table schema
-                if (!initialized) {
-                    retrieveTableSchema();
-                    initialized = true;
-                }
-
-                updateConnectionState(ConnectionState.Connected);
-                status.clearError();
-                return true;
-
-            } catch (Exception e) {
-                logger.error("Failed to connect to host '{}': {}.", hostInfo.getLabel(), e.getMessage());
-                ErrorCodeInfo errorInfo = new ErrorCodeInfo(ErrorCodeInfo.Code.EC_Server,
-                    "Connection failed: " + e.getMessage());
-                status.setError(errorInfo);
-                updateConnectionState(ConnectionState.Terminated);
-                return false;
-            }
-        }
-
-
-        private void retrieveTableSchema() throws IOException {
-            try {
-                // Get table schema using schema() function
-                String script = String.format("schema(%s)", tableName);
-                BasicDictionary schema = (BasicDictionary) connection.run(script);
-
-                // Extract column types and extras
-                BasicTable colDefs = (BasicTable) schema.get(new BasicString("colDefs"));
-                BasicIntVector colDefsTypeInt = (BasicIntVector) colDefs.getColumn("typeInt");
-                BasicIntVector colExtra = (BasicIntVector) colDefs.getColumn("extra");
-
-                columnTypes = new ArrayList<>();
-                columnExtras = new ArrayList<>();
-                for (int i = 0; i < colDefsTypeInt.rows(); i++) {
-                    // Use integer type code instead of string mapping
-                    int typeInt = colDefsTypeInt.getInt(i);
-                    Entity.DATA_TYPE type = Entity.DATA_TYPE.valueOf(typeInt);
-                    if (config.getCompression() != null && !AbstractVector.checkCompressedMethod(Entity.DATA_TYPE.valueOf(typeInt), config.getCompression()[i])) {
-                        throw new RuntimeException("Compression Failed: only support integral and temporal data, not support " + type + ".");
-                    }
-                    columnTypes.add(type);
-                    int extra = -1;
-                    if (colExtra != null) {
-                        extra = colExtra.getInt(i);
-                    }
-                    columnExtras.add(extra);
-                }
-
-                logger.debug("Retrieved schema for table '{}' from host '{}': {} columns.",
-                    tableName, hostInfo.getLabel(), columnTypes.size());
-
-            } catch (Exception e) {
-                throw new IOException("Failed to retrieve table schema: " + e.getMessage(), e);
             }
         }
 
@@ -532,24 +364,12 @@ public class StreamReplicator implements AutoCloseable {
 
             while (!success && (maxRetry == -1 || retry <= maxRetry)) {
                 try {
-                    // Check and restore connection if needed
                     if (connection == null || !connection.isConnected()) {
                         if (connectionState != ConnectionState.Reconnecting) {
                             updateConnectionState(ConnectionState.Reconnecting);
                         }
 
-                        // Try to reconnect
-                        connection = new DBConnection(false, false, false);
-                        boolean connected = connection.connect(
-                            hostInfo.getHost(),
-                            hostInfo.getPort(),
-                            hostInfo.getUserId(),
-                            hostInfo.getPassword()
-                        );
-
-                        if (!connected) {
-                            throw new IOException("Failed to reconnect.");
-                        }
+                        connection.connect(hostInfo.getHost(), hostInfo.getPort(), hostInfo.getUserId(), hostInfo.getPassword());
 
                         logger.info("Reconnected to host '{}'.", hostInfo.getLabel());
                     }
@@ -627,16 +447,6 @@ public class StreamReplicator implements AutoCloseable {
                     }
 
                     retry++;
-
-                    // Close bad connection before retry
-                    if (connection != null) {
-                        try {
-                            connection.close();
-                        } catch (Exception closeEx) {
-                            logger.debug("Error closing connection: {}.", closeEx.getMessage());
-                        }
-                        connection = null;
-                    }
                 }
             }
 
@@ -780,6 +590,163 @@ public class StreamReplicator implements AutoCloseable {
             synchronized (lock) {
                 lock.notifyAll();
             }
+        }
+    }
+
+    private void initializeTableSchema() throws IOException {
+        BasicTable referenceColDefs = null;
+
+        try {
+            String script = String.format("schema(%s)", tableName);
+            for (int i = 0; i < connections.size(); i++) {
+                DBConnection conn = connections.get(i);
+                HostInfo host = hosts.get(i);
+                BasicDictionary schema = (BasicDictionary) conn.run(script);
+                BasicTable colDefs = (BasicTable) schema.get(new BasicString("colDefs"));
+
+                if (i == 0) {
+                    referenceColDefs = colDefs;
+
+                    BasicIntVector colDefsTypeInt = (BasicIntVector) colDefs.getColumn("typeInt");
+                    BasicIntVector colExtra = (BasicIntVector) colDefs.getColumn("extra");
+                    Vector colName = colDefs.getColumn("name");
+
+                    this.columnCount = colDefsTypeInt.rows();
+                    this.columnTypes = new ArrayList<>();
+                    this.columnExtras = new ArrayList<>();
+
+                    for (int j = 0; j < columnCount; j++) {
+                        int typeInt = colDefsTypeInt.getInt(j);
+                        Entity.DATA_TYPE type = Entity.DATA_TYPE.valueOf(typeInt);
+                        columnTypes.add(type);
+
+                        int extra = -1;
+                        if (colExtra != null) {
+                            extra = colExtra.getInt(j);
+                        }
+                        columnExtras.add(extra);
+                    }
+
+                    // check compression
+                    int[] compression = config.getCompression();
+                    if (compression != null && compression.length > 0) {
+                        if (compression.length != columnCount) {
+                            throw new IllegalArgumentException(String.format("Compression array length (%d) does not match column count (%d).", compression.length, columnCount));
+                        }
+
+                        for (int j = 0; j < columnCount; j++) {
+                            Entity.DATA_TYPE type = columnTypes.get(j);
+                            if (!AbstractVector.checkCompressedMethod(type, compression[j])) {
+                                throw new IllegalArgumentException("Compression method '" + getCompressionMethodName(compression[j]) + "' is not supported for column '" + colName.getString(i) + "' of type " + type + ".");
+                            }
+                        }
+                    }
+
+                    logger.info("Retrieved schema for table '{}': {} columns.", tableName, columnCount);
+                } else {
+                    List<Entity> args = new ArrayList<>();
+                    args.add(referenceColDefs);
+
+                    BasicBoolean result = (BasicBoolean) conn.run("eqObj{" + colDefs + "}", args);
+
+                    if (!result.getBoolean()) {
+                        throw new IOException("Table schema mismatch on host '" + host.getLabel() + "'.");
+                    }
+
+                    logger.debug("Schema validated for host '{}'.", host.getLabel());
+                }
+            }
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IOException("Failed to initialize table schema: " + e.getMessage(), e);
+        }
+    }
+
+    private void startWriterThreads() {
+        for (int i = 0; i < hosts.size(); i++) {
+            HostInfo host = hosts.get(i);
+            DBConnection conn = connections.get(i);
+
+            WriterThread thread = new WriterThread(host, conn);
+            writerThreads.add(thread);
+            thread.start();
+        }
+
+        logger.info("StreamReplicator initialized for table '{}' with {} hosts and {} columns successfully.", tableName, hosts.size(), columnCount);
+    }
+
+    /**
+     * Creates a new vector list based on table schema.
+     */
+    private List<Vector> createVectorList() {
+        List<Vector> vectors = new ArrayList<>();
+        for (int i = 0; i < columnTypes.size(); i++) {
+            Entity.DATA_TYPE type = columnTypes.get(i);
+            int extra = columnExtras.get(i);
+            Vector vector;
+
+            if (type == Entity.DATA_TYPE.DT_ANY) {
+                vector = new BasicAnyVector(0);
+            } else if (type.getValue() >= 64) { // Array type
+                vector = new BasicArrayVector(type, 1, extra);
+            } else {
+                vector = BasicEntityFactory.instance().createVectorWithDefaultValue(type, 0, extra);
+            }
+            vectors.add(vector);
+        }
+        return vectors;
+    }
+
+    /**
+     * Flushes the current batch to the shared queue.
+     */
+    private void flushCurrentBatch() {
+        if (currentBatch != null && currentBatchSize > 0) {
+            sharedDataQueue.addBatch(currentBatch);
+            currentBatch = null;
+            currentBatchSize = 0;
+        }
+    }
+
+    private void initializeConnections() throws IOException {
+        for (HostInfo host : hosts) {
+            DBConnection conn = null;
+            try {
+                conn = new DBConnection(false, false, false);
+                boolean connected = conn.connect(host.getHost(), host.getPort(), host.getUserId(), host.getPassword());
+
+                if (!connected) {
+                    throw new IOException("Failed to connect to host '" + host.getLabel() + "'.");
+                }
+
+                connections.add(conn);
+                logger.info("Connected to host '{}'.", host.getLabel());
+            } catch (IOException e) {
+                conn.close();
+
+                for (DBConnection existingConn : connections) {
+                    try {
+                        existingConn.close();
+                    } catch (Exception ex) {
+                        logger.warn("Error closing connection: {}", ex.getMessage());
+                    }
+                }
+                connections.clear();
+                throw e;
+            }
+        }
+    }
+
+    private static String getCompressionMethodName(int compressionMethod) {
+        switch (compressionMethod) {
+            case 1:
+                return "COMPRESS_LZ4";
+            case 2:
+                return "COMPRESS_DELTA";
+            default:
+                return "UNKNOWN(" + compressionMethod + ")";
         }
     }
 }
