@@ -144,13 +144,13 @@ public class PollingClientReverseTest {
             assertEquals(except1.getColumn(i).getString(), res1.getColumn(i).getString());
         }
     }
-    @Test(expected = IOException.class)
+    @Test(expected = IllegalArgumentException.class)
     public  void error_size1() throws IOException {
         TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1","subtrades",-1,true);
         ArrayList<IMessage> msgs;
         msgs = poller1.poll(1000,0);
        }
-    @Test(expected = IOException.class)
+    @Test(expected = IllegalArgumentException.class)
     public  void error_size2() throws IOException {
         TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1","subtrades",-1,true);
         ArrayList<IMessage> msgs = poller1.poll(1000,-10);
