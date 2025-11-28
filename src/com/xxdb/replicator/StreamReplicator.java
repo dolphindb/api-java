@@ -42,6 +42,9 @@ public class StreamReplicator implements AutoCloseable {
     private List<Vector> currentBatch;
     private int currentBatchSize;
 
+    private Thread flushThread;
+    private volatile long lastFlushTime;
+
     /**
      * Creates a new StreamReplicator.
      *
@@ -67,6 +70,11 @@ public class StreamReplicator implements AutoCloseable {
         initializeConnections();
         initializeTableSchema();
         startWriterThreads();
+
+        // Start the timed refresh thread
+        if (config.getBatchInterval() > 0) {
+            startFlushThread();
+        }
     }
 
     /**
@@ -102,6 +110,8 @@ public class StreamReplicator implements AutoCloseable {
             // Initialize current batch if needed
             if (currentBatch == null) {
                 currentBatch = createVectorList();
+                // Record the first insertion time
+                lastFlushTime = System.currentTimeMillis();
             }
 
             // Convert objects to Entities and append to current batch
@@ -191,6 +201,16 @@ public class StreamReplicator implements AutoCloseable {
         }
 
         isClosed = true; // Prevent new inserts
+
+        // Stop the timed refresh thread
+        if (flushThread != null && flushThread.isAlive()) {
+            flushThread.interrupt();
+            try {
+                flushThread.join(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
 
         // Signal all threads to exit (after processing remaining data)
         for (WriterThread thread : writerThreads) {
@@ -586,22 +606,21 @@ public class StreamReplicator implements AutoCloseable {
     }
 
     private void initializeTableSchema() throws IOException {
-        BasicTable referenceColDefs = null;
+        Entity referenceColDefs = null;
 
         try {
-            String script = String.format("schema(%s)", tableName);
+            String script = String.format("schema(" + tableName + ").colDefs.values()", tableName);
             for (int i = 0; i < connections.size(); i++) {
                 DBConnection conn = connections.get(i);
                 HostInfo host = hosts.get(i);
-                BasicDictionary schema = (BasicDictionary) conn.run(script);
-                BasicTable colDefs = (BasicTable) schema.get(new BasicString("colDefs"));
+                Vector colDefs = (Vector) conn.run(script);
 
                 if (i == 0) {
                     referenceColDefs = colDefs;
 
-                    BasicIntVector colDefsTypeInt = (BasicIntVector) colDefs.getColumn("typeInt");
-                    BasicIntVector colExtra = (BasicIntVector) colDefs.getColumn("extra");
-                    Vector colName = colDefs.getColumn("name");
+                    BasicIntVector colDefsTypeInt = (BasicIntVector) colDefs.get(2); // typeInt
+                    BasicIntVector colExtra = (BasicIntVector) colDefs.get(3); // extra
+                    BasicStringVector colName = (BasicStringVector) colDefs.get(0); // name
 
                     this.columnCount = colDefsTypeInt.rows();
                     this.columnTypes = new ArrayList<>();
@@ -637,9 +656,9 @@ public class StreamReplicator implements AutoCloseable {
                     logger.info("Retrieved schema for table '{}': {} columns.", tableName, columnCount);
                 } else {
                     List<Entity> args = new ArrayList<>();
+                    args.add(colDefs);
                     args.add(referenceColDefs);
-
-                    BasicBoolean result = (BasicBoolean) conn.run("eqObj{" + colDefs + "}", args);
+                    BasicBoolean result = (BasicBoolean) conn.run("eqObj", args);
 
                     if (!result.getBoolean()) {
                         throw new IOException("Table schema mismatch on host '" + host.getLabel() + "'.");
@@ -699,6 +718,8 @@ public class StreamReplicator implements AutoCloseable {
             sharedDataQueue.addBatch(currentBatch);
             currentBatch = null;
             currentBatchSize = 0;
+            // Update last refresh time
+            lastFlushTime = System.currentTimeMillis();
         }
     }
 
@@ -775,5 +796,36 @@ public class StreamReplicator implements AutoCloseable {
         if (config == null) {
             throw new IllegalArgumentException("The param 'config' cannot be null.");
         }
+    }
+
+    /**
+     * Start the timed refresh thread
+     */
+    private void startFlushThread() {
+        flushThread = new Thread(() -> {
+            while (!isClosed) {
+                try {
+                    Thread.sleep(config.getBatchInterval());
+                    insertLock.lock();
+                    try {
+                        if (currentBatch != null && currentBatchSize > 0) {
+                            long currentTime = System.currentTimeMillis();
+                            if ((currentTime - lastFlushTime) >= config.getBatchInterval()) {
+                                logger.debug("Auto-flushing batch due to batchInterval timeout ({} ms).", config.getBatchInterval());
+                                flushCurrentBatch();
+                            }
+                        }
+                    } finally {
+                        insertLock.unlock();
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }, "StreamReplicator-FlushTimer");
+        flushThread.setDaemon(true);
+        flushThread.start();
+        logger.info("Started auto-flush thread with interval {} ms.", config.getBatchInterval());
     }
 }
