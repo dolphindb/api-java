@@ -51,15 +51,7 @@ public class StreamReplicator implements AutoCloseable {
      * @throws IOException If connection to any host fails during initialization
      */
     public StreamReplicator(List<HostInfo> hosts, String tableName, ReplicatorConfig config) throws IOException {
-        if (hosts == null || hosts.isEmpty()) {
-            throw new IllegalArgumentException("The param 'hosts' cannot be null or empty.");
-        }
-        if (tableName == null || tableName.isEmpty()) {
-            throw new IllegalArgumentException("The param 'tableName' cannot be null or empty.");
-        }
-        if (config == null) {
-            throw new IllegalArgumentException("The param 'config' cannot be null.");
-        }
+        validateParams(hosts, tableName, config);
 
         this.hosts = new ArrayList<>(hosts);
         this.tableName = tableName;
@@ -747,6 +739,41 @@ public class StreamReplicator implements AutoCloseable {
                 return "COMPRESS_DELTA";
             default:
                 return "UNKNOWN(" + compressionMethod + ")";
+        }
+    }
+
+    private void validateParams(List<HostInfo> hosts, String tableName, ReplicatorConfig config) {
+        if (hosts == null || hosts.isEmpty()) {
+            throw new IllegalArgumentException("The param 'hosts' cannot be null or empty.");
+        }
+
+        for (int i = 0; i < hosts.size(); i++) {
+            HostInfo host = hosts.get(i);
+            if (host == null) {
+                throw new IllegalArgumentException(String.format("'HostInfo' at index %d is null.", i));
+            }
+            if (host.getHost() == null || host.getHost().trim().isEmpty()) {
+                throw new IllegalArgumentException(String.format("Host address at index %d (label: '%s') cannot be null or empty.", i, host.getLabel()));
+            }
+            if (host.getPort() <= 0 || host.getPort() > 65535) {
+                throw new IllegalArgumentException(String.format("Port at index %d (label: '%s') must be between 1 and 65535, but got %d.", i, host.getLabel(), host.getPort()));
+            }
+            if (host.getLabel() == null || host.getLabel().trim().isEmpty()) {
+                logger.warn("Host at index {} has no label, using default: '{}:{}'.", i, host.getHost(), host.getPort());
+            }
+            for (int j = 0; j < i; j++) {
+                HostInfo existingHost = hosts.get(j);
+                if (existingHost.getLabel() != null && existingHost.getLabel().equals(host.getLabel())) {
+                    throw new IllegalArgumentException(String.format("Duplicate host label '%s' found at index %d and %d.", host.getLabel(), j, i));
+                }
+            }
+        }
+
+        if (tableName == null || tableName.isEmpty()) {
+            throw new IllegalArgumentException("The param 'tableName' cannot be null or empty.");
+        }
+        if (config == null) {
+            throw new IllegalArgumentException("The param 'config' cannot be null.");
         }
     }
 }
