@@ -264,12 +264,13 @@ public class StreamReplicator implements AutoCloseable {
      */
     private class WriterThread extends Thread {
         private final HostInfo hostInfo;
-        private final DBConnection connection;
         private final ReplicatorStreamStatus status;
 
+        private DBConnection connection;
         private volatile boolean shouldExit;
         private ConnectionState connectionState;
         private long lastProcessedSequenceId;
+        private int maxRetry;
 
         public WriterThread(HostInfo hostInfo, DBConnection connection) {
             super("StreamReplicator-" + hostInfo.getLabel());
@@ -279,6 +280,7 @@ public class StreamReplicator implements AutoCloseable {
             this.shouldExit = false;
             this.connectionState = ConnectionState.Connected;
             this.lastProcessedSequenceId = -1; // Start from the beginning
+            this.maxRetry = config.getMaxRetry();
             setDaemon(false);
         }
 
@@ -369,20 +371,19 @@ public class StreamReplicator implements AutoCloseable {
                 }
             }
 
-            // Retry loop for writing data (similar to C++ implementation)
+            // Retry loop for writing data
             boolean success = false;
-            int maxRetry = config.getMaxRetry();
             int retry = 0;
 
-            while (!success && (maxRetry == -1 || retry <= maxRetry)) {
+            while (!success && (maxRetry == -1 || retry < maxRetry)) {
                 try {
                     if (connection == null || !connection.isConnected()) {
                         if (connectionState != ConnectionState.Reconnecting) {
                             updateConnectionState(ConnectionState.Reconnecting);
                         }
 
+                        connection = new DBConnection(false, false, false);
                         connection.connect(hostInfo.getHost(), hostInfo.getPort(), hostInfo.getUserId(), hostInfo.getPassword());
-
                         logger.info("Reconnected to host '{}'.", hostInfo.getLabel());
                     }
 
@@ -395,7 +396,7 @@ public class StreamReplicator implements AutoCloseable {
                     // Success!
                     success = true;
 
-                    // Update status on success (insertedRows, not dumpedRows)
+                    // Update status on success
                     status.setDumpedRows(status.getDumpedRows() + rowCount);
                     status.clearError();
 
@@ -408,9 +409,8 @@ public class StreamReplicator implements AutoCloseable {
 
                 } catch (Exception e) {
                     // Write failed
-                    String errorMsg = "Failed to write batch to host '" + hostInfo.getLabel() +
-                                    "' (attempt " + (retry + 1) + "/" +
-                                    (maxRetry == -1 ? "∞" : (maxRetry + 1)) + "): " + e.getMessage();
+                    String errorMsg = "Failed to write batch to host '" + hostInfo.getLabel() + "' (attempt " + (retry + 1) + "/" +
+                            (maxRetry == -1 ? "∞" : maxRetry) + "): " + e.getMessage();
                     logger.error(errorMsg);
 
                     ErrorCodeInfo errorInfo = new ErrorCodeInfo(ErrorCodeInfo.Code.EC_Server, errorMsg);
@@ -421,34 +421,10 @@ public class StreamReplicator implements AutoCloseable {
                         updateConnectionState(ConnectionState.Reconnecting);
                     }
 
-                    // If this is the last retry attempt
-                    if (maxRetry != -1 && retry >= maxRetry) {
-                        logger.error("Max retry attempts reached for host '{}', data will be passed to callback.",
-                                   hostInfo.getLabel());
+                    retry++;
 
-                        // Mark as dumped (failed)
-                        status.setDumpedRows(status.getDumpedRows() + rowCount);
-
-                        // Invoke callback for failed data (only on final failure)
-                        try {
-                            boolean continueReplication = config.getOnDataDump().onDump(
-                                hostInfo.getLabel(),
-                                table
-                            );
-
-                            if (!continueReplication) {
-                                logger.warn("Callback requested to stop replication for host '{}'.",
-                                          hostInfo.getLabel());
-                                shouldExit = true;
-                            }
-                        } catch (Exception callbackEx) {
-                            logger.error("Error in data dump callback for host '{}': {}.",
-                                       hostInfo.getLabel(), callbackEx.getMessage());
-                        }
-
-                        break; // Exit retry loop
-                    } else {
-                        // Sleep before retry
+                    // Sleep before next retry (if not the last attempt)
+                    if (!success && (maxRetry == -1 || retry < maxRetry)) {
                         try {
                             Thread.sleep(config.getRetryInterval());
                         } catch (InterruptedException ie) {
@@ -457,14 +433,33 @@ public class StreamReplicator implements AutoCloseable {
                             break;
                         }
                     }
-
-                    retry++;
                 }
             }
 
-            // Data is removed from queue after processing (already dequeued)
-        }
+            // Handle final failure
+            if (!success) {
+                if (this.maxRetry != 0) {
+                    logger.error("Max retry attempts reached for host '{}', data will be passed to callback.", hostInfo.getLabel());
+                }
 
+                this.maxRetry = 0;
+
+                // Mark as dumped (failed)
+                status.setDumpedRows(status.getDumpedRows() + rowCount);
+
+                // Invoke callback
+                try {
+                    boolean continueReplication = config.getOnDataDump().onDump(hostInfo.getLabel(), table);
+
+                    if (!continueReplication) {
+                        logger.warn("Callback requested to stop replication for host '{}'.", hostInfo.getLabel());
+                        shouldExit = true;
+                    }
+                } catch (Exception callbackEx) {
+                    logger.error("Error in data dump callback for host '{}': {}.", hostInfo.getLabel(), callbackEx.getMessage());
+                }
+            }
+        }
 
         private void updateConnectionState(ConnectionState newState) {
             ConnectionState oldState = this.connectionState;
