@@ -68,19 +68,26 @@ public class ReplicatorConfig {
     /**
      * Sets the batching parameters.
      *
-     * @param batchSize The number of rows to accumulate before writing (must be > 0)
-     * @param batchInterval  The maximum time in seconds to wait before writing, regardless of batch size (0 means no timeout)
+     * @param batchSize     The number of rows to accumulate before writing (must be > 0)
+     * @param batchInterval The maximum time to wait before writing, regardless of batch size (0 means no timeout)
+     * @param unit          The time unit for batchInterval
      * @return This config instance for chaining
      */
-    public ReplicatorConfig setBatching(int batchSize, int batchInterval) {
+    public ReplicatorConfig setBatching(int batchSize, long batchInterval, TimeUnit unit) {
         if (batchSize <= 0) {
             throw new IllegalArgumentException("batchSize must be greater than 0");
         }
+
         if (batchInterval < 0) {
-            throw new IllegalArgumentException("throttle must be greater than or equal to 0");
+            throw new IllegalArgumentException("batchInterval must be greater than or equal to 0");
         }
+
+        if (unit == null) {
+            throw new IllegalArgumentException("TimeUnit cannot be null");
+        }
+
         this.batchSize = batchSize;
-        this.batchInterval = batchInterval * 1000L; // convert to milliseconds
+        this.batchInterval = unit.toMillis(batchInterval); // convert to milliseconds
         return this;
     }
 
