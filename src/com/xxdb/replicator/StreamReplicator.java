@@ -142,6 +142,8 @@ public class StreamReplicator implements AutoCloseable {
                         targetVector.Append((Scalar) entity);
                     } else if (entity instanceof Vector) {
                         targetVector.Append((Vector) entity);
+                    } else if (targetVector.getDataType() == Entity.DATA_TYPE.DT_ANY) {
+                        ((BasicAnyVector) targetVector).Append(entity);
                     } else {
                         throw new IllegalArgumentException("Unsupported entity type: " + entity.getDataForm() + ".");
                     }
