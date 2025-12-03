@@ -1399,7 +1399,7 @@ public class DBConnection {
                 log.info("New leader is " + node.hostName + ":" + node.port);
                 return ExceptionType.ET_NEWLEADER;
             }
-        }else if (msg.contains("<DataNodeNotAvail>") || msg.contains("<DataNodeNotReady>")){
+        }else if (msg.contains("<DataNodeNotAvail>") || msg.contains("<DataNodeNotReady>") || msg.contains("Public key is not initialized yet")){
             node.hostName = "";
             node.port = 0;
             return ExceptionType.ET_NODENOTAVAIL;
