@@ -22,13 +22,15 @@ public class HostInfo {
      */
     public HostInfo(String host, int port, String userId, String password, String label) {
         if (host == null || host.isEmpty()) {
-            throw new IllegalArgumentException("Host cannot be null or empty");
+            throw new IllegalArgumentException("The param 'host' cannot be null or empty.");
         }
+
         if (port <= 0 || port > 65535) {
-            throw new IllegalArgumentException("Port must be between 1 and 65535");
+            throw new IllegalArgumentException("The param 'port' must be between 1 and 65535.");
         }
+
         if (label == null || label.isEmpty()) {
-            throw new IllegalArgumentException("Label cannot be null or empty");
+            throw new IllegalArgumentException("The param 'label' cannot be null or empty.");
         }
 
         this.host = host;

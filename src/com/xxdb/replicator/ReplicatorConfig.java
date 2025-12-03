@@ -75,15 +75,15 @@ public class ReplicatorConfig {
      */
     public ReplicatorConfig setBatching(int batchSize, long batchInterval, TimeUnit unit) {
         if (batchSize <= 0) {
-            throw new IllegalArgumentException("batchSize must be greater than 0");
+            throw new IllegalArgumentException("The param 'batchSize' must be greater than 0.");
         }
 
         if (batchInterval < 0) {
-            throw new IllegalArgumentException("batchInterval must be greater than or equal to 0");
+            throw new IllegalArgumentException("The param 'batchInterval' must be greater than or equal to 0.");
         }
 
         if (unit == null) {
-            throw new IllegalArgumentException("TimeUnit cannot be null");
+            throw new IllegalArgumentException("The param 'unit' cannot be null.");
         }
 
         this.batchSize = batchSize;
@@ -101,10 +101,10 @@ public class ReplicatorConfig {
      */
     public ReplicatorConfig setRetry(int maxRetry, long retryInterval, TimeUnit unit) {
         if (maxRetry < -1) {
-            throw new IllegalArgumentException("maxRetry must be -1 (infinite), 0 (no retry), or positive");
+            throw new IllegalArgumentException("The param 'maxRetry' must be -1 (infinite), 0 (no retry), or positive.");
         }
         if (retryInterval < 0) {
-            throw new IllegalArgumentException("retryInterval cannot be negative");
+            throw new IllegalArgumentException("The param 'retryInterval' cannot be negative.");
         }
         this.maxRetry = maxRetry;
         this.retryInterval = unit.toMillis(retryInterval);
