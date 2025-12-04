@@ -95,6 +95,7 @@ public class StreamReplicator implements AutoCloseable {
      * @return ErrorCodeInfo indicating success or failure
      */
     public ErrorCodeInfo insert(Object... args) {
+        // Quick check (unlocked)
         if (isClosed) {
             return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_DestroyedObject,
                 "StreamReplicator has been closed.");
@@ -107,6 +108,12 @@ public class StreamReplicator implements AutoCloseable {
 
         insertLock.lock();
         try {
+            // Secondary inspection (lock)
+            if (isClosed) {
+                return new ErrorCodeInfo(ErrorCodeInfo.Code.EC_DestroyedObject,
+                        "StreamReplicator has been closed.");
+            }
+
             // Initialize current batch if needed
             if (currentBatch == null) {
                 currentBatch = createVectorList();
@@ -197,12 +204,11 @@ public class StreamReplicator implements AutoCloseable {
         // Flush any remaining data in current batch before closing
         insertLock.lock();
         try {
+            isClosed = true; // Prevent new inserts
             flushCurrentBatch();
         } finally {
             insertLock.unlock();
         }
-
-        isClosed = true; // Prevent new inserts
 
         // Stop the timed refresh thread
         if (flushThread != null && flushThread.isAlive()) {
@@ -222,11 +228,7 @@ public class StreamReplicator implements AutoCloseable {
         // Wait for all threads to finish processing
         for (WriterThread thread : writerThreads) {
             try {
-                thread.join(30000); // 30 second timeout for completion
-                if (thread.isAlive()) {
-                    logger.warn("Writer thread for host '{}' does not complete within timeout.", thread.getHostLabel());
-                    thread.interrupt();
-                }
+                thread.join(); // Infinite wait to ensure data is completely written
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 logger.error("Interrupted while waiting for thread completion.", e);
