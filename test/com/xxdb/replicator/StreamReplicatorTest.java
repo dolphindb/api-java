@@ -218,6 +218,25 @@ public class StreamReplicatorTest {
     }
 
     @Test
+    public void test_StreamReplicator_replicatorConfig_null() throws IOException {
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,Integer.parseInt(port1),"admin","123456");
+        DBConnection conn2 = new DBConnection();
+        conn2.connect(HOST,Integer.parseInt(port2),"admin","123456");
+        conn1.run("share table(1000:0, `char`int`long`short`id,[CHAR,INT,LONG,SHORT,INT]) as table1;");
+        conn2.run("share table(1000:0, `char`int`long`short`id,[CHAR,INT,LONG,SHORT,INT]) as table1;");
+        replicator = new StreamReplicator(hostInfoList,"table1");
+        ErrorCodeInfo ret = replicator.insert((int)1, (int)1, (int)-1, (int)0, (int)-1);
+        ret = replicator.insert(null, (int)1, (int)1, (int)0, (int)1);
+        replicator.waitForThreadCompletion();
+
+        BasicTable re1 = (BasicTable)conn1.run("select * from table1");
+        BasicTable re2 = (BasicTable)conn2.run("select * from table1");
+        Assert.assertEquals(2,re1.rows());
+        checkData(re1,re2);
+    }
+
+    @Test
     public void test_StreamReplicator_insert_Column_count_mismatch() throws IOException {
         ReplicatorConfig replicatorConfig = new ReplicatorConfig();
         DBConnection conn1 = new DBConnection();
@@ -232,6 +251,41 @@ public class StreamReplicatorTest {
         Assert.assertEquals("code=A2 info=Column count mismatch: expected 2 columns, but get 1.",ret.toString());
         Assert.assertEquals("A2",ret.getErrorCode());
         Assert.assertEquals("Column count mismatch: expected 2 columns, but get 1.",ret.getErrorInfo());
+    }
+
+    @Test
+    public void test_StreamReplicator_insert_Column_type_not_match() throws IOException {
+        ReplicatorConfig replicatorConfig = new ReplicatorConfig();
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,Integer.parseInt(port1),"admin","123456");
+        DBConnection conn2 = new DBConnection();
+        conn2.connect(HOST,Integer.parseInt(port2),"admin","123456");
+        String script = "share table(1:0,`int`arrayv,[INT,INT[]]) as dataType_int;";
+        conn1.run(script);
+        conn2.run(script);
+        replicator = new StreamReplicator(hostInfoList,"dataType_int",replicatorConfig);
+        ErrorCodeInfo ret = replicator.insert("1","1");
+        Assert.assertEquals("code=A1 info=Invalid object error when create scalar for column 1: Failed to insert data. Cannot convert String to DT_INT_ARRAY.",ret.toString());
+        Assert.assertEquals("A1",ret.getErrorCode());
+        Assert.assertEquals("Invalid object error when create scalar for column 1: Failed to insert data. Cannot convert String to DT_INT_ARRAY.",ret.getErrorInfo());
+    }
+
+    @Test
+    public void test_StreamReplicator_insert_isClosed() throws IOException {
+        ReplicatorConfig replicatorConfig = new ReplicatorConfig();
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST,Integer.parseInt(port1),"admin","123456");
+        DBConnection conn2 = new DBConnection();
+        conn2.connect(HOST,Integer.parseInt(port2),"admin","123456");
+        String script = "share table(1:0,`int`arrayv,[INT,INT[]]) as dataType_int;";
+        conn1.run(script);
+        conn2.run(script);
+        replicator = new StreamReplicator(hostInfoList,"dataType_int",replicatorConfig);
+        replicator.close();
+        ErrorCodeInfo ret = replicator.insert("1","1");
+        Assert.assertEquals("code=A7 info=StreamReplicator has been closed.",ret.toString());
+        Assert.assertEquals("A7",ret.getErrorCode());
+        Assert.assertEquals("StreamReplicator has been closed.",ret.getErrorInfo());
     }
 
     @Test

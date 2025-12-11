@@ -223,6 +223,31 @@ public class ReplicatorConfigTest {
     }
 
     @Test
+    public void test_ReplicatorConfig_setCompression_compressMethod_col_not_support_1() throws IOException {
+        List<HostInfo> hostInfoList = new ArrayList<>();
+        String port1 = ipports[0].split(":")[1];
+        String port2 = ipports[1].split(":")[1];
+        DBConnection conn1 = new DBConnection();
+        conn1.connect(HOST, Integer.parseInt(port1), "admin", "123456");
+        DBConnection conn2 = new DBConnection();
+        conn2.connect(HOST, Integer.parseInt(port2), "admin", "123456");
+        conn1.run("share table(array(INT) as col1,array(CHAR) as col2,array(SYMBOL) as col3) as table1;");
+        conn2.run("share table(array(INT) as col1,array(CHAR) as col2,array(SYMBOL) as col3) as table1;");
+        HostInfo host1 = new HostInfo(HOST, Integer.parseInt(port1), "admin", "123456", "label1");
+        HostInfo host2 = new HostInfo(HOST, Integer.parseInt(port2), "admin", "123456", "label2");
+        hostInfoList.add(host1);
+        hostInfoList.add(host2);
+        ReplicatorConfig replicatorConfig = new ReplicatorConfig();
+        String re = null;
+        try {
+            replicatorConfig.setCompression(new int[]{Vector.DISPLAY_ROWS, Vector.DISPLAY_ROWS, Vector.DISPLAY_ROWS});
+        } catch (Exception ex) {
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("Unsupported compress method: 10. Only COMPRESS_LZ4 (1) and COMPRESS_DELTA (2) are supported.", re);
+    }
+
+    @Test
     public void test_ReplicatorConfig_setCompression_compressMethod_delta() throws IOException {
         List<HostInfo> hostInfoList = new ArrayList<>();
         String port1 = ipports[0].split(":")[1];
