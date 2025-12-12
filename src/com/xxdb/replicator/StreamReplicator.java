@@ -185,7 +185,8 @@ public class StreamReplicator implements AutoCloseable {
         for (WriterThread thread : writerThreads) {
             ReplicatorStreamStatus status = thread.getStatus();
             hostStatuses.put(thread.getHostLabel(), status);
-            totalRows = Math.max(totalRows, status.getInsertedRows());
+            // all nodes total rows
+            totalRows += status.getInsertedRows();
         }
 
         return new ReplicatorStatus(totalRows, hostStatuses);
