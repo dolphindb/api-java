@@ -65,6 +65,9 @@ public class ReplicatorStatus {
      */
     public void setHostStatuses(Map<String, ReplicatorStreamStatus> hostStatuses) {
         this.hostStatuses = hostStatuses == null ? new HashMap<>() : new HashMap<>(hostStatuses);
+        this.totalRows = this.hostStatuses.values().stream()
+                .mapToLong(ReplicatorStreamStatus::getInsertedRows)
+                .sum();
     }
 
     /**
