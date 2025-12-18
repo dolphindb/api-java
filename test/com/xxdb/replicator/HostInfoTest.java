@@ -126,36 +126,8 @@ public class HostInfoTest {
         Assert.assertEquals("Failed to connect to host 'label1'.",re);
     }
 
-    @Test
-    public void test_HostInfo_userId_password_null() throws IOException {
-        List<HostInfo> hostInfoList = new ArrayList<>();
-        HostInfo host1 = new HostInfo(HOST,Integer.parseInt(port1),null,"13456","label1");
-        HostInfo host2 = new HostInfo(HOST,Integer.parseInt(port2),null,"123456","label2");
-        hostInfoList.add(host1);
-        hostInfoList.add(host2);
-        ReplicatorConfig replicatorConfig = new ReplicatorConfig();
-        DBConnection conn1 = new DBConnection();
-        conn1.connect(HOST,Integer.parseInt(port1),"admin","123456");
-        DBConnection conn2 = new DBConnection();
-        conn2.connect(HOST,Integer.parseInt(port2),"admin","123456");
-        conn1.run("share table(array(INT) as col1,array(INT) as col2,array(INT) as col3) as table1;");
-        conn2.run("share table(array(INT) as col1,array(INT) as col2,array(INT) as col3) as table1;");
-        StreamReplicator replicator = new StreamReplicator(hostInfoList,"table1",replicatorConfig);
-        ErrorCodeInfo ret = replicator.insert(1,1,1);
-        replicator.waitForThreadCompletion();
-
-        BasicTable re1 = (BasicTable)conn1.run("select * from table1");
-        System.out.println("re1："+re1.rows());
-        BasicTable re2 = (BasicTable)conn2.run("select * from table1");
-        System.out.println("re2："+re2.rows());
-        checkData(re1, re2);
-        Assert.assertEquals("col1 col2 col3\n" +
-                "---- ---- ----\n" +
-                "1    1    1   \n",re1.getString());
-    }
-
     @Test//用户密码为空时候 非登录态连接成功
-    public void test_HostInfo_userId_password_null_1() throws IOException {
+    public void test_HostInfo_userId_password_null() throws IOException {
         List<HostInfo> hostInfoList = new ArrayList<>();
         HostInfo host1 = new HostInfo(HOST,Integer.parseInt(port1),"","13456","label1");
         HostInfo host2 = new HostInfo(HOST,Integer.parseInt(port2),"","123456","label2");

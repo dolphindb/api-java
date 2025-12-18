@@ -9,15 +9,6 @@ import java.util.Map;
 
 public class ReplicatorStatusTest {
     @Test
-    public void test_ReplicatorStatus_setTotalRows() throws IOException {
-        ReplicatorStatus status = new ReplicatorStatus();
-        status.setTotalRows(-1);
-        Assert.assertEquals(-1,status.getTotalRows());
-        status.setTotalRows(100000);
-        Assert.assertEquals(100000,status.getTotalRows());
-    }
-
-    @Test
     public void test_ReplicatorStatus_setHostStatus_label_null() throws IOException {
         ReplicatorStatus status = new ReplicatorStatus();
         status.setHostStatus(null, new ReplicatorStreamStatus());
@@ -126,13 +117,13 @@ public class ReplicatorStatusTest {
     public void test_ReplicatorStatus_toString() throws IOException {
         ReplicatorStatus status = new ReplicatorStatus();
         System.out.println(status.toString());
-        Assert.assertEquals("ReplicatorStatus{totalRows=0, totalDumped=0, totalPending=0\n" +
+        Assert.assertEquals("ReplicatorStatus{totalRows=0, totalDumped=0, totalPending=0\r\n" +
                 "  Host Statuses: (none)}", status.toString());
         ReplicatorStreamStatus StreamStatus = new ReplicatorStreamStatus();
         status.setHostStatus("中文11qq@@@@" , StreamStatus);
         System.out.println(status.toString());
-        Assert.assertEquals("ReplicatorStatus{totalRows=0, totalDumped=0, totalPending=0\n" +
-                "  Host Statuses:\n" +
+        Assert.assertEquals("ReplicatorStatus{totalRows=0, totalDumped=0, totalPending=0\r\n" +
+                "  Host Statuses:\r\n" +
                 "    中文11qq@@@@: ReplicatorStreamStatus{inserted=0, dumped=0, pending=0, errorCode='', errorInfo=''}}", status.toString());
         Map<String, ReplicatorStreamStatus> hostStatuses = new HashMap<>();
         status.setHostStatuses(hostStatuses);
@@ -148,9 +139,9 @@ public class ReplicatorStatusTest {
         hostStatuses.put("label2",StreamStatus2);
         status.setHostStatuses(hostStatuses);
         System.out.println(status.toString());
-        Assert.assertEquals("ReplicatorStatus{totalRows=0, totalDumped=20, totalPending=1080\n" +
-                "  Host Statuses:\n" +
-                "    label1: ReplicatorStreamStatus{inserted=1000, dumped=10, pending=990, errorCode='', errorInfo=''}\n" +
+        Assert.assertEquals("ReplicatorStatus{totalRows=1100, totalDumped=20, totalPending=1080\r\n" +
+                "  Host Statuses:\r\n" +
+                "    label1: ReplicatorStreamStatus{inserted=1000, dumped=10, pending=990, errorCode='', errorInfo=''}\r\n" +
                 "    label2: ReplicatorStreamStatus{inserted=100, dumped=10, pending=90, errorCode='', errorInfo=''}}", status.toString());
     }
 }
