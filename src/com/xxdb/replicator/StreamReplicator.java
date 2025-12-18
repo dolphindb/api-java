@@ -180,16 +180,13 @@ public class StreamReplicator implements AutoCloseable {
      */
     public ReplicatorStatus getStatus() {
         Map<String, ReplicatorStreamStatus> hostStatuses = new HashMap<>();
-        long totalRows = 0;
 
         for (WriterThread thread : writerThreads) {
             ReplicatorStreamStatus status = thread.getStatus();
             hostStatuses.put(thread.getHostLabel(), status);
-            // all nodes total rows
-            totalRows += status.getInsertedRows();
         }
 
-        return new ReplicatorStatus(totalRows, hostStatuses);
+        return new ReplicatorStatus(hostStatuses);
     }
 
     /**

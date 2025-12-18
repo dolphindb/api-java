@@ -9,44 +9,34 @@ import java.util.Map;
  * Contains aggregated statistics and per-host status information.
  */
 public class ReplicatorStatus {
-    private long totalRows;
     private Map<String, ReplicatorStreamStatus> hostStatuses;
 
     /**
      * Creates a new ReplicatorStatus with default values.
      */
     public ReplicatorStatus() {
-        this.totalRows = 0;
         this.hostStatuses = new HashMap<>();
     }
 
     /**
      * Creates a new ReplicatorStatus with the specified values.
      *
-     * @param totalRows    The total number of rows inserted across all hosts
      * @param hostStatuses A map of host label to ReplicatorStreamStatus
      */
-    public ReplicatorStatus(long totalRows, Map<String, ReplicatorStreamStatus> hostStatuses) {
-        this.totalRows = totalRows;
+    public ReplicatorStatus(Map<String, ReplicatorStreamStatus> hostStatuses) {
         this.hostStatuses = hostStatuses == null ? new HashMap<>() : new HashMap<>(hostStatuses);
     }
 
     /**
      * Gets the total number of rows inserted across all hosts.
+     * This value is calculated in real-time from host statuses.
      *
      * @return The total number of rows
      */
     public long getTotalRows() {
-        return totalRows;
-    }
-
-    /**
-     * Sets the total number of rows inserted.
-     *
-     * @param totalRows The total number of rows
-     */
-    public void setTotalRows(long totalRows) {
-        this.totalRows = totalRows;
+        return hostStatuses.values().stream()
+                .mapToLong(ReplicatorStreamStatus::getInsertedRows)
+                .sum();
     }
 
     /**
@@ -65,9 +55,6 @@ public class ReplicatorStatus {
      */
     public void setHostStatuses(Map<String, ReplicatorStreamStatus> hostStatuses) {
         this.hostStatuses = hostStatuses == null ? new HashMap<>() : new HashMap<>(hostStatuses);
-        this.totalRows = this.hostStatuses.values().stream()
-                .mapToLong(ReplicatorStreamStatus::getInsertedRows)
-                .sum();
     }
 
     /**
@@ -128,7 +115,7 @@ public class ReplicatorStatus {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("ReplicatorStatus{totalRows=%d, totalDumped=%d, totalPending=%d%n",
-            totalRows, getTotalDumpedRows(), getTotalPendingRows()));
+                getTotalRows(), getTotalDumpedRows(), getTotalPendingRows()));
         sb.append("  Host Statuses:");
         if (hostStatuses.isEmpty()) {
             sb.append(" (none)");
