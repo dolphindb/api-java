@@ -68,7 +68,7 @@ public class ReplicatorConfig {
     /**
      * Sets the batching parameters.
      *
-     * @param batchSize     The number of rows to accumulate before writing (must be > 0)
+     * @param batchSize     The number of rows to accumulate before writing (must be greater than 0)
      * @param batchInterval The maximum time to wait before writing, regardless of batch size (0 means no timeout)
      * @param unit          The time unit for batchInterval
      * @return This config instance for chaining
