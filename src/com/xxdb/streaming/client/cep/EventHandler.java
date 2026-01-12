@@ -137,43 +137,43 @@ public class EventHandler {
         return true;
     }
 
-    public boolean serializeEvent(String eventType, List<Entity> attributes, List<Entity> serializedEvent, StringBuilder errMsg) {
+    private EventInfo validateEvent(String eventType, List<Entity> attributes, StringBuilder errMsg) {
         EventInfo info = eventInfos.get(eventType);
         if (info == null) {
             errMsg.append("unknown eventType ").append(eventType);
-            return false;
+            return null;
         }
 
         if (attributes.size() != info.getAttributeSerializers().size()) {
             errMsg.append("the number of event values does not match ").append(eventType);
-            return false;
+            return null;
         }
 
+        EventSchema schema = info.getEventSchema().getSchema();
+        List<Integer> fieldExtraParams = schema.getFieldExtraParams();
+
         for (int i = 0; i < attributes.size(); ++i) {
-            if (info.getEventSchema().getSchema().getFieldTypes().get(i) != attributes.get(i).getDataType()) {
-                // An exception: when the type in schema is symbol, you can pass a string attribute
-                if (info.getEventSchema().getSchema().getFieldTypes().get(i) == Entity.DATA_TYPE.DT_SYMBOL && attributes.get(i).getDataType() == Entity.DATA_TYPE.DT_STRING)
+            Entity attribute = attributes.get(i);
+            Entity.DATA_TYPE expectedType = schema.getFieldTypes().get(i);
+            Entity.DATA_FORM expectedForm = schema.getFieldForms().get(i);
+
+            if (expectedType != attribute.getDataType()) {
+                if (expectedType == Entity.DATA_TYPE.DT_SYMBOL && attribute.getDataType() == Entity.DATA_TYPE.DT_STRING)
                     continue;
 
-                errMsg.append("Expected type for the field ").append(info.getEventSchema().getSchema().getFieldNames().get(i)).append(" of ").append(eventType).append(":")
-                        .append(info.getEventSchema().getSchema().getFieldTypes().get(i).toString())
-                        .append(", but now it is ").append(attributes.get(i).getDataType().toString());
-                return false;
+                errMsg.append("Expected type for the field ").append(schema.getFieldNames().get(i)).append(" of ").append(eventType).append(":")
+                        .append(expectedType.toString())
+                        .append(", but now it is ").append(attribute.getDataType().toString());
+                return null;
             }
 
-            if (info.getEventSchema().getSchema().getFieldForms().get(i) != attributes.get(i).getDataForm()) {
-                errMsg.append("Expected form for the field ").append(info.getEventSchema().getSchema().getFieldNames().get(i)).append(" of ").append(eventType).append(":")
-                        .append(", but now it is ").append(attributes.get(i).getDataForm().toString());
-                return false;
+            if (expectedForm != attribute.getDataForm()) {
+                errMsg.append("Expected form for the field ").append(schema.getFieldNames().get(i)).append(" of ").append(eventType).append(":")
+                        .append(", but now it is ").append(attribute.getDataForm().toString());
+                return null;
             }
 
-            // check schema fieldExtraParams with decimal attribute.
-            EventInfo eventInfo = this.eventInfos.get(eventType);
-            EventSchemaEx eventSchema = eventInfo.getEventSchema();
-            EventSchema schema = eventSchema.getSchema();
-            List<Integer> fieldExtraParams = schema.getFieldExtraParams();
             if (!fieldExtraParams.isEmpty()) {
-                Entity attribute = attributes.get(i);
                 if (attribute.isScalar()) {
                     if ((attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL32 && ((BasicDecimal32) attribute).getScale() != fieldExtraParams.get(i))
                             || (attribute.getDataType() == Entity.DATA_TYPE.DT_DECIMAL64 && ((BasicDecimal64) attribute).getScale() != fieldExtraParams.get(i))
@@ -187,6 +187,14 @@ public class EventHandler {
                 }
             }
         }
+
+        return info;
+    }
+
+    public boolean serializeEvent(String eventType, List<Entity> attributes, List<Entity> serializedEvent, StringBuilder errMsg) {
+        EventInfo info = validateEvent(eventType, attributes, errMsg);
+        if (info == null)
+            return false;
 
         if (isNeedEventTime) {
             try {
@@ -230,6 +238,23 @@ public class EventHandler {
         }
 
         return true;
+    }
+
+    public BasicDictionary toEventDictionary(String eventType, List<Entity> attributes, StringBuilder errMsg) {
+        EventInfo info = validateEvent(eventType, attributes, errMsg);
+        if (info == null)
+            return null;
+
+        EventSchema schema = info.getEventSchema().getSchema();
+        int fieldSize = schema.getFieldNames().size();
+        BasicDictionary dict = new BasicDictionary(Entity.DATA_TYPE.DT_STRING, Entity.DATA_TYPE.DT_ANY, fieldSize + 1);
+        if (!dict.put(new BasicString("eventType"), new BasicString(eventType)))
+            throw new RuntimeException("Failed to add eventType to event dictionary.");
+        for (int i = 0; i < fieldSize; i++) {
+            if (!dict.put(new BasicString(schema.getFieldNames().get(i)), attributes.get(i)))
+                throw new RuntimeException("Failed to add field " + schema.getFieldNames().get(i) + " to event dictionary.");
+        }
+        return dict;
     }
 
     public boolean deserializeEvent(List<IMessage> msgs, List<String> eventTypes, List<List<Entity>> attributes, ErrorCodeInfo errorInfo) {
