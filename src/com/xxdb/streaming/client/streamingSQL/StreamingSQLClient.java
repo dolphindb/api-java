@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class StreamingSQLClient extends AbstractClient {
@@ -25,7 +26,7 @@ public class StreamingSQLClient extends AbstractClient {
     private String userName;
     private String password;
     private BasicIntVector deleteLineMap = new BasicIntVector(0);
-    private final Map<String, SubscriptionInfo> subscriptionInfoCache = new HashMap<>();
+    private final ConcurrentHashMap<String, SubscriptionInfo> subscriptionInfoCache = new ConcurrentHashMap<>();
 
     private static final Logger log = LoggerFactory.getLogger(StreamingSQLClient.class);
 
@@ -310,13 +311,6 @@ public class StreamingSQLClient extends AbstractClient {
         final TableWrapper resultWrapper = new TableWrapper(null);
         final UpdateListener listenerRef = listener;
 
-        // Initialize subscription info cache for this queryId
-        synchronized (subscriptionInfoCache) {
-            if (!subscriptionInfoCache.containsKey(queryId)) {
-                subscriptionInfoCache.put(queryId, new SubscriptionInfo());
-            }
-        }
-
         // update table logic
         MessageHandler handler = new MessageHandler() {
             @Override
@@ -344,6 +338,8 @@ public class StreamingSQLClient extends AbstractClient {
         if (Utils.isEmpty(queryId)) {
             throw new IllegalArgumentException("The param 'queryId' cannot be null or empty.");
         }
+
+        subscriptionInfoCache.computeIfAbsent(queryId, key -> new SubscriptionInfo());
 
         try {
             getStreamingSQLStatus(queryId);
