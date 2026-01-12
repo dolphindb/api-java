@@ -8,6 +8,7 @@ import com.xxdb.io.ExtendedDataOutput;
 import com.xxdb.streaming.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -252,7 +253,11 @@ public class StreamingSQLClient extends AbstractClient {
     }
 
     public BasicTable subscribeStreamingSQL(String queryId) throws IOException {
-        return subscribeStreamingSQL(queryId, -1, -1);
+        return subscribeStreamingSQL(queryId, -1, -1, null);
+    }
+
+    public BasicTable subscribeStreamingSQL(String queryId, UpdateListener listener) throws IOException {
+        return subscribeStreamingSQL(queryId, -1, -1, listener);
     }
 
     private int countTotalRows(List<IMessage> messages) {
@@ -273,6 +278,7 @@ public class StreamingSQLClient extends AbstractClient {
 
     /**
      * Check if the batch is complete by verifying if the last timestamp is non-null
+     *
      * @param messages List of messages to check
      * @return true if the last timestamp in the last message is non-null, false otherwise
      */
@@ -296,8 +302,13 @@ public class StreamingSQLClient extends AbstractClient {
     }
 
     public BasicTable subscribeStreamingSQL(String queryId, int batchSize, float throttle) throws IOException {
+        return subscribeStreamingSQL(queryId, batchSize, throttle, null);
+    }
+
+    public BasicTable subscribeStreamingSQL(String queryId, int batchSize, float throttle, UpdateListener listener) throws IOException {
         // Create a wrapper to store table references
         final TableWrapper resultWrapper = new TableWrapper(null);
+        final UpdateListener listenerRef = listener;
 
         // Initialize subscription info cache for this queryId
         synchronized (subscriptionInfoCache) {
@@ -350,124 +361,140 @@ public class StreamingSQLClient extends AbstractClient {
         resultWrapper.table = (BasicTable) res.get("schema");
         log.debug("Created initial table, contain: " + resultWrapper.table.columns() + " cols");
 
+        final ProxyTable proxyTable = new ProxyTable(resultWrapper);
+
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 log.info("StreamingSQLClient subscribe start.");
-                while (!isClose()) {
-                    List<IMessage> msgs = new ArrayList<>();
-                    if (batchSize < 0) {
-                        while (true) {
-                            List<IMessage> tmp;
+                try {
+                    while (!isClose()) {
+                        List<IMessage> msgs = new ArrayList<>();
+                        if (batchSize < 0) {
+                            while (true) {
+                                List<IMessage> tmp;
+                                try {
+                                    if (isBatchComplete(msgs)) {
+                                        tmp = queue.poll(0, TimeUnit.MILLISECONDS);
+                                    } else {
+                                        tmp = queue.take();
+                                    }
+                                } catch (InterruptedException e) {
+                                    return;
+                                }
+                                if (tmp != null) {
+                                    msgs.addAll(tmp);
+                                } else if (isBatchComplete(msgs)) {
+                                    break;
+                                }
+                            }
+                        } else if (batchSize > 0 && throttle < 0) {
+                            while (true) {
+                                List<IMessage> tmp;
+                                try {
+                                    if (countTotalRows(msgs) >= batchSize && isBatchComplete(msgs)) {
+                                        tmp = queue.poll(0, TimeUnit.MILLISECONDS);
+                                    } else {
+                                        tmp = queue.take();
+                                    }
+                                } catch (InterruptedException e) {
+                                    break;
+                                }
+                                if (tmp != null) {
+                                    msgs.addAll(tmp);
+                                } else if (countTotalRows(msgs) >= batchSize && isBatchComplete(msgs)) {
+                                    break;
+                                }
+                            }
+                        } else {
+                            long end;
+                            long now = System.currentTimeMillis();
+                            end = now + (long) (throttle * 1000);
+                            boolean shouldDrainQueue = false;
+
+                            while (System.currentTimeMillis() < end || shouldDrainQueue) {
+                                List<IMessage> tmp;
+                                try {
+                                    now = System.currentTimeMillis();
+                                    if (shouldDrainQueue) {
+                                        tmp = queue.poll(0, TimeUnit.MILLISECONDS);
+                                    } else if (end - now <= 0) {
+                                        tmp = queue.take();
+                                    } else {
+                                        tmp = queue.poll(end - now, TimeUnit.MILLISECONDS);
+                                    }
+                                } catch (InterruptedException e) {
+                                    break;
+                                }
+
+                                if (tmp != null) {
+                                    msgs.addAll(tmp);
+                                    if (countTotalRows(msgs) >= batchSize && isBatchComplete(msgs)) {
+                                        shouldDrainQueue = true;  // Start draining mode
+                                    }
+                                } else if (shouldDrainQueue || (System.currentTimeMillis() >= end && isBatchComplete(msgs))) {
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (msgs.isEmpty())
+                            continue;
+
+                        // Extract timestamps from batch messages
+                        BasicTimestamp firstNonNullTimestamp = new BasicTimestamp(Long.MIN_VALUE);
+                        BasicTimestamp lastNonNullTimestamp = new BasicTimestamp(Long.MIN_VALUE);
+
+                        for (IMessage msg : msgs) {
+                            BasicTimestampVector timestampVector = (BasicTimestampVector) msg.getEntity(2);
+                            for (int i = 0; i < timestampVector.rows(); i++) {
+                                BasicTimestamp basicTimestamp = (BasicTimestamp) timestampVector.get(i);
+                                if (basicTimestamp != null && !basicTimestamp.isNull()) {
+                                    if (firstNonNullTimestamp.getLong() == Long.MIN_VALUE) {
+                                        firstNonNullTimestamp = basicTimestamp;
+                                    }
+                                    lastNonNullTimestamp = basicTimestamp;
+                                }
+                            }
+                        }
+
+                        for (IMessage msg : msgs) {
                             try {
-                                if (isBatchComplete(msgs)) {
-                                    tmp = queue.poll(0, TimeUnit.MILLISECONDS);
-                                } else {
-                                    tmp = queue.take();
-                                }
-                            } catch (InterruptedException e) {
-                                return;
-                            }
-                            if (tmp != null) {
-                                msgs.addAll(tmp);
-                            } else if (isBatchComplete(msgs)) {
-                                break;
+                                handler.doEvent(msg);
+                            } catch (Exception e) {
+                                notifyListenerOnError(listenerRef, queryId, e);
+                                throw (RuntimeException) e;
                             }
                         }
-                    } else if (batchSize > 0 && throttle < 0) {
-                        while (true) {
-                            List<IMessage> tmp;
-                            try {
-                                if (countTotalRows(msgs) >= batchSize && isBatchComplete(msgs)) {
-                                    tmp = queue.poll(0, TimeUnit.MILLISECONDS);
-                                } else {
-                                    tmp = queue.take();
-                                }
-                            } catch (InterruptedException e) {
-                                break;
-                            }
-                            if (tmp != null) {
-                                msgs.addAll(tmp);
-                            } else if (countTotalRows(msgs) >= batchSize && isBatchComplete(msgs)) {
-                                break;
-                            }
-                        }
-                    } else {
-                        long end;
-                        long now = System.currentTimeMillis();
-                        end = now + (long)(throttle * 1000);
-                        boolean shouldDrainQueue = false;
 
-                        while (System.currentTimeMillis() < end || shouldDrainQueue) {
-                            List<IMessage> tmp;
-                            try {
-                                now = System.currentTimeMillis();
-                                if (shouldDrainQueue) {
-                                    tmp = queue.poll(0, TimeUnit.MILLISECONDS);
-                                } else if (end - now <= 0) {
-                                    tmp = queue.take();
-                                } else {
-                                    tmp = queue.poll(end - now, TimeUnit.MILLISECONDS);
-                                }
-                            } catch (InterruptedException e) {
-                                break;
+                        SubscriptionInfo info = subscriptionInfoCache.get(queryId);
+                        if (info != null) {
+                            synchronized (info) {
+                                info.leadingRecordInsertTime = firstNonNullTimestamp;
+                                info.lastRecordInsertTime = lastNonNullTimestamp;
+                                info.lastUpdatedTime = new BasicTimestamp(LocalDateTime.now());
                             }
+                            log.debug("Updated subscription info for queryId=" + queryId +
+                                    ", leadingRecordInsertTime=" + info.leadingRecordInsertTime +
+                                    ", lastRecordInsertTime=" + info.lastRecordInsertTime +
+                                    ", lastUpdatedTime=" + info.lastUpdatedTime);
 
-                            if (tmp != null) {
-                                msgs.addAll(tmp);
-                                if (countTotalRows(msgs) >= batchSize && isBatchComplete(msgs)) {
-                                    shouldDrainQueue = true;  // Start draining mode
-                                }
-                            } else if (shouldDrainQueue || (System.currentTimeMillis() >= end && isBatchComplete(msgs))) {
-                                break;
+                            if (listenerRef != null) {
+                                List<ChangeRecord> changes = extractChanges(msgs);
+                                UpdateEvent event = new UpdateEvent(queryId, proxyTable, changes, new ArrayList<>(msgs), System.currentTimeMillis());
+                                notifyListenerOnUpdate(listenerRef, event);
                             }
                         }
                     }
-
-                    if (msgs.isEmpty())
-                        continue;
-
-                    // Extract timestamps from batch messages
-                    BasicTimestamp firstNonNullTimestamp = new BasicTimestamp(Long.MIN_VALUE);;
-                    BasicTimestamp lastNonNullTimestamp = new BasicTimestamp(Long.MIN_VALUE);;
-
-                    for (IMessage msg : msgs) {
-                        BasicTimestampVector timestampVector = (BasicTimestampVector) msg.getEntity(2);
-                        for (int i = 0; i < timestampVector.rows(); i++) {
-                            BasicTimestamp basicTimestamp = (BasicTimestamp) timestampVector.get(i);
-                            if (basicTimestamp != null && !basicTimestamp.isNull()) {
-                                if (firstNonNullTimestamp.getLong() == Long.MIN_VALUE) {
-                                    firstNonNullTimestamp = basicTimestamp;
-                                }
-                                lastNonNullTimestamp = basicTimestamp;
-                            }
-                        }
-                    }
-
-                    // Process messages
-                    for (IMessage msg : msgs) {
-                        handler.doEvent(msg);
-                    }
-
-                    SubscriptionInfo info = subscriptionInfoCache.get(queryId);
-                    if (info != null) {
-                        synchronized (info) {
-                            info.leadingRecordInsertTime = firstNonNullTimestamp;
-                            info.lastRecordInsertTime =  lastNonNullTimestamp;
-                            info.lastUpdatedTime = new BasicTimestamp(LocalDateTime.now());
-                        }
-                        log.debug("Updated subscription info for queryId=" + queryId +
-                                ", leadingRecordInsertTime=" + info.leadingRecordInsertTime +
-                                ", lastRecordInsertTime=" + info.lastRecordInsertTime +
-                                ", lastUpdatedTime=" + info.lastUpdatedTime);
-                    }
+                } finally {
+                    notifyListenerOnClose(listenerRef, queryId);
                 }
             }
         });
         thread.start();
 
         // Returns the table from the wrapper
-        return new ProxyTable(resultWrapper);
+        return proxyTable;
     }
 
     public void unsubscribeStreamingSQL(String queryId) throws IOException {
@@ -516,6 +543,73 @@ public class StreamingSQLClient extends AbstractClient {
             ex.printStackTrace();
             return false;
         }
+    }
+
+    private void notifyListenerOnUpdate(UpdateListener listener, UpdateEvent event) {
+        if (listener == null || event == null) {
+            return;
+        }
+        try {
+            listener.onUpdate(event);
+        } catch (Exception ex) {
+            log.warn("UpdateListener onUpdate failed: " + ex.getMessage(), ex);
+        }
+    }
+
+    private void notifyListenerOnError(UpdateListener listener, String queryId, Throwable error) {
+        if (listener == null || error == null) {
+            return;
+        }
+        try {
+            listener.onError(queryId, error);
+        } catch (Exception ex) {
+            log.warn("UpdateListener onError failed: " + ex.getMessage(), ex);
+        }
+    }
+
+    private void notifyListenerOnClose(UpdateListener listener, String queryId) {
+        if (listener == null) {
+            return;
+        }
+        try {
+            listener.onClose(queryId);
+        } catch (Exception ex) {
+            log.warn("UpdateListener onClose failed: " + ex.getMessage(), ex);
+        }
+    }
+
+    private List<ChangeRecord> extractChanges(List<IMessage> msgs) {
+        List<ChangeRecord> changes = new ArrayList<>();
+        if (msgs == null || msgs.isEmpty()) {
+            return changes;
+        }
+        for (IMessage msg : msgs) {
+            try {
+                BasicByteVector typeColumn = (BasicByteVector) msg.getEntity(0);
+                BasicIntVector lineNoColumn = (BasicIntVector) msg.getEntity(1);
+                int rowCount = typeColumn.rows();
+                for (int rowIdx = 0; rowIdx < rowCount; rowIdx++) {
+                    byte typeByte = ((BasicByte) typeColumn.get(rowIdx)).getByte();
+                    int lineNo = ((BasicInt) lineNoColumn.get(rowIdx)).getInt();
+
+                    List<Entity> rowData = new ArrayList<>();
+                    for (int colIdx = 3; colIdx < msg.size(); colIdx++) {
+                        Entity colEntity = msg.getEntity(colIdx);
+                        if (colEntity instanceof Vector) {
+                            rowData.add(((Vector) colEntity).get(rowIdx));
+                        } else {
+                            rowData.add(colEntity);
+                        }
+                    }
+
+                    ChangeType changeType = ChangeType.toChangeType(typeByte);
+                    changes.add(new ChangeRecord(changeType, lineNo, rowData));
+                }
+            } catch (Exception ex) {
+                log.warn("Failed to extract changes from message: " + ex.getMessage(), ex);
+            }
+        }
+        return changes;
     }
 
     private void checkConnConnect() throws IOException {
