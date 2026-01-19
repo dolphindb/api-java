@@ -319,32 +319,48 @@ public class EventSenderTest {
                         "        qty = q\n" +
                         "    }\n" +
                         "}\n" +
+                        "class eventAny{\n" +
+                        "\tany1 :: ANY \n" +
+                        "\tany2 :: ANY \n" +
+                        "\tany3 :: ANY \n" +
+                        "  def eventAny(any1V,any2V,any3V){\n" +
+                        "\tany1 = any1V\n" +
+                        "\tany2 = any2V\n" +
+                        "\tany3 = any3V\n" +
+                        "  \t}\n" +
+                        "}   \n" +
                         "try{dropStreamEngine(`cep1)}catch(ex){}\n" +
                         "try{dropStreamEngine(`MarketDataChannel)}catch(ex){}\n" +
                         "try{dropStreamEngine(`OrdersChannel)}catch(ex){}\n" +
                         "try{dropStreamEngine(`TradesChannel)}catch(ex){}\n" +
+                        "try{dropStreamEngine(`eventAnyChannel)}catch(ex){}\n" +
                         "try{undef(`MarketDataChannel, SHARED)}catch(ex){}\n" +
                         "try{undef(`OrdersChannel, SHARED)}catch(ex){}\n" +
                         "try{undef(`TradesChannel, SHARED)}catch(ex){}\n" +
+                        "try{undef(`eventAnyChannel, SHARED)}catch(ex){}\n" +
                         "share streamTable(array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as MarketDataChannel\n" +
                         "serializer1 = streamEventSerializer(name=`MarketDataChannel, eventSchema=[MarketData], outputTable=MarketDataChannel)\n" +
                         "share streamTable(array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as OrdersChannel\n" +
                         "serializer2 = streamEventSerializer(name=`OrdersChannel, eventSchema=[Orders], outputTable=OrdersChannel)\n" +
                         "share streamTable(array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as TradesChannel\n" +
                         "serializer3 = streamEventSerializer(name=`TradesChannel, eventSchema=[Trades], outputTable=TradesChannel)\n" +
+                        "share streamTable(array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as eventAnyChannel\n" +
+                        "serializer4 = streamEventSerializer(name=`eventAnyChannel, eventSchema=[eventAny], outputTable=eventAnyChannel)\n" +
                         "class SimpleShareSearch:CEPMonitor {\n" +
                         "    def SimpleShareSearch(){}\n" +
                         "    def processMarketData(event){ emitEvent(event,,\"MarketDataChannel\") }\n" +
                         "    def processOrders(event){ emitEvent(event,,\"OrdersChannel\") }\n" +
                         "    def processTrades(event){ emitEvent(event,,\"TradesChannel\") }\n" +
+                        "    def processEventAny(event){ emitEvent(event,,\"eventAnyChannel\") }\n" +
                         "    def onload(){\n" +
                         "        addEventListener(handler=processMarketData, eventType=\"MarketData\", times=\"all\")\n" +
                         "        addEventListener(handler=processOrders, eventType=\"Orders\", times=\"all\")\n" +
                         "        addEventListener(handler=processTrades, eventType=\"Trades\", times=\"all\")\n" +
+                        "        addEventListener(handler=processEventAny, eventType=\"eventAny\", times=\"all\")\n" +
                         "    }\n" +
                         "}\n" +
                         "dummy = table(array(STRING, 0) as eventType, array(BLOB, 0) as blobs)\n" +
-                        "engine = createCEPEngine(name='cep1', monitors=<SimpleShareSearch()>, dummyTable=dummy, eventSchema=[MarketData,Orders,Trades], outputTable=[serializer1,serializer2,serializer3], dispatchKey=`market)\n";
+                        "engine = createCEPEngine(name='cep1', monitors=<SimpleShareSearch()>, dummyTable=dummy, eventSchema=[MarketData,Orders,Trades,eventAny], outputTable=[serializer1,serializer2,serializer3,serializer4])\n";
         conn.run(script);
 
         EventSchema scheme = new EventSchema();
@@ -3012,6 +3028,25 @@ public class EventSenderTest {
     }
 
     @Test
+    public void test_EventSender_appendEventWithResponse_timeout_not_set() throws IOException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+
+        BasicDictionary response = (BasicDictionary) sender.appendEventWithResponse(
+                "cep1", "MarketData", attrs, "MarketData", "MarketData.price==10");
+        Assert.assertNotNull(response);
+        Assert.assertEquals("MarketData", response.get("eventType").getString());
+        Assert.assertEquals("m", response.get("market").getString());
+        Assert.assertEquals("c", response.get("code").getString());
+        Assert.assertEquals(10.0, ((BasicDouble) response.get("price")).getDouble(), 0.000001);
+        Assert.assertEquals(100, ((BasicInt) response.get("qty")).getInt());
+    }
+
+    @Test
     public void test_EventSender_appendEventWithResponse_condition_not_set() throws IOException {
         PrepareCepEngine();
         List<Entity> attrs = new ArrayList<>();
@@ -3057,5 +3092,60 @@ public class EventSenderTest {
         Assert.assertEquals("c", response.get("code").getString());
         Assert.assertEquals(10.0, ((BasicDouble) response.get("price")).getDouble(), 0.000001);
         Assert.assertEquals(100, ((BasicInt) response.get("qty")).getInt());
+    }
+
+    @Test
+    public void test_EventSender_appendEventWithResponse_any() throws Exception {
+        PrepareCepEngine();
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("eventAny");
+        scheme.setFieldNames(Arrays.asList( "any1", "any2", "any3" ));
+        scheme.setFieldTypes(Arrays.asList( DT_ANY, DT_ANY, DT_ANY));
+        scheme.setFieldForms(Arrays.asList(  DF_VECTOR, DF_VECTOR, DF_VECTOR));
+        scheme.setFieldExtraParams(Arrays.asList( null, null, null));
+        List<EventSchema> eventSchemas = Collections.singletonList(scheme);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+        EventSender sender = new EventSender(conn, "eventAnyChannel",eventSchemas, eventTimeFields, commonFields);
+
+        String script = "share streamTable(1000000:0, `eventType`event, [STRING,BLOB]) as inputTable;\n" +
+                "n=100;\n" +
+                "num=3;\n" +
+                "intv = int(rand(rand(-100..100, 1000) join take(int(), 4), n));\n" +
+                "any1 = cut(take([true, false, NULL], n*num), num);\n" +
+                "any2 = cut(take(char(-100..100 join NULL), n*num), num);\n" +
+                "any3 = cut(take(short(-100..100 join NULL), n*num), num);\n" +
+                "share  table(intv, any1, any2, any3) as data;";
+        conn.run(script);
+        BasicTable bt = (BasicTable)conn.run("select * from data");
+        for(int i=0;i<bt.rows();i++){
+            List<Entity> attributes = new ArrayList<>();
+            for(int j=1;j<bt.columns();j++){
+                BasicAnyVector bav = new BasicAnyVector(1);
+                bav.set(0,bt.getColumn(j).get(i));
+                attributes.add(bav);
+            }
+            BasicDictionary response = (BasicDictionary) sender.appendEventWithResponse(
+                    "cep1", "eventAny", attributes, "eventAny", 5000);
+            System.out.println(response.getString());
+            Assert.assertEquals("eventAny", response.get("eventType").getString());
+            Assert.assertEquals("(" + bt.getColumn("any1").get(i).getString() + ")", response.get("any1").getString());
+            Assert.assertEquals("(" + bt.getColumn("any2").get(i).getString() + ")", response.get("any2").getString());
+            Assert.assertEquals("(" + bt.getColumn("any3").get(i).getString() + ")", response.get("any3").getString());
+        }
+
+        BasicAnyVector any11 = (BasicAnyVector)conn.run("any1=array(ANY,0).append!(dict(`aaa`bbb, `10`99));\n any1");
+        BasicAnyVector any22 = (BasicAnyVector)conn.run("any2=array(ANY,0).append!(dict(`aaa1`bbb2, [1..10, 2..5]));\n any2");
+        BasicAnyVector any33 = (BasicAnyVector)conn.run("any3=array(ANY,0).append!(dict(`aaa11`bbb22, [dict(`p1`p2, `1`2), dict(`p11`p22, `100`200,true)]));\n any3");
+        List<Entity> attributes = new ArrayList<>();
+        attributes.add(any11);
+        attributes.add(any22);
+        attributes.add(any33);
+        BasicDictionary response = (BasicDictionary) sender.appendEventWithResponse(
+                "cep1", "eventAny", attributes, "eventAny", 5000);
+        System.out.println(response.getString());
+        Assert.assertEquals(any11.getString(), response.get("any1").getString());
+        Assert.assertEquals(any22.getString(), response.get("any2").getString());
+        Assert.assertEquals(any33.getString(), response.get("any3").getString());
     }
 }
