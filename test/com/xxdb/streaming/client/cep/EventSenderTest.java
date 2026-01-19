@@ -276,6 +276,89 @@ public class EventSenderTest {
             }
         }
     };
+
+    public static void PrepareCepEngine() throws IOException {
+        String script =
+                "class MarketData{\n" +
+                        "    market :: STRING\n" +
+                        "    code :: STRING\n" +
+                        "    price :: DOUBLE\n" +
+                        "    qty :: INT\n" +
+                        "    def MarketData(m,c,p,q){\n" +
+                        "        market = m\n" +
+                        "        code = c\n" +
+                        "        price = p\n" +
+                        "        qty = q\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "class Orders{\n" +
+                        "    trader :: STRING\n" +
+                        "    market :: STRING\n" +
+                        "    code :: STRING\n" +
+                        "    price :: DOUBLE\n" +
+                        "    qty :: INT\n" +
+                        "    def Orders(t,m,c,p,q){\n" +
+                        "        trader = t\n" +
+                        "        market = m\n" +
+                        "        code = c\n" +
+                        "        price = p\n" +
+                        "        qty = q\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "class Trades{\n" +
+                        "    trader :: STRING\n" +
+                        "    market :: STRING\n" +
+                        "    code :: STRING\n" +
+                        "    price :: DOUBLE\n" +
+                        "    qty :: INT\n" +
+                        "    def Trades(t,m,c,p,q){\n" +
+                        "        trader = t\n" +
+                        "        market = m\n" +
+                        "        code = c\n" +
+                        "        price = p\n" +
+                        "        qty = q\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "try{dropStreamEngine(`cep1)}catch(ex){}\n" +
+                        "try{dropStreamEngine(`MarketDataChannel)}catch(ex){}\n" +
+                        "try{dropStreamEngine(`OrdersChannel)}catch(ex){}\n" +
+                        "try{dropStreamEngine(`TradesChannel)}catch(ex){}\n" +
+                        "try{undef(`MarketDataChannel, SHARED)}catch(ex){}\n" +
+                        "try{undef(`OrdersChannel, SHARED)}catch(ex){}\n" +
+                        "try{undef(`TradesChannel, SHARED)}catch(ex){}\n" +
+                        "share streamTable(array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as MarketDataChannel\n" +
+                        "serializer1 = streamEventSerializer(name=`MarketDataChannel, eventSchema=[MarketData], outputTable=MarketDataChannel)\n" +
+                        "share streamTable(array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as OrdersChannel\n" +
+                        "serializer2 = streamEventSerializer(name=`OrdersChannel, eventSchema=[Orders], outputTable=OrdersChannel)\n" +
+                        "share streamTable(array(STRING, 0) as eventType, array(BLOB, 0) as blobs) as TradesChannel\n" +
+                        "serializer3 = streamEventSerializer(name=`TradesChannel, eventSchema=[Trades], outputTable=TradesChannel)\n" +
+                        "class SimpleShareSearch:CEPMonitor {\n" +
+                        "    def SimpleShareSearch(){}\n" +
+                        "    def processMarketData(event){ emitEvent(event,,\"MarketDataChannel\") }\n" +
+                        "    def processOrders(event){ emitEvent(event,,\"OrdersChannel\") }\n" +
+                        "    def processTrades(event){ emitEvent(event,,\"TradesChannel\") }\n" +
+                        "    def onload(){\n" +
+                        "        addEventListener(handler=processMarketData, eventType=\"MarketData\", times=\"all\")\n" +
+                        "        addEventListener(handler=processOrders, eventType=\"Orders\", times=\"all\")\n" +
+                        "        addEventListener(handler=processTrades, eventType=\"Trades\", times=\"all\")\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "dummy = table(array(STRING, 0) as eventType, array(BLOB, 0) as blobs)\n" +
+                        "engine = createCEPEngine(name='cep1', monitors=<SimpleShareSearch()>, dummyTable=dummy, eventSchema=[MarketData,Orders,Trades], outputTable=[serializer1,serializer2,serializer3], dispatchKey=`market)\n";
+        conn.run(script);
+
+        EventSchema scheme = new EventSchema();
+        scheme.setEventType("MarketData");
+        scheme.setFieldNames(Arrays.asList("market", "code", "price", "qty"));
+        scheme.setFieldTypes(Arrays.asList(DT_STRING, DT_STRING, DT_DOUBLE, DT_INT));
+        scheme.setFieldForms(Arrays.asList(DF_SCALAR, DF_SCALAR, DF_SCALAR, DF_SCALAR));
+
+        List<EventSchema> eventSchemas = Collections.singletonList(scheme);
+        List<String> eventTimeFields = new ArrayList<>();
+        List<String> commonFields = new ArrayList<>();
+
+        sender = new EventSender(conn, "MarketDataChannel", eventSchemas, eventTimeFields, commonFields);
+    }
     @Test
     public  void test_EventSender_EventScheme_null() throws IOException, InterruptedException {
         List<EventSchema> eventSchemas = new ArrayList<>();
@@ -1222,7 +1305,7 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("serialize event Fail for unknown eventType market111",re);
+        Assert.assertEquals("serialize event fail for unknown eventType market111",re);
     }
     @Test
     public  void test_EventSender_sendEvent_eventType_null() throws IOException, InterruptedException {
@@ -1247,7 +1330,7 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("serialize event Fail for unknown eventType null",re);
+        Assert.assertEquals("serialize event fail for unknown eventType null",re);
         String re1 = null;
         try{
             sender.sendEvent("", attributes1);
@@ -1280,7 +1363,7 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("serialize event Fail for the number of event values does not match market",re);
+        Assert.assertEquals("serialize event fail for the number of event values does not match market",re);
     }
     @Test
     public  void test_EventSender_sendEvent_attributes_type_not_match() throws IOException, InterruptedException {
@@ -1305,7 +1388,7 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("serialize event Fail for Expected type for the field time of market:DT_TIME, but now it is DT_INT",re);
+        Assert.assertEquals("serialize event fail for Expected type for the field time of market:DT_TIME, but now it is DT_INT",re);
     }
     @Test
     public  void test_EventSender_sendEvent_attributes_null() throws IOException, InterruptedException {
@@ -2662,4 +2745,317 @@ public class EventSenderTest {
         checkData(bt1,bt2);
     }
 
+    @Test
+    public  void test_EventSender_appendEventWithResponse_engine_not_exist() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+        String re = null;
+        try{
+            sender.appendEventWithResponse("cep121", "MarketData", attrs, "MarketData", 5000, "MarketData.price==10");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals(true, re.contains("Invalid engine."));
+    }
+
+    @Test
+    public  void test_EventSender_appendEventWithResponse_engine_null() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+        String re = null;
+        try{
+            sender.appendEventWithResponse(null, "MarketData", attrs, "MarketData", 5000, "MarketData.price==10");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("engine cannot be null or empty.",re);
+        String re1 = null;
+        try{
+            sender.appendEventWithResponse("", "MarketData", attrs, "MarketData", 5000, "MarketData.price==10");
+        }catch(Exception ex){
+            re1 = ex.getMessage();
+        }
+        Assert.assertEquals("engine cannot be null or empty.",re1);
+    }
+
+    @Test
+    public  void test_EventSender_appendEventWithResponse_eventType_not_exist() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+        String re = null;
+        try{
+            sender.appendEventWithResponse("cep1", "MarketData111111", attrs, "MarketData", 5000, "MarketData.price==10");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("build event fail for unknown eventType MarketData111111",re);
+    }
+    @Test
+    public  void test_EventSender_appendEventWithResponse_eventType_null() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+        String re = null;
+        try{
+            sender.appendEventWithResponse("cep1", null, attrs, "MarketData", 5000, "MarketData.price==10");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("eventType cannot be null or empty.",re);
+        String re1 = null;
+        try{
+            sender.appendEventWithResponse("cep1", "", attrs, "MarketData", 5000, "MarketData.price==10");
+        }catch(Exception ex){
+            re1 = ex.getMessage();
+        }
+        Assert.assertEquals("eventType cannot be null or empty.",re1);
+    }
+    @Test
+    public  void test_EventSender_appendEventWithResponse_attributes_null() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        String re = null;
+        try{
+            sender.appendEventWithResponse("cep1", "MarketData", null, "MarketData", 5000, "MarketData.price==10");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("attributes cannot be null.",re);
+    }
+    @Test
+    public  void test_EventSender_appendEventWithResponse_attributes_column_not_match() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+//        attrs.add(new BasicInt(100));
+        String re = null;
+        try{
+            sender.appendEventWithResponse("cep1", "MarketData", attrs, "MarketData", 5000, "MarketData.price==10");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("build event fail for the number of event values does not match MarketData",re);
+    }
+    @Test
+    public  void test_EventSender_appendEventWithResponse_attributes_type_not_match() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicInt(100));
+        String re = null;
+        try{
+            sender.appendEventWithResponse("cep1", "MarketData", attrs, "MarketData", 5000, "MarketData.price==10");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("build event fail for Expected type for the field code of MarketData:DT_STRING, but now it is DT_DOUBLE",re);
+    }
+
+    @Test
+    public  void test_EventSender_appendEventWithResponse_responseType_not_exist() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+        String re = null;
+        try{
+            sender.appendEventWithResponse("cep1", "MarketData", attrs, "MarketData111", 1000, "MarketData111.price==10");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals(true, re.contains("Timeout while waiting for response of type: MarketData111"));
+    }
+
+    @Test
+    public  void test_EventSender_appendEventWithResponse_responseType_null() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+        String re = null;
+        try{
+            sender.appendEventWithResponse("cep1", "MarketData", attrs, null, 5000, "MarketData.price==10");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("responseType cannot be null or empty.",re);
+        String re1 = null;
+        try{
+            sender.appendEventWithResponse("cep1", "MarketData", attrs, "", 5000, "MarketData.price==10");
+        }catch(Exception ex){
+            re1 = ex.getMessage();
+        }
+        Assert.assertEquals("responseType cannot be null or empty.",re1);
+    }
+
+    @Test
+    public  void test_EventSender_appendEventWithResponse_timeout_negative() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+        String re = null;
+        try{
+            sender.appendEventWithResponse("cep1", "MarketData", attrs, "MarketData", -1, "MarketData.price==10");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("timeout must be positive.",re);
+    }
+
+    @Test
+    public  void test_EventSender_appendEventWithResponse_timeout_0() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+        String re = null;
+        try{
+            sender.appendEventWithResponse("cep1", "MarketData", attrs, "MarketData", 0, "MarketData.price==10");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals("timeout must be positive.",re);
+    }
+
+
+    @Test
+    public  void test_EventSender_appendEventWithResponse_condition_null() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+        BasicDictionary response = (BasicDictionary) sender.appendEventWithResponse("cep1", "MarketData", attrs, "MarketData", 1000, null);
+        Assert.assertNotNull(response);
+        Assert.assertEquals("MarketData", response.get("eventType").getString());
+        Assert.assertEquals("m", response.get("market").getString());
+        Assert.assertEquals("c", response.get("code").getString());
+        Assert.assertEquals(10.0, ((BasicDouble) response.get("price")).getDouble(), 0.000001);
+        Assert.assertEquals(100, ((BasicInt) response.get("qty")).getInt());
+
+        List<Entity> attrs1 = new ArrayList<>();
+        attrs1.add(new BasicString("m1"));
+        attrs1.add(new BasicString("c1"));
+        attrs1.add(new BasicDouble(10.1));
+        attrs1.add(new BasicInt(1001));
+        BasicDictionary response1 = (BasicDictionary) sender.appendEventWithResponse("cep1", "MarketData", attrs1, "MarketData", 1000, "");
+        Assert.assertNotNull(response1);
+        Assert.assertEquals("MarketData", response1.get("eventType").getString());
+        Assert.assertEquals("m1", response1.get("market").getString());
+        Assert.assertEquals("c1", response1.get("code").getString());
+        Assert.assertEquals(10.1, ((BasicDouble) response1.get("price")).getDouble(), 0.000001);
+        Assert.assertEquals(1001, ((BasicInt) response1.get("qty")).getInt());
+    }
+
+    @Test
+    public  void test_EventSender_appendEventWithResponse_condition_error() throws IOException, InterruptedException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100)); String re = null;
+        try{
+            sender.appendEventWithResponse("cep1", "MarketData", attrs, "MarketData", 1000, "reeeeee");
+        }catch(Exception ex){
+            re = ex.getMessage();
+        }
+        Assert.assertEquals(true, re.contains("SQL context is not initialized yet."));
+    }
+
+    @Test
+    public void test_EventSender_appendEventWithResponse() throws IOException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+
+        BasicDictionary response = (BasicDictionary) sender.appendEventWithResponse(
+                "cep1", "MarketData", attrs, "MarketData", 5000, "MarketData.price==10");
+
+        Assert.assertNotNull(response);
+        Assert.assertEquals("MarketData", response.get("eventType").getString());
+        Assert.assertEquals("m", response.get("market").getString());
+        Assert.assertEquals("c", response.get("code").getString());
+        Assert.assertEquals(10.0, ((BasicDouble) response.get("price")).getDouble(), 0.000001);
+        Assert.assertEquals(100, ((BasicInt) response.get("qty")).getInt());
+    }
+
+    @Test
+    public void test_EventSender_appendEventWithResponse_condition_not_set() throws IOException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+
+        BasicDictionary response = (BasicDictionary) sender.appendEventWithResponse(
+                "cep1", "MarketData", attrs, "MarketData", 5000);
+
+        Assert.assertNotNull(response);
+        Assert.assertEquals("MarketData", response.get("eventType").getString());
+        Assert.assertEquals("m", response.get("market").getString());
+        Assert.assertEquals("c", response.get("code").getString());
+        Assert.assertEquals(10.0, ((BasicDouble) response.get("price")).getDouble(), 0.000001);
+        Assert.assertEquals(100, ((BasicInt) response.get("qty")).getInt());
+    }
+
+    @Test
+    public void test_EventSender_appendEventWithResponse_duplicated() throws IOException {
+        PrepareCepEngine();
+        List<Entity> attrs = new ArrayList<>();
+        attrs.add(new BasicString("m"));
+        attrs.add(new BasicString("c"));
+        attrs.add(new BasicDouble(10.0));
+        attrs.add(new BasicInt(100));
+
+        BasicDictionary response = (BasicDictionary) sender.appendEventWithResponse(
+                "cep1", "MarketData", attrs, "MarketData", 5000,"MarketData.price==10");
+        List<Entity> attrs1 = new ArrayList<>();
+        attrs1.add(new BasicString("m"));
+        attrs1.add(new BasicString("c"));
+        attrs1.add(new BasicDouble(10.0));
+        attrs1.add(new BasicInt(1001));
+
+        BasicDictionary response1 = (BasicDictionary) sender.appendEventWithResponse(
+                "cep1", "MarketData", attrs, "MarketData", 5000);
+        Assert.assertNotNull(response);
+
+        Assert.assertEquals("MarketData", response.get("eventType").getString());
+        Assert.assertEquals("m", response.get("market").getString());
+        Assert.assertEquals("c", response.get("code").getString());
+        Assert.assertEquals(10.0, ((BasicDouble) response.get("price")).getDouble(), 0.000001);
+        Assert.assertEquals(100, ((BasicInt) response.get("qty")).getInt());
+    }
 }
