@@ -4,6 +4,8 @@ import com.xxdb.DBConnection;
 import com.xxdb.data.BasicDictionary;
 import com.xxdb.data.BasicTable;
 import com.xxdb.data.Entity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,6 +17,8 @@ public class EventSender {
     private String insertScript;
     private EventHandler eventHandler;
     private DBConnection conn;
+
+    private static final Logger log = LoggerFactory.getLogger(EventSender.class);
 
     public EventSender(DBConnection conn, String tableName, List<EventSchema> eventSchemas, List<String> eventTimeFields, List<String> commonFields) throws IOException {
         this.eventHandler = new EventHandler(eventSchemas, eventTimeFields, commonFields);
@@ -43,19 +47,6 @@ public class EventSender {
         }
     }
 
-    public Entity appendEventWithResponse(String engine, String eventType, List<Entity> attributes, String responseType) {
-        return appendEventWithResponse(engine, eventType, attributes, responseType, 5000, null);
-    }
-
-
-    public Entity appendEventWithResponse(String engine, String eventType, List<Entity> attributes, String responseType, int timeout) {
-        return appendEventWithResponse(engine, eventType, attributes, responseType, timeout, null);
-    }
-
-    public Entity appendEventWithResponse(String engine, String eventType, List<Entity> attributes, String responseType, String condition) {
-        return appendEventWithResponse(engine, eventType, attributes, responseType, 5000, condition);
-    }
-
     public Entity appendEventWithResponse(String engine, String eventType, List<Entity> attributes, String responseType, int timeout, String condition) {
         if (engine == null || engine.isEmpty())
             throw new IllegalArgumentException("engine cannot be null or empty.");
@@ -65,8 +56,10 @@ public class EventSender {
             throw new IllegalArgumentException("responseType cannot be null or empty.");
         if (attributes == null)
             throw new IllegalArgumentException("attributes cannot be null.");
-        if (timeout <= 0)
-            throw new IllegalArgumentException("timeout must be positive.");
+        if (timeout <= 0) {
+            log.warn("The param 'timeout' cannot be less than or equal to 0, the default value of 5000 will be used.");
+            timeout = 5000;
+        }
 
         StringBuilder errMsg = new StringBuilder();
         BasicDictionary event = eventHandler.toEventDictionary(eventType, attributes, errMsg);
