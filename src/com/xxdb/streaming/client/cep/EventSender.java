@@ -47,7 +47,7 @@ public class EventSender {
         }
     }
 
-    public Entity appendEventWithResponse(String engine, String eventType, List<Entity> attributes, String responseType, int timeout, String condition) {
+    public BasicDictionary appendEventWithResponse(String engine, String eventType, List<Entity> attributes, String responseType, int timeout, String condition) {
         if (engine == null || engine.isEmpty())
             throw new IllegalArgumentException("engine cannot be null or empty.");
         if (eventType == null || eventType.isEmpty())
@@ -75,7 +75,7 @@ public class EventSender {
 
             String responseVar = "cepResp" + "_" + System.nanoTime();
             String script = buildAppendEventScript(responseVar, engine, responseType, timeout, eventVar, condition);
-            return conn.run(script);
+            return (BasicDictionary) conn.run(script);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
