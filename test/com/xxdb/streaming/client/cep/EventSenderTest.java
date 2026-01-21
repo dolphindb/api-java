@@ -3028,45 +3028,6 @@ public class EventSenderTest {
     }
 
     @Test
-    public void test_EventSender_appendEventWithResponse_timeout_not_set() throws IOException {
-        PrepareCepEngine();
-        List<Entity> attrs = new ArrayList<>();
-        attrs.add(new BasicString("m"));
-        attrs.add(new BasicString("c"));
-        attrs.add(new BasicDouble(10.0));
-        attrs.add(new BasicInt(100));
-
-        BasicDictionary response = (BasicDictionary) sender.appendEventWithResponse(
-                "cep1", "MarketData", attrs, "MarketData", "MarketData.price==10");
-        Assert.assertNotNull(response);
-        Assert.assertEquals("MarketData", response.get("eventType").getString());
-        Assert.assertEquals("m", response.get("market").getString());
-        Assert.assertEquals("c", response.get("code").getString());
-        Assert.assertEquals(10.0, ((BasicDouble) response.get("price")).getDouble(), 0.000001);
-        Assert.assertEquals(100, ((BasicInt) response.get("qty")).getInt());
-    }
-
-    @Test
-    public void test_EventSender_appendEventWithResponse_condition_not_set() throws IOException {
-        PrepareCepEngine();
-        List<Entity> attrs = new ArrayList<>();
-        attrs.add(new BasicString("m"));
-        attrs.add(new BasicString("c"));
-        attrs.add(new BasicDouble(10.0));
-        attrs.add(new BasicInt(100));
-
-        BasicDictionary response = (BasicDictionary) sender.appendEventWithResponse(
-                "cep1", "MarketData", attrs, "MarketData", 5000);
-
-        Assert.assertNotNull(response);
-        Assert.assertEquals("MarketData", response.get("eventType").getString());
-        Assert.assertEquals("m", response.get("market").getString());
-        Assert.assertEquals("c", response.get("code").getString());
-        Assert.assertEquals(10.0, ((BasicDouble) response.get("price")).getDouble(), 0.000001);
-        Assert.assertEquals(100, ((BasicInt) response.get("qty")).getInt());
-    }
-
-    @Test
     public void test_EventSender_appendEventWithResponse_duplicated() throws IOException {
         PrepareCepEngine();
         List<Entity> attrs = new ArrayList<>();
@@ -3084,7 +3045,7 @@ public class EventSenderTest {
         attrs1.add(new BasicInt(1001));
 
         BasicDictionary response1 = (BasicDictionary) sender.appendEventWithResponse(
-                "cep1", "MarketData", attrs, "MarketData", 5000);
+                "cep1", "MarketData", attrs, "MarketData", 5000, null);
         Assert.assertNotNull(response);
 
         Assert.assertEquals("MarketData", response.get("eventType").getString());
@@ -3126,7 +3087,7 @@ public class EventSenderTest {
                 attributes.add(bav);
             }
             BasicDictionary response = (BasicDictionary) sender.appendEventWithResponse(
-                    "cep1", "eventAny", attributes, "eventAny", 5000);
+                    "cep1", "eventAny", attributes, "eventAny", 5000,null);
             System.out.println(response.getString());
             Assert.assertEquals("eventAny", response.get("eventType").getString());
             Assert.assertEquals("(" + bt.getColumn("any1").get(i).getString() + ")", response.get("any1").getString());
@@ -3142,7 +3103,7 @@ public class EventSenderTest {
         attributes.add(any22);
         attributes.add(any33);
         BasicDictionary response = (BasicDictionary) sender.appendEventWithResponse(
-                "cep1", "eventAny", attributes, "eventAny", 5000);
+                "cep1", "eventAny", attributes, "eventAny", 5000,null);
         System.out.println(response.getString());
         Assert.assertEquals(any11.getString(), response.get("any1").getString());
         Assert.assertEquals(any22.getString(), response.get("any2").getString());
