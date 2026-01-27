@@ -1,11 +1,16 @@
 package com.xxdb;
 
-import com.xxdb.data.BasicInt;
-import com.xxdb.data.BasicTable;
+import com.xxdb.data.*;
+import com.xxdb.streaming.client.streamingSQL.ChangeType;
+import com.xxdb.streaming.client.streamingSQL.UpdateEvent;
+import org.junit.Assert;
+
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import static com.xxdb.data.Entity.DATA_TYPE.DT_SYMBOL;
 import static org.junit.Assert.assertEquals;
 
 public class Prepare {
@@ -163,6 +168,13 @@ public class Prepare {
                 "colNames = `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`datehourv`uuidv`ippaddrv`int128v`blobv`pointv`complexv`decimal32v`decimal64v`decimal128v ;\n" +
                 "colTypes=[BOOL,CHAR,SHORT,INT,LONG,DOUBLE,FLOAT,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,SYMBOL,STRING,DATEHOUR,UUID,IPADDR,INT128,BLOB,POINT,COMPLEX,DECIMAL32(2),DECIMAL64(7),DECIMAL128(18)]\n" +
                 "share streamTable(1:0,colNames,colTypes) as " + tableName +";\n" ;
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run(script);
+    }
+
+    public static void Prepare_haStreamTable(String tableName) throws IOException {
+        String script = "share(streamTable(1000000:0, `permno`timestamp`ticker`price1`price2`price3`price4`price5`vol1`vol2`vol3`vol4`vol5, [INT, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE, DOUBLE, DOUBLE, DOUBLE, INT, INT, INT, INT, INT]),  " + tableName +");\n" ;
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         conn.run(script);
@@ -521,6 +533,58 @@ public class Prepare {
         for (int i = 0; i < exception.columns(); i++) {
             //System.out.println("col" + resTable.getColumnName(i));
             assertEquals(exception.getColumn(i).getString(), resTable.getColumn(i).getString());
+        }
+    }
+
+    public static void checkReceivedEvents(DBConnection conn, String id1, BasicTable tableName, List<UpdateEvent> receivedEvents) throws Exception {
+        BasicTable tableLog = (BasicTable)conn.run("select * from " + id1);
+        System.out.println(tableLog.rows());
+
+        int total = 0;
+        BasicByteVector logType = new BasicByteVector(0);
+        BasicIntVector lineNo = new BasicIntVector(0);
+        BasicTimestampVector logTimestamp = new BasicTimestampVector(0);
+        BasicStringVector id = new BasicStringVector(0);
+        BasicDoubleVector value = new BasicDoubleVector(0);
+
+        BasicIntVector lineNo1 = new BasicIntVector(0);
+        BasicStringVector rowData1 = new BasicStringVector(0);
+        BasicDoubleVector rowData2 = new BasicDoubleVector(0);
+        for (UpdateEvent event : receivedEvents) {
+            total += event.getChangeRecords().size();
+
+            Assert.assertEquals(id1, event.getQueryId());
+            Assert.assertEquals(tableName.getString(), event.getTable().getString());
+            Assert.assertTrue(event.getAppliedAtMillis() > 0);
+
+            for(int i=0;i<event.getChangeRecords().size();i++){
+                rowData1.Append((Scalar) event.getChangeRecords().get(i).getRowData().get(0));
+                rowData2.Append((Scalar) event.getChangeRecords().get(i).getRowData().get(1));
+                lineNo1.add(event.getChangeRecords().get(i).getLineNo());
+                Assert.assertTrue(event.getChangeRecords().get(i).getType()!= ChangeType.UNKNOWN);
+            }
+
+            for(int i=0;i<event.getRawMessages().size();i++){
+                System.out.println("每一个批次对应的行数："+event.getRawMessages().get(i).getEntity(0).rows());
+                logType.Append((BasicByteVector)event.getRawMessages().get(i).getEntity(0));
+                lineNo.Append((BasicIntVector)event.getRawMessages().get(i).getEntity(1));
+                logTimestamp.Append((BasicTimestampVector)event.getRawMessages().get(i).getEntity(2));
+                id.Append((Vector)event.getRawMessages().get(i).getEntity(3));
+                value.Append((BasicDoubleVector)event.getRawMessages().get(i).getEntity(4));
+            }
+        }
+
+        Assert.assertEquals(tableLog.rows(), total);
+        for(int i=0;i<tableLog.rows();i++){
+            Assert.assertEquals(tableLog.getColumn(0).getString(i), logType.getString(i));
+            Assert.assertEquals(tableLog.getColumn(1).getString(i), lineNo.getString(i));
+            Assert.assertEquals(tableLog.getColumn(2).getString(i), logTimestamp.getString(i));
+            Assert.assertEquals(tableLog.getColumn(3).getString(i), id.getString(i));
+            Assert.assertEquals(tableLog.getColumn(4).getString(i), value.getString(i));
+
+            Assert.assertEquals(tableLog.getColumn(1).getString(i), lineNo1.getString(i));
+            Assert.assertEquals(tableLog.getColumn(3).getString(i), rowData1.getString(i));
+            Assert.assertEquals(tableLog.getColumn(4).getString(i), rowData2.getString(i));
         }
     }
 
