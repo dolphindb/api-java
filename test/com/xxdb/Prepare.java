@@ -26,6 +26,12 @@ public class Prepare {
                     "for(i in a){\n" +
                     "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
                     "}");
+        conn.run("streamT = exec name from  getStreamTables() where shared=true\n" +
+                "for(i in streamT){\n" +
+                "\ttry{\n" +
+                "\t\tdropStreamTable(i)\n" +
+                "\t\t}catch(ex){}\n" +
+                "\t}");
         conn.run("res = getStreamingSQLStatus()\n" +
                 "    for(sqlStream in res){\n" +
                 "        try{unsubscribeStreamingSQL(, sqlStream.queryId)}catch(ex){print ex}\n" +
@@ -591,6 +597,19 @@ public class Prepare {
     public static void wait_data(String table_name, int data_row) throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
+        BasicInt row_num;
+        for(int i=0;i<200;i++){
+            row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
+//            System.out.println(row_num.getInt());
+            if(row_num.getInt() == data_row){
+                break;
+            }
+            Thread.sleep(300);
+            i++;
+        }
+    }
+
+    public static void wait_data(String table_name, int data_row, DBConnection conn) throws IOException, InterruptedException {
         BasicInt row_num;
         for(int i=0;i<200;i++){
             row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
