@@ -794,9 +794,8 @@ public abstract class AbstractClient implements MessageDispatcher {
                             synchronized (tableNameToTrueTopic) {
                                 tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + "/" + tableName + "/" + actionName, topic);
                             }
-                            String HATopic = getTopic(HASiteHost, HASitePort, HASiteAlias, tableName, actionName);
                             synchronized (HATopicToTrueTopic) {
-                                HATopicToTrueTopic.put(HATopic, topic);
+                                HATopicToTrueTopic.put(topic, topic);
                             }
                         }
                         if (subInfos_.containsKey(topic)){
@@ -951,9 +950,8 @@ public abstract class AbstractClient implements MessageDispatcher {
                     synchronized (tableNameToTrueTopic) {
                         tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + "/" + tableName + "/" + actionName, topic);
                     }
-                    String HATopic = getTopic(HASiteHost, HASitePort, HASiteAlias, tableName, actionName);
                     synchronized (HATopicToTrueTopic) {
-                        HATopicToTrueTopic.put(HATopic, topic);
+                        HATopicToTrueTopic.put(topic, topic);
                     }
                 }
                 if (subInfos_.containsKey(topic)){
