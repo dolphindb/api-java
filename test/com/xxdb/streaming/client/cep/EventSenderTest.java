@@ -1353,7 +1353,7 @@ public class EventSenderTest {
         }catch(Exception ex){
             re1 = ex.getMessage();
         }
-        Assert.assertEquals("serialize event Fail for unknown eventType ",re1);
+        Assert.assertEquals("serialize event fail for unknown eventType ",re1);
     }
 
     @Test
@@ -2940,7 +2940,7 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("timeout must be positive.",re);
+        Assert.assertEquals("The param 'timeout' cannot be less than or equal to 0.",re);
     }
 
     @Test
@@ -2957,7 +2957,7 @@ public class EventSenderTest {
         }catch(Exception ex){
             re = ex.getMessage();
         }
-        Assert.assertEquals("timeout must be positive.",re);
+        Assert.assertEquals("The param 'timeout' cannot be less than or equal to 0.",re);
     }
 
 

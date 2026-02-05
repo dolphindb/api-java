@@ -474,8 +474,8 @@ public class ThreadedClientsubscribeReverseTest {
         MyThread write_data  = new MyThread ();
         write_data.start();
         sleep(2000);
-        conn.run("stopPublishTable('"+HOST+"',9055,'Trades','javaStreamingApi')");
-        sleep(1000);
+        conn.run("stopPublishTable('"+HOST+"',8802,'Trades','javaStreamingApi')");
+        sleep(3000);
 //        conn.run("stopPublishTable('"+HOST+"',9055,'Trades')");
 //        Thread.sleep(3000);
         BasicInt row_num = (BasicInt)conn.run("(exec count(*) from Receive)[0]");
@@ -3864,7 +3864,7 @@ public class ThreadedClientsubscribeReverseTest {
         wait_data("Receive",10000, conn_leader);
         BasicInt row_num = (BasicInt)conn_leader.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
-        threadedClient.unsubscribe(HOST,PORT,"Trades");
+        threadedClient.unsubscribe(StreamLeaderHost, StreamLeaderPort,"Trades");
     }
 
     @Test(timeout = 120000)
@@ -3915,6 +3915,6 @@ public class ThreadedClientsubscribeReverseTest {
         wait_data("Receive",10000, conn_follower);
         BasicInt row_num = (BasicInt)conn_follower.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
-        threadedClient.unsubscribe(HOST,PORT,"Trades");
+        threadedClient.unsubscribe(StreamFollowerHost, StreamFollowerPort,"Trades");
     }
 }

@@ -46,6 +46,8 @@ public class StreamingSQLResultUpdaterTest {
                 "        try{revokeStreamingSQL(sqlStream.queryId)}catch(ex){print ex}\n" +
                 "    }\n" +
                 "    go;\n" +
+                "    try{undef(`t1,SHARED)}catch(ex){print ex}\n" +
+                "    try{undef(`t2,SHARED)}catch(ex){print ex}\n" +
                 "    try{revokeStreamingSQLTable(`t1)}catch(ex){print ex}\n" +
                 "    try{revokeStreamingSQLTable(`t2)}catch(ex){print ex}\n" +
                 "    try{undef(`t1,SHARED)}catch(ex){print ex}\n" +
@@ -1485,7 +1487,6 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable tableLog = (BasicTable)conn.run("select * from " + id1);
         UpdateEvent event = eventRef.get();
         Assert.assertNull(event);
-        Assert.assertEquals(id1, event.getQueryId());
     }
 
     //@Test//在代码中添加throw new RuntimeException("模拟 doEvent 抛异常"); 检查onError是否能够获取的到(检查日志)

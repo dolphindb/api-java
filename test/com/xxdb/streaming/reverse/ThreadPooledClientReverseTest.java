@@ -2233,7 +2233,7 @@ public static void PrepareStreamTable() throws IOException {
         wait_data("Receive",10000, conn_leader);
         BasicInt row_num = (BasicInt)conn_leader.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
-        threadPooledClient.unsubscribe(HOST,PORT,"Trades");
+        threadPooledClient.unsubscribe(StreamLeaderHost, StreamLeaderPort,"Trades");
     }
 
     @Test(timeout = 120000)
@@ -2284,6 +2284,6 @@ public static void PrepareStreamTable() throws IOException {
         wait_data("Receive",10000, conn_follower);
         BasicInt row_num = (BasicInt)conn_follower.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());
-        threadPooledClient.unsubscribe(HOST,PORT,"Trades");
+        threadPooledClient.unsubscribe(StreamFollowerHost, StreamFollowerPort,"Trades");
     }
 }

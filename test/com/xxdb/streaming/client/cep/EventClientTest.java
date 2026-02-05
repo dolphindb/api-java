@@ -2133,13 +2133,13 @@ public class EventClientTest {
                 "appendEvent(inputSerializer, [event1, event2, event3, event4]);";
         conn.run(script2);
         sleep(2000);
-        BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
+        BasicTable bt2 = (BasicTable)conn.run("select * from outputTable order by intv;");
         Assert.assertEquals(4,bt2.rows());
         Assert.assertEquals("boolv intv\n" +
                 "----- ----\n" +
-                "true  3   \n" +
                 "false 1   \n" +
-                "true  4   \n" +
-                "false 2   \n", bt2.getString());
+                "false 2   \n" +
+                "true  3   \n" +
+                "true  4   \n", bt2.getString());
     }
 }

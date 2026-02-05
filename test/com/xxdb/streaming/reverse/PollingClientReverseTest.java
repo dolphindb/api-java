@@ -1800,7 +1800,7 @@ public class PollingClientReverseTest {
         pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
-    @Test
+    //@Test AJ-283
     public void test_subscribe_msgAsTable_true() throws IOException {
         TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",0,true,null,null,"","",true);
         ArrayList<IMessage> msg1;

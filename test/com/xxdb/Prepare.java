@@ -26,12 +26,6 @@ public class Prepare {
                     "for(i in a){\n" +
                     "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
                     "}");
-        conn.run("streamT = exec name from  getStreamTables() where shared=true\n" +
-                "for(i in streamT){\n" +
-                "\ttry{\n" +
-                "\t\tdropStreamTable(i)\n" +
-                "\t\t}catch(ex){}\n" +
-                "\t}");
         conn.run("res = getStreamingSQLStatus()\n" +
                 "    for(sqlStream in res){\n" +
                 "        try{unsubscribeStreamingSQL(, sqlStream.queryId)}catch(ex){print ex}\n" +
@@ -42,6 +36,12 @@ public class Prepare {
                 "    try{revokeStreamingSQLTable(`t2)}catch(ex){print ex}\n" +
                 "    try{revokeStreamingSQLTable(`bondFilter)}catch(ex){print ex}\n" +
                 "    try{revokeStreamingSQLTable(`bestBondQuotation)}catch(ex){print ex}\n" );
+        conn.run("streamT = exec name from  getStreamTables() where shared=true\n" +
+                "for(i in streamT){\n" +
+                "\ttry{\n" +
+                "\t\tdropStreamTable(i)\n" +
+                "\t\t}catch(ex){}\n" +
+                "\t}");
             conn.run("def getAllShare(){\n" +
                     "\treturn select name from objs(true) where shared=1\n" +
                     "\t}\n" +

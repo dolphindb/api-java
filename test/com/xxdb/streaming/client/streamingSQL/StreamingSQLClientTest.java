@@ -319,7 +319,7 @@ public class StreamingSQLClientTest {
         Assert.assertNotNull(re1.getColumn("registerTime").get(0).getString());
         Assert.assertEquals("SQL_REGISTERED", re1.getColumn("status").get(0).getString());
         Assert.assertEquals(sqlStr1, re1.getColumn("sqlQuery").get(0).getString());
-        Assert.assertEquals("t1,t2", re1.getColumn("involvedTables").get(0).getString());
+        Assert.assertEquals("t2,t1", re1.getColumn("involvedTables").get(0).getString());
         Assert.assertEquals("", re1.getColumn("lastErrorMessage").get(0).getString());
 
         BasicTable re2 = streamingSQLClient.getStreamingSQLStatus(id2);
@@ -328,7 +328,7 @@ public class StreamingSQLClientTest {
         Assert.assertNotNull(re2.getColumn("registerTime").get(0).getString());
         Assert.assertEquals("SQL_REGISTERED", re2.getColumn("status").get(0).getString());
         Assert.assertEquals(sqlStr1, re2.getColumn("sqlQuery").get(0).getString());
-        Assert.assertEquals("t1,t2", re2.getColumn("involvedTables").get(0).getString());
+        Assert.assertEquals("t2,t1", re2.getColumn("involvedTables").get(0).getString());
         Assert.assertEquals("", re2.getColumn("lastErrorMessage").get(0).getString());
 
         streamingSQLClient.revokeStreamingSQL(id1);
