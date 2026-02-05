@@ -14,6 +14,7 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -1583,7 +1584,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
                 "", "t1", false, false, null, 1, 1,
                 1, "id");
         ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( (short)1, (short)1, (short)-1, (short)0, (short)-1);
-        pErrorInfo=mutithreadTableWriter_.insert( null, (short)1, (short)1, (short)0, (short)1);
+        pErrorInfo = mutithreadTableWriter_.insert( null, (short)1, (short)1, (short)0, (short)1);
         assertEquals("code= info=",pErrorInfo.toString());
         mutithreadTableWriter_.waitForThreadCompletion();
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
@@ -2787,6 +2788,31 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(10000,ex.rows());
         checkData(ex,res);
         mutithreadTableWriter_.waitForThreadCompletion();
+    }
+
+    //@Test(timeout = 120000) //AJ-822
+    public  void test_insert_arrayVector_insert_entity()throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("t = table(1000:0, `int`arrayv," +
+                "[INT,DECIMAL128(2)]);" +
+                "share t as t1;");
+        int time=10240;
+        conn.run(sb.toString());
+        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
+                "", "t1", false, false,null,1, 1,
+                1, "arrayv");
+        for (short i=0;i<time;i++) {
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( 1, new BigDecimal("1"));
+            assertEquals("code= info=",pErrorInfo.toString());
+        }
+        mutithreadTableWriter_.waitForThreadCompletion();
+        BasicTable bt= (BasicTable) conn.run("select * from t1;");
+        System.out.println(bt.getString());
+        assertEquals(time,bt.rows());
+        for (int i=0;i<time;i++) {
+            assertEquals(0.0f, ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(0)).getNumber());
+            assertEquals(Float.valueOf(i), ((Scalar)((BasicArrayVector)bt.getColumn("arrayv")).getVectorValue(i).get(1)).getNumber());
+        }
     }
 
     /**
@@ -6907,146 +6933,114 @@ public  class MultithreadedTableWriterTest implements Runnable {
         conn.run("undef(`t1,SHARED)");
     }
 
-    //@Test(timeout = 120000)
+    @Test(timeout = 120000)
     public void test_MultithreadedTableWriter_allDataType_null() throws Exception {
-        List<String> colNames = new ArrayList<String>();
-        colNames.add("boolv");
-        colNames.add("charv");
-        colNames.add("shortv");
-        colNames.add("intv");
-        colNames.add("longv");
-        colNames.add("doublev");
-        colNames.add("floatv");
-        colNames.add("datev");
-        colNames.add("monthv");
-        colNames.add("timev");
-        colNames.add("minutev");
-        colNames.add("secondv");
-        colNames.add("datetimev");
-        colNames.add("timestampv");
-        colNames.add("nanotimev");
-        colNames.add("nanotimestampv");
-        colNames.add("symbolv");
-        colNames.add("stringv");
-        colNames.add("uuidv");
-        colNames.add("datehourv");
-        colNames.add("ippaddrv");
-        colNames.add("int128v");
-        colNames.add("blobv");
-        colNames.add("complexv");
-        colNames.add("pointv");
-        colNames.add("decimal32v");
-        colNames.add("decimal64v");
-        colNames.add("decimal128V");
+        BasicBoolean boolv = new BasicBoolean(true);
+        boolv.setNull();
+        BasicByte charv = new BasicByte((byte)1);
+        charv.setNull();
+        BasicShort shortv = new BasicShort((short)1);
+        shortv.setNull();
+        BasicInt intv = new BasicInt(1);
+        intv.setNull();
+        BasicLong longv = new BasicLong(1);
+        longv.setNull();
+        BasicDouble doublev = new BasicDouble(1);
+        doublev.setNull();
+        BasicFloat floatv = new BasicFloat(1);
+        floatv.setNull();
+        BasicDate datev = new BasicDate(1);
+        datev.setNull();
+        BasicMonth monthv = new BasicMonth(1);
+        monthv.setNull();
+        BasicTime timev = new BasicTime(1);
+        timev.setNull();
+        BasicMinute minutev = new BasicMinute(1);
+        minutev.setNull();
+        BasicSecond secondv = new BasicSecond(1);
+        secondv.setNull();
+        BasicDateTime datetimev = new BasicDateTime(1);
+        datetimev.setNull();
+        BasicTimestamp timestampv = new BasicTimestamp(1);
+        timestampv.setNull();
+        BasicNanoTime nanotimev = new BasicNanoTime(1);
+        nanotimev.setNull();
+        BasicNanoTimestamp nanotimestampv = new BasicNanoTimestamp((byte)1);
+        nanotimestampv.setNull();
+        BasicString symbolv = new BasicString("2");
+        symbolv.setNull();
+        BasicString stringv = new BasicString("1");
+        stringv.setNull();
+        BasicUuid uuidv = new BasicUuid(1,1);
+        uuidv.setNull();
+        BasicDateHour datehourv = new BasicDateHour(1);
+        datehourv.setNull();
+        BasicIPAddr ippaddrv = new BasicIPAddr(1,1);
+        ippaddrv.setNull();
+        BasicInt128 int128v = new BasicInt128(1,1);
+        int128v.setNull();
+        BasicString blobv = new BasicString("(byte)1",true);
+        blobv.setNull();
+        BasicComplex complexv = new BasicComplex(1,1);
+        complexv.setNull();
+        BasicPoint pointv = new BasicPoint(1,1);
+        pointv.setNull();
+        BasicDecimal32 decimal32v = new BasicDecimal32("1.1",2);
+        decimal32v.setNull();
+        BasicDecimal64 decimal64v = new BasicDecimal64("1.1",2);
+        decimal64v.setNull();
+        BasicDecimal128 decimal128v = new BasicDecimal128("1.1",2);
+        decimal128v.setNull();
 
-        List<Vector> cols = new ArrayList<Vector>();
-        cols.add(new BasicBooleanVector(0));
-        cols.add(new BasicByteVector(0));
-        cols.add(new BasicShortVector(0));
-        cols.add(new BasicIntVector(0));
-        cols.add(new BasicLongVector(0));
-        cols.add(new BasicDoubleVector(0));
-        cols.add(new BasicFloatVector(0));
-        cols.add(new BasicDateVector(0));
-        cols.add(new BasicMonthVector(0));
-        cols.add(new BasicTimeVector(0));
-        cols.add(new BasicMinuteVector(0));
-        cols.add(new BasicSecondVector(0));
-        cols.add(new BasicDateTimeVector(0));
-        cols.add(new BasicTimestampVector(0));
-        cols.add(new BasicNanoTimeVector(0));
-        cols.add(new BasicNanoTimestampVector(0));
-        cols.add(new BasicSymbolVector(0));
-        cols.add(new BasicStringVector(0));
-        cols.add(new BasicUuidVector(0));
-        cols.add(new BasicDateHourVector(0));
-        cols.add(new BasicIPAddrVector(0));
-        cols.add(new BasicInt128Vector(0));
-        cols.add(new BasicStringVector(new String[0],true));
-        cols.add(new BasicComplexVector(0));
-        cols.add(new BasicPointVector(0));
-        cols.add(new BasicDecimal32Vector(0,0));
-        cols.add(new BasicDecimal64Vector(0,0));
-        cols.add(new BasicDecimal128Vector(0,0));
         conn.run("dbPath = \"dfs://empty_table\";if(existsDatabase(dbPath)) dropDatabase(dbPath); \n" +
                 " db = database(dbPath, HASH,[STRING, 2],,\"TSDB\");\n " +
                 "t= table(100:0,`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`uuidv`datehourv`ippaddrv`int128v`blobv`complexv`pointv`decimal32v`decimal64v`decimal128v, " +
                 "[BOOL, CHAR, SHORT, INT, LONG, DOUBLE, FLOAT, DATE, MONTH, TIME, MINUTE, SECOND, DATETIME, TIMESTAMP, NANOTIME, NANOTIMESTAMP, SYMBOL, STRING, UUID, DATEHOUR, IPADDR, INT128, BLOB, complex, POINT, DECIMAL32(3), DECIMAL64(4),DECIMAL128(10) ]);\n" +
                 " pt=db.createPartitionedTable(t,`pt,`stringv,,`stringv);");
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://empty_table", "pt", false, false, null, 1, 1, 1, "stringv");
-        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( cols);
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( boolv,charv,shortv,intv,longv,doublev,floatv,datev,monthv,timev,minutev,secondv,datetimev,timestampv,nanotimev,nanotimestampv,symbolv,stringv,uuidv,datehourv,ippaddrv,int128v,blobv,complexv,pointv,decimal32v,decimal64v,decimal128v);
         assertEquals("code= info=",pErrorInfo.toString());
         mutithreadTableWriter_.waitForThreadCompletion();
         BasicTable bt = (BasicTable) conn.run("select * from loadTable(\"dfs://empty_table\",`pt);");
-        assertEquals(0, bt.rows());
+        assertEquals(1, bt.rows());
+        System.out.println(bt.getString());
         conn.close();
     }
     //@Test(timeout = 120000)
     public void test_MultithreadedTableWriter_allDataType_array_null() throws Exception {
-        List<String> colNames = new ArrayList<String>();
-        colNames.add("boolv");
-        colNames.add("charv");
-        colNames.add("shortv");
-        colNames.add("intv");
-        colNames.add("longv");
-        colNames.add("doublev");
-        colNames.add("floatv");
-        colNames.add("datev");
-        colNames.add("monthv");
-        colNames.add("timev");
-        colNames.add("minutev");
-        colNames.add("secondv");
-        colNames.add("datetimev");
-        colNames.add("timestampv");
-        colNames.add("nanotimev");
-        colNames.add("nanotimestampv");
-        //colNames.add("symbolv");
-        //colNames.add("stringv");
-        colNames.add("uuidv");
-        colNames.add("datehourv");
-        colNames.add("ippaddrv");
-        colNames.add("int128v");
-        //colNames.add("blobv");
-        colNames.add("complexv");
-        colNames.add("pointv");
-        colNames.add("decimal32v");
-        colNames.add("decimal64v");
-        colNames.add("decimal128V");
+        BasicBooleanVector boolv = new BasicBooleanVector(0);
+        BasicByteVector charv = new BasicByteVector(0);
+        BasicShortVector shortv = new BasicShortVector(0);
+        BasicIntVector intv = new BasicIntVector(0);
+        BasicLongVector longv = new BasicLongVector(0);
+        BasicDoubleVector doublev = new BasicDoubleVector(0);
+        BasicFloatVector floatv = new BasicFloatVector(0);
+        BasicDateVector datev = new BasicDateVector(0);
+        BasicMonthVector monthv = new BasicMonthVector(0);
+        BasicTimeVector timev = new BasicTimeVector(0);
+        BasicMinuteVector minutev = new BasicMinuteVector(0);
+        BasicSecondVector secondv = new BasicSecondVector(0);
+        BasicDateTimeVector datetimev = new BasicDateTimeVector(0);
+        BasicTimestampVector timestampv = new BasicTimestampVector(0);
+        BasicNanoTimeVector nanotimev = new BasicNanoTimeVector(0);
+        BasicNanoTimestampVector nanotimestampv = new BasicNanoTimestampVector(0);
+        BasicUuidVector uuidv = new BasicUuidVector(0);
+        BasicDateHourVector datehourv = new BasicDateHourVector(0);
+        BasicIPAddrVector ippaddrv = new BasicIPAddrVector(0);
+        BasicInt128Vector int128v = new BasicInt128Vector(0);
+        BasicComplexVector complexv = new BasicComplexVector(0);
+        BasicPointVector pointv = new BasicPointVector(0);
+        BasicDecimal32Vector decimal32v = new BasicDecimal32Vector(0,0);
+        BasicDecimal64Vector decimal64v = new BasicDecimal64Vector(0,0);
+        BasicDecimal128Vector decimal128v = new BasicDecimal128Vector(0,0);
 
-        List<Vector> cols = new ArrayList<Vector>();
-        cols.add(new BasicIntVector(0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_BOOL_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_BYTE_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_SHORT_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_INT_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_LONG_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DOUBLE_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_FLOAT_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DATE_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_MONTH_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_TIME_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_MINUTE_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_SECOND_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DATETIME_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_TIMESTAMP_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_NANOTIME_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_NANOTIMESTAMP_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_UUID_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DATEHOUR_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_IPADDR_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_INT128_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_COMPLEX_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_POINT_ARRAY,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL32_ARRAY,0,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL64_ARRAY,0,0));
-        cols.add(new BasicArrayVector(Entity.DATA_TYPE.DT_DECIMAL128_ARRAY,0,0));
         conn.run("dbPath = \"dfs://empty_table\";if(existsDatabase(dbPath)) dropDatabase(dbPath); \n" +
                 " db = database(dbPath, HASH,[INT, 2],,\"TSDB\");\n " +
                 "t= table(100:0,`id`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`uuidv`datehourv`ippaddrv`int128v`complexv`pointv`decimal32v`decimal64v`decimal128v, " +
                 "[INT, BOOL[], CHAR[], SHORT[], INT[], LONG[], DOUBLE[], FLOAT[], DATE[], MONTH[], TIME[], MINUTE[], SECOND[], DATETIME[], TIMESTAMP[], NANOTIME[], NANOTIMESTAMP[], UUID[], DATEHOUR[], IPADDR[], INT128[], COMPLEX[], POINT[], DECIMAL32(3)[], DECIMAL64(4)[],DECIMAL128(10)[] ]);\n" +
                 " pt=db.createPartitionedTable(t,`pt,`id,,`id);");
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456", "dfs://empty_table", "pt", false, false, null, 1, 1, 1, "id");
-        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( cols);
+        ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(null, boolv,charv,shortv,intv,longv,doublev,floatv,datev,monthv,timev,minutev,secondv,datetimev,timestampv,nanotimev,nanotimestampv,uuidv,datehourv,ippaddrv,int128v,complexv,pointv,decimal32v,decimal64v,decimal128v);
         assertEquals("code= info=",pErrorInfo.toString());
         mutithreadTableWriter_.waitForThreadCompletion();
         BasicTable bt = (BasicTable) conn.run("select * from loadTable(\"dfs://empty_table\",`pt);");
@@ -7306,5 +7300,21 @@ public  class MultithreadedTableWriterTest implements Runnable {
         assertEquals(9, bt.rows());
         checkData(bt, bt1);
     }
+
+    //@Test(timeout = 120000)///这种情况有问题
+    public void test_insert_array1() throws Exception {
+        DBConnection conn = new DBConnection();
+        conn.connect("192.168.0.69",8848,"admin","123456");
+        conn.run("share table(array(DECIMAL64(2)[]) as data) as tt");
+        MultithreadedTableWriter writer = new MultithreadedTableWriter("192.168.0.69", 8848, "admin", "123456", "", "tt",
+                false, false, null, 1, 0.01f, 1, "");
+
+        ErrorCodeInfo re1 = writer.insert(new BasicDecimal64[]{new BasicDecimal64("1",2)});
+        System.out.println(re1.toString());
+        writer.waitForThreadCompletion();
+        BasicTable rr=(BasicTable) conn.run("select * from  tt");
+        System.out.println(rr.getString());
+    }
+
 }
 

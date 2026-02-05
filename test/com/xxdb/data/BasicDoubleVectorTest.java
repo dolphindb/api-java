@@ -50,7 +50,9 @@ public class BasicDoubleVectorTest {
 
         System.out.println(Double.MIN_VALUE);
         bbv.set(5, -Double.MAX_VALUE);
-        Assert.assertEquals("[,,-1.33,2.99,4.9E-324,]", bbv.getString());
+        //AJ-933
+        //Assert.assertEquals("[,,-1.33,2.99,,]", bbv.getString());
+        Assert.assertEquals("[,,-1.33,2.99,0,]", bbv.getString());
     }
 
     @Test

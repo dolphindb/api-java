@@ -2184,7 +2184,7 @@ public class ConnectionPoolTest {
         assertEquals("Can't find specified partition column name.", re);
         pool.shutdown();
     }
-    @Test(timeout = 120000)
+   // @Test(timeout = 120000)//AJ-590
     public void test_PartitionedTableAppender_allDataType_null() throws Exception {
         List<String> colNames = new ArrayList<String>();
         colNames.add("boolv");

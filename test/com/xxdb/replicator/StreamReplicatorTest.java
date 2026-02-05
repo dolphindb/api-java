@@ -265,9 +265,9 @@ public class StreamReplicatorTest {
         conn2.run(script);
         replicator = new StreamReplicator(hostInfoList,"dataType_int",replicatorConfig);
         ErrorCodeInfo ret = replicator.insert("1","1");
-        Assert.assertEquals("code=A1 info=Invalid object error when create scalar for column 1: Failed to insert data. Cannot convert String to DT_INT_ARRAY.",ret.toString());
+        Assert.assertEquals("code=A1 info=Invalid object error when create scalar for column 0: Failed to insert data. Cannot convert String to DT_INT.",ret.toString());
         Assert.assertEquals("A1",ret.getErrorCode());
-        Assert.assertEquals("Invalid object error when create scalar for column 1: Failed to insert data. Cannot convert String to DT_INT_ARRAY.",ret.getErrorInfo());
+        Assert.assertEquals("Invalid object error when create scalar for column 0: Failed to insert data. Cannot convert String to DT_INT.",ret.getErrorInfo());
     }
 
     @Test
