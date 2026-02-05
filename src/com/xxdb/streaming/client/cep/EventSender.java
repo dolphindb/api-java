@@ -57,7 +57,7 @@ public class EventSender {
         if (attributes == null)
             throw new IllegalArgumentException("attributes cannot be null.");
         if (timeout <= 0) {
-            throw new IllegalArgumentException("The param 'timeout' cannot be less than or equal to 0, the default value of 5000 will be used.");
+            throw new IllegalArgumentException("The param 'timeout' cannot be less than or equal to 0.");
         }
 
         StringBuilder errMsg = new StringBuilder();
