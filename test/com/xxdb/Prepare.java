@@ -1,11 +1,16 @@
 package com.xxdb;
 
-import com.xxdb.data.BasicInt;
-import com.xxdb.data.BasicTable;
+import com.xxdb.data.*;
+import com.xxdb.streaming.client.streamingSQL.ChangeType;
+import com.xxdb.streaming.client.streamingSQL.UpdateEvent;
+import org.junit.Assert;
+
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import static com.xxdb.data.Entity.DATA_TYPE.DT_SYMBOL;
 import static org.junit.Assert.assertEquals;
 
 public class Prepare {
@@ -31,6 +36,12 @@ public class Prepare {
                 "    try{revokeStreamingSQLTable(`t2)}catch(ex){print ex}\n" +
                 "    try{revokeStreamingSQLTable(`bondFilter)}catch(ex){print ex}\n" +
                 "    try{revokeStreamingSQLTable(`bestBondQuotation)}catch(ex){print ex}\n" );
+        conn.run("streamT = exec name from  getStreamTables() where shared=true\n" +
+                "for(i in streamT){\n" +
+                "\ttry{\n" +
+                "\t\tdropStreamTable(i)\n" +
+                "\t\t}catch(ex){}\n" +
+                "\t}");
             conn.run("def getAllShare(){\n" +
                     "\treturn select name from objs(true) where shared=1\n" +
                     "\t}\n" +
@@ -158,11 +169,38 @@ public class Prepare {
         conn.run(script);
     }
 
-    public static void Prepare_streamTable(String tableName) throws IOException {
+    public static void Prepare_streamTable(String HOST,int PORT,String tableName) throws IOException {
         String script = "login(`admin, `123456); \n" +
                 "colNames = `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`datehourv`uuidv`ippaddrv`int128v`blobv`pointv`complexv`decimal32v`decimal64v`decimal128v ;\n" +
                 "colTypes=[BOOL,CHAR,SHORT,INT,LONG,DOUBLE,FLOAT,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,SYMBOL,STRING,DATEHOUR,UUID,IPADDR,INT128,BLOB,POINT,COMPLEX,DECIMAL32(2),DECIMAL64(7),DECIMAL128(18)]\n" +
                 "share streamTable(1:0,colNames,colTypes) as " + tableName +";\n" ;
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run(script);
+    }
+
+    public static void Prepare_haStreamTable(String tableName) throws IOException {
+        String script = "share(streamTable(1000000:0, `permno`timestamp`ticker`price1`price2`price3`price4`price5`vol1`vol2`vol3`vol4`vol5, [INT, TIMESTAMP, SYMBOL, DOUBLE, DOUBLE, DOUBLE, DOUBLE, DOUBLE, INT, INT, INT, INT, INT]),  " + tableName +");\n" ;
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run(script);
+    }
+
+    public static void Prepare_streamTable_130(String HOST,int PORT,String tableName) throws IOException {
+        String script = "login(`admin, `123456); \n" +
+                "colNames = `boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`symbolv`stringv`datehourv`uuidv`ippaddrv`int128v`pointv`complexv ;\n" +
+                "colTypes=[BOOL,CHAR,SHORT,INT,LONG,DOUBLE,FLOAT,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,SYMBOL,STRING,DATEHOUR,UUID,IPADDR,INT128,POINT,COMPLEX]\n" +
+                "share streamTable(1:0,colNames,colTypes) as " + tableName +";\n" ;
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT,"admin","123456");
+        conn.run(script);
+    }
+
+    public static void Prepare_keyTable(String HOST,int PORT,String tableName) throws IOException {
+        String script = "login(`admin, `123456); \n" +
+                "colNames = `id`tv`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`stringv`datehourv`uuidv`ippaddrv`int128v`blobv`pointv`complexv`decimal32v`decimal64v`decimal128v ;\n" +
+                "colTypes=[SYMBOL,TIMESTAMP,BOOL,CHAR,SHORT,INT,LONG,DOUBLE,FLOAT,DATE,MONTH,TIME,MINUTE,SECOND,DATETIME,TIMESTAMP,NANOTIME,NANOTIMESTAMP,STRING,DATEHOUR,UUID,IPADDR,INT128,BLOB,POINT,COMPLEX,DECIMAL32(3),DECIMAL64(8),DECIMAL128(10)]\n" +
+                "share keyedTable(`id,1:0,colNames,colTypes) as " + tableName +";\n" ;
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         conn.run(script);
@@ -280,6 +318,43 @@ public class Prepare {
         conn.connect(HOST,PORT,"admin","123456");
         conn.run(script1);
     }
+    public static void Preparedata_streamTable_array1(String host,int port, long count1,long count2) throws IOException {
+        String script1 = "login(`admin, `123456); \n"+
+                "n="+count1+";\n" +
+                "m="+count2+";\n" +
+                "rows = ceil(double(n)/m)\n" +
+                "id = take(1..300000, rows) ;\n" +
+                "cbool = array(BOOL[]).append!(cut(take([true, false, NULL], n), m))\n" +
+                "cchar = array(CHAR[]).append!(cut(take(char(-100..100 join NULL), n), m))\n" +
+                "cshort = array(SHORT[]).append!(cut(take(short(-100..100 join NULL), n), m))\n" +
+                "cint = array(INT[]).append!(cut(take(-100..100 join NULL, n), m))\n" +
+                "clong = array(LONG[]).append!(cut(take(long(-100..100 join NULL), n), m))\n" +
+                "cdouble = array(DOUBLE[]).append!(cut(take(-100..100 join NULL, n) + 0.254, m))\n" +
+                "cfloat = array(FLOAT[]).append!(cut(take(-100..100 join NULL, n) + 0.254f, m))\n" +
+                "cdate = array(DATE[]).append!(cut(take(2012.01.01..2012.02.29, n), m))\n" +
+                "cmonth = array(MONTH[]).append!(cut(take(2012.01M..2013.12M, n), m))\n" +
+                "ctime = array(TIME[]).append!(cut(take(09:00:00.000 + 0..99 * 1000, n), m))\n" +
+                "cminute = array(MINUTE[]).append!(cut(take(09:00m..15:59m, n), m))\n" +
+                "csecond = array(SECOND[]).append!(cut(take(09:00:00 + 0..999, n), m))\n" +
+                "cdatetime = array(DATETIME[]).append!(cut(take(2012.01.01T09:00:00 + 0..999, n), m))\n" +
+                "ctimestamp = array(TIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000 + 0..999 * 1000, n), m))\n" +
+                "cnanotime =array(NANOTIME[]).append!(cut(take(09:00:00.000000000 + 0..999 * 1000000000, n), m))\n" +
+                "cnanotimestamp = array(NANOTIMESTAMP[]).append!(cut(take(2012.01.01T09:00:00.000000000 + 0..999 * 1000000000, n), m))\n" +
+                "cuuid = array(UUID[]).append!(cut(take(uuid([\"5d212a78-cc48-e3b1-4235-b4d91473ee87\", \"5d212a78-cc48-e3b1-4235-b4d91473ee88\", \"5d212a78-cc48-e3b1-4235-b4d91473ee89\", \"\"]), n), m))\n" +
+                "cdatehour = array(DATEHOUR[]).append!(cut(take(datehour(1..10 join NULL), n), m))\n" +
+                "cipaddr = array(IPADDR[]).append!(cut(take(ipaddr([\"192.168.100.10\", \"192.168.100.11\", \"192.168.100.14\", \"\"]), n), m))\n" +
+                "cint128 = array(INT128[]).append!(cut(take(int128([\"e1671797c52e15f763380b45e841ec32\", \"e1671797c52e15f763380b45e841ec33\", \"e1671797c52e15f763380b45e841ec35\", \"\"]), n), m))\n" +
+                "ccomplex = array(	COMPLEX[]).append!(cut(rand(complex(rand(100, 1000), rand(100, 1000)) join NULL, n), m))\n" +
+                "cpoint = array(POINT[]).append!(cut(rand(point(rand(100, 1000), rand(100, 1000)) join NULL, n), m))\n" +
+                "cdecimal32 = array(DECIMAL32(2)[]).append!(cut(decimal32(take(-100..100 join NULL, n) + 0.254, 3), m))\n" +
+                "cdecimal64 = array(DECIMAL64(7)[]).append!(cut(decimal64(take(-100..100 join NULL, n) + 0.25, 4), m))\n" +
+                "cdecimal128 = array(DECIMAL128(19)[]).append!(cut(decimal128(take(-100..100 join NULL, n) + 0.25, 5), m))\n" +
+                "share streamTable(1000000:0, `id`cbool`cchar`cshort`cint`clong`cdouble`cfloat`cdate`cmonth`ctime`cminute`csecond`cdatetime`ctimestamp`cnanotime`cnanotimestamp`cdatehour`cuuid`cipaddr`cint128`cpoint`ccomplex`cdecimal32`cdecimal64`cdecimal128, [INT,BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[], DATEHOUR[],UUID[],IPADDR[],INT128[],POINT[],COMPLEX[],DECIMAL32(2)[],DECIMAL64(7)[],DECIMAL128(19)[]]) as Receive;\n" +
+                "share streamTable(id, cbool, cchar, cshort, cint, clong, cdouble, cfloat, cdate, cmonth, ctime, cminute, csecond, cdatetime, ctimestamp, cnanotime, cnanotimestamp, cdatehour, cuuid, cipaddr, cint128, cpoint, ccomplex,  cdecimal32, cdecimal64, cdecimal128) as Trades;\n" ;
+        DBConnection conn = new DBConnection();
+        conn.connect(host,port,"admin","123456");
+        conn.run(script1);
+    }
 
     public static void PrepareStreamTable_StreamDeserializer_array_allDataType() throws IOException {
         String script = "share streamTable(10000:0, `permno`sym`blob`boolv`charv`shortv`intv`longv`doublev`floatv`datev`monthv`timev`minutev`secondv`datetimev`timestampv`nanotimev`nanotimestampv`datehourv`uuidv`ipaddrv`int128v`complexv`pointv, [TIMESTAMP,SYMBOL,BLOB,BOOL[],CHAR[],SHORT[],INT[],LONG[],DOUBLE[],FLOAT[],DATE[],MONTH[],TIME[],MINUTE[],SECOND[],DATETIME[],TIMESTAMP[],NANOTIME[],NANOTIMESTAMP[], DATEHOUR[],UUID[],IPADDR[],INT128[],COMPLEX[],POINT[]]) as outTables;\n" +
@@ -355,6 +430,7 @@ public class Prepare {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         conn.run(script1);
+        System.out.println(script1);
     }
 
     public static void Preparedata_array_1(long count1,long count2) throws IOException {
@@ -466,9 +542,74 @@ public class Prepare {
         }
     }
 
+    public static void checkReceivedEvents(DBConnection conn, String id1, BasicTable tableName, List<UpdateEvent> receivedEvents) throws Exception {
+        BasicTable tableLog = (BasicTable)conn.run("select * from " + id1);
+        System.out.println(tableLog.rows());
+
+        int total = 0;
+        BasicByteVector logType = new BasicByteVector(0);
+        BasicIntVector lineNo = new BasicIntVector(0);
+        BasicTimestampVector logTimestamp = new BasicTimestampVector(0);
+        BasicStringVector id = new BasicStringVector(0);
+        BasicDoubleVector value = new BasicDoubleVector(0);
+
+        BasicIntVector lineNo1 = new BasicIntVector(0);
+        BasicStringVector rowData1 = new BasicStringVector(0);
+        BasicDoubleVector rowData2 = new BasicDoubleVector(0);
+        for (UpdateEvent event : receivedEvents) {
+            total += event.getChangeRecords().size();
+
+            Assert.assertEquals(id1, event.getQueryId());
+            Assert.assertEquals(tableName.getString(), event.getTable().getString());
+            Assert.assertTrue(event.getAppliedAtMillis() > 0);
+
+            for(int i=0;i<event.getChangeRecords().size();i++){
+                rowData1.Append((Scalar) event.getChangeRecords().get(i).getRowData().get(0));
+                rowData2.Append((Scalar) event.getChangeRecords().get(i).getRowData().get(1));
+                lineNo1.add(event.getChangeRecords().get(i).getLineNo());
+                Assert.assertTrue(event.getChangeRecords().get(i).getType()!= ChangeType.UNKNOWN);
+            }
+
+            for(int i=0;i<event.getRawMessages().size();i++){
+                System.out.println("每一个批次对应的行数："+event.getRawMessages().get(i).getEntity(0).rows());
+                logType.Append((BasicByteVector)event.getRawMessages().get(i).getEntity(0));
+                lineNo.Append((BasicIntVector)event.getRawMessages().get(i).getEntity(1));
+                logTimestamp.Append((BasicTimestampVector)event.getRawMessages().get(i).getEntity(2));
+                id.Append((Vector)event.getRawMessages().get(i).getEntity(3));
+                value.Append((BasicDoubleVector)event.getRawMessages().get(i).getEntity(4));
+            }
+        }
+
+        Assert.assertEquals(tableLog.rows(), total);
+        for(int i=0;i<tableLog.rows();i++){
+            Assert.assertEquals(tableLog.getColumn(0).getString(i), logType.getString(i));
+            Assert.assertEquals(tableLog.getColumn(1).getString(i), lineNo.getString(i));
+            Assert.assertEquals(tableLog.getColumn(2).getString(i), logTimestamp.getString(i));
+            Assert.assertEquals(tableLog.getColumn(3).getString(i), id.getString(i));
+            Assert.assertEquals(tableLog.getColumn(4).getString(i), value.getString(i));
+
+            Assert.assertEquals(tableLog.getColumn(1).getString(i), lineNo1.getString(i));
+            Assert.assertEquals(tableLog.getColumn(3).getString(i), rowData1.getString(i));
+            Assert.assertEquals(tableLog.getColumn(4).getString(i), rowData2.getString(i));
+        }
+    }
+
     public static void wait_data(String table_name, int data_row) throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
+        BasicInt row_num;
+        for(int i=0;i<200;i++){
+            row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
+//            System.out.println(row_num.getInt());
+            if(row_num.getInt() == data_row){
+                break;
+            }
+            Thread.sleep(300);
+            i++;
+        }
+    }
+
+    public static void wait_data(String table_name, int data_row, DBConnection conn) throws IOException, InterruptedException {
         BasicInt row_num;
         for(int i=0;i<200;i++){
             row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");

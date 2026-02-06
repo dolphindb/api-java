@@ -1,15 +1,11 @@
 package com.xxdb.compression;
 
 import com.xxdb.data.AbstractVector;
-
-import com.xxdb.data.BasicStringVector;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
-
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-
 
 import static com.xxdb.data.Utils.reAllocByteBuffer;
 

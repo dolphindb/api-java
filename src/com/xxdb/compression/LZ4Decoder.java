@@ -1,17 +1,13 @@
 package com.xxdb.compression;
 
-import com.xxdb.data.Entity;
 import com.xxdb.io.BigEndianDataInputStream;
 import com.xxdb.io.DdbByteArrayInputStream;
 import com.xxdb.io.ExtendedDataInput;
 import com.xxdb.io.LittleEndianDataInputStream;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4SafeDecompressor;
-
-import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.LinkedList;
 
 public class LZ4Decoder extends AbstractDecoder {

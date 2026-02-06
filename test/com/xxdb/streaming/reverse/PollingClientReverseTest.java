@@ -144,13 +144,13 @@ public class PollingClientReverseTest {
             assertEquals(except1.getColumn(i).getString(), res1.getColumn(i).getString());
         }
     }
-    @Test(expected = IOException.class)
+    @Test(expected = IllegalArgumentException.class)
     public  void error_size1() throws IOException {
         TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1","subtrades",-1,true);
         ArrayList<IMessage> msgs;
         msgs = poller1.poll(1000,0);
        }
-    @Test(expected = IOException.class)
+    @Test(expected = IllegalArgumentException.class)
     public  void error_size2() throws IOException {
         TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1","subtrades",-1,true);
         ArrayList<IMessage> msgs = poller1.poll(1000,-10);
@@ -343,7 +343,7 @@ public class PollingClientReverseTest {
     }
 
     @Test(timeout = 120000)
-    public void test_subscribe_user_authMode_scream() throws IOException {
+    public void test_subscribe_user_authMode_scram() throws IOException {
         PrepareUser_authMode("scramUser","123456","scram");
         TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1", "subtrades1", -1, true,null,"scramUser","123456");
         ArrayList<IMessage> msgs1;
@@ -1800,7 +1800,7 @@ public class PollingClientReverseTest {
         pollingClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");
     }
 
-    @Test
+    //@Test AJ-283
     public void test_subscribe_msgAsTable_true() throws IOException {
         TopicPoller poller1 = pollingClient.subscribe(HOST,PORT,"Trades1","subTread1",0,true,null,null,"","",true);
         ArrayList<IMessage> msg1;
@@ -2093,5 +2093,112 @@ public class PollingClientReverseTest {
             assertEquals(re.getColumn(2).get(i).getString(), tra.getColumn(2).get(i).getString());
         }
         pollingClient.unsubscribe(HOST, port1, "orca.orca_table.output","orca");
+    }
+
+    @Test(timeout = 120000)
+    public void Test_threadedClient_subscribe_haStreamTable_on_leader() throws IOException, InterruptedException {
+        BasicString StreamLeaderTmp = (BasicString)conn.run(String.format("getStreamingLeader(%d)", GROUP_ID));
+        String StreamLeader = StreamLeaderTmp.getString();
+        BasicString StreamLeaderHostTmp = (BasicString)conn.run(String.format("(exec host from rpc(getControllerAlias(), getClusterPerf) where name=\"%s\")[0]", StreamLeader));
+        String StreamLeaderHost = StreamLeaderHostTmp.getString();
+        BasicInt StreamLeaderPortTmp = (BasicInt)conn.run(String.format("(exec port from rpc(getControllerAlias(), getClusterPerf) where mode = 0 and  name=\"%s\")[0]", StreamLeader));
+        int StreamLeaderPort = StreamLeaderPortTmp.getInt();
+        System.out.println(StreamLeaderHost);
+        System.out.println(StreamLeaderPort);
+        DBConnection conn_leader = new DBConnection();
+        conn_leader.connect(StreamLeaderHost, StreamLeaderPort, "admin", "123456");
+        String script = "try{\ndropStreamTable(`Trades)\n}catch(ex){\n}\n" +
+                "table = table(1000000:0,  `tag`ts`data,[INT,TIMESTAMP,DOUBLE]);\n"+
+                "haStreamTable("+GROUP_ID+", table, `Trades, 100000);\n"+
+                " share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as Receive;";
+        conn_leader.run(script);
+        final DBConnection finalConn1 = conn_leader;
+        TopicPoller poller = pollingClient.subscribe(StreamLeaderHost, StreamLeaderPort, "Trades", "haStreamTable", 0);
+        conn_leader.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        List<IMessage> messages = poller.poll(2000,10000);
+
+        for(int i=0;i<messages.size();i++){
+            try {
+                IMessage msg = messages.get(i);
+                List<Entity> args = new ArrayList<>();
+                args.add(msg.getEntity(0));
+                args.add(msg.getEntity(1));
+                args.add(msg.getEntity(2));
+                finalConn1.run("tableInsert{Receive}", args);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        BasicTable re = (BasicTable) conn_leader.run("select * from Receive");
+        BasicTable tra = (BasicTable) conn_leader.run("select * from  Trades");
+        assertEquals(10000, re.rows());
+        for (int i = 0; i < re.rows(); i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getString(), tra.getColumn(2).get(i).getString());
+        }
+        pollingClient.unsubscribe(StreamLeaderHost, StreamLeaderPort, "Trades", "haStreamTable");
+    }
+
+    @Test(timeout = 120000)
+    public void Test_threadedClient_subscribe_haStreamTable_on_follower() throws IOException, InterruptedException {
+        BasicString StreamLeaderTmp = (BasicString)conn.run(String.format("getStreamingLeader(%d)", GROUP_ID));
+        String StreamLeader = StreamLeaderTmp.getString();
+        BasicString StreamLeaderHostTmp = (BasicString)conn.run(String.format("(exec host from rpc(getControllerAlias(), getClusterPerf) where name=\"%s\")[0]", StreamLeader));
+        String StreamLeaderHost = StreamLeaderHostTmp.getString();
+        BasicInt StreamLeaderPortTmp = (BasicInt)conn.run(String.format("(exec port from rpc(getControllerAlias(), getClusterPerf) where mode = 0 and  name=\"%s\")[0]", StreamLeader));
+        int StreamLeaderPort = StreamLeaderPortTmp.getInt();
+        System.out.println(StreamLeaderHost);
+        System.out.println(StreamLeaderPort);
+        DBConnection conn_leader = new DBConnection();
+        conn_leader.connect(StreamLeaderHost, StreamLeaderPort, "admin", "123456");
+
+        String script0 ="leader = getStreamingLeader("+GROUP_ID+");\n" +
+                "groupSitesStr = (exec sites from getStreamingRaftGroups() where id =="+GROUP_ID+")[0];\n"+
+                "groupSites = split(groupSitesStr, \",\");\n"+
+                "followerInfo = exec top 1 *  from rpc(getControllerAlias(), getClusterPerf) where site in groupSites and name!=leader;";
+        conn.run(script0);
+        BasicString StreamFollowerHostTmp = (BasicString)conn.run("(exec host from followerInfo)[0]");
+        String StreamFollowerHost = StreamFollowerHostTmp.getString();
+        BasicInt StreamFollowerPortTmp = (BasicInt)conn.run("(exec port from followerInfo)[0]");
+        int StreamFollowerPort = StreamFollowerPortTmp.getInt();
+        System.out.println(StreamFollowerHost);
+        System.out.println(StreamFollowerPort);
+        DBConnection conn_follower = new DBConnection();
+        conn_follower.connect(StreamFollowerHost, StreamFollowerPort, "admin", "123456");
+        String script = "try{\ndropStreamTable(`Trades)\n}catch(ex){\n}\n" +
+                "table = table(1000000:0,  `tag`ts`data,[INT,TIMESTAMP,DOUBLE]);\n"+
+                "haStreamTable("+GROUP_ID+", table, `Trades, 100000);\n"+
+                " share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as Receive;";
+        conn_follower.run(script);
+        final DBConnection finalConn1 = conn_follower;
+
+        TopicPoller poller = pollingClient.subscribe(StreamFollowerHost, StreamFollowerPort, "Trades", "haStreamTable", 0);
+        conn_leader.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        List<IMessage> messages = poller.poll(2000,10000);
+
+        for(int i=0;i<messages.size();i++){
+            try {
+                IMessage msg = messages.get(i);
+                List<Entity> args = new ArrayList<>();
+                args.add(msg.getEntity(0));
+                args.add(msg.getEntity(1));
+                args.add(msg.getEntity(2));
+                finalConn1.run("tableInsert{Receive}", args);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        BasicTable re = (BasicTable) conn_follower.run("select * from Receive");
+        BasicTable tra = (BasicTable) conn_leader.run("select * from  Trades");
+        assertEquals(10000, re.rows());
+        for (int i = 0; i < re.rows(); i++) {
+            assertEquals(re.getColumn(0).get(i), tra.getColumn(0).get(i));
+            assertEquals(re.getColumn(1).get(i), tra.getColumn(1).get(i));
+            assertEquals(re.getColumn(2).get(i).getString(), tra.getColumn(2).get(i).getString());
+        }
+        pollingClient.unsubscribe(StreamFollowerHost, StreamFollowerPort, "Trades", "haStreamTable");
     }
 }

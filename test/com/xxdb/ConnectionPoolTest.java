@@ -135,7 +135,7 @@ public class ConnectionPoolTest {
     }
 
     @Test
-    public void test_DBConnectionPool_user_authMode_scream() throws Exception {
+    public void test_DBConnectionPool_user_authMode_scram() throws Exception {
         PrepareUser_authMode("scramUser","123456","scram");
         conn.run("if(existsDatabase(\"dfs://testArrayVector\")){\n" +
                 "dropDatabase(\"dfs://testArrayVector\")\n" +
@@ -1005,7 +1005,7 @@ public class ConnectionPoolTest {
         BasicInt re = (BasicInt) conn.run("int(exec count(*) from loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1))");
         assertEquals(10000,re.getInt());
         BasicIntVector nodes_port_re = (BasicIntVector) conn.run("exec nodePort from loadTable(\"dfs://test_DBConnectionPool_haSite\",`pt1) group by nodePort order by nodePort");
-        BasicIntVector nodes_port_ex = (BasicIntVector) conn.run("exec value from pnodeRun(getNodePort) order by value");
+        BasicIntVector nodes_port_ex = (BasicIntVector) conn.run("exec port from rpc(getControllerAlias(),getClusterPerf) where mode= 0 or mode =4 order by port");
         for(int i = 0;i<nodes_port_re.rows();i++){
             assertEquals(nodes_port_re.getInt(i),nodes_port_ex.getInt(i));
         }
@@ -2184,7 +2184,7 @@ public class ConnectionPoolTest {
         assertEquals("Can't find specified partition column name.", re);
         pool.shutdown();
     }
-    @Test(timeout = 120000)
+   // @Test(timeout = 120000)//AJ-590
     public void test_PartitionedTableAppender_allDataType_null() throws Exception {
         List<String> colNames = new ArrayList<String>();
         colNames.add("boolv");

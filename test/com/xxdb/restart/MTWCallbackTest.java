@@ -315,8 +315,8 @@ public class MTWCallbackTest {
         System.out.println(mtw.getStatus().toString());
         mtw.waitForThreadCompletion();
         conn1.run("sleep(10000)");
-        try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
-
+        try{
+            conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
         }
         catch(IOException ex) {
             System.out.println(ex.getMessage());

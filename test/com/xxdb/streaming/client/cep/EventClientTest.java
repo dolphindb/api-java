@@ -929,7 +929,7 @@ public class EventClientTest {
         BasicTable re = (BasicTable)conn.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
     }
-    //@Test
+    @Test
     public  void test_EventClient_subscribe_haStreamTable_leader() throws IOException, InterruptedException {
         BasicString StreamLeaderTmp = (BasicString)conn.run(String.format("getStreamingLeader(%d)", GROUP_ID));
         String StreamLeader = StreamLeaderTmp.getString();
@@ -939,13 +939,13 @@ public class EventClientTest {
         int StreamLeaderPort = StreamLeaderPortTmp.getInt();
         System.out.println(StreamLeaderHost);
         System.out.println(StreamLeaderPort);
-        DBConnection conn1 = new DBConnection();
-        conn1.connect(StreamLeaderHost, StreamLeaderPort, "admin", "123456");
+        DBConnection conn_leader = new DBConnection();
+        conn_leader.connect(StreamLeaderHost, StreamLeaderPort, "admin", "123456");
         String script = "try{\ndropStreamTable(`inputTable_1)\n}catch(ex){\n}\n"+
             "table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]);\n"+
             "haStreamTable("+GROUP_ID+", table, `inputTable_1, 100000);\n"+
             "share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;\n";
-        conn1.run(script);
+        conn_leader.run(script);
         EventSchema scheme = new EventSchema();
         scheme.setEventType("MarketData");
         scheme.setFieldNames(Arrays.asList("timestamp", "comment1"));
@@ -955,16 +955,28 @@ public class EventClientTest {
         eventSchemas.add(scheme);
         List<String> eventTimeFields = Arrays.asList(new String[]{"timestamp"});
         List<String> commonFields = Arrays.asList(new String[]{"comment1"});
-        sender = new EventSender(conn, "inputTable_1", eventSchemas, eventTimeFields, commonFields);
+        sender = new EventSender(conn_leader, "inputTable_1", eventSchemas, eventTimeFields, commonFields);
         client = new EventClient(eventSchemas, eventTimeFields, commonFields);
 
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
+
+        final DBConnection finalConn1 = conn_leader;
+        EventMessageHandler handler = new EventMessageHandler() {
+            @Override
+            public void doEvent(String eventType, List<Entity> attribute) {
+                try {
+                    finalConn1.run("tableInsert{outputTable}", attribute);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
         client.subscribe(StreamLeaderHost, StreamLeaderPort, "inputTable_1", "test1", handler, -1, true, "admin", "123456");
         sender.sendEvent("MarketData", attributes);
         sleep(1000);
-        BasicTable re = (BasicTable)conn1.run("select * from outputTable");
+        BasicTable re = (BasicTable)conn_leader.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
         Assert.assertEquals("2024.03.22T10:45:03.100",re.getColumn(0).get(0).getString());
         Assert.assertEquals("123456",re.getColumn(1).get(0).getString());
@@ -984,13 +996,14 @@ public class EventClientTest {
         int StreamFollowerPort = StreamFollowerPortTmp.getInt();
         System.out.println(StreamFollowerHost);
         System.out.println(StreamFollowerPort);
-        DBConnection conn1 = new DBConnection();
-        conn1.connect(StreamFollowerHost, StreamFollowerPort, "admin", "123456");
+        DBConnection conn_follower = new DBConnection();
+        conn_follower.connect(StreamFollowerHost, StreamFollowerPort, "admin", "123456");
         String script = "try{\ndropStreamTable(`inputTable_1)\n}catch(ex){\n}\n"+
                 "table = table(1000000:0, `timestamp`eventType`event`comment1, [TIMESTAMP,STRING,BLOB,STRING]);\n"+
-                "haStreamTable("+GROUP_ID+", table, `inputTable_1, 100000);\n"+
+                "haStreamTable("+GROUP_ID+", table, `inputTable_1, 100000);" +
+                "sleep(1000);\n"+
                 "share table(100:0, `timestamp`comment1, [TIMESTAMP,STRING]) as outputTable;\n";
-        conn1.run(script);
+        conn_follower.run(script);
         EventSchema scheme = new EventSchema();
         scheme.setEventType("MarketData");
         scheme.setFieldNames(Arrays.asList("timestamp", "comment1"));
@@ -1000,16 +1013,30 @@ public class EventClientTest {
         eventSchemas.add(scheme);
         List<String> eventTimeFields = Arrays.asList(new String[]{"timestamp"});
         List<String> commonFields = Arrays.asList(new String[]{"comment1"});
-        sender = new EventSender(conn, "inputTable_1", eventSchemas, eventTimeFields, commonFields);
+        sender = new EventSender(conn_follower, "inputTable_1", eventSchemas, eventTimeFields, commonFields);
         client = new EventClient(eventSchemas, eventTimeFields, commonFields);
 
         List<Entity> attributes = new ArrayList<>();
         attributes.add(new BasicTimestamp(LocalDateTime.of(2024,3,22,10,45,3,100000000)));
         attributes.add(new BasicString("123456"));
-        client.subscribe(StreamFollowerHost, StreamFollowerPort, "inputTable_1", "test1", handler, -1, true, "user1", "123456");
+        final DBConnection finalConn1 = conn_follower;
+        EventMessageHandler handler = new EventMessageHandler() {
+            @Override
+            public void doEvent(String eventType, List<Entity> attribute) {
+                System.out.println("eventType: ");
+                System.out.println("eventType: " + eventType);
+                System.out.println(attribute.toString());
+                try {
+                    finalConn1.run("tableInsert{outputTable}", attribute);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+        client.subscribe(StreamFollowerHost, StreamFollowerPort, "inputTable_1", "test1", handler, -1, true, "admin", "123456");
         sender.sendEvent("MarketData", attributes);
         sleep(1000);
-        BasicTable re = (BasicTable)conn1.run("select * from outputTable");
+        BasicTable re = (BasicTable)conn_follower.run("select * from outputTable");
         Assert.assertEquals(1,re.rows());
         Assert.assertEquals("2024.03.22T10:45:03.100",re.getColumn(0).get(0).getString());
         Assert.assertEquals("123456",re.getColumn(1).get(0).getString());
@@ -1579,7 +1606,7 @@ public class EventClientTest {
         EventSender sender = new EventSender(conn, "inputTable",eventSchemas, eventTimeFields, commonFields);
         EventClient client = new EventClient(eventSchemas, eventTimeFields, commonFields);
         //需要新写一个handler
-        client.subscribe(HOST, PORT, "intput1", "test1", handler_array, -1, true, "admin", "123456");
+        client.subscribe(HOST, PORT, "intput1", "test1", handler, -1, true, "admin", "123456");
 
         BasicTable bt = (BasicTable)conn.run("select * from data");
         String script2 = "data1=select * from data;\n" +
@@ -1592,8 +1619,7 @@ public class EventClientTest {
                 "\t}" ;
         conn.run(script2);
         sleep(2000);
-        BasicTable bt1 = (BasicTable)conn.run("select * from data;");
-        System.out.println(bt1.getString());
+        BasicTable bt1 = (BasicTable)conn.run("select any1,any2,any3 from data;");
         Assert.assertEquals(100,bt1.rows());
         BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
         Assert.assertEquals(100,bt2.rows());
@@ -2107,13 +2133,13 @@ public class EventClientTest {
                 "appendEvent(inputSerializer, [event1, event2, event3, event4]);";
         conn.run(script2);
         sleep(2000);
-        BasicTable bt2 = (BasicTable)conn.run("select * from outputTable;");
+        BasicTable bt2 = (BasicTable)conn.run("select * from outputTable order by intv;");
         Assert.assertEquals(4,bt2.rows());
         Assert.assertEquals("boolv intv\n" +
                 "----- ----\n" +
-                "true  3   \n" +
                 "false 1   \n" +
-                "true  4   \n" +
-                "false 2   \n", bt2.getString());
+                "false 2   \n" +
+                "true  3   \n" +
+                "true  4   \n", bt2.getString());
     }
 }

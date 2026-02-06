@@ -54,29 +54,77 @@ public class StreamingSQLResultUpdater {
         log.debug("Starting updateStreamingSQLResult");
         log.debug("Table columns: " + result.columns() + ", rows: " + result.rows());
 
-        BasicByteVector typeColumn = new BasicByteVector(0);
-        typeColumn.Append((BasicByte) msg.getEntity(0));
+        BasicByteVector typeColumn = (BasicByteVector) msg.getEntity(0);
+        int batchSize = typeColumn.rows();
+        log.debug("Batch size: " + batchSize);
 
-        byte msgType = ((BasicByte)msg.getEntity(0)).getByte();
-        log.debug("Message type: " + msgType);
+        StreamingSQLResult currentResult = new StreamingSQLResult(result, deleteLineMap);
 
-        BasicIntVector lineNoColumn = new BasicIntVector(0);
-        lineNoColumn.Append((BasicInt) msg.getEntity(1));
-        List<Vector> updateColumns = new ArrayList<>();
-        for (int i = 2; i < msg.size(); i++) {
-            if (msg.getEntity(i) instanceof Vector) {
-                updateColumns.add((Vector) msg.getEntity(i));
-            } else {
-                Vector col;
-                if (msg.getEntity(i) instanceof BasicDecimal32 || msg.getEntity(i) instanceof BasicDecimal64 || msg.getEntity(i) instanceof BasicDecimal128) {
-                    col =  BasicEntityFactory.instance().createVectorWithDefaultValue(msg.getEntity(i).getDataType(), 0, ((Scalar) msg.getEntity(i)).getScale());
+        for (int rowIdx = 0; rowIdx < batchSize; rowIdx++) {
+            byte type = ((BasicByte) typeColumn.get(rowIdx)).getByte();
+            int lineNo = ((BasicInt) ((BasicIntVector) msg.getEntity(1)).get(rowIdx)).getInt();
+
+            log.debug("Processing row " + rowIdx + ": type=" + type + ", lineNo=" + lineNo);
+
+            List<Entity> rowData = new ArrayList<>();
+            for (int colIdx = 3; colIdx < msg.size(); colIdx++) {
+                Entity colEntity = msg.getEntity(colIdx);
+
+                if (colEntity instanceof Vector) {
+                    Entity element = ((Vector) colEntity).get(rowIdx);
+                    rowData.add(element);
                 } else {
-                    col = BasicEntityFactory.instance().createVectorWithDefaultValue(msg.getEntity(i).getDataType(), 0, -1);
+                    rowData.add(colEntity);
                 }
-
-                col.Append((Scalar) msg.getEntity(i));
-                updateColumns.add(col);
             }
+
+            // Process this single row
+            currentResult = updateStreamingSQLResultInternal(currentResult.table, currentResult.deleteLineMap, type, lineNo, rowData, msg.size() - 3);
+        }
+
+        log.debug("Completed updateStreamingSQLResult, table rows: " + currentResult.table.rows());
+        return currentResult;
+    }
+
+    /**
+     * Update streaming SQL result table
+     * @param result The result table to update
+     * @param deleteLineMap Row number mapping
+     * @param type Operation type (kUpdate, kAppend, kDelete, kInsert)
+     * @param lineNo Line number
+     * @param rowData Row data (data columns only, excluding type, lineNo, logTimestamp)
+     * @param columnCount Number of data columns
+     * @return Result object containing updated table and row number mapping
+     * @throws Exception If an error occurs during update
+     */
+    private static StreamingSQLResult updateStreamingSQLResultInternal(BasicTable result, BasicIntVector deleteLineMap, byte type, int lineNo, List<Entity> rowData, int columnCount) throws Exception {
+        BasicByteVector typeColumn = new BasicByteVector(1);
+        typeColumn.set(0, new BasicByte(type));
+
+        BasicIntVector lineNoColumn = new BasicIntVector(1);
+        lineNoColumn.set(0, new BasicInt(lineNo));
+
+        List<Vector> updateColumns = new ArrayList<>();
+        for (int i = 0; i < rowData.size(); i++) {
+            Entity entity = rowData.get(i);
+            Vector col;
+
+            if (result.getColumn(i) instanceof BasicAnyVector) {
+                col = new BasicAnyVector(1);
+                col.set(0, entity);
+            } else if (entity instanceof Vector) {
+                col = (Vector) entity;
+            } else {
+                Scalar scalar = (Scalar) entity;
+                if (scalar instanceof BasicDecimal32 || scalar instanceof BasicDecimal64 || scalar instanceof BasicDecimal128) {
+                    col = BasicEntityFactory.instance().createVectorWithDefaultValue(scalar.getDataType(), 1, scalar.getScale());
+                } else {
+                    col = BasicEntityFactory.instance().createVectorWithDefaultValue(scalar.getDataType(), 1, -1);
+                }
+                col.set(0, scalar);
+            }
+
+            updateColumns.add(col);
         }
 
         int updateLogSize = lineNoColumn.rows();
@@ -224,31 +272,16 @@ public class StreamingSQLResultUpdater {
                                 BasicIntVector insertNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                                 int prevSize = result.rows();
 
-                                log.debug("msg content: type=" + prevUpdateType + ", lineNo=" + insertNo.getString() + ", cols=" + (msg.size() - 2));
+                                log.debug("Processing kInsert: type=" + prevUpdateType + ", lineNo=" + insertNo.getString() + ", cols=" + columnCount);
 
                                 // Process single-row data
                                 if (insertNo.rows() == 1) {
-                                    // Create a column array containing new data, excluding the type and row number columns.
-                                    Vector[] newColumns = new Vector[msg.size() - 2];
+                                    // Create a column array containing new data, excluding the type, row number, and logTimestamp columns.
+                                    Vector[] newColumns = new Vector[columnCount];
 
-                                    // Create a vector of the corresponding type for each column
-                                    for (int j = 2; j < msg.size(); j++) {
-                                        if (msg.getEntity(j) instanceof Vector) {
-                                            newColumns[j-2] = (Vector) msg.getEntity(j);
-                                        } else {
-                                            Scalar sourceValue = (Scalar) msg.getEntity(j);
-                                            Entity.DATA_TYPE dataType = sourceValue.getDataType();
-
-                                            Vector newVector;
-                                            if (msg.getEntity(j) instanceof BasicDecimal32 || msg.getEntity(j) instanceof BasicDecimal64 || msg.getEntity(j) instanceof BasicDecimal128) {
-                                                newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, ((Scalar) msg.getEntity(j)).getScale());
-                                            } else {
-                                                newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
-                                            }
-
-                                            newVector.set(0, sourceValue);
-                                            newColumns[j-2] = newVector;
-                                        }
+                                    // Use updateColumns directly (already extracted from row data)
+                                    for (int j = 0; j < columnCount; j++) {
+                                        newColumns[j] = updateColumns.get(j);
                                     }
 
                                     // Add directly to the table
@@ -479,31 +512,16 @@ public class StreamingSQLResultUpdater {
                     BasicIntVector insertNo = (BasicIntVector)((AbstractVector)lineNoColumn).getSubVector(createRangeIndices(offset, length));
                     int prevSize = result.rows();
 
-                    log.debug("msg content: type=" + prevUpdateType + ", lineNo=" + insertNo.getString() + ", cols=" + (msg.size() - 2));
+                    log.debug("Processing kInsert (final): type=" + prevUpdateType + ", lineNo=" + insertNo.getString() + ", cols=" + columnCount);
 
                     // Process single-row data
                     if (insertNo.rows() == 1) {
-                        // Create a column array containing new data, excluding the type and row number columns.
-                        Vector[] newColumns = new Vector[msg.size() - 2];
+                        // Create a column array containing new data, excluding the type, row number, and logTimestamp columns.
+                        Vector[] newColumns = new Vector[columnCount];
 
-                        // Create a vector of the corresponding type for each column
-                        for (int j = 2; j < msg.size(); j++) {
-                            if (msg.getEntity(j) instanceof Vector) {
-                                newColumns[j-2] = (Vector) msg.getEntity(j);
-                            } else {
-                                Scalar sourceValue = (Scalar) msg.getEntity(j);
-                                Entity.DATA_TYPE dataType = sourceValue.getDataType();
-
-                                Vector newVector;
-                                if (msg.getEntity(j) instanceof BasicDecimal32 || msg.getEntity(j) instanceof BasicDecimal64 || msg.getEntity(j) instanceof BasicDecimal128) {
-                                    newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, ((Scalar) msg.getEntity(j)).getScale());
-                                } else {
-                                    newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, 1, -1);
-                                }
-
-                                newVector.set(0, sourceValue);
-                                newColumns[j-2] = newVector;
-                            }
+                        // Use updateColumns directly (already extracted from row data)
+                        for (int j = 0; j < columnCount; j++) {
+                            newColumns[j] = updateColumns.get(j);
                         }
 
                         // Add directly to the table.
@@ -633,13 +651,17 @@ public class StreamingSQLResultUpdater {
                 scale = ((BasicDecimal128Vector) sourceVector).getScale();
             }
 
-            Vector newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, sourceVector.rows(), scale);
+            Vector newVector;
+            if (dataType == Entity.DATA_TYPE.DT_ANY) {
+                newVector = new BasicAnyVector(sourceVector.rows());
+            } else {
+                newVector = BasicEntityFactory.instance().createVectorWithDefaultValue(dataType, sourceVector.rows(), scale);
+            }
 
             // Copy data elements one by one
             for (int j = 0; j < sourceVector.rows(); j++) {
                 try {
-                    Scalar value = (Scalar)sourceVector.get(j);
-                    newVector.set(j, value);
+                    newVector.set(j, sourceVector.get(j));
                 } catch (Exception e) {
                     log.error("Error copying data: " + e.getMessage());
                 }
@@ -907,12 +929,12 @@ public class StreamingSQLResultUpdater {
         boolean isValid = true;
         for (int i = 0; i < psort.length; i++) {
             if (psort[i] < 0 || psort[i] >= psort.length) {
-                System.err.println("Invalid sort index at position " + i + ": " + psort[i]);
+                log.error("Invalid sort index at position " + i + ": " + psort[i]);
                 isValid = false;
                 break;
             }
             if (used[psort[i]]) {
-                System.err.println("Duplicate sort index: " + psort[i]);
+                log.error("Duplicate sort index: " + psort[i]);
                 isValid = false;
                 break;
             }
@@ -920,7 +942,7 @@ public class StreamingSQLResultUpdater {
         }
 
         if (!isValid) {
-            System.err.println("Sort index invalid, resetting to default order");
+            log.error("Sort index invalid, resetting to default order");
             for (int j = 0; j < psort.length; j++) {
                 psort[j] = j;
             }
@@ -1035,13 +1057,21 @@ public class StreamingSQLResultUpdater {
 
             // Add rows to table
             for (int col = 0; col < columns.length; col++) {
-                table.getColumn(col).Append(columns[col]);
+                Vector tableColumn = table.getColumn(col);
+                if (tableColumn instanceof BasicAnyVector) {
+                    Vector sourceColumn = columns[col];
+                    for (int row = 0; row < sourceColumn.rows(); row++) {
+                        ((BasicAnyVector) tableColumn).Append(sourceColumn.get(row));
+                    }
+                } else {
+                    tableColumn.Append(columns[col]);
+                }
             }
 
             log.debug("After append, table has " + table.rows() + " rows");
             return true;
         } catch (Exception e) {
-            System.err.println("Error in appendColumns: " + e.getMessage());
+            log.error("Error in appendColumns: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -1092,7 +1122,7 @@ public class StreamingSQLResultUpdater {
                         if (tableColumn instanceof BasicArrayVector) {
                             log.debug("    Detected BasicArrayVector, using enhanced set method");
                             if (!(value instanceof Vector)) {
-                                System.err.println("    Error: BasicArrayVector requires Vector value, got: " + value.getClass().getSimpleName());
+                                log.error("    Error: BasicArrayVector requires Vector value, got: " + value.getClass().getSimpleName());
                                 continue;
                             }
                         }
@@ -1105,15 +1135,15 @@ public class StreamingSQLResultUpdater {
                         log.debug("    Updated value: " + updatedValue.getString());
 
                         if (!updatedValue.getString().equals(value.getString())) {
-                            System.err.println("    Warning: Update may not have taken effect!");
-                            System.err.println("    Expected: " + value.getString());
-                            System.err.println("    Actual: " + updatedValue.getString());
+                            log.error("    Warning: Update may not have taken effect!");
+                            log.error("    Expected: " + value.getString());
+                            log.error("    Actual: " + updatedValue.getString());
                         } else {
                             log.debug("    Update successful!");
                         }
 
                     } catch (Exception e) {
-                        System.err.println("  Error updating column " + colIndex + " at row " + rowIndex + ": " + e.getMessage());
+                        log.error("  Error updating column " + colIndex + " at row " + rowIndex + ": " + e.getMessage());
                         e.printStackTrace();
                         // Continue processing other columns, don't fail entirely because of one column
                     }
@@ -1124,7 +1154,7 @@ public class StreamingSQLResultUpdater {
             return true;
 
         } catch (Exception e) {
-            System.err.println("Error in updateRows: " + e.getMessage());
+            log.error("Error in updateRows: " + e.getMessage());
             e.printStackTrace();
             return false;
         }

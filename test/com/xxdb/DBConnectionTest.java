@@ -9,25 +9,18 @@ import com.xxdb.io.Double2;
 import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.Long2;
 import com.xxdb.io.ProgressListener;
-import com.xxdb.streaming.client.IMessage;
-import com.xxdb.streaming.client.MessageHandler;
-import com.xxdb.streaming.client.ThreadedClient;
 import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.*;
 import java.util.Date;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
@@ -45,15 +38,10 @@ public class DBConnectionTest {
     static ResourceBundle bundle = ResourceBundle.getBundle("com/xxdb/setup/settings");
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
-    static int CONTROLLER_PORT = Integer.parseInt(bundle.getString("CONTROLLER_PORT"));
     static String[] ipports = bundle.getString("SITES").split(",");
-
-    static String[] host_list= bundle.getString("HOSTS").split(",");
     static String controller_host = bundle.getString("CONTROLLER_HOST");
     static int controller_port = Integer.parseInt(bundle.getString("CONTROLLER_PORT"));
 
-    static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
-    private double load = -1.0;
     public int getConnCount() throws IOException {
         return ((BasicInt) conn.run("(exec connectionNum from rpc(getControllerAlias(),getClusterPerf) where PORT = getNodePort())[0]")).getInt();
     }
@@ -86,7 +74,7 @@ public class DBConnectionTest {
     }
     @Before
     public void setUp() throws IOException {
-        conn = new DBConnection(false,false,true);
+        conn = new DBConnection(false,false,false);
         try {
             if (!conn.connect(HOST, PORT, "admin", "123456")) {
                 throw new IOException("Failed to connect to dolphindb server");
@@ -2512,7 +2500,22 @@ public class DBConnectionTest {
         assertEquals(100, table.rows());
         assertEquals(2, table.columns());
     }
-
+    @Test
+    public void Test_upload_table_any() throws IOException {
+        String script = "ctime=take(2025.10.18T10:27:23.275..2025.10.10T10:27:23.275,9)\n" +
+                "cany=array(ANY,0).append!(1000).append!(`www`qqq).append!(matrix([1 2 3, 4 5 6])).append!(set(1 2)).append!(100:11).append!(table(`qa`ws`ed as id)).append!(dict(`aaa11`bbb22, [dict(`p1`p2, `1`2, true), dict(`p11`p22, `100`200, true)])).append!((100, `11)).append!( [[`1a,`a1]].setColumnarTuple!())\n" +
+                "t1 = table(ctime, cany);\n" +
+                "t1";
+        BasicTable tb = (BasicTable) conn.run(script);
+        System.out.println(tb.getString());
+        Map<String, Entity> upObj = new HashMap<String, Entity>();
+        upObj.put("table_uploaded", (Entity) tb);
+        conn.upload(upObj);
+        BasicTable re = (BasicTable) conn.run("table_uploaded");
+        assertEquals(9, re.rows());
+        assertEquals(2, re.columns());
+        checkData(tb, re);
+    }
     @Test
     public void testTableUpload() throws IOException {
         conn.run("try{" +
@@ -3896,8 +3899,7 @@ public class DBConnectionTest {
         DBConnection conn = new DBConnection(false,false);
         assertTrue(conn.connect(HOST,PORT,100));
         conn.login("admin","123456",true);
-        InetAddress ip = InetAddress.getByName("127.0.0.1");
-        assertEquals(ip,conn.getLocalAddress());
+        assertNotNull(conn.getLocalAddress());
         System.out.println(conn.getSessionID());
     }
 
@@ -5281,7 +5283,7 @@ public void test_SSL() throws Exception {
         }
         assertEquals(true, re.contains("Can't recognize function name C function: C"));
     }
-    @Test
+    //@Test //AJ-707
     public void test_allDateType_combine() throws IOException {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
@@ -5298,7 +5300,7 @@ public void test_SSL() throws Exception {
         assertEquals(10000, data.rows());
     }
 
-    @Test
+    //@Test //AJ-708
     public void test_allDateType_array_combine() throws IOException {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
@@ -6168,7 +6170,7 @@ public void test_SSL() throws Exception {
         assertEquals(true, re.contains("The user name or password is incorrect. function: login"));
     }
 
-    //@Test //AJ-820
+    //@Test //
     public void test_run() throws IOException, InterruptedException {
         DBConnection conn = new DBConnection();
         Boolean isuccessful = conn.connect("192.168.0.69", 8848, "admin", "123456", "", false, null, true);

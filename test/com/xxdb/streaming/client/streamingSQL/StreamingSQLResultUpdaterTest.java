@@ -1,20 +1,21 @@
 package com.xxdb.streaming.client.streamingSQL;
 
 import com.xxdb.DBConnection;
-import com.xxdb.data.BasicTable;
-import com.xxdb.data.Entity;
-import com.xxdb.streaming.client.ThreadedClient;
+import com.xxdb.data.*;
+import com.xxdb.data.Vector;
 import org.junit.*;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.xxdb.Prepare.*;
 import static com.xxdb.Prepare.checkData;
 import static com.xxdb.streaming.client.streamingSQL.StreamingSQLClientTest.writer_data;
 import static com.xxdb.streaming.client.streamingSQL.StreamingSQLClientTest.writerdata_array;
+import static java.lang.Thread.sleep;
 
 public class StreamingSQLResultUpdaterTest {
     public static DBConnection conn;
@@ -45,6 +46,8 @@ public class StreamingSQLResultUpdaterTest {
                 "        try{revokeStreamingSQL(sqlStream.queryId)}catch(ex){print ex}\n" +
                 "    }\n" +
                 "    go;\n" +
+                "    try{undef(`t1,SHARED)}catch(ex){print ex}\n" +
+                "    try{undef(`t2,SHARED)}catch(ex){print ex}\n" +
                 "    try{revokeStreamingSQLTable(`t1)}catch(ex){print ex}\n" +
                 "    try{revokeStreamingSQLTable(`t2)}catch(ex){print ex}\n" +
                 "    try{undef(`t1,SHARED)}catch(ex){print ex}\n" +
@@ -70,13 +73,13 @@ public class StreamingSQLResultUpdaterTest {
         int count = 0;
         int count1= 0;
         int count2= 1;
-        Thread.sleep(1000);
+        sleep(1000);
         while (!(count1==count2)&&count<=100)
         {
             count=count++;
             count1 = bt.rows();
             System.out.println("count1:"+bt.rows());
-            Thread.sleep(1000);
+            sleep(1000);
             count2 = bt.rows();
             System.out.println("count2:"+bt.rows());
         }
@@ -94,7 +97,7 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1);
         writer_data(100,"t1","double");
         writer_data(100,"t2","double");
-        Thread.sleep(1000);
+        sleep(1000);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
@@ -102,14 +105,14 @@ public class StreamingSQLResultUpdaterTest {
         //update
         conn.run("update t1 set value = value+10");
         conn.run("update t2 set value = value+10.4");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex1 = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
         checkData(ex1, bt);
         //update
         conn.run("update t1 set value = NULL where id in(`A+string(1..10))");
         conn.run("update t2 set value = NULL where id in(`A+string(1..20))");
-        Thread.sleep(500);
+        sleep(500);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
         checkData(ex2, bt);
@@ -126,21 +129,22 @@ public class StreamingSQLResultUpdaterTest {
         String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
         System.out.println("id1:"+id1);
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1);
-        Thread.sleep(500);
+        sleep(1000);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
+        System.out.println(ex.getString());
         checkData(ex, bt);
         //update
         conn.run("update t1 set boolv=true, charv='1', shortv=1, intv=1, longv=1, doublev=1.0, floatv=1.0, datev=date(now()), monthv=month(now()), timev=time(now()), minutev=minute(now()), secondv=second(now()), datetimev=datetime(now()), timestampv=timestamp(now()), nanotimev=nanotime(now()), nanotimestampv=nanotimestamp(now()), stringv=\"erere\", datehourv=datehour(now()), uuidv=uuid(\"5d212a78-cc48-e3b1-4235-b4d91473ee87\"), ippaddrv=ipaddr(\"192.168.100.10\"), int128v=int128(\"e1671797c52e15f763380b45e841ec32\"), blobv=\"blobbbbbbb@@@##$%^&*()!\", pointv=point(1,1), complexv=complex(1,1), decimal32v=decimal32(1,1), decimal64v=decimal64(1,1), decimal128v=decimal128 (1,1) where  id in(`A+string(1..30))");
         conn.run("update t2 set boolv=true, charv='1', shortv=1, intv=1, longv=1, doublev=1.0, floatv=1.0, datev=date(now()), monthv=month(now()), timev=time(now()), minutev=minute(now()), secondv=second(now()), datetimev=datetime(now()), timestampv=timestamp(now()), nanotimev=nanotime(now()), nanotimestampv=nanotimestamp(now()), stringv=\"erere\", datehourv=datehour(now()), uuidv=uuid(\"5d212a78-cc48-e3b1-4235-b4d91473ee87\"), ippaddrv=ipaddr(\"192.168.100.10\"), int128v=int128(\"e1671797c52e15f763380b45e841ec32\"), blobv=\"blobbbbbbb@@@##$%^&*()!\", pointv=point(1,1), complexv=complex(1,1), decimal32v=decimal32(1,1), decimal64v=decimal64(1,1), decimal128v=decimal128 (1,1) where  id in(`A+string(20..30))");
-        Thread.sleep(500);
+        sleep(500);
         BasicTable ex1 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex1, bt);
         //update
         conn.run("update t1 set boolv=NULL, charv=NULL, shortv=NULL, intv=NULL, longv=NULL, doublev=NULL, floatv=NULL, datev=NULL, monthv=NULL, timev=NULL, minutev=NULL, secondv=NULL, datetimev=NULL, timestampv=NULL, nanotimev=NULL, nanotimestampv=NULL, stringv=NULL, datehourv=NULL, uuidv=NULL, ippaddrv=NULL, int128v=NULL, blobv=NULL, pointv=NULL, complexv=NULL, decimal32v=NULL, decimal64v=NULL, decimal128v=NULL where  id in(`A+string(1..10))");
         conn.run("update t2 set boolv=NULL, charv=NULL, shortv=NULL, intv=NULL, longv=NULL, doublev=NULL, floatv=NULL, datev=NULL, monthv=NULL, timev=NULL, minutev=NULL, secondv=NULL, datetimev=NULL, timestampv=NULL, nanotimev=NULL, nanotimestampv=NULL, stringv=NULL, datehourv=NULL, uuidv=NULL, ippaddrv=NULL, int128v=NULL, blobv=NULL, pointv=NULL, complexv=NULL, decimal32v=NULL, decimal64v=NULL, decimal128v=NULL where  id in(`A+string(1..20))");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -148,7 +152,7 @@ public class StreamingSQLResultUpdaterTest {
         //update
         conn.run("update t1 set boolv=true, charv='1', shortv=1, intv=1, longv=1, doublev=1.0, floatv=1.0, datev=date(now()), monthv=month(now()), timev=time(now()), minutev=minute(now()), secondv=second(now()), datetimev=datetime(now()), timestampv=timestamp(now()), nanotimev=nanotime(now()), nanotimestampv=nanotimestamp(now()), stringv=\"erere\", datehourv=datehour(now()), uuidv=uuid(\"5d212a78-cc48-e3b1-4235-b4d91473ee87\"), ippaddrv=ipaddr(\"192.168.100.10\"), int128v=int128(\"e1671797c52e15f763380b45e841ec32\"), blobv=\"blobbbbbbb@@@##$%^&*()!\", pointv=point(1,1), complexv=complex(1,1), decimal32v=decimal32(1,1), decimal64v=decimal64(1,1), decimal128v=decimal128 (1,1) where  id in(`A+string(30..31))");
         conn.run("update t2 set boolv=true, charv='1', shortv=1, intv=1, longv=1, doublev=1.0, floatv=1.0, datev=date(now()), monthv=month(now()), timev=time(now()), minutev=minute(now()), secondv=second(now()), datetimev=datetime(now()), timestampv=timestamp(now()), nanotimev=nanotime(now()), nanotimestampv=nanotimestamp(now()), stringv=\"erere\", datehourv=datehour(now()), uuidv=uuid(\"5d212a78-cc48-e3b1-4235-b4d91473ee87\"), ippaddrv=ipaddr(\"192.168.100.10\"), int128v=int128(\"e1671797c52e15f763380b45e841ec32\"), blobv=\"blobbbbbbb@@@##$%^&*()!\", pointv=point(1,1), complexv=complex(1,1), decimal32v=decimal32(1,1), decimal64v=decimal64(1,1), decimal128v=decimal128 (1,1) where  id in(`A+string(32..33))");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex3 = (BasicTable)conn.run(sqlStr1);
         checkData(ex3, bt);
         streamingSQLClient.unsubscribeStreamingSQL(id1);
@@ -166,14 +170,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","bool");
         writerdata_array(100,5,"t2","bool");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -191,14 +195,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","char");
         writerdata_array(100,5,"t2","char");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -216,14 +220,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","short");
         writerdata_array(100,5,"t2","short");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -241,14 +245,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","int");
         writerdata_array(100,5,"t2","int");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -267,14 +271,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","int");
         writerdata_array(100,5,"t2","int");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value ;\n" +
                 "update t2 set  t1.value=tmptt.value ;");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex1 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex1, bt);
@@ -291,7 +295,7 @@ public class StreamingSQLResultUpdaterTest {
         conn.run("tmptt =(exec * FROM t1 where id = `A20 limit 1)[0];\n" +
                 "update t1 set  value=tmptt.value ;\n" +
                 "update t2 set  value=tmptt.value ;");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -311,14 +315,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","long");
         writerdata_array(100,5,"t2","long");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -336,14 +340,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","double");
         writerdata_array(100,5,"t2","double");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -361,14 +365,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","float");
         writerdata_array(100,5,"t2","float");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -386,14 +390,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","date");
         writerdata_array(100,5,"t2","date");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -411,14 +415,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","month");
         writerdata_array(100,5,"t2","month");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -436,14 +440,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","time");
         writerdata_array(100,5,"t2","time");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -461,14 +465,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","minute");
         writerdata_array(100,5,"t2","minute");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -486,14 +490,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","second");
         writerdata_array(100,5,"t2","second");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -511,14 +515,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","datetime");
         writerdata_array(100,5,"t2","datetime");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -536,14 +540,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","timestamp1");
         writerdata_array(100,5,"t2","timestamp1");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -561,14 +565,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","nanotime");
         writerdata_array(100,5,"t2","nanotime");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -586,14 +590,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","nanotimestamp");
         writerdata_array(100,5,"t2","nanotimestamp");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -611,14 +615,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","uuid");
         writerdata_array(100,5,"t2","uuid");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -636,14 +640,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","datehour");
         writerdata_array(100,5,"t2","datehour");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -661,14 +665,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","ipaddr");
         writerdata_array(100,5,"t2","ipaddr");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -686,14 +690,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","int128");
         writerdata_array(100,5,"t2","int128");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -711,14 +715,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","complex");
         writerdata_array(100,5,"t2","complex");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -736,14 +740,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","point");
         writerdata_array(100,5,"t2","point");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -762,14 +766,14 @@ public class StreamingSQLResultUpdaterTest {
         Assert.assertEquals(0, bt.rows());
         writerdata_array(100,5,"t1","decimal32");
         writerdata_array(100,5,"t2","decimal32");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -787,14 +791,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","decimal64");
         writerdata_array(100,5,"t2","decimal64");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -812,14 +816,14 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","decimal128");
         writerdata_array(100,5,"t2","decimal128");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //update
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.value=tmptt.value where id in(`A+string(1..5));\n" +
                 "update t2 set  t1.value=tmptt.value where id in(`A+string(2..10));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -837,7 +841,7 @@ public class StreamingSQLResultUpdaterTest {
         String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
         System.out.println("id1:"+id1);
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1);
-        Thread.sleep(500);
+        sleep(500);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
@@ -845,7 +849,7 @@ public class StreamingSQLResultUpdaterTest {
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.cbool=tmptt.cbool, cchar=tmptt.cchar, cshort=tmptt.cshort, cint=tmptt.cint, clong=tmptt.clong, cdouble=tmptt.cdouble, cfloat=tmptt.cfloat, cdate=tmptt.cdate, cmonth=tmptt.cmonth, ctime=tmptt.ctime, cminute=tmptt.cminute, csecond=tmptt.csecond, cdatetime=tmptt.cdatetime, ctimestamp=tmptt.ctimestamp, cnanotime=tmptt.cnanotime, cnanotimestamp=tmptt.cnanotimestamp, cdatehour=tmptt.cdatehour, cuuid=tmptt.cuuid, cipaddr=tmptt.cipaddr, cint128=tmptt.cint128, cpoint=tmptt.cpoint, ccomplex=tmptt.ccomplex, cdecimal32=tmptt.cdecimal32, cdecimal64=tmptt.cdecimal64, cdecimal128=tmptt.cdecimal128 where id in(`A+string(1..25));\n" +
                 "update t2 set  t1.cbool=tmptt.cbool, cchar=tmptt.cchar, cshort=tmptt.cshort, cint=tmptt.cint, clong=tmptt.clong, cdouble=tmptt.cdouble, cfloat=tmptt.cfloat, cdate=tmptt.cdate, cmonth=tmptt.cmonth, ctime=tmptt.ctime, cminute=tmptt.cminute, csecond=tmptt.csecond, cdatetime=tmptt.cdatetime, ctimestamp=tmptt.ctimestamp, cnanotime=tmptt.cnanotime, cnanotimestamp=tmptt.cnanotimestamp, cdatehour=tmptt.cdatehour, cuuid=tmptt.cuuid, cipaddr=tmptt.cipaddr, cint128=tmptt.cint128, cpoint=tmptt.cpoint, ccomplex=tmptt.ccomplex, cdecimal32=tmptt.cdecimal32, cdecimal64=tmptt.cdecimal64, cdecimal128=tmptt.cdecimal128 where id in(`A+string(20..30));");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex1 = (BasicTable)conn.run(sqlStr1);
 //        System.out.println(bt.getString());
 //        System.out.println(ex1.getString());
@@ -855,7 +859,7 @@ public class StreamingSQLResultUpdaterTest {
                 "tmptt =(exec * FROM t1  where id = `A601 limit 1)[0];\n" +
                 "update t1 set  t1.cbool=tmptt.cbool, cchar=tmptt.cchar, cshort=tmptt.cshort, cint=tmptt.cint, clong=tmptt.clong, cdouble=tmptt.cdouble, cfloat=tmptt.cfloat, cdate=tmptt.cdate, cmonth=tmptt.cmonth, ctime=tmptt.ctime, cminute=tmptt.cminute, csecond=tmptt.csecond, cdatetime=tmptt.cdatetime, ctimestamp=tmptt.ctimestamp, cnanotime=tmptt.cnanotime, cnanotimestamp=tmptt.cnanotimestamp, cdatehour=tmptt.cdatehour, cuuid=tmptt.cuuid, cipaddr=tmptt.cipaddr, cint128=tmptt.cint128, cpoint=tmptt.cpoint, ccomplex=tmptt.ccomplex, cdecimal32=tmptt.cdecimal32, cdecimal64=tmptt.cdecimal64, cdecimal128=tmptt.cdecimal128 where id in(`A+string(30..35));\n" +
                 "update t2 set  t1.cbool=tmptt.cbool, cchar=tmptt.cchar, cshort=tmptt.cshort, cint=tmptt.cint, clong=tmptt.clong, cdouble=tmptt.cdouble, cfloat=tmptt.cfloat, cdate=tmptt.cdate, cmonth=tmptt.cmonth, ctime=tmptt.ctime, cminute=tmptt.cminute, csecond=tmptt.csecond, cdatetime=tmptt.cdatetime, ctimestamp=tmptt.ctimestamp, cnanotime=tmptt.cnanotime, cnanotimestamp=tmptt.cnanotimestamp, cdatehour=tmptt.cdatehour, cuuid=tmptt.cuuid, cipaddr=tmptt.cipaddr, cint128=tmptt.cint128, cpoint=tmptt.cpoint, ccomplex=tmptt.ccomplex, cdecimal32=tmptt.cdecimal32, cdecimal64=tmptt.cdecimal64, cdecimal128=tmptt.cdecimal128 where id in(`A+string(40..45));");
-        Thread.sleep(2000);
+        sleep(2000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         System.out.println(ex2.getString());
@@ -864,7 +868,7 @@ public class StreamingSQLResultUpdaterTest {
         conn.run("tmptt =(exec * FROM t1 where id = `A100 limit 1)[0];\n" +
                 "update t1 set  t1.cbool=tmptt.cbool, cchar=tmptt.cchar, cshort=tmptt.cshort, cint=tmptt.cint, clong=tmptt.clong, cdouble=tmptt.cdouble, cfloat=tmptt.cfloat, cdate=tmptt.cdate, cmonth=tmptt.cmonth, ctime=tmptt.ctime, cminute=tmptt.cminute, csecond=tmptt.csecond, cdatetime=tmptt.cdatetime, ctimestamp=tmptt.ctimestamp, cnanotime=tmptt.cnanotime, cnanotimestamp=tmptt.cnanotimestamp, cdatehour=tmptt.cdatehour, cuuid=tmptt.cuuid, cipaddr=tmptt.cipaddr, cint128=tmptt.cint128, cpoint=tmptt.cpoint, ccomplex=tmptt.ccomplex, cdecimal32=tmptt.cdecimal32, cdecimal64=tmptt.cdecimal64, cdecimal128=tmptt.cdecimal128 where id in(`A+string(55..60));\n" +
                 "update t2 set  t1.cbool=tmptt.cbool, cchar=tmptt.cchar, cshort=tmptt.cshort, cint=tmptt.cint, clong=tmptt.clong, cdouble=tmptt.cdouble, cfloat=tmptt.cfloat, cdate=tmptt.cdate, cmonth=tmptt.cmonth, ctime=tmptt.ctime, cminute=tmptt.cminute, csecond=tmptt.csecond, cdatetime=tmptt.cdatetime, ctimestamp=tmptt.ctimestamp, cnanotime=tmptt.cnanotime, cnanotimestamp=tmptt.cnanotimestamp, cdatehour=tmptt.cdatehour, cuuid=tmptt.cuuid, cipaddr=tmptt.cipaddr, cint128=tmptt.cint128, cpoint=tmptt.cpoint, ccomplex=tmptt.ccomplex, cdecimal32=tmptt.cdecimal32, cdecimal64=tmptt.cdecimal64, cdecimal128=tmptt.cdecimal128 where id in(`A+string(60..75));");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex3 = (BasicTable)conn.run(sqlStr1);
         checkData(ex3, bt);
         System.out.println(bt.getString());
@@ -882,7 +886,7 @@ public class StreamingSQLResultUpdaterTest {
         String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
         System.out.println("id1:"+id1);
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1);
-        Thread.sleep(500);
+        sleep(500);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
@@ -890,7 +894,7 @@ public class StreamingSQLResultUpdaterTest {
         conn.run("tmptt =(exec * FROM t1 limit 1)[0];\n" +
                 "update t1 set  t1.cbool=tmptt.cbool, cchar=tmptt.cchar, cshort=tmptt.cshort, cint=tmptt.cint, clong=tmptt.clong, cdouble=tmptt.cdouble, cfloat=tmptt.cfloat, cdate=tmptt.cdate, cmonth=tmptt.cmonth, ctime=tmptt.ctime, cminute=tmptt.cminute, csecond=tmptt.csecond, cdatetime=tmptt.cdatetime, ctimestamp=tmptt.ctimestamp, cnanotime=tmptt.cnanotime, cnanotimestamp=tmptt.cnanotimestamp, cdatehour=tmptt.cdatehour, cuuid=tmptt.cuuid, cipaddr=tmptt.cipaddr, cint128=tmptt.cint128, cpoint=tmptt.cpoint, ccomplex=tmptt.ccomplex, cdecimal32=tmptt.cdecimal32, cdecimal64=tmptt.cdecimal64, cdecimal128=tmptt.cdecimal128 ;\n" +
                 "update t2 set  t1.cbool=tmptt.cbool, cchar=tmptt.cchar, cshort=tmptt.cshort, cint=tmptt.cint, clong=tmptt.clong, cdouble=tmptt.cdouble, cfloat=tmptt.cfloat, cdate=tmptt.cdate, cmonth=tmptt.cmonth, ctime=tmptt.ctime, cminute=tmptt.cminute, csecond=tmptt.csecond, cdatetime=tmptt.cdatetime, ctimestamp=tmptt.ctimestamp, cnanotime=tmptt.cnanotime, cnanotimestamp=tmptt.cnanotimestamp, cdatehour=tmptt.cdatehour, cuuid=tmptt.cuuid, cipaddr=tmptt.cipaddr, cint128=tmptt.cint128, cpoint=tmptt.cpoint, ccomplex=tmptt.ccomplex, cdecimal32=tmptt.cdecimal32, cdecimal64=tmptt.cdecimal64, cdecimal128=tmptt.cdecimal128 ;");
-        Thread.sleep(20000);
+        sleep(20000);
         BasicTable ex1 = (BasicTable)conn.run(sqlStr1);
         System.out.println("------预期-----:"+ex1.rows());
         checkData(ex1, bt);
@@ -899,7 +903,7 @@ public class StreamingSQLResultUpdaterTest {
                 "tmptt =(exec * FROM t1  where id = `A11601 limit 1)[0];\n" +
                 "update t1 set  t1.cbool=tmptt.cbool, cchar=tmptt.cchar, cshort=tmptt.cshort, cint=tmptt.cint, clong=tmptt.clong, cdouble=tmptt.cdouble, cfloat=tmptt.cfloat, cdate=tmptt.cdate, cmonth=tmptt.cmonth, ctime=tmptt.ctime, cminute=tmptt.cminute, csecond=tmptt.csecond, cdatetime=tmptt.cdatetime, ctimestamp=tmptt.ctimestamp, cnanotime=tmptt.cnanotime, cnanotimestamp=tmptt.cnanotimestamp, cdatehour=tmptt.cdatehour, cuuid=tmptt.cuuid, cipaddr=tmptt.cipaddr, cint128=tmptt.cint128, cpoint=tmptt.cpoint, ccomplex=tmptt.ccomplex, cdecimal32=tmptt.cdecimal32, cdecimal64=tmptt.cdecimal64, cdecimal128=tmptt.cdecimal128 ;\n" +
                 "update t2 set  t1.cbool=tmptt.cbool, cchar=tmptt.cchar, cshort=tmptt.cshort, cint=tmptt.cint, clong=tmptt.clong, cdouble=tmptt.cdouble, cfloat=tmptt.cfloat, cdate=tmptt.cdate, cmonth=tmptt.cmonth, ctime=tmptt.ctime, cminute=tmptt.cminute, csecond=tmptt.csecond, cdatetime=tmptt.cdatetime, ctimestamp=tmptt.ctimestamp, cnanotime=tmptt.cnanotime, cnanotimestamp=tmptt.cnanotimestamp, cdatehour=tmptt.cdatehour, cuuid=tmptt.cuuid, cipaddr=tmptt.cipaddr, cint128=tmptt.cint128, cpoint=tmptt.cpoint, ccomplex=tmptt.ccomplex, cdecimal32=tmptt.cdecimal32, cdecimal64=tmptt.cdecimal64, cdecimal128=tmptt.cdecimal128 ;");
-        Thread.sleep(20000);
+        sleep(20000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(bt.getString());
         checkData(ex2, bt);
@@ -919,7 +923,7 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1);
         writer_data(100,"t1","double");
         writer_data(100,"t2","double");
-        Thread.sleep(500);
+        sleep(500);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
@@ -927,7 +931,7 @@ public class StreamingSQLResultUpdaterTest {
         //delete
         conn.run("delete from t1 where value<0");
         conn.run("delete from t2 where value<10");
-        Thread.sleep(500);
+        sleep(500);
         BasicTable ex1 = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
         checkData(ex1, bt);
@@ -944,27 +948,27 @@ public class StreamingSQLResultUpdaterTest {
         String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
         System.out.println("id1:"+id1);
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1);
-        Thread.sleep(500);
+        sleep(500);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //delete
         conn.run("delete from t1 where id in(`A+string(1..11))");
         conn.run("delete from t2 where id in(`A+string(12..20))");
-        Thread.sleep(500);
+        sleep(500);
         BasicTable ex1 = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
         checkData(ex1, bt);
         //delete
         conn.run("delete from t1 where id in(`A+string(22..30))");
         conn.run("delete from t2 where id in(`A+string(22..35))");
-        Thread.sleep(500);
+        sleep(500);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
         checkData(ex2, bt);
 
         conn.run("delete from t1 where id in(`A+string(30..50))");
-        Thread.sleep(500);
+        sleep(500);
         BasicTable ex3 = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
         checkData(ex3, bt);
@@ -983,13 +987,13 @@ public class StreamingSQLResultUpdaterTest {
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1);
         writerdata_array(100,5,"t1","bool");
         writerdata_array(100,5,"t2","bool");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //delete
         conn.run("delete from t1 where id in(`A+string(1..5))");
         conn.run("delete from t2 where id in(`A+string(3..10))");
-        Thread.sleep(1000);
+        sleep(1000);
         Map<String, Entity> map = new HashMap<String, Entity>();
         map.put("bt_tmp", bt);
         conn.upload(map);
@@ -1010,27 +1014,27 @@ public class StreamingSQLResultUpdaterTest {
         String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
         System.out.println("id1:"+id1);
         BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1);
-        Thread.sleep(500);
+        sleep(500);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         checkData(ex, bt);
         //delete
         conn.run("delete from t1 where id in(`A+string(1..11))");
         conn.run("delete from t2 where id in(`A+string(12..20))");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex1 = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
         checkData(ex1, bt);
         //delete
         conn.run("delete from t1 where id in(`A+string(22..30))");
         conn.run("delete from t2 where id in(`A+string(22..35))");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
         checkData(ex2, bt);
 
         conn.run("delete from t1 where id in(`A+string(30..50))");
-        Thread.sleep(1000);
+        sleep(1000);
         BasicTable ex3 = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
         checkData(ex3, bt);
@@ -1049,7 +1053,7 @@ public class StreamingSQLResultUpdaterTest {
         //append
         writer_data(100,"t1","double");
         writer_data(100,"t2","double");
-        Thread.sleep(500);
+        sleep(500);
         System.out.println(bt.getString());
         BasicTable ex = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
@@ -1057,7 +1061,7 @@ public class StreamingSQLResultUpdaterTest {
         //append
         writer_data(1000,"t1","double");
         writer_data(1000,"t2","double");
-        Thread.sleep(500);
+        sleep(1000);
         BasicTable ex1 = (BasicTable)conn.run(sqlStr1);
         System.out.println(ex.rows());
         checkData(ex1, bt);
@@ -1247,7 +1251,7 @@ public class StreamingSQLResultUpdaterTest {
             count=count++;
             count1 = bt.rows();
             System.out.println("count1:"+bt.rows());
-            Thread.sleep(1000);
+            sleep(1000);
             count2 = bt.rows();
             System.out.println("count2:"+bt.rows());
         }
@@ -1256,5 +1260,303 @@ public class StreamingSQLResultUpdaterTest {
         checkData(ex1, bt);
         System.out.println(bt.rows());
         streamingSQLClient.unsubscribeStreamingSQL(id1);
+    }
+
+    @Test
+    public void test_StreamingSQLClient_subscribeStreamingSQL_listener_null() throws IOException, InterruptedException {
+        Preparedata("DOUBLE");
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        System.out.println("id1:"+id1);
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1,null);
+        writer_data(100,"t1","double");
+        writer_data(100,"t2","double");
+        sleep(1000);
+        System.out.println(bt.getString());
+        BasicTable ex = (BasicTable)conn.run(sqlStr1);
+        System.out.println(ex.rows());
+        checkData(ex, bt);
+        //update
+        conn.run("update t1 set value = value+10");
+        conn.run("update t2 set value = value+10.4");
+        sleep(1000);
+        BasicTable ex1 = (BasicTable)conn.run(sqlStr1);
+        System.out.println(ex.rows());
+        checkData(ex1, bt);
+        //update
+        conn.run("update t1 set value = NULL where id in(`A+string(1..10))");
+        conn.run("update t2 set value = NULL where id in(`A+string(1..20))");
+        sleep(500);
+        BasicTable ex2 = (BasicTable)conn.run(sqlStr1);
+        System.out.println(ex.rows());
+        checkData(ex2, bt);
+        streamingSQLClient.unsubscribeStreamingSQL(id1);
+    }
+
+    @Test
+    public void test_StreamingSQLClient_subscribeStreamingSQL_listener_insert() throws Exception {
+        Preparedata("DOUBLE");
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        final List<UpdateEvent> receivedEvents = Collections.synchronizedList(new ArrayList<>());
+        UpdateListener listener = new UpdateListener() {
+            @Override
+            public void onUpdate(UpdateEvent event) {
+                if (event != null && event.getChangeRecords() != null && !event.getChangeRecords().isEmpty()) {
+                    System.out.println("event.getChangeRecords().size()：" + event.getChangeRecords().size());
+                    receivedEvents.add(event);
+                }
+            }
+        };
+
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1, 1, 1, listener);
+        writer_data(10,"t1","double");
+        writer_data(10,"t2","double");
+        BasicTable ex = (BasicTable)conn.run(sqlStr1);
+        System.out.println(ex.rows());
+        sleep(1000);
+        checkData(ex, bt);
+        checkReceivedEvents(conn, id1, ex, receivedEvents);
+        streamingSQLClient.unsubscribeStreamingSQL(id1);
+    }
+
+    @Test
+    public void test_StreamingSQLClient_subscribeStreamingSQL_listener_update() throws Exception {
+        Preparedata("DOUBLE");
+        writer_data(10,"t1","double");
+        writer_data(10,"t2","double");
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        System.out.println("id1:"+id1);
+        final List<UpdateEvent> receivedEvents = Collections.synchronizedList(new ArrayList<>());
+        UpdateListener listener = new UpdateListener() {
+            @Override
+            public void onUpdate(UpdateEvent event) {
+                if (event != null && event.getChangeRecords() != null && !event.getChangeRecords().isEmpty()) {
+                    System.out.println("event.getChangeRecords().size()：" + event.getChangeRecords().size());
+                    receivedEvents.add(event);
+                }
+            }
+        };
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1,listener);
+
+        //update
+        conn.run("update t1 set value = value+10");
+        conn.run("update t2 set value = value+10.4");
+        sleep(1000);
+        int total1 = 0;
+        for (UpdateEvent event : receivedEvents) {
+            total1 += event.getChangeRecords().size();
+        }
+        BasicTable tableLog1 = (BasicTable)conn.run("select * from " + id1);
+        Assert.assertEquals(tableLog1.rows(), total1);
+
+        //update
+        conn.run("update t1 set value = NULL where id in(`A+string(1..10))");
+        conn.run("update t2 set value = NULL where id in(`A+string(1..20))");
+        sleep(2000);
+
+        checkReceivedEvents(conn, id1, bt, receivedEvents);
+        streamingSQLClient.unsubscribeStreamingSQL(id1);
+    }
+
+    @Test
+    public void test_StreamingSQLClient_subscribeStreamingSQL_listener_delete() throws Exception {
+        Preparedata("DOUBLE");
+        writer_data(100,"t1","double");
+        writer_data(100,"t2","double");
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        System.out.println("id1:"+id1);
+        final List<UpdateEvent> receivedEvents = Collections.synchronizedList(new ArrayList<>());
+        UpdateListener listener = new UpdateListener() {
+            @Override
+            public void onUpdate(UpdateEvent event) {
+                if (event != null && event.getChangeRecords() != null && !event.getChangeRecords().isEmpty()) {
+                    receivedEvents.add(event);
+                }
+            }
+        };
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1,1,1,listener);
+        //delete
+        conn.run("delete from t1 where value<0");
+        conn.run("delete from t2 where value<10");
+        sleep(2000);
+
+        BasicTable tableLog = (BasicTable)conn.run("select * from " + id1);
+        System.out.println(tableLog.rows());
+
+        int total = 0;
+        BasicByteVector logType = new BasicByteVector(0);
+        BasicIntVector lineNo = new BasicIntVector(0);
+        BasicTimestampVector logTimestamp = new BasicTimestampVector(0);
+        BasicStringVector id = new BasicStringVector(0);
+        BasicDoubleVector value = new BasicDoubleVector(0);
+
+        BasicIntVector lineNo1 = new BasicIntVector(0);
+        BasicStringVector rowData1 = new BasicStringVector(0);
+        BasicDoubleVector rowData2 = new BasicDoubleVector(0);
+        for (UpdateEvent event : receivedEvents) {
+            total += event.getChangeRecords().size();
+
+            Assert.assertEquals(id1, event.getQueryId());
+            Assert.assertEquals(bt.getString(), event.getTable().getString());
+            Assert.assertTrue(event.getAppliedAtMillis() > 0);
+
+            for(int i=0;i<event.getChangeRecords().size();i++){
+                rowData1.Append((Scalar) event.getChangeRecords().get(i).getRowData().get(0));
+                rowData2.Append((Scalar) event.getChangeRecords().get(i).getRowData().get(1));
+                lineNo1.add(event.getChangeRecords().get(i).getLineNo());
+                Assert.assertTrue(event.getChangeRecords().get(i).getType()!= ChangeType.UNKNOWN);
+            }
+
+            for(int i=0;i<event.getRawMessages().size();i++){
+                System.out.println("每一个批次对应的行数："+event.getRawMessages().get(i).getEntity(0).rows());
+                logType.Append((BasicByteVector)event.getRawMessages().get(i).getEntity(0));
+                lineNo.Append((BasicIntVector)event.getRawMessages().get(i).getEntity(1));
+                logTimestamp.Append((BasicTimestampVector)event.getRawMessages().get(i).getEntity(2));
+                //id.Append((Vector)event.getRawMessages().get(i).getEntity(3));
+                value.Append((BasicDoubleVector)event.getRawMessages().get(i).getEntity(4));
+            }
+        }
+
+        Assert.assertEquals(tableLog.rows(), total);
+        for(int i=0;i<tableLog.rows();i++){
+            Assert.assertEquals(tableLog.getColumn(0).getString(i), logType.getString(i));
+            Assert.assertEquals(tableLog.getColumn(1).getString(i), lineNo.getString(i));
+            Assert.assertEquals(tableLog.getColumn(2).getString(i), logTimestamp.getString(i));
+            //Assert.assertEquals(tableLog.getColumn(3).getString(i), id.getString(i));
+            Assert.assertEquals(tableLog.getColumn(4).getString(i), value.getString(i));
+
+            Assert.assertEquals(tableLog.getColumn(1).getString(i), lineNo1.getString(i));
+            Assert.assertEquals(tableLog.getColumn(3).getString(i), rowData1.getString(i));
+            Assert.assertEquals(tableLog.getColumn(4).getString(i), rowData2.getString(i));
+        }
+        streamingSQLClient.unsubscribeStreamingSQL(id1);
+    }
+    @Test
+    public void test_StreamingSQLClient_subscribeStreamingSQL_listener_onUpdate() throws IOException, InterruptedException {
+        Preparedata("DOUBLE");
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<UpdateEvent> eventRef = new AtomicReference<>();
+        UpdateListener listener = new UpdateListener() {
+            @Override
+            public void onUpdate(UpdateEvent event) {
+                if (event != null && event.getChangeRecords() != null && !event.getChangeRecords().isEmpty()) {
+                    latch.countDown();
+                    throw new RuntimeException("模拟 onUpdate 抛异常");
+                }
+            }
+
+            @Override
+            public void onError(String queryId, Throwable mockError)  {
+                System.out.println("-------------------------------------");
+                System.out.println(queryId);
+                System.out.println(mockError.getMessage());
+                System.out.println("-------------------------------------");
+            }
+        };
+
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1, 1, 1, listener);
+        writer_data(10,"t1","double");
+        writer_data(10,"t2","double");
+
+        boolean received = latch.await(3, TimeUnit.SECONDS);
+        Assert.assertTrue(received);
+        BasicTable ex = (BasicTable)conn.run(sqlStr1);
+        System.out.println(ex.rows());
+        checkData(ex, bt);
+
+        BasicTable tableLog = (BasicTable)conn.run("select * from " + id1);
+        UpdateEvent event = eventRef.get();
+        Assert.assertNull(event);
+    }
+
+    //@Test//在代码中添加throw new RuntimeException("模拟 doEvent 抛异常"); 检查onError是否能够获取的到(检查日志)
+    public void test_StreamingSQLClient_subscribeStreamingSQL_updateListener_onError() throws IOException, InterruptedException {
+        Preparedata("DOUBLE");
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<UpdateEvent> eventRef = new AtomicReference<>();
+        UpdateListener listener = new UpdateListener() {
+            @Override
+            public void onUpdate(UpdateEvent event) {
+                if (event != null && event.getChangeRecords() != null && !event.getChangeRecords().isEmpty()) {
+                    eventRef.set(event);
+                    latch.countDown();
+                }
+            }
+            @Override
+            public void onError(String queryId, Throwable mockError)  {
+                System.out.println("-------------------------------------");
+                System.out.println(queryId);
+                System.out.println(mockError.getMessage());
+                System.out.println("-------------------------------------");
+            }
+        };
+
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1, 1, 1, listener);
+        writer_data(10,"t1","double");
+        writer_data(10,"t2","double");
+        boolean received = latch.await(2, TimeUnit.SECONDS);
+        Assert.assertTrue(received);
+    }
+
+    @Test
+    public void test_StreamingSQLClient_subscribeStreamingSQL_updateListener_onClose() throws IOException, InterruptedException {
+        Preparedata("DOUBLE");
+        StreamingSQLClient streamingSQLClient = new StreamingSQLClient(HOST, PORT, "admin","123456");
+        streamingSQLClient.declareStreamingSQLTable("t1");
+        streamingSQLClient.declareStreamingSQLTable("t2");
+        String sqlStr1 = "SELECT id, t1.value+t2.value as value FROM t1 INNER JOIN t2 ON t1.time = t2.time order by id, value";
+        String id1 = streamingSQLClient.registerStreamingSQL(sqlStr1);
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<UpdateEvent> eventRef = new AtomicReference<>();
+        final AtomicReference<Boolean> closed = new AtomicReference<>();
+        UpdateListener listener = new UpdateListener() {
+            @Override
+            public void onUpdate(UpdateEvent event) {
+                if (event != null && event.getChangeRecords() != null && !event.getChangeRecords().isEmpty()) {
+                    eventRef.set(event);
+                    latch.countDown();
+                }
+            }
+            @Override
+            public void onClose(String queryId)  {
+                System.out.println("-------------------------------------");
+                System.out.println("线程已退出");
+                System.out.println("-------------------------------------");
+                closed.set(true);
+            }
+        };
+
+        BasicTable bt = streamingSQLClient.subscribeStreamingSQL(id1, 1, 1, listener);
+        streamingSQLClient.close();
+        Assert.assertTrue(streamingSQLClient.isClose());
+        writer_data(10,"t1","double");
+        writer_data(10,"t2","double");
+        boolean received = latch.await(2, TimeUnit.SECONDS);
+        Assert.assertTrue(closed.get());
     }
 }

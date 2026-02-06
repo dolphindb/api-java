@@ -794,9 +794,8 @@ public abstract class AbstractClient implements MessageDispatcher {
                             synchronized (tableNameToTrueTopic) {
                                 tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + "/" + tableName + "/" + actionName, topic);
                             }
-                            String HATopic = getTopic(HASiteHost, HASitePort, HASiteAlias, tableName, actionName);
                             synchronized (HATopicToTrueTopic) {
-                                HATopicToTrueTopic.put(HATopic, topic);
+                                HATopicToTrueTopic.put(topic, topic);
                             }
                         }
                         if (subInfos_.containsKey(topic)){
@@ -858,7 +857,7 @@ public abstract class AbstractClient implements MessageDispatcher {
     protected Map<String, Object> subscribeStreamingSqlLogInfoInternal(String host, int port,
                                                                        String tableName, String actionName, MessageHandler handler,
                                                                        long offset, boolean reconnect, Vector filter, StreamDeserializer deserializer,
-                                                                       boolean allowExistTopic, String userName, String passWord, boolean createSubInfo, boolean streamingSQL) throws IOException, RuntimeException {
+                                                                       boolean allowExistTopic, String userName, String passWord, boolean createSubInfo, boolean streamingSQL, boolean msgAsTable) throws IOException, RuntimeException {
         Entity re;
         String topic = "";
         DBConnection dbConn = null;
@@ -889,11 +888,11 @@ public abstract class AbstractClient implements MessageDispatcher {
             List<Entity> params = new ArrayList<Entity>();
             params.add(new BasicString(tableName));
             params.add(new BasicString(actionName));
-            params.add(new BasicBoolean(true)); // streamingSQL，'true' true will return
+            params.add(new BasicBoolean(true)); // streamingSQL,'true' true will return
             re = dbConn.run("getSubscriptionTopic", params);
-            System.out.println("getSubscriptionTopic re: \n" + re.getString());
+            log.debug("getSubscriptionTopic re: \n" + re.getString());
             topic = ((BasicAnyVector) re).getEntity(0).getString();
-            System.out.println("topic: " + topic);
+            log.debug("topic: " + topic);
             lastSuccessSubscribeTopic = topic;
             params.clear();
 
@@ -944,16 +943,15 @@ public abstract class AbstractClient implements MessageDispatcher {
                     String HASiteHost = HASiteHostAndPort[0];
                     int HASitePort = new Integer(HASiteHostAndPort[1]);
                     String HASiteAlias = HASiteHostAndPort[2];
-                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord, false);
+                    sites[i] = new Site(HASiteHost, HASitePort, tableName, actionName, handler, offset - 1, true, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable);
                     if (!reconnect){
                         sites[i].closed = true;
                     }
                     synchronized (tableNameToTrueTopic) {
                         tableNameToTrueTopic.put(HASiteHost + ":" + HASitePort + "/" + tableName + "/" + actionName, topic);
                     }
-                    String HATopic = getTopic(HASiteHost, HASitePort, HASiteAlias, tableName, actionName);
                     synchronized (HATopicToTrueTopic) {
-                        HATopicToTrueTopic.put(HATopic, topic);
+                        HATopicToTrueTopic.put(topic, topic);
                     }
                 }
                 if (subInfos_.containsKey(topic)){
@@ -965,7 +963,7 @@ public abstract class AbstractClient implements MessageDispatcher {
                     trueTopicToSites.put(topic, sites);
                 }
             } else {
-                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, deserializer, allowExistTopic, userName, passWord, false)};
+                Site[] sites = {new Site(host, port, tableName, actionName, handler, offset - 1, reconnect, filter, deserializer, allowExistTopic, userName, passWord, msgAsTable)};
                 if (!reconnect){
                     sites[0].closed = true;
                 }

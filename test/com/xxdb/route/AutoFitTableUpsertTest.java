@@ -2027,7 +2027,7 @@ public class AutoFitTableUpsertTest {
     }
 
     @Test
-    public void test_AutoFitTableUpsert__user_authMode_scream() throws Exception {
+    public void test_AutoFitTableUpsert_user_authMode_scram() throws Exception {
         PrepareUser_authMode("scramUser","123456","scram");
         conn = new DBConnection();
         conn.connect(HOST,PORT,"scramUser","123456");

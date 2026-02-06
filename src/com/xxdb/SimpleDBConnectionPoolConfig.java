@@ -248,7 +248,7 @@ public class SimpleDBConnectionPoolConfig {
 
         if (idleTimeout < 10000) {
             idleTimeout = 600000;
-            log.warn("The param 'idleTimeout' cannot less than 10000ms， will use the default value 600000ms(10min)");
+            log.warn("The param 'idleTimeout' cannot less than 10000ms, will use the default value 600000ms(10min)");
         }
     }
 

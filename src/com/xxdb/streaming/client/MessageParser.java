@@ -102,9 +102,7 @@ class MessageParser implements Runnable {
 
                 Entity.DATA_FORM df = Entity.DATA_FORM.values()[form];
                 Entity.DATA_TYPE dt = Entity.DATA_TYPE.valueOf(type);
-                Entity body;
-
-                body = BasicEntityFactory.instance().createEntity(df, dt, in, extended);
+                Entity body = BasicEntityFactory.instance().createEntity(df, dt, in, extended);
                 if (body.isTable() && body.rows() == 0) {
                     for (String t : topic.split(",")) {
                         AbstractClient.lastExceptionTopicTimeMap.put(topic, System.currentTimeMillis());
@@ -156,30 +154,28 @@ class MessageParser implements Runnable {
                     }
                     dispatcher.setMsgId(topic, msgid);
                 } else {
-                        log.error("message body has an invalid format. Vector or table is expected");
+                    log.error("message body has an invalid format. Vector or table is expected");
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
             if (dispatcher.isClosed(topic)) {
-                if (!AbstractClient.ifUseBackupSite)
-                    log.error("check " + topic + " is unsubscribed");
+                if (!AbstractClient.ifUseBackupSite) {
+                    log.warn("Check topic {} is unsubscribed, stopping message parser", topic);
+                }
                 return;
-            } else {
-                AbstractClient.lastExceptionTopicTimeMap.put(topic, System.currentTimeMillis());
-                dispatcher.setNeedReconnect(topic, 1);
             }
-        } catch (Throwable t) {
-            t.printStackTrace();
+
+            log.error("Error occurred while parsing message for topic: {}", topic, e);
             AbstractClient.lastExceptionTopicTimeMap.put(topic, System.currentTimeMillis());
             dispatcher.setNeedReconnect(topic, 1);
         } finally {
-            try {
-                if (socket != null) {
+            if (socket != null) {
+                try {
                     socket.close();
+                    log.debug("Socket closed for topic: {}", topic);
+                } catch (IOException e) {
+                    log.warn("Failed to close socket for topic: {}", topic, e);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
     }

@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 class Daemon implements Runnable {
     private int listeningPort = 0;
@@ -57,7 +58,10 @@ class Daemon implements Runnable {
                     dBConnectionAndSocket.socket = socket;
                     dBConnectionAndSocket.conn = null;
                 } else {
-                    DBConnection conn = connList.take();
+                    DBConnection conn = connList.poll(1000, TimeUnit.MILLISECONDS);
+                    if (conn == null) {
+                        continue;
+                    }
                     socket = conn.getSocket();
                     dBConnectionAndSocket.socket = null;
                     dBConnectionAndSocket.conn =conn;
@@ -72,7 +76,9 @@ class Daemon implements Runnable {
 
 //                if (!System.getProperty("os.name").equalsIgnoreCase("linux"))
 //                    new Thread(new ConnectionDetector(socket)).start();
-            }catch(Exception ex){
+            } catch (InterruptedException iex) {
+                break;
+            } catch(Exception ex){
                 try {
                     if(runningThread_.isInterrupted()) {
                         throw new InterruptedException();

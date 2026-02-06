@@ -28,7 +28,7 @@ public class ThreadPooledClientReverseTest {
     //static int PORT = 9002;
     static int COMPUTENODE = Integer.parseInt(bundle.getString("COMPUTENODE"));
     static long total = 0;
-
+    static int GROUP_ID = Integer.parseInt(bundle.getString("GROUP_ID"));
     private static ThreadPooledClient threadPooledClient;
 
     @BeforeClass
@@ -194,7 +194,7 @@ public static void PrepareStreamTable() throws IOException {
             try {
                 String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
                 conn.run(script);
-                //  System.out.println(msg.getEntity(0).getString());
+                  System.out.println(msg.getEntity(0).getString());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -481,11 +481,11 @@ public static void PrepareStreamTable() throws IOException {
             threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades2", MessageHandler_handler, -1, true, filter1, true);
             threadPooledClient.subscribe(HOST, PORT, "Trades", "subTrades3", MessageHandler_handler, -1, true, filter1, true);
             conn.run("n=10;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
-            Thread.sleep(1500);
+            Thread.sleep(1000);
             threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades1");
             threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades2");
             threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTrades3");
-            Thread.sleep(2000);
+            Thread.sleep(1000);
         }
     }
 
@@ -540,7 +540,7 @@ public static void PrepareStreamTable() throws IOException {
     }
 
     @Test
-    public void test_subscribe_authMode_scream() throws IOException, InterruptedException {
+    public void test_subscribe_authMode_scram() throws IOException, InterruptedException {
         PrepareStreamTable();
         PrepareUser_authMode("scramUser","123456","scram");
         Vector filter1 = (Vector) conn.run("1..100000");
@@ -2115,9 +2115,9 @@ public static void PrepareStreamTable() throws IOException {
 
     @Test(timeout = 120000)
     public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_1() throws Exception {
-        Prepare_streamTable("Trades");
+        Prepare_streamTable(HOST, PORT,"Trades");
         conn.run("setStreamTableFilterColumn(Trades, `intv)");
-        Prepare_streamTable("Receive");
+        Prepare_streamTable(HOST, PORT,"Receive");
         threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_msgAsTable_all, 0,false, null,null,false,"admin","123456",true);
         Preparedata1(1);
         conn.run("Trades.append!(data)");
@@ -2130,9 +2130,9 @@ public static void PrepareStreamTable() throws IOException {
     }
     @Test(timeout = 120000)
     public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_1000() throws Exception {
-        Prepare_streamTable("Trades");
+        Prepare_streamTable(HOST, PORT,"Trades");
         conn.run("setStreamTableFilterColumn(Trades, `intv)");
-        Prepare_streamTable("Receive");
+        Prepare_streamTable(HOST, PORT,"Receive");
         threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_msgAsTable_all, 0,false, null,null,false,"admin","123456",true);
         Preparedata1(1000);
         conn.run("Trades.append!(data)");
@@ -2146,9 +2146,9 @@ public static void PrepareStreamTable() throws IOException {
 
     @Test(timeout = 120000)
     public void test_threadedClient_subscribe_msgAsTable_true_all_dateType_10000() throws Exception {
-        Prepare_streamTable("Trades");
+        Prepare_streamTable(HOST, PORT,"Trades");
         conn.run("setStreamTableFilterColumn(Trades, `intv)");
-        Prepare_streamTable("Receive");
+        Prepare_streamTable(HOST, PORT,"Receive");
         threadPooledClient.subscribe(HOST, PORT, "Trades", "subTread1", BatchMessageHandler_msgAsTable_all, 0,false, null,null,false,"admin","123456",true);
         Preparedata1(10000);
         conn.run("Trades.append!(data)");
@@ -2197,5 +2197,93 @@ public static void PrepareStreamTable() throws IOException {
         threadPooledClient.unsubscribe(HOST, PORT, "Trades", "subTread1");
         assertEquals(34, re.rows());
         checkData(tra, re);
+    }
+
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_haStreamTable_on_leader() throws IOException, InterruptedException {
+        BasicString StreamLeaderTmp = (BasicString)conn.run(String.format("getStreamingLeader(%d)", GROUP_ID));
+        String StreamLeader = StreamLeaderTmp.getString();
+        BasicString StreamLeaderHostTmp = (BasicString)conn.run(String.format("(exec host from rpc(getControllerAlias(), getClusterPerf) where name=\"%s\")[0]", StreamLeader));
+        String StreamLeaderHost = StreamLeaderHostTmp.getString();
+        BasicInt StreamLeaderPortTmp = (BasicInt)conn.run(String.format("(exec port from rpc(getControllerAlias(), getClusterPerf) where mode = 0 and  name=\"%s\")[0]", StreamLeader));
+        int StreamLeaderPort = StreamLeaderPortTmp.getInt();
+        System.out.println(StreamLeaderHost);
+        System.out.println(StreamLeaderPort);
+        DBConnection conn_leader = new DBConnection();
+        conn_leader.connect(StreamLeaderHost, StreamLeaderPort, "admin", "123456");
+        String script = "try{\ndropStreamTable(`Trades)\n}catch(ex){\n}\n" +
+                "table = table(1000000:0,  `tag`ts`data,[INT,TIMESTAMP,DOUBLE]);\n"+
+                "haStreamTable("+GROUP_ID+", table, `Trades, 100000);\n"+
+                " share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as Receive;";
+        conn_leader.run(script);
+        final DBConnection finalConn1 = conn_leader;
+        MessageHandler MessageHandler_handler1 = new MessageHandler() {
+            @Override
+            public void doEvent(IMessage msg) {
+                try {
+                    String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
+                    finalConn1.run(script);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        threadPooledClient.subscribe(StreamLeaderHost, StreamLeaderPort,"Trades",MessageHandler_handler1);
+        conn_leader.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",10000, conn_leader);
+        BasicInt row_num = (BasicInt)conn_leader.run("(exec count(*) from Receive)[0]");
+        assertEquals(10000,row_num.getInt());
+        threadPooledClient.unsubscribe(StreamLeaderHost, StreamLeaderPort,"Trades");
+    }
+
+    @Test(timeout = 120000)
+    public void Test_ThreadPooledClient_subscribe_haStreamTable_on_follower() throws IOException, InterruptedException {
+        BasicString StreamLeaderTmp = (BasicString)conn.run(String.format("getStreamingLeader(%d)", GROUP_ID));
+        String StreamLeader = StreamLeaderTmp.getString();
+        BasicString StreamLeaderHostTmp = (BasicString)conn.run(String.format("(exec host from rpc(getControllerAlias(), getClusterPerf) where name=\"%s\")[0]", StreamLeader));
+        String StreamLeaderHost = StreamLeaderHostTmp.getString();
+        BasicInt StreamLeaderPortTmp = (BasicInt)conn.run(String.format("(exec port from rpc(getControllerAlias(), getClusterPerf) where mode = 0 and  name=\"%s\")[0]", StreamLeader));
+        int StreamLeaderPort = StreamLeaderPortTmp.getInt();
+        System.out.println(StreamLeaderHost);
+        System.out.println(StreamLeaderPort);
+        DBConnection conn_leader = new DBConnection();
+        conn_leader.connect(StreamLeaderHost, StreamLeaderPort, "admin", "123456");
+
+        String script0 ="leader = getStreamingLeader("+GROUP_ID+");\n" +
+                "groupSitesStr = (exec sites from getStreamingRaftGroups() where id =="+GROUP_ID+")[0];\n"+
+                "groupSites = split(groupSitesStr, \",\");\n"+
+                "followerInfo = exec top 1 *  from rpc(getControllerAlias(), getClusterPerf) where site in groupSites and name!=leader;";
+        conn.run(script0);
+        BasicString StreamFollowerHostTmp = (BasicString)conn.run("(exec host from followerInfo)[0]");
+        String StreamFollowerHost = StreamFollowerHostTmp.getString();
+        BasicInt StreamFollowerPortTmp = (BasicInt)conn.run("(exec port from followerInfo)[0]");
+        int StreamFollowerPort = StreamFollowerPortTmp.getInt();
+        System.out.println(StreamFollowerHost);
+        System.out.println(StreamFollowerPort);
+        DBConnection conn_follower = new DBConnection();
+        conn_follower.connect(StreamFollowerHost, StreamFollowerPort, "admin", "123456");
+        String script = "try{\ndropStreamTable(`Trades)\n}catch(ex){\n}\n" +
+                "table = table(1000000:0,  `tag`ts`data,[INT,TIMESTAMP,DOUBLE]);\n"+
+                "haStreamTable("+GROUP_ID+", table, `Trades, 100000);\n"+
+                " share streamTable(1000000:0,`tag`ts`data,[INT,TIMESTAMP,DOUBLE]) as Receive;";
+        conn_follower.run(script);
+        final DBConnection finalConn1 = conn_follower;
+        MessageHandler MessageHandler_handler1 = new MessageHandler() {
+            @Override
+            public void doEvent(IMessage msg) {
+                try {
+                    String script = String.format("insert into Receive values(%d,%s,%f)", Integer.parseInt(msg.getEntity(0).getString()), msg.getEntity(1).getString(), Double.valueOf(msg.getEntity(2).toString()));
+                    finalConn1.run(script);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        threadPooledClient.subscribe(StreamFollowerHost, StreamFollowerPort,"Trades",MessageHandler_handler1);
+        conn_leader.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        wait_data("Receive",10000, conn_follower);
+        BasicInt row_num = (BasicInt)conn_follower.run("(exec count(*) from Receive)[0]");
+        assertEquals(10000,row_num.getInt());
+        threadPooledClient.unsubscribe(StreamFollowerHost, StreamFollowerPort,"Trades");
     }
 }

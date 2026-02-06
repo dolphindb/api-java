@@ -2013,7 +2013,7 @@ public class SimpleDBConnectionPoolTest {
     }
 
     @Test
-    public void test_SimpleDBConnectionPool_config_user_authMode_scream() throws IOException, InterruptedException {
+    public void test_SimpleDBConnectionPool_config_user_authMode_scram() throws IOException, InterruptedException {
         PrepareUser_authMode("scramUser","123456","scram");
         SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
         config1.setHostName(HOST);
