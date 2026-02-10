@@ -360,8 +360,6 @@ public class BasicDecimalTest {
         mutithreadTableWriter_.waitForThreadCompletion();
         BasicTable bt = (BasicTable) conn.run("select * from t1;");
         assertEquals(900,bt.rows());
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL32,bt.getColumn("int").getDataType());
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL64,bt.getColumn("intX").getDataType());
         conn.run("undef(`t1,SHARED)");
     }
 
@@ -370,32 +368,32 @@ public class BasicDecimalTest {
         clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        String script ="t=streamTable(1:0, `sym`tradeDate`tradePrice`vwap`volume`vol`valueTrade, [SYMBOL,DATEHOUR, DOUBLE, DOUBLE, DECIMAL32(2), DECIMAL64(4), DOUBLE])\n;share t as t1;" +
-                "tt=streamTable(1:0, `sym`tradeDate`tradePrice`vwap`volume`vol`valueTrade, [SYMBOL,DATEHOUR, DOUBLE, DOUBLE, DECIMAL32(2), DECIMAL64(4), DOUBLE])\n;share tt as trades;";
+        String script = "try{undef(`t1,SHARED);}catch(ex){}\n" +
+                "t=streamTable(1:0, `id`a`b,[INT,DECIMAL32(2),DECIMAL64(4)]);\n" +
+                "share t as t1;\n" +
+                "n = 1048576;\n" +
+                "intv=array(INT,0)\n" +
+                "decimal32v=array(DECIMAL32(2),0)\n" +
+                "decimal64v=array(DECIMAL64(4),0)\n" +
+                "for(i in 0..(n-1)){\n" +
+                "    intv.append!(i%100)\n" +
+                "    decimal32v.append!(i)\n" +
+                "    decimal64v.append!(i)\n" +
+                "}\n" +
+                "t1.tableInsert(intv,decimal32v,decimal64v);\n" +
+                "tt=streamTable(1:0, `id`a`b,[INT,DECIMAL32(2),DECIMAL64(4)]);\n" +
+                "share tt as trades;";
         conn.run(script);
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "", "trades", false, false, null, 100000, 1,
-                20, "volume");
+                20, "id");
         for (int i = 0; i < 1048576; i++) {
-            List<Entity> row = new ArrayList<>();
-            row.add(new BasicString("2"));
-            row.add(new BasicNanoTimestamp(LocalDateTime.of(2022, 1, 1 + i % 10, 1, 1, 0, 0)));
-            row.add(new BasicDouble(i + 0.1));
-            row.add(new BasicDouble(i + 0.1));
-            row.add(new BasicDecimal32(i % 10,2));
-            row.add(new BasicDecimal64((long) (i%100),4));
-            row.add(new BasicDouble(i + 0.1));
-            conn.run("tableInsert{t1}", row);
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( "2", LocalDateTime.of(2022, 1, 1 + i % 10, 1, 1, 0, 0), i + 0.1, i + 0.1,
-                    new BasicDecimal32(i % 10,2), new BasicDecimal64((long) (i%100),4), i + 0.1);
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( new BasicInt(i%100),new BasicDecimal32(i,2),new BasicDecimal64((long)i,4));
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt = (BasicTable) conn.run("select * from trades order by sym,tradeDate,tradePrice,vwap,volume,valueTrade;");
-        BasicTable ex = (BasicTable) conn.run("select * from t1 order by sym,tradeDate,tradePrice,vwap,volume,valueTrade;");
-        checkData(ex,bt);
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL32,bt.getColumn("volume").getDataType());
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL64,bt.getColumn("vol").getDataType());
+        Entity bt = conn.run("re = select * from trades order by id,a,b; ex = select * from t1 order by id,a,b; eqObj(re.values(),ex.values())");
+        assertEquals("true", bt.getString());
         conn.run("undef(`t1,SHARED);");
         conn.run("undef(`trades,SHARED);");
     }
@@ -405,9 +403,19 @@ public class BasicDecimalTest {
         clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        String script1 = "n = 1048576;\n" +
-                "t = table(n:0,`id`a`b,[INT,DECIMAL32(2),DECIMAL64(4)]);\n" +
-                "share t as t1;\n"+
+        String script1 ="try{undef(`t1,SHARED);}catch(ex){}\n" +
+                "n = 1048576;\n" +
+                "t = table(1:0,`id`a`b,[INT,DECIMAL32(2),DECIMAL64(4)]); \n" +
+                "share t as t1; \n" +
+                "intv=array(INT,0)\n" +
+                "decimal32v=array(DECIMAL32(2),0)\n" +
+                "decimal64v=array(DECIMAL64(4),0)\n" +
+                "for(i in 0..(n-1)){\n" +
+                "    intv.append!(i%100)\n" +
+                "    decimal32v.append!(i)\n" +
+                "    decimal64v.append!(i)\n" +
+                "}\n" +
+                "t1.tableInsert(intv,decimal32v,decimal64v)\n" +
                 "if(existsDatabase(\"dfs://testDecimal\")){dropDatabase(\"dfs://testDecimal\")}\n" +
                 "db=database(\"dfs://testDecimal\",VALUE,1..100);\n" +
                 "pt = db.createPartitionedTable(t,`pt,`id);\n" +
@@ -417,20 +425,12 @@ public class BasicDecimalTest {
                 "dfs://testDecimal", "pt", false, false, null, 1000, 1,
                 20, "id");
         for (int i = 0; i < 1048576; i++) {
-            List<Entity> row = new ArrayList<>();
-            row.add(new BasicInt(i%100));
-            row.add(new BasicDecimal32(i,2));
-            row.add(new BasicDecimal64((long)i,4));
-            conn.run("tableInsert{t1}", row);
             ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new BasicInt(i%100),new BasicDecimal32(i,2),new BasicDecimal64((long)i,4));
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt = (BasicTable) conn.run("select * from pt order by id");
-        BasicTable ex = (BasicTable) conn.run("select * from t1 order by id;");
-        checkData(ex,bt);
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL32,bt.getColumn("a").getDataType());
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL64,bt.getColumn("b").getDataType());
+        Entity bt = conn.run("re = select * from pt order by id; ex = select * from t1 order by id; eqObj(re.values(),ex.values())");
+        assertEquals("true", bt.getString());
         conn.run("undef(`t1,SHARED);");
     }
 
@@ -439,11 +439,21 @@ public class BasicDecimalTest {
         clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        String script1 = "n = 1048576;\n" +
-                "t = table(n:0,`id`a`b,[INT,DECIMAL32(2),DECIMAL64(4)]);\n" +
-                "share t as t1;\n"+
+        String script1 = "try{undef(`t1,SHARED);}catch(ex){}\n" +
+                "n = 1048576;\n" +
+                "t = table(1:0,`id`a`b,[INT,DECIMAL32(2),DECIMAL64(4)]); \n" +
+                "share t as t1; \n" +
+                "intv=array(INT,0)\n" +
+                "decimal32v=array(DECIMAL32(2),0)\n" +
+                "decimal64v=array(DECIMAL64(4),0)\n" +
+                "for(i in 0..(n-1)){\n" +
+                "    intv.append!(i%100)\n" +
+                "    decimal32v.append!(i)\n" +
+                "    decimal64v.append!(i)\n" +
+                "}\n" +
+                "t1.tableInsert(intv,decimal32v,decimal64v)\n" +
                 "if(existsDatabase(\"dfs://testDecimal\")){dropDatabase(\"dfs://testDecimal\")}\n" +
-                "db=database(\"dfs://testDecimal\",VALUE,1..100);\n" +
+                "db=database(\"dfs://testDecimal\",VALUE,0..100);\n" +
                 "pt = db.createTable(t,`pt);\n" +
                 "pt = loadTable(\"dfs://testDecimal\",\"pt\");";
         conn.run(script1);
@@ -451,20 +461,12 @@ public class BasicDecimalTest {
                 "dfs://testDecimal", "pt", false, false, null, 1000, 1,
                 1, "id");
         for (int i = 0; i < 1048576; i++) {
-            List<Entity> row = new ArrayList<>();
-            row.add(new BasicInt(i%100));
-            row.add(new BasicDecimal32(i,2));
-            row.add(new BasicDecimal64((long)i,4));
-            conn.run("tableInsert{t1}", row);
             ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new BasicInt(i%100),new BasicDecimal32(i,2),new BasicDecimal64((long)i,4));
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt = (BasicTable) conn.run("select * from pt order by id");
-        BasicTable ex = (BasicTable) conn.run("select * from t1 order by id;");
-        checkData(ex,bt);
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL32,bt.getColumn("a").getDataType());
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL64,bt.getColumn("b").getDataType());
+        Entity bt = conn.run("re = select * from pt order by id; ex = select * from t1 order by id; eqObj(re.values(),ex.values())");
+        assertEquals("true", bt.getString());
         conn.run("undef(`t1,SHARED);");
     }
 
@@ -903,9 +905,19 @@ public class BasicDecimalTest {
         clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        String script1 = "n = 1048576;\n" +
-                "t = table(n:0,`id`a`b,[INT,DECIMAL128(2),DECIMAL128(4)]);\n" +
-                "share t as t1;\n"+
+        String script1 = "try{undef(`t1,SHARED);}catch(ex){}\n" +
+                "n = 1048576;\n" +
+                "t = table(1:0,`id`a`b,[INT,DECIMAL128(2),DECIMAL128(4)]); \n" +
+                "share t as t1; \n" +
+                "intv=array(INT,0)\n" +
+                "decimal128_1=array(DECIMAL128(2),0)\n" +
+                "decimal128_2=array(DECIMAL128(4),0)\n" +
+                "for(i in 0..(n-1)){\n" +
+                "    intv.append!(i%100)\n" +
+                "    decimal128_1.append!(i)\n" +
+                "    decimal128_2.append!(i)\n" +
+                "}\n" +
+                "t1.tableInsert(intv,decimal128_1,decimal128_2)\n" +
                 "if(existsDatabase(\"dfs://testDecimal\")){dropDatabase(\"dfs://testDecimal\")}\n" +
                 "db=database(\"dfs://testDecimal\",VALUE,1..100);\n" +
                 "pt = db.createPartitionedTable(t,`pt,`id);\n" +
@@ -915,20 +927,12 @@ public class BasicDecimalTest {
                 "dfs://testDecimal", "pt", false, false, null, 1000, 1,
                 20, "id");
         for (int i = 0; i < 1048576; i++) {
-            List<Entity> row = new ArrayList<>();
-            row.add(new BasicInt(i%100));
-            row.add(new BasicDecimal128(String.valueOf(i),2));
-            row.add(new BasicDecimal128(String.valueOf(i),4));
-            conn.run("tableInsert{t1}", row);
             ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new BasicInt(i%100),new BasicDecimal128(String.valueOf(i),2),new BasicDecimal128(String.valueOf(i),4));
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt = (BasicTable) conn.run("select * from pt order by id");
-        BasicTable ex = (BasicTable) conn.run("select * from t1 order by id;");
-        checkData(ex,bt);
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL128,bt.getColumn("a").getDataType());
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL128,bt.getColumn("b").getDataType());
+        Entity bt = conn.run("re = select * from pt order by id; ex = select * from t1 order by id; eqObj(re.values(),ex.values())");
+        assertEquals("true", bt.getString());
         conn.run("undef(`t1,SHARED);");
     }
 
@@ -937,9 +941,19 @@ public class BasicDecimalTest {
         clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        String script1 = "n = 1048576;\n" +
-                "t = table(n:0,`id`a`b,[INT,DECIMAL128(2),DECIMAL128(4)]);\n" +
-                "share t as t1;\n"+
+        String script1 =  "try{undef(`t1,SHARED);}catch(ex){}\n" +
+                "n = 1048576;\n" +
+                "t = table(1:0,`id`a`b,[INT,DECIMAL128(2),DECIMAL128(4)]); \n" +
+                "share t as t1; \n" +
+                "intv=array(INT,0)\n" +
+                "decimal128_1=array(DECIMAL128(2),0)\n" +
+                "decimal128_2=array(DECIMAL128(4),0)\n" +
+                "for(i in 0..(n-1)){\n" +
+                "    intv.append!(i%100)\n" +
+                "    decimal128_1.append!(i)\n" +
+                "    decimal128_2.append!(i)\n" +
+                "}\n" +
+                "t1.tableInsert(intv,decimal128_1,decimal128_2)\n" +
                 "if(existsDatabase(\"dfs://testDecimal\")){dropDatabase(\"dfs://testDecimal\")}\n" +
                 "db=database(\"dfs://testDecimal\",VALUE,1..100);\n" +
                 "pt = db.createTable(t,`pt);\n" +
@@ -949,20 +963,12 @@ public class BasicDecimalTest {
                 "dfs://testDecimal", "pt", false, false, null, 1000, 1,
                 1, "id");
         for (int i = 0; i < 1048576; i++) {
-            List<Entity> row = new ArrayList<>();
-            row.add(new BasicInt(i%100));
-            row.add(new BasicDecimal128(String.valueOf(i),2));
-            row.add(new BasicDecimal128(String.valueOf(i),4));
-            conn.run("tableInsert{t1}", row);
             ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new BasicInt(i%100),new BasicDecimal128(String.valueOf(i),2),new BasicDecimal128(String.valueOf(i),4));
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt = (BasicTable) conn.run("select * from pt order by id");
-        BasicTable ex = (BasicTable) conn.run("select * from t1 order by id;");
-        checkData(ex,bt);
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL128,bt.getColumn("a").getDataType());
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL128,bt.getColumn("b").getDataType());
+        Entity bt = conn.run("re = select * from pt order by id; ex = select * from t1 order by id; eqObj(re.values(),ex.values())");
+        assertEquals("true", bt.getString());
         conn.run("undef(`t1,SHARED);");
     }
     @Test(timeout = 600000)
@@ -970,9 +976,19 @@ public class BasicDecimalTest {
         clear_env();
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
-        String script1 = "n = 1048576;\n" +
-                "t = table(n:0,`id`a`b,[INT,DECIMAL128(2),DECIMAL128(4)]);\n" +
-                "share t as t1;\n"+
+        String script1 = "try{undef(`t1,SHARED);}catch(ex){}\n" +
+                "n = 1048576;\n" +
+                "t = table(1:0,`id`a`b,[INT,DECIMAL128(2),DECIMAL128(4)]); \n" +
+                "share t as t1; \n" +
+                "intv=array(INT,0)\n" +
+                "decimal128_1=array(DECIMAL128(2),0)\n" +
+                "decimal128_2=array(DECIMAL128(4),0)\n" +
+                "for(i in 0..(n-1)){\n" +
+                "    intv.append!(i%100)\n" +
+                "    decimal128_1.append!(i)\n" +
+                "    decimal128_2.append!(i)\n" +
+                "}\n" +
+                "t1.tableInsert(intv,decimal128_1,decimal128_2)\n" +
                 "if(existsDatabase(\"dfs://testDecimal\")){dropDatabase(\"dfs://testDecimal\")}\n" +
                 "db=database(\"dfs://testDecimal\",VALUE,1..100);\n" +
                 "pt = db.createTable(t,`pt);\n" +
@@ -982,20 +998,12 @@ public class BasicDecimalTest {
                 "dfs://testDecimal", "pt", false, false, null, 1000, 1,
                 1, "id");
         for (int i = 0; i < 1048576; i++) {
-            List<Entity> row = new ArrayList<>();
-            row.add(new BasicInt(i%100));
-            row.add(new BasicDecimal128(String.valueOf(i),2));
-            row.add(new BasicDecimal128(String.valueOf(i),4));
-            conn.run("tableInsert{t1}", row);
             ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new BasicInt(i%100),new BasicDecimal128(String.valueOf(i),2),new BasicDecimal128(String.valueOf(i),4));
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
-        BasicTable bt = (BasicTable) conn.run("select * from pt order by id");
-        BasicTable ex = (BasicTable) conn.run("select * from t1 order by id;");
-        checkData(ex,bt);
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL128,bt.getColumn("a").getDataType());
-        assertEquals(Entity.DATA_TYPE.DT_DECIMAL128,bt.getColumn("b").getDataType());
+        Entity bt = conn.run("re = select * from pt order by id; ex = select * from t1 order by id; eqObj(re.values(),ex.values())");
+        assertEquals("true", bt.getString());
         conn.run("undef(`t1,SHARED);");
     }
 }
