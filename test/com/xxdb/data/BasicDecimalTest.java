@@ -369,30 +369,32 @@ public class BasicDecimalTest {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script = "try{undef(`t1,SHARED);}catch(ex){}\n" +
-                "t=streamTable(1:0, `id`a`b,[INT,DECIMAL32(2),DECIMAL64(4)]);\n" +
+                "t=streamTable(1:0, `id`a`b`c,[INT,DECIMAL32(2),DECIMAL64(4),DECIMAL128(4)]);\n" +
                 "share t as t1;\n" +
                 "n = 1048576;\n" +
                 "intv=array(INT,0)\n" +
                 "decimal32v=array(DECIMAL32(2),0)\n" +
                 "decimal64v=array(DECIMAL64(4),0)\n" +
+                "decimal128v=array(DECIMAL128(4),0)\n" +
                 "for(i in 0..(n-1)){\n" +
                 "    intv.append!(i%100)\n" +
                 "    decimal32v.append!(i)\n" +
                 "    decimal64v.append!(i)\n" +
+                "    decimal128v.append!(i)\n" +
                 "}\n" +
-                "t1.tableInsert(intv,decimal32v,decimal64v);\n" +
-                "tt=streamTable(1:0, `id`a`b,[INT,DECIMAL32(2),DECIMAL64(4)]);\n" +
+                "t1.tableInsert(intv,decimal32v,decimal64v,decimal128v);\n" +
+                "tt=streamTable(1:0, `id`a`b`c,[INT,DECIMAL32(2),DECIMAL64(4),DECIMAL128(4)]);\n" +
                 "share tt as trades;";
         conn.run(script);
         mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
                 "", "trades", false, false, null, 100000, 1,
                 20, "id");
         for (int i = 0; i < 1048576; i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( new BasicInt(i%100),new BasicDecimal32(i,2),new BasicDecimal64((long)i,4));
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert( new BasicInt(i%100),new BasicDecimal32(i,2),new BasicDecimal64((long)i,4),new BasicDecimal128(String.valueOf(i),4));
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
-        Entity bt = conn.run("re = select * from trades order by id,a,b; ex = select * from t1 order by id,a,b; eqObj(re.values(),ex.values())");
+        Entity bt = conn.run("re = select * from trades order by id,a,b,c; ex = select * from t1 order by id,a,b,c; eqObj(re.values(),ex.values())");
         assertEquals("true", bt.getString());
         conn.run("undef(`t1,SHARED);");
         conn.run("undef(`trades,SHARED);");
@@ -404,18 +406,20 @@ public class BasicDecimalTest {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script1 ="try{undef(`t1,SHARED);}catch(ex){}\n" +
+                "t=table(1:0, `id`a`b`c,[INT,DECIMAL32(2),DECIMAL64(4),DECIMAL128(4)]);\n" +
+                "share t as t1;\n" +
                 "n = 1048576;\n" +
-                "t = table(1:0,`id`a`b,[INT,DECIMAL32(2),DECIMAL64(4)]); \n" +
-                "share t as t1; \n" +
                 "intv=array(INT,0)\n" +
                 "decimal32v=array(DECIMAL32(2),0)\n" +
                 "decimal64v=array(DECIMAL64(4),0)\n" +
+                "decimal128v=array(DECIMAL128(4),0)\n" +
                 "for(i in 0..(n-1)){\n" +
                 "    intv.append!(i%100)\n" +
                 "    decimal32v.append!(i)\n" +
                 "    decimal64v.append!(i)\n" +
+                "    decimal128v.append!(i)\n" +
                 "}\n" +
-                "t1.tableInsert(intv,decimal32v,decimal64v)\n" +
+                "t1.tableInsert(intv,decimal32v,decimal64v,decimal128v);\n" +
                 "if(existsDatabase(\"dfs://testDecimal\")){dropDatabase(\"dfs://testDecimal\")}\n" +
                 "db=database(\"dfs://testDecimal\",VALUE,1..100);\n" +
                 "pt = db.createPartitionedTable(t,`pt,`id);\n" +
@@ -425,11 +429,11 @@ public class BasicDecimalTest {
                 "dfs://testDecimal", "pt", false, false, null, 1000, 1,
                 20, "id");
         for (int i = 0; i < 1048576; i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new BasicInt(i%100),new BasicDecimal32(i,2),new BasicDecimal64((long)i,4));
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new BasicInt(i%100),new BasicDecimal32(i,2),new BasicDecimal64((long)i,4),new BasicDecimal128(String.valueOf(i),4));
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
-        Entity bt = conn.run("re = select * from pt order by id; ex = select * from t1 order by id; eqObj(re.values(),ex.values())");
+        Entity bt = conn.run("re = select * from pt order by id,a,b,c; ex = select * from t1 order by id,a,b,c; eqObj(re.values(),ex.values())");
         assertEquals("true", bt.getString());
         conn.run("undef(`t1,SHARED);");
     }
@@ -440,18 +444,20 @@ public class BasicDecimalTest {
         conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         String script1 = "try{undef(`t1,SHARED);}catch(ex){}\n" +
+                "t=table(1:0, `id`a`b`c,[INT,DECIMAL32(2),DECIMAL64(4),DECIMAL128(4)]);\n" +
+                "share t as t1;\n" +
                 "n = 1048576;\n" +
-                "t = table(1:0,`id`a`b,[INT,DECIMAL32(2),DECIMAL64(4)]); \n" +
-                "share t as t1; \n" +
                 "intv=array(INT,0)\n" +
                 "decimal32v=array(DECIMAL32(2),0)\n" +
                 "decimal64v=array(DECIMAL64(4),0)\n" +
+                "decimal128v=array(DECIMAL128(4),0)\n" +
                 "for(i in 0..(n-1)){\n" +
                 "    intv.append!(i%100)\n" +
                 "    decimal32v.append!(i)\n" +
                 "    decimal64v.append!(i)\n" +
+                "    decimal128v.append!(i)\n" +
                 "}\n" +
-                "t1.tableInsert(intv,decimal32v,decimal64v)\n" +
+                "t1.tableInsert(intv,decimal32v,decimal64v,decimal128v);\n" +
                 "if(existsDatabase(\"dfs://testDecimal\")){dropDatabase(\"dfs://testDecimal\")}\n" +
                 "db=database(\"dfs://testDecimal\",VALUE,0..100);\n" +
                 "pt = db.createTable(t,`pt);\n" +
@@ -461,11 +467,11 @@ public class BasicDecimalTest {
                 "dfs://testDecimal", "pt", false, false, null, 1000, 1,
                 1, "id");
         for (int i = 0; i < 1048576; i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new BasicInt(i%100),new BasicDecimal32(i,2),new BasicDecimal64((long)i,4));
+            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new BasicInt(i%100),new BasicDecimal32(i,2),new BasicDecimal64((long)i,4),new BasicDecimal128(String.valueOf(i),4));
             assertEquals("code= info=",pErrorInfo.toString());
         }
         mutithreadTableWriter_.waitForThreadCompletion();
-        Entity bt = conn.run("re = select * from pt order by id; ex = select * from t1 order by id; eqObj(re.values(),ex.values())");
+        Entity bt = conn.run("re = select * from pt order by id,a,b,c; ex = select * from t1 order by id,a,b,c; eqObj(re.values(),ex.values())");
         assertEquals("true", bt.getString());
         conn.run("undef(`t1,SHARED);");
     }
@@ -898,112 +904,5 @@ public class BasicDecimalTest {
         assertEquals(Entity.DATA_TYPE.DT_DECIMAL128,bt.getColumn("vol").getDataType());
         conn.run("undef(`t1,SHARED);");
         conn.run("undef(`trades1,SHARED);");
-    }
-
-    @Test(timeout = 600000)
-    public void test_BasicDecimal_MultiThreadWritePartitionTable_decimal128() throws Exception {
-        clear_env();
-        conn = new DBConnection();
-        conn.connect(HOST,PORT,"admin","123456");
-        String script1 = "try{undef(`t1,SHARED);}catch(ex){}\n" +
-                "n = 1048576;\n" +
-                "t = table(1:0,`id`a`b,[INT,DECIMAL128(2),DECIMAL128(4)]); \n" +
-                "share t as t1; \n" +
-                "intv=array(INT,0)\n" +
-                "decimal128_1=array(DECIMAL128(2),0)\n" +
-                "decimal128_2=array(DECIMAL128(4),0)\n" +
-                "for(i in 0..(n-1)){\n" +
-                "    intv.append!(i%100)\n" +
-                "    decimal128_1.append!(i)\n" +
-                "    decimal128_2.append!(i)\n" +
-                "}\n" +
-                "t1.tableInsert(intv,decimal128_1,decimal128_2)\n" +
-                "if(existsDatabase(\"dfs://testDecimal\")){dropDatabase(\"dfs://testDecimal\")}\n" +
-                "db=database(\"dfs://testDecimal\",VALUE,1..100);\n" +
-                "pt = db.createPartitionedTable(t,`pt,`id);\n" +
-                "pt = loadTable(\"dfs://testDecimal\",\"pt\");";
-        conn.run(script1);
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://testDecimal", "pt", false, false, null, 1000, 1,
-                20, "id");
-        for (int i = 0; i < 1048576; i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new BasicInt(i%100),new BasicDecimal128(String.valueOf(i),2),new BasicDecimal128(String.valueOf(i),4));
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        Entity bt = conn.run("re = select * from pt order by id; ex = select * from t1 order by id; eqObj(re.values(),ex.values())");
-        assertEquals("true", bt.getString());
-        conn.run("undef(`t1,SHARED);");
-    }
-
-    @Test(timeout = 600000)
-    public void test_BasicDecimal_MultiThreadedWriteDimensionTable_decimal128() throws Exception {
-        clear_env();
-        conn = new DBConnection();
-        conn.connect(HOST,PORT,"admin","123456");
-        String script1 =  "try{undef(`t1,SHARED);}catch(ex){}\n" +
-                "n = 1048576;\n" +
-                "t = table(1:0,`id`a`b,[INT,DECIMAL128(2),DECIMAL128(4)]); \n" +
-                "share t as t1; \n" +
-                "intv=array(INT,0)\n" +
-                "decimal128_1=array(DECIMAL128(2),0)\n" +
-                "decimal128_2=array(DECIMAL128(4),0)\n" +
-                "for(i in 0..(n-1)){\n" +
-                "    intv.append!(i%100)\n" +
-                "    decimal128_1.append!(i)\n" +
-                "    decimal128_2.append!(i)\n" +
-                "}\n" +
-                "t1.tableInsert(intv,decimal128_1,decimal128_2)\n" +
-                "if(existsDatabase(\"dfs://testDecimal\")){dropDatabase(\"dfs://testDecimal\")}\n" +
-                "db=database(\"dfs://testDecimal\",VALUE,1..100);\n" +
-                "pt = db.createTable(t,`pt);\n" +
-                "pt = loadTable(\"dfs://testDecimal\",\"pt\");";
-        conn.run(script1);
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://testDecimal", "pt", false, false, null, 1000, 1,
-                1, "id");
-        for (int i = 0; i < 1048576; i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new BasicInt(i%100),new BasicDecimal128(String.valueOf(i),2),new BasicDecimal128(String.valueOf(i),4));
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        Entity bt = conn.run("re = select * from pt order by id; ex = select * from t1 order by id; eqObj(re.values(),ex.values())");
-        assertEquals("true", bt.getString());
-        conn.run("undef(`t1,SHARED);");
-    }
-    @Test(timeout = 600000)
-    public void test_BasicDecimal128_dfs_tableInsert() throws Exception {
-        clear_env();
-        conn = new DBConnection();
-        conn.connect(HOST,PORT,"admin","123456");
-        String script1 = "try{undef(`t1,SHARED);}catch(ex){}\n" +
-                "n = 1048576;\n" +
-                "t = table(1:0,`id`a`b,[INT,DECIMAL128(2),DECIMAL128(4)]); \n" +
-                "share t as t1; \n" +
-                "intv=array(INT,0)\n" +
-                "decimal128_1=array(DECIMAL128(2),0)\n" +
-                "decimal128_2=array(DECIMAL128(4),0)\n" +
-                "for(i in 0..(n-1)){\n" +
-                "    intv.append!(i%100)\n" +
-                "    decimal128_1.append!(i)\n" +
-                "    decimal128_2.append!(i)\n" +
-                "}\n" +
-                "t1.tableInsert(intv,decimal128_1,decimal128_2)\n" +
-                "if(existsDatabase(\"dfs://testDecimal\")){dropDatabase(\"dfs://testDecimal\")}\n" +
-                "db=database(\"dfs://testDecimal\",VALUE,1..100);\n" +
-                "pt = db.createTable(t,`pt);\n" +
-                "pt = loadTable(\"dfs://testDecimal\",\"pt\");";
-        conn.run(script1);
-        mutithreadTableWriter_ = new MultithreadedTableWriter(HOST, PORT, "admin", "123456",
-                "dfs://testDecimal", "pt", false, false, null, 1000, 1,
-                1, "id");
-        for (int i = 0; i < 1048576; i++) {
-            ErrorCodeInfo pErrorInfo = mutithreadTableWriter_.insert(new BasicInt(i%100),new BasicDecimal128(String.valueOf(i),2),new BasicDecimal128(String.valueOf(i),4));
-            assertEquals("code= info=",pErrorInfo.toString());
-        }
-        mutithreadTableWriter_.waitForThreadCompletion();
-        Entity bt = conn.run("re = select * from pt order by id; ex = select * from t1 order by id; eqObj(re.values(),ex.values())");
-        assertEquals("true", bt.getString());
-        conn.run("undef(`t1,SHARED);");
     }
 }
