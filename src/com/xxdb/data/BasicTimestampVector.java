@@ -26,6 +26,14 @@ public class BasicTimestampVector extends BasicLongVector{
 	public BasicTimestampVector(List<Long> list){
 		super(list);
 	}
+
+	public BasicTimestampVector(LocalDateTime[] array){
+		this(Utils.timestampVectorValues(array), false);
+	}
+
+	public BasicTimestampVector(Calendar[] array){
+		this(Utils.timestampVectorValues(array), false);
+	}
 	
 	public BasicTimestampVector(long[] array){
 		super(array);

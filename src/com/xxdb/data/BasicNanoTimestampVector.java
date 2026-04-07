@@ -26,6 +26,10 @@ public class BasicNanoTimestampVector extends BasicLongVector{
 		super(list);
 	}
 
+	public BasicNanoTimestampVector(LocalDateTime[] array){
+		this(Utils.nanoTimestampVectorValues(array), false);
+	}
+
 	public BasicNanoTimestampVector(long[] array){
 		super(array);
 	}

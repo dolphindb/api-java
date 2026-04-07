@@ -318,6 +318,177 @@ public class Utils {
 		return (long)countMilliseconds(time.getYear(), time.getMonthValue(), time.getDayOfMonth(), time.getHour(), time.getMinute(), time.getSecond(), 0) * 1000000 + time.getNano();
 	}
 
+	static int[] dateVectorValues(LocalDate[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countDays(values[i]);
+		}
+		return data;
+	}
+
+	static int[] dateVectorValues(Calendar[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countDays(values[i]);
+		}
+		return data;
+	}
+
+	static int[] monthVectorValues(YearMonth[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countMonths(values[i]);
+		}
+		return data;
+	}
+
+	static int[] monthVectorValues(Calendar[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : values[i].get(Calendar.YEAR) * 12 + values[i].get(Calendar.MONTH);
+		}
+		return data;
+	}
+
+	static int[] dateHourVectorValues(LocalDateTime[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countHours(values[i]);
+		}
+		return data;
+	}
+
+	static int[] dateHourVectorValues(Calendar[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countHours(values[i]);
+		}
+		return data;
+	}
+
+	static int[] dateTimeVectorValues(LocalDateTime[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countSeconds(values[i]);
+		}
+		return data;
+	}
+
+	static int[] dateTimeVectorValues(Calendar[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countDTSeconds(values[i]);
+		}
+		return data;
+	}
+
+	static long[] timestampVectorValues(LocalDateTime[] values) {
+		Objects.requireNonNull(values, "values");
+		long[] data = new long[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Long.MIN_VALUE : countMilliseconds(values[i]);
+		}
+		return data;
+	}
+
+	static long[] timestampVectorValues(Calendar[] values) {
+		Objects.requireNonNull(values, "values");
+		long[] data = new long[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Long.MIN_VALUE : countDateMilliseconds(values[i]);
+		}
+		return data;
+	}
+
+	static long[] nanoTimestampVectorValues(LocalDateTime[] values) {
+		Objects.requireNonNull(values, "values");
+		long[] data = new long[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Long.MIN_VALUE : countDTNanoseconds(values[i]);
+		}
+		return data;
+	}
+
+	static int[] timeVectorValues(LocalTime[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countMilliseconds(values[i]);
+		}
+		return data;
+	}
+
+	static int[] timeVectorValues(Calendar[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countMilliseconds(values[i]);
+		}
+		return data;
+	}
+
+	static int[] secondVectorValues(LocalTime[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countSeconds(values[i]);
+		}
+		return data;
+	}
+
+	static int[] secondVectorValues(Calendar[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countSeconds(values[i]);
+		}
+		return data;
+	}
+
+	static int[] minuteVectorValues(LocalTime[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countMinutes(values[i]);
+		}
+		return data;
+	}
+
+	static int[] minuteVectorValues(Calendar[] values) {
+		Objects.requireNonNull(values, "values");
+		int[] data = new int[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Integer.MIN_VALUE : countMinutes(values[i]);
+		}
+		return data;
+	}
+
+	static long[] nanoTimeVectorValues(LocalTime[] values) {
+		Objects.requireNonNull(values, "values");
+		long[] data = new long[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Long.MIN_VALUE : countNanoseconds(values[i]);
+		}
+		return data;
+	}
+
+	static long[] nanoTimeVectorValues(LocalDateTime[] values) {
+		Objects.requireNonNull(values, "values");
+		long[] data = new long[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			data[i] = values[i] == null ? Long.MIN_VALUE : countNanoseconds(values[i].toLocalTime());
+		}
+		return data;
+	}
+
 	public static LocalTime parseTime(int milliseconds){
 		return LocalTime.of(milliseconds/3600000, milliseconds/60000 % 60, milliseconds/1000 %60, milliseconds % 1000 *1000000);
 	}

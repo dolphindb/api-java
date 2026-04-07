@@ -27,6 +27,14 @@ public class BasicMonthVector extends BasicIntVector{
 		super(list);
 	}
 
+	public BasicMonthVector(YearMonth[] array) {
+		this(Utils.monthVectorValues(array), false);
+	}
+
+	public BasicMonthVector(Calendar[] array) {
+		this(Utils.monthVectorValues(array), false);
+	}
+
 	public BasicMonthVector(int[] array) {
 		super(array);
 	}
