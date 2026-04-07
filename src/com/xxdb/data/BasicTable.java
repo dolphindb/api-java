@@ -85,6 +85,22 @@ public class BasicTable extends AbstractEntity implements Table{
         this.setColumns(cols);
     }
 
+	public BasicTable(final List<String> colNames, final List<?> cols, final DATA_TYPE[] colTypes) {
+		this(colNames, cols, colTypes, null);
+	}
+
+	public BasicTable(final List<String> colNames, final List<?> cols, final DATA_TYPE[] colTypes, final int[] colExtraParams) {
+		this(colNames, Utils.convertColumns(colNames, cols, colTypes, colExtraParams));
+	}
+
+	public BasicTable(final List<String> colNames, final Object[] cols, final DATA_TYPE[] colTypes) {
+		this(colNames, Arrays.asList(cols), colTypes);
+	}
+
+	public BasicTable(final List<String> colNames, final Object[] cols, final DATA_TYPE[] colTypes, final int[] colExtraParams) {
+		this(colNames, Arrays.asList(cols), colTypes, colExtraParams);
+	}
+
 	public void setColumnCompressTypes(int[] colCompresses) {
 		if (colCompresses!=null && colCompresses.length != columns.size()) {
 			throw new RuntimeException("Compress type size must match column size "+ columns.size()+".");

@@ -1,11 +1,14 @@
 package com.xxdb.data;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.time.*;
 import java.util.*;
+import com.xxdb.io.Double2;
+import com.xxdb.io.Long2;
 import com.xxdb.data.Entity.DATA_CATEGORY;
 import com.xxdb.data.Entity.DATA_FORM;
 import com.xxdb.data.Entity.DATA_TYPE;
@@ -753,5 +756,534 @@ public class Utils {
 		}
 
 		return BasicEntityFactory.instance().createVector(type, size, capacity, scale);
+	}
+
+	static int[] createDefaultExtraParams(final int size) {
+		int[] extraParams = new int[size];
+		Arrays.fill(extraParams, -1);
+		return extraParams;
+	}
+
+	static List<Vector> convertColumns(final List<String> colNames, final List<?> cols, final DATA_TYPE[] colTypes, final int[] colExtraParams) {
+		if (colNames.size() != cols.size()) {
+			throw new Error("The length of column name and column data is unequal.");
+		}
+
+		boolean hasVectorColumn = false;
+		boolean hasJavaColumn = false;
+		for (int i = 0; i < cols.size(); ++i) {
+			Object col = cols.get(i);
+			if (col == null) {
+				throw new IllegalArgumentException("Column [" + colNames.get(i) + "] is null.");
+			}
+			if (col instanceof Vector) {
+				hasVectorColumn = true;
+			} else {
+				hasJavaColumn = true;
+			}
+			if (hasVectorColumn && hasJavaColumn) {
+				throw new IllegalArgumentException("The new BasicTable constructors only support all-Java columns or all-Vector columns.");
+			}
+		}
+
+		if (hasVectorColumn) {
+			return validateVectorColumns(colNames, cols, colTypes, colExtraParams);
+		}
+		return convertJavaColumns(colNames, cols, colTypes, colExtraParams);
+	}
+
+	private static List<Vector> validateVectorColumns(final List<String> colNames, final List<?> cols, final DATA_TYPE[] colTypes, final int[] colExtraParams) {
+		if (colTypes != null && colNames.size() != colTypes.length) {
+			throw new Error("The lengths of column names, column data, and column types must be equal.");
+		}
+		if (colExtraParams != null && colNames.size() != colExtraParams.length) {
+			throw new Error("The lengths of column names, column data, and column extra params must be equal.");
+		}
+
+		List<Vector> vectors = new ArrayList<Vector>(cols.size());
+		for (int i = 0; i < cols.size(); ++i) {
+			DATA_TYPE colType = colTypes == null ? null : colTypes[i];
+			int extraParam = colExtraParams == null ? -1 : colExtraParams[i];
+			vectors.add(validateVectorType(colNames.get(i), colType, extraParam, (Vector) cols.get(i)));
+		}
+		return vectors;
+	}
+
+	private static List<Vector> convertJavaColumns(final List<String> colNames, final List<?> cols, final DATA_TYPE[] colTypes, final int[] colExtraParams) {
+		if (colTypes == null) {
+			throw new IllegalArgumentException("Column types must be specified when using Java-native columns.");
+		}
+		if (colNames.size() != colTypes.length) {
+			throw new Error("The lengths of column names, column data, and column types must be equal.");
+		}
+		int[] resolvedExtraParams = colExtraParams;
+		if (resolvedExtraParams == null) {
+			resolvedExtraParams = createDefaultExtraParams(colTypes.length);
+		} else if (colNames.size() != resolvedExtraParams.length) {
+			throw new Error("The lengths of column names, column data, column types, and column extra params must be equal.");
+		}
+
+		List<Vector> vectors = new ArrayList<Vector>(cols.size());
+		for (int i = 0; i < cols.size(); ++i) {
+			DATA_TYPE colType = colTypes[i];
+			if (colType == null) {
+				throw new IllegalArgumentException("Column [" + colNames.get(i) + "] type must be specified when using Java-native columns.");
+			}
+			vectors.add(convertJavaColumn(colNames.get(i), colType, resolvedExtraParams[i], cols.get(i)));
+		}
+		return vectors;
+	}
+
+	private static Vector convertJavaColumn(final String colName, final DATA_TYPE colType, final int extraParam, final Object col) {
+		Vector fastVector = tryCreateFastVector(colType, extraParam, col);
+		if (fastVector != null) {
+			return fastVector;
+		}
+		if (isArrayDataType(colType)) {
+			if (col instanceof Collection<?>) {
+				return convertCollectionColumn(colName, colType, extraParam, (Collection<?>) col);
+			}
+			if (col instanceof Object[]) {
+				return convertCollectionColumn(colName, colType, extraParam, Arrays.asList((Object[]) col));
+			}
+			return convertScalarColumn(colName, colType, extraParam, col);
+		}
+		if (col instanceof Collection<?>) {
+			return convertCollectionColumn(colName, colType, extraParam, (Collection<?>) col);
+		}
+		if (col instanceof Object[]) {
+			return convertCollectionColumn(colName, colType, extraParam, Arrays.asList((Object[]) col));
+		}
+		if (isPrimitiveArrayColumn(col)) {
+			return convertPrimitiveArrayColumn(colName, colType, extraParam, col);
+		}
+		return convertScalarColumn(colName, colType, extraParam, col);
+	}
+
+	private static Vector convertPrimitiveArrayColumn(final String colName, final DATA_TYPE colType, final int extraParam, final Object values) {
+		if (colType == DATA_TYPE.DT_BLOB && values instanceof byte[]) {
+			return convertScalarColumn(colName, colType, extraParam, values);
+		}
+		try {
+			Entity vector = BasicEntityFactory.createScalar(toColumnArrayType(colType), values, extraParam);
+			if (!(vector instanceof Vector)) {
+				throw new IllegalArgumentException("Column [" + colName + "] could not be converted to a vector.");
+			}
+			return validateVectorType(colName, colType, extraParam, (Vector) vector);
+		} catch (Exception ex) {
+			throw new IllegalArgumentException("Failed to convert column [" + colName + "] to " + colType.getName() + ": " + ex.getMessage(), ex);
+		}
+	}
+
+	private static Vector convertCollectionColumn(final String colName, final DATA_TYPE colType, final int extraParam, final Collection<?> values) {
+		int resolvedExtraParam = resolveExtraParam(colType, extraParam, findFirstNonNullValue(values));
+		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(colType, values.size(), resolvedExtraParam);
+		int rowIndex = 0;
+		for (Object value : values) {
+			setColumnValue(colName, vector, colType, resolvedExtraParam, rowIndex, value);
+			rowIndex++;
+		}
+		return vector;
+	}
+
+	private static Vector convertScalarColumn(final String colName, final DATA_TYPE colType, final int extraParam, final Object value) {
+		int resolvedExtraParam = resolveExtraParam(colType, extraParam, value);
+		Vector vector = BasicEntityFactory.instance().createVectorWithDefaultValue(colType, 1, resolvedExtraParam);
+		setColumnValue(colName, vector, colType, resolvedExtraParam, 0, value);
+		return vector;
+	}
+
+	private static void setColumnValue(final String colName, final Vector vector, final DATA_TYPE colType, final int extraParam, final int rowIndex, final Object value) {
+		try {
+			vector.set(rowIndex, toColumnEntity(colType, extraParam, value));
+		} catch (Exception ex) {
+			throw new IllegalArgumentException("Failed to convert row " + rowIndex + " of column [" + colName + "] to " + colType.getName() + ": " + ex.getMessage(), ex);
+		}
+	}
+
+	private static Entity toColumnEntity(final DATA_TYPE colType, final int extraParam, final Object value) throws Exception {
+		if (value == null) {
+			return null;
+		}
+		if (colType == DATA_TYPE.DT_MONTH && value instanceof YearMonth) {
+			return new BasicMonth((YearMonth) value);
+		}
+		if (colType == DATA_TYPE.DT_BLOB && value instanceof byte[]) {
+			return new BasicString((byte[]) value, true);
+		}
+		if (isArrayDataType(colType)) {
+			if (value instanceof Entity) {
+				Entity entity = (Entity) value;
+				if (!entity.isVector()) {
+					throw new IllegalArgumentException("Array-typed column values must be vectors.");
+				}
+				return entity;
+			}
+			return BasicEntityFactory.createScalar(colType, value, extraParam);
+		}
+		if (value instanceof Entity && !((Entity) value).isScalar()) {
+			throw new IllegalArgumentException("Only scalar Entity values are supported in Java columns.");
+		}
+		return BasicEntityFactory.createScalar(colType, value, extraParam);
+	}
+
+	private static Vector validateVectorType(final String colName, final DATA_TYPE colType, final int extraParam, final Vector vector) {
+		DATA_TYPE resolvedType = vector.getDataType();
+		if (colType != null && resolvedType != colType) {
+			throw new IllegalArgumentException("Column [" + colName + "] expected type " + colType.getName() + ", but got " + vector.getDataType().getName() + ".");
+		}
+		if (colType != null) {
+			resolvedType = colType;
+		}
+		if (extraParam >= 0 && isDecimalType(resolvedType) && vector instanceof AbstractVector) {
+			int vectorExtraParam = ((AbstractVector) vector).getExtraParamForType();
+			if (vectorExtraParam != extraParam) {
+				throw new IllegalArgumentException("Column [" + colName + "] expected extra param " + extraParam + ", but got " + vectorExtraParam + ".");
+			}
+		}
+		return vector;
+	}
+
+	private static Vector tryCreateFastVector(final DATA_TYPE colType, final int declaredExtraParam, final Object col) {
+		int extraParam = resolveExtraParam(colType, declaredExtraParam, getSampleValue(col));
+		if (col instanceof boolean[]) {
+			if (colType == DATA_TYPE.DT_BOOL) {
+				return new BasicBooleanVector((boolean[]) col);
+			}
+			return null;
+		}
+		if (col instanceof byte[]) {
+			switch (colType) {
+				case DT_BOOL:
+					return new BasicBooleanVector((byte[]) col);
+				case DT_BYTE:
+					return new BasicByteVector((byte[]) col);
+				default:
+					return null;
+			}
+		}
+		if (col instanceof short[]) {
+			if (colType == DATA_TYPE.DT_SHORT) {
+				return new BasicShortVector((short[]) col);
+			}
+			return null;
+		}
+		if (col instanceof int[]) {
+			switch (colType) {
+				case DT_INT:
+					return new BasicIntVector((int[]) col);
+				case DT_DATE:
+					return new BasicDateVector((int[]) col);
+				case DT_MONTH:
+					return new BasicMonthVector((int[]) col);
+				case DT_TIME:
+					return new BasicTimeVector((int[]) col);
+				case DT_MINUTE:
+					return new BasicMinuteVector((int[]) col);
+				case DT_SECOND:
+					return new BasicSecondVector((int[]) col);
+				case DT_DATETIME:
+					return new BasicDateTimeVector((int[]) col);
+				case DT_DATEHOUR:
+					return new BasicDateHourVector((int[]) col);
+				case DT_DECIMAL32:
+					return new BasicDecimal32Vector((int[]) col, extraParam);
+				default:
+					return null;
+			}
+		}
+		if (col instanceof long[]) {
+			switch (colType) {
+				case DT_LONG:
+					return new BasicLongVector((long[]) col);
+				case DT_NANOTIME:
+					return new BasicNanoTimeVector((long[]) col);
+				case DT_TIMESTAMP:
+					return new BasicTimestampVector((long[]) col);
+				case DT_NANOTIMESTAMP:
+					return new BasicNanoTimestampVector((long[]) col);
+				case DT_DECIMAL64:
+					return new BasicDecimal64Vector((long[]) col, extraParam);
+				default:
+					return null;
+			}
+		}
+		if (col instanceof float[]) {
+			if (colType == DATA_TYPE.DT_FLOAT) {
+				return new BasicFloatVector((float[]) col);
+			}
+			return null;
+		}
+		if (col instanceof double[]) {
+			switch (colType) {
+				case DT_DOUBLE:
+					return new BasicDoubleVector((double[]) col);
+				case DT_DECIMAL32:
+					return new BasicDecimal32Vector((double[]) col, extraParam);
+				case DT_DECIMAL64:
+					return new BasicDecimal64Vector((double[]) col, extraParam);
+				default:
+					return null;
+			}
+		}
+		if (col instanceof String[]) {
+			switch (colType) {
+				case DT_STRING:
+					return new BasicStringVector((String[]) col);
+				case DT_SYMBOL:
+					return new BasicSymbolVector(Arrays.asList((String[]) col));
+				case DT_DECIMAL32:
+					return new BasicDecimal32Vector((String[]) col, extraParam);
+				case DT_DECIMAL64:
+					return new BasicDecimal64Vector((String[]) col, extraParam);
+				case DT_DECIMAL128:
+					return new BasicDecimal128Vector((String[]) col, extraParam);
+				default:
+					return null;
+			}
+		}
+		if (col instanceof byte[][]) {
+			if (colType == DATA_TYPE.DT_BLOB) {
+				return new BasicStringVector((byte[][]) col);
+			}
+			return null;
+		}
+		if (col instanceof Long2[]) {
+			switch (colType) {
+				case DT_INT128:
+					return new BasicInt128Vector((Long2[]) col);
+				case DT_UUID:
+					return new BasicUuidVector((Long2[]) col);
+				case DT_IPADDR:
+					return new BasicIPAddrVector((Long2[]) col);
+				default:
+					return null;
+			}
+		}
+		if (col instanceof Double2[]) {
+			switch (colType) {
+				case DT_POINT:
+					return new BasicPointVector((Double2[]) col);
+				case DT_COMPLEX:
+					return new BasicComplexVector((Double2[]) col);
+				default:
+					return null;
+			}
+		}
+		if (col instanceof BigInteger[]) {
+			if (colType == DATA_TYPE.DT_DECIMAL128) {
+				return new BasicDecimal128Vector((BigInteger[]) col, extraParam);
+			}
+			return null;
+		}
+		if (col instanceof List<?>) {
+			return tryCreateFastVectorFromList(colType, extraParam, (List<?>) col);
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Vector tryCreateFastVectorFromList(final DATA_TYPE colType, final int extraParam, final List<?> values) {
+		Object sample = findFirstNonNullValue(values);
+		if (sample == null) {
+			return null;
+		}
+		if (isArrayDataType(colType) && sample instanceof Vector) {
+			DATA_TYPE inferredType = DATA_TYPE.valueOf(((Vector) sample).getDataType().getValue() + 64);
+			if (inferredType != colType) {
+				throw new IllegalArgumentException("Array column expected type " + colType.getName() + ", but got " + inferredType.getName() + ".");
+			}
+			if (extraParam >= 0 && isDecimalType(colType) && sample instanceof AbstractVector
+					&& ((AbstractVector) sample).getExtraParamForType() != extraParam) {
+				throw new IllegalArgumentException("Array column expected extra param " + extraParam + ", but got " + ((AbstractVector) sample).getExtraParamForType() + ".");
+			}
+			try {
+				return new BasicArrayVector((List<Vector>) values);
+			} catch (Exception ex) {
+				throw new IllegalArgumentException("Failed to convert array column: " + ex.getMessage(), ex);
+			}
+		}
+		switch (colType) {
+			case DT_BOOL:
+				return sample instanceof Byte ? new BasicBooleanVector((List<Byte>) values) : null;
+			case DT_BYTE:
+				return sample instanceof Byte ? new BasicByteVector((List<Byte>) values) : null;
+			case DT_SHORT:
+				return sample instanceof Short ? new BasicShortVector((List<Short>) values) : null;
+			case DT_INT:
+				return sample instanceof Integer ? new BasicIntVector((List<Integer>) values) : null;
+			case DT_LONG:
+				return sample instanceof Long ? new BasicLongVector((List<Long>) values) : null;
+			case DT_FLOAT:
+				return sample instanceof Float ? new BasicFloatVector((List<Float>) values) : null;
+			case DT_DOUBLE:
+				return sample instanceof Double ? new BasicDoubleVector((List<Double>) values) : null;
+			case DT_DATE:
+				return sample instanceof Integer ? new BasicDateVector((List<Integer>) values) : null;
+			case DT_MONTH:
+				return sample instanceof Integer ? new BasicMonthVector((List<Integer>) values) : null;
+			case DT_TIME:
+				return sample instanceof Integer ? new BasicTimeVector((List<Integer>) values) : null;
+			case DT_MINUTE:
+				return sample instanceof Integer ? new BasicMinuteVector((List<Integer>) values) : null;
+			case DT_SECOND:
+				return sample instanceof Integer ? new BasicSecondVector((List<Integer>) values) : null;
+			case DT_DATETIME:
+				return sample instanceof Integer ? new BasicDateTimeVector((List<Integer>) values) : null;
+			case DT_DATEHOUR:
+				return sample instanceof Integer ? new BasicDateHourVector((List<Integer>) values) : null;
+			case DT_NANOTIME:
+				return sample instanceof Long ? new BasicNanoTimeVector((List<Long>) values) : null;
+			case DT_TIMESTAMP:
+				return sample instanceof Long ? new BasicTimestampVector((List<Long>) values) : null;
+			case DT_NANOTIMESTAMP:
+				return sample instanceof Long ? new BasicNanoTimestampVector((List<Long>) values) : null;
+			case DT_STRING:
+				return sample instanceof String ? new BasicStringVector((List<String>) values) : null;
+			case DT_SYMBOL:
+				return sample instanceof String ? new BasicSymbolVector((List<String>) values) : null;
+			case DT_INT128:
+				return sample instanceof Long2 ? new BasicInt128Vector((List<Long2>) values) : null;
+			case DT_UUID:
+				return sample instanceof Long2 ? new BasicUuidVector((List<Long2>) values) : null;
+			case DT_IPADDR:
+				return sample instanceof Long2 ? new BasicIPAddrVector((List<Long2>) values) : null;
+			case DT_POINT:
+				return sample instanceof Double2 ? new BasicPointVector((List<Double2>) values) : null;
+			case DT_COMPLEX:
+				return sample instanceof Double2 ? new BasicComplexVector((List<Double2>) values) : null;
+			case DT_DECIMAL32:
+				return sample instanceof String ? new BasicDecimal32Vector((List<String>) values, extraParam) : null;
+			case DT_DECIMAL64:
+				return sample instanceof String ? new BasicDecimal64Vector((List<String>) values, extraParam) : null;
+			case DT_DECIMAL128:
+				return sample instanceof String ? new BasicDecimal128Vector((List<String>) values, extraParam) : null;
+			default:
+				return null;
+		}
+	}
+
+	private static int resolveExtraParam(final DATA_TYPE colType, final int declaredExtraParam, final Object sampleValue) {
+		if (declaredExtraParam >= 0) {
+			return declaredExtraParam;
+		}
+		if (sampleValue instanceof Scalar) {
+			return ((Scalar) sampleValue).getScale();
+		}
+		if (isDecimalType(colType)) {
+			throw new IllegalArgumentException("Column type " + colType.getName() + " requires extra parameters such as scale.");
+		}
+		return -1;
+	}
+
+	private static Object getSampleValue(final Object col) {
+		if (col instanceof Collection<?>) {
+			return findFirstNonNullValue((Collection<?>) col);
+		}
+		if (col instanceof Object[]) {
+			for (Object value : (Object[]) col) {
+				if (value != null) {
+					return value;
+				}
+			}
+			return null;
+		}
+		return col;
+	}
+
+	private static boolean isPrimitiveArrayColumn(final Object value) {
+		return value instanceof boolean[]
+				|| value instanceof byte[]
+				|| value instanceof char[]
+				|| value instanceof short[]
+				|| value instanceof int[]
+				|| value instanceof long[]
+				|| value instanceof float[]
+				|| value instanceof double[];
+	}
+
+	private static boolean isArrayDataType(final DATA_TYPE colType) {
+		return colType.getValue() >= DATA_TYPE.DT_BOOL_ARRAY.getValue();
+	}
+
+	private static boolean isDecimalType(final DATA_TYPE colType) {
+		return colType == DATA_TYPE.DT_DECIMAL32
+				|| colType == DATA_TYPE.DT_DECIMAL64
+				|| colType == DATA_TYPE.DT_DECIMAL128
+				|| colType == DATA_TYPE.DT_DECIMAL32_ARRAY
+				|| colType == DATA_TYPE.DT_DECIMAL64_ARRAY
+				|| colType == DATA_TYPE.DT_DECIMAL128_ARRAY;
+	}
+
+	private static DATA_TYPE toColumnArrayType(final DATA_TYPE colType) {
+		switch (colType) {
+			case DT_BOOL:
+				return DATA_TYPE.DT_BOOL_ARRAY;
+			case DT_BYTE:
+				return DATA_TYPE.DT_BYTE_ARRAY;
+			case DT_SHORT:
+				return DATA_TYPE.DT_SHORT_ARRAY;
+			case DT_INT:
+				return DATA_TYPE.DT_INT_ARRAY;
+			case DT_LONG:
+				return DATA_TYPE.DT_LONG_ARRAY;
+			case DT_DATE:
+				return DATA_TYPE.DT_DATE_ARRAY;
+			case DT_MONTH:
+				return DATA_TYPE.DT_MONTH_ARRAY;
+			case DT_TIME:
+				return DATA_TYPE.DT_TIME_ARRAY;
+			case DT_MINUTE:
+				return DATA_TYPE.DT_MINUTE_ARRAY;
+			case DT_SECOND:
+				return DATA_TYPE.DT_SECOND_ARRAY;
+			case DT_DATETIME:
+				return DATA_TYPE.DT_DATETIME_ARRAY;
+			case DT_TIMESTAMP:
+				return DATA_TYPE.DT_TIMESTAMP_ARRAY;
+			case DT_NANOTIME:
+				return DATA_TYPE.DT_NANOTIME_ARRAY;
+			case DT_NANOTIMESTAMP:
+				return DATA_TYPE.DT_NANOTIMESTAMP_ARRAY;
+			case DT_FLOAT:
+				return DATA_TYPE.DT_FLOAT_ARRAY;
+			case DT_DOUBLE:
+				return DATA_TYPE.DT_DOUBLE_ARRAY;
+			case DT_SYMBOL:
+				return DATA_TYPE.DT_SYMBOL_ARRAY;
+			case DT_STRING:
+				return DATA_TYPE.DT_STRING_ARRAY;
+			case DT_UUID:
+				return DATA_TYPE.DT_UUID_ARRAY;
+			case DT_DATEHOUR:
+				return DATA_TYPE.DT_DATEHOUR_ARRAY;
+			case DT_DATEMINUTE:
+				return DATA_TYPE.DT_DATEMINUTE_ARRAY;
+			case DT_IPADDR:
+				return DATA_TYPE.DT_IPADDR_ARRAY;
+			case DT_INT128:
+				return DATA_TYPE.DT_INT128_ARRAY;
+			case DT_COMPLEX:
+				return DATA_TYPE.DT_COMPLEX_ARRAY;
+			case DT_POINT:
+				return DATA_TYPE.DT_POINT_ARRAY;
+			case DT_DECIMAL32:
+				return DATA_TYPE.DT_DECIMAL32_ARRAY;
+			case DT_DECIMAL64:
+				return DATA_TYPE.DT_DECIMAL64_ARRAY;
+			case DT_DECIMAL128:
+				return DATA_TYPE.DT_DECIMAL128_ARRAY;
+			default:
+				throw new IllegalArgumentException("Column type " + colType.getName() + " does not support direct array conversion.");
+		}
+	}
+
+	private static Object findFirstNonNullValue(final Collection<?> values) {
+		for (Object value : values) {
+			if (value != null) {
+				return value;
+			}
+		}
+		return null;
 	}
 }
