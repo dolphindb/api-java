@@ -22,6 +22,9 @@ public class BasicTable extends AbstractEntity implements Table{
 
 	private static final Logger log = LoggerFactory.getLogger(BasicTable.class);
 
+	public BasicTable() {
+	}
+
 	public BasicTable(ExtendedDataInput in) throws IOException{
 		int rows = in.readInt();
 		int cols = in.readInt();
@@ -392,12 +395,30 @@ public class BasicTable extends AbstractEntity implements Table{
 		if (colNames.contains(colName))
 			throw new RuntimeException("The table already contains column '" + colName + "'.");
 
-		if (Objects.nonNull(this.columns) && Objects.nonNull(this.columns.get(0)) && this.getColumn(0).rows() != col.rows())
+		if (Objects.nonNull(this.columns) && !this.columns.isEmpty() && Objects.nonNull(this.columns.get(0)) && this.getColumn(0).rows() != col.rows())
 			throw new RuntimeException("The length of column " + colName + "  must be the same as the first column length: " + this.getColumn(0).rows() +".");
-
+		
 		colNames.add(colName);
 		colNamesIndex.put(colName, colNamesIndex.size());
 		columns.add(col);
+		if (colCompresses != null) {
+			colCompresses = Arrays.copyOf(colCompresses, colCompresses.length + 1);
+			colCompresses[colCompresses.length - 1] = Vector.COMPRESS_LZ4;
+		}
+	}
+
+	public void addColumn(String colName, List<?> values) {
+		if (Objects.isNull(colName) || Objects.isNull(values))
+			throw new RuntimeException("The param 'colName' or 'col' in table cannot be null.");
+
+		addColumn(colName, Utils.inferAndConvertJavaColumn(colName, values));
+	}
+
+	public void addColumn(String colName, Object[] values) {
+		if (Objects.isNull(colName) || Objects.isNull(values))
+			throw new RuntimeException("The param 'colName' or 'col' in table cannot be null.");
+
+		addColumn(colName, Utils.inferAndConvertJavaColumn(colName, values));
 	}
 
 	/**

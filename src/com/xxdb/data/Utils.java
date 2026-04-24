@@ -935,6 +935,16 @@ public class Utils {
 		return extraParams;
 	}
 
+	static Vector inferAndConvertJavaColumn(final String colName, final List<?> values) {
+		DATA_TYPE colType = inferJavaColumnType(colName, values);
+		return convertJavaColumn(colName, colType, -1, values);
+	}
+
+	static Vector inferAndConvertJavaColumn(final String colName, final Object[] values) {
+		DATA_TYPE colType = inferJavaColumnType(colName, values);
+		return convertJavaColumn(colName, colType, -1, normalizeJavaArrayColumnValues(values));
+	}
+
 	static List<Vector> convertColumns(final List<String> colNames, final List<?> cols, final DATA_TYPE[] colTypes, final int[] colExtraParams) {
 		if (colNames.size() != cols.size()) {
 			throw new Error("The length of column name and column data is unequal.");
@@ -1003,6 +1013,135 @@ public class Utils {
 			vectors.add(convertJavaColumn(colNames.get(i), colType, resolvedExtraParams[i], cols.get(i)));
 		}
 		return vectors;
+	}
+
+	private static DATA_TYPE inferJavaColumnType(final String colName, final List<?> values) {
+		Object sample = findFirstNonNullValue(values);
+		if (sample == null) {
+			throw new IllegalArgumentException("Column [" + colName + "] type cannot be inferred from an empty or all-null List. Please use addColumn(String, Vector).");
+		}
+
+		DATA_TYPE inferredType = inferJavaColumnTypeFromValue(colName, sample);
+		validateInferredJavaColumnValues(colName, inferredType, values);
+		return inferredType;
+	}
+
+	private static DATA_TYPE inferJavaColumnType(final String colName, final Object[] values) {
+		Class<?> componentType = values.getClass().getComponentType();
+		DATA_TYPE inferredType = null;
+		if (componentType != null && componentType != Object.class) {
+			inferredType = inferJavaColumnTypeFromClass(componentType);
+			if (inferredType == null) {
+				Object sample = getSampleValue(values);
+				if (sample == null) {
+					throw unsupportedJavaInference(colName, componentType);
+				}
+			}
+		}
+
+		if (inferredType == null) {
+			Object sample = getSampleValue(values);
+			if (sample == null) {
+				throw new IllegalArgumentException("Column [" + colName + "] type cannot be inferred from an empty or all-null Object[] column. Please use addColumn(String, Vector).");
+			}
+			inferredType = inferJavaColumnTypeFromValue(colName, sample);
+		}
+
+		validateInferredJavaColumnValues(colName, inferredType, Arrays.asList(values));
+		return inferredType;
+	}
+
+	private static DATA_TYPE inferJavaColumnTypeFromValue(final String colName, final Object value) {
+		DATA_TYPE inferredType = inferJavaColumnTypeFromClass(value.getClass());
+		if (inferredType != null) {
+			return inferredType;
+		}
+		if (value instanceof Vector) {
+			throw new IllegalArgumentException("Column [" + colName + "] does not support automatic type inference for DolphinDB Vector values. Please use addColumn(String, Vector).");
+		}
+		if (value instanceof Entity) {
+			throw new IllegalArgumentException("Column [" + colName + "] does not support automatic type inference for DolphinDB Entity values. Please use addColumn(String, Vector).");
+		}
+		throw unsupportedJavaInference(colName, value.getClass());
+	}
+
+	private static DATA_TYPE inferJavaColumnTypeFromClass(final Class<?> valueClass) {
+		if (valueClass == Boolean.class) {
+			return DATA_TYPE.DT_BOOL;
+		}
+		if (valueClass == Byte.class) {
+			return DATA_TYPE.DT_BYTE;
+		}
+		if (valueClass == Short.class) {
+			return DATA_TYPE.DT_SHORT;
+		}
+		if (valueClass == Integer.class) {
+			return DATA_TYPE.DT_INT;
+		}
+		if (valueClass == Long.class) {
+			return DATA_TYPE.DT_LONG;
+		}
+		if (valueClass == Float.class) {
+			return DATA_TYPE.DT_FLOAT;
+		}
+		if (valueClass == Double.class) {
+			return DATA_TYPE.DT_DOUBLE;
+		}
+		if (valueClass == String.class) {
+			return DATA_TYPE.DT_STRING;
+		}
+		if (valueClass == byte[].class) {
+			return DATA_TYPE.DT_BLOB;
+		}
+		if (YearMonth.class.isAssignableFrom(valueClass)) {
+			return DATA_TYPE.DT_MONTH;
+		}
+		if (LocalDate.class.isAssignableFrom(valueClass)) {
+			return DATA_TYPE.DT_DATE;
+		}
+		if (LocalTime.class.isAssignableFrom(valueClass)) {
+			return DATA_TYPE.DT_NANOTIME;
+		}
+		if (LocalDateTime.class.isAssignableFrom(valueClass)) {
+			return DATA_TYPE.DT_NANOTIMESTAMP;
+		}
+		if (Calendar.class.isAssignableFrom(valueClass)) {
+			return DATA_TYPE.DT_TIMESTAMP;
+		}
+		if (Date.class.isAssignableFrom(valueClass)) {
+			return DATA_TYPE.DT_TIMESTAMP;
+		}
+		return null;
+	}
+
+	private static void validateInferredJavaColumnValues(final String colName, final DATA_TYPE inferredType, final Collection<?> values) {
+		for (Object value : values) {
+			if (value == null) {
+				continue;
+			}
+			DATA_TYPE currentType = inferJavaColumnTypeFromValue(colName, value);
+			if (currentType != inferredType) {
+				throw new IllegalArgumentException("Column [" + colName + "] contains values with inconsistent Java types for automatic inference.");
+			}
+		}
+	}
+
+	private static Object normalizeJavaArrayColumnValues(final Object[] values) {
+		Class<?> componentType = values.getClass().getComponentType();
+		if (componentType == Boolean.class
+				|| componentType == Byte.class
+				|| componentType == Short.class
+				|| componentType == Integer.class
+				|| componentType == Long.class
+				|| componentType == Float.class
+				|| componentType == Double.class) {
+			return Arrays.asList(values);
+		}
+		return values;
+	}
+
+	private static IllegalArgumentException unsupportedJavaInference(final String colName, final Class<?> valueClass) {
+		return new IllegalArgumentException("Column [" + colName + "] does not support automatic type inference for Java type " + valueClass.getName() + ". Please use addColumn(String, Vector).");
 	}
 
 	private static Vector convertJavaColumn(final String colName, final DATA_TYPE colType, final int extraParam, final Object col) {
@@ -1213,6 +1352,70 @@ public class Utils {
 					return null;
 			}
 		}
+		if (col instanceof LocalDate[]) {
+			if (colType == DATA_TYPE.DT_DATE) {
+				return new BasicDateVector((LocalDate[]) col);
+			}
+			return null;
+		}
+		if (col instanceof YearMonth[]) {
+			if (colType == DATA_TYPE.DT_MONTH) {
+				return new BasicMonthVector((YearMonth[]) col);
+			}
+			return null;
+		}
+		if (col instanceof LocalTime[]) {
+			switch (colType) {
+				case DT_TIME:
+					return new BasicTimeVector((LocalTime[]) col);
+				case DT_SECOND:
+					return new BasicSecondVector((LocalTime[]) col);
+				case DT_MINUTE:
+					return new BasicMinuteVector((LocalTime[]) col);
+				case DT_NANOTIME:
+					return new BasicNanoTimeVector((LocalTime[]) col);
+				default:
+					return null;
+			}
+		}
+		if (col instanceof LocalDateTime[]) {
+			switch (colType) {
+				case DT_DATETIME:
+					return new BasicDateTimeVector((LocalDateTime[]) col);
+				case DT_DATEHOUR:
+					return new BasicDateHourVector((LocalDateTime[]) col);
+				case DT_TIMESTAMP:
+					return new BasicTimestampVector((LocalDateTime[]) col);
+				case DT_NANOTIME:
+					return new BasicNanoTimeVector((LocalDateTime[]) col);
+				case DT_NANOTIMESTAMP:
+					return new BasicNanoTimestampVector((LocalDateTime[]) col);
+				default:
+					return null;
+			}
+		}
+		if (col instanceof Calendar[]) {
+			switch (colType) {
+				case DT_DATE:
+					return new BasicDateVector((Calendar[]) col);
+				case DT_MONTH:
+					return new BasicMonthVector((Calendar[]) col);
+				case DT_TIME:
+					return new BasicTimeVector((Calendar[]) col);
+				case DT_SECOND:
+					return new BasicSecondVector((Calendar[]) col);
+				case DT_MINUTE:
+					return new BasicMinuteVector((Calendar[]) col);
+				case DT_DATETIME:
+					return new BasicDateTimeVector((Calendar[]) col);
+				case DT_DATEHOUR:
+					return new BasicDateHourVector((Calendar[]) col);
+				case DT_TIMESTAMP:
+					return new BasicTimestampVector((Calendar[]) col);
+				default:
+					return null;
+			}
+		}
 		if (col instanceof byte[][]) {
 			if (colType == DATA_TYPE.DT_BLOB) {
 				return new BasicStringVector((byte[][]) col);
@@ -1276,7 +1479,13 @@ public class Utils {
 		}
 		switch (colType) {
 			case DT_BOOL:
-				return sample instanceof Byte ? new BasicBooleanVector((List<Byte>) values) : null;
+				if (sample instanceof Byte) {
+					return new BasicBooleanVector((List<Byte>) values);
+				}
+				if (sample instanceof Boolean) {
+					return new BasicBooleanVector(booleanListValues((List<Boolean>) values));
+				}
+				return null;
 			case DT_BYTE:
 				return sample instanceof Byte ? new BasicByteVector((List<Byte>) values) : null;
 			case DT_SHORT:
@@ -1456,5 +1665,14 @@ public class Utils {
 			}
 		}
 		return null;
+	}
+
+	private static byte[] booleanListValues(final List<Boolean> values) {
+		byte[] data = new byte[values.size()];
+		for (int i = 0; i < values.size(); ++i) {
+			Boolean value = values.get(i);
+			data[i] = value == null ? Byte.MIN_VALUE : (value ? (byte) 1 : (byte) 0);
+		}
+		return data;
 	}
 }
