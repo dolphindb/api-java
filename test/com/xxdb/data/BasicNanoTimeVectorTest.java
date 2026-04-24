@@ -35,6 +35,46 @@ public class BasicNanoTimeVectorTest {
     }
 
     @Test
+    public void test_BasicNanoTimeVector_LocalTime() throws Exception{
+        LocalTime current = LocalTime.now();
+        BasicNanoTimeVector v = new BasicNanoTimeVector(new LocalTime[]{
+                LocalTime.of(0, 0, 1, 1),
+                LocalTime.of(23, 59, 59, 999999999),
+                current
+        });
+        assertEquals(3, v.rows());
+        assertEquals("00:00:00.000000001", v.getNanoTime(0).toString());
+        assertEquals("23:59:59.999999999", v.getNanoTime(1).toString());
+        assertEquals(current.toString(), v.getNanoTime(2).toString());
+    }
+
+    @Test
+    public void test_BasicNanoTimeVector_LocalDateTime() throws Exception{
+        LocalDateTime current = LocalDateTime.now();
+        BasicNanoTimeVector v = new BasicNanoTimeVector(new LocalDateTime[]{
+                LocalDateTime.of(1969, 12, 31, 0, 0, 0, 1),
+                LocalDateTime.of(2025, 1, 1, 12, 0, 0, 123456789),
+                LocalDateTime.of(2040, 1, 1, 23, 59, 59, 999999999),
+                current
+        });
+        assertEquals(4, v.rows());
+        assertEquals("00:00:00.000000001", v.getNanoTime(0).toString());
+        assertEquals("12:00:00.123456789", v.getNanoTime(1).toString());
+        assertEquals("23:59:59.999999999", v.getNanoTime(2).toString());
+        assertEquals(current.toLocalTime().toString(), v.getNanoTime(3).toString());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicNanoTimeVector_LocalTime_null(){
+        new BasicNanoTimeVector((LocalTime[]) null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicNanoTimeVector_LocalDateTime_null(){
+        new BasicNanoTimeVector((LocalDateTime[]) null);
+    }
+
+    @Test
     public void test_BasicNanoTimeVector_capacity_lt_size() throws Exception {
         BasicNanoTimeVector bbv = new BasicNanoTimeVector(6,1);
         bbv.set(0, (Object)null);

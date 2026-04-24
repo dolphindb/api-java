@@ -38,6 +38,50 @@ public class BasicMonthVectorTest {
     }
 
     @Test
+    public void test_BasicMonthVector_YearMonth() throws Exception{
+        YearMonth current = YearMonth.now();
+        BasicMonthVector v = new BasicMonthVector(new YearMonth[]{
+                YearMonth.of(1969, 12),
+                YearMonth.of(2025, 1),
+                YearMonth.of(2040, 1),
+                current
+        });
+        assertEquals(4, v.rows());
+        assertEquals("1969-12", v.getMonth(0).toString());
+        assertEquals("2025-01", v.getMonth(1).toString());
+        assertEquals("2040-01", v.getMonth(2).toString());
+        assertEquals(current, v.getMonth(3));
+    }
+
+    @Test
+    public void test_BasicMonthVector_Calendar() throws Exception{
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1969, Calendar.DECEMBER, 1, 0, 0, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Calendar calendar2 = Calendar.getInstance();
+        calendar2.set(2025, Calendar.JANUARY, 1, 0, 0, 0);
+        calendar2.set(Calendar.MILLISECOND, 0);
+        Calendar calendar3 = Calendar.getInstance();
+        calendar3.set(2040, Calendar.JANUARY, 1, 0, 0, 0);
+        calendar3.set(Calendar.MILLISECOND, 0);
+        BasicMonthVector v = new BasicMonthVector(new Calendar[]{calendar, calendar2, calendar3});
+        assertEquals(3, v.rows());
+        assertEquals("1969-12", v.getMonth(0).toString());
+        assertEquals("2025-01", v.getMonth(1).toString());
+        assertEquals("2040-01", v.getMonth(2).toString());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicMonthVector_YearMonth_null(){
+        new BasicMonthVector((YearMonth[]) null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicMonthVector_Calendar_null(){
+        new BasicMonthVector((Calendar[]) null);
+    }
+
+    @Test
     public void test_BasicMonthVector_capacity_lt_size() throws Exception {
         BasicMonthVector bbv = new BasicMonthVector(6,1);
         bbv.set(0, (Object)null);

@@ -8,6 +8,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
+import java.util.Calendar;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
@@ -37,6 +38,56 @@ public class BasicDateTimeVectorTest {
         BasicDateTimeVector bdtv2 = (BasicDateTimeVector) conn.run("dateTimeVector");
         assertEquals(BasicDateTime.class,bdtv2.getElementClass());
         conn.close();
+    }
+
+    @Test
+    public void test_BasicDateTimeVector_LocalDateTime() throws Exception{
+        LocalDateTime current = LocalDateTime.now().withNano(0);
+        LocalDateTime[] array = new LocalDateTime[]{
+                LocalDateTime.of(1969, 12, 31, 23, 59, 59),
+                LocalDateTime.of(2025, 1, 1, 0, 0, 0),
+                LocalDateTime.of(2038, 1, 1, 12, 30, 45),
+                current
+        };
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(array);
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL, bdtv.getDataCategory());
+        assertEquals(4, bdtv.rows());
+        assertEquals("1969-12-31T23:59:59", bdtv.getDateTime(0).toString());
+        assertEquals("2025-01-01T00:00", bdtv.getDateTime(1).toString());
+        assertEquals("2038-01-01T12:30:45", bdtv.getDateTime(2).toString());
+        assertEquals(current, bdtv.getDateTime(3));
+    }
+
+    @Test
+    public void test_BasicDateTimeVector_Calendar() throws Exception{
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1969, Calendar.DECEMBER, 31, 23, 59, 59);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Calendar calendar2 = Calendar.getInstance();
+        calendar2.set(2025, Calendar.JANUARY, 1, 0, 0, 0);
+        calendar2.set(Calendar.MILLISECOND, 0);
+        Calendar calendar3 = Calendar.getInstance();
+        calendar3.set(2038, Calendar.JANUARY, 1, 12, 30, 45);
+        calendar3.set(Calendar.MILLISECOND, 0);
+        Calendar current = Calendar.getInstance();
+        current.setTimeInMillis(System.currentTimeMillis());
+        current.set(Calendar.MILLISECOND, 0);
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(new Calendar[]{calendar, calendar2, calendar3, current});
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL, bdtv.getDataCategory());
+        assertEquals(4, bdtv.rows());
+        assertEquals("1969-12-31T23:59:59", bdtv.getDateTime(0).toString());
+        assertEquals("2025-01-01T00:00", bdtv.getDateTime(1).toString());
+        assertEquals("2038-01-01T12:30:45", bdtv.getDateTime(2).toString());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicDateTimeVector_LocalDateTime_null(){
+        new BasicDateTimeVector((LocalDateTime[]) null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicDateTimeVector_Calendar_null(){
+        new BasicDateTimeVector((Calendar[]) null);
     }
 
     @Test

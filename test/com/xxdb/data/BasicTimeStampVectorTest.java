@@ -27,6 +27,49 @@ public class BasicTimeStampVectorTest {
         assertEquals("2733.11.07T14:06:30.000",btsv.get(2).toString());
     }
 
+    @Test(expected = NullPointerException.class)
+    public void test_BasicTimestampVector_LocalDateTime_null(){
+        new BasicTimestampVector((LocalDateTime[]) null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicTimestampVector_Calendar_null(){
+        new BasicTimestampVector((Calendar[]) null);
+    }
+    @Test
+    public void test_BasicTimestampVector_LocalDateTime() throws Exception{
+        LocalDateTime current = LocalDateTime.now().withNano((LocalDateTime.now().getNano()/1000000)*1000000);
+        BasicTimestampVector v = new BasicTimestampVector(new LocalDateTime[]{
+                LocalDateTime.of(1969, 12, 31, 23, 59, 59, 0),
+                LocalDateTime.of(2025, 1, 1, 0, 0, 0, 123000000),
+                LocalDateTime.of(2040, 1, 1, 23, 59, 59, 999000000),
+                current
+        });
+        assertEquals(4, v.rows());
+        assertEquals("1969-12-31T23:59:59.000", v.getTimestamp(0).toString());
+        assertEquals("2025-01-01T00:00:00.123", v.getTimestamp(1).toString());
+        assertEquals("2040-01-01T23:59:59.999", v.getTimestamp(2).toString());
+        assertEquals(current, v.getTimestamp(3));
+    }
+
+    @Test
+    public void test_BasicTimestampVector_Calendar() throws Exception{
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1969, Calendar.DECEMBER, 31, 23, 59, 59);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Calendar calendar2 = Calendar.getInstance();
+        calendar2.set(2025, Calendar.JANUARY, 1, 0, 0, 0);
+        calendar2.set(Calendar.MILLISECOND, 123);
+        Calendar calendar3 = Calendar.getInstance();
+        calendar3.set(2040, Calendar.JANUARY, 1, 23, 59, 59);
+        calendar3.set(Calendar.MILLISECOND, 999);
+        BasicTimestampVector v = new BasicTimestampVector(new Calendar[]{calendar, calendar2, calendar3});
+        assertEquals(3, v.rows());
+        assertEquals("1969-12-31T23:59:59.000", v.getTimestamp(0).toString());
+        assertEquals("2025-01-01T00:00:00.123", v.getTimestamp(1).toString());
+        assertEquals("2040-01-01T23:59:59.999", v.getTimestamp(2).toString());
+    }
+
     @Test
     public void test_BasicTimestampVector_capacity_lt_size() throws Exception {
         BasicTimestampVector bbv = new BasicTimestampVector(6,1);

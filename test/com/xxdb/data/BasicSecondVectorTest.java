@@ -34,6 +34,48 @@ public class BasicSecondVectorTest {
     }
 
     @Test
+    public void test_BasicSecondVector_LocalTime() throws Exception{
+        LocalTime current = LocalTime.now().withNano(0);
+        BasicSecondVector v = new BasicSecondVector(new LocalTime[]{
+                LocalTime.of(0, 0, 1),
+                LocalTime.of(23, 59, 59),
+                current
+        });
+        assertEquals(3, v.rows());
+        assertEquals("00:00:01", v.getSecond(0).toString());
+        assertEquals("23:59:59", v.getSecond(1).toString());
+        assertEquals(current, v.getSecond(2));
+    }
+
+    @Test
+    public void test_BasicSecondVector_Calendar() throws Exception{
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1969, Calendar.DECEMBER, 31, 0, 0, 1);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Calendar calendar2 = Calendar.getInstance();
+        calendar2.set(2025, Calendar.JANUARY, 1, 23, 59, 59);
+        calendar2.set(Calendar.MILLISECOND, 0);
+        Calendar calendar3 = Calendar.getInstance();
+        calendar3.set(2040, Calendar.JANUARY, 1, 12, 0, 1);
+        calendar3.set(Calendar.MILLISECOND, 0);
+        BasicSecondVector v = new BasicSecondVector(new Calendar[]{calendar, calendar2, calendar3});
+        assertEquals(3, v.rows());
+        assertEquals("00:00:01", v.getSecond(0).toString());
+        assertEquals("23:59:59", v.getSecond(1).toString());
+        assertEquals("12:00:01", v.getSecond(2).toString());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicSecondVector_LocalTime_null(){
+        new BasicSecondVector((LocalTime[]) null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicSecondVector_Calendar_null(){
+        new BasicSecondVector((Calendar[]) null);
+    }
+
+    @Test
     public void test_BasicSecondVector_capacity_lt_size() throws Exception {
         BasicSecondVector bbv = new BasicSecondVector(6,1);
         bbv.set(0, (Object)null);

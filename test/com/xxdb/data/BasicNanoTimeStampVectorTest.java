@@ -34,6 +34,27 @@ public class BasicNanoTimeStampVectorTest {
     }
 
     @Test
+    public void test_BasicNanoTimestampVector_LocalDateTime() throws Exception{
+        LocalDateTime current = LocalDateTime.now();
+        BasicNanoTimestampVector v = new BasicNanoTimestampVector(new LocalDateTime[]{
+                LocalDateTime.of(1969, 12, 31, 23, 59, 59, 1),
+                LocalDateTime.of(2025, 1, 1, 12, 0, 0, 123456789),
+                LocalDateTime.of(2040, 1, 1, 23, 59, 59, 999999999),
+                current
+        });
+        assertEquals(4, v.rows());
+        assertEquals("1969-12-31T23:59:59.000000001", v.getNanoTimestamp(0).toString());
+        assertEquals("2025-01-01T12:00:00.123456789", v.getNanoTimestamp(1).toString());
+        assertEquals("2040-01-01T23:59:59.999999999", v.getNanoTimestamp(2).toString());
+        assertEquals(current, v.getNanoTimestamp(3));
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicNanoTimestampVector_LocalDateTime_null(){
+        new BasicNanoTimestampVector((LocalDateTime[]) null);
+    }
+
+    @Test
     public void test_BasicNanoTimestampVector_capacity_lt_size() throws Exception {
         BasicNanoTimestampVector bbv = new BasicNanoTimestampVector(6,1);
         bbv.set(0, (Object)null);
