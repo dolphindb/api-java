@@ -945,6 +945,27 @@ public class Utils {
 		return convertJavaColumn(colName, colType, -1, normalizeJavaArrayColumnValues(values));
 	}
 
+	static List<Vector> inferAndConvertJavaColumns(final List<String> colNames, final Collection<?> cols) {
+		if (!(cols instanceof List<?>)) {
+			throw new IllegalArgumentException("The auto-inference BasicTable constructor only supports List input for Java columns.");
+		}
+		if (colNames.size() != cols.size()) {
+			throw new Error("The length of column name and column data is unequal.");
+		}
+
+		List<Vector> vectors = new ArrayList<Vector>(cols.size());
+		int index = 0;
+		for (Object col : cols) {
+			vectors.add(inferAndConvertJavaConstructorColumn(colNames.get(index), col));
+			index++;
+		}
+		return vectors;
+	}
+
+	static List<Vector> inferAndConvertJavaColumns(final List<String> colNames, final Object[] cols) {
+		return inferAndConvertJavaColumns(colNames, Arrays.asList(cols));
+	}
+
 	static List<Vector> convertColumns(final List<String> colNames, final List<?> cols, final DATA_TYPE[] colTypes, final int[] colExtraParams) {
 		if (colNames.size() != cols.size()) {
 			throw new Error("The length of column name and column data is unequal.");
@@ -971,6 +992,34 @@ public class Utils {
 			return validateVectorColumns(colNames, cols, colTypes, colExtraParams);
 		}
 		return convertJavaColumns(colNames, cols, colTypes, colExtraParams);
+	}
+
+	private static Vector inferAndConvertJavaConstructorColumn(final String colName, final Object col) {
+		if (col == null) {
+			throw new IllegalArgumentException("Column [" + colName + "] is null.");
+		}
+		if (col instanceof Vector) {
+			throw new IllegalArgumentException("Column [" + colName + "] is a DolphinDB Vector. Please use BasicTable(List<String>, List<Vector>) or the typed constructor.");
+		}
+		if (col instanceof List<?>) {
+			DATA_TYPE colType = inferJavaConstructorColumnType(colName, (List<?>) col);
+			return convertJavaColumn(colName, colType, -1, col);
+		}
+		if (col instanceof Object[]) {
+			DATA_TYPE colType = inferJavaConstructorColumnType(colName, (Object[]) col);
+			return convertJavaColumn(colName, colType, -1, normalizeJavaArrayColumnValues((Object[]) col));
+		}
+		DATA_TYPE primitiveArrayType = inferJavaConstructorTypeFromPrimitiveArray(col);
+		if (primitiveArrayType != null) {
+			return convertJavaColumn(colName, primitiveArrayType, -1, col);
+		}
+		if (isPrimitiveArrayColumn(col)) {
+			throw unsupportedJavaConstructorInference(colName, col.getClass());
+		}
+		if (col instanceof Entity) {
+			throw new IllegalArgumentException("Column [" + colName + "] does not support automatic type inference for DolphinDB Entity values. Please use the typed constructor.");
+		}
+		throw new IllegalArgumentException("Column [" + colName + "] only supports Java List or array values for automatic type inference. Please use the typed constructor.");
 	}
 
 	private static List<Vector> validateVectorColumns(final List<String> colNames, final List<?> cols, final DATA_TYPE[] colTypes, final int[] colExtraParams) {
@@ -1015,6 +1064,42 @@ public class Utils {
 		return vectors;
 	}
 
+	private static DATA_TYPE inferJavaConstructorColumnType(final String colName, final List<?> values) {
+		Object sample = findFirstNonNullValue(values);
+		if (sample == null) {
+			throw new IllegalArgumentException("Column [" + colName + "] type cannot be inferred from an empty or all-null List. Please use the typed constructor.");
+		}
+
+		DATA_TYPE inferredType = inferJavaConstructorTypeFromValue(colName, sample);
+		validateInferredJavaConstructorValues(colName, inferredType, values);
+		return inferredType;
+	}
+
+	private static DATA_TYPE inferJavaConstructorColumnType(final String colName, final Object[] values) {
+		Class<?> componentType = values.getClass().getComponentType();
+		DATA_TYPE inferredType = null;
+		if (componentType != null && componentType != Object.class) {
+			inferredType = inferJavaColumnTypeFromClass(componentType);
+			if (inferredType == null) {
+				Object sample = getSampleValue(values);
+				if (sample == null) {
+					throw unsupportedJavaConstructorInference(colName, componentType);
+				}
+			}
+		}
+
+		if (inferredType == null) {
+			Object sample = getSampleValue(values);
+			if (sample == null) {
+				throw new IllegalArgumentException("Column [" + colName + "] type cannot be inferred from an empty or all-null Object[] column. Please use the typed constructor.");
+			}
+			inferredType = inferJavaConstructorTypeFromValue(colName, sample);
+		}
+
+		validateInferredJavaConstructorValues(colName, inferredType, Arrays.asList(values));
+		return inferredType;
+	}
+
 	private static DATA_TYPE inferJavaColumnType(final String colName, final List<?> values) {
 		Object sample = findFirstNonNullValue(values);
 		if (sample == null) {
@@ -1049,6 +1134,20 @@ public class Utils {
 
 		validateInferredJavaColumnValues(colName, inferredType, Arrays.asList(values));
 		return inferredType;
+	}
+
+	private static DATA_TYPE inferJavaConstructorTypeFromValue(final String colName, final Object value) {
+		DATA_TYPE inferredType = inferJavaColumnTypeFromClass(value.getClass());
+		if (inferredType != null) {
+			return inferredType;
+		}
+		if (value instanceof Vector) {
+			throw new IllegalArgumentException("Column [" + colName + "] is a DolphinDB Vector. Please use BasicTable(List<String>, List<Vector>) or the typed constructor.");
+		}
+		if (value instanceof Entity) {
+			throw new IllegalArgumentException("Column [" + colName + "] does not support automatic type inference for DolphinDB Entity values. Please use the typed constructor.");
+		}
+		throw unsupportedJavaConstructorInference(colName, value.getClass());
 	}
 
 	private static DATA_TYPE inferJavaColumnTypeFromValue(final String colName, final Object value) {
@@ -1114,6 +1213,43 @@ public class Utils {
 		return null;
 	}
 
+	private static DATA_TYPE inferJavaConstructorTypeFromPrimitiveArray(final Object value) {
+		if (value instanceof boolean[]) {
+			return DATA_TYPE.DT_BOOL;
+		}
+		if (value instanceof byte[]) {
+			return DATA_TYPE.DT_BYTE;
+		}
+		if (value instanceof short[]) {
+			return DATA_TYPE.DT_SHORT;
+		}
+		if (value instanceof int[]) {
+			return DATA_TYPE.DT_INT;
+		}
+		if (value instanceof long[]) {
+			return DATA_TYPE.DT_LONG;
+		}
+		if (value instanceof float[]) {
+			return DATA_TYPE.DT_FLOAT;
+		}
+		if (value instanceof double[]) {
+			return DATA_TYPE.DT_DOUBLE;
+		}
+		return null;
+	}
+
+	private static void validateInferredJavaConstructorValues(final String colName, final DATA_TYPE inferredType, final Collection<?> values) {
+		for (Object value : values) {
+			if (value == null) {
+				continue;
+			}
+			DATA_TYPE currentType = inferJavaConstructorTypeFromValue(colName, value);
+			if (currentType != inferredType) {
+				throw new IllegalArgumentException("Column [" + colName + "] contains values with inconsistent Java types for automatic inference.");
+			}
+		}
+	}
+
 	private static void validateInferredJavaColumnValues(final String colName, final DATA_TYPE inferredType, final Collection<?> values) {
 		for (Object value : values) {
 			if (value == null) {
@@ -1142,6 +1278,10 @@ public class Utils {
 
 	private static IllegalArgumentException unsupportedJavaInference(final String colName, final Class<?> valueClass) {
 		return new IllegalArgumentException("Column [" + colName + "] does not support automatic type inference for Java type " + valueClass.getName() + ". Please use addColumn(String, Vector).");
+	}
+
+	private static IllegalArgumentException unsupportedJavaConstructorInference(final String colName, final Class<?> valueClass) {
+		return new IllegalArgumentException("Column [" + colName + "] does not support automatic type inference for Java type " + valueClass.getName() + ". Please use the typed constructor.");
 	}
 
 	private static Vector convertJavaColumn(final String colName, final DATA_TYPE colType, final int extraParam, final Object col) {

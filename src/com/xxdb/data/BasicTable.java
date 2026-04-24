@@ -88,6 +88,18 @@ public class BasicTable extends AbstractEntity implements Table{
         this.setColumns(cols);
     }
 
+	/**
+	 * @param colNames
+	 * @param cols: only supports List input;
+	 */
+	public BasicTable(final List<String> colNames, final Collection<?> cols) {
+		this(colNames, Utils.inferAndConvertJavaColumns(colNames, cols));
+	}
+
+	public BasicTable(final List<String> colNames, final Object[] cols) {
+		this(colNames, Utils.inferAndConvertJavaColumns(colNames, cols));
+	}
+
 	public BasicTable(final List<String> colNames, final List<?> cols, final DATA_TYPE[] colTypes) {
 		this(colNames, cols, colTypes, null);
 	}
