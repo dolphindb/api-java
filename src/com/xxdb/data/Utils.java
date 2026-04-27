@@ -935,6 +935,16 @@ public class Utils {
 		return extraParams;
 	}
 
+	static void validateColumnNames(final List<String> colNames) {
+		if (Objects.isNull(colNames))
+			throw new RuntimeException("The param 'colNames' in table cannot be null.");
+
+		for (String name : colNames) {
+			if (Utils.isEmpty(name))
+				throw new RuntimeException("The column name in table cannot be null or empty.");
+		}
+	}
+
 	static Vector inferAndConvertJavaColumn(final String colName, final List<?> values) {
 		DATA_TYPE colType = inferJavaColumnType(colName, values);
 		return convertJavaColumn(colName, colType, -1, values);
@@ -946,6 +956,10 @@ public class Utils {
 	}
 
 	static List<Vector> inferAndConvertJavaColumns(final List<String> colNames, final Collection<?> cols) {
+		if (Objects.isNull(colNames))
+			throw new RuntimeException("The param 'colNames' in table cannot be null.");
+		if (Objects.isNull(cols))
+			throw new RuntimeException("The param 'cols' in table cannot be null.");
 		if (!(cols instanceof List<?>)) {
 			throw new IllegalArgumentException("The auto-inference BasicTable constructor only supports List input for Java columns.");
 		}
@@ -963,10 +977,18 @@ public class Utils {
 	}
 
 	static List<Vector> inferAndConvertJavaColumns(final List<String> colNames, final Object[] cols) {
+		if (Objects.isNull(colNames))
+			throw new RuntimeException("The param 'colNames' in table cannot be null.");
+		if (Objects.isNull(cols))
+			throw new RuntimeException("The param 'cols' in table cannot be null.");
 		return inferAndConvertJavaColumns(colNames, Arrays.asList(cols));
 	}
 
 	static List<Vector> convertColumns(final List<String> colNames, final List<?> cols, final DATA_TYPE[] colTypes, final int[] colExtraParams) {
+		if (Objects.isNull(colNames))
+			throw new RuntimeException("The param 'colNames' in table cannot be null.");
+		if (Objects.isNull(cols))
+			throw new RuntimeException("The param 'cols' in table cannot be null.");
 		if (colNames.size() != cols.size()) {
 			throw new Error("The length of column name and column data is unequal.");
 		}

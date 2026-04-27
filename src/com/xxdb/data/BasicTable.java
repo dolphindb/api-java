@@ -74,6 +74,13 @@ public class BasicTable extends AbstractEntity implements Table{
 	}
 	
     public BasicTable(final List<String> colNames, final List<Vector> cols) {
+		if (Objects.isNull(colNames))
+			throw new RuntimeException("The param 'colNames' in table cannot be null.");
+		if (Objects.isNull(cols))
+			throw new RuntimeException("The param 'cols' in table cannot be null.");
+
+		Utils.validateColumnNames(colNames);
+
 		if(colNames.size() != cols.size()){
 			throw new Error("The length of column name and column data is unequal.");
 		}
@@ -109,11 +116,11 @@ public class BasicTable extends AbstractEntity implements Table{
 	}
 
 	public BasicTable(final List<String> colNames, final Object[] cols, final DATA_TYPE[] colTypes) {
-		this(colNames, Arrays.asList(cols), colTypes);
+		this(colNames, cols == null ? null : Arrays.asList(cols), colTypes);
 	}
 
 	public BasicTable(final List<String> colNames, final Object[] cols, final DATA_TYPE[] colTypes, final int[] colExtraParams) {
-		this(colNames, Arrays.asList(cols), colTypes, colExtraParams);
+		this(colNames, cols == null ? null : Arrays.asList(cols), colTypes, colExtraParams);
 	}
 
 	public void setColumnCompressTypes(int[] colCompresses) {
@@ -152,6 +159,7 @@ public class BasicTable extends AbstractEntity implements Table{
 	 * @param colNames
 	 */
 	public void setColName (final List<String> colNames) {
+		Utils.validateColumnNames(colNames);
         this.colNames.clear();
 		colNamesIndex.clear();
         for (String name : colNames){
