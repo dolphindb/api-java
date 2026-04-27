@@ -939,9 +939,12 @@ public class Utils {
 		if (Objects.isNull(colNames))
 			throw new RuntimeException("The param 'colNames' in table cannot be null.");
 
+		HashSet<String> colNameSet = new HashSet<String>();
 		for (String name : colNames) {
 			if (Utils.isEmpty(name))
 				throw new RuntimeException("The column name in table cannot be null or empty.");
+			if (!colNameSet.add(name))
+				throw new RuntimeException("The table contains duplicated column name '" + name + "'.");
 		}
 	}
 
