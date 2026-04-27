@@ -429,18 +429,18 @@ public class BasicTable extends AbstractEntity implements Table{
 		}
 	}
 
-	public void addColumn(String colName, List<?> values) {
-		if (Objects.isNull(colName) || Objects.isNull(values))
+	public void addColumn(String colName, List<?> col) {
+		if (Objects.isNull(colName) || Objects.isNull(col))
 			throw new RuntimeException("The param 'colName' or 'col' in table cannot be null.");
 
-		addColumn(colName, Utils.inferAndConvertJavaColumn(colName, values));
+		addColumn(colName, Utils.inferAndConvertJavaColumn(colName, col));
 	}
 
-	public void addColumn(String colName, Object[] values) {
-		if (Objects.isNull(colName) || Objects.isNull(values))
+	public void addColumn(String colName, Object[] col) {
+		if (Objects.isNull(colName) || Objects.isNull(col))
 			throw new RuntimeException("The param 'colName' or 'col' in table cannot be null.");
 
-		addColumn(colName, Utils.inferAndConvertJavaColumn(colName, values));
+		addColumn(colName, Utils.inferAndConvertJavaColumn(colName, col));
 	}
 
 	/**
