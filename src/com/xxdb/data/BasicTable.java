@@ -223,6 +223,8 @@ public class BasicTable extends AbstractEntity implements Table{
 	}
 
 	public String getString(){
+		if(columns() == 0)
+			return "";
 		int rows = Math.min(Utils.DISPLAY_ROWS,rows());
 	    int strColMaxWidth = Utils.DISPLAY_WIDTH/Math.min(columns(),Utils.DISPLAY_COLS)+5;
 	    int length=0;
