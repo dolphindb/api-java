@@ -1020,6 +1020,8 @@ public class Utils {
 			}
 			if (col instanceof Vector) {
 				hasVectorColumn = true;
+			} else if (col instanceof Entity) {
+				throw new IllegalArgumentException("Column [" + colNames.get(i) + "] is a DolphinDB Entity but not a Vector. The new BasicTable constructors only support all-Java columns or all-Vector columns.");
 			} else {
 				hasJavaColumn = true;
 			}
@@ -1073,6 +1075,9 @@ public class Utils {
 		List<Vector> vectors = new ArrayList<Vector>(cols.size());
 		for (int i = 0; i < cols.size(); ++i) {
 			DATA_TYPE colType = colTypes == null ? null : colTypes[i];
+			if (colType != null) {
+				validateBasicTableConstructorColumnType(colType);
+			}
 			int extraParam = colExtraParams == null ? -1 : colExtraParams[i];
 			vectors.add(validateVectorType(colNames.get(i), colType, extraParam, (Vector) cols.get(i)));
 		}
@@ -1099,6 +1104,7 @@ public class Utils {
 			if (colType == null) {
 				throw new IllegalArgumentException("Column [" + colNames.get(i) + "] type must be specified when using Java-native columns.");
 			}
+			validateBasicTableConstructorColumnType(colType);
 			vectors.add(convertJavaColumn(colNames.get(i), colType, resolvedExtraParams[i], cols.get(i)));
 		}
 		return vectors;
@@ -1322,6 +1328,16 @@ public class Utils {
 
 	private static IllegalArgumentException unsupportedJavaConstructorInference(final String colName, final Class<?> valueClass) {
 		return new IllegalArgumentException("Column [" + colName + "] does not support automatic type inference for Java type " + valueClass.getName() + ". Please use the typed constructor.");
+	}
+
+	private static void validateBasicTableConstructorColumnType(final DATA_TYPE colType) {
+		if (colType == DATA_TYPE.DT_FUNCTIONDEF || colType == DATA_TYPE.DT_HANDLE || colType == DATA_TYPE.DT_CODE
+				|| colType == DATA_TYPE.DT_DATASOURCE || colType == DATA_TYPE.DT_RESOURCE || colType == DATA_TYPE.DT_COMPRESS
+				|| colType == DATA_TYPE.DT_DICTIONARY || colType == DATA_TYPE.DT_DECIMAL || colType == DATA_TYPE.DT_OBJECT
+				|| colType == DATA_TYPE.DT_ANY || colType == DATA_TYPE.DT_IOTANY || colType == DATA_TYPE.DT_INSTRUMENT
+				|| colType == DATA_TYPE.DT_MKTDATA) {
+			throw new RuntimeException("Column type " + colType + " is not supported for BasicTable constructor.");
+		}
 	}
 
 	private static Vector createAddColumnTemporalVector(final DATA_TYPE colType, final List<?> values) {
