@@ -950,11 +950,19 @@ public class Utils {
 
 	static Vector inferAndConvertJavaColumn(final String colName, final List<?> values) {
 		DATA_TYPE colType = inferJavaColumnType(colName, values);
+		Vector temporalVector = createAddColumnTemporalVector(colType, values);
+		if (temporalVector != null) {
+			return temporalVector;
+		}
 		return convertJavaColumn(colName, colType, -1, values);
 	}
 
 	static Vector inferAndConvertJavaColumn(final String colName, final Object[] values) {
 		DATA_TYPE colType = inferJavaColumnType(colName, values);
+		Vector temporalVector = createAddColumnTemporalVector(colType, values);
+		if (temporalVector != null) {
+			return temporalVector;
+		}
 		return convertJavaColumn(colName, colType, -1, normalizeJavaArrayColumnValues(values));
 	}
 
@@ -1307,6 +1315,78 @@ public class Utils {
 
 	private static IllegalArgumentException unsupportedJavaConstructorInference(final String colName, final Class<?> valueClass) {
 		return new IllegalArgumentException("Column [" + colName + "] does not support automatic type inference for Java type " + valueClass.getName() + ". Please use the typed constructor.");
+	}
+
+	private static Vector createAddColumnTemporalVector(final DATA_TYPE colType, final List<?> values) {
+		if (colType != DATA_TYPE.DT_TIMESTAMP) {
+			return null;
+		}
+		Object sample = findFirstNonNullValue(values);
+		if (sample instanceof Date) {
+			return new BasicTimestampVector(timestampMillisFromDates(values), false);
+		}
+		if (sample instanceof Calendar) {
+			return new BasicTimestampVector(timestampMillisFromCalendars(values), false);
+		}
+		return null;
+	}
+
+	private static Vector createAddColumnTemporalVector(final DATA_TYPE colType, final Object[] values) {
+		if (colType != DATA_TYPE.DT_TIMESTAMP) {
+			return null;
+		}
+		Class<?> componentType = values.getClass().getComponentType();
+		if (componentType != null && Date.class.isAssignableFrom(componentType)) {
+			return new BasicTimestampVector(timestampMillisFromDates(values), false);
+		}
+		if (componentType != null && Calendar.class.isAssignableFrom(componentType)) {
+			return new BasicTimestampVector(timestampMillisFromCalendars(values), false);
+		}
+
+		Object sample = getSampleValue(values);
+		if (sample instanceof Date) {
+			return new BasicTimestampVector(timestampMillisFromDates(values), false);
+		}
+		if (sample instanceof Calendar) {
+			return new BasicTimestampVector(timestampMillisFromCalendars(values), false);
+		}
+		return null;
+	}
+
+	private static long[] timestampMillisFromDates(final List<?> values) {
+		long[] data = new long[values.size()];
+		for (int i = 0; i < values.size(); ++i) {
+			Object value = values.get(i);
+			data[i] = value == null ? Long.MIN_VALUE : ((Date) value).getTime();
+		}
+		return data;
+	}
+
+	private static long[] timestampMillisFromDates(final Object[] values) {
+		long[] data = new long[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			Object value = values[i];
+			data[i] = value == null ? Long.MIN_VALUE : ((Date) value).getTime();
+		}
+		return data;
+	}
+
+	private static long[] timestampMillisFromCalendars(final List<?> values) {
+		long[] data = new long[values.size()];
+		for (int i = 0; i < values.size(); ++i) {
+			Object value = values.get(i);
+			data[i] = value == null ? Long.MIN_VALUE : ((Calendar) value).getTimeInMillis();
+		}
+		return data;
+	}
+
+	private static long[] timestampMillisFromCalendars(final Object[] values) {
+		long[] data = new long[values.length];
+		for (int i = 0; i < values.length; ++i) {
+			Object value = values[i];
+			data[i] = value == null ? Long.MIN_VALUE : ((Calendar) value).getTimeInMillis();
+		}
+		return data;
 	}
 
 	private static Vector convertJavaColumn(final String colName, final DATA_TYPE colType, final int extraParam, final Object col) {
