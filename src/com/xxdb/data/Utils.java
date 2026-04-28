@@ -1009,7 +1009,14 @@ public class Utils {
 		for (int i = 0; i < cols.size(); ++i) {
 			Object col = cols.get(i);
 			if (col == null) {
-				throw new IllegalArgumentException("Column [" + colNames.get(i) + "] is null.");
+				if (colTypes == null) {
+					throw new IllegalArgumentException("Column [" + colNames.get(i) + "] is null.");
+				}
+				hasJavaColumn = true;
+				if (hasVectorColumn) {
+					throw new IllegalArgumentException("The new BasicTable constructors only support all-Java columns or all-Vector columns.");
+				}
+				continue;
 			}
 			if (col instanceof Vector) {
 				hasVectorColumn = true;
