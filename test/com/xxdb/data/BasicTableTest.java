@@ -363,7 +363,7 @@ public class BasicTableTest {
     @Test
     public void test_BasicTable_cols_null_list(){
         thrown.expect(java.lang.Error.class);
-        thrown.expectMessage("The param 'cols' in table cannot be null..");
+        thrown.expectMessage("The length of column name and column data is unequal.");
 
         List<String> colNames = Arrays.asList("col1", "col2");
         List<Object> cols = new ArrayList<>();
@@ -412,7 +412,7 @@ public class BasicTableTest {
     @Test
     public void test_BasicTable_colTypes_not_support() throws IOException {
         thrown.expect(java.lang.RuntimeException.class);
-        thrown.expectMessage("Column type DT_CODE is not supported for BasicTable constructor.");
+        thrown.expectMessage("Column [col1] is a DolphinDB Entity but not a Vector. The new BasicTable constructors only support all-Java columns or all-Vector columns.");
         List<String> colNames = Arrays.asList("col1", "col2");
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT);
@@ -1822,13 +1822,13 @@ public class BasicTableTest {
         bt.addColumn("double_col", Arrays.asList(-1.25d, 2.5d));
         assertEquals(2, bt.rows());
         assertEquals("DT_DOUBLE", bt.getColumn(0).getDataType().toString());
-        assertEquals("[-1.5,2.75]", bt.getColumn(0).getString());
+        assertEquals("[-1.25,2.5]", bt.getColumn(0).getString());
 
         BasicTable bt1 = new BasicTable();
         bt1.addColumn("double_col", Arrays.asList(new Double(-1.25d), new Double(2.5d)));
         assertEquals(2, bt1.rows());
         assertEquals("DT_DOUBLE", bt1.getColumn(0).getDataType().toString());
-        assertEquals("[-1.5,2.75]", bt1.getColumn(0).getString());
+        assertEquals("[-1.25,2.5]", bt1.getColumn(0).getString());
     }
 
     @Test
@@ -4863,5 +4863,23 @@ public class BasicTableTest {
             re = e.getMessage();
         }
         assertEquals("Serialized string length must less than 256k bytes.",re);
+    }
+
+    @Test
+    public void test_BasicTable_setColCompressTypes_then_addColumn_update_colCompresses() {
+        BasicTable bt = createBasicTable();
+        int oldColCount = bt.columns();
+        int[] colCompresses = new int[oldColCount];
+        Arrays.fill(colCompresses, Vector.COMPRESS_LZ4);
+        bt.setColumnCompressTypes(colCompresses);
+        bt.addColumn("addedInt", new BasicIntVector(new int[]{1, 2}));
+        int[] updated = bt.getColumnCompressTypes();
+
+        assertNotNull(updated);
+        assertEquals(oldColCount + 1, updated.length);
+        for (int i = 0; i < oldColCount; i++) {
+            assertEquals(colCompresses[i], updated[i]);
+        }
+        assertEquals(Vector.COMPRESS_LZ4, updated[oldColCount]);
     }
 }
