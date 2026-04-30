@@ -85,10 +85,14 @@ public class BasicTable extends AbstractEntity implements Table{
 			throw new Error("The length of column name and column data is unequal.");
 		}
 
-		int rowsCount = cols.get(0).rows();
+		int rowsCount = -1;
 		for (int i=0;i<cols.size();i++) {
 			Vector v = cols.get(i);
-			if(v.rows() != rowsCount)
+			if (Objects.isNull(v))
+				throw new RuntimeException("Column [" + colNames.get(i) + "] is null.");
+			if(i == 0)
+				rowsCount = v.rows();
+			else if(v.rows() != rowsCount)
 				throw new Error("The length of column " + colNames.get(i) + "  must be the same as the first column length.");
 		}
         this.setColName(colNames);
