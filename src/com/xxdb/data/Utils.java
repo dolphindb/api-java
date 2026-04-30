@@ -950,7 +950,7 @@ public class Utils {
 
 	static Vector inferAndConvertJavaColumn(final String colName, final List<?> values) {
 		DATA_TYPE colType = inferJavaColumnType(colName, values);
-		Vector temporalVector = createAddColumnTemporalVector(colType, values);
+		Vector temporalVector = createAutoInferenceTemporalVector(colType, values);
 		if (temporalVector != null) {
 			return temporalVector;
 		}
@@ -959,7 +959,7 @@ public class Utils {
 
 	static Vector inferAndConvertJavaColumn(final String colName, final Object[] values) {
 		DATA_TYPE colType = inferJavaColumnType(colName, values);
-		Vector temporalVector = createAddColumnTemporalVector(colType, values);
+		Vector temporalVector = createAutoInferenceTemporalVector(colType, values);
 		if (temporalVector != null) {
 			return temporalVector;
 		}
@@ -1045,10 +1045,18 @@ public class Utils {
 		}
 		if (col instanceof List<?>) {
 			DATA_TYPE colType = inferJavaConstructorColumnType(colName, (List<?>) col);
+			Vector temporalVector = createAutoInferenceTemporalVector(colType, (List<?>) col);
+			if (temporalVector != null) {
+				return temporalVector;
+			}
 			return convertJavaColumn(colName, colType, -1, col);
 		}
 		if (col instanceof Object[]) {
 			DATA_TYPE colType = inferJavaConstructorColumnType(colName, (Object[]) col);
+			Vector temporalVector = createAutoInferenceTemporalVector(colType, (Object[]) col);
+			if (temporalVector != null) {
+				return temporalVector;
+			}
 			return convertJavaColumn(colName, colType, -1, normalizeJavaArrayColumnValues((Object[]) col));
 		}
 		DATA_TYPE primitiveArrayType = inferJavaConstructorTypeFromPrimitiveArray(col);
@@ -1340,7 +1348,7 @@ public class Utils {
 		}
 	}
 
-	private static Vector createAddColumnTemporalVector(final DATA_TYPE colType, final List<?> values) {
+	private static Vector createAutoInferenceTemporalVector(final DATA_TYPE colType, final List<?> values) {
 		if (colType != DATA_TYPE.DT_TIMESTAMP) {
 			return null;
 		}
@@ -1354,7 +1362,7 @@ public class Utils {
 		return null;
 	}
 
-	private static Vector createAddColumnTemporalVector(final DATA_TYPE colType, final Object[] values) {
+	private static Vector createAutoInferenceTemporalVector(final DATA_TYPE colType, final Object[] values) {
 		if (colType != DATA_TYPE.DT_TIMESTAMP) {
 			return null;
 		}
