@@ -680,14 +680,35 @@ public class BasicTableTest {
         Calendar cal2 = Calendar.getInstance();
         cal2.setTimeInMillis(1704067299999L);
         Calendar cal3 = Calendar.getInstance();
-        cal2.setTimeInMillis(1704067200000L);
+        cal3.setTimeInMillis(1704067200000L);
         Object[] cols = new Object[]{
                  Arrays.asList(new java.util.Date(1704067200000L), new java.util.Date(1704067299999L),new java.util.Date(1704067200000L)),
                 Arrays.asList(cal1, cal2, cal3)
         };
         BasicTable re = new BasicTable(colNames, cols);
-        assertEquals("[2024.01.01 00:00:00.000,2024.01.01 00:01:39.999,2024.01.01 00:00:00.000]", re.getColumn(0).getString());
-        assertEquals("[2024.01.01 00:00:00.000,2024.01.01 00:01:39.999,2024.01.01 00:00:00.000]", re.getColumn(1).getString());
+        assertEquals("[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]", re.getColumn(0).getString());
+        assertEquals("[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]", re.getColumn(1).getString());
+    }
+
+    @Test
+    public void test_BasicTable_Basic_list_cols_date_Calendar() throws IOException {
+        List<String> colNames = Arrays.asList(
+                "ctimestamp_Date ",
+                "ctimestamp_Calendar"
+        );
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTimeInMillis(1704067200000L);
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTimeInMillis(1704067299999L);
+        Calendar cal3 = Calendar.getInstance();
+        cal3.setTimeInMillis(1704067200000L);
+        List<Object> cols = Arrays.asList(
+                Arrays.asList(new java.util.Date(1704067200000L), new java.util.Date(1704067299999L),new java.util.Date(1704067200000L)),
+                Arrays.asList(cal1, cal2, cal3)
+        );
+        BasicTable re = new BasicTable(colNames, cols);
+        assertEquals("[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]", re.getColumn(0).getString());
+        assertEquals("[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]", re.getColumn(1).getString());
     }
 
     @Test
@@ -715,7 +736,7 @@ public class BasicTableTest {
         Calendar cal2 = Calendar.getInstance();
         cal2.setTimeInMillis(1704067299999L);
         Calendar cal3 = Calendar.getInstance();
-        cal2.setTimeInMillis(1704067200000L);
+        cal3.setTimeInMillis(1704067200000L);
 
         List<Object> cols = Arrays.asList(
                 Arrays.asList(true, false, false),
@@ -771,8 +792,8 @@ public class BasicTableTest {
                 "[1970.01.02,1969.12.31,1970.01.03]",
                 "[00:00:02.345000000,00:00:46.284000000,00:00:05.839000000]",
                 "[1970.01.01T00:00:49.000000000,1970.01.01T00:04:02.000000000,1970.01.01T00:00:25.000000000]",
-                "[2024.01.01 00:00:00.000,2024.01.01 00:01:39.999,2024.01.01 00:00:00.000]",
-                "[2024.01.01 00:00:00.000,2024.01.01 00:01:39.999,2024.01.01 00:00:00.000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
                 "[\u0001\u0002,\u0003\u0004,\u0003\u0004]"
         };
         for (int i = 0; i < colNames.size(); i++) {
@@ -807,7 +828,7 @@ public class BasicTableTest {
         Calendar cal2 = Calendar.getInstance();
         cal2.setTimeInMillis(1704067299999L);
         Calendar cal3 = Calendar.getInstance();
-        cal2.setTimeInMillis(1704067200000L);
+        cal3.setTimeInMillis(1704067200000L);
 
         List<Object> cols = Arrays.asList(
                 new Object[]{true, false, false},
@@ -863,8 +884,8 @@ public class BasicTableTest {
                 "[1970.01.02,1969.12.31,1970.01.03]",
                 "[00:00:02.345000000,00:00:46.284000000,00:00:05.839000000]",
                 "[1970.01.01T00:00:49.000000000,1970.01.01T00:04:02.000000000,1970.01.01T00:00:25.000000000]",
-                "[2024.01.01 00:00:00.000,2024.01.01 00:01:39.999,2024.01.01 00:00:00.000]",
-                "[2024.01.01 00:00:00.000,2024.01.01 00:01:39.999,2024.01.01 00:00:00.000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
                 "[\u0001\u0002,\u0003\u0004,\u0003\u0004]"
         };
         for (int i = 0; i < colNames.size(); i++) {
@@ -899,7 +920,7 @@ public class BasicTableTest {
         Calendar cal2 = Calendar.getInstance();
         cal2.setTimeInMillis(1704067299999L);
         Calendar cal3 = Calendar.getInstance();
-        cal2.setTimeInMillis(1704067200000L);
+        cal3.setTimeInMillis(1704067200000L);
         Object[] cols = new Object[]{
                 Arrays.asList(true, false, false),
                 Arrays.asList((byte) 22, (byte) 57, (byte) 13),
@@ -954,8 +975,8 @@ public class BasicTableTest {
                 "[1970.01.02,1969.12.31,1970.01.03]",
                 "[00:00:02.345000000,00:00:46.284000000,00:00:05.839000000]",
                 "[1970.01.01T00:00:49.000000000,1970.01.01T00:04:02.000000000,1970.01.01T00:00:25.000000000]",
-                "[2024.01.01 00:00:00.000,2024.01.01 00:01:39.999,2024.01.01 00:00:00.000]",
-                "[2024.01.01 00:00:00.000,2024.01.01 00:01:39.999,2024.01.01 00:00:00.000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
                 "[\u0001\u0002,\u0003\u0004,\u0003\u0004]"
         };
         for (int i = 0; i < colNames.size(); i++) {
@@ -990,7 +1011,7 @@ public class BasicTableTest {
         Calendar cal2 = Calendar.getInstance();
         cal2.setTimeInMillis(1704067299999L);
         Calendar cal3 = Calendar.getInstance();
-        cal2.setTimeInMillis(1704067200000L);
+        cal3.setTimeInMillis(1704067200000L);
         Object[] cols = new Object[]{
                 new Object[]{true, false, false},
                 new Object[]{(byte) 22, (byte) 57, (byte) 13},
@@ -1045,8 +1066,8 @@ public class BasicTableTest {
                 "[1970.01.02,1969.12.31,1970.01.03]",
                 "[00:00:02.345000000,00:00:46.284000000,00:00:05.839000000]",
                 "[1970.01.01T00:00:49.000000000,1970.01.01T00:04:02.000000000,1970.01.01T00:00:25.000000000]",
-                "[2024.01.01 00:00:00.000,2024.01.01 00:01:39.999,2024.01.01 00:00:00.000]",
-                "[2024.01.01 00:00:00.000,2024.01.01 00:01:39.999,2024.01.01 00:00:00.000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
                 "[\u0001\u0002,\u0003\u0004,\u0003\u0004]"
         };
         for (int i = 0; i < colNames.size(); i++) {
