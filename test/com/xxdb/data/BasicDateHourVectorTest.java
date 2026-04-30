@@ -50,8 +50,8 @@ public class BasicDateHourVectorTest {
         assertEquals(Entity.DATA_CATEGORY.TEMPORAL,btv.getDataCategory());
         assertEquals(4,btv.rows());
         assertEquals("1969-12-31T23:00",btv.getDateHour(0).toString());
-        assertEquals("2025-01-01T12:59",btv.getDateHour(1).toString());
-        assertEquals("2040-01-01T08:30",btv.getDateHour(2).toString());
+        assertEquals("2025-01-01T12:00",btv.getDateHour(1).toString());
+        assertEquals("2040-01-01T08:00",btv.getDateHour(2).toString());
         assertEquals(current,btv.getDateHour(3));
     }
     @Test

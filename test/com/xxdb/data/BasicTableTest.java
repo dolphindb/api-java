@@ -446,7 +446,7 @@ public class BasicTableTest {
     @Test
     public void test_BasicTable_colTypes_decimal_colExtraParams_set_error1() throws IOException {
         thrown.expect(java.lang.RuntimeException.class);
-        thrown.expectMessage("Scale 39 is out of bounds, it must be in [0,38].");
+        thrown.expectMessage("Scale -4 is out of bounds, it must be in [0,38].");
         List<String> colNames = Arrays.asList("col1", "col2");
         List<Object> cols = Arrays.asList("1", "1");
         int[] colExtraParams = new int[]{-4,0};

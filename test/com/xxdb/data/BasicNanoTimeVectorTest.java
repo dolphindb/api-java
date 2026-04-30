@@ -43,7 +43,7 @@ public class BasicNanoTimeVectorTest {
                 current
         });
         assertEquals(3, v.rows());
-        assertEquals("00:00:00.000000001", v.getNanoTime(0).toString());
+        assertEquals("00:00:01.000000001", v.getNanoTime(0).toString());
         assertEquals("23:59:59.999999999", v.getNanoTime(1).toString());
         assertEquals(current.toString(), v.getNanoTime(2).toString());
     }

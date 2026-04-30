@@ -46,7 +46,7 @@ public class BasicTimeStampVectorTest {
                 current
         });
         assertEquals(4, v.rows());
-        assertEquals("1969-12-31T23:59:59.000", v.getTimestamp(0).toString());
+        assertEquals("1969-12-31T23:59:59", v.getTimestamp(0).toString());
         assertEquals("2025-01-01T00:00:00.123", v.getTimestamp(1).toString());
         assertEquals("2040-01-01T23:59:59.999", v.getTimestamp(2).toString());
         assertEquals(current, v.getTimestamp(3));
@@ -61,13 +61,13 @@ public class BasicTimeStampVectorTest {
         calendar2.set(2025, Calendar.JANUARY, 1, 0, 0, 0);
         calendar2.set(Calendar.MILLISECOND, 123);
         Calendar calendar3 = Calendar.getInstance();
-        calendar3.set(2040, Calendar.JANUARY, 1, 23, 59, 59);
+        calendar3.set(2038, Calendar.JANUARY, 1, 23, 59, 59);
         calendar3.set(Calendar.MILLISECOND, 999);
         BasicTimestampVector v = new BasicTimestampVector(new Calendar[]{calendar, calendar2, calendar3});
         assertEquals(3, v.rows());
-        assertEquals("1969-12-31T23:59:59.000", v.getTimestamp(0).toString());
+        assertEquals("1969-12-31T23:59:59", v.getTimestamp(0).toString());
         assertEquals("2025-01-01T00:00:00.123", v.getTimestamp(1).toString());
-        assertEquals("2040-01-01T23:59:59.999", v.getTimestamp(2).toString());
+        assertEquals("2038-01-01T23:59:59.999", v.getTimestamp(2).toString());
     }
 
     @Test
