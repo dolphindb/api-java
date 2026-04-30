@@ -1521,6 +1521,9 @@ public class Utils {
 		if (colType != null) {
 			resolvedType = colType;
 		}
+		if (extraParam != -1 && isDecimalType(resolvedType)) {
+			validateDecimalScale(resolvedType, extraParam);
+		}
 		if (extraParam >= 0 && isDecimalType(resolvedType) && vector instanceof AbstractVector) {
 			int vectorExtraParam = ((AbstractVector) vector).getExtraParamForType();
 			if (vectorExtraParam != extraParam) {
@@ -1820,6 +1823,10 @@ public class Utils {
 	}
 
 	private static int resolveExtraParam(final DATA_TYPE colType, final int declaredExtraParam, final Object sampleValue) {
+		if (isDecimalType(colType) && declaredExtraParam != -1) {
+			validateDecimalScale(colType, declaredExtraParam);
+			return declaredExtraParam;
+		}
 		if (declaredExtraParam >= 0) {
 			return declaredExtraParam;
 		}
@@ -1830,6 +1837,29 @@ public class Utils {
 			throw new IllegalArgumentException("Column type " + colType.getName() + " requires extra parameters such as scale.");
 		}
 		return -1;
+	}
+
+	private static void validateDecimalScale(final DATA_TYPE colType, final int scale) {
+		int upperBound = getDecimalScaleUpperBound(colType);
+		if (scale < 0 || scale > upperBound) {
+			throw new RuntimeException("Scale " + scale + " is out of bounds, it must be in [0," + upperBound + "].");
+		}
+	}
+
+	private static int getDecimalScaleUpperBound(final DATA_TYPE colType) {
+		switch (colType) {
+			case DT_DECIMAL32:
+			case DT_DECIMAL32_ARRAY:
+				return 9;
+			case DT_DECIMAL64:
+			case DT_DECIMAL64_ARRAY:
+				return 18;
+			case DT_DECIMAL128:
+			case DT_DECIMAL128_ARRAY:
+				return 38;
+			default:
+				throw new IllegalArgumentException("Column type " + colType.getName() + " is not a decimal type.");
+		}
 	}
 
 	private static Object getSampleValue(final Object col) {
