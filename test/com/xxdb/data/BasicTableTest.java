@@ -1631,8 +1631,8 @@ public class BasicTableTest {
 
     @Test
     public void Test_BasicTable_colNames_list_vector_null() throws Exception {
-        //thrown.expect(java.lang.Error.class);
-        //thrown.expectMessage("The length of column name and column data is unequal.");
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("Column [col2] is null.");
         List<String> colNames = Arrays.asList("col1", "col2");
         List<Vector> cols = new ArrayList<Vector>(2);
         BasicDateVector date = new BasicDateVector(2);
