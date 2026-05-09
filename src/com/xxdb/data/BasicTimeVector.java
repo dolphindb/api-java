@@ -25,6 +25,14 @@ public class BasicTimeVector extends BasicIntVector{
 	public BasicTimeVector(List<Integer> list){
 		super(list);
 	}
+
+	public BasicTimeVector(LocalTime[] array){
+		this(Utils.timeVectorValues(array), false);
+	}
+
+	public BasicTimeVector(Calendar[] array){
+		this(Utils.timeVectorValues(array), false);
+	}
 	
 	public BasicTimeVector(int[] array){
 		super(array);

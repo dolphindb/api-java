@@ -33,6 +33,48 @@ public class BasicTimeVectorTest {
         assertEquals(new BasicTime(53000),btv.get(0));
     }
 
+    @Test(expected = NullPointerException.class)
+    public void test_BasicTimeVector_LocalTime_null(){
+        new BasicTimeVector((LocalTime[]) null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicTimeVector_Calendar_null(){
+        new BasicTimeVector((Calendar[]) null);
+    }
+
+    @Test
+    public void test_BasicTimeVector_LocalTime() throws Exception{
+        LocalTime current = LocalTime.now();
+        BasicTimeVector v = new BasicTimeVector(new LocalTime[]{
+                LocalTime.of(0, 0, 1, 1),
+                LocalTime.of(23, 59, 59, 999999999),
+                current
+        });
+        assertEquals(3, v.rows());
+        assertEquals("00:00:01.000", v.getTime(0).toString());
+        assertEquals("23:59:59.999", v.getTime(1).toString());
+        assertEquals(current.withNano((current.getNano()/1000000)*1000000), v.getTime(2));
+    }
+
+    @Test
+    public void test_BasicTimeVector_Calendar() throws Exception{
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1969, Calendar.DECEMBER, 31, 0, 0, 1);
+        calendar.set(Calendar.MILLISECOND, 1);
+        Calendar calendar2 = Calendar.getInstance();
+        calendar2.set(2025, Calendar.JANUARY, 1, 23, 59, 59);
+        calendar2.set(Calendar.MILLISECOND, 999);
+        Calendar calendar3 = Calendar.getInstance();
+        calendar3.set(2040, Calendar.JANUARY, 1, 12, 0, 1);
+        calendar3.set(Calendar.MILLISECOND, 0);
+        BasicTimeVector v = new BasicTimeVector(new Calendar[]{calendar, calendar2, calendar3});
+        assertEquals(3, v.rows());
+        assertEquals("00:00:01.001", v.getTime(0).toString());
+        assertEquals("23:59:59.999", v.getTime(1).toString());
+        assertEquals("12:00:01", v.getTime(2).toString());
+    }
+
     @Test
     public void test_BasicTimeVector_capacity_lt_size() throws Exception {
         BasicTimeVector bbv = new BasicTimeVector(6,1);

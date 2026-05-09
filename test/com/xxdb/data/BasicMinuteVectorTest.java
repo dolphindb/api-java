@@ -36,6 +36,48 @@ public class BasicMinuteVectorTest {
     }
 
     @Test
+    public void test_BasicMinuteVector_LocalTime() throws Exception{
+        LocalTime current = LocalTime.now().withSecond(0).withNano(0);
+        BasicMinuteVector v = new BasicMinuteVector(new LocalTime[]{
+                LocalTime.of(0, 0, 1, 1),
+                LocalTime.of(23, 59, 59, 999999999),
+                current
+        });
+        assertEquals(3, v.rows());
+        assertEquals("00:00", v.getMinute(0).toString());
+        assertEquals("23:59", v.getMinute(1).toString());
+        assertEquals(current, v.getMinute(2));
+    }
+
+    @Test
+    public void test_BasicMinuteVector_Calendar() throws Exception{
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1969, Calendar.DECEMBER, 31, 0, 0, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Calendar calendar2 = Calendar.getInstance();
+        calendar2.set(2025, Calendar.JANUARY, 1, 23, 59, 0);
+        calendar2.set(Calendar.MILLISECOND, 0);
+        Calendar calendar3 = Calendar.getInstance();
+        calendar3.set(2040, Calendar.JANUARY, 1, 12, 0, 0);
+        calendar3.set(Calendar.MILLISECOND, 0);
+        BasicMinuteVector v = new BasicMinuteVector(new Calendar[]{calendar, calendar2, calendar3});
+        assertEquals(3, v.rows());
+        assertEquals("00:00", v.getMinute(0).toString());
+        assertEquals("23:59", v.getMinute(1).toString());
+        assertEquals("12:00", v.getMinute(2).toString());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicMinuteVector_LocalTime_null(){
+        new BasicMinuteVector((LocalTime[]) null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicMinuteVector_Calendar_null(){
+        new BasicMinuteVector((Calendar[]) null);
+    }
+
+    @Test
     public void test_BasicMinuteVector_capacity_lt_size() throws Exception {
         BasicMinuteVector bbv = new BasicMinuteVector(6,1);
         bbv.set(0, (Object)null);

@@ -3911,7 +3911,7 @@ public class ThreadedClientsubscribeReverseTest {
             }
         };
         threadedClient.subscribe(StreamFollowerHost, StreamFollowerPort,"Trades",MessageHandler_handler1);
-        conn_leader.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);" + "Trades.append!(t)");
+        conn_leader.run("n=10000;t=table(1..n as tag,now()+1..n as ts,rand(100.0,n) as data);Trades.append!(t)");
         wait_data("Receive",10000, conn_follower);
         BasicInt row_num = (BasicInt)conn_follower.run("(exec count(*) from Receive)[0]");
         assertEquals(10000,row_num.getInt());

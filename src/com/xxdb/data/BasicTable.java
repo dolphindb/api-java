@@ -22,6 +22,9 @@ public class BasicTable extends AbstractEntity implements Table{
 
 	private static final Logger log = LoggerFactory.getLogger(BasicTable.class);
 
+	public BasicTable() {
+	}
+
 	public BasicTable(ExtendedDataInput in) throws IOException{
 		int rows = in.readInt();
 		int cols = in.readInt();
@@ -71,19 +74,58 @@ public class BasicTable extends AbstractEntity implements Table{
 	}
 	
     public BasicTable(final List<String> colNames, final List<Vector> cols) {
+		if (Objects.isNull(colNames))
+			throw new RuntimeException("The param 'colNames' in table cannot be null.");
+		if (Objects.isNull(cols))
+			throw new RuntimeException("The param 'cols' in table cannot be null.");
+
+		Utils.validateColumnNames(colNames);
+
 		if(colNames.size() != cols.size()){
 			throw new Error("The length of column name and column data is unequal.");
 		}
 
-		int rowsCount = cols.get(0).rows();
+		int rowsCount = -1;
 		for (int i=0;i<cols.size();i++) {
 			Vector v = cols.get(i);
-			if(v.rows() != rowsCount)
+			if (Objects.isNull(v))
+				throw new RuntimeException("Column [" + colNames.get(i) + "] is null.");
+			if(i == 0)
+				rowsCount = v.rows();
+			else if(v.rows() != rowsCount)
 				throw new Error("The length of column " + colNames.get(i) + "  must be the same as the first column length.");
 		}
         this.setColName(colNames);
         this.setColumns(cols);
     }
+
+	/**
+	 * @param colNames
+	 * @param cols: only supports List input;
+	 */
+	public BasicTable(final List<String> colNames, final Collection<?> cols) {
+		this(colNames, Utils.inferAndConvertJavaColumns(colNames, cols));
+	}
+
+	public BasicTable(final List<String> colNames, final Object[] cols) {
+		this(colNames, Utils.inferAndConvertJavaColumns(colNames, cols));
+	}
+
+	public BasicTable(final List<String> colNames, final List<?> cols, final DATA_TYPE[] colTypes) {
+		this(colNames, cols, colTypes, null);
+	}
+
+	public BasicTable(final List<String> colNames, final List<?> cols, final DATA_TYPE[] colTypes, final int[] colExtraParams) {
+		this(colNames, Utils.convertColumns(colNames, cols, colTypes, colExtraParams));
+	}
+
+	public BasicTable(final List<String> colNames, final Object[] cols, final DATA_TYPE[] colTypes) {
+		this(colNames, cols == null ? null : Arrays.asList(cols), colTypes);
+	}
+
+	public BasicTable(final List<String> colNames, final Object[] cols, final DATA_TYPE[] colTypes, final int[] colExtraParams) {
+		this(colNames, cols == null ? null : Arrays.asList(cols), colTypes, colExtraParams);
+	}
 
 	public void setColumnCompressTypes(int[] colCompresses) {
 		if (colCompresses!=null && colCompresses.length != columns.size()) {
@@ -121,6 +163,7 @@ public class BasicTable extends AbstractEntity implements Table{
 	 * @param colNames
 	 */
 	public void setColName (final List<String> colNames) {
+		Utils.validateColumnNames(colNames);
         this.colNames.clear();
 		colNamesIndex.clear();
         for (String name : colNames){
@@ -184,6 +227,8 @@ public class BasicTable extends AbstractEntity implements Table{
 	}
 
 	public String getString(){
+		if(columns() == 0)
+			return "";
 		int rows = Math.min(Utils.DISPLAY_ROWS,rows());
 	    int strColMaxWidth = Utils.DISPLAY_WIDTH/Math.min(columns(),Utils.DISPLAY_COLS)+5;
 	    int length=0;
@@ -376,12 +421,30 @@ public class BasicTable extends AbstractEntity implements Table{
 		if (colNames.contains(colName))
 			throw new RuntimeException("The table already contains column '" + colName + "'.");
 
-		if (Objects.nonNull(this.columns) && Objects.nonNull(this.columns.get(0)) && this.getColumn(0).rows() != col.rows())
+		if (Objects.nonNull(this.columns) && !this.columns.isEmpty() && Objects.nonNull(this.columns.get(0)) && this.getColumn(0).rows() != col.rows())
 			throw new RuntimeException("The length of column " + colName + "  must be the same as the first column length: " + this.getColumn(0).rows() +".");
-
+		
 		colNames.add(colName);
 		colNamesIndex.put(colName, colNamesIndex.size());
 		columns.add(col);
+		if (colCompresses != null) {
+			colCompresses = Arrays.copyOf(colCompresses, colCompresses.length + 1);
+			colCompresses[colCompresses.length - 1] = Vector.COMPRESS_LZ4;
+		}
+	}
+
+	public void addColumn(String colName, List<?> col) {
+		if (Objects.isNull(colName) || Objects.isNull(col))
+			throw new RuntimeException("The param 'colName' or 'col' in table cannot be null.");
+
+		addColumn(colName, Utils.inferAndConvertJavaColumn(colName, col));
+	}
+
+	public void addColumn(String colName, Object[] col) {
+		if (Objects.isNull(colName) || Objects.isNull(col))
+			throw new RuntimeException("The param 'colName' or 'col' in table cannot be null.");
+
+		addColumn(colName, Utils.inferAndConvertJavaColumn(colName, col));
 	}
 
 	/**

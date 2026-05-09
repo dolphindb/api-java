@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
+import java.util.Calendar;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,6 +35,48 @@ public class BasicDateHourVectorTest {
         assertEquals("2878-05-31T16:00",bdhv2.getDateHour(1).toString());
         ByteBuffer bb = ByteBuffer.allocate(10000);
         bdhv2.writeVectorToBuffer(bb);
+    }
+
+    @Test
+    public void test_BasicDateHourVector_LocalDateTime() throws Exception{
+        LocalDateTime current = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime[] array = new LocalDateTime[]{
+                LocalDateTime.of(1969, 12, 31, 23, 0),
+                LocalDateTime.of(2025, 1, 1, 12, 59),
+                LocalDateTime.of(2040, 1, 1, 8, 30),
+                current
+        };
+        BasicDateHourVector btv = new BasicDateHourVector(array);
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,btv.getDataCategory());
+        assertEquals(4,btv.rows());
+        assertEquals("1969-12-31T23:00",btv.getDateHour(0).toString());
+        assertEquals("2025-01-01T12:00",btv.getDateHour(1).toString());
+        assertEquals("2040-01-01T08:00",btv.getDateHour(2).toString());
+        assertEquals(current,btv.getDateHour(3));
+    }
+    @Test
+    public void test_BasicDateHourVector_LocalDateTime_null() throws Exception{
+        LocalDateTime[] array = new LocalDateTime[]{null};
+        BasicDateHourVector btv = new BasicDateHourVector(array);
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL,btv.getDataCategory());
+        assertEquals(1,btv.rows());
+        assertEquals("[]",btv.getString());
+    }
+
+    @Test
+    public void test_BasicDateHourVector_Calendar() throws Exception{
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2021, Calendar.JANUARY, 1, 12, 0, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        BasicDateHourVector btv = new BasicDateHourVector(new Calendar[]{calendar});
+        assertEquals(Entity.DATA_CATEGORY.TEMPORAL, btv.getDataCategory());
+        assertEquals(1, btv.rows());
+        assertEquals("2021-01-01T12:00", btv.getDateHour(0).toString());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicDateHourVector_Calendar_null() {
+        new BasicDateHourVector((Calendar[]) null);
     }
 
     @Test

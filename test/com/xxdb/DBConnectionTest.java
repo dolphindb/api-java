@@ -6180,4 +6180,94 @@ public void test_SSL() throws Exception {
             conn.run("sleep(100)");
         }
     }
+
+    @Test
+    public void test_tableInsert_haMvccTable_leader() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT,"admin","123456");
+        BasicIntVector port1 = (BasicIntVector)conn.run(" exec port from rpc(getControllerAlias(), getClusterPerf) where name=getHaMvccLeader(3);\n");
+        int leader_port = Integer.valueOf(port1.get(0).getString());
+        DBConnection conn_leader = new DBConnection();
+        conn_leader.connect(HOST,leader_port ,"admin", "123456");
+        String script2 = "try{dropHaMvccTable(\"HaMvccTable1\")}catch(ex){};\n go;\n haMvccTable(1:0, table(array(INT) as intv,array(SYMBOL) as symbolv),\"HaMvccTable1\",3)";
+        conn_leader.run(script2);
+        String sql = "table(1..100 as intv,take(`qq`ee`rr,100) as symbolv)";
+        BasicTable data = (BasicTable) conn.run(sql);
+        List<Entity> args = Arrays.asList(data);
+        conn_leader.run("tableInsert{loadHaMvccTable('HaMvccTable1')}", args);
+        Entity re1 = conn_leader.run("each(eqObj, (select * from loadHaMvccTable('HaMvccTable1')).values(), table(1..100 as intv,take(`qq`ee`rr,100) as symbolv).values()).all()");
+        assertEquals("true", re1.getString());
+    }
+
+    @Test
+    public void test_tableInsert_haMvccTable_follower() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT,"admin","123456");
+        BasicIntVector port1 = (BasicIntVector)conn.run(" exec port from rpc(getControllerAlias(), getClusterPerf) where name=getHaMvccLeader(3);\n");
+        int leader_port = Integer.valueOf(port1.get(0).getString());
+        BasicIntVector port2 = (BasicIntVector)conn.run(" exec port from rpc(getControllerAlias(), getClusterPerf) where name in (exec sites[0] from getHaMvccRaftGroups() where id==3).split(\",\") and name!=getHaMvccLeader(3) limit 1;\n");
+        int follower_port = Integer.valueOf(port2.get(0).getString());
+        DBConnection conn_leader = new DBConnection();
+        conn_leader.connect(HOST,leader_port ,"admin", "123456",null,true);
+
+        DBConnection conn_follower = new DBConnection();
+        conn_follower.connect(HOST,follower_port ,"admin", "123456",null,true);
+        String script2 = "try{dropHaMvccTable(\"HaMvccTable1\")}catch(ex){};\n go;\n haMvccTable(1:0, table(array(INT) as intv,array(SYMBOL) as symbolv),\"HaMvccTable1\",3)";
+        conn_leader.run(script2);
+        String sql = "table(1..100 as intv,take(`qq`ee`rr,100) as symbolv)";
+        BasicTable data = (BasicTable) conn.run(sql);
+        List<Entity> args = Arrays.asList(data);
+        conn_follower.run("tableInsert{loadHaMvccTable('HaMvccTable1')}", args);
+        Entity re1 = conn_follower.run("each(eqObj, (select * from loadHaMvccTable('HaMvccTable1')).values(), table(1..100 as intv,take(`qq`ee`rr,100) as symbolv).values()).all()");
+        assertEquals("true", re1.getString());
+        conn_leader.close();
+        conn_follower.close();
+    }
+
+    @Test
+    public void test_tableInsert_haStreamTable_leader() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT,"admin","123456");
+        BasicIntVector port1 = (BasicIntVector)conn.run(" exec port from rpc(getControllerAlias(), getClusterPerf) where name=getStreamingLeader(11);\n");
+        int leader_port = Integer.valueOf(port1.get(0).getString());
+        DBConnection conn_leader = new DBConnection();
+        conn_leader.connect(HOST,leader_port ,"admin", "123456");
+        String script2 = "try{dropStreamTable(\"haStreamTable1\")}catch(ex){};\n go;\n haStreamTable(11, table(array(INT) as intv,array(SYMBOL) as symbolv),\"haStreamTable1\",100000)";
+        conn_leader.run(script2);
+        String sql = "table(1..100 as intv,take(`qq`ee`rr,100) as symbolv)";
+        BasicTable data = (BasicTable) conn.run(sql);
+        List<Entity> args = Arrays.asList(data);
+        conn_leader.run("tableInsert{'haStreamTable1'}", args);
+        Entity re1 = conn_leader.run("each(eqObj, (select * from haStreamTable1).values(), table(1..100 as intv,take(`qq`ee`rr,100) as symbolv).values()).all()");
+        assertEquals("true", re1.getString());
+    }
+
+    @Test
+    public void test_tableInsert_haStreamTable_follower() throws IOException {
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST, PORT,"admin","123456");
+        BasicIntVector port1 = (BasicIntVector)conn.run(" exec port from rpc(getControllerAlias(), getClusterPerf) where name=getStreamingLeader(11);\n");
+        int leader_port = Integer.valueOf(port1.get(0).getString());
+        BasicIntVector port2 = (BasicIntVector)conn.run("tmp1=(exec sites[0] from getStreamingRaftGroups() where raftGroupName==\"11\").split(\",\");\n" +
+                "tmp2=each(x->split(x, \":\")[2],tmp1);\n" +
+                "exec port from rpc(getControllerAlias(), getClusterPerf) where name in tmp2  and name!=getStreamingLeader(11) limit 1;\n");
+        int follower_port = Integer.valueOf(port2.get(0).getString());
+        DBConnection conn_leader = new DBConnection();
+        conn_leader.connect(HOST, leader_port, "admin", "123456",null,true);
+
+        DBConnection conn_follower = new DBConnection();
+        conn_follower.connect(HOST,follower_port ,"admin", "123456",null,true);
+        String script2 = "try{dropStreamTable(\"haStreamTable1\")}catch(ex){};\n go;\n haStreamTable(11, table(array(INT) as intv,array(SYMBOL) as symbolv),\"haStreamTable1\",100000)";
+        conn_leader.run(script2);
+        String sql = "table(1..100 as intv,take(`qq`ee`rr,100) as symbolv)";
+        BasicTable data = (BasicTable) conn.run(sql);
+        List<Entity> args = Arrays.asList(data);
+        System.out.println("----------------");
+        conn_follower.run("tableInsert{'haStreamTable1'}", args);
+        System.out.println("----------------");
+        Entity re1 = conn_follower.run("each(eqObj, (select * from haStreamTable1).values(), table(1..100 as intv,take(`qq`ee`rr,100) as symbolv).values()).all()");
+        assertEquals("true", re1.getString());
+        conn_leader.close();
+        conn_follower.close();
+    }
 }

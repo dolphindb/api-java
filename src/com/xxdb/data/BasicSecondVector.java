@@ -26,6 +26,14 @@ public class BasicSecondVector extends BasicIntVector{
 	public BasicSecondVector(List<Integer> list){
 		super(list);
 	}
+
+	public BasicSecondVector(LocalTime[] array){
+		this(Utils.secondVectorValues(array), false);
+	}
+
+	public BasicSecondVector(Calendar[] array){
+		this(Utils.secondVectorValues(array), false);
+	}
 	
 	public BasicSecondVector(int[] array){
 		super(array);

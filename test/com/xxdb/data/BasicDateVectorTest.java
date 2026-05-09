@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,6 +35,50 @@ public class BasicDateVectorTest {
         assertEquals("1991-10-21",bdhv2.getDate(1).toString());
         ByteBuffer bb = ByteBuffer.allocate(10000);
         bdhv2.writeVectorToBuffer(bb);
+    }
+
+    @Test
+    public void test_BasicDateVector_LocalDate() throws Exception{
+        LocalDate current = LocalDate.now();
+        BasicDateVector v = new BasicDateVector(new LocalDate[]{
+                LocalDate.of(1969, 12, 31),
+                LocalDate.of(2025, 1, 1),
+                LocalDate.of(2040, 1, 1),
+                current
+        });
+        assertEquals(4, v.rows());
+        assertEquals("1969-12-31", v.getDate(0).toString());
+        assertEquals("2025-01-01", v.getDate(1).toString());
+        assertEquals("2040-01-01", v.getDate(2).toString());
+        assertEquals(current, v.getDate(3));
+    }
+
+    @Test
+    public void test_BasicDateVector_Calendar() throws Exception{
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1969, Calendar.DECEMBER, 31, 0, 0, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Calendar calendar2 = Calendar.getInstance();
+        calendar2.set(2025, Calendar.JANUARY, 1, 0, 0, 0);
+        calendar2.set(Calendar.MILLISECOND, 0);
+        Calendar calendar3 = Calendar.getInstance();
+        calendar3.set(2040, Calendar.JANUARY, 1, 0, 0, 0);
+        calendar3.set(Calendar.MILLISECOND, 0);
+        BasicDateVector v = new BasicDateVector(new Calendar[]{calendar, calendar2, calendar3});
+        assertEquals(3, v.rows());
+        assertEquals("1969-12-31", v.getDate(0).toString());
+        assertEquals("2025-01-01", v.getDate(1).toString());
+        assertEquals("2040-01-01", v.getDate(2).toString());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicDateVector_LocalDate_null(){
+        new BasicDateVector((LocalDate[]) null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void test_BasicDateVector_Calendar_null(){
+        new BasicDateVector((Calendar[]) null);
     }
 
     @Test

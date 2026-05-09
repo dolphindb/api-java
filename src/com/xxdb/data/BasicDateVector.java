@@ -27,6 +27,14 @@ public class BasicDateVector extends BasicIntVector{
 	public BasicDateVector(List<Integer> list){
 		super(list);
 	}
+
+	public BasicDateVector(LocalDate[] array){
+		this(Utils.dateVectorValues(array), false);
+	}
+
+	public BasicDateVector(Calendar[] array){
+		this(Utils.dateVectorValues(array), false);
+	}
 	
 	public BasicDateVector(int[] array){
 		super(array);

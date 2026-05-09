@@ -27,6 +27,14 @@ public class BasicDateHourVector extends BasicIntVector {
 	public BasicDateHourVector(List<Integer> list){
 		super(list);
 	}
+
+	public BasicDateHourVector(LocalDateTime[] array){
+		this(Utils.dateHourVectorValues(array), false);
+	}
+
+	public BasicDateHourVector(Calendar[] array){
+		this(Utils.dateHourVectorValues(array), false);
+	}
 	
 	public BasicDateHourVector(int[] array){
 		super(array);

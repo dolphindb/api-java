@@ -8,14 +8,14 @@ import com.xxdb.io.Long2;
 import com.xxdb.io.ProgressListener;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Date;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.YearMonth;
+import java.time.*;
 import java.util.*;
 
 import static com.xxdb.data.BasicDecimalTest.HOST;
@@ -53,6 +53,9 @@ public class BasicTableTest {
         assertTrue(((BasicBoolean)table1.getColumn("cbool").get(0)).getBoolean());
     }
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     @Test
     public void test_set_nullvalue() throws IOException {
         try{
@@ -71,6 +74,2159 @@ public class BasicTableTest {
             e.printStackTrace();
         }
     }
+
+    ////BasicTable(final List<String> colNames, final Collection<?> cols)
+    @Test
+    public void test_BasicTable_Basic_colNames_null(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The param 'colNames' in table cannot be null.");
+
+        List<Object> cols = Arrays.asList(Arrays.asList("alpha"), Arrays.asList("alpha"));
+        BasicTable re = new BasicTable(null, cols);
+        System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_Basic_colNames_null_list(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("length of column name and column data is unequal.");
+
+        List<String> colNames = new ArrayList<>();
+        List<Object> cols = Arrays.asList(Arrays.asList("alpha"), Arrays.asList("alpha"));
+        new BasicTable(colNames, cols);
+    }
+
+    @Test
+    public void test_BasicTable_Basic_colNames_list_contain_null(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The column name in table cannot be null or empty.");
+
+        List<String> colNames = Arrays.asList(null, "alpha");
+        List<Object> cols = Arrays.asList(Arrays.asList("alpha"), Arrays.asList("alpha"));
+        BasicTable re = new BasicTable(colNames, cols);
+        System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_Basic_colNames_list_empty(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The column name in table cannot be null or empty.");
+
+        List<String> colNames = Arrays.asList("", "alpha");
+        List<Object> cols = Arrays.asList(Arrays.asList("alpha"), Arrays.asList("alpha"));
+        BasicTable re = new BasicTable(colNames, cols);
+        System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_Basic_colNames_Duplicated(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The table contains duplicated column name 'alpha'.");
+
+        List<String> colNames = Arrays.asList("alpha", "alpha");
+        List<Object> cols = Arrays.asList(Arrays.asList("alpha"), Arrays.asList("alpha"));
+        BasicTable re = new BasicTable(colNames, cols);
+        //System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_Basic_colNames_size_not_match_cols_size(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The length of column name and column data is unequal.");
+
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList(Arrays.asList("alpha"));
+        BasicTable re = new BasicTable(colNames, cols);
+    }
+
+    @Test
+    public void test_BasicTable_Basic_cols_null(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The param 'cols' in table cannot be null.");
+        List<String> colNames = Arrays.asList("cid", "cname");
+        List<Object> cols = null;
+        new BasicTable(colNames, cols);
+    }
+
+    @Test
+    public void test_BasicTable_Basic_cols_null_list(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The length of column name and column data is unequal.");
+
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = new ArrayList<>();
+        new BasicTable(colNames, cols);
+    }
+
+    @Test
+    public void test_BasicTable_Basic_cols_list_contain_null(){
+        thrown.expect(java.lang.IllegalArgumentException.class);
+        thrown.expectMessage("Column [col1] is null.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList(null, Arrays.asList("alpha"));
+        BasicTable re = new BasicTable(colNames, cols);
+        System.out.println(re.getString());
+        Assert.assertEquals("[]",re.getColumn(0).getString());
+    }
+
+    @Test
+    public void test_BasicTable_Basic_cols_rows_not_match(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The length of column col2  must be the same as the first column length.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList(Arrays.asList("a", "b"), Arrays.asList("alpha"));
+        new BasicTable(colNames, cols);
+    }
+
+    /////BasicTable(final List<String> colNames, final Object[] cols)
+    @Test
+    public void test_BasicTable_Basic_array_colNames_null(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The param 'colNames' in table cannot be null.");
+
+        Object[] cols = new Object[]{new Object[]{1}, new Object[]{"1"}};
+        BasicTable re = new BasicTable(null, cols);
+        System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_Basic_array_colNames_null_list(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("length of column name and column data is unequal.");
+
+        List<String> colNames = new ArrayList<>();
+        Object[] cols = new Object[]{new Object[]{1}, new Object[]{"1"}};
+        new BasicTable(colNames, cols);
+    }
+
+    @Test
+    public void test_BasicTable_Basic_array_colNames_list_contain_null(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The column name in table cannot be null or empty.");
+
+        List<String> colNames = Arrays.asList(null, "alpha");
+        Object[] cols = new Object[]{new Object[]{1}, new Object[]{"1"}};
+        BasicTable re = new BasicTable(colNames, cols);
+        System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_Basic_array_colNames_list_empty(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The column name in table cannot be null or empty.");
+
+        List<String> colNames = Arrays.asList("", "alpha");
+        Object[] cols = new Object[]{new Object[]{1}, new Object[]{"1"}};
+        BasicTable re = new BasicTable(colNames, cols);
+        System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_Basic_array_colNames_Duplicated(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The table contains duplicated column name 'alpha'.");
+
+        List<String> colNames = Arrays.asList("alpha", "alpha");
+        Object[] cols = new Object[]{new Object[]{1}, new Object[]{"1"}};
+        BasicTable re = new BasicTable(colNames, cols);
+        //System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_Basic_array_colNames_size_not_match_cols_size(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The length of column name and column data is unequal.");
+
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{ "1"};
+        BasicTable re = new BasicTable(colNames, cols);
+    }
+
+    @Test
+    public void test_BasicTable_Basic_array_cols_null(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The param 'cols' in table cannot be null.");
+        List<String> colNames = Arrays.asList("cid", "cname");
+        Object[] cols = null;
+        new BasicTable(colNames, cols);
+    }
+
+    @Test
+    public void test_BasicTable_Basic_array_cols_null_list(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The length of column name and column data is unequal.");
+
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{};
+        new BasicTable(colNames, cols);
+    }
+
+    @Test
+    public void test_BasicTable_Basic_array_cols_list_contain_null(){
+        thrown.expect(java.lang.IllegalArgumentException.class);
+        thrown.expectMessage("Column [col1] is null.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{null, "alpha"};
+        BasicTable re = new BasicTable(colNames, cols);
+        System.out.println(re.getString());
+        Assert.assertEquals("[]",re.getColumn(0).getString());
+    }
+
+    @Test//(expected = Error.class)
+    public void test_BasicTable_Basic_array_cols_rows_not_match(){
+        thrown.expect(java.lang.IllegalArgumentException.class);
+        thrown.expectMessage("Column [col2] only supports Java List or array values for automatic type inference. Please use the typed constructor.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{ new Object[]{1,2}, "alpha"};
+        new BasicTable(colNames, cols);
+    }
+    ////BasicTable(List<String> colNames, List<?> cols, DATA_TYPE[] colTypes)
+    @Test
+    public void test_BasicTable_colNames_null(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The param 'colNames' in table cannot be null.");
+
+        List<Object> cols = Arrays.asList(1, "alpha");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(null, cols, colTypes);
+        System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_colNames_null_list(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("length of column name and column data is unequal.");
+
+        List<String> colNames = new ArrayList<>();
+        List<Object> cols = Arrays.asList(1, "alpha");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_colNames_list_contain_null(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The column name in table cannot be null or empty.");
+
+        List<String> colNames = Arrays.asList(null, "alpha");
+        List<Object> cols = Arrays.asList(1, "alpha");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+        System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_colNames_list_empty(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The column name in table cannot be null or empty.");
+
+        List<String> colNames = Arrays.asList("", "alpha");
+        List<Object> cols = Arrays.asList(1, "alpha");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+        System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_colNames_Duplicated(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The table contains duplicated column name 'alpha'.");
+
+        List<String> colNames = Arrays.asList("alpha", "alpha");
+        List<Object> cols = Arrays.asList(1, "alpha");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+        //System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_colNames_size_not_match_cols_size(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The length of column name and column data is unequal.");
+
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList("alpha");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_cols_null(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The param 'cols' in table cannot be null.");
+        List<String> colNames = Arrays.asList("cid", "cname");
+        List<Object> cols = null;
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_cols_null_list(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The length of column name and column data is unequal.");
+
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = new ArrayList<>();
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_cols_list_contain_null(){
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList(null, "alpha");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+        System.out.println(re.getString());
+        Assert.assertEquals("[]",re.getColumn(0).getString());
+    }
+
+    @Test//(expected = Error.class)
+    public void test_BasicTable_cols_rows_not_match(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The length of column col2  must be the same as the first column length.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList(Arrays.asList("a", "b"), "alpha");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_STRING, Entity.DATA_TYPE.DT_STRING};
+        new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_colTypes_null(){
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Column types must be specified when using Java-native columns.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList(Arrays.asList("b"), "alpha");
+        Entity.DATA_TYPE[] colTypes = null;
+        new BasicTable(colNames, cols, colTypes);
+    }
+    @Test
+    public void test_BasicTable_colTypes_list_null(){
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Column [col1] type must be specified when using Java-native columns.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList(Arrays.asList("b"), "alpha");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{null, Entity.DATA_TYPE.DT_STRING};
+        new BasicTable(colNames, cols, colTypes);
+    }
+    @Test
+    public void test_BasicTable_colTypes_not_support() throws IOException {
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("Column [col1] is a DolphinDB Entity but not a Vector. The new BasicTable constructors only support all-Java columns or all-Vector columns.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        Entity code = conn.run("<1+2>");
+        List<Object> cols = Arrays.asList(code, "1");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_CODE, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_colTypes_decimal_colExtraParams_not_set() throws IOException {
+        thrown.expect(java.lang.IllegalArgumentException.class);
+        thrown.expectMessage("Column type DECIMAL128 requires extra parameters such as scale.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList("1", "1");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_DECIMAL128, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_colTypes_decimal_colExtraParams_set_error() throws IOException {
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("Scale 39 is out of bounds, it must be in [0,38].");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList("1", "1");
+        int[] colExtraParams = new int[]{39,0};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_DECIMAL128, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes,colExtraParams);
+    }
+
+    @Test
+    public void test_BasicTable_colTypes_decimal_colExtraParams_set_error1() throws IOException {
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("Scale -4 is out of bounds, it must be in [0,38].");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList("1", "1");
+        int[] colExtraParams = new int[]{-4,0};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_DECIMAL128, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes,colExtraParams);
+    }
+
+    @Test
+    public void test_BasicTable_colTypes_colExtraParams_null() throws IOException {
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList("1", "1");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_STRING, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes,null);
+        Assert.assertEquals(1,re.rows());
+    }
+
+    @Test
+    public void test_BasicTable_colTypes_colExtraParams_length_not_match() throws IOException {
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The lengths of column names, column data, column types, and column extra params must be equal.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList("1", "1");
+        int[] colExtraParams = new int[]{1};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_DECIMAL128, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes, colExtraParams);
+    }
+
+    ////BasicTable(final List<String> colNames, final Object[] cols, final DATA_TYPE[] colTypes)
+    @Test
+    public void test_BasicTable_array_cols_colNames_null(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The param 'colNames' in table cannot be null.");
+
+        Object[] cols = new Object[]{1, "alpha"};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(null, cols, colTypes);
+        System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_colNames_null_list(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("length of column name and column data is unequal.");
+
+        List<String> colNames = new ArrayList<>();
+        Object[] cols = new Object[]{1, "alpha"};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_colNames_list_contain_null(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The column name in table cannot be null or empty.");
+
+        List<String> colNames = Arrays.asList(null, "alpha");
+        Object[] cols = new Object[]{1, "alpha"};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+        System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_colNames_list_empty(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The column name in table cannot be null or empty.");
+
+        List<String> colNames = Arrays.asList("", "alpha");
+        Object[] cols = new Object[]{1, "alpha"};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+        System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_colNames_Duplicated(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The table contains duplicated column name 'alpha'.");
+
+        List<String> colNames = Arrays.asList("alpha", "alpha");
+        Object[] cols = new Object[]{1, "alpha"};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+        //System.out.println(re.getString());
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_colNames_size_not_match_cols_size(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The length of column name and column data is unequal.");
+
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{"alpha"};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_null(){
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The param 'cols' in table cannot be null.");
+        List<String> colNames = Arrays.asList("cid", "cname");
+        Object[] cols = null;
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_null_array(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The length of column name and column data is unequal.");
+
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_cols_list_contain_null(){
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{null, "alpha"};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+        System.out.println(re.getString());
+        Assert.assertEquals("[]", re.getColumn(0).getString());
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_cols_rows_not_match(){
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The length of column col2  must be the same as the first column length.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{Arrays.asList("a", "b"), "alpha"};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_STRING, Entity.DATA_TYPE.DT_STRING};
+        new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_colTypes_null(){
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Column types must be specified when using Java-native columns.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{Arrays.asList("b"), "alpha"};
+        Entity.DATA_TYPE[] colTypes = null;
+        new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_colTypes_list_null(){
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Column [col1] type must be specified when using Java-native columns.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{Arrays.asList("b"), "alpha"};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{null, Entity.DATA_TYPE.DT_STRING};
+        new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_colTypes_not_support() throws IOException {
+        thrown.expect(java.lang.IllegalArgumentException.class);
+        thrown.expectMessage("Column [col1] is a DolphinDB Entity but not a Vector. The new BasicTable constructors only support all-Java columns or all-Vector columns.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        DBConnection conn = new DBConnection();
+        conn.connect(HOST,PORT);
+        Entity code = conn.run("<1+2>");
+        Object[] cols = new Object[]{code, "1"};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_CODE, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_colTypes_decimal_colExtraParams_not_set() throws IOException {
+        thrown.expect(java.lang.IllegalArgumentException.class);
+        thrown.expectMessage("Column type DECIMAL128 requires extra parameters such as scale.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{"1", "1"};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_DECIMAL128, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+    }
+    @Test
+    public void test_BasicTable_array_cols_colTypes_decimal_colExtraParams_set_error() throws IOException {
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("Scale 39 is out of bounds, it must be in [0,38].");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{"1", "1"};
+        int[] colExtraParams = new int[]{39,0};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_DECIMAL128, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes,colExtraParams);
+    }
+    @Test
+    public void test_BasicTable_array_cols_colTypes_decimal_colExtraParams_set_error1() throws IOException {
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("Scale -4 is out of bounds, it must be in [0,38].");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Object> cols = Arrays.asList("1", "1");
+        int[] colExtraParams = new int[]{-4,0};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_DECIMAL128, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes,colExtraParams);
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_colExtraParams_length_not_match() throws IOException {
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The lengths of column names, column data, column types, and column extra params must be equal.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        Object[] cols = new Object[]{"1", "1"};
+        int[] colExtraParams = new int[]{1};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_DECIMAL128, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes, colExtraParams);
+    }
+
+    @Test
+    public void test_BasicTable_array_cols_Types_mixed() throws IOException {
+        thrown.expect(java.lang.IllegalArgumentException.class);
+        thrown.expectMessage("The new BasicTable constructors only support all-Java columns or all-Vector columns.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+
+        Object[] cols = new Object[]{new BasicIntVector(1), "1"};
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{Entity.DATA_TYPE.DT_INT, Entity.DATA_TYPE.DT_STRING};
+        BasicTable re = new BasicTable(colNames, cols, colTypes);
+    }
+    @Test
+    public void test_BasicTable_Basic_cols_date_Calendar() throws IOException {
+        List<String> colNames = Arrays.asList(
+                "ctimestamp_Date ",
+                "ctimestamp_Calendar"
+        );
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTimeInMillis(1704067200000L);
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTimeInMillis(1704067299999L);
+        Calendar cal3 = Calendar.getInstance();
+        cal3.setTimeInMillis(1704067200000L);
+        Object[] cols = new Object[]{
+                 Arrays.asList(new java.util.Date(1704067200000L), new java.util.Date(1704067299999L),new java.util.Date(1704067200000L)),
+                Arrays.asList(cal1, cal2, cal3)
+        };
+        BasicTable re = new BasicTable(colNames, cols);
+        assertEquals("[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]", re.getColumn(0).getString());
+        assertEquals("[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]", re.getColumn(1).getString());
+    }
+
+    @Test
+    public void test_BasicTable_Basic_list_cols_date_Calendar() throws IOException {
+        List<String> colNames = Arrays.asList(
+                "ctimestamp_Date ",
+                "ctimestamp_Calendar"
+        );
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTimeInMillis(1704067200000L);
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTimeInMillis(1704067299999L);
+        Calendar cal3 = Calendar.getInstance();
+        cal3.setTimeInMillis(1704067200000L);
+        List<Object> cols = Arrays.asList(
+                Arrays.asList(new java.util.Date(1704067200000L), new java.util.Date(1704067299999L),new java.util.Date(1704067200000L)),
+                Arrays.asList(cal1, cal2, cal3)
+        );
+        BasicTable re = new BasicTable(colNames, cols);
+        assertEquals("[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]", re.getColumn(0).getString());
+        assertEquals("[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]", re.getColumn(1).getString());
+    }
+
+    @Test
+    public void test_BasicTable_Basic_cols_list_list_allDataType_java() throws IOException {
+        List<String> colNames = Arrays.asList(
+                "cbool",
+                "cchar",
+                "cshort",
+                "cint",
+                "clong",
+                "cfloat",
+                "cdouble",
+                "cstring",
+                "csymbol",
+                "cmonth",
+                "cdate",
+                "cnanotime",
+                "cnanotimestamp",
+                "ctimestamp_Date ",
+                "ctimestamp_Calendar",
+                "cblob"
+        );
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTimeInMillis(1704067200000L);
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTimeInMillis(1704067299999L);
+        Calendar cal3 = Calendar.getInstance();
+        cal3.setTimeInMillis(1704067200000L);
+
+        List<Object> cols = Arrays.asList(
+                Arrays.asList(true, false, false),
+                Arrays.asList((byte) 22, (byte) 57, (byte) 13),
+                Arrays.asList((short) -12, (short) 35, (short) 73),
+                Arrays.asList(5, 11, 76),
+                Arrays.asList(12L, 367L, 23L),
+                Arrays.asList(4580.02f, 394.3f, 5.981f),
+                Arrays.asList(15.32, 748.55, 7.17),
+                Arrays.asList("hello", "abandon", "lambada"),
+                Arrays.asList("KingBase", "vastBase", null),
+                Arrays.asList(YearMonth.of(28, 11), YearMonth.of(2010, 4), YearMonth.of(2006, 3)),
+                Arrays.asList(LocalDate.of(1970, 1, 2), LocalDate.of(1969, 12, 31), LocalDate.of(1970, 1, 3)),
+                Arrays.asList(LocalTime.of(0, 0, 2, 345000000), LocalTime.of(0, 0, 46, 284000000), LocalTime.of(0, 0, 5, 839000000)),
+                Arrays.asList(LocalDateTime.of(1970, 1, 1, 0, 0, 49), LocalDateTime.of(1970, 1, 1, 0, 4, 2), LocalDateTime.of(1970, 1, 1, 0, 0, 25)),
+                Arrays.asList(new java.util.Date(1704067200000L), new java.util.Date(1704067299999L),new java.util.Date(1704067200000L)),
+                Arrays.asList(cal1, cal2, cal3),
+                Arrays.asList(new byte[]{0x01, 0x02}, new byte[]{0x03, 0x04}, new byte[]{0x03, 0x04})
+        );
+
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{
+                Entity.DATA_TYPE.DT_BOOL,
+                Entity.DATA_TYPE.DT_BYTE,
+                Entity.DATA_TYPE.DT_SHORT,
+                Entity.DATA_TYPE.DT_INT,
+                Entity.DATA_TYPE.DT_LONG,
+                Entity.DATA_TYPE.DT_FLOAT,
+                Entity.DATA_TYPE.DT_DOUBLE,
+                Entity.DATA_TYPE.DT_STRING,
+                Entity.DATA_TYPE.DT_STRING,
+                Entity.DATA_TYPE.DT_MONTH,
+                Entity.DATA_TYPE.DT_DATE,
+                Entity.DATA_TYPE.DT_NANOTIME,
+                Entity.DATA_TYPE.DT_NANOTIMESTAMP,
+                Entity.DATA_TYPE.DT_TIMESTAMP,
+                Entity.DATA_TYPE.DT_TIMESTAMP,
+                Entity.DATA_TYPE.DT_BLOB
+        };
+        BasicTable re = new BasicTable(colNames, cols);
+        assertEquals(16, re.columns());
+        assertEquals(3, re.rows());
+        String[] expectedStrings = new String[]{
+                "[true,false,false]",
+                "[22,'9',13]",
+                "[-12,35,73]",
+                "[5,11,76]",
+                "[12,367,23]",
+                "[4580.02001953,394.29998779,5.98099995]",
+                "[15.32,748.55,7.17]",
+                "[hello,abandon,lambada]",
+                "[KingBase,vastBase,]",
+                "[0028.11M,2010.04M,2006.03M]",
+                "[1970.01.02,1969.12.31,1970.01.03]",
+                "[00:00:02.345000000,00:00:46.284000000,00:00:05.839000000]",
+                "[1970.01.01T00:00:49.000000000,1970.01.01T00:04:02.000000000,1970.01.01T00:00:25.000000000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
+                "[\u0001\u0002,\u0003\u0004,\u0003\u0004]"
+        };
+        for (int i = 0; i < colNames.size(); i++) {
+            assertEquals(colNames.get(i), re.getColumnName(i));
+            assertEquals(colTypes[i].toString(), re.getColumn(i).getDataType().toString());
+            assertEquals(expectedStrings[i], re.getColumn(i).getString());
+        }
+    }
+
+    @Test
+    public void test_BasicTable_Basic_cols_list_array_allDataType_java() throws IOException {
+        List<String> colNames = Arrays.asList(
+                "cbool",
+                "cchar",
+                "cshort",
+                "cint",
+                "clong",
+                "cfloat",
+                "cdouble",
+                "cstring",
+                "csymbol",
+                "cmonth",
+                "cdate",
+                "cnanotime",
+                "cnanotimestamp",
+                "ctimestamp_Date ",
+                "ctimestamp_Calendar",
+                "cblob"
+        );
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTimeInMillis(1704067200000L);
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTimeInMillis(1704067299999L);
+        Calendar cal3 = Calendar.getInstance();
+        cal3.setTimeInMillis(1704067200000L);
+
+        List<Object> cols = Arrays.asList(
+                new Object[]{true, false, false},
+                new Object[]{(byte) 22, (byte) 57, (byte) 13},
+                new Object[]{(short) -12, (short) 35, (short) 73},
+                new Object[]{5, 11, 76},
+                new Object[]{12L, 367L, 23L},
+                new Object[]{4580.02f, 394.3f, 5.981f},
+                new Object[]{15.32, 748.55, 7.17},
+                new Object[]{"hello", "abandon", "lambada"},
+                new Object[]{"KingBase", "vastBase", null},
+                new Object[]{YearMonth.of(28, 11), YearMonth.of(2010, 4), YearMonth.of(2006, 3)},
+                new Object[]{LocalDate.of(1970, 1, 2), LocalDate.of(1969, 12, 31), LocalDate.of(1970, 1, 3)},
+                new Object[]{LocalTime.of(0, 0, 2, 345000000), LocalTime.of(0, 0, 46, 284000000), LocalTime.of(0, 0, 5, 839000000)},
+                new Object[]{LocalDateTime.of(1970, 1, 1, 0, 0, 49), LocalDateTime.of(1970, 1, 1, 0, 4, 2), LocalDateTime.of(1970, 1, 1, 0, 0, 25)},
+                new Object[]{new java.util.Date(1704067200000L), new java.util.Date(1704067299999L),new java.util.Date(1704067200000L)},
+                new Object[]{cal1, cal2, cal3},
+                new Object[]{new byte[]{0x01, 0x02}, new byte[]{0x03, 0x04}, new byte[]{0x03, 0x04}}
+        );
+
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{
+                Entity.DATA_TYPE.DT_BOOL,
+                Entity.DATA_TYPE.DT_BYTE,
+                Entity.DATA_TYPE.DT_SHORT,
+                Entity.DATA_TYPE.DT_INT,
+                Entity.DATA_TYPE.DT_LONG,
+                Entity.DATA_TYPE.DT_FLOAT,
+                Entity.DATA_TYPE.DT_DOUBLE,
+                Entity.DATA_TYPE.DT_STRING,
+                Entity.DATA_TYPE.DT_STRING,
+                Entity.DATA_TYPE.DT_MONTH,
+                Entity.DATA_TYPE.DT_DATE,
+                Entity.DATA_TYPE.DT_NANOTIME,
+                Entity.DATA_TYPE.DT_NANOTIMESTAMP,
+                Entity.DATA_TYPE.DT_TIMESTAMP,
+                Entity.DATA_TYPE.DT_TIMESTAMP,
+                Entity.DATA_TYPE.DT_BLOB
+        };
+        BasicTable re = new BasicTable(colNames, cols);
+        assertEquals(16, re.columns());
+        assertEquals(3, re.rows());
+        String[] expectedStrings = new String[]{
+                "[true,false,false]",
+                "[22,'9',13]",
+                "[-12,35,73]",
+                "[5,11,76]",
+                "[12,367,23]",
+                "[4580.02001953,394.29998779,5.98099995]",
+                "[15.32,748.55,7.17]",
+                "[hello,abandon,lambada]",
+                "[KingBase,vastBase,]",
+                "[0028.11M,2010.04M,2006.03M]",
+                "[1970.01.02,1969.12.31,1970.01.03]",
+                "[00:00:02.345000000,00:00:46.284000000,00:00:05.839000000]",
+                "[1970.01.01T00:00:49.000000000,1970.01.01T00:04:02.000000000,1970.01.01T00:00:25.000000000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
+                "[\u0001\u0002,\u0003\u0004,\u0003\u0004]"
+        };
+        for (int i = 0; i < colNames.size(); i++) {
+            assertEquals(colNames.get(i), re.getColumnName(i));
+            assertEquals(colTypes[i].toString(), re.getColumn(i).getDataType().toString());
+            assertEquals(expectedStrings[i], re.getColumn(i).getString());
+        }
+    }
+
+    @Test
+    public void test_BasicTable_Basic_cols_array_list_allDataType_java() throws IOException {
+        List<String> colNames = Arrays.asList(
+                "cbool",
+                "cchar",
+                "cshort",
+                "cint",
+                "clong",
+                "cfloat",
+                "cdouble",
+                "cstring",
+                "csymbol",
+                "cmonth",
+                "cdate",
+                "cnanotime",
+                "cnanotimestamp",
+                "ctimestamp_Date ",
+                "ctimestamp_Calendar",
+                "cblob"
+                );
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTimeInMillis(1704067200000L);
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTimeInMillis(1704067299999L);
+        Calendar cal3 = Calendar.getInstance();
+        cal3.setTimeInMillis(1704067200000L);
+        Object[] cols = new Object[]{
+                Arrays.asList(true, false, false),
+                Arrays.asList((byte) 22, (byte) 57, (byte) 13),
+                Arrays.asList((short) -12, (short) 35, (short) 73),
+                Arrays.asList(5, 11, 76),
+                Arrays.asList(12L, 367L, 23L),
+                Arrays.asList(4580.02f, 394.3f, 5.981f),
+                Arrays.asList(15.32, 748.55, 7.17),
+                Arrays.asList("hello", "abandon", "lambada"),
+                Arrays.asList("KingBase", "vastBase", null),
+                Arrays.asList(YearMonth.of(28, 11), YearMonth.of(2010, 4), YearMonth.of(2006, 3)),
+                Arrays.asList(LocalDate.of(1970, 1, 2), LocalDate.of(1969, 12, 31), LocalDate.of(1970, 1, 3)),
+                Arrays.asList(LocalTime.of(0, 0, 2, 345000000), LocalTime.of(0, 0, 46, 284000000), LocalTime.of(0, 0, 5, 839000000)),
+                Arrays.asList(LocalDateTime.of(1970, 1, 1, 0, 0, 49), LocalDateTime.of(1970, 1, 1, 0, 4, 2), LocalDateTime.of(1970, 1, 1, 0, 0, 25)),
+                Arrays.asList(new java.util.Date(1704067200000L), new java.util.Date(1704067299999L),new java.util.Date(1704067200000L)),
+                Arrays.asList(cal1, cal2, cal3),
+                Arrays.asList(new byte[]{0x01, 0x02}, new byte[]{0x03, 0x04}, new byte[]{0x03, 0x04})
+        };
+
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{
+                Entity.DATA_TYPE.DT_BOOL,
+                Entity.DATA_TYPE.DT_BYTE,
+                Entity.DATA_TYPE.DT_SHORT,
+                Entity.DATA_TYPE.DT_INT,
+                Entity.DATA_TYPE.DT_LONG,
+                Entity.DATA_TYPE.DT_FLOAT,
+                Entity.DATA_TYPE.DT_DOUBLE,
+                Entity.DATA_TYPE.DT_STRING,
+                Entity.DATA_TYPE.DT_STRING,
+                Entity.DATA_TYPE.DT_MONTH,
+                Entity.DATA_TYPE.DT_DATE,
+                Entity.DATA_TYPE.DT_NANOTIME,
+                Entity.DATA_TYPE.DT_NANOTIMESTAMP,
+                Entity.DATA_TYPE.DT_TIMESTAMP,
+                Entity.DATA_TYPE.DT_TIMESTAMP,
+                Entity.DATA_TYPE.DT_BLOB
+               };
+        BasicTable re = new BasicTable(colNames, cols);
+        assertEquals(16, re.columns());
+        assertEquals(3, re.rows());
+        String[] expectedStrings = new String[]{
+                "[true,false,false]",
+                "[22,'9',13]",
+                "[-12,35,73]",
+                "[5,11,76]",
+                "[12,367,23]",
+                "[4580.02001953,394.29998779,5.98099995]",
+                "[15.32,748.55,7.17]",
+                "[hello,abandon,lambada]",
+                "[KingBase,vastBase,]",
+                "[0028.11M,2010.04M,2006.03M]",
+                "[1970.01.02,1969.12.31,1970.01.03]",
+                "[00:00:02.345000000,00:00:46.284000000,00:00:05.839000000]",
+                "[1970.01.01T00:00:49.000000000,1970.01.01T00:04:02.000000000,1970.01.01T00:00:25.000000000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
+                "[\u0001\u0002,\u0003\u0004,\u0003\u0004]"
+        };
+        for (int i = 0; i < colNames.size(); i++) {
+            assertEquals(colNames.get(i), re.getColumnName(i));
+            assertEquals(colTypes[i].toString(), re.getColumn(i).getDataType().toString());
+            assertEquals(expectedStrings[i], re.getColumn(i).getString());
+        }
+    }
+
+    @Test
+    public void test_BasicTable_Basic_cols_array_array_allDataType_java() throws IOException {
+        List<String> colNames = Arrays.asList(
+                "cbool",
+                "cchar",
+                "cshort",
+                "cint",
+                "clong",
+                "cfloat",
+                "cdouble",
+                "cstring",
+                "csymbol",
+                "cmonth",
+                "cdate",
+                "cnanotime",
+                "cnanotimestamp",
+                "ctimestamp_Date ",
+                "ctimestamp_Calendar",
+                "cblob"
+        );
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTimeInMillis(1704067200000L);
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTimeInMillis(1704067299999L);
+        Calendar cal3 = Calendar.getInstance();
+        cal3.setTimeInMillis(1704067200000L);
+        Object[] cols = new Object[]{
+                new Object[]{true, false, false},
+                new Object[]{(byte) 22, (byte) 57, (byte) 13},
+                new Object[]{(short) -12, (short) 35, (short) 73},
+                new Object[]{5, 11, 76},
+                new Object[]{12L, 367L, 23L},
+                new Object[]{4580.02f, 394.3f, 5.981f},
+                new Object[]{15.32, 748.55, 7.17},
+                new Object[]{"hello", "abandon", "lambada"},
+                new Object[]{"KingBase", "vastBase", null},
+                new Object[]{YearMonth.of(28, 11), YearMonth.of(2010, 4), YearMonth.of(2006, 3)},
+                new Object[]{LocalDate.of(1970, 1, 2), LocalDate.of(1969, 12, 31), LocalDate.of(1970, 1, 3)},
+                new Object[]{LocalTime.of(0, 0, 2, 345000000), LocalTime.of(0, 0, 46, 284000000), LocalTime.of(0, 0, 5, 839000000)},
+                new Object[]{LocalDateTime.of(1970, 1, 1, 0, 0, 49), LocalDateTime.of(1970, 1, 1, 0, 4, 2), LocalDateTime.of(1970, 1, 1, 0, 0, 25)},
+                new Object[]{new java.util.Date(1704067200000L), new java.util.Date(1704067299999L),new java.util.Date(1704067200000L)},
+                new Object[]{cal1, cal2, cal3},
+                new Object[]{new byte[]{0x01, 0x02}, new byte[]{0x03, 0x04}, new byte[]{0x03, 0x04}}
+        };
+
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{
+                Entity.DATA_TYPE.DT_BOOL,
+                Entity.DATA_TYPE.DT_BYTE,
+                Entity.DATA_TYPE.DT_SHORT,
+                Entity.DATA_TYPE.DT_INT,
+                Entity.DATA_TYPE.DT_LONG,
+                Entity.DATA_TYPE.DT_FLOAT,
+                Entity.DATA_TYPE.DT_DOUBLE,
+                Entity.DATA_TYPE.DT_STRING,
+                Entity.DATA_TYPE.DT_STRING,
+                Entity.DATA_TYPE.DT_MONTH,
+                Entity.DATA_TYPE.DT_DATE,
+                Entity.DATA_TYPE.DT_NANOTIME,
+                Entity.DATA_TYPE.DT_NANOTIMESTAMP,
+                Entity.DATA_TYPE.DT_TIMESTAMP,
+                Entity.DATA_TYPE.DT_TIMESTAMP,
+                Entity.DATA_TYPE.DT_BLOB
+        };
+        BasicTable re = new BasicTable(colNames, cols);
+        assertEquals(16, re.columns());
+        assertEquals(3, re.rows());
+        String[] expectedStrings = new String[]{
+                "[true,false,false]",
+                "[22,'9',13]",
+                "[-12,35,73]",
+                "[5,11,76]",
+                "[12,367,23]",
+                "[4580.02001953,394.29998779,5.98099995]",
+                "[15.32,748.55,7.17]",
+                "[hello,abandon,lambada]",
+                "[KingBase,vastBase,]",
+                "[0028.11M,2010.04M,2006.03M]",
+                "[1970.01.02,1969.12.31,1970.01.03]",
+                "[00:00:02.345000000,00:00:46.284000000,00:00:05.839000000]",
+                "[1970.01.01T00:00:49.000000000,1970.01.01T00:04:02.000000000,1970.01.01T00:00:25.000000000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
+                "[2024.01.01T00:00:00.000,2024.01.01T00:01:39.999,2024.01.01T00:00:00.000]",
+                "[\u0001\u0002,\u0003\u0004,\u0003\u0004]"
+        };
+        for (int i = 0; i < colNames.size(); i++) {
+            assertEquals(colNames.get(i), re.getColumnName(i));
+            assertEquals(colTypes[i].toString(), re.getColumn(i).getDataType().toString());
+            assertEquals(expectedStrings[i], re.getColumn(i).getString());
+        }
+    }
+
+    @Test
+    public void test_BasicTable_cols_array_allDataType_java() throws IOException {
+        List<String> colNames = Arrays.asList(
+                "cbool",
+                "cchar",
+                "cshort",
+                "cint",
+                "clong",
+                "cdate",
+                "cmonth",
+                "ctime",
+                "cminute",
+                "csecond",
+                "cdatetime",
+                "ctimestamp",
+                "cnanotime",
+                "cnanotimestamp",
+                "cfloat",
+                "cdouble",
+                "cstring",
+                "csymbol",
+                "cblob",
+                "cuuid",
+                "cdatehour",
+                "cipaddr",
+                "cint128",
+                "ccomplex",
+                "cpoint",
+                "cdecimal32",
+                "cdecimal64",
+                "cdecimal128");
+
+        Object[] cols = new Object[]{
+                Arrays.asList(true, false, false),
+                Arrays.asList((byte) 22, (byte) 57, (byte) 13),
+                Arrays.asList((short) 12, (short) 35, (short) 73),
+                Arrays.asList(5, 11, 76),
+                Arrays.asList(12L, 367L, 23L),
+                Arrays.asList(LocalDate.of(1970, 1, 2), LocalDate.of(1969, 12, 31), LocalDate.of(1970, 1, 3)),
+                Arrays.asList(YearMonth.of(28, 11), YearMonth.of(2010, 4), YearMonth.of(2006, 3)),
+                Arrays.asList(LocalTime.of(0, 0, 2, 345000000), LocalTime.of(0, 0, 46, 284000000), LocalTime.of(0, 0, 5, 839000000)),
+                Arrays.asList(LocalTime.of(12, 29), LocalTime.of(15, 4), LocalTime.of(7, 12)),
+                Arrays.asList(LocalTime.of(0, 0, 17), LocalTime.of(1, 21, 30), LocalTime.of(0, 8, 14)),
+                Arrays.asList(LocalDateTime.of(1970, 1, 1, 0, 0, 49), LocalDateTime.of(1970, 1, 1, 0, 4, 2), LocalDateTime.of(1970, 1, 1, 0, 0, 25)),
+                Arrays.asList(LocalDateTime.of(1970, 1, 1, 0, 0, 2, 839000000), LocalDateTime.of(1970, 1, 1, 0, 0, 0, 480000000), LocalDateTime.of(1970, 1, 1, 0, 0, 0, 341000000)),
+                Arrays.asList(LocalTime.of(0, 0, 0, 521), LocalTime.of(0, 0, 0, 353566), LocalTime.of(0, 0, 0, 1)),
+                Arrays.asList(LocalDateTime.of(1970, 1, 1, 0, 0, 0, 521), LocalDateTime.of(1970, 1, 1, 0, 0, 0, 353566), LocalDateTime.of(1970, 1, 1, 0, 0, 0, 1)),
+                Arrays.asList(4580.02f, 394.3f, 5.981f),
+                Arrays.asList(15.32, 748.55, 7.17),
+                Arrays.asList("hello", "abandon", "lambada"),
+                Arrays.asList("KingBase", "vastBase", null),
+                Arrays.asList("Dolphindb", "MongoDB", "GaussDB"),
+                Arrays.asList(new Long2(4758, 1231), new Long2(5890, 943), new Long2(9000, 659)),
+                Arrays.asList(LocalDateTime.of(1970, 1, 1, 1, 0), LocalDateTime.of(1970, 1, 1, 2, 0), LocalDateTime.of(1970, 1, 1, 3, 0)),
+                Arrays.asList(new Long2(0L, 0L), new Long2(0L, 0x01020304L), new Long2(0L, 0x0A000001L)),
+                Arrays.asList(new Long2(0L, 1L), new Long2(0L, 2L), new Long2(0L, 3L)),
+                Arrays.asList(new Double2(1.0, 2.0), new Double2(-1.87, -2.99), new Double2(3.14, 2.71)),
+                Arrays.asList(new Double2(0.83, 4.51), new Double2(33.16, 49.71), new Double2(52.10, 45.43)),
+                Arrays.asList("0.35", "0.17", "0.25"),
+                Arrays.asList("0.0349", "0.5372", "0.2336"),
+                Arrays.asList("0.0349", "0.5372", "0.2336")
+        };
+
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{
+                Entity.DATA_TYPE.DT_BOOL,
+                Entity.DATA_TYPE.DT_BYTE,
+                Entity.DATA_TYPE.DT_SHORT,
+                Entity.DATA_TYPE.DT_INT,
+                Entity.DATA_TYPE.DT_LONG,
+                Entity.DATA_TYPE.DT_DATE,
+                Entity.DATA_TYPE.DT_MONTH,
+                Entity.DATA_TYPE.DT_TIME,
+                Entity.DATA_TYPE.DT_MINUTE,
+                Entity.DATA_TYPE.DT_SECOND,
+                Entity.DATA_TYPE.DT_DATETIME,
+                Entity.DATA_TYPE.DT_TIMESTAMP,
+                Entity.DATA_TYPE.DT_NANOTIME,
+                Entity.DATA_TYPE.DT_NANOTIMESTAMP,
+                Entity.DATA_TYPE.DT_FLOAT,
+                Entity.DATA_TYPE.DT_DOUBLE,
+                Entity.DATA_TYPE.DT_STRING,
+                Entity.DATA_TYPE.DT_SYMBOL,
+                Entity.DATA_TYPE.DT_BLOB,
+                Entity.DATA_TYPE.DT_UUID,
+                Entity.DATA_TYPE.DT_DATEHOUR,
+                Entity.DATA_TYPE.DT_IPADDR,
+                Entity.DATA_TYPE.DT_INT128,
+                Entity.DATA_TYPE.DT_COMPLEX,
+                Entity.DATA_TYPE.DT_POINT,
+                Entity.DATA_TYPE.DT_DECIMAL32,
+                Entity.DATA_TYPE.DT_DECIMAL64,
+                Entity.DATA_TYPE.DT_DECIMAL128};
+        int[] colExtraParams = new int[]{
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 2, 4, 4};
+        BasicTable re = new BasicTable(colNames, cols, colTypes, colExtraParams);
+        assertEquals(28, re.columns());
+        assertEquals(3, re.rows());
+        String[] expectedStrings = new String[]{
+                "[true,false,false]",
+                "[22,'9',13]",
+                "[12,35,73]",
+                "[5,11,76]",
+                "[12,367,23]",
+                "[1970.01.02,1969.12.31,1970.01.03]",
+                "[0028.11M,2010.04M,2006.03M]",
+                "[00:00:02.345,00:00:46.284,00:00:05.839]",
+                "[12:29m,15:04m,07:12m]",
+                "[00:00:17,01:21:30,00:08:14]",
+                "[1970.01.01T00:00:49,1970.01.01T00:04:02,1970.01.01T00:00:25]",
+                "[1970.01.01T00:00:02.839,1970.01.01T00:00:00.480,1970.01.01T00:00:00.341]",
+                "[00:00:00.000000521,00:00:00.000353566,00:00:00.000000001]",
+                "[1970.01.01T00:00:00.000000521,1970.01.01T00:00:00.000353566,1970.01.01T00:00:00.000000001]",
+                "[4580.02001953,394.29998779,5.98099995]",
+                "[15.32,748.55,7.17]",
+                "[hello,abandon,lambada]",
+                "[KingBase,vastBase,]",
+                "[Dolphindb,MongoDB,GaussDB]",
+                new BasicUuidVector(Arrays.asList(new Long2(4758, 1231), new Long2(5890, 943), new Long2(9000, 659))).getString(),
+                new BasicDateHourVector(new LocalDateTime[]{
+                        LocalDateTime.of(1970, 1, 1, 1, 0),
+                        LocalDateTime.of(1970, 1, 1, 2, 0),
+                        LocalDateTime.of(1970, 1, 1, 3, 0)}).getString(),
+                new BasicIPAddrVector(new Long2[]{new Long2(0L, 0L), new Long2(0L, 0x01020304L), new Long2(0L, 0x0A000001L)}).getString(),
+                new BasicInt128Vector(Arrays.asList(new Long2(0L, 1L), new Long2(0L, 2L), new Long2(0L, 3L))).getString(),
+                new BasicComplexVector(Arrays.asList(new Double2(1.0, 2.0), new Double2(-1.87, -2.99), new Double2(3.14, 2.71))).getString(),
+                new BasicPointVector(Arrays.asList(new Double2(0.83, 4.51), new Double2(33.16, 49.71), new Double2(52.10, 45.43))).getString(),
+                new BasicDecimal32Vector(Arrays.asList("0.35", "0.17", "0.25"), 2).getString(),
+                new BasicDecimal64Vector(Arrays.asList("0.0349", "0.5372", "0.2336"), 4).getString(),
+                new BasicDecimal128Vector(Arrays.asList("0.0349", "0.5372", "0.2336"), 4).getString()
+        };
+
+        for (int i = 0; i < colNames.size(); i++) {
+            assertEquals(colNames.get(i), re.getColumnName(i));
+            assertEquals(colTypes[i].toString(), re.getColumn(i).getDataType().toString());
+            assertEquals(expectedStrings[i], re.getColumn(i).getString());
+        }
+    }
+
+    @Test
+    public void test_BasicTable_cols_list_allDataType_java() throws IOException {
+        List<String> colNames = Arrays.asList(
+                "cbool",
+                "cchar",
+                "cshort",
+                "cint",
+                "clong",
+                "cdate",
+                "cmonth",
+                "ctime",
+                "cminute",
+                "csecond",
+                "cdatetime",
+                "ctimestamp",
+                "cnanotime",
+                "cnanotimestamp",
+                "cfloat",
+                "cdouble",
+                "cstring",
+                "csymbol",
+                "cblob",
+                "cuuid",
+                "cdatehour",
+                "cipaddr",
+                "cint128",
+                "ccomplex",
+                "cpoint",
+                "cdecimal32",
+                "cdecimal64",
+                "cdecimal128");
+        List<Object> cols = Arrays.asList(
+                Arrays.asList(true, false, false),
+                Arrays.asList((byte) 22, (byte) 57, (byte) 13),
+                Arrays.asList((short) 12, (short) 35, (short) 73),
+                Arrays.asList(5, 11, 76),
+                Arrays.asList(12L, 367L, 23L),
+                Arrays.asList(LocalDate.of(1970, 1, 2), LocalDate.of(1969, 12, 31), LocalDate.of(1970, 1, 3)),
+                Arrays.asList(YearMonth.of(28, 11), YearMonth.of(2010, 4), YearMonth.of(2006, 3)),
+                Arrays.asList(LocalTime.of(0, 0, 2, 345000000), LocalTime.of(0, 0, 46, 284000000), LocalTime.of(0, 0, 5, 839000000)),
+                Arrays.asList(LocalTime.of(12, 29), LocalTime.of(15, 4), LocalTime.of(7, 12)),
+                Arrays.asList(LocalTime.of(0, 0, 17), LocalTime.of(1, 21, 30), LocalTime.of(0, 8, 14)),
+                Arrays.asList(LocalDateTime.of(1970, 1, 1, 0, 0, 49), LocalDateTime.of(1970, 1, 1, 0, 4, 2), LocalDateTime.of(1970, 1, 1, 0, 0, 25)),
+                Arrays.asList(LocalDateTime.of(1970, 1, 1, 0, 0, 2, 839000000), LocalDateTime.of(1970, 1, 1, 0, 0, 0, 480000000), LocalDateTime.of(1970, 1, 1, 0, 0, 0, 341000000)),
+                Arrays.asList(LocalTime.of(0, 0, 0, 521), LocalTime.of(0, 0, 0, 353566), LocalTime.of(0, 0, 0, 1)),
+                Arrays.asList(LocalDateTime.of(1970, 1, 1, 0, 0, 0, 521), LocalDateTime.of(1970, 1, 1, 0, 0, 0, 353566), LocalDateTime.of(1970, 1, 1, 0, 0, 0, 1)),
+                Arrays.asList(4580.02f, 394.3f, 5.981f),
+                Arrays.asList(15.32, 748.55, 7.17),
+                Arrays.asList("hello", "abandon", "lambada"),
+                Arrays.asList("KingBase", "vastBase", null),
+                Arrays.asList("Dolphindb", "MongoDB", "GaussDB"),
+                Arrays.asList(new Long2(4758, 1231), new Long2(5890, 943), new Long2(9000, 659)),
+                Arrays.asList(LocalDateTime.of(1970, 1, 1, 1, 0), LocalDateTime.of(1970, 1, 1, 2, 0), LocalDateTime.of(1970, 1, 1, 3, 0)),
+                Arrays.asList(new Long2(0L, 0L), new Long2(0L, 0x01020304L), new Long2(0L, 0x0A000001L)),
+                Arrays.asList(new Long2(0L, 1L), new Long2(0L, 2L), new Long2(0L, 3L)),
+                Arrays.asList(new Double2(1.0, 2.0), new Double2(-1.87, -2.99), new Double2(3.14, 2.71)),
+                Arrays.asList(new Double2(0.83, 4.51), new Double2(33.16, 49.71), new Double2(52.10, 45.43)),
+                Arrays.asList("0.35", "0.17", "0.25"),
+                Arrays.asList("0.0349", "0.5372", "0.2336"),
+                Arrays.asList("0.0349", "0.5372", "0.2336")
+        );
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{
+                Entity.DATA_TYPE.DT_BOOL,
+                Entity.DATA_TYPE.DT_BYTE,
+                Entity.DATA_TYPE.DT_SHORT,
+                Entity.DATA_TYPE.DT_INT,
+                Entity.DATA_TYPE.DT_LONG,
+                Entity.DATA_TYPE.DT_DATE,
+                Entity.DATA_TYPE.DT_MONTH,
+                Entity.DATA_TYPE.DT_TIME,
+                Entity.DATA_TYPE.DT_MINUTE,
+                Entity.DATA_TYPE.DT_SECOND,
+                Entity.DATA_TYPE.DT_DATETIME,
+                Entity.DATA_TYPE.DT_TIMESTAMP,
+                Entity.DATA_TYPE.DT_NANOTIME,
+                Entity.DATA_TYPE.DT_NANOTIMESTAMP,
+                Entity.DATA_TYPE.DT_FLOAT,
+                Entity.DATA_TYPE.DT_DOUBLE,
+                Entity.DATA_TYPE.DT_STRING,
+                Entity.DATA_TYPE.DT_SYMBOL,
+                Entity.DATA_TYPE.DT_BLOB,
+                Entity.DATA_TYPE.DT_UUID,
+                Entity.DATA_TYPE.DT_DATEHOUR,
+                Entity.DATA_TYPE.DT_IPADDR,
+                Entity.DATA_TYPE.DT_INT128,
+                Entity.DATA_TYPE.DT_COMPLEX,
+                Entity.DATA_TYPE.DT_POINT,
+                Entity.DATA_TYPE.DT_DECIMAL32,
+                Entity.DATA_TYPE.DT_DECIMAL64,
+                Entity.DATA_TYPE.DT_DECIMAL128};
+        int[] colExtraParams = new int[]{
+                -1, -1, -1, -1, -1, -1, -1,
+                -1, -1, -1, -1, -1, -1, -1,
+                -1, -1, -1, -1, -1, -1, -1,
+                -1, -1, -1, -1, 2, 4, 4};
+        BasicTable re = new BasicTable(colNames, cols, colTypes, colExtraParams);
+        assertEquals(28, re.columns());
+        assertEquals(3, re.rows());
+        String[] expectedStrings = new String[]{
+                "[true,false,false]",
+                "[22,'9',13]",
+                "[12,35,73]",
+                "[5,11,76]",
+                "[12,367,23]",
+                "[1970.01.02,1969.12.31,1970.01.03]",
+                "[0028.11M,2010.04M,2006.03M]",
+                "[00:00:02.345,00:00:46.284,00:00:05.839]",
+                "[12:29m,15:04m,07:12m]",
+                "[00:00:17,01:21:30,00:08:14]",
+                "[1970.01.01T00:00:49,1970.01.01T00:04:02,1970.01.01T00:00:25]",
+                "[1970.01.01T00:00:02.839,1970.01.01T00:00:00.480,1970.01.01T00:00:00.341]",
+                "[00:00:00.000000521,00:00:00.000353566,00:00:00.000000001]",
+                "[1970.01.01T00:00:00.000000521,1970.01.01T00:00:00.000353566,1970.01.01T00:00:00.000000001]",
+                "[4580.02001953,394.29998779,5.98099995]",
+                "[15.32,748.55,7.17]",
+                "[hello,abandon,lambada]",
+                "[KingBase,vastBase,]",
+                "[Dolphindb,MongoDB,GaussDB]",
+                new BasicUuidVector(Arrays.asList(new Long2(4758, 1231), new Long2(5890, 943), new Long2(9000, 659))).getString(),
+                new BasicDateHourVector(new LocalDateTime[]{
+                        LocalDateTime.of(1970, 1, 1, 1, 0),
+                        LocalDateTime.of(1970, 1, 1, 2, 0),
+                        LocalDateTime.of(1970, 1, 1, 3, 0)}).getString(),
+                new BasicIPAddrVector(new Long2[]{new Long2(0L, 0L), new Long2(0L, 0x01020304L), new Long2(0L, 0x0A000001L)}).getString(),
+                new BasicInt128Vector(Arrays.asList(new Long2(0L, 1L), new Long2(0L, 2L), new Long2(0L, 3L))).getString(),
+                new BasicComplexVector(Arrays.asList(new Double2(1.0, 2.0), new Double2(-1.87, -2.99), new Double2(3.14, 2.71))).getString(),
+                new BasicPointVector(Arrays.asList(new Double2(0.83, 4.51), new Double2(33.16, 49.71), new Double2(52.10, 45.43))).getString(),
+                new BasicDecimal32Vector(Arrays.asList("0.35", "0.17", "0.25"), 2).getString(),
+                new BasicDecimal64Vector(Arrays.asList("0.0349", "0.5372", "0.2336"), 4).getString(),
+                new BasicDecimal128Vector(Arrays.asList("0.0349", "0.5372", "0.2336"), 4).getString()
+        };
+        for (int i = 0; i < colNames.size(); i++) {
+            assertEquals(colNames.get(i), re.getColumnName(i));
+            assertEquals(colTypes[i].toString(), re.getColumn(i).getDataType().toString());
+            assertEquals(expectedStrings[i], re.getColumn(i).getString());
+        }
+    }
+
+    @Test
+    public void test_BasicTable_cols_allDataType_DolphinDB() throws Exception {
+        List<Vector> cols = new ArrayList<>();
+        List<String> colNames = new ArrayList<>();
+        LocalDate date1 = LocalDate.of(1970, 1, 2);
+        LocalDate date2 = LocalDate.of(1969, 12, 31);
+        LocalDate date3 = LocalDate.of(1970, 1, 3);
+        BasicBooleanVector bbv = new BasicBooleanVector(0);
+        bbv.add((byte) 1);
+        bbv.add((byte) 0);
+        bbv.Append(new BasicBoolean(false));
+        cols.add(bbv);
+        colNames.add("cbool");
+        BasicByteVector byv = new BasicByteVector(0);
+        byv.add((byte) 22);
+        byv.add((byte) 57);
+        byv.Append(new BasicByte((byte) 13));
+        cols.add(byv);
+        colNames.add("cchar");
+        BasicShortVector bsv = new BasicShortVector(0);
+        bsv.add((short) 12);
+        bsv.Append(new BasicShort((short) 35));
+        bsv.add((short) 73);
+        cols.add(bsv);
+        colNames.add("cshort");
+        BasicIntVector biv = new BasicIntVector(0);
+        biv.Append(new BasicInt(5));
+        biv.add(11);
+        biv.Append(new BasicInt(76));
+        cols.add(biv);
+        colNames.add("cint");
+        BasicLongVector blv = new BasicLongVector(0);
+        blv.add(12);
+        blv.Append(new BasicLong(367));
+        blv.Append(new BasicLong(23));
+        cols.add(blv);
+        colNames.add("clong");
+        BasicDateVector bdv = new BasicDateVector(0);
+        bdv.add(1);
+        bdv.Append(new BasicDate(date2));
+        bdv.Append(new BasicDate(date3));
+        cols.add(bdv);
+        colNames.add("cdate");
+        BasicMonthVector bmv = new BasicMonthVector(0);
+        bmv.add(346);
+        bmv.Append(new BasicMonth(2010, Month.APRIL));
+        bmv.Append(new BasicMonth(2006,Month.MARCH));
+        cols.add(bmv);
+        colNames.add("cmonth");
+        BasicTimeVector btv = new BasicTimeVector(0);
+        btv.add(2345);
+        btv.Append(new BasicTimeVector(new int[]{46284,5839}));
+        cols.add(btv);
+        colNames.add("ctime");
+        BasicMinuteVector bmiv = new BasicMinuteVector(0);
+        bmiv.Append(new BasicMinuteVector(new int[]{749,904}));
+        bmiv.add(432);
+        cols.add(bmiv);
+        colNames.add("cminute");
+        BasicSecondVector bsev = new BasicSecondVector(0);
+        bsev.add(17);
+        bsev.Append(new BasicSecondVector(new int[]{4890,494}));
+        cols.add(bsev);
+        colNames.add("csecond");
+        BasicDateTimeVector bdtv = new BasicDateTimeVector(0);
+        bdtv.Append(new BasicDateTimeVector(new int[]{49,242}));
+        bdtv.add(25);
+        cols.add(bdtv);
+        colNames.add("cdatetime");
+        BasicTimestampVector btsv = new BasicTimestampVector(0);
+        btsv.Append(new BasicTimestampVector(new long[]{2839,480}));
+        btsv.add(341);
+        cols.add(btsv);
+        colNames.add("ctimestamp");
+        BasicNanoTimeVector bntv = new BasicNanoTimeVector(0);
+        bntv.add(521L);
+        bntv.Append(new BasicNanoTime(LocalTime.of(0, 0, 0, 353566)));
+        bntv.Append(new BasicNanoTimeVector(new long[]{1L}));
+        cols.add(bntv);
+        colNames.add("cnanotime");
+        BasicNanoTimestampVector bntsv = new BasicNanoTimestampVector(0);
+        bntsv.add(521L);
+        bntsv.Append(new BasicNanoTimestampVector(new long[]{353566L}));
+        bntsv.Append(new BasicNanoTimestamp(LocalDateTime.of(1970, 1, 1, 0, 0, 0, 1)));
+        cols.add(bntsv);
+        colNames.add("cnanotimestamp");
+        BasicFloatVector bfv = new BasicFloatVector(0);
+        bfv.Append(new BasicFloatVector(new float[]{(float) 4580.02, (float) 394.3}));
+        bfv.add((float) 5.981);
+        cols.add(bfv);
+        colNames.add("cfloat");
+        BasicDoubleVector bdbv = new BasicDoubleVector(0);
+        bdbv.add(15.32);
+        bdbv.Append(new BasicDoubleVector(new double[]{748.55}));
+        bdbv.Append(new BasicDouble(7.17));
+        cols.add(bdbv);
+        colNames.add("cdouble");
+        BasicStringVector bstv = new BasicStringVector(0);
+        bstv.Append(new BasicStringVector(new String[]{"hello","abandon"}));
+        bstv.add("lambada");
+        cols.add(bstv);
+        colNames.add("cstring");
+        List<String> list = new ArrayList<>();
+        list.add("KingBase");
+        //list.add("vastBase");
+        list.add(null);
+        list.add("OceanBase");
+        BasicSymbolVector bsyv = new BasicSymbolVector(list);
+        cols.add(bsyv);
+        colNames.add("csymbol");
+        String[] array = new String[]{"Dolphindb","MongoDB","GaussDB"};
+        BasicStringVector bblv = new BasicStringVector(array,true,true);
+        cols.add(bblv);
+        colNames.add("cblob");
+        BasicUuidVector buv = new BasicUuidVector(0);
+        buv.add(new Long2(4758,1231));
+        buv.Append(new BasicUuid(5890,943));
+        buv.Append(new BasicUuidVector(new Long2[]{new Long2(9000,659)}));
+        cols.add(buv);
+        colNames.add("cuuid");
+        BasicDateHourVector bdhv = new BasicDateHourVector(0);
+        bdhv.Append(new BasicDateHourVector(new int[]{1,2}));
+        bdhv.add(3);
+        cols.add(bdhv);
+        colNames.add("cdatehour");
+        BasicIPAddrVector biav = new BasicIPAddrVector(0);
+        biav.add(new Long2(0L, 0L));
+        biav.Append(new BasicIPAddrVector(new Long2[]{new Long2(0L, 0x01020304L),new Long2(0L, 0x0A000001L)}));
+        cols.add(biav);
+        colNames.add("cipaddr");
+        BasicInt128Vector bi128v = new BasicInt128Vector(0);
+        bi128v.add(new Long2(0L, 1L));
+        bi128v.Append(new BasicInt128Vector(new Long2[]{new Long2(0L, 2L),new Long2(0L, 3L)}));
+        cols.add(bi128v);
+        colNames.add("cint128");
+        BasicComplexVector bcv = new BasicComplexVector(0);
+        bcv.Append(new BasicComplexVector(new Double2[]{new Double2(1.0,2.0),new Double2(-1.87,-2.99)}));
+        bcv.add(new Double2(3.14,2.71));
+        cols.add(bcv);
+        colNames.add("ccomplex");
+        BasicPointVector bpv = new BasicPointVector(0);
+        bpv.Append(new BasicPointVector(new Double2[]{new Double2(0.83,4.51),new Double2(33.16,49.71)}));
+        bpv.add(new Double2(52.10,45.43));
+        cols.add(bpv);
+        colNames.add("cpoint");
+        BasicDecimal32Vector bd32v = new BasicDecimal32Vector(0,2);
+        bd32v.add(35);
+        bd32v.Append(new BasicDecimal32(17,2));
+        bd32v.Append(new BasicDecimal32(25,2));
+        cols.add(bd32v);
+        colNames.add("cdecimal32");
+        BasicDecimal64Vector bd64v = new BasicDecimal64Vector(0,4);
+        bd64v.add(349L);
+        bd64v.Append(new BasicDecimal64(5372L,4));
+        bd64v.Append(new BasicDecimal64(2336L,4));
+        cols.add(bd64v);
+        colNames.add("cdecimal64");
+
+        BasicDecimal128Vector bd128v = new BasicDecimal128Vector(0,4);
+        bd128v.add(new BigDecimal("0.0349"));
+        bd128v.Append(new BasicDecimal128("0.5372",4));
+        bd128v.Append(new BasicDecimal128("0.2336",4));
+        cols.add(bd128v);
+        colNames.add("cdecimal128");
+        Entity.DATA_TYPE[] colTypes = new Entity.DATA_TYPE[]{
+                Entity.DATA_TYPE.DT_BOOL,
+                Entity.DATA_TYPE.DT_BYTE,
+                Entity.DATA_TYPE.DT_SHORT,
+                Entity.DATA_TYPE.DT_INT,
+                Entity.DATA_TYPE.DT_LONG,
+                Entity.DATA_TYPE.DT_DATE,
+                Entity.DATA_TYPE.DT_MONTH,
+                Entity.DATA_TYPE.DT_TIME,
+                Entity.DATA_TYPE.DT_MINUTE,
+                Entity.DATA_TYPE.DT_SECOND,
+                Entity.DATA_TYPE.DT_DATETIME,
+                Entity.DATA_TYPE.DT_TIMESTAMP,
+                Entity.DATA_TYPE.DT_NANOTIME,
+                Entity.DATA_TYPE.DT_NANOTIMESTAMP,
+                Entity.DATA_TYPE.DT_FLOAT,
+                Entity.DATA_TYPE.DT_DOUBLE,
+                Entity.DATA_TYPE.DT_STRING,
+                Entity.DATA_TYPE.DT_SYMBOL,
+                Entity.DATA_TYPE.DT_BLOB,
+                Entity.DATA_TYPE.DT_UUID,
+                Entity.DATA_TYPE.DT_DATEHOUR,
+                Entity.DATA_TYPE.DT_IPADDR,
+                Entity.DATA_TYPE.DT_INT128,
+                Entity.DATA_TYPE.DT_COMPLEX,
+                Entity.DATA_TYPE.DT_POINT,
+                Entity.DATA_TYPE.DT_DECIMAL32,
+                Entity.DATA_TYPE.DT_DECIMAL64,
+                Entity.DATA_TYPE.DT_DECIMAL128};
+        int[] colExtraParams = new int[]{
+                -1, -1, -1, -1, -1, -1, -1,
+                -1, -1, -1, -1, -1, -1, -1,
+                -1, -1, -1, -1, -1, -1, -1,
+                -1, -1, -1, -1, 2, 4, 4};
+        BasicTable re = new BasicTable(colNames, cols, colTypes, colExtraParams);
+        assertEquals(28, re.columns());
+        assertEquals(3, re.rows());
+        String[] expectedStrings = new String[]{
+                "[true,false,false]",
+                "[22,'9',13]",
+                "[12,35,73]",
+                "[5,11,76]",
+                "[12,367,23]",
+                "[1970.01.02,1969.12.31,1970.01.03]",
+                "[0028.11M,2010.04M,2006.03M]",
+                "[00:00:02.345,00:00:46.284,00:00:05.839]",
+                "[12:29m,15:04m,07:12m]",
+                "[00:00:17,01:21:30,00:08:14]",
+                "[1970.01.01T00:00:49,1970.01.01T00:04:02,1970.01.01T00:00:25]",
+                "[1970.01.01T00:00:02.839,1970.01.01T00:00:00.480,1970.01.01T00:00:00.341]",
+                "[00:00:00.000000521,00:00:00.000353566,00:00:00.000000001]",
+                "[1970.01.01T00:00:00.000000521,1970.01.01T00:00:00.000353566,1970.01.01T00:00:00.000000001]",
+                "[4580.02001953,394.29998779,5.98099995]",
+                "[15.32,748.55,7.17]",
+                "[hello,abandon,lambada]",
+                "[KingBase,,OceanBase]",
+                "[Dolphindb,MongoDB,GaussDB]",
+                new BasicUuidVector(Arrays.asList(new Long2(4758, 1231), new Long2(5890, 943), new Long2(9000, 659))).getString(),
+                new BasicDateHourVector(new int[]{1,2,3}).getString(),
+                new BasicIPAddrVector(new Long2[]{new Long2(0L, 0L), new Long2(0L, 0x01020304L), new Long2(0L, 0x0A000001L)}).getString(),
+                new BasicInt128Vector(Arrays.asList(new Long2(0L, 1L), new Long2(0L, 2L), new Long2(0L, 3L))).getString(),
+                new BasicComplexVector(Arrays.asList(new Double2(1.0, 2.0), new Double2(-1.87, -2.99), new Double2(3.14, 2.71))).getString(),
+                new BasicPointVector(Arrays.asList(new Double2(0.83, 4.51), new Double2(33.16, 49.71), new Double2(52.10, 45.43))).getString(),
+                new BasicDecimal32Vector(Arrays.asList("35", "17", "25"), 2).getString(),
+                new BasicDecimal64Vector(Arrays.asList("349", "5372", "2336"), 4).getString(),
+                new BasicDecimal128Vector(Arrays.asList("0.0349", "0.5372", "0.2336"), 4).getString()
+        };
+        for (int i = 0; i < colNames.size(); i++) {
+            assertEquals(colNames.get(i), re.getColumnName(i));
+            assertEquals(colTypes[i].toString(), re.getColumn(i).getDataType().toString());
+            assertEquals(expectedStrings[i], re.getColumn(i).getString());
+        }
+    }
+
+ ////////////////////AJ-1000/////////////////////////////////////////
+
+    @Test
+    public void Test_BasicTable_colNames_list_null() throws Exception {
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("The param 'colNames' in table cannot be null.");
+        List<Vector> cols = new ArrayList<Vector>(2);
+        BasicDateVector date = new BasicDateVector(2);
+        date.setDate(1, LocalDate.now());
+        date.setDate(0,LocalDate.now());
+        BasicStringVector sym = new BasicStringVector(2);
+        sym.setString(0,"w");
+        sym.setString(1,"w");
+        cols.add(date);
+        cols.add(sym);
+        BasicTable t=  new BasicTable(null, cols);
+    }
+
+    @Test
+    public void Test_BasicTable_colNames_list_empty() throws Exception {
+        thrown.expect(java.lang.Error.class);
+        thrown.expectMessage("The length of column name and column data is unequal.");
+        List<String> colNames = new ArrayList<String>(0);
+        List<Vector> cols = new ArrayList<Vector>(2);
+        BasicDateVector date = new BasicDateVector(2);
+        date.setDate(1, LocalDate.now());
+        date.setDate(0,LocalDate.now());
+        BasicStringVector sym = new BasicStringVector(2);
+        sym.setString(0,"w");
+        sym.setString(1,"w");
+        cols.add(date);
+        cols.add(sym);
+        BasicTable t=  new BasicTable(colNames, cols);
+    }
+
+    @Test
+    public void Test_BasicTable_colNames_list_vector_null() throws Exception {
+        thrown.expect(java.lang.RuntimeException.class);
+        thrown.expectMessage("Column [col2] is null.");
+        List<String> colNames = Arrays.asList("col1", "col2");
+        List<Vector> cols = new ArrayList<Vector>(2);
+        BasicDateVector date = new BasicDateVector(2);
+        date.setDate(1, LocalDate.now());
+        date.setDate(0,LocalDate.now());
+        cols.add(date);
+        cols.add(null);
+        BasicTable t=  new BasicTable(colNames, cols);
+    }
+    ////BasicTable()
+    @Test
+    public void Test_BasicTable_constructor_empty() throws Exception {
+        BasicTable bt = new BasicTable();
+        assertEquals(0, bt.rows());
+        assertEquals(0, bt.columns());
+        assertEquals("",bt.getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_col_null_disambiguation() throws Exception {
+        BasicTable bt = new BasicTable();
+        String re = null;
+        try{
+            bt.addColumn("c1", (Vector) null);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' or 'col' in table cannot be null.",re);
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_Vector_colName_null() throws Exception {
+        BasicTable bt = new BasicTable();
+        String re = null;
+        try{
+            bt.addColumn(null, new BasicIntVector(1));
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' or 'col' in table cannot be null.",re);
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_Vector_colName_empty() throws Exception {
+        BasicTable bt = new BasicTable();
+        String re = null;
+        try{
+            bt.addColumn("", new BasicIntVector(1));
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' cannot be empty.",re);
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_colName_null() throws Exception {
+        BasicTable bt = new BasicTable();
+        String re = null;
+        try{
+            bt.addColumn(null, Arrays.asList(true, false, true));
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' or 'col' in table cannot be null.",re);
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_colName_empty() throws Exception {
+        BasicTable bt = new BasicTable();
+        String re = null;
+        try{
+            bt.addColumn("", Arrays.asList(true, false, true));
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' cannot be empty.",re);
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_values_null() throws Exception {
+        BasicTable bt = new BasicTable();
+        String re = null;
+        try{
+            bt.addColumn("c1", (List<?>) null);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' or 'col' in table cannot be null.",re);
+    }
+    @Test
+    public void Test_BasicTable_addColumn_list_colName_duplicate() throws Exception {
+        BasicTable bt = new BasicTable();
+        String re = null;
+        bt.addColumn("bool_col", Arrays.asList(true, false, true));
+        try{
+            bt.addColumn("bool_col", Arrays.asList(true, false, true));
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The table already contains column 'bool_col'.",re);
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_inconsistent_types() throws Exception {
+        BasicTable bt = new BasicTable();
+        String re = null;
+        try{
+            bt.addColumn("long_col", Arrays.asList(-100, 200L));
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("Column [long_col] contains values with inconsistent Java types for automatic inference.",re);
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_BOOL() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("bool_col", Arrays.asList(true, false, true));
+        assertEquals(3, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_BOOL", bt.getColumn(0).getDataType().toString());
+        assertEquals("[true,false,true]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("bool_col1", Arrays.asList(new Boolean("true"), new Boolean("true"), new Boolean("false")));
+        assertEquals("DT_BOOL", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[true,true,false]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_BYTE() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("byte_col", Arrays.asList((byte) 1, (byte) 2));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_BYTE", bt.getColumn(0).getDataType().toString());
+        assertEquals("[1,2]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("byte_col", Arrays.asList(new Byte((byte) 1), new Byte((byte) 2)));
+        assertEquals(2, bt1.rows());
+        assertEquals("DT_BYTE", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[1,2]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_INT() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("int_col", Arrays.asList(-1, 0, 3));
+        assertEquals(3, bt.rows());
+        assertEquals("DT_INT", bt.getColumn(0).getDataType().toString());
+        assertEquals("[-1,0,3]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("int_col1", Arrays.asList(new Integer(-1), new Integer(0), new Integer(1)));
+        assertEquals(3, bt1.rows());
+        assertEquals("DT_INT", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[-1,0,1]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_LONG() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("long_col", Arrays.asList(-10000000000L, 20000000000L));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_LONG", bt.getColumn(0).getDataType().toString());
+        assertEquals("[-10000000000,20000000000]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("long_col", Arrays.asList(new Long(-10000000000L), new Long(20000000000L)));
+        assertEquals(2, bt1.rows());
+        assertEquals("DT_LONG", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[-10000000000,20000000000]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_SHORT() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("short_col", Arrays.asList((short) -10, (short) 20));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_SHORT", bt.getColumn(0).getDataType().toString());
+        assertEquals("[-10,20]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("short_col", Arrays.asList(new Short((short)-10), new Short((short) 20)));
+        assertEquals(2, bt1.rows());
+        assertEquals("DT_SHORT", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[-10,20]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_FLOAT() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("float_col", Arrays.asList(-1.5f, 2.75f));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_FLOAT", bt.getColumn(0).getDataType().toString());
+        assertEquals("[-1.5,2.75]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("float_col", Arrays.asList(new Float(-1.5f), new Float(2.75f)));
+        assertEquals(2, bt1.rows());
+        assertEquals("DT_FLOAT", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[-1.5,2.75]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_DOUBLE() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("double_col", Arrays.asList(-1.25d, 2.5d));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_DOUBLE", bt.getColumn(0).getDataType().toString());
+        assertEquals("[-1.25,2.5]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("double_col", Arrays.asList(new Double(-1.25d), new Double(2.5d)));
+        assertEquals(2, bt1.rows());
+        assertEquals("DT_DOUBLE", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[-1.25,2.5]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_STRING() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("中文", Arrays.asList("中文", "B"));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_STRING", bt.getColumn(0).getDataType().toString());
+        assertEquals("[中文,B]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_YEARMONTH() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("month_col", Arrays.asList(YearMonth.of(2024, 1), YearMonth.of(2024, 12)));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_MONTH", bt.getColumn(0).getDataType().toString());
+        assertEquals("[2024.01M,2024.12M]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_LOCALDATE() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("date_col", Arrays.asList(LocalDate.of(1956, 2, 29), LocalDate.of(2099, 3, 1)));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_DATE", bt.getColumn(0).getDataType().toString());
+        assertEquals("[1956.02.29,2099.03.01]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_LOCALTIME() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("time_col", Arrays.asList(LocalTime.of(12, 34, 56, 123456789), LocalTime.of(23, 59, 59, 0)));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_NANOTIME", bt.getColumn(0).getDataType().toString());
+        assertEquals("[12:34:56.123456789,23:59:59.000000000]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_LOCALDATETIME() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("ts_col", Arrays.asList(LocalDateTime.of(2024, 1, 1, 10, 20, 30, 123), LocalDateTime.of(2024, 1, 2, 11, 22, 33, 456999999)));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_NANOTIMESTAMP", bt.getColumn(0).getDataType().toString());
+        assertEquals("[2024.01.01T10:20:30.000000123,2024.01.02T11:22:33.456999999]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_DATE() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("date_col", Arrays.asList(new java.util.Date(1704067200000L), new java.util.Date(1704153600000L)));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_TIMESTAMP", bt.getColumn(0).getDataType().toString());
+        assertEquals("[2024.01.01T00:00:00.000,2024.01.02T00:00:00.000]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_list_CALENDAR() throws Exception {
+        BasicTable bt = new BasicTable();
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTimeInMillis(1704067200000L);
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTimeInMillis(1704153600000L);
+        bt.addColumn("calendar_col", Arrays.asList(cal1, cal2));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_TIMESTAMP", bt.getColumn(0).getDataType().toString());
+        assertEquals("[2024.01.01T00:00:00.000,2024.01.02T00:00:00.000]", bt.getColumn(0).getString());
+    }
+    @Test
+    public void Test_BasicTable_addColumn_list_byte_array() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("calendar_col", Arrays.asList(new byte[]{0x01, 0x02}, new byte[]{0x01, 0x02}));
+        assertEquals(2, bt.rows());
+        assertEquals("DT_BLOB", bt.getColumn(0).getDataType().toString());
+        assertEquals("[\u0001\u0002,\u0001\u0002]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_colName_null() throws Exception {
+        BasicTable bt = new BasicTable();
+        String re = null;
+        try{
+            bt.addColumn(null, new Integer[]{1, 2, 3});
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' or 'col' in table cannot be null.",re);
+    }
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_colName_empty() throws Exception {
+        BasicTable bt = new BasicTable();
+        String re = null;
+        try{
+            bt.addColumn("", new Integer[]{1, 2, 3});
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' cannot be empty.",re);
+    }
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_values_null() throws Exception {
+        BasicTable bt = new BasicTable();
+        String re = null;
+        try{
+            bt.addColumn("c1", (Object[]) null);
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The param 'colName' or 'col' in table cannot be null.",re);
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_length_not_match_java_column() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("c1", Arrays.asList("a"));
+        String re = null;
+        try{
+            bt.addColumn("c2", new Integer[]{1, 2});
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The length of column c2  must be the same as the first column length: 1.",re);
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_length_not_match_java_column_1() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("c1", Arrays.asList("a","a"));
+        String re = null;
+        try{
+            bt.addColumn("c2", new Integer[]{1});
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertEquals("The length of column c2  must be the same as the first column length: 2.",re);
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_unsupported_type() throws Exception {
+        BasicTable bt = new BasicTable();
+        String re = null;
+        try{
+            bt.addColumn("decimal_col", new Object[]{new java.math.BigDecimal("1.23")});
+        }catch(Exception e){
+            re = e.getMessage();
+        }
+        assertTrue(re != null && (re.contains("unsupported") || re.contains("cannot") || re.contains("infer") || re.contains("map")));
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_BOOL() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("bool_col", new Boolean[]{true, false, true});
+        assertEquals(3, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_BOOL", bt.getColumn(0).getDataType().toString());
+        assertEquals("[true,false,true]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("bool_col1", new Boolean[]{new Boolean("true"), new Boolean("true"), new Boolean("false")});
+        assertEquals(3, bt1.rows());
+        assertEquals("DT_BOOL", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[true,true,false]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_BYTE() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("byte_col", new Byte[]{1, 2});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_BYTE", bt.getColumn(0).getDataType().toString());
+        assertEquals("[1,2]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("byte_col", new Byte[]{new Byte((byte) 1), new Byte((byte) 2)});
+        assertEquals(2, bt1.rows());
+        assertEquals("DT_BYTE", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[1,2]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_INT() throws Exception {
+        BasicTable bt = new BasicTable();
+         bt.addColumn("int_col", new Integer[]{-1, 0, 3});
+        assertEquals(3, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_INT", bt.getColumn(0).getDataType().toString());
+        assertEquals("[-1,0,3]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("int_col1", new Integer[]{new Integer(-1), new Integer(0), new Integer(1)});
+        assertEquals(3, bt1.rows());
+        assertEquals("DT_INT", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[-1,0,1]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_LONG() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("long_col", new Long[]{-10000000000L, 20000000000L});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_LONG", bt.getColumn(0).getDataType().toString());
+        assertEquals("[-10000000000,20000000000]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("long_col", new Long[]{new Long(-10000000000L), new Long(20000000000L)});
+        assertEquals(2, bt1.rows());
+        assertEquals("DT_LONG", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[-10000000000,20000000000]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_SHORT() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("short_col", new Short[]{-10, 20});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_SHORT", bt.getColumn(0).getDataType().toString());
+        assertEquals("[-10,20]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("short_col", new Short[]{new Short((short)-10), new Short((short) 20)});
+        assertEquals(2, bt1.rows());
+        assertEquals("DT_SHORT", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[-10,20]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_FLOAT() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("float_col", new Float[]{-1.5f, 2.75f});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_FLOAT", bt.getColumn(0).getDataType().toString());
+        assertEquals("[-1.5,2.75]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("float_col", new Float[]{new Float(-1.5f), new Float(2.75f)});
+        assertEquals(2, bt1.rows());
+        assertEquals("DT_FLOAT", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[-1.5,2.75]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_DOUBLE() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("double_col", new Double[]{-1.25d, 2.5d});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_DOUBLE", bt.getColumn(0).getDataType().toString());
+        assertEquals("[-1.25,2.5]", bt.getColumn(0).getString());
+
+        BasicTable bt1 = new BasicTable();
+        bt1.addColumn("double_col", new Double[]{new Double(-1.25d), new Double(2.5d)});
+        assertEquals(2, bt1.rows());
+        assertEquals("DT_DOUBLE", bt1.getColumn(0).getDataType().toString());
+        assertEquals("[-1.25,2.5]", bt1.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_STRING() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("str_col", new String[]{"中文", ""});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_STRING", bt.getColumn(0).getDataType().toString());
+        assertEquals("[中文,]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_blob() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("blob_col", new byte[][]{new byte[]{0x01, 0x02}, new byte[]{0x03, 0x04}});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_BLOB", bt.getColumn(0).getDataType().toString());
+        assertEquals("[\u0001\u0002,\u0003\u0004]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_YEARMONTH() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("month_col", new YearMonth[]{YearMonth.of(2024, 1), YearMonth.of(2024, 12)});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_MONTH", bt.getColumn(0).getDataType().toString());
+        assertEquals("[2024.01M,2024.12M]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_LOCALTIME() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("time_col", new LocalTime[]{LocalTime.of(12, 34, 56, 123456789), LocalTime.of(23, 59, 59, 1)});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_NANOTIME", bt.getColumn(0).getDataType().toString());
+        assertEquals("[12:34:56.123456789,23:59:59.000000001]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_LOCALDATE() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("date_col", new LocalDate[]{LocalDate.of(1956, 2, 29), LocalDate.of(2099, 3, 1)});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_DATE", bt.getColumn(0).getDataType().toString());
+        assertEquals("[1956.02.29,2099.03.01]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_LOCALDATETIME() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("ts_col", new LocalDateTime[]{LocalDateTime.of(2024, 1, 1, 10, 20, 30, 123), LocalDateTime.of(2024, 1, 2, 11, 22, 33, 456999999)});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_NANOTIMESTAMP", bt.getColumn(0).getDataType().toString());
+        assertEquals("[2024.01.01T10:20:30.000000123,2024.01.02T11:22:33.456999999]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_CALENDAR() throws Exception {
+        BasicTable bt = new BasicTable();
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTimeInMillis(1704067200000L);
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTimeInMillis(1704153600000L);
+        bt.addColumn("calendar_col", new Calendar[]{cal1, cal2});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_TIMESTAMP", bt.getColumn(0).getDataType().toString());
+        assertEquals("[2024.01.01T00:00:00.000,2024.01.02T00:00:00.000]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_DATE() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("date_col", new java.util.Date[]{new java.util.Date(1704067200000L), new java.util.Date(1704153600000L)});
+        assertEquals(2, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_TIMESTAMP", bt.getColumn(0).getDataType().toString());
+        assertEquals("[2024.01.01T00:00:00.000,2024.01.02T00:00:00.000]", bt.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_objectArray_dateCalendar() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("date_col", new java.util.Date[]{new java.util.Date(1704067200000L)});
+        assertEquals(1, bt.rows());
+        assertEquals(1, bt.columns());
+        assertEquals("DT_TIMESTAMP", bt.getColumn(0).getDataType().toString());
+        assertEquals("[2024.01.01T00:00:00.000]", bt.getColumn(0).getString());
+        BasicTable bt2 = new BasicTable();
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(1704067200000L);
+        bt2.addColumn("calendar_col", new Object[]{cal});
+        assertEquals(1, bt2.rows());
+        assertEquals(1, bt2.columns());
+        assertEquals("DT_TIMESTAMP", bt2.getColumn(0).getDataType().toString());
+        assertEquals("[2024.01.01T00:00:00.000]", bt2.getColumn(0).getString());
+    }
+
+    @Test
+    public void Test_BasicTable_addColumn_mix_java_and_vector() throws Exception {
+        BasicTable bt = new BasicTable();
+        bt.addColumn("id", new Integer[]{1, 2});
+        BasicStringVector name = new BasicStringVector(new String[]{"a", "b"});
+        bt.addColumn("name", name);
+        bt.addColumn("symbol", Arrays.asList("a","a"));
+        assertEquals(2, bt.rows());
+        assertEquals(3, bt.columns());
+        assertEquals("DT_INT", bt.getColumn(0).getDataType().toString());
+        assertEquals("DT_STRING", bt.getColumn(1).getDataType().toString());
+        assertEquals("DT_STRING", bt.getColumn(2).getDataType().toString());
+    }
+
     private	BasicTable createBasicTable(){
         List<String> colNames = new ArrayList<String>();
         colNames.add("cbool");
@@ -716,7 +2872,7 @@ public class BasicTableTest {
         BasicTable bt = createBasicTable();
         String re = null;
         try{
-            bt.addColumn("cbool1",null);
+            bt.addColumn("cbool1",(Vector)null);
         }catch(Exception e){
             re = e.getMessage();
         }
@@ -2728,5 +4884,23 @@ public class BasicTableTest {
             re = e.getMessage();
         }
         assertEquals("Serialized string length must less than 256k bytes.",re);
+    }
+
+    @Test
+    public void test_BasicTable_setColCompressTypes_then_addColumn_update_colCompresses() {
+        BasicTable bt = createBasicTable();
+        int oldColCount = bt.columns();
+        int[] colCompresses = new int[oldColCount];
+        Arrays.fill(colCompresses, Vector.COMPRESS_LZ4);
+        bt.setColumnCompressTypes(colCompresses);
+        bt.addColumn("addedInt", new BasicIntVector(new int[]{1, 2}));
+        int[] updated = bt.getColumnCompressTypes();
+
+        assertNotNull(updated);
+        assertEquals(oldColCount + 1, updated.length);
+        for (int i = 0; i < oldColCount; i++) {
+            assertEquals(colCompresses[i], updated[i]);
+        }
+        assertEquals(Vector.COMPRESS_LZ4, updated[oldColCount]);
     }
 }

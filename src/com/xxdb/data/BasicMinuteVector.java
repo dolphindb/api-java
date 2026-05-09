@@ -26,6 +26,14 @@ public class BasicMinuteVector extends BasicIntVector{
 	public BasicMinuteVector(List<Integer> list){
 		super(list);
 	}
+
+	public BasicMinuteVector(LocalTime[] array){
+		this(Utils.minuteVectorValues(array), false);
+	}
+
+	public BasicMinuteVector(Calendar[] array){
+		this(Utils.minuteVectorValues(array), false);
+	}
 	
 	public BasicMinuteVector(int[] array){
 		super(array);
