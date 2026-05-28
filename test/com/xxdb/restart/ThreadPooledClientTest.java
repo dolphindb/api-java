@@ -22,7 +22,6 @@ public class ThreadPooledClientTest {
     static String HOST = bundle.getString("HOST");
     static int PORT = Integer.parseInt(bundle.getString("PORT"));
     //static int PORT = 9002;
-    static long total = 0;
     static int[] port_list = Arrays.stream(bundle.getString("PORTS").split(",")).mapToInt(Integer::parseInt).toArray();
     static String controller_host = bundle.getString("CONTROLLER_HOST");
     static int controller_port = Integer.parseInt(bundle.getString("CONTROLLER_PORT"));

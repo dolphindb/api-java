@@ -621,4 +621,21 @@ public class Prepare {
             i++;
         }
     }
+
+    /**
+     * Helper to directly query only data nodes (mode=0) and return port->connectionNum map.
+     */
+    public static java.util.Map<Integer, Integer> getDataNodeConnectionNums(DBConnection controller) throws IOException {
+        BasicTable bt = (BasicTable) controller.run("select port, connectionNum from rpc(getControllerAlias(),getClusterPerf) where mode= 0", 0);
+        if (bt == null || bt.getDataForm() != Entity.DATA_FORM.DF_TABLE) {
+            throw new IOException("Run getClusterPerf() failed.");
+        }
+        java.util.Map<Integer, Integer> map = new java.util.HashMap<>();
+        com.xxdb.data.BasicIntVector ports = (com.xxdb.data.BasicIntVector) bt.getColumn("port");
+        com.xxdb.data.BasicIntVector connectionNum = (com.xxdb.data.BasicIntVector) bt.getColumn("connectionNum");
+        for (int i = 0; i < ports.rows(); i++) {
+            map.put(ports.getInt(i), connectionNum.getInt(i));
+        }
+        return map;
+    }
 }

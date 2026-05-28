@@ -84,22 +84,6 @@ public class MTWCallbackTest {
         conn.close();
     }
 
-    /**
-     * Parameter check
-     * @throws Exception
-     */
-    Callback callbackHandler = new Callback(){
-        public void writeCompletion(Table callbackTable){
-            List<String> failedIdList = new ArrayList<>();
-            BasicStringVector idV = (BasicStringVector) callbackTable.getColumn(0);
-            BasicBooleanVector successV = (BasicBooleanVector) callbackTable.getColumn(1);
-            for (int i = 0; i < successV.rows(); i++){
-                if (!successV.getBoolean(i)){
-                    failedIdList.add(idV.getString(i));
-                }
-            }
-        }
-    };
     @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_memoryTable_single_thread_true()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, false);
@@ -162,8 +146,8 @@ public class MTWCallbackTest {
                 catch(IOException ex) {
                     System.out.println(ex.getMessage());
                 }
+                conn1.run("sleep(6000)");
             }
-            conn1.run("sleep(5000)");
             try{
                 ErrorCodeInfo pErrorInfo = mtw.insert("id"+i, i);
             }
@@ -179,7 +163,7 @@ public class MTWCallbackTest {
         catch(IOException ex) {
             System.out.println(ex.getMessage());
         }
-        conn1.run("sleep(5000)");
+        conn1.run("sleep(3000)");
         conn1.close();
     }
     @Test(timeout = 120000)
@@ -240,8 +224,6 @@ public class MTWCallbackTest {
         map.put("testUpload",callback);
         conn.upload(map);
         BasicTable act = (BasicTable) conn.run("select * from testUpload where issuccess = true order by id");
-        BasicTable act1 = (BasicTable) conn.run("select * from testUpload order by id");
-
         BasicTable ex = (BasicTable)conn.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
         assertEquals(ex.rows(), act.rows());
         assertEquals(ex.rows(), act.rows());
@@ -302,6 +284,7 @@ public class MTWCallbackTest {
                 {
                     System.out.println(ex.getMessage());
                 }
+                conn1.run("sleep(6000)");
             }
 
             try{
@@ -314,24 +297,21 @@ public class MTWCallbackTest {
         }
         System.out.println(mtw.getStatus().toString());
         mtw.waitForThreadCompletion();
-        conn1.run("sleep(10000)");
         try{
             conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
         }
         catch(IOException ex) {
             System.out.println(ex.getMessage());
         }
-        conn1.run("sleep(10000)");
+        conn1.run("sleep(3000)");
         DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
-        conn1.run("sleep(1000)");
         System.out.println("callback rows"+callback.rows());
         Map<String,Entity> map = new HashMap<>();
         map.put("testUpload",callback);
         conn2.upload(map);
         conn1.run("sleep(1000)");
         BasicTable act = (BasicTable) conn2.run("select * from testUpload where issuccess = true order by id");
-        conn1.run("sleep(5000)");
         BasicTable ex = (BasicTable)conn2.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
         assertEquals(ex.rows(), act.rows());
         assertEquals(ex.rows(), act.rows());
@@ -342,6 +322,18 @@ public class MTWCallbackTest {
         conn.close();
         conn2.close();
     }
+    @Test(timeout = 120000)
+    public  void test_MultithreadedTableWriter_()throws Exception {
+        DBConnection conn = new DBConnection(false, false, false, false);
+        conn.connect(HOST, PORT, "admin", "123456");
+        BasicTable callback = (BasicTable)conn.run("table(string(rand(10,300)) as rowsid,take(false,300) as issuccess)");
+        Map<String,Entity> map = new HashMap<>();
+        map.put("testUpload",callback);
+        conn.upload(map);
+        BasicTable act = (BasicTable) conn.run("select * from testUpload ");
+        System.out.println(act.rows());
+    }
+
     @Test(timeout = 120000)
     public  void test_MultithreadedTableWriter_Callback_dfs_single_thread_true()throws Exception {
         DBConnection conn= new DBConnection(false, false, false, false);
@@ -471,18 +463,18 @@ public class MTWCallbackTest {
                 System.out.println(ex.getMessage());
             }
         }
-        conn1.run("sleep(10000)");
+        conn1.run("sleep(6000)");
         System.out.println(mtw.getStatus().toString());
         Assert.assertEquals(true,mtw.getStatus().sendFailedRows>0);
         //Assert.assertEquals(true,mtw.getStatus().unsentRows==0);
         mtw.waitForThreadCompletion();
-        conn1.run("sleep(4000)");
-        try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
+        try{
+            conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
         }
         catch(IOException ex) {
             System.out.println(ex.getMessage());
         }
-        conn1.run("sleep(8000)");
+        conn1.run("sleep(3000)");
         DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
         conn1.run("sleep(1000)");
@@ -491,7 +483,7 @@ public class MTWCallbackTest {
         map.put("testUpload",callback);
         conn2.upload(map);
         BasicTable act = (BasicTable) conn2.run("select * from testUpload where issuccess = true order by id");
-        conn1.run("sleep(20000)");
+//        conn1.run("sleep(20000)");
         BasicTable ex = (BasicTable)conn2.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
         assertEquals(ex.rows(), act.rows());
         assertEquals(ex.rows(), act.rows());
@@ -627,6 +619,7 @@ public class MTWCallbackTest {
                 {
                     System.out.println(ex.getMessage());
                 }
+                conn1.run("sleep(6000)");
             }
             try{
                 ErrorCodeInfo pErrorInfo = mtw.insert(Integer.toString(i), Integer.toString(i));
@@ -637,17 +630,15 @@ public class MTWCallbackTest {
             }
         }
         mtw.waitForThreadCompletion();
-        conn1.run("sleep(10000)");
-        try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
-
+        try{
+            conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
         }
         catch(IOException ex) {
             System.out.println(ex.getMessage());
         }
-        conn1.run("sleep(10000)");
+        conn1.run("sleep(3000)");
         DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
-        conn1.run("sleep(20000)");
         System.out.println("callback rows"+callback.rows());
         Map<String,Entity> map = new HashMap<>();
         map.put("testUpload",callback);
@@ -719,6 +710,7 @@ public class MTWCallbackTest {
                 {
                     System.out.println(ex.getMessage());
                 }
+                conn1.run("sleep(6000)");
             }
             try{
                 ErrorCodeInfo pErrorInfo = mtw.insert(Integer.toString(i), Integer.toString(i));
@@ -729,14 +721,13 @@ public class MTWCallbackTest {
             }
         }
         mtw.waitForThreadCompletion();
-        conn1.run("sleep(10000)");
-        try{conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
-
+        try{
+            conn1.run("startDataNode([\""+HOST+":"+PORT+"\"])");
         }
         catch(IOException ex) {
             System.out.println(ex.getMessage());
         }
-        conn1.run("sleep(10000)");
+        conn1.run("sleep(3000)");
         DBConnection conn2= new DBConnection(false, false, false, false);
         conn2.connect(HOST, PORT, "admin", "123456");
         conn1.run("sleep(1000)");
@@ -747,7 +738,6 @@ public class MTWCallbackTest {
         conn2.upload(map);
         conn1.run("sleep(1000)");
         BasicTable act = (BasicTable) conn2.run("select * from testUpload where issuccess = true order by id");
-        conn1.run("sleep(20000)");
         BasicTable ex = (BasicTable)conn2.run("select * from loadTable('dfs://test_MultithreadedTableWriter', 'pt') order by id");
         assertEquals(ex.rows(), act.rows());
         assertEquals(ex.rows(), act.rows());

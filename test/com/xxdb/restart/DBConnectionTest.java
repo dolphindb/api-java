@@ -4,11 +4,13 @@ import com.xxdb.DBConnection;
 import com.xxdb.data.*;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import static java.lang.Thread.sleep;
@@ -52,10 +54,9 @@ public class DBConnectionTest {
         {
             System.out.println(ex);
         }
-        sleep(5000);
+        sleep(6000);
         //DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"admin","123456",null,false);
-        sleep(500);
         String e = null;
         try{
             conn1.run("a=1;\n a");
@@ -65,14 +66,13 @@ public class DBConnectionTest {
             System.out.println(ex);
         }
         assertNotNull(e);
-        sleep(1000);
         try{
             conn.run("startDataNode(\""+nodeAlias+"\")");
         }catch(Exception ex)
         {
             System.out.println(ex);
         }
-        sleep(5000);
+        sleep(3000);
         conn1.connect(HOST,PORT,"admin","123456",null,false);
         conn1.run("a=1;\n a");
         assertEquals(true, conn1.isConnected());
@@ -92,7 +92,7 @@ public class DBConnectionTest {
         {
             System.out.println(ex);
         }
-        sleep(5000);
+        sleep(6000);
         conn1.run("a=1;\n a");
         //The connection switches to a different node to execute the code
         try{
@@ -101,7 +101,7 @@ public class DBConnectionTest {
         {
             System.out.println(ex);
         }
-        sleep(5000);
+        sleep(3000);
         assertEquals(true, conn1.isConnected());
     }
     //@Test //AJ-287
@@ -141,7 +141,7 @@ public class DBConnectionTest {
         {
             System.out.println(ex);
         }
-        sleep(8000);
+        sleep(6000);
         System.out.println("-----------------------------------");
         conn1.run("a=1;\n a");
         //The connection switches to a different node to execute the code
@@ -151,7 +151,7 @@ public class DBConnectionTest {
         {
             System.out.println(ex);
         }
-        sleep(1000);
+        sleep(3000);
         assertEquals(true, conn1.isConnected());
     }
     @Test
@@ -167,7 +167,7 @@ public class DBConnectionTest {
         {
             System.out.println(ex);
         }
-        sleep(10000);
+        sleep(6000);
         //conn1.run("a=1;\n a");
         //The connection switches to a different node to execute the code
         try{
@@ -176,7 +176,7 @@ public class DBConnectionTest {
         {
             System.out.println(ex);
         }
-        sleep(5000);
+        sleep(3000);
 
         class MyThread extends Thread {
             @Override
@@ -210,7 +210,7 @@ public class DBConnectionTest {
         assertEquals(true, conn1.isConnected());
     }
     @Test //reConnect is not valid
-    public void Test_reConnect__false() throws IOException, InterruptedException {
+    public void Test_reConnect_false() throws IOException, InterruptedException {
         DBConnection conn1 = new DBConnection();
         conn1.connect(HOST,PORT,"admin","123456",null,false,null,false);
         BasicString nodeAliasTmp = (BasicString)conn1.run("getNodeAlias()");
@@ -221,7 +221,7 @@ public class DBConnectionTest {
         {
             System.out.println(ex);
         }
-        sleep(1000);
+        sleep(6000);
         conn1.run("a=1;\n a");
         //The connection switches to a different node to execute the code
         try{
@@ -230,7 +230,7 @@ public class DBConnectionTest {
         {
             System.out.println(ex);
         }
-        sleep(1000);
+        sleep(3000);
         assertEquals(true, conn1.isConnected());
     }
 
@@ -297,4 +297,37 @@ public class DBConnectionTest {
 //        thread1.start();
 //        thread.join();
 //    }
+
+    @Ignore
+    public void test_Disconnection_dfs() throws Exception {
+        String HOST = "192.168.0.69";
+        int PORT = 18921;
+        String[] ha_site = new String[]{"192.168.0.69:18922", "192.168.0.69:18923", "192.168.0.69:18924"};
+        DBConnection connection = new DBConnection(false, false, false);
+        connection.connect(HOST, PORT, "admin", "123456",
+                "", true, ha_site);
+        connection.run("\n" +
+                "dbPath = \"dfs://tableUpsert_test1\"\n" +
+                "if(existsDatabase(dbPath)){\n" +
+                "\tdropDatabase(dbPath)\n" +
+                "}\n" +
+                "t = table(take(1..10, 100) as id, 1..100 as id2, 100..1 as value)\n" +
+                "db  = database(dbPath, RANGE,1 50 10000)\n" +
+                "pt = db.createPartitionedTable(t,`pt,`id).append!(t)");
+        BasicTable bt = (BasicTable) connection.run("table( take(1000,3000000) as id, 1..3000000 as id2, 1..3000000 as value);");
+        List<Entity> values = new ArrayList<>();
+        values.add(bt);
+        System.out.println("---------------------------------Read data end------------------------------------");
+        Thread.sleep(5000);
+        System.out.println("Start Write!!!!!!!!!!!!!!!!!");//这句话出现后进行断网操作
+        for (int i = 0; i < 100; i++) {
+            connection.run("tableInsert{loadTable(\"dfs://tableUpsert_test1\",\"pt\")}", values);
+            System.out.println("数据插入" + i + "次");
+        }
+        System.out.println("End Write!!!!!!!!!!!!!!!!!!!");
+        BasicTable res = (BasicTable) connection.run("select count(*) from loadTable(\"dfs://tableUpsert_test1\",\"pt\")");
+        //assertEquals(300000100,res.rows());
+        System.out.println("The result is: \n" + res.getString());
+        connection.close();
+    }
 }
