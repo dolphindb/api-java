@@ -5592,23 +5592,6 @@ public void test_SSL() throws Exception {
         System.out.println(re.getString());
         assertEquals("2", re.getString());
     }
-    //@Test
-    public void Test_DBConnection_usePython_true() throws Exception {
-        DBConnection conn = new DBConnection(false, false,false,true);
-        conn.connect(HOST,PORT,"admin","123456");
-        BasicInt re = (BasicInt) conn.run("1+1");
-        System.out.println(re.getString());
-        assertEquals("2", re.getString());
-    }
-    @Ignore //python parser not support
-    public void Test_DBConnection_enableSCRAM_true_usePython_true() throws Exception {
-        PrepareUser_authMode("test1","123456","scram");
-        DBConnection conn = new DBConnection(false, false,false,true,false,null,true);
-        conn.connect(HOST,PORT,"test1","123456");
-        BasicInt re = (BasicInt) conn.run("1+1");
-        System.out.println(re.getString());
-        assertEquals("2", re.getString());
-    }
 
     @Test
     public void Test_DBConnection_enableSCRAM_true_login() throws Exception {

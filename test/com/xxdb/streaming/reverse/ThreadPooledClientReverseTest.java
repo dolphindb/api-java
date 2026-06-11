@@ -68,18 +68,18 @@ public class ThreadPooledClientReverseTest {
         try{threadPooledClient.unsubscribe(HOST, PORT, "Trades1", "subTrades");}catch (Exception ex){}
         try{threadPooledClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
         try{threadPooledClient.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
-        try{clear_env();}catch (Exception ex){}
-        try {
-            conn.run("login(`admin,`123456);" +
-                    "try{dropStreamTable('Trades')}catch(ex){};"+
-                    "try{dropStreamTable('Receive')}catch(ex){};"+
-                    "try{deleteUser(`test1)}catch(ex){};" +
-                    "userlist=getUserList();" +
-                    "grouplist=getGroupList();" +
-                    "loop(deleteUser,userlist);" +
-                    "loop(deleteGroup,grouplist)");
-        } catch (Exception e) {
-        }
+       // try{clear_env();}catch (Exception ex){}
+//        try {
+//            conn.run("login(`admin,`123456);" +
+//                    "try{dropStreamTable('Trades')}catch(ex){};"+
+//                    "try{dropStreamTable('Receive')}catch(ex){};"+
+//                    "try{deleteUser(`test1)}catch(ex){};" +
+//                    "userlist=getUserList();" +
+//                    "grouplist=getGroupList();" +
+//                    "loop(deleteUser,userlist);" +
+//                    "loop(deleteGroup,grouplist)");
+//        } catch (Exception e) {
+//        }
         threadPooledClient.close();
         conn.close();
     }
@@ -325,13 +325,12 @@ public static void PrepareStreamTable() throws IOException {
         PrepareStreamTable();
         int ofst = -2;
         String re = null;
-        threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
-//        try {
-//            threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
-//        } catch (Exception ex) {
-//            re = ex.getMessage();
-//        }
-//        assertEquals(true, re.contains("Can't find the message with offset [-2]"));
+        try {
+            threadPooledClient.subscribe(HOST, PORT, "Trades", MessageHandler_handler, ofst);
+        } catch (Exception ex) {
+            re = ex.getMessage();
+        }
+        assertEquals(true, re.contains("Can't find the message with offset [-2]"));
     }
 
     @Test

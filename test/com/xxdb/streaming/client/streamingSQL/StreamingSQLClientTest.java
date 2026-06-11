@@ -36,22 +36,22 @@ public class StreamingSQLClientTest {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        try{conn.run("login(`admin, `123456)\n" +
-                "    res = getStreamingSQLStatus()\n" +
-                "    for(sqlStream in res){\n" +
-                "        try{unsubscribeStreamingSQL(, sqlStream.queryId)}catch(ex){print ex}\n" +
-                "        try{revokeStreamingSQL(sqlStream.queryId)}catch(ex){print ex}\n" +
-                "    }\n" +
-                "    go;\n" +
-                "    try{revokeStreamingSQLTable(`t1)}catch(ex){print ex}\n" +
-                "    try{revokeStreamingSQLTable(`t2)}catch(ex){print ex}\n" +
-                "    try{undef(`t1,SHARED)}catch(ex){print ex}\n" +
-                "    try{undef(`t2,SHARED)}catch(ex){print ex}");}catch (Exception ex){}
+        try {clear_env();}catch (Exception e){}
+//        try{conn.run("login(`admin, `123456)\n" +
+//                "    res = getStreamingSQLStatus()\n" +
+//                "    for(sqlStream in res){\n" +
+//                "        try{unsubscribeStreamingSQL(, sqlStream.queryId)}catch(ex){print ex}\n" +
+//                "        try{revokeStreamingSQL(sqlStream.queryId)}catch(ex){print ex}\n" +
+//                "    }\n" +
+//                "    go;\n" +
+//                "    try{revokeStreamingSQLTable(`t1)}catch(ex){print ex}\n" +
+//                "    try{revokeStreamingSQLTable(`t2)}catch(ex){print ex}\n" +
+//                "    try{undef(`t1,SHARED)}catch(ex){print ex}\n" +
+//                "    try{undef(`t2,SHARED)}catch(ex){print ex}");}catch (Exception ex){}
     }
 
     @After
     public void after() throws IOException, InterruptedException {
-        try {clear_env();}catch (Exception e){}
         conn.close();
     }
     public static void Preparedata(String dataType) throws IOException {

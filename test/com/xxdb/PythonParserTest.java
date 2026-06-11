@@ -1,6 +1,7 @@
 package com.xxdb;
 
 import com.xxdb.data.BasicDoubleVector;
+import com.xxdb.data.BasicInt;
 import com.xxdb.data.BasicTable;
 import com.xxdb.data.Entity;
 import org.junit.After;
@@ -13,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import static com.xxdb.Prepare.PrepareUser_authMode;
 import static org.junit.Assert.assertEquals;
 @Ignore
 public class PythonParserTest {
@@ -85,6 +87,24 @@ public class PythonParserTest {
                 "a = pd.DataFrame({\"int\": [1, 2, 3], \"char\": [1, 2, 3]}, [11,22,33], False)");
         Entity result =conn_python_parser.run("a");
         System.out.println(result);
+    }
+
+    @Ignore
+    public void Test_DBConnection_usePython_true() throws Exception {
+        DBConnection conn = new DBConnection(false, false,false,true);
+        conn.connect(HOST,PORT,"admin","123456");
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
+    }
+    @Ignore //python parser not support
+    public void Test_DBConnection_enableSCRAM_true_usePython_true() throws Exception {
+        PrepareUser_authMode("test1","123456","scram");
+        DBConnection conn = new DBConnection(false, false,false,true,false,null,true);
+        conn.connect(HOST,PORT,"test1","123456");
+        BasicInt re = (BasicInt) conn.run("1+1");
+        System.out.println(re.getString());
+        assertEquals("2", re.getString());
     }
 
 }

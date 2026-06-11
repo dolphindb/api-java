@@ -22,10 +22,14 @@ public class Prepare {
     public static void clear_env() throws IOException {
             DBConnection conn = new DBConnection();
             conn.connect(HOST, PORT, "admin", "123456");
-            conn.run("a = getStreamingStat().pubTables\n" +
-                    "for(i in a){\n" +
-                    "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
-                    "}");
+        conn.run("def clearPublishTable(){\n" +
+                "    a = getStreamingStat().pubTables\n" +
+                "    for(i in a){\n" +
+                "    try{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
+                "    }\n" +
+                "}\n" +
+                "pnodeRun(clearPublishTable)"
+        );
         conn.run("res = getStreamingSQLStatus()\n" +
                 "    for(sqlStream in res){\n" +
                 "        try{unsubscribeStreamingSQL(, sqlStream.queryId)}catch(ex){print ex}\n" +
@@ -36,12 +40,16 @@ public class Prepare {
                 "    try{revokeStreamingSQLTable(`t2)}catch(ex){print ex}\n" +
                 "    try{revokeStreamingSQLTable(`bondFilter)}catch(ex){print ex}\n" +
                 "    try{revokeStreamingSQLTable(`bestBondQuotation)}catch(ex){print ex}\n" );
-        conn.run("streamT = exec name from  getStreamTables() where shared=true\n" +
+        conn.run("def clearStreamTable(){" +
+                "streamT = exec name from  getStreamTables(0) \n" +
                 "for(i in streamT){\n" +
                 "\ttry{\n" +
                 "\t\tdropStreamTable(i)\n" +
                 "\t\t}catch(ex){}\n" +
-                "\t}");
+                "\t}" +
+                "\t}\n"+
+                "pnodeRun(clearStreamTable)"
+        );
             conn.run("def getAllShare(){\n" +
                     "\treturn select name from objs(true) where shared=1\n" +
                     "\t}\n" +
@@ -63,13 +71,23 @@ public class Prepare {
             conn.run("try{dropStreamEngine(\"serInput\");\n}catch(ex){\n}\n");
     }
     public static void clear_env_1() throws IOException {
-        for (int i = 0; i < port_list.length; i++) {
+        //for (int i = 0; i < port_list.length; i++) {
             DBConnection conn = new DBConnection();
-            conn.connect(HOST, port_list[i], "admin", "123456");
-            conn.run("a = getStreamingStat().pubTables\n" +
-                    "for(i in a){\n" +
-                    "\ttry{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
-                    "}");
+            conn.connect(HOST, PORT, "admin", "123456");
+           // conn.connect(HOST, port_list[i], "admin", "123456");
+
+            conn.run("def clearStreamTable(){\n" +
+                    "    a = getStreamingStat().pubTables\n" +
+                    "    for(i in a){\n" +
+                    "    try{stopPublishTable(i.subscriber.split(\":\")[0],int(i.subscriber.split(\":\")[1]),i.tableName,i.actions)}catch(ex){}\n" +
+                    "    }\n" +
+                    "    streamtable_per=exec name from getStreamTables(0)\n" +
+                    "    for(i in streamtable_per){\n" +
+                    " try{dropStreamTable(i)}catch(ex){print ex}\n" +
+                    "    }\n" +
+                    "}\n" +
+                    "pnodeRun(clearStreamTable)"
+            );
             conn.run("def getAllShare(){\n" +
                     "\treturn select name from objs(true) where shared=1\n" +
                     "\t}\n" +
@@ -89,7 +107,7 @@ public class Prepare {
                     "}\n" +
                     "clearShare()");
             conn.run("try{dropStreamEngine(\"serInput\");\n}catch(ex){\n}\n");
-        }
+        //}
     }
 
     public static void Preparedata(long count) throws IOException {
@@ -598,7 +616,7 @@ public class Prepare {
         DBConnection conn = new DBConnection();
         conn.connect(HOST,PORT,"admin","123456");
         BasicInt row_num;
-        for(int i=0;i<200;i++){
+        for(int i=0;i<300;i++){
             row_num = (BasicInt)conn.run("(exec count(*) from "+table_name+")[0]");
 //            System.out.println(row_num.getInt());
             if(row_num.getInt() == data_row){
