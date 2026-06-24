@@ -4,6 +4,7 @@ import com.xxdb.data.Entity.DATA_TYPE;
 import com.xxdb.data.Entity.DURATION;
 import com.xxdb.io.ExtendedDataInput;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -789,6 +790,8 @@ public class BasicEntityFactory implements EntityFactory{
 			return createAnyVector(dataType, (Long[]) object, extraParam);
 		if (object instanceof long[])
 			return createAnyVector(dataType, (long[]) object, extraParam);
+		if (object instanceof BigDecimal)
+			return createScalar(dataType, (BigDecimal) object, extraParam);
 		if (object instanceof Double)
 			return createScalar(dataType, (double) object, extraParam);
 		if (object instanceof Double[])
@@ -1145,6 +1148,22 @@ public class BasicEntityFactory implements EntityFactory{
 		}
 	}
 
+	private static Scalar createScalar(DATA_TYPE dataType, BigDecimal val, int extraParam) {
+		switch (dataType) {
+			case DT_DECIMAL32:
+				return new BasicDecimal32(val.toPlainString(), extraParam);
+			case DT_DECIMAL64:
+				return new BasicDecimal64(val.toPlainString(), extraParam);
+			case DT_DECIMAL128:
+				return new BasicDecimal128(val.toPlainString(), extraParam);
+			case DT_FLOAT:
+				return new BasicFloat(val.floatValue());
+			case DT_DOUBLE:
+				return new BasicDouble(val.doubleValue());
+			default:
+				throw new RuntimeException("Failed to insert data. Cannot convert BigDecimal to " + dataType + ".");
+		}
+	}
 	private static Scalar createScalar(DATA_TYPE dataType, float val, int extraParam) {
 		switch (dataType) {
 			case DT_FLOAT:
@@ -1256,6 +1275,8 @@ public class BasicEntityFactory implements EntityFactory{
 					throw new RuntimeException("Failed to insert data, long cannot be converted because it exceeds the range of " + dataType + ".");
 			case DT_DECIMAL64:
 				return new BasicDecimal64(val, extraParam);
+			case DT_DECIMAL128:
+				return new BasicDecimal128(BigInteger.valueOf(val), extraParam);
 			case DT_FLOAT:
 				return new BasicFloat(val);
 			case DT_DOUBLE:
