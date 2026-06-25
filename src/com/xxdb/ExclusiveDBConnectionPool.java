@@ -44,6 +44,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 		private final DBConnection conn_;
 		private final Thread workThread_;
 		private final boolean dynamicWorker_;
+		private volatile boolean active_ = false;
 		private long lastUsedTime_ = System.currentTimeMillis();
 
 		public AsyncWorker(DBConnection conn, int workerIndex, boolean dynamicWorker) {
@@ -81,6 +82,9 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 					while (true) {
 						synchronized (taskLists_) {
 							task = taskLists_.pollLast();
+							if (task != null) {
+								active_ = true;
+							}
 						}
 						if (task == null) {
 							break;
@@ -92,6 +96,8 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 							break;
 						} catch (Exception e) {
 							e.printStackTrace();
+						} finally {
+							active_ = false;
 						}
 						((BasicDBTask)task).finish();
 						synchronized (finishedTasklock_) {
@@ -134,6 +140,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 						}
 						task = taskLists_.pollLast();
 						if (task != null) {
+							active_ = true;
 							runningTaskCount_++;
 						}
 					}
@@ -154,6 +161,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 							runningTaskCount_--;
 							lastUsedTime_ = System.currentTimeMillis();
 						}
+						active_ = false;
 						if (shouldFinish) {
 							((BasicDBTask)task).finish();
 							synchronized (finishedTasklock_) {
@@ -306,12 +314,30 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 	public int getIdleTimeout() {
 		return idleTimeout_;
 	}
-	
+
+	/**
+	 * Get the number of connections currently executing tasks.
+	 */
+	public int getActiveConnectionsCount() {
+		checkPoolOpen();
+		synchronized (workersLock_) {
+			return getActiveConnectionsCountInternal();
+		}
+	}
+
+	/**
+	 * Get the number of live connections currently not executing tasks.
+	 */
+	public int getIdleConnectionsCount() {
+		checkPoolOpen();
+		synchronized (workersLock_) {
+			return workers_.size() - getActiveConnectionsCountInternal();
+		}
+	}
+
 	public void shutdown() {
 		waitForThreadCompletion();
-		if (dynamicPool_) {
-			isShutdown_ = true;
-		}
+		isShutdown_ = true;
 		List<AsyncWorker> workers = dynamicPool_ ? getWorkersSnapshot() : workers_;
 		for (AsyncWorker one : workers) {
 			synchronized (one.workThread_ ) {
@@ -323,6 +349,22 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 	private List<AsyncWorker> getWorkersSnapshot() {
 		synchronized (workersLock_) {
 			return new ArrayList<>(workers_);
+		}
+	}
+
+	private int getActiveConnectionsCountInternal() {
+		int count = 0;
+		for (AsyncWorker worker : workers_) {
+			if (worker.active_) {
+				count++;
+			}
+		}
+		return count;
+	}
+
+	private void checkPoolOpen() {
+		if (isShutdown_) {
+			throw new RuntimeException("The connection pool has been closed.");
 		}
 	}
 
