@@ -62,11 +62,9 @@ public class ThreadedClientsubscribeReverseTest {
         try{threadedClient.unsubscribe(HOST, PORT, "Trades", "subTrades");}catch (Exception ex){}
         try{threadedClient.unsubscribe(HOST, PORT, "outTables", "mutiSchema");}catch (Exception ex){}
         try{threadedClient.unsubscribe(HOST, PORT, "outTables", "javaStreamingApi");}catch (Exception ex){}
-        try {clear_env();}catch (Exception e){}
-        //Thread.sleep(2000);
+        //try {clear_env();}catch (Exception e){}
         threadedClient.close();
         conn.close();
-        //Thread.sleep(2000);
     }
 
     @AfterClass

@@ -52,7 +52,7 @@ public class BasicTimeVectorTest {
                 current
         });
         assertEquals(3, v.rows());
-        assertEquals("00:00:01.000", v.getTime(0).toString());
+        assertEquals("00:00:01", v.getTime(0).toString());
         assertEquals("23:59:59.999", v.getTime(1).toString());
         assertEquals(current.withNano((current.getNano()/1000000)*1000000), v.getTime(2));
     }

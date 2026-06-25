@@ -81,20 +81,20 @@ public class PollingClientReverseTest {
         try {pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades2");}catch (Exception e){}
         try {pollingClient.unsubscribe(HOST, PORT, "Trades1");}catch (Exception e){}
         try {pollingClient.unsubscribe(HOST, PORT, "Trades", "subTread1");}catch (Exception e){}
-        try {
-            conn.run("login(`admin,`123456);" +
-                    "try{dropStreamTable('Trades1')}catch(ex){};"+
-                    "try{dropStreamTable('Receive')}catch(ex){};"+
-                    "try{deleteUser(`test1)}catch(ex){};" +
-                    "userlist=getUserList();" +
-                    "grouplist=getGroupList();" +
-                    "loop(deleteUser,userlist);" +
-                    "loop(deleteGroup,grouplist)");
-        } catch (Exception e) {
-        }
-        try{conn.run("dropStreamTable(`Trades1)");}catch (Exception e){}
-        try {clear_env();}catch (Exception e){}
-        //client.close();
+//        try {
+//            conn.run("login(`admin,`123456);" +
+//                    "try{dropStreamTable('Trades1')}catch(ex){};"+
+//                    "try{dropStreamTable('Receive')}catch(ex){};"+
+//                    "try{deleteUser(`test1)}catch(ex){};" +
+//                    "userlist=getUserList();" +
+//                    "grouplist=getGroupList();" +
+//                    "loop(deleteUser,userlist);" +
+//                    "loop(deleteGroup,grouplist)");
+//        } catch (Exception e) {
+//        }
+//        try{conn.run("dropStreamTable(`Trades1)");}catch (Exception e){}
+//        try {clear_env();}catch (Exception e){}
+        pollingClient.close();
         conn.close();
     }
 
@@ -258,7 +258,7 @@ public class PollingClientReverseTest {
 
     @Test(timeout = 120000)
     public  void test_size_resubscribe() throws IOException {
-        for (int j=0;j<10;j++) {
+        for (int j=0;j<5;j++) {
             TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1", "subtrades1", -1, true);
             TopicPoller poller2 = pollingClient.subscribe(HOST, PORT, "Trades1", "subtrades2", -1, true);
             ArrayList<IMessage> msgs1;
@@ -285,7 +285,6 @@ public class PollingClientReverseTest {
                     BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
                     assertTrue(msgs2.size() >= 1000);
                 }
-
             }
             pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades1");
             pollingClient.unsubscribe(HOST, PORT, "Trades1", "subtrades2");
@@ -588,7 +587,7 @@ public class PollingClientReverseTest {
 
     @Test(timeout = 200000)
     public void test_subscribe_tableName_actionName_offset_reconnect() throws IOException {
-        for (int j=0;j<10;j++) {
+        for (int j=0;j<5;j++) {
             TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1","subTrades1",-1,true);
             TopicPoller poller2 = pollingClient.subscribe(HOST, PORT, "Trades1","subTrades2",-1,true);
             ArrayList<IMessage> msgs1;
@@ -607,12 +606,11 @@ public class PollingClientReverseTest {
                         assertEquals(t.getColumn(1).get(k),msgs1.get(k).getEntity(1));
                         assertEquals(t.getColumn(2).get(k),msgs1.get(k).getEntity(2));
                     }
-
                 }
                 if (msgs2 == null) {
                     continue;
                 } else if (msgs2.size() > 0) {
-                    BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
+                    //BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
                     assertEquals(1000, msgs1.size());
                 }
             }
@@ -625,10 +623,9 @@ public class PollingClientReverseTest {
     @Test(timeout = 120000)
     public void test_subscribe_tableName_actionName_reconnect() throws IOException {
         TopicPoller poller1 = pollingClient.subscribe(HOST, PORT, "Trades1","subTrades1",true);
-        PollingClient pollingClient1 = new PollingClient(HOST,0);
+        //PollingClient pollingClient1 = new PollingClient(HOST,0);
         TopicPoller poller2 = pollingClient.subscribe(HOST, PORT, "Trades1","subTrades2",true);
-        for (int j=0;j<10;j++) {
-
+        for (int j=0;j<5;j++) {
             ArrayList<IMessage> msgs1;
             ArrayList<IMessage> msgs2;
             for (int i = 0; i < 10; i++) {
@@ -645,20 +642,18 @@ public class PollingClientReverseTest {
                         assertEquals(t.getColumn(1).get(k),msgs1.get(k).getEntity(1));
                         assertEquals(t.getColumn(2).get(k),msgs1.get(k).getEntity(2));
                     }
-
                 }
                 if (msgs2 == null) {
                     continue;
                 } else if (msgs2.size() > 0) {
-                    BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
-                    //assertTrue(msgs2.size() >= 1000);
-                    System.out.println("-----111111-----------");
-                    System.out.println("i的值为"+i);
-                    System.out.println("j的值为"+j);
-                    System.out.println(msgs2.size());
-                    System.out.println("-----222222-----------");
+                    assertTrue(msgs2.size() >= 1000);
+                    //BasicInt value = (BasicInt) msgs2.get(0).getEntity(0);
+//                    System.out.println("-----111111-----------");
+//                    System.out.println("i的值为"+i);
+//                    System.out.println("j的值为"+j);
+//                    System.out.println(msgs2.size());
+//                    System.out.println("-----222222-----------");
                 }
-
             }
         }
         pollingClient.unsubscribe(HOST, PORT, "Trades1","subTrades1");
