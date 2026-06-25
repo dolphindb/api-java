@@ -403,7 +403,7 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 		}
 	}
 
-	private DBConnection createConnection(int workerIndex) {
+	private DBConnection createConnection(int workerIndex) throws IOException {
 		if (!loadBalance_) {
 			DBConnection conn = new DBConnection(false, useSSL_, compress_, usePython_);
 			try {
@@ -411,23 +411,22 @@ public class ExclusiveDBConnectionPool implements DBConnectionPool {
 				if (!isConnected) {
 					throw new RuntimeException("Can't connect to the specified host.");
 				}
-			} catch (Exception e) {
+			} catch (IOException e) {
+				if (dynamicPool_) {
+					throw e;
+				}
 				throw new RuntimeException("Can't connect to the specified host: ", e);
 			}
 			return conn;
 		}
 		int targetIndex = workerIndex % hosts_.length;
 		DBConnection conn = new DBConnection(false, useSSL_, compress_, usePython_);
-		try {
-			if(!conn.connect(hosts_[targetIndex], ports_[targetIndex], uid_, pwd_, initialScript_, enableHighAvailability_, highAvailabilitySites_,false,false))
-				throw new RuntimeException("Can't connect to the host " + hosts_[targetIndex] + ":" + ports_[targetIndex]);
-		} catch (Exception e) {
-			throw new RuntimeException("Can't connect to the host " + hosts_[targetIndex] + ":" + ports_[targetIndex], e);
-		}
+		if(!conn.connect(hosts_[targetIndex], ports_[targetIndex], uid_, pwd_, initialScript_, enableHighAvailability_, highAvailabilitySites_,false,false))
+			throw new RuntimeException("Can't connect to the host " + hosts_[targetIndex] + ":" + ports_[targetIndex]);
 		return conn;
 	}
 
-	private void addInitialWorker() {
+	private void addInitialWorker() throws IOException {
 		int workerIndex = nextWorkerIndex_++;
 		AsyncWorker worker = new AsyncWorker(createConnection(workerIndex), workerIndex + 1, dynamicPool_);
 		synchronized (workersLock_) {
