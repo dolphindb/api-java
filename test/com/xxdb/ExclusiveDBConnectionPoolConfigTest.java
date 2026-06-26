@@ -488,7 +488,7 @@ public class ExclusiveDBConnectionPoolConfigTest {
         assertEquals(5,pool.getIdleConnectionsCount());
         List<DBTask> tasks = new ArrayList<>();
         for (int i = 0; i < 5; i++){
-            BasicDBTask task = new BasicDBTask("sleep(1000);insert into t1 values(1,1);");
+            BasicDBTask task = new BasicDBTask("sleep(1000);");
             tasks.add(task);
         }
         Thread threads1 = new Thread(() -> {
