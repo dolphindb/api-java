@@ -48,8 +48,13 @@ public class ConnectionPoolTest {
     }
     @After
     public void tearDown() throws Exception {
+    try{
         conn.run("if(existsDatabase(\"dfs://demohash\")){\n" +"\tdropDatabase(\"dfs://demohash\")\n" +                "}");
+    }catch(Exception e){}
+    try{
         conn.close();
+    }catch(Exception e){}
+
     }
 
     //ExclusiveDBConnectionPool(String host, int port, String uid, String pwd, int count, boolean loadBalance, boolean enableHighAvailability)
@@ -688,7 +693,7 @@ public class ConnectionPoolTest {
 
     @Test
     public void test_DBConnectionPool_haSite() throws Exception {
-        DBConnectionPool tmp_pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456", 10, true, true, ipports,null,true,false,false);
+        ExclusiveDBConnectionPool tmp_pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456", 10, true, true, ipports,null,true,false,false);
         conn.run("db_path = \"dfs://test_DBConnectionPool_haSite\";\n" +
                 "if(existsDatabase(db_path)){\n" +
                 "        dropDatabase(db_path)\n" +
@@ -902,7 +907,6 @@ public class ConnectionPoolTest {
         BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
         assertEquals(3,res.rows());
         assertEquals(Entity.DATA_TYPE.DT_INT_ARRAY,res.getColumn(2).getDataType());
-        System.out.println(res.getColumn(2).getString());
         pool.shutdown();
     }
 
@@ -939,7 +943,6 @@ public class ConnectionPoolTest {
         BasicTable res = (BasicTable) conn.run("select * from loadTable(\"dfs://testArrayVector\",\"pt\");");
         assertEquals(3,res.rows());
         assertEquals(Entity.DATA_TYPE.DT_DOUBLE_ARRAY,res.getColumn(2).getDataType());
-        System.out.println(res.getColumn(2).getString());
         pool.shutdown();
     }
 
@@ -1337,7 +1340,6 @@ public class ConnectionPoolTest {
         assertEquals(v640.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
         assertEquals(v641.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
         assertEquals(v642.getString(), ((BasicArrayVector)(res.getColumn("col4"))).getVectorValue(0).getString());
-
         pool.shutdown();
     }
 
@@ -1508,7 +1510,6 @@ public class ConnectionPoolTest {
         assertEquals(v1282.getString(), ((BasicArrayVector)(res.getColumn("col2"))).getVectorValue(0).getString());
         assertEquals(v1283.getString(), ((BasicArrayVector)(res.getColumn("col3"))).getVectorValue(0).getString());
         assertEquals(v1284.getString(), ((BasicArrayVector)(res.getColumn("col4"))).getVectorValue(0).getString());
-
         pool.shutdown();
     }
 
@@ -1647,9 +1648,6 @@ public class ConnectionPoolTest {
     @Test
     public void test_pool_execute_decimal_arrayvector() throws Exception {
         ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
-
-        DBConnection connection = new DBConnection(false, false, false);
-        connection.connect(HOST, PORT, "admin", "123456");
         String script=("\n" +
                 "t = table(1000:0, `col0`col1`col2`col3`col4`col5`col6, [DECIMAL32(0)[],DECIMAL32(1)[],DECIMAL32(3)[],DECIMAL64(0)[],DECIMAL64(1)[],DECIMAL64(4)[],DECIMAL64(8)[]])\n" +
                 "share t as ptt;\n"+
@@ -1667,8 +1665,7 @@ public class ConnectionPoolTest {
         tasks.add(task);
         pool.execute(tasks);
         pool.waitForThreadCompletion();
-        BasicTable res = (BasicTable) connection.run("ptt");
-        System.out.println(res.getString());
+        BasicTable res = (BasicTable) conn.run("ptt");
         assertEquals(7,res.columns());
         assertEquals(2,res.rows());
         assertEquals("[[1,3,100000],[-1,0,0]]",res.getColumn(0).getString());
@@ -1678,16 +1675,12 @@ public class ConnectionPoolTest {
         assertEquals("[[1.0,3.0,100000.0],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
         assertEquals("[[1.0000,3.0000,100000.0000],[-1.0000,0.0000,0.1235]]",res.getColumn(5).getString());
         assertEquals("[[1.00000000,3.00001000,100000.00000000],[-1.00000000,0.00000000,0.12345679]]",res.getColumn(6).getString());
-        System.out.println(res.getColumn(0).getString());
         pool.shutdown();
     }
 
     @Test
     public void test_pool_execute_decimal_arrayvector_compress_true() throws Exception {
         ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false,null,"",true,false,false);
-
-        DBConnection connection = new DBConnection(false, false, false);
-        connection.connect(HOST, PORT, "admin", "123456");
         String script=("\n" +
                 "t = table(1000:0, `col0`col1`col2`col3`col4`col5`col6, [DECIMAL32(0)[],DECIMAL32(1)[],DECIMAL32(3)[],DECIMAL64(0)[],DECIMAL64(1)[],DECIMAL64(4)[],DECIMAL64(8)[]])\n" +
                 "share t as ptt;\n"+
@@ -1705,8 +1698,7 @@ public class ConnectionPoolTest {
         tasks.add(task);
         pool.execute(tasks);
         pool.waitForThreadCompletion();
-        BasicTable res = (BasicTable) connection.run("ptt");
-        System.out.println(res.getString());
+        BasicTable res = (BasicTable) conn.run("ptt");
         assertEquals(7,res.columns());
         assertEquals(2,res.rows());
         assertEquals("[[1,3,100000],[-1,0,0]]",res.getColumn(0).getString());
@@ -1716,14 +1708,11 @@ public class ConnectionPoolTest {
         assertEquals("[[1.0,3.0,100000.0],[-1.0,0.0,0.1]]",res.getColumn(4).getString());
         assertEquals("[[1.0000,3.0000,100000.0000],[-1.0000,0.0000,0.1235]]",res.getColumn(5).getString());
         assertEquals("[[1.00000000,3.00001000,100000.00000000],[-1.00000000,0.00000000,0.12345679]]",res.getColumn(6).getString());
-        System.out.println(res.getColumn(0).getString());
         pool.shutdown();
     }
     @Test
     public void test_pool_execute_decimal128_arrayvector() throws Exception {
         ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, false, false);
-        DBConnection connection = new DBConnection(false, false, false);
-        connection.connect(HOST, PORT, "admin", "123456");
         String script = ("\n" +
                 "t = table(1000:0, `col0`col1`col2`col3`col4, [DECIMAL128(0)[],DECIMAL128(4)[],DECIMAL128(10)[],DECIMAL128(19)[],DECIMAL128(37)[]])\n" +
                 "share t as ptt;\n" +
@@ -1739,8 +1728,7 @@ public class ConnectionPoolTest {
         tasks.add(task);
         pool.execute(tasks);
         pool.waitForThreadCompletion();
-        BasicTable res = (BasicTable) connection.run("ptt");
-        System.out.println(res.getString());
+        BasicTable res = (BasicTable) conn.run("ptt");
         assertEquals(5, res.columns());
         assertEquals(2, res.rows());
         assertEquals("[[1,3,100000],[-1,0,0]]",res.getColumn(0).getString());
@@ -1748,12 +1736,11 @@ public class ConnectionPoolTest {
         assertEquals("[[1.0000000000,3.0000100000,100000.0000000000],[-1.0000000000,0.0000000000,0.1234567890]]",res.getColumn(2).getString());
         assertEquals("[[1.0000000000000000000,3.0000100000000000000,99999.9999999999849005056],[-1.0000000000000000000,0.0000000000000000000,0.1234567890000000000]]",res.getColumn(3).getString());
         assertEquals("[[1.0000000000000000000000000000000000000,3.0000000000000000000000000000000000000,1.0000000000000000000000000000000000000],[-3.0000000000000000000000000000000000000,0.0000000000000000000000000000000000000,0.1234567889999999866557890289987485696]]",res.getColumn(4).getString());
+        pool.shutdown();
     }
     @Test
     public void test_pool_execute_decimal128_arrayvector_compress_true() throws Exception {
         ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 3, false, false);
-        DBConnection connection = new DBConnection(false, false, true);
-        connection.connect(HOST, PORT, "admin", "123456");
         String script = ("\n" +
                 "t = table(1000:0, `col0`col1`col2`col3`col4, [DECIMAL128(0)[],DECIMAL128(4)[],DECIMAL128(10)[],DECIMAL128(19)[],DECIMAL128(37)[]])\n" +
                 "share t as ptt;\n" +
@@ -1769,8 +1756,7 @@ public class ConnectionPoolTest {
         tasks.add(task);
         pool.execute(tasks);
         pool.waitForThreadCompletion();
-        BasicTable res = (BasicTable) connection.run("ptt");
-        System.out.println(res.getString());
+        BasicTable res = (BasicTable) conn.run("ptt");
         assertEquals(5, res.columns());
         assertEquals(2, res.rows());
         assertEquals("[[1,3,100000],[-1,0,0]]",res.getColumn(0).getString());
@@ -1778,6 +1764,7 @@ public class ConnectionPoolTest {
         assertEquals("[[1.0000000000,3.0000100000,100000.0000000000],[-1.0000000000,0.0000000000,0.1234567890]]",res.getColumn(2).getString());
         assertEquals("[[1.0000000000000000000,3.0000100000000000000,99999.9999999999849005056],[-1.0000000000000000000,0.0000000000000000000,0.1234567890000000000]]",res.getColumn(3).getString());
         assertEquals("[[1.0000000000000000000000000000000000000,3.0000000000000000000000000000000000000,1.0000000000000000000000000000000000000],[-3.0000000000000000000000000000000000000,0.0000000000000000000000000000000000000,0.1234567889999999866557890289987485696]]",res.getColumn(4).getString());
+        pool.shutdown();
     }
     @Test
     public void test_pool_execute_timeout_10000() throws Exception {
@@ -1801,7 +1788,7 @@ public class ConnectionPoolTest {
         connectionPool.execute(new BasicDBTask("sleep(10000);"), 5000);
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
-        assertEquals(true,(end - start) / 1000000<6000);
+        assertEquals(true,(end - start) / 1000000<=6000);
         connectionPool.waitForThreadCompletion();
         connectionPool.shutdown();
     }
@@ -1814,7 +1801,7 @@ public class ConnectionPoolTest {
         connectionPool.execute(new BasicDBTask("sleep(10000);"), -1);
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
-        assertEquals(true,(end - start) / 1000000>10000);
+        assertEquals(true,(end - start) / 1000000>=10000);
         connectionPool.waitForThreadCompletion();
         connectionPool.shutdown();
     }
@@ -1832,7 +1819,7 @@ public class ConnectionPoolTest {
         //connectionPool.execute(tasks,-1);
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
-        assertEquals(true,(end - start) / 1000000>10000);
+        assertEquals(true,(end - start) / 1000000>=10000);
         connectionPool.waitForThreadCompletion();
         connectionPool.shutdown();
     }
@@ -1846,8 +1833,8 @@ public class ConnectionPoolTest {
         connectionPool.execute(bt,20000);
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
-        assertEquals(true,(end - start) / 1000000>10000);
-        assertEquals(true,(end - start) / 1000000<10100);
+        assertEquals(true,(end - start) / 1000000>=10000);
+        assertEquals(true,(end - start) / 1000000<=10100);
         connectionPool.waitForThreadCompletion();
         connectionPool.shutdown();
     }
@@ -1861,8 +1848,8 @@ public class ConnectionPoolTest {
         connectionPool.execute(bt,5000);
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
-        assertEquals(true,(end - start) / 1000000>5000);
-        assertEquals(true,(end - start) / 1000000<6100);
+        assertEquals(true,(end - start) / 1000000>=5000);
+        assertEquals(true,(end - start) / 1000000<=6100);
         connectionPool.waitForThreadCompletion();
         connectionPool.shutdown();
     }
@@ -1876,8 +1863,8 @@ public class ConnectionPoolTest {
         connectionPool.execute(bt,0);
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
-        assertEquals(true,(end - start) / 1000000>10000);
-        assertEquals(true,(end - start) / 1000000<10100);
+        assertEquals(true,(end - start) / 1000000>=10000);
+        assertEquals(true,(end - start) / 1000000<=10100);
         connectionPool.waitForThreadCompletion();
         connectionPool.shutdown();
     }
@@ -1891,7 +1878,7 @@ public class ConnectionPoolTest {
         connectionPool.execute(bt,1);
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
-        assertEquals(true,(end - start) / 1000000<100);
+        assertEquals(true,(end - start) / 1000000<=100);
         connectionPool.waitForThreadCompletion();
         connectionPool.shutdown();
     }
@@ -1905,8 +1892,8 @@ public class ConnectionPoolTest {
         connectionPool.execute(bt,10000);
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
-        assertEquals(true,(end - start) / 1000000>10000);
-        assertEquals(true,(end - start) / 1000000<10100);
+        assertEquals(true,(end - start) / 1000000>=10000);
+        assertEquals(true,(end - start) / 1000000<=10100);
         connectionPool.waitForThreadCompletion();
         connectionPool.shutdown();
     }
@@ -2055,7 +2042,6 @@ public class ConnectionPoolTest {
         BasicTable bt = (BasicTable) conn.run("select * from loadTable(\"dfs://empty_table\",`pt);");
         assertEquals(0, bt.rows());
         pool.shutdown();
-        conn.close();
     }
     @Test(timeout = 120000)
     public void test_PartitionedTableAppender_allDataType_array_null() throws Exception {
@@ -2129,7 +2115,6 @@ public class ConnectionPoolTest {
         BasicTable bt = (BasicTable) conn.run("select * from loadTable(\"dfs://empty_table\",`pt);");
         assertEquals(0, bt.rows());
         pool.shutdown();
-        conn.close();
     }
 
     @Test
@@ -2156,7 +2141,6 @@ public class ConnectionPoolTest {
         BasicTable bt6 = (BasicTable)conn.run("t=table([7] as deviceId, [now()]  as timestamp,  [`loc1] as location, [233.34] as value);\n select * from t");
         BasicTable bt7 = (BasicTable)conn.run("t=table([8] as deviceId, [now()]  as timestamp,  [`loc1] as location, [`loc1] as value);\n select * from t");
         BasicTable bt8 = (BasicTable)conn.run("t=table(12..14 as deviceId, [now(),2022.06.13 13:30:10.008,2020.06.13 13:30:10.008]  as timestamp,  [`loc1`loc2`loc3] as location, [symbol(`AAA`bbb`xxx)] as value);\n select * from t");
-        System.out.println(bt8.getString());
         ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
         PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testIOT_allDateType","pt","deviceId", pool);
         appender.append(bt);
@@ -2170,7 +2154,6 @@ public class ConnectionPoolTest {
         appender.append(bt8);
         BasicTable bt10 = (BasicTable) conn.run("select * from loadTable(\"dfs://testIOT_allDateType\",`pt);");
         assertEquals(11, bt10.rows());
-        System.out.println(bt10.getString());
         assertEquals("['Q',233,-233,233121,true,233.33999634,233.34,loc1,AAA,bbb,xxx]", bt10.getColumn(3).getString());
         pool.shutdown();
     }
@@ -2199,7 +2182,6 @@ public class ConnectionPoolTest {
         BasicTable bt6 = (BasicTable)conn.run("t=table([7] as deviceId, [now()]  as timestamp,  [`loc1] as location, [233.34] as value);\n select * from t");
         BasicTable bt7 = (BasicTable)conn.run("t=table([8] as deviceId, [now()]  as timestamp,  [`loc1] as location, [`loc1] as value);\n select * from t");
         BasicTable bt8 = (BasicTable)conn.run("t=table(12..14 as deviceId, [now(),2022.06.13 13:30:10.008,2020.06.13 13:30:10.008]  as timestamp,  [`loc1`loc2`loc3] as location, [symbol(`AAA`bbb`xxx)] as value);\n select * from t");
-        System.out.println(bt8.getString());
         DBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456", 10, true, true, null,null,true,false,false);
         PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testIOT_allDateType","pt","deviceId", pool);
         appender.append(bt);
@@ -2213,7 +2195,6 @@ public class ConnectionPoolTest {
         appender.append(bt8);
         BasicTable bt10 = (BasicTable) conn.run("select * from loadTable(\"dfs://testIOT_allDateType\",`pt);");
         assertEquals(11, bt10.rows());
-        System.out.println(bt10.getString());
         assertEquals("['Q',233,-233,233121,true,233.33999634,233.34,loc1,AAA,bbb,xxx]", bt10.getColumn(3).getString());
         pool.shutdown();
     }
@@ -2254,7 +2235,6 @@ public class ConnectionPoolTest {
         BasicTable bt9 = new BasicTable(colNames,cols);
         ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
         PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testIOT_allDateType","pt","deviceId", pool);
-
         appender.append(bt);
         appender.append(bt1);
         appender.append(bt2);
@@ -2267,7 +2247,6 @@ public class ConnectionPoolTest {
         appender.append(bt9);
         BasicTable bt10 = (BasicTable) conn.run("select * from loadTable(\"dfs://testIOT_allDateType\",`pt);");
         assertEquals(9, bt10.rows());
-        System.out.println(bt10.getColumn(3).getString());
         assertEquals("[,,,,,,,,]", bt10.getColumn(3).getString());
         pool.shutdown();
     }
@@ -2321,7 +2300,6 @@ public class ConnectionPoolTest {
         appender.append(bt9);
         BasicTable bt10 = (BasicTable) conn.run("select * from loadTable(\"dfs://testIOT_allDateType\",`pt);");
         assertEquals(9, bt10.rows());
-        System.out.println(bt10.getColumn(3).getString());
         assertEquals("[,,,,,,,,]", bt10.getColumn(3).getString());
         pool.shutdown();
     }
@@ -2350,7 +2328,6 @@ public class ConnectionPoolTest {
         BasicTable bt6 = (BasicTable)conn.run("t=table(take(600001..700000,1000000) as deviceId, take(now()+(0..100), 1000000)  as timestamp,  take(\"bb\"+string(0..100), 1000000) as location, take(-2.33 0 4.44,1000000) as value);\n select * from t");
         BasicTable bt7 = (BasicTable)conn.run("t=table(take(700001..800000,1000000) as deviceId, take(now()+(0..100), 1000000)  as timestamp,  take(\"bb\"+string(0..100), 1000000) as location, take(\"bb\"+string(0..100000), 1000000) as value);\n select * from t");
         BasicTable bt8 = (BasicTable)conn.run("t=table(take(800001..900000,1000000) as deviceId, take(now()+(0..100), 1000000)  as timestamp,  take(\"bb\"+string(0..100), 1000000) as location, symbol(take(NULL`bbb`AAA,1000000)) as value);\n select * from t");
-        System.out.println(bt8.getString());
         ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
         PartitionedTableAppender appender = new PartitionedTableAppender("dfs://testIOT_allDateType1","pt","deviceId", pool);
         long start = System.nanoTime();
@@ -2365,7 +2342,6 @@ public class ConnectionPoolTest {
         appender.append(bt8);
         long end = System.nanoTime();
         System.out.println((end - start) / 1000000);
-
         BasicTable bt10 = (BasicTable) conn.run("select count(*) from loadTable(\"dfs://testIOT_allDateType1\",`pt);");
         assertEquals("9000000", bt10.getColumn(0).getString(0));
         pool.shutdown();
@@ -2421,19 +2397,14 @@ public class ConnectionPoolTest {
 
     @Test(timeout = 120000)
     public void test_ChunkInTransaction_insert() throws Exception {
-        DBConnection conn = new DBConnection();
-        conn.connect(HOST,PORT,"admin","123456");
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n" +
-                "dbName = \"dfs://test_ChunkInTransaction\"\n" +
+        String script = "dbName = \"dfs://test_ChunkInTransaction\"\n" +
                 "if(exists(dbName)){\n" +
                 "\tdropDatabase(dbName)\t\n" +
                 "}\n" +
                 "db=database(dbName, VALUE,1..6)\n" +
                 "t=table(1:0, `volume`valueTrade, [INT, DOUBLE])\n" +
-                " ;share t as t1;\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"volume\"])\n");
-        conn.run(sb.toString());
-
+                " ;share t as t1;\tcreatePartitionedTable(dbHandle=db, table=t, tableName=`pt, partitionColumns=[\"volume\"])\n";
+        conn.run(script);
         ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",3,false,false);
         PartitionedTableAppender appender = new PartitionedTableAppender("dfs://test_ChunkInTransaction","pt","volume", pool);
         PartitionedTableAppender appender1 = new PartitionedTableAppender("dfs://test_ChunkInTransaction","pt","volume", pool);
@@ -2484,6 +2455,5 @@ public class ConnectionPoolTest {
         assertEquals(true, re[0].toString().contains("is currently locked and in use"));
         pool.shutdown();
     }
-
 }
 

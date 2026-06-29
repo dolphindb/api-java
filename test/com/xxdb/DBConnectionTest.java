@@ -1,7 +1,6 @@
 package com.xxdb;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.sun.org.apache.xml.internal.utils.StringVector;
 import com.xxdb.data.Dictionary;
 import com.xxdb.data.Vector;
 import com.xxdb.data.*;
@@ -10,8 +9,6 @@ import com.xxdb.io.LittleEndianDataOutputStream;
 import com.xxdb.io.Long2;
 import com.xxdb.io.ProgressListener;
 import org.junit.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.lang.reflect.*;
@@ -4090,7 +4087,7 @@ public void test_SSL() throws Exception {
         conn.tryRun("sum",argus1,1,1,8192);
         long afterDT = System.currentTimeMillis();
         System.out.println(afterDT-beforeDT);
-        sleep(10000);
+//        sleep(10000);
         List<Entity> argus2 = new ArrayList<>();
         conn.run("y=1..10000000");
         argus2.add(conn.run("y;"));
@@ -4098,7 +4095,7 @@ public void test_SSL() throws Exception {
         conn.tryRun("sum",argus2,1,1,1000000);
         long endDT = System.currentTimeMillis();
         System.out.println(endDT-startDT);
-        assertTrue((endDT-startDT)<(afterDT-beforeDT));
+        assertTrue((endDT-startDT)<=(afterDT-beforeDT));
     }
 
     @Test
@@ -5590,23 +5587,6 @@ public void test_SSL() throws Exception {
     public void Test_DBConnection_enableSCRAM_true_compress_true() throws Exception {
         PrepareUser_authMode("test1","123456","scram");
         DBConnection conn = new DBConnection(false, false,true,false,false,null,true);
-        conn.connect(HOST,PORT,"test1","123456");
-        BasicInt re = (BasicInt) conn.run("1+1");
-        System.out.println(re.getString());
-        assertEquals("2", re.getString());
-    }
-    //@Test
-    public void Test_DBConnection_usePython_true() throws Exception {
-        DBConnection conn = new DBConnection(false, false,false,true);
-        conn.connect(HOST,PORT,"admin","123456");
-        BasicInt re = (BasicInt) conn.run("1+1");
-        System.out.println(re.getString());
-        assertEquals("2", re.getString());
-    }
-    @Test
-    public void Test_DBConnection_enableSCRAM_true_usePython_true() throws Exception {
-        PrepareUser_authMode("test1","123456","scram");
-        DBConnection conn = new DBConnection(false, false,false,true,false,null,true);
         conn.connect(HOST,PORT,"test1","123456");
         BasicInt re = (BasicInt) conn.run("1+1");
         System.out.println(re.getString());

@@ -38,7 +38,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
     static String[] ipports = bundle.getString("SITES").split(",");
 
     public static Integer insertTime = 5000;
-    public static ErrorCodeInfo pErrorInfo =new ErrorCodeInfo();;
+    public static ErrorCodeInfo pErrorInfo =new ErrorCodeInfo();
 
     //private final int id;
     private static MultithreadedTableWriter mutithreadTableWriter_ = null;
@@ -50,7 +50,7 @@ public  class MultithreadedTableWriterTest implements Runnable {
         DBConnection controller_conn = new DBConnection();
         controller_conn.connect(CONTROLLER_HOST, CONTROLLER_PORT, "admin", "123456");
         controller_conn.run("try{startDataNode('" + HOST + ":" + PORT + "')}catch(ex){}");
-        controller_conn.run("sleep(8000)");
+        controller_conn.run("sleep(6000)");
     }
     @Before
     public void prepare() throws IOException {

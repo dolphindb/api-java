@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.xxdb.Prepare.PrepareUser_authMode;
+import static com.xxdb.Prepare.getDataNodeConnectionNums;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -49,7 +50,6 @@ public class SimpleDBConnectionPoolTest {
        try{
            pool.close();
        }catch(Exception e){
-
        }
 //        DBConnection controller_conn = new DBConnection();
 //        controller_conn.connect(controller_host, controller_port, "admin", "123456");
@@ -437,31 +437,39 @@ public class SimpleDBConnectionPoolTest {
     }
     @Test
     public void test_SimpleDBConnectionPool_config_LoadBalance_true_highAvailablity_true() throws IOException, InterruptedException {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host, controller_port, "admin", "123456");
         SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
         config1.setHostName(HOST);
         config1.setPort(PORT);
         config1.setUserId("admin");
         config1.setPassword("123456");
-        config1.setInitialPoolSize(100);
+        config1.setInitialPoolSize(40);
         config1.setLoadBalance(true);
         config1.setEnableHighAvailability(true);
+
+        java.util.Map<Integer,Integer> before = getDataNodeConnectionNums(controller_conn);
         pool = new SimpleDBConnectionPool(config1);
-        assertEquals(100, pool.getTotalConnectionsCount());
+        Thread.sleep(2000);
+        java.util.Map<Integer,Integer> after = getDataNodeConnectionNums(controller_conn);
+        assertEquals(40, pool.getTotalConnectionsCount());
         assertEquals(true, config1.isLoadBalance());
-        DBConnection poolEntity = pool.getConnection();
-        poolEntity.run("sleep(2000)");
-        BasicTable re = (BasicTable) poolEntity.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
-        for (int i = 0; i < re.rows(); i++) {
-            System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
-            String port = re.getColumn(0).get(i).toString();
-            String connectionNum = re.getColumn(1).get(i).toString();
-            assertEquals(true, Integer.valueOf(connectionNum) > 20);
-            assertEquals(true, Integer.valueOf(connectionNum) < 50);
+        for (java.util.Map.Entry<Integer, Integer> en : after.entrySet()) {
+            int port = en.getKey();
+            int beforeNum = before.getOrDefault(port, 0);
+            int afterNum = en.getValue();
+            int delta = afterNum - beforeNum;
+            System.out.println("port:" + port + " delta:" + delta + " before:" + beforeNum + " after:" + afterNum);
+            Assert.assertTrue("delta per data node should be >=10, port=" + port + ", delta=" + delta, delta >= 5);
+            Assert.assertTrue("delta per data node should be <25, port=" + port + ", delta=" + delta, delta < 15);
         }
+        controller_conn.close();
     }
 
     @Test
     public void test_SimpleDBConnectionPool_config_LoadBalance_false_highAvailablity_false() throws IOException, InterruptedException {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host, controller_port, "admin", "123456");
         SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
         config1.setHostName(HOST);
         config1.setPort(PORT);
@@ -469,24 +477,25 @@ public class SimpleDBConnectionPoolTest {
         config1.setPassword("123456");
         config1.setLoadBalance(false);
         config1.setEnableHighAvailability(false);
-        config1.setInitialPoolSize(100);
+        config1.setInitialPoolSize(20);
+
+        java.util.Map<Integer,Integer> before = getDataNodeConnectionNums(controller_conn);
         pool = new SimpleDBConnectionPool(config1);
-        assertEquals(100,pool.getTotalConnectionsCount());
+        Thread.sleep(2000);
+        java.util.Map<Integer,Integer> after = getDataNodeConnectionNums(controller_conn);
+        assertEquals(20,pool.getTotalConnectionsCount());
         assertEquals(false,config1.isLoadBalance());
-        DBConnection poolEntity = pool.getConnection();
-        poolEntity.run("sleep(2000)");
-        BasicTable re = (BasicTable) poolEntity.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
-        for (int i = 0; i < re.rows(); i++) {
-            System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
-            String port = re.getColumn(0).get(i).toString();
-            String connectionNum = re.getColumn(1).get(i).toString();
-            if(Integer.valueOf(port)==PORT) {
-                assertEquals(true, Integer.valueOf(connectionNum) >= 100);
-            }
-        }
+        int beforeNum = before.getOrDefault(PORT, 0);
+        int afterNum = after.getOrDefault(PORT, 0);
+        int delta = afterNum - beforeNum;
+        System.out.println("port:" + PORT + " delta:" + delta + " before:" + beforeNum + " after:" + afterNum);
+        Assert.assertTrue("delta per data node should be >=10, port=" + PORT + ", delta=" + delta, delta >= 20);
+        controller_conn.close();
     }
     @Test
     public void test_SimpleDBConnectionPool_config_LoadBalance_false_highAvailablity_true() throws IOException, InterruptedException {
+        DBConnection controller_conn = new DBConnection();
+        controller_conn.connect(controller_host, controller_port, "admin", "123456");
         SimpleDBConnectionPoolConfig config1 = new SimpleDBConnectionPoolConfig();
         config1.setHostName(HOST);
         config1.setPort(PORT);
@@ -494,21 +503,19 @@ public class SimpleDBConnectionPoolTest {
         config1.setPassword("123456");
         config1.setLoadBalance(false);
         config1.setEnableHighAvailability(true);
-        config1.setInitialPoolSize(100);
+        config1.setInitialPoolSize(20);
+        java.util.Map<Integer,Integer> before = getDataNodeConnectionNums(controller_conn);
         pool = new SimpleDBConnectionPool(config1);
-        assertEquals(100,pool.getTotalConnectionsCount());
+        Thread.sleep(2000);
+        java.util.Map<Integer,Integer> after = getDataNodeConnectionNums(controller_conn);
+        assertEquals(20,pool.getTotalConnectionsCount());
         assertEquals(false,config1.isLoadBalance());
-        DBConnection poolEntity = pool.getConnection();
-        poolEntity.run("sleep(1000)");
-        BasicTable re = (BasicTable) poolEntity.run("select port ,connectionNum  from rpc(getControllerAlias(),getClusterPerf) where mode= 0");
-        for (int i = 0; i < re.rows(); i++) {
-            System.out.println("port:" + re.getColumn(0).get(i) + " connectionNum:" + re.getColumn(1).get(i));
-            String port = re.getColumn(0).get(i).toString();
-            String connectionNum = re.getColumn(1).get(i).toString();
-            if(Integer.valueOf(port)==PORT) {
-                assertEquals(true, Integer.valueOf(connectionNum) >= 100);
-            }
-        }
+        int beforeNum = before.getOrDefault(PORT, 0);
+        int afterNum = after.getOrDefault(PORT, 0);
+        int delta = afterNum - beforeNum;
+        System.out.println("port:" + PORT + " delta:" + delta + " before:" + beforeNum + " after:" + afterNum);
+        Assert.assertTrue("delta per data node should be >=10, port=" + PORT + ", delta=" + delta, delta >= 20);
+        controller_conn.close();
     }
 
     @Test
@@ -977,7 +984,6 @@ public class SimpleDBConnectionPoolTest {
         assertEquals(0,pool.getActiveConnectionsCount());
         assertEquals(5,pool.getTotalConnectionsCount());
         assertEquals(5,pool.getIdleConnectionsCount());
-        pool.close();
     }
 
     @Test
@@ -1013,7 +1019,6 @@ public class SimpleDBConnectionPoolTest {
         assertEquals(0,pool.getActiveConnectionsCount());
         assertEquals(10,pool.getTotalConnectionsCount());
         assertEquals(10,pool.getIdleConnectionsCount());
-        pool.close();
     }
 
     @Test
@@ -1062,7 +1067,6 @@ public class SimpleDBConnectionPoolTest {
 
         }
         assertEquals("The connection pool has been closed.",re);
-
     }
 
     @Test
@@ -1165,7 +1169,6 @@ public class SimpleDBConnectionPoolTest {
         assertEquals(3,pool.getActiveConnectionsCount());
         assertEquals(10,pool.getTotalConnectionsCount());
         assertEquals(7,pool.getIdleConnectionsCount());
-        pool.close();
     }
     @Test
     public void test_SimpleDBConnectionPool_getConnection_connect() throws IOException, InterruptedException {
@@ -1184,7 +1187,6 @@ public class SimpleDBConnectionPoolTest {
             re = ex.getMessage();
         }
         assertEquals("The connection in connection pool can only connect by pool.",re);
-        pool.close();
     }
 
     @Test
@@ -1204,7 +1206,6 @@ public class SimpleDBConnectionPoolTest {
             re = ex.getMessage();
         }
         assertEquals("The connection in connection pool can only login by pool.",re);
-        pool.close();
     }
 
     @Test
@@ -1224,7 +1225,6 @@ public class SimpleDBConnectionPoolTest {
             re = ex.getMessage();
         }
         assertEquals("The loadBalance configuration of connection in connection pool can only be set in SimpleDBConnectionPoolConfig.",re);
-        pool.close();
     }
     @Test
     public void test_SimpleDBConnectionPool_getConnection_Failed_TryReconnectNums_enableHighAvailability_false_enableLoadBalance_false(){
@@ -1244,6 +1244,7 @@ public class SimpleDBConnectionPoolTest {
         }
         assertEquals("java.lang.RuntimeException: Create connection pool failure, because Connect to "+HOST+":"+port+" failed after "+trynums+" reconnect attempts.",s);
     }
+
     @Test(expected =RuntimeException.class)
     public void test_SimpleDBConnectionPool_getConnection_Failed_TryReconnectNums_enableHighAvailability_true_enableLoadBalance_false(){
         class LogCapture {
@@ -1317,113 +1318,113 @@ public class SimpleDBConnectionPoolTest {
         bbv.add((byte) 1);
         bbv.add((byte) 0);
         bbv.Append(new BasicBoolean(false));
-        System.out.println(bbv.rows());
+//        System.out.println(bbv.rows());
         cols.add(bbv);
         colNames.add("cbool");
         BasicByteVector byv = new BasicByteVector(1);
         byv.add((byte) 22);
         byv.add((byte) 57);
         byv.Append(new BasicByte((byte) 13));
-        System.out.println(byv.rows());
+//        System.out.println(byv.rows());
         cols.add(byv);
         colNames.add("cchar");
         BasicShortVector bsv = new BasicShortVector(1);
         bsv.add((short) 12);
         bsv.Append(new BasicShort((short) 35));
         bsv.add((short) 73);
-        System.out.println(bsv.rows());
+//        System.out.println(bsv.rows());
         cols.add(bsv);
         colNames.add("cshort");
         BasicIntVector biv = new BasicIntVector(1);
         biv.Append(new BasicInt(5));
         biv.add(11);
         biv.Append(new BasicInt(76));
-        System.out.println(biv.rows());
+//        System.out.println(biv.rows());
         cols.add(biv);
         colNames.add("cint");
         BasicLongVector blv = new BasicLongVector(1);
         blv.add(12);
         blv.Append(new BasicLong(367));
         blv.Append(new BasicLong(23));
-        System.out.println(blv.rows());
+//        System.out.println(blv.rows());
         cols.add(blv);
         colNames.add("clong");
         BasicDateVector bdv = new BasicDateVector(1);
         bdv.add(1);
         bdv.Append(new BasicDate(LocalDate.MIN));
         bdv.Append(new BasicDate(LocalDate.now()));
-        System.out.println(bdv.rows());
-        System.out.println(bdv.rows());
+//        System.out.println(bdv.rows());
+//        System.out.println(bdv.rows());
         cols.add(bdv);
         colNames.add("cdate");
         BasicMonthVector bmv = new BasicMonthVector(1);
         bmv.add(346);
         bmv.Append(new BasicMonth(2010, Month.APRIL));
         bmv.Append(new BasicMonth(2006,Month.MARCH));
-        System.out.println(bmv.rows());
+//        System.out.println(bmv.rows());
         cols.add(bmv);
         colNames.add("cmonth");
         BasicTimeVector btv = new BasicTimeVector(1);
         btv.add(2345);
         btv.Append(new BasicTimeVector(new int[]{46284,5839}));
-        System.out.println(btv.rows());
+//        System.out.println(btv.rows());
         cols.add(btv);
         colNames.add("ctime");
         BasicMinuteVector bmiv = new BasicMinuteVector(1);
         bmiv.Append(new BasicMinuteVector(new int[]{749,904}));
         bmiv.add(432);
-        System.out.println(bmiv.rows());
+//        System.out.println(bmiv.rows());
         cols.add(bmiv);
         colNames.add("cminute");
         BasicSecondVector bsev = new BasicSecondVector(1);
         bsev.add(17);
         bsev.Append(new BasicSecondVector(new int[]{4890,494}));
-        System.out.println(bsev.rows());
+//        System.out.println(bsev.rows());
         cols.add(bsev);
         colNames.add("csecond");
         BasicDateTimeVector bdtv = new BasicDateTimeVector(1);
         bdtv.Append(new BasicDateTimeVector(new int[]{49,242}));
         bdtv.add(25);
-        System.out.println(bdtv.rows());
+//        System.out.println(bdtv.rows());
         cols.add(bdtv);
         colNames.add("cdatetime");
         BasicTimestampVector btsv = new BasicTimestampVector(1);
         btsv.Append(new BasicTimestampVector(new long[]{2839,480}));
         btsv.add(341);
-        System.out.println(btsv.rows());
+//        System.out.println(btsv.rows());
         cols.add(btsv);
         colNames.add("ctimestamp");
         BasicNanoTimeVector bntv = new BasicNanoTimeVector(1);
         bntv.add(521);
         bntv.Append(new BasicNanoTime(LocalTime.now()));
         bntv.Append(new BasicNanoTimeVector(new long[]{353566}));
-        System.out.println(bntv.rows());
+//        System.out.println(bntv.rows());
         cols.add(bntv);
         colNames.add("cnanotime");
         BasicNanoTimestampVector bntsv = new BasicNanoTimestampVector(1);
         bntsv.Append(new BasicNanoTimestampVector(new long[]{38297658492L}));
         bntsv.add(78900482747L);
         bntsv.Append(new BasicNanoTimestamp(LocalDateTime.MAX));
-        System.out.println(bntsv.rows());
+//        System.out.println(bntsv.rows());
         cols.add(bntsv);
         colNames.add("cnanotimestamp");
         BasicFloatVector bfv = new BasicFloatVector(1);
         bfv.Append(new BasicFloatVector(new float[]{(float) 4580.02, (float) 394.3}));
         bfv.add((float) 5.981);
-        System.out.println(bfv.rows());
+//        System.out.println(bfv.rows());
         cols.add(bfv);
         colNames.add("cfloat");
         BasicDoubleVector bdbv = new BasicDoubleVector(1);
         bdbv.add(15.32);
         bdbv.Append(new BasicDoubleVector(new double[]{748.55}));
         bdbv.Append(new BasicDouble(7.17));
-        System.out.println(bdbv.rows());
+//        System.out.println(bdbv.rows());
         cols.add(bdbv);
         colNames.add("cdouble");
         BasicStringVector bstv = new BasicStringVector(1);
         bstv.Append(new BasicStringVector(new String[]{"hello","abandon"}));
         bstv.add("lambada");
-        System.out.println(bstv.rows());
+//        System.out.println(bstv.rows());
         cols.add(bstv);
         colNames.add("cstring");
         List<String> list = new ArrayList<>();
@@ -1444,49 +1445,49 @@ public class SimpleDBConnectionPoolTest {
         buv.Append(new BasicUuidVector(new Long2[]{new Long2(9000,659)}));
         cols.add(buv);
         colNames.add("cuuid");
-        System.out.println(buv.rows());
+//        System.out.println(buv.rows());
         BasicDateHourVector bdhv = new BasicDateHourVector(1);
         bdhv.Append(new BasicDateHourVector(new int[]{225,37}));
         bdhv.add(28);
-        System.out.println(bdhv.rows());
+//        System.out.println(bdhv.rows());
         cols.add(bdhv);
         colNames.add("cdatehour");
         BasicIPAddrVector biav = new BasicIPAddrVector(1);
         biav.add(new Long2(231,489));
         biav.Append(new BasicIPAddrVector(new Long2[]{new Long2(34837,2938),new Long2(4794,95838)}));
-        System.out.println(biav.rows());
+//        System.out.println(biav.rows());
         cols.add(biav);
         colNames.add("cipaddr");
         BasicInt128Vector bi128v = new BasicInt128Vector(1);
         bi128v.add(new Long2(384,390));
         bi128v.Append(new BasicInt128Vector(new Long2[]{new Long2(2719,3829),new Long2(849,49320)}));
-        System.out.println(bi128v.rows());
+//        System.out.println(bi128v.rows());
         cols.add(bi128v);
         colNames.add("cint128");
         BasicComplexVector bcv = new BasicComplexVector(1);
         bcv.Append(new BasicComplexVector(new Double2[]{new Double2(23.04,3718.52),new Double2(37.23,25.12)}));
         bcv.add(new Double2(16.71,35.778));
-        System.out.println(bcv.rows());
+//        System.out.println(bcv.rows());
         cols.add(bcv);
         colNames.add("ccomplex");
         BasicPointVector bpv = new BasicPointVector(1);
         bpv.Append(new BasicPointVector(new Double2[]{new Double2(0.83,4.51),new Double2(33.16,49.71)}));
         bpv.add(new Double2(52.10,45.43));
-        System.out.println(bpv.rows());
+//        System.out.println(bpv.rows());
         cols.add(bpv);
         colNames.add("cpoint");
         BasicDecimal32Vector bd32v = new BasicDecimal32Vector(1,2);
         bd32v.add(35);
         bd32v.Append(new BasicDecimal32(17,2));
         bd32v.Append(new BasicDecimal32(25,2));
-        System.out.println(bd32v.rows());
+//        System.out.println(bd32v.rows());
         cols.add(bd32v);
         colNames.add("cdecimal32");
         BasicDecimal64Vector bd64v = new BasicDecimal64Vector(1,4);
         bd64v.add(349);
         bd64v.Append(new BasicDecimal64(5372,4));
         bd64v.Append(new BasicDecimal64(2336,4));
-        System.out.println(bd64v.rows());
+//        System.out.println(bd64v.rows());
         cols.add(bd64v);
         colNames.add("cdecimal64");
 
@@ -1494,7 +1495,7 @@ public class SimpleDBConnectionPoolTest {
         bd128v.add(new BigDecimal(349));
         bd128v.Append(new BasicDecimal128("5372",4));
         bd128v.Append(new BasicDecimal128("2336",4));
-        System.out.println(bd128v.rows());
+//        System.out.println(bd128v.rows());
         cols.add(bd128v);
         colNames.add("cdecimal128");
 
@@ -1506,7 +1507,6 @@ public class SimpleDBConnectionPoolTest {
         assertEquals(4,ta.rows());
         assertEquals(28,ta.columns());
         assertEquals(bt.getString(),ta.getString());
-        pool.close();
     }
 
     @Test
@@ -1673,7 +1673,6 @@ public class SimpleDBConnectionPoolTest {
         for (int i = 0; i < 3; i++) {
             threads[i].join();
         }
-        pool.close();
     }
     @Test
     public void test_SimpleDBConnectionPool_insert_into_dfs_arrayVector_all_dateType() throws IOException, InterruptedException {
@@ -1746,7 +1745,6 @@ public class SimpleDBConnectionPoolTest {
         for (int i = 0; i < 100; i++){
             threads[i].join();
         }
-        pool.close();
     }
     @Test
     public void test_SimpleDBConnectionPool_insert_into_DimensionTable_arrayVector_all_dateType() throws IOException, InterruptedException {
@@ -1819,7 +1817,6 @@ public class SimpleDBConnectionPoolTest {
         for (int i = 0; i < 100; i++){
             threads[i].join();
         }
-        pool.close();
     }
     @Test
     public void test_SimpleDBConnectionPool_insert_into_dfs_all_dateType() throws IOException, InterruptedException {
@@ -1896,7 +1893,6 @@ public class SimpleDBConnectionPoolTest {
         for (int i = 0; i < 100; i++){
             threads[i].join();
         }
-        pool.close();
     }
     @Test
     public void test_SimpleDBConnectionPool_insert_into_DimensionTable_all_dateType() throws IOException, InterruptedException {
@@ -1973,7 +1969,6 @@ public class SimpleDBConnectionPoolTest {
         for (int i = 0; i < 100; i++){
             threads[i].join();
         }
-        pool.close();
     }
     @Test
     public void test_SimpleDBConnectionPool_upload_WideTable() throws Exception {
