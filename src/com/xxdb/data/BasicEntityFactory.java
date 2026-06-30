@@ -990,6 +990,14 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicDate(val);
 			case DT_MONTH:
 				return new BasicMonth(val.getYear(),val.getMonth());
+			case DT_DATETIME:
+				return new BasicDateTime(val.atStartOfDay());
+			case DT_DATEHOUR:
+				return new BasicDateHour(val.atStartOfDay());
+			case DT_TIMESTAMP:
+				return new BasicTimestamp(val.atStartOfDay());
+			case DT_NANOTIMESTAMP:
+				return new BasicNanoTimestamp(val.atStartOfDay());
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert LocalDate to " + dataType + ".");
 		}
