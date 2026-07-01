@@ -615,6 +615,22 @@ public class BasicEntityTest {
             ex = e.getMessage();
         }
         assertEquals("Failed to insert data. Cannot convert LocalDate to DT_SYMBOL.",ex);
+
+        Entity  re1 = factory.createScalar(Entity.DATA_TYPE.DT_DATE, LocalDate.parse("2026-06-01"),0);
+        System.out.println(re1.getString());
+        assertEquals("2026.06.01",re1.getString());
+
+        Entity  re2 = factory.createScalar(Entity.DATA_TYPE.DT_MONTH, LocalDate.parse("2026-06-01"),0);
+        assertEquals("2026.06M",re2.getString());
+
+        Entity  re3 = factory.createScalar(Entity.DATA_TYPE.DT_DATETIME, LocalDate.parse("2026-06-01"),0);
+        assertEquals("2026.06.01T00:00:00",re3.getString());
+
+        Entity  re4 = factory.createScalar(Entity.DATA_TYPE.DT_TIMESTAMP, LocalDate.parse("2026-06-01"),0);
+        assertEquals("2026.06.01T00:00:00.000",re4.getString());
+
+        Entity  re5 = factory.createScalar(Entity.DATA_TYPE.DT_NANOTIMESTAMP, LocalDate.parse("2026-06-01"),0);
+        assertEquals("2026.06.01T00:00:00.000000000",re5.getString());
     }
     @Test
     public void test_BasicEntityFactory_createScalar_LocalDateTime() throws Exception {
