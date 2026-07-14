@@ -10,6 +10,7 @@ import javax.management.RuntimeErrorException;
 import static org.junit.Assert.*;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -877,6 +878,12 @@ public class BasicEntityTest {
 
         BasicString  re14 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, 2147483647,0);
         assertEquals("2147483647",re14.getString());
+
+        BasicString  re15 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, new Integer(2147483647) ,0);
+        assertEquals("2147483647",re15.getString());
+
+        BasicString  re16 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, new Integer(2147483647) ,0);
+        assertEquals("2147483647",re16.getString());
     }
     @Test
     public void test_BasicEntityFactory_createScalar_long() throws Exception {
@@ -957,5 +964,91 @@ public class BasicEntityTest {
         assertEquals("2147483647",re7.getString());
         BasicString  re8 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, 2147483647l,0);
         assertEquals("2147483647",re8.getString());
+        BasicString  re9 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, new Long(2147483647l),0);
+        assertEquals("2147483647",re9.getString());
+        BasicString  re10 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, new Long(2147483647l),0);
+        assertEquals("2147483647",re10.getString());
+    }
+
+    @Test
+    public void test_BasicEntityFactory_createScalar_BigDecimal() throws Exception {
+        BasicEntityFactory factory = new BasicEntityFactory();
+        BasicByte  re = (BasicByte)factory.createScalar(Entity.DATA_TYPE.DT_BYTE, new BigDecimal("1"),1);
+        assertEquals("1",re.getString());
+
+        BasicShort  re2 = (BasicShort)factory.createScalar(Entity.DATA_TYPE.DT_SHORT, new BigDecimal("1"),1);
+        assertEquals("1",re2.getString());
+
+        BasicInt  re3 = (BasicInt)factory.createScalar(Entity.DATA_TYPE.DT_INT, new BigDecimal("1"),1);
+        assertEquals("1",re3.getString());
+
+        BasicLong  re4 = (BasicLong)factory.createScalar(Entity.DATA_TYPE.DT_LONG, new BigDecimal("1"),1);
+        assertEquals("1",re4.getString());
+
+        BasicDecimal32  re5 = (BasicDecimal32)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL32, new BigDecimal("1"),1);
+        assertEquals("1.0",re5.getString());
+
+        BasicDecimal64  re6 = (BasicDecimal64)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL64, new BigDecimal("1"),1);
+        assertEquals("1.0",re6.getString());
+
+        BasicDecimal128  re7 = (BasicDecimal128)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL128, new BigDecimal("1"),1);
+        assertEquals("1.0",re7.getString());
+
+        BasicDecimal32  re12 = (BasicDecimal32)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL32, new BigDecimal("1.1"),1);
+        assertEquals("1.1",re12.getString());
+
+        BasicDecimal64  re13 = (BasicDecimal64)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL64, new BigDecimal("1.1"),1);
+        assertEquals("1.1",re13.getString());
+
+        BasicDecimal128  re14 = (BasicDecimal128)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL128, new BigDecimal("1.1"),1);
+        assertEquals("1.1",re14.getString());
+
+        String ex1 = null;
+        try {
+            BasicByte  re8 = (BasicByte)factory.createScalar(Entity.DATA_TYPE.DT_BYTE, new BigDecimal("1.1"),1);
+        } catch (Exception e) {
+            ex1 = e.getMessage();
+        }
+        assertEquals("Failed to insert data. Cannot convert BigDecimal to DT_BYTE exactly.",ex1);
+
+        String ex2 = null;
+        try {
+            BasicShort  re9 = (BasicShort)factory.createScalar(Entity.DATA_TYPE.DT_SHORT, new BigDecimal("1.1"),1);
+        } catch (Exception e) {
+            ex2 = e.getMessage();
+        }
+        assertEquals("Failed to insert data. Cannot convert BigDecimal to DT_SHORT exactly.",ex2);
+
+        String ex3 = null;
+        try {
+            BasicInt  re10 = (BasicInt)factory.createScalar(Entity.DATA_TYPE.DT_INT, new BigDecimal("1.1"),1);
+        } catch (Exception e) {
+            ex3 = e.getMessage();
+        }
+        assertEquals("Failed to insert data. Cannot convert BigDecimal to DT_INT exactly.",ex3);
+
+        String ex4 = null;
+        try {
+            BasicInt  re10 = (BasicInt)factory.createScalar(Entity.DATA_TYPE.DT_LONG, new BigDecimal("1.1"),1);
+        } catch (Exception e) {
+            ex4 = e.getMessage();
+        }
+        assertEquals("Failed to insert data. Cannot convert BigDecimal to DT_LONG exactly.",ex4);
+
+        String ex5 = null;
+        try {
+            BasicString  re10 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, new BigDecimal("1.1"),1);
+        } catch (Exception e) {
+            ex5 = e.getMessage();
+        }
+        assertEquals("Failed to insert data. Cannot convert BigDecimal to DT_SYMBOL.",ex5);
+
+        String ex6 = null;
+        try {
+            BasicString  re10 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, new BigDecimal("1.1"),1);
+        } catch (Exception e) {
+            ex6 = e.getMessage();
+        }
+        assertEquals("Failed to insert data. Cannot convert BigDecimal to DT_STRING.",ex6);
     }
 }
