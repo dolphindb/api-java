@@ -872,13 +872,11 @@ public class BasicEntityTest {
         //assertEquals("-2147483647.00",re11.getString());//AJ-586
         BasicDecimal128  re12 = (BasicDecimal128)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL128, 2147483647,2);
         //assertEquals("2147483647.00",re12.getString());//AJ-586
-        String ex4 = null;
-        try{
-            BasicString  re = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, 2147483647,0);
-        }catch(Exception e){
-            ex4 = e.getMessage();
-        }
-        assertEquals("Failed to insert data. Cannot convert int to DT_SYMBOL.",ex4);
+        BasicString  re13 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, 2147483647,0);
+        assertEquals("2147483647",re13.getString());
+
+        BasicString  re14 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, 2147483647,0);
+        assertEquals("2147483647",re14.getString());
     }
     @Test
     public void test_BasicEntityFactory_createScalar_long() throws Exception {
@@ -954,12 +952,10 @@ public class BasicEntityTest {
         assertEquals("-2147483647.00",re5.getString());
         BasicDecimal64  re6 = (BasicDecimal64)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL64, 2147483647l,2);
         assertEquals("2147483647.00",re6.getString());
-        String ex7 = null;
-        try{
-            BasicDecimal64  re7 = (BasicDecimal64)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, 2147483647l,0);
-        }catch(Exception e){
-            ex7 = e.getMessage();
-        }
-        assertEquals("Failed to insert data. Cannot convert long to DT_SYMBOL.",ex7);
+
+        BasicString  re7 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, 2147483647l,0);
+        assertEquals("2147483647",re7.getString());
+        BasicString  re8 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, 2147483647l,0);
+        assertEquals("2147483647",re8.getString());
     }
 }
