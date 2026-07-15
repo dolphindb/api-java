@@ -701,17 +701,17 @@ public class BasicEntityTest {
         assertEquals("Failed to insert data, char cannot be converted because it exceeds the range of DT_BYTE.",ex1);
 
     }
+
     @Test
     public void test_BasicEntityFactory_createScalar_byte() throws Exception {
         BasicEntityFactory factory = new BasicEntityFactory();
-        String ex = null;
-        try{
-            BasicShort  re = (BasicShort)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, (byte)1,0);
-        }catch(Exception e){
-            ex = e.getMessage();
-        }
-        assertEquals("Failed to insert data. Cannot convert byte to DT_SYMBOL.",ex);
+        BasicString  re = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, (byte)1,0);
+        assertEquals("1",re.getString());
+
+        BasicString  re1 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, (byte)1,0);
+        assertEquals("1",re1.getString());
     }
+
     @Test
     public void test_BasicEntityFactory_createScalar_short() throws Exception {
         BasicEntityFactory factory = new BasicEntityFactory();
@@ -729,14 +729,18 @@ public class BasicEntityTest {
             ex1 = e.getMessage();
         }
         assertEquals("Failed to insert data, short cannot be converted because it exceeds the range of DT_BYTE.",ex1);
-        String ex2 = null;
-        try{
-            BasicShort  re = (BasicShort)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, (short)129,0);
-        }catch(Exception e){
-            ex2 = e.getMessage();
-        }
-        assertEquals("Failed to insert data. Cannot convert short to DT_SYMBOL.",ex2);
+
+        BasicString  re = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, (short)129,0);
+        assertEquals("129",re.getString());
+        BasicString  re1 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, (short)129,0);
+        assertEquals("129",re1.getString());
+
+        BasicString  re3 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, new Short((short) 129),0);
+        assertEquals("129",re3.getString());
+        BasicString  re4 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, new Short((short) 129),0);
+        assertEquals("129",re4.getString());
     }
+
     @Test
     public void test_BasicEntityFactory_createScalar_string() throws Exception {
         BasicEntityFactory factory = new BasicEntityFactory();
