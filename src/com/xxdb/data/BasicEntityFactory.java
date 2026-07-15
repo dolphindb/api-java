@@ -1101,6 +1101,9 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicFloat(val);
 			case DT_DOUBLE:
 				return new BasicDouble(val);
+			case DT_SYMBOL:
+			case DT_STRING:
+				return new BasicString(String.valueOf(val));
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert byte to " + dataType + ".");
 		}
@@ -1123,6 +1126,9 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicFloat(val);
 			case DT_DOUBLE:
 				return new BasicDouble(val);
+			case DT_SYMBOL:
+			case DT_STRING:
+				return new BasicString(String.valueOf(val));
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert short to " + dataType + ".");
 		}
