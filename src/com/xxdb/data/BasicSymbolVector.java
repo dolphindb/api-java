@@ -266,9 +266,7 @@ public class BasicSymbolVector extends AbstractVector {
 
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
-		for (int i = 0; i < count; i++){
-			out.writeInt(values[start + i]);
-		}
+		out.writeIntArray(values, start, count);
 	}
 
 	@Override
@@ -314,10 +312,8 @@ public class BasicSymbolVector extends AbstractVector {
 	@Override
 	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
 		targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
-		for (int i = 0; i < targetNumElement; ++i)
-		{
-			out.putInt(values[indexStart + i]);
-		}
+		out.asIntBuffer().put(values, indexStart, targetNumElement);
+		out.position(out.position() + targetNumElement * 4);
 		numElementAndPartial.numElement = targetNumElement;
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 4;

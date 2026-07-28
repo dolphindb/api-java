@@ -118,9 +118,7 @@ public class BasicShortVector extends AbstractVector{
 
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
-		for (int i = 0; i < count; i++){
-			out.writeShort(values[start + i]);
-		}
+		out.writeShortArray(values, start, count);
 	}
 
 	public short getShort(int index){
@@ -320,10 +318,8 @@ public class BasicShortVector extends AbstractVector{
 	@Override
 	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
 		targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
-		for (int i = 0; i < targetNumElement; ++i)
-		{
-			out.putShort(values[indexStart + i]);
-		}
+		out.asShortBuffer().put(values, indexStart, targetNumElement);
+		out.position(out.position() + targetNumElement * 2);
 		numElementAndPartial.numElement = targetNumElement;
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 2;

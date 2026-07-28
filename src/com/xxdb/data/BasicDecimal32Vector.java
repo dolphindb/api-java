@@ -308,9 +308,7 @@ public class BasicDecimal32Vector extends AbstractVector{
 
     @Override
     public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
-        for (int i = 0; i < count; i++){
-            out.writeInt(unscaledValues[start + i]);
-        }
+        out.writeIntArray(unscaledValues, start, count);
     }
 
     @Override
@@ -501,10 +499,8 @@ public class BasicDecimal32Vector extends AbstractVector{
     @Override
     public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
         targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
-        for (int i = 0; i < targetNumElement; ++i)
-        {
-            out.putInt(unscaledValues[indexStart + i]);
-        }
+        out.asIntBuffer().put(unscaledValues, indexStart, targetNumElement);
+        out.position(out.position() + targetNumElement * 4);
         numElementAndPartial.numElement = targetNumElement;
         numElementAndPartial.partial = 0;
         return targetNumElement * 4;

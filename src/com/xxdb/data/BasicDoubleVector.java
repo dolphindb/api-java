@@ -117,9 +117,7 @@ public class BasicDoubleVector extends AbstractVector{
 
 	@Override
 	public void serialize(int start, int count, ExtendedDataOutput out) throws IOException {
-		for (int i = 0; i < count; i++){
-			out.writeDouble(values[start + i]);
-		}
+		out.writeDoubleArray(values, start, count);
 	}
 
 	public Entity get(int index){
@@ -306,10 +304,8 @@ public class BasicDoubleVector extends AbstractVector{
 	@Override
 	public int serialize(int indexStart, int offect, int targetNumElement, NumElementAndPartial numElementAndPartial, ByteBuffer out) throws IOException{
 		targetNumElement = Math.min((out.remaining() / getUnitLength()), targetNumElement);
-		for (int i = 0; i < targetNumElement; ++i)
-		{
-			out.putDouble(values[indexStart + i]);
-		}
+		out.asDoubleBuffer().put(values, indexStart, targetNumElement);
+		out.position(out.position() + targetNumElement * 8);
 		numElementAndPartial.numElement = targetNumElement;
 		numElementAndPartial.partial = 0;
 		return targetNumElement * 8;
