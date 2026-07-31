@@ -181,7 +181,7 @@ public class BasicLongVector extends AbstractVector{
 
 	@Override
 	public int getUnitLength() {
-		return 16;
+		return Long.BYTES;
 	}
 
 	@Override
