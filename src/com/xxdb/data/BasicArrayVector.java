@@ -147,7 +147,14 @@ public class BasicArrayVector extends AbstractVector {
 	}
 
 	public void deserialize(DATA_TYPE valueType,  ExtendedDataInput in, int rows, int cols, int scale) throws IOException {
-		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, 0, scale);
+		// Full API responses include the flattened value count in cols. Streaming
+		// callers may pass 0, so keep the append path as a compatibility fallback.
+		if (cols < 0) {
+			throw new IOException("Invalid ArrayVector column count: " + cols);
+		}
+		boolean preallocated = cols > 0;
+		valueVec = BasicEntityFactory.instance().createVectorWithDefaultValue(
+				valueType, preallocated ? cols : 0, scale);
 
 		ByteOrder bo = in.isLittleEndian() ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 		this.baseUnitLength_ = valueVec.getUnitLength();
@@ -161,6 +168,14 @@ public class BasicArrayVector extends AbstractVector {
 			int blockRows = in.readUnsignedShort();
 			int countBytes = in.readUnsignedByte();
 			in.skipBytes(1);
+			int remainingRows = rows - rowsRead;
+			if (blockRows <= 0 || blockRows > remainingRows) {
+				throw new IOException("Invalid ArrayVector block row count: " + blockRows
+						+ ", remaining rows: " + remainingRows);
+			}
+			if (countBytes != 1 && countBytes != 2 && countBytes != 4) {
+				throw new IOException("Invalid ArrayVector count width: " + countBytes);
+			}
 
 			//read array of counts
 			totalBytes = blockRows * countBytes;
@@ -173,24 +188,39 @@ public class BasicArrayVector extends AbstractVector {
 				if(countBytes == 1){
 					for (int i = 0; i < curRows; i++){
 						int curRowCells = Byte.toUnsignedInt(buf[i]);
-						rowIndices[rowsRead + rowsReadInBlock + i] = prevIndex + curRowCells;
-						prevIndex += curRowCells;
+						long nextIndex = prevIndex + (long)curRowCells;
+						if (nextIndex > Integer.MAX_VALUE) {
+							throw new IOException("ArrayVector value count exceeds integer range");
+						}
+						rowIndices[rowsRead + rowsReadInBlock + i] = (int)nextIndex;
+						prevIndex = (int)nextIndex;
 					}
 				}
 				else if(countBytes == 2){
 					ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
 					for (int i = 0; i < curRows; i++){
 						int curRowCells = Short.toUnsignedInt(byteBuffer.getShort(i * 2));
-						rowIndices[rowsRead + rowsReadInBlock + i] = prevIndex + curRowCells;
-						prevIndex += curRowCells;
+						long nextIndex = prevIndex + (long)curRowCells;
+						if (nextIndex > Integer.MAX_VALUE) {
+							throw new IOException("ArrayVector value count exceeds integer range");
+						}
+						rowIndices[rowsRead + rowsReadInBlock + i] = (int)nextIndex;
+						prevIndex = (int)nextIndex;
 					}
 				}
 				else {
 					ByteBuffer byteBuffer = ByteBuffer.wrap(buf, 0, len).order(bo);
 					for (int i = 0; i < curRows; i++){
 						int curRowCells = byteBuffer.getInt(i * 4);
-						rowIndices[rowsRead + rowsReadInBlock + i] = prevIndex + curRowCells;
-						prevIndex += curRowCells;
+						if (curRowCells < 0) {
+							throw new IOException("Invalid negative ArrayVector row length: " + curRowCells);
+						}
+						long nextIndex = prevIndex + (long)curRowCells;
+						if (nextIndex > Integer.MAX_VALUE) {
+							throw new IOException("ArrayVector value count exceeds integer range");
+						}
+						rowIndices[rowsRead + rowsReadInBlock + i] = (int)nextIndex;
+						prevIndex = (int)nextIndex;
 					}
 				}
 				rowsReadInBlock += curRows;
@@ -200,15 +230,27 @@ public class BasicArrayVector extends AbstractVector {
 			//read array of values
 			int rowStart =  rowsRead == 0 ? 0 : rowIndices[rowsRead - 1];
 			int valueCount = rowIndices[rowsRead + rowsReadInBlock - 1] - rowStart;
-			Vector subVector = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, valueCount, scale);
-			subVector.deserialize(0, valueCount, in);
-			try {
-				valueVec.Append(subVector);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
+			if (preallocated) {
+				if (rowStart > cols || valueCount > cols - rowStart) {
+					throw new IOException("ArrayVector value count exceeds declared columns: "
+							+ (rowStart + (long)valueCount) + " > " + cols);
+				}
+				valueVec.deserialize(rowStart, valueCount, in);
+			} else {
+				Vector subVector = BasicEntityFactory.instance().createVectorWithDefaultValue(valueType, valueCount, scale);
+				subVector.deserialize(0, valueCount, in);
+				try {
+					valueVec.Append(subVector);
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
 			}
 
 			rowsRead += rowsReadInBlock;
+		}
+		if (preallocated && prevIndex != cols) {
+			throw new IOException("ArrayVector value count does not match declared columns: "
+					+ prevIndex + " != " + cols);
 		}
 		rowIndicesSize = rowIndices.length;
 		capacity = rowIndices.length;
