@@ -2455,5 +2455,109 @@ public class ConnectionPoolTest {
         assertEquals(true, re[0].toString().contains("is currently locked and in use"));
         pool.shutdown();
     }
+
+    @Test
+    public void test_DBConnectionPool_count_minimumPoolSize_maximumPoolSize() throws IOException, InterruptedException {
+        conn.run("t = streamTable(10:0,`a`b,[INT,INT]);" +
+                "share t as t1");
+        ExclusiveDBConnectionPool pool1 = new ExclusiveDBConnectionPool(HOST,PORT,"admin","123456",10,false,false);
+        assertEquals(10,pool1.getConnectionCount());
+        assertEquals(10,pool1.getMinimumPoolSize());
+        assertEquals(10,pool1.getMaximumPoolSize());
+        assertEquals(10,pool1.getCurrentConnectionCount());
+        assertEquals(0,pool1.getActiveConnectionsCount());
+        assertEquals(10,pool1.getIdleConnectionsCount());
+        assertEquals(600000,pool1.getIdleTimeout());
+        List<DBTask> tasks = new ArrayList<>();
+        for (int i = 0; i < 100; i++){
+            BasicDBTask task = new BasicDBTask("sleep(1000);insert into t1 values(1,1);");
+            tasks.add(task);
+        }
+        Thread threads1 = new Thread(() -> {
+            pool1.execute(tasks);
+        });
+        threads1.start();
+        Thread.sleep(10);
+        assertEquals(10,pool1.getCurrentConnectionCount());
+        assertEquals(10,pool1.getActiveConnectionsCount());
+        assertEquals(0,pool1.getIdleConnectionsCount());
+        threads1.join();
+        assertEquals(10,pool1.getCurrentConnectionCount());
+        assertEquals(0,pool1.getActiveConnectionsCount());
+        assertEquals(10,pool1.getIdleConnectionsCount());
+        BasicInt a = (BasicInt)conn.run("exec count(*) from t1");
+        assertEquals(100,a.getInt());
+//        等待10分钟不会自动关闭释放连接
+//        Thread.sleep(600010);
+//        assertEquals(10,pool1.getCurrentConnectionCount());
+//        System.out.println("pool1.getConnectionCount():" + pool1.getConnectionCount());
+//        System.out.println("pool1.getActiveConnectionsCount():" + pool1.getActiveConnectionsCount());
+//        System.out.println("pool1.getIdleConnectionsCount():" + pool1.getIdleConnectionsCount());
+        pool1.shutdown();
+    }
+
+    @Test(timeout = 30000)
+    public void Test_ExclusiveDBConnectionPool_MinimumPoolSize_equal_MaximumPoolSize() throws Exception {
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 5,5, 10000,false, false);
+        assertEquals(5,pool.getCurrentConnectionCount());
+        assertEquals(0,pool.getActiveConnectionsCount());
+        assertEquals(5,pool.getIdleConnectionsCount());
+        assertEquals(10000, pool.getIdleTimeout());
+        List<DBTask> tasks = new ArrayList<>();
+        for (int i = 0; i < 5; i++){
+            BasicDBTask task = new BasicDBTask("sleep(1000);");
+            tasks.add(task);
+        }
+        Thread threads1 = new Thread(() -> {
+            pool.execute(tasks);
+        });
+        threads1.start();
+        Thread.sleep(900);
+
+        assertEquals(5,pool.getCurrentConnectionCount());
+        assertEquals(5,pool.getActiveConnectionsCount());
+        assertEquals(0,pool.getIdleConnectionsCount());
+        threads1.join();
+
+        assertEquals(5,pool.getCurrentConnectionCount());
+        assertEquals(0,pool.getActiveConnectionsCount());
+        assertEquals(5,pool.getIdleConnectionsCount());
+        Thread.sleep(10100);
+        assertEquals(5,pool.getCurrentConnectionCount());
+        assertEquals(0,pool.getActiveConnectionsCount());
+        assertEquals(5,pool.getIdleConnectionsCount());
+        pool.shutdown();
+    }
+
+    @Test(timeout = 40000)
+    public void Test_ExclusiveDBConnectionPool_MinimumPoolSize_less_MaximumPoolSize() throws Exception {
+        ExclusiveDBConnectionPool pool = new ExclusiveDBConnectionPool(HOST, PORT, "admin", "123456", 5, 10, 10000, false, false);
+        assertEquals(5,pool.getCurrentConnectionCount());
+        assertEquals(0,pool.getActiveConnectionsCount());
+        assertEquals(5,pool.getIdleConnectionsCount());
+        List<DBTask> tasks = new ArrayList<>();
+        for (int i = 0; i < 10; i++){
+            BasicDBTask task = new BasicDBTask("sleep(7000);");
+            tasks.add(task);
+        }
+        Thread threads1 = new Thread(() -> {
+            pool.execute(tasks);
+        });
+        threads1.start();
+        Thread.sleep(6000);
+        assertEquals(10,pool.getCurrentConnectionCount());
+        assertEquals(10,pool.getActiveConnectionsCount());
+        assertEquals(0,pool.getIdleConnectionsCount());
+        threads1.join();
+        assertEquals(10,pool.getCurrentConnectionCount());
+        assertEquals(0,pool.getActiveConnectionsCount());
+        assertEquals(10,pool.getIdleConnectionsCount());
+        Thread.sleep(10100);
+        //closeIdleConnections_Auto
+        assertEquals(5,pool.getCurrentConnectionCount());
+        assertEquals(0,pool.getActiveConnectionsCount());
+        assertEquals(5,pool.getIdleConnectionsCount());
+        pool.shutdown();
+    }
 }
 

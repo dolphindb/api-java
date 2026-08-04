@@ -1,6 +1,5 @@
 package com.xxdb.io;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -42,7 +41,60 @@ public class DdbByteArrayInputStream extends InputStream {
         count_ += buf.length;
     }
 
-    public synchronized int read(byte b[], long off, long len) {
+    /**
+     * Bulk read across the internal block list. {@link InputStream} never declares this
+     * overload with {@code int} off/len as abstract, so without this override callers such as
+     * {@link java.io.BufferedInputStream#read(byte[], int, int)} fall back to the default
+     * {@link InputStream#read(byte[], int, int)} implementation, which repeatedly calls the
+     * single-byte {@link #read()} above. For large decompressed payloads that turns every
+     * {@code readFully} into millions of synchronized single-byte calls. All backing bytes are
+     * already resident in {@code bufList_}, so a plain {@code System.arraycopy} across the
+     * relevant blocks is both correct and non-blocking.
+     */
+    @Override
+    public synchronized int read(byte[] b, int off, int len) {
+        if (b == null) {
+            throw new NullPointerException();
+        }
+        if (off < 0 || len < 0 || len > b.length - off) {
+            throw new IndexOutOfBoundsException();
+        }
+        if (len == 0) {
+            return 0;
+        }
+        if (pos_ >= count_) {
+            return -1;
+        }
+        int remaining = len;
+        int totalRead = 0;
+        while (remaining > 0 && pos_ < count_) {
+            byte[] bytes = bufList_.get(bufIndex_);
+            int available = bytes.length - bufPos_;
+            int n = Math.min(available, remaining);
+            System.arraycopy(bytes, bufPos_, b, off + totalRead, n);
+            bufPos_ += n;
+            pos_ += n;
+            totalRead += n;
+            remaining -= n;
+            if (bufPos_ >= bytes.length) {
+                bufIndex_++;
+                bufPos_ = 0;
+            }
+        }
+        return totalRead;
+    }
+
+    /**
+     * Retained for binary compatibility with clients compiled against the historical,
+     * non-overriding overload. Use {@link #read(byte[], int, int)} instead.
+     *
+     * @deprecated Deprecated since 3.00.6.0. This overload has never been a valid override of
+     *             {@link InputStream#read(byte[], int, int)} ({@code off}/{@code len} must be
+     *             {@code int}); calls still throw {@link RuntimeException}. Use
+     *             {@link #read(byte[], int, int)} instead.
+     */
+    @Deprecated
+    public synchronized int read(byte[] b, long off, long len) {
         throw new RuntimeException("This method is not support yet");
     }
 
