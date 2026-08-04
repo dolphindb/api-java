@@ -88,8 +88,10 @@ public class DdbByteArrayInputStream extends InputStream {
      * Retained for binary compatibility with clients compiled against the historical,
      * non-overriding overload. Use {@link #read(byte[], int, int)} instead.
      *
-     * @deprecated This overload has never been supported because {@link InputStream} uses
-     *             {@code int} for offset and length.
+     * @deprecated Deprecated since 3.00.6.0. This overload has never been a valid override of
+     *             {@link InputStream#read(byte[], int, int)} ({@code off}/{@code len} must be
+     *             {@code int}); calls still throw {@link RuntimeException}. Use
+     *             {@link #read(byte[], int, int)} instead.
      */
     @Deprecated
     public synchronized int read(byte[] b, long off, long len) {
