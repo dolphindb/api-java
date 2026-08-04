@@ -145,6 +145,6 @@ public class BasicNanoTimeStampVectorTest {
         BasicNanoTimestampVector bntsv = new BasicNanoTimestampVector(new long[]{7554784040L,46274927491L});
         String re = JSONObject.toJSONString(bntsv);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[7554784040,46274927491],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_NANOTIMESTAMP\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicNanoTimestamp\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[1970.01.01T00:00:07.554784040,1970.01.01T00:00:46.274927491]\",\"table\":false,\"unitLength\":16,\"values\":[7554784040,46274927491],\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[7554784040,46274927491],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_NANOTIMESTAMP\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicNanoTimestamp\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[1970.01.01T00:00:07.554784040,1970.01.01T00:00:46.274927491]\",\"table\":false,\"unitLength\":8,\"values\":[7554784040,46274927491],\"vector\":true}", re);
     }
 }

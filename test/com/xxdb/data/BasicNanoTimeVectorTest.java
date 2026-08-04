@@ -170,6 +170,6 @@ public class BasicNanoTimeVectorTest {
         BasicNanoTimeVector v = new BasicNanoTimeVector(list);
         String re = JSONObject.toJSONString(v);
         System.out.println(re);
-        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_NANOTIME\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicNanoTime\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[00:00:00.000000001,00:00:00.000000002,00:00:00.000000003]\",\"table\":false,\"unitLength\":16,\"values\":[1,2,3],\"vector\":true}", re);
+        assertEquals("{\"chart\":false,\"chunk\":false,\"dataArray\":[1,2,3],\"dataCategory\":\"TEMPORAL\",\"dataForm\":\"DF_VECTOR\",\"dataType\":\"DT_NANOTIME\",\"dictionary\":false,\"elementClass\":\"com.xxdb.data.BasicNanoTime\",\"matrix\":false,\"pair\":false,\"scalar\":false,\"string\":\"[00:00:00.000000001,00:00:00.000000002,00:00:00.000000003]\",\"table\":false,\"unitLength\":8,\"values\":[1,2,3],\"vector\":true}", re);
     }
 }
