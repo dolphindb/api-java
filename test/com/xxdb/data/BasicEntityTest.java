@@ -10,6 +10,7 @@ import javax.management.RuntimeErrorException;
 import static org.junit.Assert.*;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -615,6 +616,22 @@ public class BasicEntityTest {
             ex = e.getMessage();
         }
         assertEquals("Failed to insert data. Cannot convert LocalDate to DT_SYMBOL.",ex);
+
+        Entity  re1 = factory.createScalar(Entity.DATA_TYPE.DT_DATE, LocalDate.parse("2026-06-01"),0);
+        System.out.println(re1.getString());
+        assertEquals("2026.06.01",re1.getString());
+
+        Entity  re2 = factory.createScalar(Entity.DATA_TYPE.DT_MONTH, LocalDate.parse("2026-06-01"),0);
+        assertEquals("2026.06M",re2.getString());
+
+        Entity  re3 = factory.createScalar(Entity.DATA_TYPE.DT_DATETIME, LocalDate.parse("2026-06-01"),0);
+        assertEquals("2026.06.01T00:00:00",re3.getString());
+
+        Entity  re4 = factory.createScalar(Entity.DATA_TYPE.DT_TIMESTAMP, LocalDate.parse("2026-06-01"),0);
+        assertEquals("2026.06.01T00:00:00.000",re4.getString());
+
+        Entity  re5 = factory.createScalar(Entity.DATA_TYPE.DT_NANOTIMESTAMP, LocalDate.parse("2026-06-01"),0);
+        assertEquals("2026.06.01T00:00:00.000000000",re5.getString());
     }
     @Test
     public void test_BasicEntityFactory_createScalar_LocalDateTime() throws Exception {
@@ -684,17 +701,17 @@ public class BasicEntityTest {
         assertEquals("Failed to insert data, char cannot be converted because it exceeds the range of DT_BYTE.",ex1);
 
     }
+
     @Test
     public void test_BasicEntityFactory_createScalar_byte() throws Exception {
         BasicEntityFactory factory = new BasicEntityFactory();
-        String ex = null;
-        try{
-            BasicShort  re = (BasicShort)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, (byte)1,0);
-        }catch(Exception e){
-            ex = e.getMessage();
-        }
-        assertEquals("Failed to insert data. Cannot convert byte to DT_SYMBOL.",ex);
+        BasicString  re = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, (byte)1,0);
+        assertEquals("1",re.getString());
+
+        BasicString  re1 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, (byte)1,0);
+        assertEquals("1",re1.getString());
     }
+
     @Test
     public void test_BasicEntityFactory_createScalar_short() throws Exception {
         BasicEntityFactory factory = new BasicEntityFactory();
@@ -712,14 +729,18 @@ public class BasicEntityTest {
             ex1 = e.getMessage();
         }
         assertEquals("Failed to insert data, short cannot be converted because it exceeds the range of DT_BYTE.",ex1);
-        String ex2 = null;
-        try{
-            BasicShort  re = (BasicShort)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, (short)129,0);
-        }catch(Exception e){
-            ex2 = e.getMessage();
-        }
-        assertEquals("Failed to insert data. Cannot convert short to DT_SYMBOL.",ex2);
+
+        BasicString  re = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, (short)129,0);
+        assertEquals("129",re.getString());
+        BasicString  re1 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, (short)129,0);
+        assertEquals("129",re1.getString());
+
+        BasicString  re3 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, new Short((short) 129),0);
+        assertEquals("129",re3.getString());
+        BasicString  re4 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, new Short((short) 129),0);
+        assertEquals("129",re4.getString());
     }
+
     @Test
     public void test_BasicEntityFactory_createScalar_string() throws Exception {
         BasicEntityFactory factory = new BasicEntityFactory();
@@ -856,13 +877,17 @@ public class BasicEntityTest {
         //assertEquals("-2147483647.00",re11.getString());//AJ-586
         BasicDecimal128  re12 = (BasicDecimal128)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL128, 2147483647,2);
         //assertEquals("2147483647.00",re12.getString());//AJ-586
-        String ex4 = null;
-        try{
-            BasicString  re = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, 2147483647,0);
-        }catch(Exception e){
-            ex4 = e.getMessage();
-        }
-        assertEquals("Failed to insert data. Cannot convert int to DT_SYMBOL.",ex4);
+        BasicString  re13 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, 2147483647,0);
+        assertEquals("2147483647",re13.getString());
+
+        BasicString  re14 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, 2147483647,0);
+        assertEquals("2147483647",re14.getString());
+
+        BasicString  re15 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, new Integer(2147483647) ,0);
+        assertEquals("2147483647",re15.getString());
+
+        BasicString  re16 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, new Integer(2147483647) ,0);
+        assertEquals("2147483647",re16.getString());
     }
     @Test
     public void test_BasicEntityFactory_createScalar_long() throws Exception {
@@ -938,12 +963,96 @@ public class BasicEntityTest {
         assertEquals("-2147483647.00",re5.getString());
         BasicDecimal64  re6 = (BasicDecimal64)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL64, 2147483647l,2);
         assertEquals("2147483647.00",re6.getString());
-        String ex7 = null;
-        try{
-            BasicDecimal64  re7 = (BasicDecimal64)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, 2147483647l,0);
-        }catch(Exception e){
-            ex7 = e.getMessage();
+
+        BasicString  re7 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, 2147483647l,0);
+        assertEquals("2147483647",re7.getString());
+        BasicString  re8 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, 2147483647l,0);
+        assertEquals("2147483647",re8.getString());
+        BasicString  re9 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, new Long(2147483647l),0);
+        assertEquals("2147483647",re9.getString());
+        BasicString  re10 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, new Long(2147483647l),0);
+        assertEquals("2147483647",re10.getString());
+    }
+
+    @Test
+    public void test_BasicEntityFactory_createScalar_BigDecimal() throws Exception {
+        BasicEntityFactory factory = new BasicEntityFactory();
+        BasicByte  re = (BasicByte)factory.createScalar(Entity.DATA_TYPE.DT_BYTE, new BigDecimal("1"),1);
+        assertEquals("1",re.getString());
+
+        BasicShort  re2 = (BasicShort)factory.createScalar(Entity.DATA_TYPE.DT_SHORT, new BigDecimal("1"),1);
+        assertEquals("1",re2.getString());
+
+        BasicInt  re3 = (BasicInt)factory.createScalar(Entity.DATA_TYPE.DT_INT, new BigDecimal("1"),1);
+        assertEquals("1",re3.getString());
+
+        BasicLong  re4 = (BasicLong)factory.createScalar(Entity.DATA_TYPE.DT_LONG, new BigDecimal("1"),1);
+        assertEquals("1",re4.getString());
+
+        BasicDecimal32  re5 = (BasicDecimal32)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL32, new BigDecimal("1"),1);
+        assertEquals("1.0",re5.getString());
+
+        BasicDecimal64  re6 = (BasicDecimal64)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL64, new BigDecimal("1"),1);
+        assertEquals("1.0",re6.getString());
+
+        BasicDecimal128  re7 = (BasicDecimal128)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL128, new BigDecimal("1"),1);
+        assertEquals("1.0",re7.getString());
+
+        BasicDecimal32  re12 = (BasicDecimal32)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL32, new BigDecimal("1.1"),1);
+        assertEquals("1.1",re12.getString());
+
+        BasicDecimal64  re13 = (BasicDecimal64)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL64, new BigDecimal("1.1"),1);
+        assertEquals("1.1",re13.getString());
+
+        BasicDecimal128  re14 = (BasicDecimal128)factory.createScalar(Entity.DATA_TYPE.DT_DECIMAL128, new BigDecimal("1.1"),1);
+        assertEquals("1.1",re14.getString());
+
+        String ex1 = null;
+        try {
+            BasicByte  re8 = (BasicByte)factory.createScalar(Entity.DATA_TYPE.DT_BYTE, new BigDecimal("1.1"),1);
+        } catch (Exception e) {
+            ex1 = e.getMessage();
         }
-        assertEquals("Failed to insert data. Cannot convert long to DT_SYMBOL.",ex7);
+        assertEquals("Failed to insert data. Cannot convert BigDecimal to DT_BYTE exactly.",ex1);
+
+        String ex2 = null;
+        try {
+            BasicShort  re9 = (BasicShort)factory.createScalar(Entity.DATA_TYPE.DT_SHORT, new BigDecimal("1.1"),1);
+        } catch (Exception e) {
+            ex2 = e.getMessage();
+        }
+        assertEquals("Failed to insert data. Cannot convert BigDecimal to DT_SHORT exactly.",ex2);
+
+        String ex3 = null;
+        try {
+            BasicInt  re10 = (BasicInt)factory.createScalar(Entity.DATA_TYPE.DT_INT, new BigDecimal("1.1"),1);
+        } catch (Exception e) {
+            ex3 = e.getMessage();
+        }
+        assertEquals("Failed to insert data. Cannot convert BigDecimal to DT_INT exactly.",ex3);
+
+        String ex4 = null;
+        try {
+            BasicInt  re10 = (BasicInt)factory.createScalar(Entity.DATA_TYPE.DT_LONG, new BigDecimal("1.1"),1);
+        } catch (Exception e) {
+            ex4 = e.getMessage();
+        }
+        assertEquals("Failed to insert data. Cannot convert BigDecimal to DT_LONG exactly.",ex4);
+
+        String ex5 = null;
+        try {
+            BasicString  re10 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_SYMBOL, new BigDecimal("1.1"),1);
+        } catch (Exception e) {
+            ex5 = e.getMessage();
+        }
+        assertEquals("Failed to insert data. Cannot convert BigDecimal to DT_SYMBOL.",ex5);
+
+        String ex6 = null;
+        try {
+            BasicString  re10 = (BasicString)factory.createScalar(Entity.DATA_TYPE.DT_STRING, new BigDecimal("1.1"),1);
+        } catch (Exception e) {
+            ex6 = e.getMessage();
+        }
+        assertEquals("Failed to insert data. Cannot convert BigDecimal to DT_STRING.",ex6);
     }
 }
