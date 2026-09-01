@@ -49,7 +49,7 @@ public class DBConnection {
     private int connTimeout_ = 0;
     private int connectTimeout_ = 0;
     private int readTimeout_ = 0;
-    private boolean closed_ = false;
+    private volatile boolean closed_ = false;
     private boolean loadBalance_ = false;
     private String runClientId_ = null;
     private long runSeqNo_ = 0;
@@ -825,6 +825,24 @@ public class DBConnection {
                 lock_.unlock();
             }
             isConnected_ = false;
+        }
+
+        /**
+         * Clear the handshake/connect {@code SO_TIMEOUT} so later {@code run()}
+         * calls block until the server responds. Failure must be treated as a
+         * failed connect; the caller must close this connection.
+         */
+        void restoreBlockingReads() throws IOException {
+            lock_.lock();
+            try {
+                this.readTimeout_ = 0;
+                if (socket_ == null || socket_.isClosed()) {
+                    throw new IOException("Cannot restore socket timeout: no live socket.");
+                }
+                socket_.setSoTimeout(0);
+            } finally {
+                lock_.unlock();
+            }
         }
 
         public boolean isConnected(){
@@ -1762,6 +1780,49 @@ public class DBConnection {
         } finally {
             mutex_.unlock();
         }
+    }
+
+    /**
+     * Abort the underlying socket without waiting for an in-flight run call to
+     * release {@code mutex_}. This is intentionally package-private and is used
+     * by connection pools when a timed-out worker can no longer be reused
+     * safely. The owning task must enter a terminal state before this method is
+     * called, because aborting an HA connection can make an in-flight run return
+     * without a result while its reconnect loop observes {@code closed_}.
+     */
+    void abort() {
+        closed_ = true;
+        try {
+            conn_.close();
+        } catch (Exception ex) {
+            log.warn("Failed to abort DolphinDB connection: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Restore the default unlimited HA reconnect policy used by {@code run()}.
+     * Connection pools may pass a finite {@code tryReconnectNums} into
+     * {@link ConnectConfig} so {@code connect()} cannot loop forever, then call
+     * this so later node flaps still self-heal.
+     */
+    void restoreUnlimitedReconnect() {
+        tryReconnectNums = -1;
+    }
+
+    /**
+     * Restore the runtime contract a connection pool worker needs after a
+     * bounded {@code connect()}: unlimited HA reconnect, blocking reads, and
+     * the pool's background TCP {@code connectTimeout}. Must be called before
+     * the worker is published. Any failure is a failed connect.
+     */
+    void preparePublishedWorker(int connectTimeoutMs) throws IOException {
+        restoreUnlimitedReconnect();
+        readTimeout_ = 0;
+        connectTimeout_ = connectTimeoutMs;
+        if (conn_ == null) {
+            throw new IOException("Cannot restore worker timeouts: connection is not initialized.");
+        }
+        conn_.restoreBlockingReads();
     }
 
     public String getHostName() {
