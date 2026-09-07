@@ -283,197 +283,6 @@ public class DBConnection {
         }
     }
 
-    /**
-     * Per-call compression mode. {@link #CONNECTION_DEFAULT} keeps the constructor / pool
-     * {@code compress} flag; {@link #ENABLED} and {@link #DISABLED} override that one request.
-     */
-    public enum CompressionMode {
-        CONNECTION_DEFAULT,
-        ENABLED,
-        DISABLED
-    }
-
-    /**
-     * Immutable per-call options for {@link #runWithOptions(String, RunOptions)} and
-     * {@link #runWithOptions(String, List, RunOptions)}.
-     * <p>
-     * {@link Builder#build()} always returns a new snapshot; later builder mutations do not
-     * affect previously built instances.
-     * <p>
-     * {@code resultCompression} controls request flag 64 (the server may still refuse to
-     * compress a small or high-entropy result). {@code tableCompression} controls whether
-     * top-level Table arguments call {@code writeCompressed}. When {@code tableName} is
-     * non-empty the script path returns a schema probe and neither compression option has
-     * an effect. Asynchronous connections still send flag 64 but do not read the result.
-     */
-    public static final class RunOptions {
-        private final ProgressListener listener;
-        private final int priority;
-        private final int parallelism;
-        private final int fetchSize;
-        private final boolean clearSessionMemory;
-        private final String tableName;
-        private final boolean enableSeqNo;
-        private final CompressionMode resultCompression;
-        private final CompressionMode tableCompression;
-
-        private RunOptions(Builder builder) {
-            this.listener = builder.listener;
-            this.priority = builder.priority;
-            this.parallelism = builder.parallelism;
-            this.fetchSize = builder.fetchSize;
-            this.clearSessionMemory = builder.clearSessionMemory;
-            this.tableName = builder.tableName == null ? "" : builder.tableName;
-            this.enableSeqNo = builder.enableSeqNo;
-            this.resultCompression = builder.resultCompression == null
-                    ? CompressionMode.CONNECTION_DEFAULT : builder.resultCompression;
-            this.tableCompression = builder.tableCompression == null
-                    ? CompressionMode.CONNECTION_DEFAULT : builder.tableCompression;
-        }
-
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        public ProgressListener getListener() {
-            return listener;
-        }
-
-        public int getPriority() {
-            return priority;
-        }
-
-        public int getParallelism() {
-            return parallelism;
-        }
-
-        public int getFetchSize() {
-            return fetchSize;
-        }
-
-        public boolean isClearSessionMemory() {
-            return clearSessionMemory;
-        }
-
-        public String getTableName() {
-            return tableName;
-        }
-
-        public boolean isEnableSeqNo() {
-            return enableSeqNo;
-        }
-
-        public CompressionMode getResultCompression() {
-            return resultCompression;
-        }
-
-        public CompressionMode getTableCompression() {
-            return tableCompression;
-        }
-
-        public static final class Builder {
-            private ProgressListener listener;
-            private int priority = DEFAULT_PRIORITY;
-            private int parallelism = DEFAULT_PARALLELISM;
-            private int fetchSize = 0;
-            private boolean clearSessionMemory = false;
-            private String tableName = "";
-            private boolean enableSeqNo = true;
-            private CompressionMode resultCompression = CompressionMode.CONNECTION_DEFAULT;
-            private CompressionMode tableCompression = CompressionMode.CONNECTION_DEFAULT;
-
-            private Builder() {
-            }
-
-            public Builder listener(ProgressListener listener) {
-                this.listener = listener;
-                return this;
-            }
-
-            public Builder priority(int priority) {
-                this.priority = priority;
-                return this;
-            }
-
-            public Builder parallelism(int parallelism) {
-                this.parallelism = parallelism;
-                return this;
-            }
-
-            public Builder fetchSize(int fetchSize) {
-                this.fetchSize = fetchSize;
-                return this;
-            }
-
-            public Builder clearSessionMemory(boolean clearSessionMemory) {
-                this.clearSessionMemory = clearSessionMemory;
-                return this;
-            }
-
-            public Builder tableName(String tableName) {
-                this.tableName = tableName;
-                return this;
-            }
-
-            public Builder enableSeqNo(boolean enableSeqNo) {
-                this.enableSeqNo = enableSeqNo;
-                return this;
-            }
-
-            public Builder resultCompression(CompressionMode resultCompression) {
-                this.resultCompression = resultCompression;
-                return this;
-            }
-
-            public Builder tableCompression(CompressionMode tableCompression) {
-                this.tableCompression = tableCompression;
-                return this;
-            }
-
-            public RunOptions build() {
-                return new RunOptions(this);
-            }
-        }
-    }
-
-    /**
-     * Immutable per-call options for {@link #upload(Map, UploadOptions)}.
-     * Only table argument compression is controllable; the upload response flag still
-     * inherits the connection default because upload has no large result to tune.
-     */
-    public static final class UploadOptions {
-        private final CompressionMode tableCompression;
-
-        private UploadOptions(Builder builder) {
-            this.tableCompression = builder.tableCompression == null
-                    ? CompressionMode.CONNECTION_DEFAULT : builder.tableCompression;
-        }
-
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        public CompressionMode getTableCompression() {
-            return tableCompression;
-        }
-
-        public static final class Builder {
-            private CompressionMode tableCompression = CompressionMode.CONNECTION_DEFAULT;
-
-            private Builder() {
-            }
-
-            public Builder tableCompression(CompressionMode tableCompression) {
-                this.tableCompression = tableCompression;
-                return this;
-            }
-
-            public UploadOptions build() {
-                return new UploadOptions(this);
-            }
-        }
-    }
-
     enum Property{
         flag,//1
         cancel,//2
@@ -498,7 +307,7 @@ public class DBConnection {
         private boolean isConnected_;
         private boolean sslEnable_ = false;
         private boolean asynTask_ = false;
-        private final boolean compress_;
+        private boolean compress_ = false;
         private boolean ifUrgent_ = false;
         private int connTimeout_ = 0;
         private int connectTimeout_ = 0;
@@ -621,10 +430,6 @@ public class DBConnection {
         }
 
         private int generateRequestFlag(boolean clearSessionMemory){
-            return generateRequestFlag(clearSessionMemory, this.compress_);
-        }
-
-        private int generateRequestFlag(boolean clearSessionMemory, boolean compressResult){
             if (this.python_ && this.kdb_) {
                 throw new IllegalArgumentException("The param 'usePython' and 'useKdb' cannot be set simultaneously.");
             }
@@ -636,7 +441,7 @@ public class DBConnection {
                 flag += 4;
             if(clearSessionMemory)
                 flag += 16;
-            if(compressResult)
+            if(this.compress_)
                 flag += 64;
             if (this.python_)
                 flag += 2048;
@@ -774,46 +579,28 @@ public class DBConnection {
         }
 
         private Entity run(String script, ProgressListener listener,int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName, long seqNum) throws IOException{
-            return run(script, listener, priority, parallelism, fetchSize, clearMemory, tableName, seqNum, compress_, compress_);
-        }
-        private Entity run(String script, ProgressListener listener,int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName, long seqNum, boolean compressResult, boolean compressTable) throws IOException{
             List<Entity> args = new ArrayList<>();
-            return run(script, "script", listener, args, priority, parallelism, fetchSize, clearMemory, tableName, seqNum, compressResult, compressTable);
+            return run(script, "script", listener, args, priority, parallelism, fetchSize, clearMemory, tableName,seqNum);
         }
         private Entity run(String function, List<Entity> arguments,long seqNum) throws IOException {
             return run(function,"function", (ProgressListener)null, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, seqNum);
         }
 
         private Entity run(String function, String scriptType, List<Entity> arguments,long seqNum)throws IOException{
-            return run(function, scriptType, arguments, seqNum, compress_, compress_);
-        }
-
-        private Entity run(String function, String scriptType, List<Entity> arguments,long seqNum, boolean compressResult, boolean compressTable)throws IOException{
-            return run(function, scriptType, (ProgressListener)null, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, seqNum, compressResult, compressTable);
+            return run(function, scriptType, (ProgressListener)null, arguments, DEFAULT_PRIORITY, DEFAULT_PARALLELISM, 0, false, seqNum);
         }
 
         private Entity run(String function, ProgressListener listener,List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory,long seqNum) throws IOException{
-            return run(function, listener, args, priority, parallelism, fetchSize, clearMemory, seqNum, compress_, compress_);
-        }
-
-        private Entity run(String function, ProgressListener listener,List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory,long seqNum, boolean compressResult, boolean compressTable) throws IOException{
-            return run(function, "function", listener, args, priority, parallelism, fetchSize, clearMemory,seqNum, compressResult, compressTable);
+            return run(function, "function", listener, args, priority, parallelism, fetchSize, clearMemory,seqNum);
         }
 
         private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory,long seqNum) throws IOException{
-            return run(script, scriptType, listener, args, priority, parallelism, fetchSize, clearMemory, seqNum, compress_, compress_);
-        }
-
-        private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory,long seqNum, boolean compressResult, boolean compressTable) throws IOException{
-            return run(script, scriptType, listener, args, priority, parallelism, fetchSize, clearMemory, "", seqNum, compressResult, compressTable);
+            return run(script, scriptType, listener, args, priority, parallelism, fetchSize, clearMemory, "", seqNum);
         }
         //flag) + "_1_" + String.valueOf(priority) + "_" + String.valueOf(parallelism));
         //                if (fetchSize > 0)
         //                    out_.writeBytes("__" + String.valueOf(fetchSize
         private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName, long seqNum) throws IOException{
-            return run(script, scriptType, listener, args, priority, parallelism, fetchSize, clearMemory, tableName, seqNum, compress_, compress_);
-        }
-        private Entity run(String script, String scriptType, ProgressListener listener, List<Entity> args, int priority, int parallelism, int fetchSize, boolean clearMemory, String tableName, long seqNum, boolean compressResult, boolean compressTable) throws IOException{
             if (!isConnected_)
                 throw new IOException("Couldn't send script/function to the remote host because the connection has been closed");
 
@@ -832,9 +619,6 @@ public class DBConnection {
 
 
             if (!tableName.equals("")){
-                // Schema-probe path: no main request is sent. Internal metadata calls
-                // (assign / schema / rows) inherit the connection default, so per-call
-                // resultCompression / tableCompression have no effect here.
                 script = tableName + "=" + script;
                 run(script,0);
                 BasicDictionary schema = (BasicDictionary) run(tableName + ".schema()",0);
@@ -866,7 +650,7 @@ public class DBConnection {
             try {
                 out_.writeBytes((listener != null ? "API2 " : "API ") + sessionID_ + " ");
                 out_.writeBytes(String.valueOf(AbstractExtendedDataOutputStream.getUTFlength(body.toString(), 0, 0)));
-                int flag = generateRequestFlag(clearMemory, compressResult);
+                int flag = generateRequestFlag(clearMemory);
                 Map<Property,Object> properties=new HashMap<>();
                 properties.put(Property.flag, flag);
                 properties.put(Property.cancel,1);
@@ -902,7 +686,7 @@ public class DBConnection {
 
                 if (argCount > 0){
                     for (int i = 0; i < args.size(); ++i) {
-                        if (compressTable && args.get(i).isTable()) {
+                        if (compress_ && args.get(i).isTable()) {
                             args.get(i).writeCompressed(out_); //TODO: which compress method to use
                         } else
                             args.get(i).write(out_);
@@ -1002,22 +786,14 @@ public class DBConnection {
         }
 
         public void upload(String name, Entity obj,long seqNum) throws IOException{
-            upload(name, obj, seqNum, compress_, compress_);
-        }
-
-        public void upload(String name, Entity obj,long seqNum, boolean compressResult, boolean compressTable) throws IOException{
             if (!Utils.isVariableCandidate(name))
                 throw new RuntimeException(name + " is not a qualified variable name.");
             List<Entity> args = new ArrayList<>();
             args.add(obj);
-            run(name, "variable", args, seqNum, compressResult, compressTable);
+            run(name, "variable", args, seqNum);
         }
 
         public void upload(List<String> names, List<Entity> objs,long seqNum) throws IOException{
-            upload(names, objs, seqNum, compress_, compress_);
-        }
-
-        public void upload(List<String> names, List<Entity> objs,long seqNum, boolean compressResult, boolean compressTable) throws IOException{
             if (names.size() != objs.size())
                 throw new RuntimeException("the size of variable names doesn't match the size of objects.");
             if (names.isEmpty())
@@ -1032,7 +808,7 @@ public class DBConnection {
                 varNames.append(names.get(i));
             }
 
-            run(varNames.toString(), "variable", objs, seqNum, compressResult, compressTable);
+            run(varNames.toString(), "variable", objs, seqNum);
         }
 
         public void close(){
@@ -1760,29 +1536,6 @@ public class DBConnection {
     }
 
     public Entity run(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory, String tableName, boolean enableSeqNo) throws IOException{
-        return runScriptInternal(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, enableSeqNo, conn_.compress_, conn_.compress_);
-    }
-
-    public Entity runWithOptions(String script, RunOptions options) throws IOException {
-        RunOptions opts = options == null ? RunOptions.builder().build() : options;
-        boolean compressResult = resolveCompression(opts.getResultCompression());
-        boolean compressTable = resolveCompression(opts.getTableCompression());
-        return runScriptInternal(script, opts.getListener(), opts.getPriority(), opts.getParallelism(),
-                opts.getFetchSize(), opts.isClearSessionMemory(), opts.getTableName(), opts.isEnableSeqNo(),
-                compressResult, compressTable);
-    }
-
-    public Entity tryRunWithOptions(String script, RunOptions options) throws IOException {
-        if (!mutex_.tryLock())
-            return null;
-        try {
-            return runWithOptions(script, options);
-        } finally {
-            mutex_.unlock();
-        }
-    }
-
-    private Entity runScriptInternal(String script, ProgressListener listener, int priority, int parallelism, int fetchSize, boolean clearSessionMemory, String tableName, boolean enableSeqNo, boolean compressResult, boolean compressTable) throws IOException{
         mutex_.lock();
         try {
             if (!nodes_.isEmpty()) {
@@ -1794,7 +1547,7 @@ public class DBConnection {
 
                 while (!closed_) {
                     try {
-                        return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, currentSeqNo, compressResult, compressTable);
+                        return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, currentSeqNo);
                     } catch (IOException e) {
                         if (currentSeqNo > 0)
                             currentSeqNo = -currentSeqNo;
@@ -1818,7 +1571,7 @@ public class DBConnection {
                 }
                 return null;
             } else {
-                return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, 0, compressResult, compressTable);
+                return conn_.run(script, listener, priority, parallelism, fetchSize, clearSessionMemory, tableName, 0);
             }
         } finally {
             mutex_.unlock();
@@ -1896,32 +1649,6 @@ public class DBConnection {
     }
 
     public Entity run(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize, boolean enableSeqNo, ProgressListener listener) throws IOException {
-        return runFunctionInternal(function, arguments, priority, parallelism, fetchSize, enableSeqNo, listener, conn_.compress_, conn_.compress_);
-    }
-
-    public Entity runWithOptions(String function, List<Entity> arguments, RunOptions options) throws IOException {
-        RunOptions opts = options == null ? RunOptions.builder().build() : options;
-        if (opts.isClearSessionMemory())
-            throw new IllegalArgumentException("clearSessionMemory is script-only and cannot be used with runWithOptions(function, arguments, options)");
-        if (!opts.getTableName().isEmpty())
-            throw new IllegalArgumentException("tableName is script-only and cannot be used with runWithOptions(function, arguments, options)");
-        boolean compressResult = resolveCompression(opts.getResultCompression());
-        boolean compressTable = resolveCompression(opts.getTableCompression());
-        return runFunctionInternal(function, arguments, opts.getPriority(), opts.getParallelism(),
-                opts.getFetchSize(), opts.isEnableSeqNo(), opts.getListener(), compressResult, compressTable);
-    }
-
-    public Entity tryRunWithOptions(String function, List<Entity> arguments, RunOptions options) throws IOException {
-        if (!mutex_.tryLock())
-            return null;
-        try {
-            return runWithOptions(function, arguments, options);
-        } finally {
-            mutex_.unlock();
-        }
-    }
-
-    private Entity runFunctionInternal(String function, List<Entity> arguments, int priority, int parallelism, int fetchSize, boolean enableSeqNo, ProgressListener listener, boolean compressResult, boolean compressTable) throws IOException {
         mutex_.lock();
         try {
             if (!nodes_.isEmpty()) {
@@ -1933,7 +1660,7 @@ public class DBConnection {
 
                 while (!closed_) {
                     try {
-                        return conn_.run(function, listener, arguments, priority, parallelism, fetchSize, false, currentSeqNo, compressResult, compressTable);
+                        return conn_.run(function, listener, arguments, priority, parallelism, fetchSize, false, currentSeqNo);
                     } catch (IOException e) {
                         if (currentSeqNo > 0)
                             currentSeqNo = -currentSeqNo;
@@ -1952,7 +1679,7 @@ public class DBConnection {
                 }
                 return null;
             } else {
-                return conn_.run(function, listener, arguments, priority, parallelism, fetchSize, false, 0, compressResult, compressTable);
+                return conn_.run(function, listener, arguments, priority, parallelism, fetchSize, false, 0);
             }
         } finally {
             mutex_.unlock();
@@ -1964,30 +1691,16 @@ public class DBConnection {
     }
 
     public void tryUpload(final Map<String, Entity> variableObjectMap) throws IOException {
-        tryUpload(variableObjectMap, null);
-    }
-
-    public void tryUpload(final Map<String, Entity> variableObjectMap, UploadOptions options) throws IOException {
         if (!mutex_.tryLock())
             throw new IOException("The connection is in use.");
         try {
-            upload(variableObjectMap, options);
+            upload(variableObjectMap);
         } finally {
             mutex_.unlock();
         }
     }
 
     public void upload(final Map<String, Entity> variableObjectMap) throws IOException {
-        uploadInternal(variableObjectMap, conn_.compress_, conn_.compress_);
-    }
-
-    public void upload(final Map<String, Entity> variableObjectMap, UploadOptions options) throws IOException {
-        UploadOptions opts = options == null ? UploadOptions.builder().build() : options;
-        boolean compressTable = resolveCompression(opts.getTableCompression());
-        uploadInternal(variableObjectMap, conn_.compress_, compressTable);
-    }
-
-    private void uploadInternal(final Map<String, Entity> variableObjectMap, boolean compressResult, boolean compressTable) throws IOException {
         mutex_.lock();
         try {
             List<String> keys = new ArrayList<>();
@@ -1998,14 +1711,14 @@ public class DBConnection {
                         for (String key : variableObjectMap.keySet()){
                             if (variableObjectMap.size() == 1){
                                 Entity obj = variableObjectMap.get(key);
-                                conn_.upload(key, obj,0, compressResult, compressTable);
+                                conn_.upload(key, obj,0);
                             }else {
                                 keys.add(key);
                                 objs.add(variableObjectMap.get(key));
                             }
                         }
                         if (variableObjectMap.size() > 1)
-                            conn_.upload(keys, objs,0, compressResult, compressTable);
+                            conn_.upload(keys, objs,0);
                         break;
                     }catch (Exception e){
                         Node node = new Node();
@@ -2025,24 +1738,18 @@ public class DBConnection {
                 for (String key : variableObjectMap.keySet()){
                     if (variableObjectMap.size() == 1){
                         Entity obj = variableObjectMap.get(key);
-                        conn_.upload(key, obj, 0, compressResult, compressTable);
+                        conn_.upload(key, obj, 0);
                     }else {
                         keys.add(key);
                         objs.add(variableObjectMap.get(key));
                     }
                 }
                 if (variableObjectMap.size() > 1)
-                    conn_.upload(keys, objs, 0, compressResult, compressTable);
+                    conn_.upload(keys, objs, 0);
             }
         }finally {
             mutex_.unlock();
         }
-    }
-
-    private boolean resolveCompression(CompressionMode mode) {
-        if (mode == null || mode == CompressionMode.CONNECTION_DEFAULT)
-            return conn_.compress_;
-        return mode == CompressionMode.ENABLED;
     }
 
     public void close() {
