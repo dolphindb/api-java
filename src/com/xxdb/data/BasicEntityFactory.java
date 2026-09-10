@@ -4,6 +4,7 @@ import com.xxdb.data.Entity.DATA_TYPE;
 import com.xxdb.data.Entity.DURATION;
 import com.xxdb.io.ExtendedDataInput;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -790,6 +791,8 @@ public class BasicEntityFactory implements EntityFactory{
 			return createAnyVector(dataType, (Long[]) object, extraParam);
 		if (object instanceof long[])
 			return createAnyVector(dataType, (long[]) object, extraParam);
+		if (object instanceof BigDecimal)
+			return createScalar(dataType, (BigDecimal) object, extraParam);
 		if (object instanceof Double)
 			return createScalar(dataType, (double) object, extraParam);
 		if (object instanceof Double[])
@@ -988,6 +991,14 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicDate(val);
 			case DT_MONTH:
 				return new BasicMonth(val.getYear(),val.getMonth());
+			case DT_DATETIME:
+				return new BasicDateTime(val.atStartOfDay());
+			case DT_DATEHOUR:
+				return new BasicDateHour(val.atStartOfDay());
+			case DT_TIMESTAMP:
+				return new BasicTimestamp(val.atStartOfDay());
+			case DT_NANOTIMESTAMP:
+				return new BasicNanoTimestamp(val.atStartOfDay());
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert LocalDate to " + dataType + ".");
 		}
@@ -1091,6 +1102,9 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicFloat(val);
 			case DT_DOUBLE:
 				return new BasicDouble(val);
+			case DT_SYMBOL:
+			case DT_STRING:
+				return new BasicString(String.valueOf(val));
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert byte to " + dataType + ".");
 		}
@@ -1113,6 +1127,9 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicFloat(val);
 			case DT_DOUBLE:
 				return new BasicDouble(val);
+			case DT_SYMBOL:
+			case DT_STRING:
+				return new BasicString(String.valueOf(val));
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert short to " + dataType + ".");
 		}
@@ -1180,6 +1197,46 @@ public class BasicEntityFactory implements EntityFactory{
 		}
 	}
 
+	private static Scalar createScalar(DATA_TYPE dataType, BigDecimal val, int extraParam) {
+		switch (dataType) {
+			case DT_BYTE:
+				try {
+					return new BasicByte(val.byteValueExact());
+				} catch (ArithmeticException e) {
+					throw new RuntimeException("Failed to insert data. Cannot convert BigDecimal to " + dataType + " exactly.", e);
+				}
+			case DT_SHORT:
+				try {
+					return new BasicShort(val.shortValueExact());
+				} catch (ArithmeticException e) {
+					throw new RuntimeException("Failed to insert data. Cannot convert BigDecimal to " + dataType + " exactly.", e);
+				}
+			case DT_INT:
+				try {
+					return new BasicInt(val.intValueExact());
+				} catch (ArithmeticException e) {
+					throw new RuntimeException("Failed to insert data. Cannot convert BigDecimal to " + dataType + " exactly.", e);
+				}
+			case DT_LONG:
+				try {
+					return new BasicLong(val.longValueExact());
+				} catch (ArithmeticException e) {
+					throw new RuntimeException("Failed to insert data. Cannot convert BigDecimal to " + dataType + " exactly.", e);
+				}
+			case DT_DECIMAL32:
+				return new BasicDecimal32(val.toPlainString(), extraParam);
+			case DT_DECIMAL64:
+				return new BasicDecimal64(val.toPlainString(), extraParam);
+			case DT_DECIMAL128:
+				return new BasicDecimal128(val.toPlainString(), extraParam);
+			case DT_FLOAT:
+				return new BasicFloat(val.floatValue());
+			case DT_DOUBLE:
+				return new BasicDouble(val.doubleValue());
+			default:
+				throw new RuntimeException("Failed to insert data. Cannot convert BigDecimal to " + dataType + ".");
+		}
+	}
 	private static Scalar createScalar(DATA_TYPE dataType, float val, int extraParam) {
 		switch (dataType) {
 			case DT_FLOAT:
@@ -1254,6 +1311,9 @@ public class BasicEntityFactory implements EntityFactory{
 				return new BasicFloat(val);
 			case DT_DOUBLE:
 				return new BasicDouble(val);
+			case DT_SYMBOL:
+			case DT_STRING:
+				return new BasicString(String.valueOf(val));
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert int to " + dataType + ".");
 		}
@@ -1291,10 +1351,15 @@ public class BasicEntityFactory implements EntityFactory{
 					throw new RuntimeException("Failed to insert data, long cannot be converted because it exceeds the range of " + dataType + ".");
 			case DT_DECIMAL64:
 				return new BasicDecimal64(val, extraParam);
+			case DT_DECIMAL128:
+				return new BasicDecimal128(BigInteger.valueOf(val), extraParam);
 			case DT_FLOAT:
 				return new BasicFloat(val);
 			case DT_DOUBLE:
 				return new BasicDouble(val);
+			case DT_SYMBOL:
+			case DT_STRING:
+				return new BasicString(String.valueOf(val));
 			default:
 				throw new RuntimeException("Failed to insert data. Cannot convert long to " + dataType + ".");
 		}
